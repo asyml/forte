@@ -6,15 +6,15 @@ import logging
 import codecs
 from typing import DefaultDict, List, Optional, Iterator, Tuple
 from collections import defaultdict
-from nlp.pipeline.io.readers.base_reader import BaseReader
-from nlp.pipeline.io.interchange import Interchange
+from nlp.pipeline.io.readers.file_reader import MonoFileReader
+from nlp.pipeline.io.data_pack import DataPack
 from nlp.pipeline.io.ontonotes_ontology import OntonotesOntology
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class OntonotesReader(BaseReader):
+class OntonotesReader(MonoFileReader):
     def __init__(self, lazy):
         super().__init__(lazy)
         self.ontology = OntonotesOntology
@@ -30,7 +30,7 @@ class OntonotesReader(BaseReader):
                 if data_file.endswith("gold_conll"):
                     yield os.path.join(root, data_file)
 
-    def _read_document(self, file_path: str) -> Interchange:
+    def _read_document(self, file_path: str) -> DataPack:
         doc = codecs.open(file_path, "r", encoding="utf8")
 
         text = ""
@@ -151,7 +151,7 @@ class OntonotesReader(BaseReader):
                             **kwargs_i
                         )
 
-                        self.current_interchange.index.annotation_index[
+                        self.current_datapack.index.entry_index[
                             predicate
                         ].add_link(link)
 
@@ -178,12 +178,12 @@ class OntonotesReader(BaseReader):
                 self.ontology.CoreferenceGroup, mention_list, **kwargs_i
             )
 
-        kwargs_i = {"docid": document_id}
-        self.current_interchange.set_meta(**kwargs_i)
-        self.current_interchange.text = text
+        kwargs_i = {"doc_id": document_id}
+        self.current_datapack.set_meta(**kwargs_i)
+        self.current_datapack.text = text
 
         doc.close()
-        return self.current_interchange
+        return self.current_datapack
 
     def _process_entity_annotations(
         self,
@@ -274,43 +274,43 @@ class OntonotesReader(BaseReader):
                 groups[group_id].append(annotation)
 
     def _record_fields(self):
-        self.current_interchange.add_fields(
+        self.current_datapack.record_fields(
             ["speaker", "part_id", "span"],
             self.component_name,
-            self.ontology.Sentence.__qualname__,
+            self.ontology.Sentence.__name__,
         )
-        self.current_interchange.add_fields(
+        self.current_datapack.record_fields(
             ["sense", "pos_tag", "span"],
             self.component_name,
-            self.ontology.Token.__qualname__,
+            self.ontology.Token.__name__,
         )
-        self.current_interchange.add_fields(
+        self.current_datapack.record_fields(
             ["ner_type", "span"],
             self.component_name,
-            self.ontology.EntityMention.__qualname__,
+            self.ontology.EntityMention.__name__,
         )
-        self.current_interchange.add_fields(
-            ["pred_lemma", "pred_type", "link", "span"],
+        self.current_datapack.record_fields(
+            ["pred_lemma", "pred_type", "link", "span", "framenet_id"],
             self.component_name,
-            self.ontology.PredicateMention.__qualname__,
+            self.ontology.PredicateMention.__name__,
         )
-        self.current_interchange.add_fields(
+        self.current_datapack.record_fields(
             ["span"],
             self.component_name,
-            self.ontology.PredicateArgument.__qualname__,
+            self.ontology.PredicateArgument.__name__,
         )
-        self.current_interchange.add_fields(
+        self.current_datapack.record_fields(
             ["parent", "child", "arg_type"],
             self.component_name,
-            self.ontology.PredicateLink.__qualname__,
+            self.ontology.PredicateLink.__name__,
         )
-        self.current_interchange.add_fields(
+        self.current_datapack.record_fields(
             ["span"],
             self.component_name,
-            self.ontology.CoreferenceMention.__qualname__,
+            self.ontology.CoreferenceMention.__name__,
         )
-        self.current_interchange.add_fields(
+        self.current_datapack.record_fields(
             ["coref_type", "members"],
             self.component_name,
-            self.ontology.CoreferenceGroup.__qualname__,
+            self.ontology.CoreferenceGroup.__name__,
         )
