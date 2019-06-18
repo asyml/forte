@@ -29,6 +29,8 @@ SpaCY
     tokens = nlp(u"Some\nspaces  and\ttab characters")
     tokens_text = [t.text for t in tokens]        
     ```
+    Our method is slightly indirect comparing to this, but we may be able to 
+    achieve this via some syntax sugar.
 
 # Cons
 1. Problem: Assumes token to be the lower level representation (For example, 
