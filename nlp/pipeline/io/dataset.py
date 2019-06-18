@@ -345,7 +345,7 @@ class Dataset:
     def get_data_batch(self, batch_size: int):
 
         batch = {}
-        for i in range(batch_size):
+        for _ in range(batch_size):
             data = self.get_data()
             if data is None: break
             for entry, fields in data.items():

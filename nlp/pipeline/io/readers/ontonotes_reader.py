@@ -74,9 +74,11 @@ class OntonotesReader(MonoFileReader):
 
                 # add tokens
                 kwargs_i = {"pos_tag": pos_tag, "sense": word_sense}
-                self._add_span_annotation(
-                    self.ontology.Token, word_begin, word_end, **kwargs_i
+                token = self.ontology.Token(
+                    self.component_name, word_begin, word_end
                 )
+                token.set_fields(**kwargs_i)
+                self.current_datapack.add_entry(token)
 
                 # add entity mentions
                 current_entity_mention = self._process_entity_annotations(
@@ -98,15 +100,15 @@ class OntonotesReader(MonoFileReader):
                         if word_is_verbal_predicate
                         else "other",
                     }
-                    pred_mention = self._add_span_annotation(
-                        self.ontology.PredicateMention,
-                        word_begin,
-                        word_end,
-                        **kwargs_i
+                    pred_mention = self.ontology.PredicateMention(
+                        self.component_name, word_begin, word_end
                     )
+                    pred_mention.set_fields(**kwargs_i)
+                    pred_mention_id = \
+                        self.current_datapack.add_entry(pred_mention)
 
                     if word_is_verbal_predicate:
-                        verbal_predicates.append(pred_mention)
+                        verbal_predicates.append(pred_mention_id)
 
                 if not verbal_pred_args:
                     current_pred_arg = [None for _ in pred_labels]
@@ -140,33 +142,33 @@ class OntonotesReader(MonoFileReader):
 
                 # add predicate links in the sentence
                 for predicate, pred_arg in zip(
-                    verbal_predicates, verbal_pred_args
+                        verbal_predicates, verbal_pred_args
                 ):
                     for arg in pred_arg:
-                        kwargs_i = {"arg_type": arg[1]}
-                        link = self._add_link_annotation(
-                            self.ontology.PredicateLink,
-                            predicate,
-                            arg[0],
-                            **kwargs_i
-                        )
+                        kwargs_i = {"arg_type": arg[1],
+                                    "parent": predicate,
+                                    "child": arg[0]}
+                        link = self.ontology.PredicateLink(self.component_name)
+                        link.set_fields(**kwargs_i)
+                        link_id = self.current_datapack.add_entry(link)
 
                         self.current_datapack.index.entry_index[
                             predicate
-                        ].add_link(link)
+                        ].add_link(link_id)
 
                 verbal_predicates = []
                 current_pred_arg = []
                 verbal_pred_args = []
 
                 # add sentence
+
                 kwargs_i = {"speaker": speaker, "part_id": part_id}
-                self._add_span_annotation(
-                    self.ontology.Sentence,
-                    sentence_begin,
-                    offset - 1,
-                    **kwargs_i
+                sent = self.ontology.Sentence(
+                    self.component_name, sentence_begin, offset-1
                 )
+                sent.set_fields(**kwargs_i)
+                self.current_datapack.add_entry(sent)
+
                 sentence_begin = offset
 
                 has_rows = False
@@ -174,9 +176,12 @@ class OntonotesReader(MonoFileReader):
         # group the coreference mentions in the whole document
         for group_id, mention_list in groups.items():
             kwargs_i = {"coref_type": group_id}
-            self._add_group_annotation(
-                self.ontology.CoreferenceGroup, mention_list, **kwargs_i
+            group = self.ontology.CoreferenceGroup(
+                self.component_name
             )
+            group.set_fields(**kwargs_i)
+            group.add_members(mention_list)
+            self.current_datapack.add_entry(group)
 
         kwargs_i = {"doc_id": document_id}
         self.current_datapack.set_meta(**kwargs_i)
@@ -186,11 +191,11 @@ class OntonotesReader(MonoFileReader):
         return self.current_datapack
 
     def _process_entity_annotations(
-        self,
-        label: str,
-        word_begin: int,
-        word_end: int,
-        current_entity_mention: Tuple[int, str],
+            self,
+            label: str,
+            word_begin: int,
+            word_end: int,
+            current_entity_mention: Tuple[int, str],
     ) -> Tuple[int, str]:
 
         ner_type = label.strip("()*")
@@ -201,23 +206,23 @@ class OntonotesReader(MonoFileReader):
         if ")" in label:
             # Exiting a span, add and then reset the current span.
             kwargs_i = {"ner_type": current_entity_mention[1]}
-            self._add_span_annotation(
-                self.ontology.EntityMention,
-                current_entity_mention[0],
-                word_end,
-                **kwargs_i
+            entity = self.ontology.EntityMention(
+                self.component_name, current_entity_mention[0], word_end
             )
+            entity.set_fields(**kwargs_i)
+            self.current_datapack.add_entry(entity)
+
             current_entity_mention = None
 
         return current_entity_mention
 
     def _process_pred_annotations(
-        self,
-        labels: List[str],
-        word_begin: int,
-        word_end: int,
-        current_pred_arg: List[Optional[Tuple[int, str]]],
-        verbal_pred_args: List[List[Tuple[str, str]]],
+            self,
+            labels: List[str],
+            word_begin: int,
+            word_end: int,
+            current_pred_arg: List[Optional[Tuple[int, str]]],
+            verbal_pred_args: List[List[Tuple[str, str]]],
     ) -> None:
 
         for label_index, label in enumerate(labels):
@@ -233,19 +238,22 @@ class OntonotesReader(MonoFileReader):
                 # Exiting a span
                 arg_begin = current_pred_arg[label_index][0]
                 arg_type = current_pred_arg[label_index][1]
-                pred_arg = self._add_span_annotation(
-                    self.ontology.PredicateArgument, arg_begin, word_end
+
+                pred_arg = self.ontology.PredicateArgument(
+                    self.component_name, arg_begin, word_end
                 )
-                verbal_pred_args[label_index].append((pred_arg, arg_type))
+                pred_arg_id = self.current_datapack.add_entry(pred_arg)
+
+                verbal_pred_args[label_index].append((pred_arg_id, arg_type))
                 current_pred_arg[label_index] = None
 
     def _process_coref_annotations(
-        self,
-        label: str,
-        word_begin: int,
-        word_end: int,
-        coref_stacks: DefaultDict[int, List[int]],
-        groups: DefaultDict[int, List[str]],
+            self,
+            label: str,
+            word_begin: int,
+            word_end: int,
+            coref_stacks: DefaultDict[int, List[int]],
+            groups: DefaultDict[int, List[str]],
     ) -> None:
 
         if label == "-":
@@ -256,10 +264,13 @@ class OntonotesReader(MonoFileReader):
                 if segment[-1] == ")":
                     # The span begins and ends at this word (single word span).
                     group_id = int(segment[1:-1])
-                    coref_mention = self._add_span_annotation(
-                        self.ontology.CoreferenceMention, word_begin, word_end
+
+                    coref_mention = self.ontology.CoreferenceMention(
+                        self.component_name, word_begin, word_end
                     )
-                    groups[group_id].append(coref_mention)
+                    coref_mention_id = self.current_datapack.add_entry(coref_mention)
+
+                    groups[group_id].append(coref_mention_id)
                 else:
                     # The span is starting, so we record the index of the word.
                     group_id = int(segment[1:])
@@ -268,10 +279,12 @@ class OntonotesReader(MonoFileReader):
                 # The span for this id is ending, but not start at this word.
                 group_id = int(segment[:-1])
                 start = coref_stacks[group_id].pop()
-                annotation = self._add_span_annotation(
-                    self.ontology.CoreferenceMention, start, word_end
+                coref_mention = self.ontology.CoreferenceMention(
+                    self.component_name, start, word_end
                 )
-                groups[group_id].append(annotation)
+                coref_mention_id = self.current_datapack.add_entry(coref_mention)
+
+                groups[group_id].append(coref_mention_id)
 
     def _record_fields(self):
         self.current_datapack.record_fields(

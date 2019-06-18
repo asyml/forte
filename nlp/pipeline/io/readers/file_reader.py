@@ -156,62 +156,6 @@ class MonoFileReader(BaseReader):
         """
         raise NotImplementedError
 
-
-
     def _record_fields(self):
         raise NotImplementedError
 
-    def _add_span_annotation(self, annotation_class, begin, end, **kwargs):
-        span = Span(begin, end)
-        span_anno = annotation_class(component=self.component_name, span=span)
-        for k, v in kwargs.items():
-            if not hasattr(span_anno, k):
-                raise AttributeError(
-                    f"class {annotation_class.__qualname__}"
-                    f" has no attribute {k}"
-                )
-            setattr(span_anno, k, v)
-
-        span_anno = self.current_datapack.add_entry(span_anno)
-
-        # TODO: to remove this method and let users
-        #  add annotations manually:
-        # span = Span(begin, end)
-        # ano = Token(span, component， **kwargs)
-        # data_pack.add_entry(ano)
-        # ano.set_attribute('lemma', 'be')
-
-        return span_anno
-
-    def _add_group_annotation(self, annotation_class, members, **kwargs):
-        group = annotation_class(component=self.component_name)
-        for k, v in kwargs.items():
-            if not hasattr(group, k):
-                raise AttributeError(
-                    f"class {annotation_class.__qualname__}"
-                    f" has no attribute {k}"
-                )
-            setattr(group, k, v)
-        for m in members:
-            group.add_member(m)
-
-        group = self.current_datapack.add_entry(group)
-
-        return group
-
-    def _add_link_annotation(self, annotation_class, parent, child, **kwargs):
-        link = annotation_class(component=self.component_name)
-        for k, v in kwargs.items():
-            if not hasattr(link, k):
-                raise AttributeError(
-                    f"class {annotation_class.__qualname__}"
-                    f" has no attribute {k}"
-                )
-            setattr(link, k, v)
-
-        link.set_parent(parent)
-        link.set_child(child)
-
-        link = self.current_datapack.add_entry(link)
-
-        return link

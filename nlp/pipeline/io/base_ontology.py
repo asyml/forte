@@ -2,7 +2,7 @@
 """
 from abc import abstractmethod
 from functools import total_ordering
-
+from typing import Iterable
 
 @total_ordering
 class Span:
@@ -41,6 +41,15 @@ class Entry:
     def set_tid(self, tid: str):
         self.tid = f"{self.__class__.__name__}.{tid}"
 
+    def set_fields(self, **kwargs):
+        for k, v in kwargs.items():
+            if not hasattr(self, k):
+                raise AttributeError(
+                    f"class {self.__class__.__qualname__}"
+                    f" has no attribute {k}"
+                )
+            setattr(self, k, v)
+
     @abstractmethod
     def hash(self):
         pass
@@ -57,9 +66,9 @@ class Entry:
 
 
 class Annotation(Entry):
-    def __init__(self, component: str, span: Span, tid: str = None):
+    def __init__(self, component: str, begin: int, end: int, tid: str = None):
         super().__init__(component, tid)
-        self.span = span
+        self.span = Span(begin, end)
 
     def hash(self):
         return hash((self.component, type(self), self.span.begin, self.span.end))
@@ -91,19 +100,16 @@ class Link(Entry):
         return (type(self), self.component, self.parent, self.child) == \
                (type(other), other.component, other.parent, other.child)
 
-    # def __lt__(self, other):
-    #     if self.parent == other.parent:
-    #         return self.child < other.child
-    #     return self.parent < other.parent
-
 
 class Group(Entry):
     def __init__(self, component: str, tid: str = None):
         super().__init__(component, tid)
         self.members = set()
 
-    def add_member(self, member: Entry):
-        self.members.add(member)
+    def add_members(self, members: Iterable):
+        if not isinstance(members, Iterable):
+            members = [members]
+        self.members.update(members)
 
     def hash(self):
         return hash((type(self), self.component, tuple(self.members)))
@@ -111,12 +117,6 @@ class Group(Entry):
     def eq(self, other):
         return (type(self), self.component, self.members) == \
                (type(other), other.component, other.members)
-
-    # def __lt__(self, other):
-    #     self_mlist = sorted(self.members)
-    #     other_mlist = sorted(other.members)
-    #
-    #     return self_mlist < other_mlist
 
 
 class Meta:
@@ -126,21 +126,21 @@ class Meta:
 
 class BaseOntology:
     class Token(Annotation):
-        def __init__(self, component: str, span: Span, tid: str = None):
-            super().__init__(component, span, tid)
+        def __init__(self, component: str, begin: int, end: int,  tid: str = None):
+            super().__init__(component, begin, end, tid)
 
     class Sentence(Annotation):
-        def __init__(self, component: str, span: Span, tid: str = None):
-            super().__init__(component, span, tid)
+        def __init__(self, component: str, begin: int, end: int,  tid: str = None):
+            super().__init__(component, begin, end, tid)
 
     class EntityMention(Annotation):
-        def __init__(self, component: str, span: Span, tid: str = None):
-            super().__init__(component, span, tid)
+        def __init__(self, component: str, begin: int, end: int,  tid: str = None):
+            super().__init__(component, begin, end, tid)
             self.ner_type = None
 
     class PredicateArgument(Annotation):
-        def __init__(self, component: str, span: Span, tid: str = None):
-            super().__init__(component, span, tid)
+        def __init__(self, component: str, begin: int, end: int,  tid: str = None):
+            super().__init__(component, begin, end, tid)
 
     class PredicateLink(Link):
         parent_type = "PredicateMention"
@@ -151,8 +151,8 @@ class BaseOntology:
             self.arg_type = None
 
     class PredicateMention(Annotation):
-        def __init__(self, component: str, span: Span, tid: str = None):
-            super().__init__(component, span, tid)
+        def __init__(self, component: str, begin: int, end: int, tid: str = None):
+            super().__init__(component, begin, end, tid)
             self.links = []
 
         def add_link(self, link: Link):
@@ -166,5 +166,5 @@ class BaseOntology:
             self.coref_type = None
 
     class CoreferenceMention(Annotation):
-        def __init__(self, component: str, span: Span, tid: str = None):
-            super().__init__(component, span, tid)
+        def __init__(self, component: str, begin: int, end: int, tid: str = None):
+            super().__init__(component, begin, end, tid)
