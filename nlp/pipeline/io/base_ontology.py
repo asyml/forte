@@ -4,6 +4,7 @@ from abc import abstractmethod
 from functools import total_ordering
 from typing import Iterable
 
+
 @total_ordering
 class Span:
     """
@@ -39,24 +40,30 @@ class Entry:
         self.component = component
 
     def set_tid(self, tid: str):
+        """Set the entry id"""
         self.tid = f"{self.__class__.__name__}.{tid}"
 
     def set_fields(self, **kwargs):
-        for k, v in kwargs.items():
-            if not hasattr(self, k):
+        """Set other entry fields"""
+        for field_name, field_value in kwargs.items():
+            if not hasattr(self, field_name):
                 raise AttributeError(
                     f"class {self.__class__.__qualname__}"
-                    f" has no attribute {k}"
+                    f" has no attribute {field_name}"
                 )
-            setattr(self, k, v)
+            setattr(self, field_name, field_value)
 
     @abstractmethod
     def hash(self):
-        pass
+        """The hash function for :class:`Entry` objects.
+        To be implemented in each subclass."""
+        raise NotImplementedError
 
     @abstractmethod
     def eq(self, other):
-        pass
+        """The eq function for :class:`Entry` objects.
+        To be implemented in each subclass."""
+        raise NotImplementedError
 
     def __hash__(self):
         return self.hash()
@@ -66,12 +73,17 @@ class Entry:
 
 
 class Annotation(Entry):
+    """Annotation type entries, such as "token", "entity mention" and
+    "sentence". Each annotation has a text span corresponding to its offset
+    in the text.
+    """
     def __init__(self, component: str, begin: int, end: int, tid: str = None):
         super().__init__(component, tid)
         self.span = Span(begin, end)
 
     def hash(self):
-        return hash((self.component, type(self), self.span.begin, self.span.end))
+        return hash(
+            (self.component, type(self), self.span.begin, self.span.end))
 
     def eq(self, other):
         return (type(self), self.component, self.span.begin, self.span.end) == \
@@ -82,16 +94,13 @@ class Annotation(Entry):
 
 
 class Link(Entry):
+    """Link type entries, such as "predicate link". Each link has a parent node
+    and a child node.
+    """
     def __init__(self, component: str, tid: str = None):
         super().__init__(component, tid)
         self.parent = None
         self.child = None
-
-    def set_parent(self, parent: Entry):
-        self.parent = parent
-
-    def set_child(self, child: Entry):
-        self.child = child
 
     def hash(self):
         return hash((self.component, type(self), self.parent, self.child))
@@ -102,11 +111,15 @@ class Link(Entry):
 
 
 class Group(Entry):
+    """Group type entries, such as "coreference group". Each group has a set
+    of members.
+    """
     def __init__(self, component: str, tid: str = None):
         super().__init__(component, tid)
         self.members = set()
 
     def add_members(self, members: Iterable):
+        """Add group members."""
         if not isinstance(members, Iterable):
             members = [members]
         self.members.update(members)
@@ -120,26 +133,34 @@ class Group(Entry):
 
 
 class Meta:
+    """Meta information of a document.
+    """
     def __init__(self, doc_id: str = None):
         self.doc_id = doc_id
 
 
 class BaseOntology:
+    """The basic ontology that could be inherited by other more specific
+     ontology"""
     class Token(Annotation):
-        def __init__(self, component: str, begin: int, end: int,  tid: str = None):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
             super().__init__(component, begin, end, tid)
 
     class Sentence(Annotation):
-        def __init__(self, component: str, begin: int, end: int,  tid: str = None):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
             super().__init__(component, begin, end, tid)
 
     class EntityMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int,  tid: str = None):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
             super().__init__(component, begin, end, tid)
             self.ner_type = None
 
     class PredicateArgument(Annotation):
-        def __init__(self, component: str, begin: int, end: int,  tid: str = None):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
             super().__init__(component, begin, end, tid)
 
     class PredicateLink(Link):
@@ -151,12 +172,13 @@ class BaseOntology:
             self.arg_type = None
 
     class PredicateMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int, tid: str = None):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
             super().__init__(component, begin, end, tid)
-            self.links = []
+            # self.links = []
 
-        def add_link(self, link: Link):
-            self.links.append(link)
+        # def add_link(self, link: Link):
+        #     self.links.append(link)
 
     class CoreferenceGroup(Group):
         member_type = "CoreferenceMention"
@@ -166,5 +188,6 @@ class BaseOntology:
             self.coref_type = None
 
     class CoreferenceMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int, tid: str = None):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
             super().__init__(component, begin, end, tid)

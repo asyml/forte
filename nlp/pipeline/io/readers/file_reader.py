@@ -1,8 +1,10 @@
+"""
+File readers.
+"""
 import logging
 import os
 from typing import Iterator, List
 from nlp.pipeline.io.data_pack import DataPack
-from nlp.pipeline.io.base_ontology import *
 from nlp.pipeline.io.readers.base_reader import BaseReader
 
 logging.basicConfig(level=logging.DEBUG)
@@ -21,7 +23,7 @@ class MonoFileReader(BaseReader):
             ``dataset_iterator()`` returns a list.
     """
 
-    def __init__(self, lazy: bool = False) -> None:
+    def __init__(self, lazy: bool = True) -> None:
         super().__init__(lazy)
 
     def dataset_iterator(self, dir_path: str):
@@ -44,28 +46,28 @@ class MonoFileReader(BaseReader):
             return self._lazy_dataset_iterator(dir_path, cache_file, has_cache)
 
         if has_cache:
-            logger.info(f"reading from cache file {cache_file}")
+            logger.info("reading from cache file %s", cache_file)
             return list(self._instances_from_cache_file(cache_file))
-        else:
-            logger.info(f"reading from original files in {dir_path}")
-            datapacks: List[DataPack] = []
-            for file_path in self.dataset_path_iterator(dir_path):
-                datapacks.append(
-                    self.read(
-                        file_path,
-                        cache_file=cache_file,
-                        read_from_cache=False,
-                        append_to_cache=True,
-                    )
+
+        logger.info("reading from original files in %s", dir_path)
+        datapacks: List[DataPack] = []
+        for file_path in self.dataset_path_iterator(dir_path):
+            datapacks.append(
+                self.read(
+                    file_path,
+                    cache_file=cache_file,
+                    read_from_cache=False,
+                    append_to_cache=True,
                 )
-            return datapacks
+            )
+        return datapacks
 
     def _lazy_dataset_iterator(self, dir_path: str, cache_file, has_cache):
         if has_cache:
-            logger.info(f"reading from cache file {cache_file}")
+            logger.info("reading from cache file %s", cache_file)
             yield from self._instances_from_cache_file(cache_file)
         else:
-            logger.info(f"reading from original files in {dir_path}")
+            logger.info("reading from original files in %s", dir_path)
             for file_path in self.dataset_path_iterator(dir_path):
                 yield self.read(
                     file_path,
@@ -83,13 +85,11 @@ class MonoFileReader(BaseReader):
             for data_file in files:
                 yield os.path.join(root, data_file)
 
-    def read(
-        self,
-        file_path: str,
-        cache_file: str = None,
-        read_from_cache: bool = True,
-        append_to_cache: bool = False,
-    ) -> DataPack:
+    def read(self,
+             file_path: str,
+             cache_file: str = None,
+             read_from_cache: bool = True,
+             append_to_cache: bool = False) -> DataPack:
         """
         Read a **single** document from original file or from caching file.
         If the cache file contains multiple lines, only read the datapack
@@ -117,7 +117,7 @@ class MonoFileReader(BaseReader):
             cache_file = self._get_cache_location_for_file_path(file_path)
 
         if read_from_cache and cache_file and os.path.exists(cache_file):
-            logger.info(f"reading from cache file {cache_file}")
+            logger.info("reading from cache file %s", cache_file)
             datapack = next(self._instances_from_cache_file(cache_file))
 
             if not isinstance(datapack, DataPack):
@@ -126,7 +126,7 @@ class MonoFileReader(BaseReader):
                     f"file path {file_path}. "
                 )
         else:
-            logger.info(f"reading from original file {file_path}")
+            logger.info("reading from original file %s", file_path)
             self.current_datapack = DataPack()
             self._record_fields()
             datapack = self._read_document(file_path)
@@ -139,7 +139,7 @@ class MonoFileReader(BaseReader):
 
             # write to the cache if we need to.
             if cache_file:
-                logger.info(f"Caching datapack to {cache_file}")
+                logger.info("Caching datapack to %s", cache_file)
                 if append_to_cache:
                     with open(cache_file, "a") as cache:
                         cache.write(self.serialize_instance(datapack) + "\n")
@@ -158,4 +158,3 @@ class MonoFileReader(BaseReader):
 
     def _record_fields(self):
         raise NotImplementedError
-
