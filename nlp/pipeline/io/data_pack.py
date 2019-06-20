@@ -96,20 +96,20 @@ class DataPack:
                 self.index.component_index[entry.component].add(entry.tid)
 
                 # sentence indexing: time complexity could be improved by bisect
-                if isinstance(entry, BaseOntology.Sentence):
-                    for prev_entry in itertools.chain(self.annotations,
-                                                      self.links,
-                                                      self.groups):
-                        if self._in_span(prev_entry, entry.span):
-                            self.index.sentence_index[entry.tid].add(
-                                prev_entry.tid)
-                else:
-                    for sent_id in self.index.sentence_index.keys():
-                        sent = self.index.entry_index[sent_id]
-                        if hasattr(sent, "span") and \
-                                self._in_span(entry, sent.span):
-                            self.index.sentence_index[sent_id].add(
-                                entry.tid)
+                # if isinstance(entry, BaseOntology.Sentence):
+                #     for prev_entry in itertools.chain(self.annotations,
+                #                                       self.links,
+                #                                       self.groups):
+                #         if self._in_span(prev_entry, entry.span):
+                #             self.index.sentence_index[entry.tid].add(
+                #                 prev_entry.tid)
+                # else:
+                #     for sent_id in self.index.sentence_index.keys():
+                #         sent = self.index.entry_index[sent_id]
+                #         if hasattr(sent, "span") and \
+                #                 self._in_span(entry, sent.span):
+                #             self.index.sentence_index[sent_id].add(
+                #                 entry.tid)
             return entry.tid
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)].tid
@@ -136,7 +136,27 @@ class DataPack:
             self.index.entry_index[entry.tid] = entry
             self.index.type_index[name].add(entry.tid)
             self.index.component_index[entry.component].add(entry.tid)
-        for entry in itertools.chain(self.annotations, self.links, self.groups):
+
+        for i in range(len(self.annotations)):
+            if self.annotations[i].tid in self.index.type_index["Sentence"]:
+                for k in range(i, -1, -1):
+                    if self._in_span(self.annotations[k],
+                                     self.annotations[i].span):
+                        self.index.sentence_index[
+                            self.annotations[i].tid
+                        ].add(self.annotations[k].tid)
+                    else:
+                        break
+                for k in range(i, len(self.annotations)):
+                    if self._in_span(self.annotations[k],
+                                     self.annotations[i].span):
+                        self.index.sentence_index[
+                            self.annotations[i].tid
+                        ].add(self.annotations[k].tid)
+                    else:
+                        break
+
+        for entry in itertools.chain(self.links, self.groups):
             for sent_id in self.index.type_index["Sentence"]:
                 sent = self.index.entry_index[sent_id]
                 if hasattr(sent, "span") and self._in_span(entry, sent.span):

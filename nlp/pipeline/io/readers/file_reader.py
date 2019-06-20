@@ -130,7 +130,7 @@ class MonoFileReader(BaseReader):
             self.current_datapack = DataPack()
             self._record_fields()
             datapack = self._read_document(file_path)
-
+            datapack.index_entries()
             if not isinstance(datapack, DataPack):
                 raise ValueError(
                     f"No DataPack object read from the given "
