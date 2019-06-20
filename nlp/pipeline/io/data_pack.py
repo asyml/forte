@@ -120,8 +120,12 @@ class DataPack:
         """
         if entry_type not in self.internal_metas.keys():
             self.internal_metas[entry_type].default_component = component
+
         for field in fields:
             self.internal_metas[entry_type].fields_created[component].add(field)
+
+        if component not in self.internal_metas[entry_type].fields_created.keys():
+            self.internal_metas[entry_type].fields_created[component] = set()
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
@@ -137,6 +141,7 @@ class DataPack:
             self.index.type_index[name].add(entry.tid)
             self.index.component_index[entry.component].add(entry.tid)
 
+        # index the entries in the span of sentence
         for i in range(len(self.annotations)):
             if self.annotations[i].tid in self.index.type_index["Sentence"]:
                 for k in range(i, -1, -1):
