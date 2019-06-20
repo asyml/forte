@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.io.data_pack import DataPack
 from nlp.pipeline.io.readers.ontonotes_reader import OntonotesReader
@@ -11,9 +11,8 @@ class Pipeline:
         self.dataset_iterator = None  # or put this into Reader class
 
         self.processors: List[BaseProcessor] = []
-
+        self._processors_beginning: List[Tuple[int, int]] = []
         self.current_packs: List[DataPack] = []
-        self._tail_instances = 0
 
         self._config(**kwargs)
 
@@ -29,55 +28,54 @@ class Pipeline:
 
             self.dataset_iterator = self.reader.dataset_iterator(dataset_dir)
 
-    def _load_datapacks_for_next_batch(self,
-                                       batch_size: int,
-                                       count_sentence: bool = True):
+    def _load_next_datapacks(self,
+                             instance_need: int,
+                             instance_level: str = "sentence"):
+        """
+        Load new data packs into `current_datapacks` according to the request.
 
-        if self._tail_instances == 0:
-            self.current_packs.clear()
-            start_from = 0
-        else:
-            self.current_packs = self.current_packs[-1:]
-            start_from = self.current_packs[0].internal_metas[
-                             "Sentence"
-                         ].id_counter - self._tail_instances  # sentence component
+        Args:
+            instance_need: the number of instances needed.
+            instance_level: the level (granularity) of instances needed.
+                Will count instances in this level.
+        """
 
-        instance_cnt = self._tail_instances
+        instance_cnt = 0
 
-        while instance_cnt < batch_size:
+        while instance_cnt < instance_need:
             try:
                 data_pack = next(self.dataset_iterator)
             except StopIteration:
-                break
+                break  # need to deal with stop iteration exception
             self.current_packs.append(data_pack)
-            if count_sentence:
-                # TODO: need to ensure all processor request
-                #  sentence from the same component?
+            if instance_level == "sentence":
                 instance_num = data_pack.internal_metas["Sentence"].id_counter
-            else:
+            elif instance_level == "document":
                 instance_num = 1
+            else:  # need to add other instance levels
+                raise ValueError(f"Invalid instance level. Should be 'document'"
+                                 f" or 'sentence'.")
             instance_cnt += instance_num
 
-        self._tail_instances = instance_cnt - batch_size
-
-        return start_from
-
-    def _get_batch_as_numpy(self,
-                            batch_size: int,
-                            start_from: int,
-                            context_type: str,
-                            annotation_types: Dict,
-                            link_types: Dict,
-                            group_types: Dict
-                            ) -> Dict:
+    def _get_batch_as_numpy(self, processor, processor_index) -> Dict:
         batch = dict()
         instance_cnt = 0
-        for pack in self.current_packs:
-            instances = list(pack.get_data(context_type,
-                                           annotation_types,
-                                           link_types,
-                                           group_types))
-            for data in instances[start_from:]:
+        pack_offset, instance_offset = \
+            self._processors_beginning[processor_index]
+
+        if not self.current_packs:
+            self._load_next_datapacks(processor.batch_size,
+                                      processor.context_type)
+
+        for pack_index, pack in enumerate(self.current_packs[pack_offset:],
+                                          pack_offset):
+
+            instances = pack.get_data(processor.context_type,
+                                      processor.annotation_types,
+                                      processor.link_types,
+                                      processor.group_types,
+                                      instance_offset)
+            for data in instances:
                 for entry, fields in data.items():
                     if isinstance(fields, dict):
                         if entry not in batch.keys():
@@ -91,28 +89,35 @@ class Pipeline:
                             batch[entry] = []
                         batch[entry].append(fields)
                 instance_cnt += 1
-                if instance_cnt == batch_size:
+                instance_offset += 1
+                if instance_cnt == processor.batch_size:
+                    self._processors_beginning[processor_index] = (
+                        pack_offset, instance_offset
+                    )
                     return batch
-            start_from = 0
+
+            pack_offset += 1
+            instance_offset = 0
+
+            if pack_offset == len(self.current_packs):
+                self._load_next_datapacks(processor.batch_size - instance_cnt,
+                                          processor.context_type)
+
+        self._processors_beginning[processor_index] = (
+            pack_offset, instance_offset
+        )
 
         return batch
 
-    def process_next(self, batch_size: int = 1):
+    def process_next(self):
 
-        start_from = self._load_datapacks_for_next_batch(batch_size)
-
-        for processor in self.processors:
-            batch = self._get_batch_as_numpy(batch_size,
-                                             start_from,
-                                             processor.context_type,
-                                             processor.annotation_types,
-                                             processor.link_types,
-                                             processor.group_types)
+        for processor_index, processor in enumerate(self.processors):
+            batch = self._get_batch_as_numpy(processor, processor_index)
+            if not batch:
+                return None
             results = processor.process(batch)
-            processor.pack(results, self.current_packs, start_from)
-
-        #write out
-
-
+            return results
+            # pack
+        # write out
 
 

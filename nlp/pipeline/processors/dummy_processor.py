@@ -97,7 +97,7 @@ class DummyRelationExtractor(BaseProcessor):
     def pack(self,
              output_dict: Dict,
              data_packs: List[DataPack],
-             start_from: int):        # Add corresponding fields to data_pack
+             start_from: int = 0):        # Add corresponding fields to data_pack
         for result_key, result_value in output_dict.items():
             # Custom function of how to add the value back.
             pass

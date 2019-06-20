@@ -192,6 +192,7 @@ class DataPack:
             annotation_types: Dict[str, Union[Dict, Iterable]] = None,
             link_types: Dict[str, Union[Dict, Iterable]] = None,
             group_types: Dict[str, Union[Dict, Iterable]] = None,
+            offset: int = 0
     ) -> Iterable[Dict]:
         """
 
@@ -213,7 +214,8 @@ class DataPack:
                 values could be a list, set, or tuple of field names. Users can
                 also specify the component from which the annotations are
                 generated.
-
+            offset (int): Will skip the first `offset` instances and generate
+                data from the `offset` + 1 instance.
         Returns:
             A data generator, which generates one piece of data (a dict
             containing the required annotations and context).
@@ -254,8 +256,12 @@ class DataPack:
             valid_sent_ids = (self.index.type_index["Sentence"]
                               & self.index.component_index[sent_component])
 
+            skipped = 0
             for sent in self.annotations:  # to maintain the order
                 if sent.tid not in valid_sent_ids:
+                    continue
+                if skipped < offset:
+                    skipped += 1
                     continue
 
                 data = dict()

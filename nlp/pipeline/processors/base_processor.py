@@ -10,6 +10,7 @@ class BaseProcessor:
         self.annotation_types = None
         self.link_types = None
         self.group_types = None
+        self.batch_size = None
 
     @abstractmethod
     def initialize(self):
@@ -24,7 +25,7 @@ class BaseProcessor:
     def pack(self,
              processed_batch: Dict,
              data_packs: List[DataPack],
-             start_from: int):
+             start_from: int = 0):
         # Add corresponding fields to data_pack
         for result_key, result_value in processed_batch.items():
             # Custom function of how to add the value back.
