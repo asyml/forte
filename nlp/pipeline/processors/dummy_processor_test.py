@@ -21,12 +21,11 @@ class DummyProcessorTest(unittest.TestCase):
             "EntityMention": ["ner_type"]
         }
 
-        self.batch_size = 4
 
         self.processor = DummyRelationExtractor()
         self.processor.annotation_types = self.annotype
         self.processor.context_type = "sentence"
-
+        self.processor.batch_size = 4
     def test_processor(self):
 
         # case 1: process data
@@ -50,12 +49,13 @@ class DummyProcessorTest(unittest.TestCase):
 
         nlp = Pipeline(**kwargs)
         nlp.processors.append(self.processor)
-        out_dict = nlp.process_next(batch_size=self.batch_size)
+        nlp._processors_beginning.append((0,0))
+        out_dict = nlp.process_next()
 
         self.assertEqual(len(out_dict["RelationshipLink"].keys()), 3)
         for k in out_dict["RelationshipLink"].keys():
             self.assertEqual(len(out_dict["RelationshipLink"][k]),
-                             self.batch_size)
+                             self.processor.batch_size)
 
 
 if __name__ == '__main__':
