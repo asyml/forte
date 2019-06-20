@@ -32,6 +32,13 @@ the json file.
         very expressive. They can also be simply dropped if we would like to
         pass on less metadata but only the core content.
         
+        A main problem of this component record is that once we added or altered
+         the order, then we need to update the record every time.
+1. Add component record
+    1. Once we added some records, then we need to add to the meta that these
+    records are there (add_record function), if we let the user to do it then it
+    is quite cumbersome. But if we automatically do it every time then it may be
+    a performance concern. 
 1. Python is not a very fast language for this sort of things,
 we need to make sure the format is language-independent, allow
 possible future extension.
