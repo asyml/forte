@@ -1,5 +1,5 @@
 """
-The reader that reads Ontonotes data into our internal json data format.
+The reader that reads Ontonotes data into Datapacks.
 """
 import os
 import codecs
