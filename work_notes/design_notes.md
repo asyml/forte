@@ -67,6 +67,13 @@ possible future extension.
    1. One reason is the full qualified name, but that's kinda inevitable.
    1. If we move the component names out, that will reduce some boilerplates.
     
+***Functionality Concerns***
+1. Add a switcher to split the doc into multiple pipelines (train, dev)
+1. Add vocabulary support to reduce multi initialization
+
+***Product Concerns***
+1. May need to concern about the integration with Symphony
+ 
 ---
 
 # Interface to learning modules
