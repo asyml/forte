@@ -1,23 +1,31 @@
 from abc import abstractmethod
+from typing import Dict, Any, List
 from nlp.pipeline.io.data_pack import DataPack
-from typing import List, Dict
+
 
 class BaseProcessor:
     def __init__(self):
         # Initialized model.
-        pass
+        self.context_type = None
+        self.annotation_types = None
+        self.link_types = None
+        self.group_types = None
+        self.batch_size = None
 
     @abstractmethod
     def initialize(self):
         pass
 
     @abstractmethod
-    def process(self, data_batch: Dict):
-        # Do testing, return new list of results
+    def process(self, input_dict: Dict[str, Any]) -> Dict[str, Any]:
+        # Do testing, return a dict of results
         pass
 
     @abstractmethod
-    def pack(self, processed_batch: Dict, data_pack: DataPack):
+    def pack(self,
+             processed_batch: Dict,
+             data_packs: List[DataPack],
+             start_from: int = 0):
         # Add corresponding fields to data_pack
         for result_key, result_value in processed_batch.items():
             # Custom function of how to add the value back.

@@ -2,7 +2,6 @@
 The reader that reads Ontonotes data into our internal json data format.
 """
 import os
-import logging
 import codecs
 from typing import DefaultDict, List, Optional, Iterator, Tuple
 from collections import defaultdict
@@ -10,12 +9,9 @@ from nlp.pipeline.io.readers.file_reader import MonoFileReader
 from nlp.pipeline.io.data_pack import DataPack
 from nlp.pipeline.io.ontonotes_ontology import OntonotesOntology
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 
 class OntonotesReader(MonoFileReader):
-    def __init__(self, lazy):
+    def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ontology = OntonotesOntology
 
@@ -82,10 +78,7 @@ class OntonotesReader(MonoFileReader):
 
                 # add entity mentions
                 current_entity_mention = self._process_entity_annotations(
-                    entity_label,
-                    word_begin,
-                    word_end,
-                    current_entity_mention
+                    entity_label, word_begin, word_end, current_entity_mention
                 )
 
                 # add predicate mentions
@@ -96,16 +89,16 @@ class OntonotesReader(MonoFileReader):
                     kwargs_i = {
                         "framenet_id": framenet_id,
                         "pred_lemma": lemmatised_word,
-                        "pred_type": "verb"
-                        if word_is_verbal_predicate
-                        else "other",
+                        "pred_type": "verb" if word_is_verbal_predicate
+                                     else "other"
                     }
                     pred_mention = self.ontology.PredicateMention(
                         self.component_name, word_begin, word_end
                     )
                     pred_mention.set_fields(**kwargs_i)
-                    pred_mention_id = \
-                        self.current_datapack.add_entry(pred_mention)
+                    pred_mention_id = self.current_datapack.add_entry(
+                        pred_mention
+                    )
 
                     if word_is_verbal_predicate:
                         verbal_predicates.append(pred_mention_id)
@@ -141,20 +134,21 @@ class OntonotesReader(MonoFileReader):
                     continue
 
                 # add predicate links in the sentence
-                for predicate, pred_arg in zip(
-                        verbal_predicates, verbal_pred_args
-                ):
+                for predicate, pred_arg in zip(verbal_predicates,
+                                               verbal_pred_args):
                     for arg in pred_arg:
-                        kwargs_i = {"arg_type": arg[1],
-                                    "parent": predicate,
-                                    "child": arg[0]}
+                        kwargs_i = {
+                            "arg_type": arg[1],
+                            "parent": predicate,
+                            "child": arg[0],
+                        }
                         link = self.ontology.PredicateLink(self.component_name)
                         link.set_fields(**kwargs_i)
                         link_id = self.current_datapack.add_entry(link)
 
-                        self.current_datapack.index.entry_index[
-                            predicate
-                        ].add_link(link_id)
+                        # self.current_datapack.index.entry_index[
+                        #     predicate
+                        # ].add_link(link_id)
 
                 verbal_predicates = []
                 current_pred_arg = []
@@ -164,7 +158,7 @@ class OntonotesReader(MonoFileReader):
 
                 kwargs_i = {"speaker": speaker, "part_id": part_id}
                 sent = self.ontology.Sentence(
-                    self.component_name, sentence_begin, offset-1
+                    self.component_name, sentence_begin, offset - 1
                 )
                 sent.set_fields(**kwargs_i)
                 self.current_datapack.add_entry(sent)
@@ -176,9 +170,7 @@ class OntonotesReader(MonoFileReader):
         # group the coreference mentions in the whole document
         for group_id, mention_list in groups.items():
             kwargs_i = {"coref_type": group_id}
-            group = self.ontology.CoreferenceGroup(
-                self.component_name
-            )
+            group = self.ontology.CoreferenceGroup(self.component_name)
             group.set_fields(**kwargs_i)
             group.add_members(mention_list)
             self.current_datapack.add_entry(group)
@@ -190,13 +182,12 @@ class OntonotesReader(MonoFileReader):
         doc.close()
         return self.current_datapack
 
-    def _process_entity_annotations(
-            self,
-            label: str,
-            word_begin: int,
-            word_end: int,
-            current_entity_mention: Tuple[int, str],
-    ) -> Tuple[int, str]:
+    def _process_entity_annotations(self,
+                                    label: str,
+                                    word_begin: int,
+                                    word_end: int,
+                                    current_entity_mention: Tuple[int, str],
+                                    ) -> Tuple[int, str]:
 
         ner_type = label.strip("()*")
 
@@ -268,7 +259,9 @@ class OntonotesReader(MonoFileReader):
                     coref_mention = self.ontology.CoreferenceMention(
                         self.component_name, word_begin, word_end
                     )
-                    coref_mention_id = self.current_datapack.add_entry(coref_mention)
+                    coref_mention_id = self.current_datapack.add_entry(
+                        coref_mention
+                    )
 
                     groups[group_id].append(coref_mention_id)
                 else:
@@ -282,7 +275,9 @@ class OntonotesReader(MonoFileReader):
                 coref_mention = self.ontology.CoreferenceMention(
                     self.component_name, start, word_end
                 )
-                coref_mention_id = self.current_datapack.add_entry(coref_mention)
+                coref_mention_id = self.current_datapack.add_entry(
+                    coref_mention
+                )
 
                 groups[group_id].append(coref_mention_id)
 
@@ -303,7 +298,7 @@ class OntonotesReader(MonoFileReader):
             self.ontology.EntityMention.__name__,
         )
         self.current_datapack.record_fields(
-            ["pred_lemma", "pred_type", "link", "span", "framenet_id"],
+            ["pred_lemma", "pred_type", "span", "framenet_id"],
             self.component_name,
             self.ontology.PredicateMention.__name__,
         )

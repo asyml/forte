@@ -3,16 +3,16 @@ Base reader type to be inherited by all readers.
 """
 import os
 import pathlib
+from typing import Iterator
 import jsonpickle
 from nlp.pipeline.io.data_pack import DataPack
-from typing import Iterator
 
 
 class BaseReader:
     """The basic data reader class.
     To be inherited by all data readers.
     """
-    def __init__(self, lazy: bool = False) -> None:
+    def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
         self._cache_directory = None
         self.component_name = f"{__name__}.{self.__class__.__name__}"
@@ -70,5 +70,3 @@ class BaseReader:
         Read a **single** document from the dataset.
         """
         raise NotImplementedError
-
-
