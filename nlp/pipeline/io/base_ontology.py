@@ -4,7 +4,7 @@ from abc import abstractmethod
 from functools import total_ordering
 from typing import Iterable
 
-
+# TODO: recording the links in the parent and child seems to be more natural
 @total_ordering
 class Span:
     """

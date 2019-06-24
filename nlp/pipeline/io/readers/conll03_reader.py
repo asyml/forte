@@ -1,10 +1,11 @@
 """
-The reader that reads CoNll03 data into Datapacks.
+The reader that reads Ontonotes data into our internal json data format.
 """
 import os
 import logging
 import codecs
-from typing import Iterator
+from typing import DefaultDict, List, Optional, Iterator, Tuple
+from collections import defaultdict
 from nlp.pipeline.io.readers.file_reader import MonoFileReader
 from nlp.pipeline.io.data_pack import DataPack
 from nlp.pipeline.io.conll03_ner import Conll03NER
