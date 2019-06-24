@@ -11,11 +11,3 @@ class Conll03NER(BaseOntology):
             self.chunk_tag = None
             self.pos_tag = None
             self.ner_tag = None
-
-    class Sentence(BaseOntology.Sentence):
-        class Sentence(BaseOntology.Sentence):
-            def __init__(self, component: str, begin: int, end: int,
-                         tid: str = None):
-                super().__init__(component, begin, end, tid)
-
-
