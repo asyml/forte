@@ -2,7 +2,6 @@
 The reader that reads Ontonotes data into our internal json data format.
 """
 import os
-import time
 import logging
 import codecs
 from typing import DefaultDict, List, Optional, Iterator, Tuple
@@ -44,9 +43,6 @@ class Conll03Reader(MonoFileReader):
 
         sentence_begin = 0
         sentence_cnt = 0
-
-        start_time = time.time()
-
         for line in doc:
             line = line.strip()
 
@@ -91,9 +87,6 @@ class Conll03Reader(MonoFileReader):
 
         self.current_datapack.text = text
         doc.close()
-
-        logger.info(f'Takes {time.time() - start_time}s to read {file_path}')
-
         return self.current_datapack
 
     def _record_fields(self):

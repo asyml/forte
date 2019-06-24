@@ -38,18 +38,19 @@ class BaseReader:
     def _get_cache_location_for_file_path(self, file_path: str) -> str:
         return f"{self._cache_directory / file_path.split('/')[-1]}.cache"
 
-    def _instances_from_cache_file(self, cache_filename: str) \
-            -> Iterator[DataPack]:
+    def _instances_from_cache_file(self,
+                                   cache_filename: str) -> Iterator[DataPack]:
         with open(cache_filename, "r") as cache_file:
             for line in cache_file:
                 yield self.deserialize_instance(line.strip())
 
     @staticmethod
-    def serialize_instance(instance: DataPack) -> str:
+    def serialize_instance(instance: DataPack, unpicklable: bool = True) -> str:
         """
         Serializes an ``DataPack`` to a string.
         """
-        return jsonpickle.encode(instance)
+        return jsonpickle.encode(instance, unpicklable=unpicklable)
+
 
     @staticmethod
     def deserialize_instance(string: str) -> DataPack:

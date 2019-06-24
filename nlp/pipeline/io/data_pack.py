@@ -4,7 +4,7 @@ such as reading, writing, checking and indexing.
 import logging
 import itertools
 from collections import defaultdict
-from typing import Union, Dict, Optional, List, Iterable
+from typing import Union, Dict, Optional, List, Iterable, DefaultDict
 import numpy as np
 from sortedcontainers import SortedList
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class InternalMeta:
     def __init__(self):
         self.id_counter = 0
-        self.fields_created = defaultdict(set)
+        self.fields_created = dict()
         self.default_component = None
 
 
@@ -27,6 +27,7 @@ class DataIndex:
         self.type_index = defaultdict(set)
         self.sentence_index = defaultdict(set)
         self.component_index = defaultdict(set)
+        self.coverage_index: Dict[str, DefaultDict[str, set]] = dict()
 
 
 class DataPack:
@@ -95,21 +96,6 @@ class DataPack:
                 self.index.type_index[name].add(entry.tid)
                 self.index.component_index[entry.component].add(entry.tid)
 
-                # sentence indexing: time complexity could be improved by bisect
-                # if isinstance(entry, BaseOntology.Sentence):
-                #     for prev_entry in itertools.chain(self.annotations,
-                #                                       self.links,
-                #                                       self.groups):
-                #         if self._in_span(prev_entry, entry.span):
-                #             self.index.sentence_index[entry.tid].add(
-                #                 prev_entry.tid)
-                # else:
-                #     for sent_id in self.index.sentence_index.keys():
-                #         sent = self.index.entry_index[sent_id]
-                #         if hasattr(sent, "span") and \
-                #                 self._in_span(entry, sent.span):
-                #             self.index.sentence_index[sent_id].add(
-                #                 entry.tid)
             return entry.tid
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)].tid
@@ -121,11 +107,13 @@ class DataPack:
         if entry_type not in self.internal_metas.keys():
             self.internal_metas[entry_type].default_component = component
 
+        # ensure to record entry_type if fields list is empty
+        if component not in self.internal_metas[
+            entry_type].fields_created.keys():
+            self.internal_metas[entry_type].fields_created[component] = set()
+
         for field in fields:
             self.internal_metas[entry_type].fields_created[component].add(field)
-
-        if component not in self.internal_metas[entry_type].fields_created.keys():
-            self.internal_metas[entry_type].fields_created[component] = set()
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
@@ -166,6 +154,53 @@ class DataPack:
                 sent = self.index.entry_index[sent_id]
                 if hasattr(sent, "span") and self._in_span(entry, sent.span):
                     self.index.sentence_index[sent_id].add(entry.tid)
+
+    def index_annotation_coverage(self,
+                                     outter_type: Optional[str] = None,
+                                     inner_type: Optional[str] = None):
+        """
+        Index the coverage relationship from annotations of outter_type to
+        annotations of inner_type, and store in
+        ``self.index.coverage_index["outter_type-to-inner_type"]``. An outter
+        annotation is considered to cover an inner annotation if inner.begin
+        >= outter.begin and inner.end <= outter.end.
+
+        Args:
+            outter_type (str, optional): The type of the outter annotations. If
+                `None`, the outter annotations could be of all types, and the
+                index name will be "all-to-inner_type".
+            inner_type (str, optional): The type of the inner annotations. If
+                `None`, the inner annotations could be of all types, and the
+                index name will be "outter_type-to-all".
+        """
+
+        dict_name = outter_type if outter_type else "all"
+        outter_ids = self.index.type_index[outter_type] if outter_type else None
+        dict_name += "-to-"
+        dict_name += inner_type if inner_type else "all"
+        inner_ids = self.index.type_index[inner_type] if inner_type else None
+        self.index.coverage_index[dict_name] = defaultdict(set)
+
+        for i in range(len(self.annotations)):
+            if outter_ids is None or self.annotations[i].tid in outter_ids:
+                for k in range(i, -1, -1):
+                    if inner_ids is None or self.annotations[k].tid in inner_ids:
+                        if self._in_span(self.annotations[k],
+                                         self.annotations[i].span):
+                            self.index.coverage_index[dict_name][
+                                self.annotations[i].tid
+                            ].add(self.annotations[k].tid)
+                        else:
+                            break
+                for k in range(i, len(self.annotations)):
+                    if inner_ids is None or self.annotations[k].tid in inner_ids:
+                        if self._in_span(self.annotations[k],
+                                         self.annotations[i].span):
+                            self.index.coverage_index[dict_name][
+                                self.annotations[i].tid
+                            ].add(self.annotations[k].tid)
+                        else:
+                            break
 
     def _in_span(self,
                  inner_entry: Union[str, Entry],
@@ -426,7 +461,7 @@ class DataPack:
                                             annotation.span.end])
             for field in fields:
                 if field not in self.internal_metas[a_type].fields_created[
-                        component
+                    component
                 ]:
                     raise AttributeError(
                         f"'{a_type}' annotation generated by "
@@ -497,7 +532,7 @@ class DataPack:
 
                     if p_field not in \
                             self.internal_metas[p_type].fields_created[
-                                    parent.component
+                                parent.component
                             ]:
                         raise AttributeError(
                             f"'{p_type}' annotation generated by "
@@ -529,7 +564,7 @@ class DataPack:
 
                     if c_field not in \
                             self.internal_metas[c_type].fields_created[
-                                    child.component
+                                child.component
                             ]:
                         raise AttributeError(
                             f"'{c_type}' annotation generated by "
@@ -540,7 +575,7 @@ class DataPack:
 
             for field in fields - parent_fields - child_fields:
                 if field not in self.internal_metas[a_type].fields_created[
-                        component
+                    component
                 ]:
                     raise AttributeError(
                         f"'{a_type}' annotation generated by "

@@ -71,7 +71,7 @@ class Entry:
     def __eq__(self, other):
         return self.eq(other)
 
-
+@total_ordering
 class Annotation(Entry):
     """Annotation type entries, such as "token", "entity mention" and
     "sentence". Each annotation has a text span corresponding to its offset
@@ -90,7 +90,13 @@ class Annotation(Entry):
                (type(other), other.component, other.span.begin, other.span.end)
 
     def __lt__(self, other):
-        return self.span < other.span
+        """Have to support total ordering and be consistent with
+        self.eq(other)"""
+        if self.span != other.span:
+            return self.span < other.span
+        if self.component != other.component:
+            return self.component < other.component
+        return str(type(self)) < str(type(other))
 
 
 class Link(Entry):

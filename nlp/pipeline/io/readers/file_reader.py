@@ -62,7 +62,9 @@ class MonoFileReader(BaseReader):
             )
         return datapacks
 
-    def _lazy_dataset_iterator(self, dir_path: str, cache_file, has_cache):
+    def _lazy_dataset_iterator(self, dir_path: str,
+                               cache_file: str,
+                               has_cache: bool):
         if has_cache:
             logger.info("reading from cache file %s", cache_file)
             yield from self._instances_from_cache_file(cache_file)
@@ -105,9 +107,9 @@ class MonoFileReader(BaseReader):
                 are ``None``, will not read from or write to a caching file.
             read_from_cache (bool, optional): Decide whether to read from cache
                 if cache file exists. By default (``True``), the reader will
-                try to read an datapack from the caching file. If ``False``,
-                the reader will only read from the original file and use the
-                cache file path only for output.
+                try to read an datapack from the first line of the caching file.
+                If ``False``, the reader will only read from the original file
+                and use the cache file path only for output.
             append_to_cache (bool, optional): Decide whether to append write
                 if cache file already exists.  By default (``False``), we
                 will overwrite the existing caching file. If ``True``, we will
