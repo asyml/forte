@@ -71,6 +71,7 @@ class Entry:
     def __eq__(self, other):
         return self.eq(other)
 
+
 @total_ordering
 class Annotation(Entry):
     """Annotation type entries, such as "token", "entity mention" and

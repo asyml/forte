@@ -51,12 +51,6 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(cov_index.keys()), 27+22+12+15)  # annotation num
         self.assertEqual(len(cov_index["Sentence.1"]), 12)
 
-    def test_generate_annotation_entry_data(self):
-        sent = self.data_pack.index.entry_index["Sentence.0"]
-        self.data_pack._generate_annotation_entry_data("Token", None, sent)
-        print(sent.span.begin, sent.span.end)
-        print(self.data_pack.annotations[49].span.begin)
-
 
 if __name__ == '__main__':
     unittest.main()
