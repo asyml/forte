@@ -4,7 +4,7 @@ from abc import abstractmethod
 from functools import total_ordering
 from typing import Iterable
 
-# TODO: recording the links in the parent and child seems to be more natural
+
 @total_ordering
 class Span:
     """
@@ -182,10 +182,6 @@ class BaseOntology:
         def __init__(self, component: str, begin: int, end: int,
                      tid: str = None):
             super().__init__(component, begin, end, tid)
-            # self.links = []
-
-        # def add_link(self, link: Link):
-        #     self.links.append(link)
 
     class CoreferenceGroup(Group):
         member_type = "CoreferenceMention"

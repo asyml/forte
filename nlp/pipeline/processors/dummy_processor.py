@@ -1,10 +1,10 @@
 import numpy as np
 from typing import Dict, List, Optional, Any
-from nlp.pipeline.processors.base_processor import BaseProcessor
+from nlp.pipeline.processors.predictor import Predictor
 from nlp.pipeline.io.data_pack import DataPack
 
 
-class DummyRelationExtractor(BaseProcessor):
+class DummyRelationExtractor(Predictor):
     """
     A dummy relation extractor
     """

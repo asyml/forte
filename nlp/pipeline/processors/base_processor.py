@@ -17,8 +17,8 @@ class BaseProcessor:
         pass
 
     @abstractmethod
-    def process(self, input_dict: Dict[str, Any]) -> Dict[str, Any]:
-        # Do testing, return a dict of results
+    def process(self, *inputs):
+        # Do testing or training
         pass
 
     @abstractmethod
@@ -36,7 +36,3 @@ class BaseProcessor:
     def finish(self):
         # Release model.
         pass
-
-
-
-

@@ -95,7 +95,8 @@ class MonoFileReader(BaseReader):
         """
         Read a **single** document from original file or from caching file.
         If the cache file contains multiple lines, only read the datapack
-        in the first line.
+        in the first line. The reader automatically build the link index,
+        group index, and sentence-to-entry coverage index.
 
         Args:
             file_path (str): The path to the original file to read.

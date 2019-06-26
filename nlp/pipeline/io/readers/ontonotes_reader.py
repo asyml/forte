@@ -144,11 +144,7 @@ class OntonotesReader(MonoFileReader):
                         }
                         link = self.ontology.PredicateLink(self.component_name)
                         link.set_fields(**kwargs_i)
-                        link_id = self.current_datapack.add_entry(link)
-
-                        # self.current_datapack.index.entry_index[
-                        #     predicate
-                        # ].add_link(link_id)
+                        self.current_datapack.add_entry(link)
 
                 verbal_predicates = []
                 current_pred_arg = []

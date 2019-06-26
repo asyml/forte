@@ -6,6 +6,7 @@ import pathlib
 from typing import Iterator
 import jsonpickle
 from nlp.pipeline.io.data_pack import DataPack
+from nlp.pipeline.utils import *
 
 
 class BaseReader:
@@ -15,7 +16,7 @@ class BaseReader:
     def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
         self._cache_directory = None
-        self.component_name = f"{__name__}.{self.__class__.__name__}"
+        self.component_name = get_full_component_name(self)
         self.current_datapack = None
 
     def cache_data(self, cache_directory: str) -> None:
@@ -50,7 +51,6 @@ class BaseReader:
         Serializes an ``DataPack`` to a string.
         """
         return jsonpickle.encode(instance, unpicklable=unpicklable)
-
 
     @staticmethod
     def deserialize_instance(string: str) -> DataPack:
