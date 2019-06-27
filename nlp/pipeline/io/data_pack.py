@@ -10,7 +10,7 @@ from sortedcontainers import SortedList
 
 from nlp.pipeline.io.base_ontology import *
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +22,8 @@ class InternalMeta:
 
 
 class DataIndex:
-    def __init__(self):
+    def __init__(self, data_pack):
+        self.data_pack: DataPack = data_pack
         # basic indexes
         self.entry_index = defaultdict(Entry)
         self.type_index = defaultdict(set)
@@ -132,7 +133,7 @@ class DataIndex:
         Args:
             links (list): a list of links to be added into the index.
         """
-        logger.info("Updating link index")
+        logger.debug("Updating link index")
         self.link_index_switch = True
         if "child_index" not in self.link_index.keys():
             self.link_index["child_index"] = defaultdict(set)
@@ -150,16 +151,14 @@ class DataIndex:
         Args:
             groups (list): a list of groups to be added into the index.
         """
-        logger.info("Updating group index")
+        logger.debug("Updating group index")
         self.group_index_switch = True
         for group in groups:
             for member in group.members:
                 self.group_index[member].add(group.tid)
-        # TODO: update index when add members to existing groups.
-        #       add datapack pointer into entries?
 
     def build_coverage_index(self,
-                             annotations: List[Annotation],
+                             annotations,
                              links: List[Link] = None,
                              groups: List[Group] = None,
                              outer_type: Optional[type] = None,
@@ -202,7 +201,7 @@ class DataIndex:
             raise TypeError(f"'inner_type' must be a subclass of Entry,"
                             f" but get {inner_type}.")
         dict_name = outer_type.__name__ + "-to-" + inner_type.__name__
-        logger.info("Building coverage index %s", dict_name)
+        logger.debug("Building coverage index %s", dict_name)
 
         # Check whether inner_type includes Link and Group.
         # If yes, build link_index and group_index first.
@@ -270,6 +269,49 @@ class DataIndex:
             add_covered_entries(annotations[i], len(annotations), 1)
         self.coverage_index_switch[dict_name] = True
 
+    def get_coverage_index(self,
+                           outer_type: Optional[type] = None,
+                           inner_type: Optional[type] = None) -> Dict[str,set]:
+        """
+        Return the coverage index that includes the coverage relationship
+        between ``outer_type`` and ``inner_type``. Will check the existance
+        of coverage indexes from tightest ("outer_type-to-inner_type") to
+        loosest ("Annotation-to-Entry").
+
+        Args:
+            outer_type (str, optional): The type of the outer annotations. If
+                `None`, the outer annotations could be all types of
+                annotations, and the index name will be
+                "Annotation-to-inner_type".
+            inner_type (str, optional): The type of the inner entries. If
+                `None`, the inner entries could be all types of entries, and the
+                index name will be "outer_type-to-Entry".
+        """
+        if outer_type is None:
+            outer_name = "Annotation"
+        else:
+            outer_name = outer_type.__name__
+        if inner_type is None:
+            inner_name = "Entry"
+        else:
+            inner_name = inner_type.__name__
+
+        if self.coverage_index_switch.get(outer_name + "-to-" + inner_name):
+            return self.coverage_index[outer_name + "-to-" + inner_name]
+        if self.coverage_index_switch.get("Annotation" + "-to-" + inner_name):
+            return self.coverage_index["Annotation" + "-to-" + inner_name]
+        if self.coverage_index_switch.get(outer_name + "-to-" + "Entry"):
+            return self.coverage_index[outer_name + "-to-" + "Entry"]
+        if self.coverage_index_switch.get("Annotation" + "-to-" + "Entry"):
+            return self.coverage_index["Annotation" + "-to-" + "Entry"]
+
+        self.build_coverage_index(self.data_pack.annotations,
+                                  self.data_pack.links,
+                                  self.data_pack.groups,
+                                  outer_type,
+                                  inner_type)
+        return self.coverage_index[outer_name + "-to-" + inner_name]
+
 
 class DataPack:
     """
@@ -284,12 +326,12 @@ class DataPack:
 
     def __init__(self, text: str = None, doc_id: str = None):
         self.annotations = SortedList()
-        self.links = []
-        self.groups = []
-        self.meta = Meta(doc_id)
-        self.text = text
+        self.links: List[Link] = []
+        self.groups: List[Group] = []
+        self.meta: Meta = Meta(doc_id)
+        self.text: str = text
 
-        self.index = DataIndex()
+        self.index: DataIndex = DataIndex(self)
         self.internal_metas = defaultdict(InternalMeta)
 
     def add_entry(self, entry: Entry):
@@ -325,6 +367,7 @@ class DataPack:
             name = entry.__class__.__name__
             if entry.tid is None:
                 entry.set_tid(str(self.internal_metas[name].id_counter))
+            entry.data_pack = self
             if isinstance(target, list):
                 target.append(entry)
             else:
@@ -353,7 +396,7 @@ class DataPack:
         if component not in self.internal_metas[
             entry_type].fields_created.keys():
             self.internal_metas[entry_type].fields_created[component] = set()
-
+        fields.append("tid")
         for field in fields:
             self.internal_metas[entry_type].fields_created[component].add(field)
 
@@ -713,3 +756,48 @@ class DataPack:
 
         if batch:
             yield batch
+
+    def get_entries(self,
+                    entry_type: type,
+                    range_annotation: Annotation = None,
+                    component: str = None) -> Iterable:
+        """
+        Get ``entry_type`` entries from the span of ``range_annotation`` of
+        DataPack.
+
+        Args:
+            entry_type (type): The type of entries requested.
+            range_annotation (Annotation, optional): The range of entries
+                requested. If `None`, will return valid entries in the range of
+                whole data_pack.
+            component (str, optional): The component generating the entries
+                requested. If `None`, will return valid entries generated by
+                any component.
+        """
+        sent_begin = range_annotation.span.begin if range_annotation else 0
+        sent_end = (range_annotation.span.end if range_annotation else
+                    self.annotations[-1].span.end)
+
+        # ``a_type`` annotations generated by ``component`` in ``range``
+        valid_id = self.index.type_index[entry_type.__name__]
+        if component:
+            valid_id = valid_id & self.index.component_index[component]
+        if range_annotation:
+            c_index = self.index.get_coverage_index(type(range_annotation),
+                                                    entry_type)
+            valid_id = valid_id & c_index[range_annotation.tid]
+
+        if issubclass(entry_type, Annotation):
+            begin_index = self.annotations.bisect(Annotation('',sent_begin, -1))
+            end_index = self.annotations.bisect(Annotation('', sent_end, -1))
+            for annotation in self.annotations[begin_index: end_index]:
+                if annotation.tid not in valid_id:
+                    continue
+                else:
+                    yield annotation
+
+        elif issubclass(entry_type, (Link, Group)):
+            for entry_id in valid_id:
+                entry = self.index.entry_index[entry_id]
+                yield entry
+

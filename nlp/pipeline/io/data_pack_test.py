@@ -13,8 +13,8 @@ class DataPackTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.reader = OntonotesReader()
-        data_path = os.path.join(os.path.dirname(os.path.dirname(nlp.__file__)),
-                                 "examples/abc_0059.gold_conll")
+        data_path = os.path.join(os.path.dirname(
+            os.path.dirname(nlp.__file__)), "examples/abc_0059.gold_conll")
         self.data_pack = self.reader.read(data_path)
 
     def test_coverage_index(self):
@@ -29,9 +29,11 @@ class DataPackTest(unittest.TestCase):
 
         # case 2: build one-type to one-type index
         self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 1)
-        self.data_pack.index.build_coverage_index(self.data_pack.annotations,
-                                                  outer_type=OntonotesOntology.Sentence,
-                                                  inner_type=OntonotesOntology.Token)
+        self.data_pack.index.build_coverage_index(
+            self.data_pack.annotations,
+            outer_type=OntonotesOntology.Sentence,
+            inner_type=OntonotesOntology.Token
+        )
         self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 2)
         self.assertIn("Sentence-to-Token",
                       self.data_pack.index.coverage_index.keys())
@@ -41,8 +43,10 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(cov_index["Sentence.1"]), 12)
 
         # case 3: build all-type to one-type index
-        self.data_pack.index.build_coverage_index(self.data_pack.annotations,
-                                                  inner_type=OntonotesOntology.Token)
+        self.data_pack.index.build_coverage_index(
+            self.data_pack.annotations,
+            inner_type=OntonotesOntology.Token
+        )
         self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 3)
         self.assertIn("Annotation-to-Token",
                       self.data_pack.index.coverage_index.keys())
