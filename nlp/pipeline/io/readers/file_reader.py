@@ -6,7 +6,7 @@ import os
 from typing import Iterator, List
 from nlp.pipeline.io.data_pack import DataPack
 from nlp.pipeline.io.readers.base_reader import BaseReader
-
+from nlp.pipeline.io.base_ontology import BaseOntology
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,8 @@ class MonoFileReader(BaseReader):
         """
         Read a **single** document from original file or from caching file.
         If the cache file contains multiple lines, only read the datapack
-        in the first line.
+        in the first line. The reader automatically build the link index,
+        group index, and sentence-to-entry coverage index.
 
         Args:
             file_path (str): The path to the original file to read.
@@ -132,7 +133,10 @@ class MonoFileReader(BaseReader):
             self.current_datapack = DataPack()
             self._record_fields()
             datapack = self._read_document(file_path)
-            datapack.index_entries()
+            datapack.index.build_coverage_index(
+                datapack.annotations, datapack.links, datapack.groups,
+                outer_type=BaseOntology.Sentence
+            )
             if not isinstance(datapack, DataPack):
                 raise ValueError(
                     f"No DataPack object read from the given "

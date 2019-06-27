@@ -1,23 +1,22 @@
 """
-The reader that reads Ontonotes data into our internal json data format.
+The reader that reads CoNLL data into our internal json data format.
 """
 import os
 import logging
 import codecs
-from typing import DefaultDict, List, Optional, Iterator, Tuple
-from collections import defaultdict
+from typing import Iterator
 from nlp.pipeline.io.readers.file_reader import MonoFileReader
 from nlp.pipeline.io.data_pack import DataPack
-from nlp.pipeline.io.conll03_ner import Conll03NER
+from nlp.pipeline.io.conll03_ontology import CoNLL03Ontology
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class Conll03Reader(MonoFileReader):
+class CoNLL03Reader(MonoFileReader):
     def __init__(self, lazy):
         super().__init__(lazy)
-        self.nerdata = Conll03NER
+        self.ner_ontology = CoNLL03Ontology
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -60,7 +59,7 @@ class Conll03Reader(MonoFileReader):
                 # add tokens
                 kwargs_i = {"pos_tag": pos_tag, "chunk_tag": chunk_id,
                             "ner_tag": ner_tag}
-                token = self.nerdata.Token(
+                token = self.ner_ontology.Token(
                     self.component_name, word_begin, word_end
                 )
 
@@ -76,7 +75,7 @@ class Conll03Reader(MonoFileReader):
                     # skip consecutive empty lines
                     continue
                 # add sentence
-                sent = self.nerdata.Sentence(
+                sent = self.ner_ontology.Sentence(
                     self.component_name, sentence_begin, offset-1
                 )
                 self.current_datapack.add_entry(sent)
@@ -93,10 +92,10 @@ class Conll03Reader(MonoFileReader):
         self.current_datapack.record_fields(
             [],
             self.component_name,
-            self.nerdata.Sentence.__name__,
+            self.ner_ontology.Sentence.__name__,
         )
         self.current_datapack.record_fields(
             ["chunk_tag", "pos_tag", "ner_tag"],
             self.component_name,
-            self.nerdata.Token.__name__,
+            self.ner_ontology.Token.__name__,
         )
