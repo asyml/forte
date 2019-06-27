@@ -40,20 +40,20 @@ class Entry:
     """
 
     def __init__(self, component: str, tid: str = None):
-        self.tid = f"{get_class_name(self, lower=True)}.{tid}" if tid else None
+        self.tid = f"{get_class_name(self)}.{tid}" if tid else None
         self.component = component
         self.data_pack = None
 
     def set_tid(self, tid: str):
         """Set the entry id"""
-        self.tid = f"{get_class_name(self, lower=True)}.{tid}"
+        self.tid = f"{get_class_name(self)}.{tid}"
 
     def set_fields(self, **kwargs):
         """Set other entry fields"""
         for field_name, field_value in kwargs.items():
             if not hasattr(self, field_name):
                 raise AttributeError(
-                    f"class {get_qual_name(self, lower=True)}"
+                    f"class {get_qual_name(self)}"
                     f" has no attribute {field_name}"
                 )
             setattr(self, field_name, field_value)

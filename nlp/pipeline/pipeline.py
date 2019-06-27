@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Iterator
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.io.data_pack import DataPack
 from nlp.pipeline.io.readers.ontonotes_reader import OntonotesReader
@@ -109,15 +109,11 @@ class Pipeline:
 
         return batch
 
-    def process_next(self):
-
-        for processor_index, processor in enumerate(self.processors):
-            batch = self._get_batch_as_numpy(processor, processor_index)
-            if not batch:
-                return None
-            results = processor.process(batch)
-            return results
-            # pack
-        # write out
+    def process_next(self) -> Iterator[DataPack]:
+        for pack in self.dataset_iterator:
+            for processor_index, processor in enumerate(self.processors):
+                processor.process(pack)
+            yield pack
+            # write out
 
 
