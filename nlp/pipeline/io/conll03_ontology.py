@@ -1,10 +1,11 @@
-""" This class defines the ontology for Conll03-NER dataset
+"""
+This class defines the ontology for CoNLL03 dataset
 """
 
 from nlp.pipeline.io.base_ontology import BaseOntology
 
 
-class Conll03NER(BaseOntology):
+class CoNLL03Ontology(BaseOntology):
     class Token(BaseOntology.Token):
         def __init__(self, component: str, begin: int, end: int,
                      tid: str = None):
