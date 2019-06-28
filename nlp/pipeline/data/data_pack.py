@@ -14,7 +14,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+class Meta:
+    """
+    Meta information of a datapack.
+    """
+
+    def __init__(self, doc_id: str = None):
+        self.doc_id = doc_id
+        self.process_state = None
+
+
 class InternalMeta:
+    """
+    The internal meta information of **one kind of entry** in a datapack.
+    """
     def __init__(self):
         self.id_counter = 0
         self.fields_created = dict()
@@ -22,6 +35,9 @@ class InternalMeta:
 
 
 class DataIndex:
+    """
+    A set of indexes used in a datapack.
+    """
     def __init__(self, data_pack):
         self.data_pack: DataPack = data_pack
         # basic indexes
@@ -276,7 +292,8 @@ class DataIndex:
         Return the coverage index that includes the coverage relationship
         between ``outer_type`` and ``inner_type``. Will check the existance
         of coverage indexes from tightest ("outer_type-to-inner_type") to
-        loosest ("Annotation-to-Entry").
+        loosest ("Annotation-to-Entry"). If not exist, will build the tightest
+        coverage index.
 
         Args:
             outer_type (str, optional): The type of the outer annotations. If
@@ -750,12 +767,12 @@ class DataPack:
                     batch[entry].append(fields)
             cnt += 1
             if cnt == batch_size:
-                yield batch
+                yield (batch, cnt)
                 cnt = 0
                 batch = {}
 
         if batch:
-            yield batch
+            yield (batch, cnt)
 
     def get_entries(self,
                     entry_type: type,
