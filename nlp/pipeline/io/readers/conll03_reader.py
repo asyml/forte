@@ -42,6 +42,7 @@ class CoNLL03Reader(MonoFileReader):
 
         sentence_begin = 0
         sentence_cnt = 0
+
         for line in doc:
             line = line.strip()
 
