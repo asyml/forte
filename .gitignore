@@ -13,7 +13,6 @@ __pycache__/
 .Python
 env/
 build/
-data/
 develop-eggs/
 dist/
 downloads/
