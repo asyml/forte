@@ -3,7 +3,7 @@ Unit tests for Pipeline.
 """
 import unittest
 from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.io.readers.ontonotes_reader import OntonotesReader
+from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
 from nlp.pipeline.processors.dummy_processor import *
 
 

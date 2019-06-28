@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.io.data_pack import DataPack
+from nlp.pipeline.data.data_pack import DataPack
 from typing import Dict
 
 class Predictor(BaseProcessor):

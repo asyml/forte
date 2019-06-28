@@ -1,8 +1,8 @@
 from typing import List, Dict, Tuple, Iterator
 from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.io.data_pack import DataPack
-from nlp.pipeline.io.readers.ontonotes_reader import OntonotesReader
-from nlp.pipeline.io.readers.base_reader import BaseReader
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
+from nlp.pipeline.data.readers.base_reader import BaseReader
 
 
 class Pipeline:

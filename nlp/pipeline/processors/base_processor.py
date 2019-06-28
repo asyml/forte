@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from typing import Dict, Any, List
-from nlp.pipeline.io.data_pack import DataPack
+from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.utils import *
 
 

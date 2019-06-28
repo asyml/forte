@@ -10,7 +10,7 @@ import torch
 import torchtext
 from torch.optim import SGD
 from typing import Dict, Any, Iterator
-from nlp.pipeline.io.data_pack import DataPack
+from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
 from nlp.pipeline.models.NER.model_factory import BiRecurrentConvCRF
 from nlp.pipeline.trainer import Trainer
