@@ -10,14 +10,14 @@ class Trainer(BaseProcessor):
     def __init__(self, config):
         super().__init__()
         self.__stop_train = False
-        self.__eval_requested = False
-        self.dev_eval_result = None
+        self.__validation_requested = False
+        self.__dev_eval_result = None
 
     def initialize(self, resources: Resources):
         pass
 
-    def eval_requested(self) -> bool:
-        return self.__eval_requested
+    def validation_requested(self) -> bool:
+        return self.__validation_requested
 
     def stop_train(self) -> bool:
         return self.__stop_train
@@ -31,6 +31,9 @@ class Trainer(BaseProcessor):
         # Do training
         raise NotImplementedError
 
+    def get_loss(self, instances: Iterator[Dict]):
+        raise NotImplementedError
+
     def pack_finish_action(self, pack_count: int):
         pass
 
@@ -38,8 +41,8 @@ class Trainer(BaseProcessor):
         pass
 
     def request_eval(self):
-        self.__eval_requested = True
+        self.__validation_requested = True
 
     def _eval_call_back(self, eval_result):
         self.__dev_eval_result = eval_result
-        self.__eval_requested = False
+        self.__validation_requested = False

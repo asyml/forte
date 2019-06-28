@@ -4,21 +4,27 @@ from nlp.pipeline.processors.predictor import Predictor
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
+import logging
 
 
 class TrainPipeline:
     def __init__(self,
                  train_reader: BaseReader,
                  trainer: Trainer,
-                 evaluator: Evaluator,
+                 dev_reader: BaseReader,
                  # TODO: Let's define the config system.
                  config,
+                 evaluator: Evaluator = None,
                  predictor: Predictor = None,
-                 dev_reader: BaseReader = None,
                  ):
         resource = Resources(config)
         trainer.initialize(resource)
-        predictor.initialize(resource)
+
+        if predictor is not None:
+            logging.info(
+                "Training pipeline initialized with real eval setting."
+            )
+            predictor.initialize(resource)
 
         self.train_reader = train_reader
         self.trainer = trainer
@@ -32,7 +38,7 @@ class TrainPipeline:
         while True:
             for pack in self.train_reader.dataset_iterator():
                 for instance in pack.get_data(self.trainer.data_request()):
-                    if self.trainer.eval_requested():
+                    if self.trainer.validation_requested():
                         self.trainer._eval_call_back(self.eval_dev())
                     if self.trainer.stop_train():
                         return
@@ -41,7 +47,18 @@ class TrainPipeline:
             self.trainer.epoch_finish_action(epoch)
 
     def eval_dev(self):
-        for pack in self.dev_reader.dataset_iterator():
-            self.predictor.process(pack)
-            self.evaluator.consume_next(pack)
-        return self.evaluator.get_result()
+        def dev_instances():
+            for instance in pack.get_data(self.trainer.data_request()):
+                yield instance
+
+        validation_result = {
+            "loss": self.trainer.get_loss(dev_instances())
+        }
+
+        if self.predictor is not None and self.evaluator is not None:
+            for pack in self.dev_reader.dataset_iterator():
+                self.predictor.process(pack)
+                self.evaluator.consume_next(pack)
+            validation_result['eval'] = self.evaluator.get_result()
+
+        return validation_result
