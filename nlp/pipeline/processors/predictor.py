@@ -1,9 +1,9 @@
 from abc import abstractmethod
 from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.io.data_pack import DataPack
-from nlp.pipeline.io.io_utils import merge_batches, slice_batch
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.io_utils import merge_batches, slice_batch
 from typing import Dict, List, Union, Iterable
-from nlp.pipeline.io.ontonotes_ontology import OntonotesOntology
+from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
 from nlp.pipeline.utils import *
 
 

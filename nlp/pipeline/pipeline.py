@@ -2,7 +2,10 @@ from typing import List, Dict, Tuple, Iterator
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
+from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
 from nlp.pipeline.data.readers.base_reader import BaseReader
+from nlp.pipeline.processors.predictor import Predictor
+from nlp.pipeline.utils import *
 
 
 class Pipeline:
@@ -14,6 +17,7 @@ class Pipeline:
         self._processors_beginning: List[Tuple[int, int]] = []
         self.current_packs: List[DataPack] = []
 
+        self.topology = None
         self._config(**kwargs)
 
     def _config(self, **kwargs):
@@ -23,6 +27,8 @@ class Pipeline:
 
             if dataset_format.lower() == "ontonotes":
                 self.reader = OntonotesReader()
+            elif dataset_format.lower() == "conll03":
+                self.reader = CoNLL03Reader()
             else:
                 self.reader = BaseReader()
 
@@ -109,11 +115,37 @@ class Pipeline:
 
         return batch
 
-    def process_next(self) -> Iterator[DataPack]:
+    def process_next(self, hard_batch: True) -> Iterator[DataPack]:
+        if hard_batch:
+            yield from self.process_next_in_hard_batch()
+        else:
+            yield from self.process_next_in_soft_batch()
+
+    def process_next_in_soft_batch(self) -> Iterator[DataPack]:
         for pack in self.dataset_iterator:
             for processor_index, processor in enumerate(self.processors):
-                processor.process(pack)
+                if isinstance(processor, Predictor):
+                    processor.process(pack, hard_batch=False)
             yield pack
             # write out
 
+    def process_next_in_hard_batch(self) -> Iterator[DataPack]:
+        for pack in self.dataset_iterator:
+            self.current_packs.append(pack)
+            for i, processor in enumerate(self.processors):
+                for c_pack in self.current_packs:
+                    if (i == 0 or c_pack.meta.process_state ==
+                            get_full_component_name(self.processors[i - 1])):
+                        processor.process(c_pack, hard_batch=True)
+                for c_pack in self.current_packs:
+                    if c_pack.meta.process_state == get_full_component_name(
+                                self.processors[-1]):
+                        yield c_pack
+                        self.current_packs.remove(c_pack)
+        # process tail instances in the whole dataset
+        for c_pack in self.current_packs:
+            for processor_index, processor in enumerate(self.processors):
+                processor.process(c_pack, hard_batch=False)
+            yield c_pack
+            self.current_packs.remove(c_pack)
 
