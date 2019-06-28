@@ -5,7 +5,7 @@ import re
 import json
 from typing import Dict, List, Any, Iterator
 from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.io.data_pack import DataPack
+from nlp.pipeline.data.data_pack import DataPack
 import texar
 
 

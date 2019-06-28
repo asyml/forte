@@ -4,8 +4,8 @@ Unit tests for data pack related operations.
 import os
 import unittest
 import nlp
-from nlp.pipeline.io.readers.ontonotes_reader import OntonotesReader
-from nlp.pipeline.io.ontonotes_ontology import *
+from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
+from nlp.pipeline.data.ontonotes_ontology import *
 from nlp.pipeline.utils import *
 
 

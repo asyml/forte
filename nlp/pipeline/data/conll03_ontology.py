@@ -2,7 +2,7 @@
 This class defines the ontology for CoNLL03 dataset
 """
 
-from nlp.pipeline.io.base_ontology import BaseOntology
+from nlp.pipeline.data.base_ontology import BaseOntology
 
 
 class CoNLL03Ontology(BaseOntology):

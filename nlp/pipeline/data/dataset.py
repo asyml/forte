@@ -3,8 +3,8 @@ entries and fields.
 """
 from typing import Iterator, Dict, List, Union, Optional, Iterable
 import numpy as np
-from nlp.pipeline.io.data_pack import DataPack
-from nlp.pipeline.io.base_ontology import BaseOntology
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.base_ontology import BaseOntology
 
 
 class Dataset:

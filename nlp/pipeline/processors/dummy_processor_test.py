@@ -4,7 +4,7 @@ Unit tests for dummy processor.
 import os
 import unittest
 import nlp
-from nlp.pipeline.io.readers.ontonotes_reader import OntonotesReader
+from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
 from nlp.pipeline.processors.dummy_processor import DummyRelationExtractor
 from nlp.pipeline.pipeline import Pipeline
 

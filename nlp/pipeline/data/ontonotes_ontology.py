@@ -1,7 +1,7 @@
 """
 This class defines the ontology for Ontonotes dataset
 """
-from nlp.pipeline.io.base_ontology import BaseOntology
+from nlp.pipeline.data.base_ontology import BaseOntology
 
 
 class OntonotesOntology(BaseOntology):

@@ -4,9 +4,9 @@ File readers.
 import logging
 import os
 from typing import Iterator, List
-from nlp.pipeline.io.data_pack import DataPack
-from nlp.pipeline.io.readers.base_reader import BaseReader
-from nlp.pipeline.io.base_ontology import BaseOntology
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.readers.base_reader import BaseReader
+from nlp.pipeline.data.base_ontology import BaseOntology
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 

@@ -5,9 +5,9 @@ import os
 import codecs
 from typing import DefaultDict, List, Optional, Iterator, Tuple
 from collections import defaultdict
-from nlp.pipeline.io.readers.file_reader import MonoFileReader
-from nlp.pipeline.io.data_pack import DataPack
-from nlp.pipeline.io.ontonotes_ontology import OntonotesOntology
+from nlp.pipeline.data.readers.file_reader import MonoFileReader
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
 
 
 class OntonotesReader(MonoFileReader):

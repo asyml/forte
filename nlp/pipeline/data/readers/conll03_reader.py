@@ -5,9 +5,9 @@ import os
 import logging
 import codecs
 from typing import Iterator
-from nlp.pipeline.io.readers.file_reader import MonoFileReader
-from nlp.pipeline.io.data_pack import DataPack
-from nlp.pipeline.io.conll03_ontology import CoNLL03Ontology
+from nlp.pipeline.data.readers.file_reader import MonoFileReader
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.conll03_ontology import CoNLL03Ontology
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
