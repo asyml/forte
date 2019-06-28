@@ -133,7 +133,7 @@ class Link(Entry):
 
     @property
     def parent(self):
-        return self._child
+        return self._parent
 
     @property
     def child(self):
