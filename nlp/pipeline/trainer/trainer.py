@@ -9,6 +9,8 @@ class Trainer(BaseProcessor):
         super().__init__()
 
     @abstractmethod
-    def process(self, dataset: Iterator[DataPack]):
+    def process(self, input_pack: Iterator[DataPack]):
         # Do training
         pass
+
+
