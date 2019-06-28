@@ -31,7 +31,7 @@ class PipelineTest(unittest.TestCase):
     def test_process_next(self):
 
         # get processed pack from dataset
-        for pack in self.nlp.process_next():
+        for pack in self.nlp.process_next(hard_batch=False):
             # get sentence from pack
             for sentence in pack.get_entries(OntonotesOntology.Sentence):
                 sent_text = sentence.text
@@ -39,7 +39,10 @@ class PipelineTest(unittest.TestCase):
                 # first method to get entry in a sentence
                 for link in pack.get_entries(RelationOntology.RelationLink,
                                              sentence):
-                    pass # some operation on link
+                    parent = link.get_parent()
+                    child = link.get_child()
+                    print(f"{parent.text} is {link.rel_type} {child.text}")
+                    pass  # some operation on link
 
                 # second method to get entry in a sentence
                 tokens = [token.text for token in

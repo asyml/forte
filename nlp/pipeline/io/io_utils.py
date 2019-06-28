@@ -1,1 +1,34 @@
+from typing import List, Dict
 
+
+def merge_batches(batches: List[Dict]):
+    merged_batch = {}
+    for batch in batches:
+        for entry, fields in batch.items():
+            if isinstance(fields, dict):
+                if entry not in merged_batch.keys():
+                    merged_batch[entry] = {}
+                for k, value in fields.items():
+                    if k not in merged_batch[entry].keys():
+                        merged_batch[entry][k] = []
+                    merged_batch[entry][k].extend(value)
+            else:  # context level feature
+                if entry not in merged_batch.keys():
+                    merged_batch[entry] = []
+                merged_batch[entry].extend(fields)
+    return merged_batch
+
+
+def slice_batch(batch, start, length):
+    sliced_batch = {}
+
+    for entry, fields in batch.items():
+        if isinstance(fields, dict):
+            if entry not in sliced_batch.keys():
+                sliced_batch[entry] = {}
+            for k, value in fields.items():
+                sliced_batch[entry][k] = value[start: start + length]
+        else:  # context level feature
+            sliced_batch = fields[start: start + length]
+
+    return sliced_batch

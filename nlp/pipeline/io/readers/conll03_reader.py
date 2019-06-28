@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class CoNLL03Reader(MonoFileReader):
-    def __init__(self, lazy):
+    def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ner_ontology = CoNLL03Ontology
 
@@ -30,10 +30,7 @@ class CoNLL03Reader(MonoFileReader):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:
-        """
-        :param file_path:
-        :return:
-        """
+
         doc = codecs.open(file_path, "r", encoding="utf8")
 
         text = ""

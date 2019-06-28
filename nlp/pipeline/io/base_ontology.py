@@ -133,7 +133,7 @@ class Link(Entry):
 
     @property
     def parent(self):
-        return self._parent
+        return self._child
 
     @property
     def child(self):
@@ -175,6 +175,26 @@ class Link(Entry):
                 self.data_pack.index.link_index_switch):
             self.data_pack.index.update_link_index()
 
+    def get_parent(self):
+        """
+        Get the parent entry of the link. Note that link.get_parent() is
+        different from link.parent: the former returns the entry object and
+        the latter returns the tid of the entry.
+
+        Returns:
+             An instance of :class:`Entry` that is the parent of the link.
+        """
+        return self.data_pack.index.entry_index[self._parent]
+
+    def get_child(self):
+        """
+        Get the child entry of the link.
+
+        Returns:
+             An instance of :class:`Entry` that is the child of the link.
+        """
+        return self.data_pack.index.entry_index[self._child]
+
 
 class Group(Entry):
     """Group type entries, such as "coreference group". Each group has a set
@@ -208,13 +228,18 @@ class Group(Entry):
         return (type(self), self.component, self.members) == \
                (type(other), other.component, other.members)
 
+    def get_members(self):
+        """
+        Get the member entries in the group.
 
-class Meta:
-    """Meta information of a document.
-    """
-
-    def __init__(self, doc_id: str = None):
-        self.doc_id = doc_id
+        Returns:
+             An set of instances of :class:`Entry` that are the members of the
+             group.
+        """
+        member_entries = set()
+        for m in self.members:
+            member_entries.add(self.data_pack.index.entry_index[m])
+        return member_entries
 
 
 class BaseOntology:

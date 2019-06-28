@@ -23,15 +23,13 @@ class BaseReader:
         """Specify the path to the cache directory.
 
         After you call this method, the dataset reader will use this
-        :attr:`cache_directory` to store a cache of already-processed
-        :class:`DataPack` in every document passed to :func:`read`,
-        serialized as one string-formatted :class:`DataPack`. If the cache
-        file for a given ``file_path`` exists, we read the :class:`DataPack`
-        from the cache instead of re-processing the data (using
-        :func:`deserialize_instance`).  If the cache file does not
-        exist, we will `create` it on our first pass through the data
-        (using :func:`serialize_instance`).
-
+        :attr:`cache_directory` to store a cache of :class:`DataPack` read
+        from every document passed to :func:`read`, serialized as one
+        string-formatted :class:`DataPack`. If the cache file for a given
+        ``file_path`` exists, we read the :class:`DataPack` from the cache
+        (using :func:`deserialize_instance`).  If the cache file does not
+        exist, we will `create` it on our first pass through the data (using
+        :func:`serialize_instance`).
         """
         self._cache_directory = pathlib.Path(cache_directory)
         os.makedirs(self._cache_directory, exist_ok=True)
