@@ -3,6 +3,10 @@ from typing import Dict, Any, List
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.utils import *
 
+__all__ = [
+    "BaseProcessor",
+]
+
 
 class BaseProcessor:
     def __init__(self):

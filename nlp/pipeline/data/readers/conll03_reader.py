@@ -12,6 +12,10 @@ from nlp.pipeline.data.conll03_ontology import CoNLL03Ontology
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "CoNLL03Reader",
+]
+
 
 class CoNLL03Reader(MonoFileReader):
     def __init__(self, lazy: bool = True):

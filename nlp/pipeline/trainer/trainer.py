@@ -5,6 +5,10 @@ from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.common.resources import Resources
 
+__all__ = [
+    "Trainer",
+]
+
 
 class Trainer(BaseProcessor):
     def __init__(self, config):

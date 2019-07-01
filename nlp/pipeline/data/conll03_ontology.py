@@ -4,6 +4,10 @@ This class defines the ontology for CoNLL03 dataset
 
 from nlp.pipeline.data.base_ontology import BaseOntology
 
+__all__ = [
+    "CoNLL03Ontology",
+]
+
 
 class CoNLL03Ontology(BaseOntology):
     class Token(BaseOntology.Token):
