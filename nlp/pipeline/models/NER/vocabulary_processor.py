@@ -175,7 +175,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         if self.normalize_digit:
             self.normalize_func = lambda x: digit_re.sub("0", x)
         else:
-            self.normalize_digit = lambda x: x
+            self.normalize_func = lambda x: x
 
     def process(self, input_pack: Iterator[DataPack]) -> List[Counter]:
         """

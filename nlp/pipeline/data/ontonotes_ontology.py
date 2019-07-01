@@ -5,6 +5,9 @@ from nlp.pipeline.data.base_ontology import BaseOntology
 
 
 class OntonotesOntology(BaseOntology):
+    """
+    The ontology for Ontonotes dataset
+    """
     class Token(BaseOntology.Token):
         def __init__(self, component: str, begin: int, end: int,
                      tid: str = None):

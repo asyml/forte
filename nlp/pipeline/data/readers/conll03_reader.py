@@ -14,20 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class CoNLL03Reader(MonoFileReader):
+    """:class:`CoNLL03Reader` is designed to read in the CoNLL03-NER dataset.
+
+    Args:
+        lazy (bool, optional): The reading strategy used when reading a
+            dataset containing multiple documents. If this is true,
+            ``dataset_iterator()`` will return an object whose ``__iter__``
+            method reloads the dataset each time it's called. Otherwise,
+            ``dataset_iterator()`` returns a list.
+    """
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ner_ontology = CoNLL03Ontology
-
-    @staticmethod
-    def dataset_path_iterator(dir_path: str) -> Iterator[str]:
-        """
-        An iterator returning file_paths in a directory containing
-        CONLL-formatted files.
-        """
-        for root, _, files in os.walk(dir_path):
-            for data_file in files:
-                if data_file.endswith("gold_conll"):
-                    yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:
 

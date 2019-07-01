@@ -2,6 +2,9 @@ from typing import List, Dict
 
 
 def merge_batches(batches: List[Dict]):
+    """
+    Merge a list of instances or batches.
+    """
     merged_batch = {}
     for batch in batches:
         for entry, fields in batch.items():
@@ -20,6 +23,9 @@ def merge_batches(batches: List[Dict]):
 
 
 def slice_batch(batch, start, length):
+    """
+    Return a sliced batch of size ``length`` from ``start`` in ``batch``.
+    """
     sliced_batch = {}
 
     for entry, fields in batch.items():

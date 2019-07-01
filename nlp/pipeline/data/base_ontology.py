@@ -32,7 +32,7 @@ class Entry:
     """The base class inherited by all NLP entries.
 
     Args:
-        component (str): the engine name that creates this entry,
+        component (str): the name of the engine that creates this entry,
             it should at least include the full engine name.
         tid (str, optional): a doc level universal id to identify
             this entry. If `None`, the DataPack will assign a unique id
@@ -292,3 +292,21 @@ class BaseOntology:
         def __init__(self, component: str, begin: int, end: int,
                      tid: str = None):
             super().__init__(component, begin, end, tid)
+
+
+# class Token(Annotation):
+#     def __init__(self, component: str, begin: int, end: int,
+#                  tid: str = None):
+#         super().__init__(component, begin, end, tid)
+#
+#
+# class Sentence(Annotation):
+#     def __init__(self, component: str, begin: int, end: int,
+#                  tid: str = None):
+#         super().__init__(component, begin, end, tid)
+#
+#
+# class BaseOntology(NamedTuple):
+#     Token = Token
+#     Sentence = Sentence
+

@@ -43,6 +43,6 @@ class Trainer(BaseProcessor):
     def request_eval(self):
         self.__validation_requested = True
 
-    def _eval_call_back(self, eval_result):
+    def eval_call_back(self, eval_result):
         self.__dev_eval_result = eval_result
         self.__validation_requested = False

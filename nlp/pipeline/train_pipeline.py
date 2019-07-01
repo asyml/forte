@@ -17,7 +17,7 @@ class TrainPipeline:
                  evaluator: Evaluator = None,
                  predictor: Predictor = None,
                  ):
-        resource = Resources(config)
+        resource = Resources(**config)
         trainer.initialize(resource)
 
         if predictor is not None:
@@ -39,17 +39,19 @@ class TrainPipeline:
             for pack in self.train_reader.dataset_iterator():
                 for instance in pack.get_data(self.trainer.data_request()):
                     if self.trainer.validation_requested():
-                        self.trainer._eval_call_back(self.eval_dev())
+                        self.trainer.eval_call_back(self.eval_dev())
                     if self.trainer.stop_train():
                         return
+                    # collect a batch of instances
                     self.trainer.process(instance)
                 self.trainer.pack_finish_action(pack_count)
             self.trainer.epoch_finish_action(epoch)
 
     def eval_dev(self):
         def dev_instances():
-            for instance in pack.get_data(self.trainer.data_request()):
-                yield instance
+            for dev_pack in self.dev_reader.dataset_iterator():
+                for instance in dev_pack.get_data(self.trainer.data_request()):
+                    yield instance
 
         validation_result = {
             "loss": self.trainer.get_loss(dev_instances())

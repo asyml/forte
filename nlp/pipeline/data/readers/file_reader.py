@@ -3,6 +3,7 @@ File readers.
 """
 import logging
 import os
+from abc import abstractmethod
 from typing import Iterator, List
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
@@ -155,6 +156,7 @@ class MonoFileReader(BaseReader):
 
         return datapack
 
+    @abstractmethod
     def _read_document(self, file_path: str):
         """
         Process the original document. Should be Implemented according to the
@@ -162,5 +164,6 @@ class MonoFileReader(BaseReader):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def _record_fields(self):
         raise NotImplementedError

@@ -11,6 +11,20 @@ from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
 
 
 class OntonotesReader(MonoFileReader):
+    """:class:`OntonotesReader` is designed to read in the English OntoNotes
+    v5.0 data in the format used by the CoNLL 2011/2012 shared tasks. To use
+    this Reader, you must follow the instructions provided `here (v12 release):
+    <http://cemantix.org/data/ontonotes.html>`_:, which will allow you to
+    download the CoNLL style annotations for the OntoNotes v5.0 release
+    – LDC2013T19.tgz obtained from LDC.
+
+    Args:
+        lazy (bool, optional): The reading strategy used when reading a
+            dataset containing multiple documents. If this is true,
+            ``dataset_iterator()`` will return an object whose ``__iter__``
+            method reloads the dataset each time it's called. Otherwise,
+            ``dataset_iterator()`` returns a list.
+    """
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ontology = OntonotesOntology
@@ -19,7 +33,7 @@ class OntonotesReader(MonoFileReader):
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
         """
         An iterator returning file_paths in a directory containing
-        CONLL-formatted files.
+        CoNLL-formatted files.
         """
         for root, _, files in os.walk(dir_path):
             for data_file in files:

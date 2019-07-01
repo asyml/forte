@@ -8,6 +8,9 @@ from nlp.pipeline.utils import *
 
 
 class Predictor(BaseProcessor):
+    """
+    The base class of all predictors.
+    """
     def __init__(self):
         super().__init__()
 
@@ -51,7 +54,7 @@ class Predictor(BaseProcessor):
         """
 
         self.data_pack_pool.append(input_pack)
-        for (data_batch, instance_num) in self.get_data_batch_by_need(
+        for (data_batch, instance_num) in self._get_data_batch_by_need(
                 input_pack, self.context_type, self.annotation_types):
 
             self.current_batch = merge_batches([self.current_batch, data_batch])
@@ -72,6 +75,17 @@ class Predictor(BaseProcessor):
 
     @abstractmethod
     def predict(self, data_batch: Dict):
+        """
+        Make predictions for the input data_batch.
+
+        Args:
+              data_batch (Dict): A batch of instances in our dict format.
+
+        Returns:
+              The prediction results. This could be in any type and format,
+              and you just need to write the :meth:`pack` method according to
+              your prediction format.
+        """
         pass
 
     def pack_all(self, output_dict: Dict):
@@ -87,6 +101,12 @@ class Predictor(BaseProcessor):
         """
         Add corresponding fields to data_pack. Custom function of how
         to add the value back.
+
+        Args:
+            data_pack (DataPack): The data pack to add entries or fields to.
+            *inputs: The prediction results returned by :meth:`predict`. You
+                need to add entries or fields corresponding to this prediction
+                results to the ``data_pack``.
         """
         pass
 
@@ -94,8 +114,15 @@ class Predictor(BaseProcessor):
         """
         Do finishing work for data packs in :attr:`data_pack_pool` from the
         beginning to ``end`` (``end`` is not included).
+
+        Args:
+            end (int): Will do finishing work for data packs in
+                :attr:`data_pack_pool` from the beginning to ``end``
+                (``end`` is not included). If `None`, will finish up all the
+                packs in :attr:`data_pack_pool`.
         """
-        if end is None: end = len(self.data_pack_pool)
+        if end is None:
+            end = len(self.data_pack_pool)
         for pack in self.data_pack_pool[:end]:
             self.finish(pack)
         self.data_pack_pool = self.data_pack_pool[end:]
@@ -123,7 +150,7 @@ class Predictor(BaseProcessor):
         """
         pass
 
-    def get_data_batch_by_need(
+    def _get_data_batch_by_need(
             self,
             data_pack: DataPack,
             context_type: str,

@@ -1,5 +1,4 @@
-from typing import List, Dict, Tuple, Iterator
-from nlp.pipeline.processors.base_processor import BaseProcessor
+from typing import List, Iterator
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
@@ -9,20 +8,25 @@ from nlp.pipeline.utils import *
 
 
 class Pipeline:
+    """
+    The pipeline consists of a list of predictors.
+    """
     def __init__(self, **kwargs):
         self.reader = None
-        self.dataset_iterator = None  # or put this into Reader class
-
-        self.processors: List[BaseProcessor] = []
-        self._processors_beginning: List[Tuple[int, int]] = []
-        self.current_packs: List[DataPack] = []
+        self.dataset_dir = None
+        self.processors: List[Predictor] = []
 
         self.topology = None
-        self._config(**kwargs)
+        self.current_packs = []
 
-    def _config(self, **kwargs):
+        self.initialize(**kwargs)
+
+    def initialize(self, **kwargs):
+        """
+        Initialize the pipeline with configs
+        """
         if "dataset" in kwargs.keys():
-            dataset_dir = kwargs["dataset"]["dataset_dir"]
+            self.dataset_dir = kwargs["dataset"]["dataset_dir"]
             dataset_format = kwargs["dataset"]["dataset_format"]
 
             if dataset_format.lower() == "ontonotes":
@@ -32,105 +36,32 @@ class Pipeline:
             else:
                 self.reader = BaseReader()
 
-            self.dataset_iterator = self.reader.dataset_iterator(dataset_dir)
-
-    def _load_next_datapacks(self,
-                             instance_need: int,
-                             instance_level: str = "sentence"):
+    def run(self, hard_batch: bool = True) -> Iterator[DataPack]:
         """
-        Load new data packs into `current_datapacks` according to the request.
+        Process the documents in the dataset and return an iterator of DataPack.
 
         Args:
-            instance_need: the number of instances needed.
-            instance_level: the level (granularity) of instances needed.
-                Will count instances in this level.
+            hard_batch (bool): Determines whether to process the dataset
+                strictly according to batch_size. (This will only influence
+                the efficiency of this method, but will not change the
+                result. For small datapacks, using hard batch should be more
+                time-saving; for large datapacks (avg instance num in each
+                datapack >> batch size), using soft batch is more
+                space-saving.)
         """
-
-        instance_cnt = 0
-
-        while instance_cnt < instance_need:
-            try:
-                data_pack = next(self.dataset_iterator)
-            except StopIteration:
-                break  # need to deal with stop iteration exception
-            self.current_packs.append(data_pack)
-            if instance_level == "sentence":
-                instance_num = data_pack.internal_metas["Sentence"].id_counter
-            elif instance_level == "document":
-                instance_num = 1
-            else:  # need to add other instance levels
-                raise ValueError(f"Invalid instance level. Should be 'document'"
-                                 f" or 'sentence'.")
-            instance_cnt += instance_num
-
-    def _get_batch_as_numpy(self, processor, processor_index) -> Dict:
-        batch = dict()
-        instance_cnt = 0
-        pack_offset, instance_offset = \
-            self._processors_beginning[processor_index]
-
-        if not self.current_packs:
-            self._load_next_datapacks(processor.batch_size,
-                                      processor.context_type)
-
-        for pack_index, pack in enumerate(self.current_packs[pack_offset:],
-                                          pack_offset):
-
-            instances = pack.get_data(processor.context_type,
-                                      processor.annotation_types,
-                                      processor.link_types,
-                                      processor.group_types,
-                                      instance_offset)
-            for data in instances:
-                for entry, fields in data.items():
-                    if isinstance(fields, dict):
-                        if entry not in batch.keys():
-                            batch[entry] = {}
-                        for k, value in fields.items():
-                            if k not in batch[entry].keys():
-                                batch[entry][k] = []
-                            batch[entry][k].append(value)
-                    else:  # context level feature
-                        if entry not in batch.keys():
-                            batch[entry] = []
-                        batch[entry].append(fields)
-                instance_cnt += 1
-                instance_offset += 1
-                if instance_cnt == processor.batch_size:
-                    self._processors_beginning[processor_index] = (
-                        pack_offset, instance_offset
-                    )
-                    return batch
-
-            pack_offset += 1
-            instance_offset = 0
-
-            if pack_offset == len(self.current_packs):
-                self._load_next_datapacks(processor.batch_size - instance_cnt,
-                                          processor.context_type)
-
-        self._processors_beginning[processor_index] = (
-            pack_offset, instance_offset
-        )
-
-        return batch
-
-    def process_next(self, hard_batch: True) -> Iterator[DataPack]:
         if hard_batch:
-            yield from self.process_next_in_hard_batch()
+            yield from self._process_next_in_hard_batch()
         else:
-            yield from self.process_next_in_soft_batch()
+            yield from self._process_next_in_soft_batch()
 
-    def process_next_in_soft_batch(self) -> Iterator[DataPack]:
-        for pack in self.dataset_iterator:
+    def _process_next_in_soft_batch(self) -> Iterator[DataPack]:
+        for pack in self.reader.dataset_iterator(self.dataset_dir):
             for processor_index, processor in enumerate(self.processors):
-                if isinstance(processor, Predictor):
-                    processor.process(pack, hard_batch=False)
+                processor.process(pack, hard_batch=False)
             yield pack
-            # write out
 
-    def process_next_in_hard_batch(self) -> Iterator[DataPack]:
-        for pack in self.dataset_iterator:
+    def _process_next_in_hard_batch(self) -> Iterator[DataPack]:
+        for pack in self.reader.dataset_iterator(self.dataset_dir):
             self.current_packs.append(pack)
             for i, processor in enumerate(self.processors):
                 for c_pack in self.current_packs:
