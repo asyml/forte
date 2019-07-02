@@ -3,8 +3,13 @@ Conditional random field.
 Adapted from AllenNLP but removed the feature of external restriction
 """
 from typing import Optional, List, Tuple, Dict
+import logging
 
 import torch
+
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def allowed_transitions(
@@ -170,7 +175,7 @@ def is_transition_allowed(
             ]
         )
     else:
-        raise ConfigurationError(f"Unknown constraint type: {constraint_type}")
+        raise ValueError(f"Unknown constraint type: {constraint_type}")
 
 
 class ConditionalRandomField(torch.nn.Module):
@@ -427,7 +432,8 @@ class ConditionalRandomField(torch.nn.Module):
             tag_sequence.fill_(-10000.0)
             # At timestep 0 we must have the START_TAG
             tag_sequence[0, start_tag] = 0.0
-            # At steps 1, ..., sequence_length we just use the incoming prediction
+            # At steps 1, ..., sequence_length we just use the
+            # incoming prediction
             tag_sequence[1 : (sequence_length + 1), :num_tags] = prediction[
                 :sequence_length
             ]
@@ -483,7 +489,7 @@ def viterbi_decode(
     sequence_length, num_tags = list(tag_sequence.size())
     if tag_observations:
         if len(tag_observations) != sequence_length:
-            raise ConfigurationError(
+            raise ValueError(
                 "Observations were provided, but they were not the same length "
                 "as the sequence. Found sequence of length: {} and evidence: {}".format(
                     sequence_length, tag_observations

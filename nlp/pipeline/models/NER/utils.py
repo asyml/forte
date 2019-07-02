@@ -1,18 +1,22 @@
-import re
-import numpy as np
 import logging
 import os
+import random
+import re
 from typing import List
+from typing import Tuple
+
+import numpy as np
 import torch
 import torch.nn.utils.rnn as rnn_utils
-
-from typing import Tuple
 
 MAX_CHAR_LENGTH = 45
 NUM_CHAR_PAD = 2
 
 # Regular expressions used to normalize digits.
 DIGIT_RE = re.compile(r"\d")
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def normalize_digit_word(word):
@@ -26,7 +30,8 @@ def load_glove_embedding(embedding_path, normalize_digits=True):
     :param normalize_digits: whether to normalize the digits characters in token
     :return: embedding dict, embedding dimention, caseless
     """
-    print(
+
+    logger.info(
         f"loading glove embedding from {embedding_path}, "
         f"normalize_digits: {normalize_digits}"
     )
@@ -231,4 +236,10 @@ def get_batch_tensor(data: List, device=None):
     return words, chars, pos, chunks, ners, masks, lengths
 
 
-
+def set_random_seed(seed):
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)

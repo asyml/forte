@@ -1,21 +1,19 @@
-from abc import abstractmethod
-from typing import List, Tuple
 import logging
 import random
-import re
-import sys
-import numpy as np
 import time
+from typing import Iterator
+from typing import List, Tuple
+
+import numpy as np
 import torch
 import torchtext
-from torch.optim import SGD
 from tqdm import tqdm
-from typing import Dict, Any, Iterator
-from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.common.resources import Resources
+
 from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
-from nlp.pipeline.models.NER.model_factory import BiRecurrentConvCRF
 from nlp.pipeline.trainer.trainer import Trainer
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class CoNLLNERTrainer(Trainer):
@@ -23,13 +21,11 @@ class CoNLLNERTrainer(Trainer):
         super().__init__(config)
 
         self.model = None
-        self.word_alphabet, self.char_alphabet, self.chunk_alphabet, self.pos_alphabet, self.ner_alphabet = (
-            None,
-            None,
-            None,
-            None,
-            None,
-        )
+        self.word_alphabet = None
+        self.char_alphabet = None
+        self.chunk_alphabet = None
+        self.pos_alphabet = None
+        self.ner_alphabet = None
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
@@ -40,6 +36,7 @@ class CoNLLNERTrainer(Trainer):
 
         self.train_instances_cache = []
         self.max_char_length = 0
+        self.__dev_eval_result = None
 
     def initialize(self, resource):
 
@@ -52,8 +49,9 @@ class CoNLLNERTrainer(Trainer):
         self.config_data = resource.resources["config_data"]
         self.embedding_dict = resource.resources["embedding_dict"]
         self.embedding_dim = resource.resources["embedding_dim"]
-        self.model = resource.resources['model']
-        self.optim = resource.resources['optim']
+        self.model = resource.resources["model"]
+        self.optim = resource.resources["optim"]
+        self.device = resource.resources["device"]
 
         self.normalize_func = lambda x: self.config_data.digit_re.sub("0", x)
 
@@ -68,10 +66,6 @@ class CoNLLNERTrainer(Trainer):
             },
         }
         return request_string
-
-    def update(self):
-
-        pass
 
     def process(self, instance):
         tokens = instance["Token"]
@@ -105,7 +99,6 @@ class CoNLLNERTrainer(Trainer):
         self.train_instances_cache.append(
             (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
         )
-        self.request_eval()
 
     def pack_finish_action(self, pack_count):
 
@@ -128,7 +121,6 @@ class CoNLLNERTrainer(Trainer):
         train_total = 0.0
 
         start_time = time.time()
-        num_back = 0
         self.model.train()
 
         instances = self.train_instances_cache
@@ -157,25 +149,17 @@ class CoNLLNERTrainer(Trainer):
             train_total += num_inst
 
             # update log
-            if bid % 100 == 0:
-                sys.stdout.write("\b" * num_back)
-                sys.stdout.write(" " * num_back)
-                sys.stdout.write("\b" * num_back)
+            if bid % 200 == 0:
+
                 log_info = "train: %d loss: %.4f" % (
                     bid,
                     train_err / train_total,
                 )
-                sys.stdout.write(log_info)
-                sys.stdout.flush()
-                num_back = len(log_info)
+                logger.info(log_info)
 
-        sys.stdout.write("\b" * num_back)
-        sys.stdout.write(" " * num_back)
-        sys.stdout.write("\b" * num_back)
-        print(
+        logger.info(
             "Epoch: %d train: %d loss: %.4f, time: %.2fs"
-            % (epoch, bid, train_err / train_total, time.time() -
-               start_time)
+            % (epoch, bid, train_err / train_total, time.time() - start_time)
         )
 
         self.trained_epochs = epoch
@@ -188,17 +172,19 @@ class CoNLLNERTrainer(Trainer):
                 param_group["lr"] = lr
 
         self.request_eval()
+        self.train_instances_cache.clear()
 
         if epoch >= self.config_data.num_epochs:
             self.request_stop_train()
 
     @torch.no_grad()
-    def get_loss(self, instances:Iterator) -> float:
+    def get_loss(self, instances: Iterator) -> float:
 
         losses = 0
         val_data = list(instances)
-        for i in tqdm(range(0, len(val_data),
-                            self.config_data.test_batch_size)):
+        for i in tqdm(
+            range(0, len(val_data), self.config_data.test_batch_size)
+        ):
             b_data = val_data[i: i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
 
@@ -208,6 +194,56 @@ class CoNLLNERTrainer(Trainer):
 
         mean_loss = losses / len(val_data)
         return mean_loss
+
+    def eval_call_back(self, eval_result):
+
+        if (
+            not self.__dev_eval_result
+            or eval_result["eval"]["f1"] > self.__dev_eval_result["eval"]["f1"]
+        ):
+            self.__dev_eval_result = eval_result
+            logger.info("validation f1 increased, saving model")
+            self.save_model_checkpoint()
+
+        best_epoch = self.__dev_eval_result["epoch"]
+        acc, prec, rec, f1 = (
+            self.__dev_eval_result["eval"]["accuracy"],
+            self.__dev_eval_result["eval"]["precision"],
+            self.__dev_eval_result["eval"]["recall"],
+            self.__dev_eval_result["eval"]["f1"],
+        )
+        logger.info(
+            f"best val  acc: {acc}, precision: {prec}, recall: {rec}, "
+            f"F1: {f1} % (epoch: {best_epoch})"
+        )
+
+        acc, prec, rec, f1 = (
+            self.__dev_eval_result["test"]["accuracy"],
+            self.__dev_eval_result["test"]["precision"],
+            self.__dev_eval_result["test"]["recall"],
+            self.__dev_eval_result["test"]["f1"],
+        )
+        logger.info(
+            f"best test  acc: {acc}, precision: {prec}, recall: {rec}, "
+            f"F1: {f1} % (epoch: {best_epoch})"
+        )
+        self._validation_requested = False
+
+    def finish(self):
+        self.save_model_checkpoint()
+
+    def save_model_checkpoint(self):
+        states = {
+            "model": self.model.state_dict(),
+            "optimizer": self.optim.state_dict(),
+        }
+        torch.save(states, self.config_model.model_path)
+
+    def load_model_checkpoint(self):
+        ckpt = torch.load(self.config_model.model_path)
+        print("restoring model from {}".format(self.config_model.model_path))
+        self.model.load_state_dict(ckpt["model"])
+        self.optim.load_state_dict(ckpt["optimizer"])
 
     def get_batch_tensor(self, data: List, device=None):
         """
@@ -247,10 +283,10 @@ class CoNLLNERTrainer(Trainer):
             lengths[i] = inst_size
             # word ids
             wid_inputs[i, :inst_size] = wids
-            wid_inputs[i, inst_size:] = self.word_alphabet.bos_id
+            wid_inputs[i, inst_size:] = self.word_alphabet.pad_id
             for c, cids in enumerate(cid_seqs):
                 cid_inputs[i, c, : len(cids)] = cids
-                cid_inputs[i, c, len(cids) :] = self.char_alphabet.pad_id
+                cid_inputs[i, c, len(cids):] = self.char_alphabet.pad_id
             cid_inputs[i, inst_size:, :] = self.char_alphabet.pad_id
             # pos ids
             pid_inputs[i, :inst_size] = pids
@@ -275,7 +311,7 @@ class CoNLLNERTrainer(Trainer):
         return words, chars, pos, chunks, ners, masks, lengths
 
 
-def batch_size_fn(new: Tuple, count: int, size_so_far: int):
+def batch_size_fn(new: Tuple, count: int, _: int):
     if count == 1:
         batch_size_fn.max_length = 0
     batch_size_fn.max_length = max(batch_size_fn.max_length, len(new[0]))

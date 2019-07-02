@@ -1,27 +1,26 @@
 from abc import abstractmethod
-from typing import Dict, Any, Iterator
-from nlp.pipeline.common.evaluation import Evaluator
-from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.data.data_pack import DataPack
+from typing import Dict, Iterator
+
 from nlp.pipeline.common.resources import Resources
+from nlp.pipeline.processors.base_processor import BaseProcessor
 
 
 class Trainer(BaseProcessor):
     def __init__(self, config):
         super().__init__()
-        self.__stop_train = False
-        self.__validation_requested = False
-        self.__dev_eval_result = None
+        self._stop_train = False
+        self._validation_requested = False
+        self._dev_eval_result = None
 
     @abstractmethod
     def initialize(self, resources: Resources):
         raise NotImplemented
 
     def validation_requested(self) -> bool:
-        return self.__validation_requested
+        return self._validation_requested
 
     def stop_train(self) -> bool:
-        return self.__stop_train
+        return self._stop_train
 
     @abstractmethod
     def data_request(self):
@@ -42,11 +41,13 @@ class Trainer(BaseProcessor):
         pass
 
     def request_eval(self):
-        self.__validation_requested = True
+        self._validation_requested = True
 
     def request_stop_train(self):
-        self.__stop_train = True
+        self._stop_train = True
 
+    @abstractmethod
     def eval_call_back(self, eval_result):
-        self.__dev_eval_result = eval_result
-        self.__validation_requested = False
+        pass
+        # self.__dev_eval_result = eval_result
+        # self.__validation_requested = False

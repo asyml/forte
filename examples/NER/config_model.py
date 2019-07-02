@@ -52,6 +52,9 @@ learning_rate = 0.01
 momentum = 0.9
 decay_interval = 1
 decay_rate = 0.05
+
+random_seed = 1234
+
 # opt = {
 #     "optimizer": {
 #         "type": "MomentumOptimizer",

@@ -1,32 +1,37 @@
-from typing import Tuple, Dict
-import importlib
 import logging
-import numpy as np
 import os
+from typing import Tuple, Dict
+
+import numpy as np
+import texar
 import torch
-from torch import nn
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
-
-import texar
-from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
 from texar.modules.embedders import WordEmbedder
-from conditional_random_field import ConditionalRandomField
-config_model = importlib.import_module("config_model")
+from torch import nn
+
+from nlp.pipeline.models.NER.conditional_random_field import (
+    ConditionalRandomField,
+)
+from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
+from nlp.pipeline.models.NER.utils import set_random_seed
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class BiRecurrentConvCRF(nn.Module):
-    def __init__(self,
-                 word_alphabet: Alphabet,
-                 char_alphabet: Alphabet,
-                 tag_alphabet: Alphabet,
-                 embedding_dict: Dict,
-                 embedding_dim: int):
+    def __init__(
+        self,
+        word_alphabet: Alphabet,
+        char_alphabet: Alphabet,
+        tag_alphabet: Alphabet,
+        embedding_dict: Dict,
+        embedding_dim: int,
+        config_model,
+    ):
         super().__init__()
 
-        for word in embedding_dict:
-            if word not in word_alphabet.instance2index:
-                word_alphabet.add(word)
+        set_random_seed(config_model.random_seed)
 
         def construct_word_embedding_table():
             scale = np.sqrt(3.0 / embedding_dim)
@@ -45,11 +50,11 @@ class BiRecurrentConvCRF(nn.Module):
                     ).astype(np.float32)
                     oov += 1
                 table[index, :] = embedding
-            print("oov: %d when creating word embedding" % oov)
+            logger.info("oov: %d when creating word embedding from "
+                        "predefined embedding" % oov)
             return torch.from_numpy(table)
 
         word_table = construct_word_embedding_table()
-        print(f"The size of Vocabulary:{word_alphabet.size()}")
 
         self.word_embedder = WordEmbedder(
             vocab_size=word_alphabet.size(),
@@ -198,8 +203,6 @@ class BiRecurrentConvCRF(nn.Module):
         return output, hn, mask, length
 
 
-
-
 def prepare_rnn_seq(rnn_input, lengths, hx=None, masks=None, batch_first=False):
     """
 
@@ -253,9 +256,9 @@ def prepare_rnn_seq(rnn_input, lengths, hx=None, masks=None, batch_first=False):
     )
     if masks is not None:
         if batch_first:
-            masks = masks[:, :lens[0]]
+            masks = masks[:, : lens[0]]
         else:
-            masks = masks[:lens[0]]
+            masks = masks[: lens[0]]
 
     return seq, hx, rev_order, masks
 
@@ -285,9 +288,7 @@ def evaluate(output_file: str) -> Tuple[float, float, float, float]:
         (accuracy, precision, recall, F1)
     """
     score_file = f"{output_file}.score"
-    os.system(
-        "./conll03eval.v2 < %s > %s" % (output_file, score_file)
-    )
+    os.system("./conll03eval.v2 < %s > %s" % (output_file, score_file))
     with open(score_file, "r") as fin:
         fin.readline()
         line = fin.readline()

@@ -55,6 +55,7 @@ class Alphabet(object):
         if word_cnt is not None:
             for word in word_cnt:
                 self.add(word)
+            self.close()
 
     def add(self, instance):
         if instance not in self.instance2index:

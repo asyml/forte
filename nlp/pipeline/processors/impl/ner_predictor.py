@@ -1,5 +1,6 @@
 from typing import Dict, List
 from abc import abstractmethod
+import os
 import sys
 import torch
 import numpy as np
@@ -55,7 +56,7 @@ class CoNLLNERPredictor(Predictor):
         self.embedding_dict = resource.resources["embedding_dict"]
         self.embedding_dim = resource.resources["embedding_dim"]
         self.model = resource.resources["model"]
-
+        self.device = resource.resources["device"]
         self.normalize_func = lambda x: self.config_data.digit_re.sub("0", x)
 
         self.trained_epochs = 0
@@ -64,7 +65,7 @@ class CoNLLNERPredictor(Predictor):
     def predict(self, data_batch: Dict):
 
         tokens = data_batch["Token"]
-        offsets = data_batch['offset']
+        offsets = data_batch["offset"]
 
         pred_tokens, instances = [], []
         for words, poses, chunks, ners in zip(
@@ -101,20 +102,28 @@ class CoNLLNERPredictor(Predictor):
         self.model.eval()
         batch_data = self.get_batch_tensor(instances, device=self.device)
         word, char, _, _, labels, masks, lengths = batch_data
+        preds = self.model.decode(word, char, mask=masks)
+
         for i in range(len(tokens["text"])):
             sentence = tokens["text"][i]
             spans = tokens["span"][i]
             offset = offsets[i]
-            poses, chunks, ners = tokens['pos_tag'][i], tokens['chunk_tag'][
-                i], tokens['ner_tag'][i]
-            # print(f'length of spans:{len(spans)}, length of sentences:{len(
-            # sentence)}')
+            poses, chunks, ners = (
+                tokens["pos_tag"][i],
+                tokens["chunk_tag"][i],
+                tokens["ner_tag"][i],
+            )
             for j in range(len(sentence)):
-                predicted_tag = self.ner_alphabet.get_instance(labels[i][j])
-                kwargs_i = {"pos_tag": poses[j], "chunk_tag": chunks[j],
-                            "ner_tag": predicted_tag}
+                predicted_tag = self.ner_alphabet.get_instance(preds[i][j])
+                kwargs_i = {
+                    "pos_tag": poses[j],
+                    "chunk_tag": chunks[j],
+                    "ner_tag": predicted_tag,
+                }
                 token = self.ner_ontology.Token(
-                    self.component_name, spans[j][0]+offset, spans[j][1]+offset
+                    self.component_name,
+                    spans[j][0] + offset,
+                    spans[j][1] + offset,
                 )
                 token.set_fields(**kwargs_i)
                 pred_tokens.append(token)
@@ -180,7 +189,7 @@ class CoNLLNERPredictor(Predictor):
             lengths[i] = inst_size
             # word ids
             wid_inputs[i, :inst_size] = wids
-            wid_inputs[i, inst_size:] = self.word_alphabet.bos_id
+            wid_inputs[i, inst_size:] = self.word_alphabet.pad_id
             for c, cids in enumerate(cid_seqs):
                 cid_inputs[i, c, : len(cids)] = cids
                 cid_inputs[i, c, len(cids) :] = self.char_alphabet.pad_id
@@ -212,44 +221,77 @@ class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config):
         super().__init__(config)
         self.ner_ontology = CoNLL03Ontology
+        self.output_file = "tmp_eval.txt"
+        self.score_file = "tmp_eval.score"
+        self.scores = {}
 
     def consume_next(self, pack: DataPack):
-        tokens = pack.get_entries(
-            self.ner_ontology.Token
-        )
+        tokens = pack.get_entries(self.ner_ontology.Token)
         ori_cnt, pred_cnt = 0, 0
         for token in tokens:
-            if token.component != \
-                    "nlp.pipeline.data.readers.conll03_reader.CoNLL03Reader":
+            if (
+                token.component
+                != "nlp.pipeline.data.readers.conll03_reader.CoNLL03Reader"
+            ):
                 pred_cnt += 1
             else:
                 ori_cnt += 1
-
-        print(f'pred_cnt:{pred_cnt}, ori_cnt:{ori_cnt}')
-
-        for pred_sentence, ori_sentence in zip(pack.get_data(
-            context_type="sentence",
-            annotation_types={
-                "Token": {
-                    "component": "ner_predictor",
-                    "fields": ["chunk_tag", "pos_tag", "ner_tag"]
+        opened_file = open(self.output_file, "w+")
+        for pred_sentence, tgt_sentence in zip(
+            pack.get_data(
+                context_type="sentence",
+                annotation_types={
+                    "Token": {
+                        "component": "ner_predictor",
+                        "fields": ["chunk_tag", "pos_tag", "ner_tag"],
+                    },
+                    "Sentence": [],  # span by default
                 },
-                "Sentence": [],  # span by default
-            },
-        ), pack.get_data(
-            context_type="sentence",
-            annotation_types={
-                "Token": {
-                    # "component": "ner_predictor",
-                    "fields": ["chunk_tag", "pos_tag", "ner_tag"]
+            ),
+            pack.get_data(
+                context_type="sentence",
+                annotation_types={
+                    "Token": {"fields": ["chunk_tag", "pos_tag", "ner_tag"]},
+                    "Sentence": [],  # span by default
                 },
-                "Sentence": [],  # span by default
-            },
-        )):
-            print(pack.index.coverage_index["Sentence-to-Entry"]["Sentence.0"])
-            print(f"pred:{pred_sentence}")
-            print(f"ori:{ori_sentence}")
-            exit()
+            ),
+        ):
+
+            pred_tokens, tgt_tokens = (
+                pred_sentence["Token"],
+                tgt_sentence["Token"],
+            )
+            for i in range(len(pred_tokens["text"])):
+                w = pred_tokens["text"][i]
+                p = pred_tokens["pos_tag"][i]
+                ch = pred_tokens["chunk_tag"][i]
+                tgt = tgt_tokens["ner_tag"][i]
+                pred = pred_tokens["ner_tag"][i]
+
+                opened_file.write(
+                    "%d %s %s %s %s %s\n" % (i + 1, w, p, ch, tgt, pred)
+                )
+
+            opened_file.write("\n")
+        opened_file.close()
+        os.system(
+            "./conll03eval.v2 < %s > %s"
+            % (self.output_file, self.score_file)
+        )
+        with open(self.score_file, "r") as fin:
+            fin.readline()
+            line = fin.readline()
+            fields = line.split(";")
+            acc = float(fields[0].split(":")[1].strip()[:-1])
+            precision = float(fields[1].split(":")[1].strip()[:-1])
+            recall = float(fields[2].split(":")[1].strip()[:-1])
+            f1 = float(fields[3].split(":")[1].strip())
+        self.scores = {
+            "accuracy": acc,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+        }
 
     def get_result(self):
-        raise NotImplementedError
+        return self.scores
