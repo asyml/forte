@@ -29,6 +29,8 @@ class CoNLLNERPredictor(Predictor):
         self.embedding_dim = None
         self.device = None
         self.optim, self.trained_epochs = None, None
+        self.add_cnt = 0
+        self.input_cnt = 0
 
         self.train_instances_cache = []
 
@@ -62,9 +64,9 @@ class CoNLLNERPredictor(Predictor):
     def predict(self, data_batch: Dict):
 
         tokens = data_batch["Token"]
+        offsets = data_batch['offset']
 
         pred_tokens, instances = [], []
-
         for words, poses, chunks, ners in zip(
             tokens["text"],
             tokens["pos_tag"],
@@ -75,6 +77,7 @@ class CoNLLNERPredictor(Predictor):
             word_ids = []
             pos_ids, chunk_ids, ner_ids = [], [], []
             for word in words:
+                self.input_cnt += 1
                 char_ids = []
                 for char in word:
                     char_ids.append(self.char_alphabet.get_index(char))
@@ -101,6 +104,7 @@ class CoNLLNERPredictor(Predictor):
         for i in range(len(tokens["text"])):
             sentence = tokens["text"][i]
             spans = tokens["span"][i]
+            offset = offsets[i]
             poses, chunks, ners = tokens['pos_tag'][i], tokens['chunk_tag'][
                 i], tokens['ner_tag'][i]
             # print(f'length of spans:{len(spans)}, length of sentences:{len(
@@ -110,7 +114,7 @@ class CoNLLNERPredictor(Predictor):
                 kwargs_i = {"pos_tag": poses[j], "chunk_tag": chunks[j],
                             "ner_tag": predicted_tag}
                 token = self.ner_ontology.Token(
-                    self.component_name, spans[j][0], spans[j][1]
+                    self.component_name, spans[j][0]+offset, spans[j][1]+offset
                 )
                 token.set_fields(**kwargs_i)
                 pred_tokens.append(token)
@@ -120,9 +124,11 @@ class CoNLLNERPredictor(Predictor):
     def pack(self, data_pack: DataPack, *inputs):
         tokens = inputs[0]
         for i, token in enumerate(tokens):
-            if i == 0:
-                print(f'token:{token.pos_tag, token.chunk_tag,token.ner_tag}')
+            self.add_cnt += 1
             data_pack.add_entry(token)
+
+        # TODO: input_cnt != add_cnt, but why?
+        assert self.input_cnt == self.add_cnt
 
     def _record_fields(self, data_pack: DataPack):
         # data_pack.record_fields(
@@ -205,8 +211,22 @@ class CoNLLNERPredictor(Predictor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config):
         super().__init__(config)
+        self.ner_ontology = CoNLL03Ontology
 
     def consume_next(self, pack: DataPack):
+        tokens = pack.get_entries(
+            self.ner_ontology.Token
+        )
+        ori_cnt, pred_cnt = 0, 0
+        for token in tokens:
+            if token.component != \
+                    "nlp.pipeline.data.readers.conll03_reader.CoNLL03Reader":
+                pred_cnt += 1
+            else:
+                ori_cnt += 1
+
+        print(f'pred_cnt:{pred_cnt}, ori_cnt:{ori_cnt}')
+
         for pred_sentence, ori_sentence in zip(pack.get_data(
             context_type="sentence",
             annotation_types={
@@ -226,6 +246,7 @@ class CoNLLNEREvaluator(Evaluator):
                 "Sentence": [],  # span by default
             },
         )):
+            print(pack.index.coverage_index["Sentence-to-Entry"]["Sentence.0"])
             print(f"pred:{pred_sentence}")
             print(f"ori:{ori_sentence}")
             exit()

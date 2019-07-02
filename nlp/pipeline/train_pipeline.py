@@ -73,6 +73,7 @@ class TrainPipeline:
             for pack in self.dev_reader.dataset_iterator(
                     self.config_data.val_path):
                 self.predictor.process(pack)
+                print('add_cnt:{}'.format(self.predictor.add_cnt))
                 self.evaluator.consume_next(pack)
             validation_result['eval'] = self.evaluator.get_result()
 
