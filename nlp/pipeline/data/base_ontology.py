@@ -292,21 +292,3 @@ class BaseOntology:
         def __init__(self, component: str, begin: int, end: int,
                      tid: str = None):
             super().__init__(component, begin, end, tid)
-
-
-# class Token(Annotation):
-#     def __init__(self, component: str, begin: int, end: int,
-#                  tid: str = None):
-#         super().__init__(component, begin, end, tid)
-#
-#
-# class Sentence(Annotation):
-#     def __init__(self, component: str, begin: int, end: int,
-#                  tid: str = None):
-#         super().__init__(component, begin, end, tid)
-#
-#
-# class BaseOntology(NamedTuple):
-#     Token = Token
-#     Sentence = Sentence
-
