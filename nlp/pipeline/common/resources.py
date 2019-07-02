@@ -6,4 +6,4 @@ trainer)
 
 class Resources:
     def __init__(self, **kwargs):
-        pass
+        self.resources = kwargs

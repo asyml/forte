@@ -13,8 +13,9 @@ class Trainer(BaseProcessor):
         self.__validation_requested = False
         self.__dev_eval_result = None
 
+    @abstractmethod
     def initialize(self, resources: Resources):
-        pass
+        raise NotImplemented
 
     def validation_requested(self) -> bool:
         return self.__validation_requested
@@ -43,6 +44,9 @@ class Trainer(BaseProcessor):
     def request_eval(self):
         self.__validation_requested = True
 
-    def _eval_call_back(self, eval_result):
+    def request_stop_train(self):
+        self.__stop_train = True
+
+    def eval_call_back(self, eval_result):
         self.__dev_eval_result = eval_result
         self.__validation_requested = False

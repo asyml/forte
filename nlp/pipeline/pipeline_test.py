@@ -13,8 +13,8 @@ class PipelineTest(unittest.TestCase):
         # Define and config the Pipeline
         reader = OntonotesReader()
         dataset_path = "/Users/wei.wei/Documents/nlp-pipeline" \
-                       "/conll-formatted-ontonotes-5.0/data/" \
-                       "test/data/english/annotations/bn/abc/"
+                       "/conll-formatted-ontonotes-5.0/ner_data/" \
+                       "test/ner_data/english/annotations/bn/abc/"
         self.data_packs_iter = reader.dataset_iterator(dataset_path)
 
         kwargs = {

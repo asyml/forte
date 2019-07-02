@@ -340,7 +340,7 @@ class DataPack:
 
     Args:
         text (str, optional): A piece of natural language text.
-        doc_id (str, optional): A universal id of this data pack.
+        doc_id (str, optional): A universal id of this ner_data pack.
     """
 
     def __init__(self, text: str = None, doc_id: str = None):
@@ -360,7 +360,7 @@ class DataPack:
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
-            indexing (bool): Whether to update the data pack index. Indexing is
+            indexing (bool): Whether to update the ner_data pack index. Indexing is
                 always suggested unless you are sure that your pipeline will
                 never refer it.
 
@@ -393,7 +393,7 @@ class DataPack:
                 target.add(entry)
             self.internal_metas[name].id_counter += 1
 
-            # update the data pack index if needed
+            # update the ner_data pack index if needed
             self.index.update_basic_index([entry])
             if self.index.link_index_switch and isinstance(entry, Link):
                 self.index.update_link_index([entry])
@@ -436,7 +436,7 @@ class DataPack:
         """
 
         Args:
-            context_type (str): The granularity of the data context, which
+            context_type (str): The granularity of the ner_data context, which
                 could be either `"sentence"` or `"document"`
             annotation_types (dict): The annotation types and fields required.
                 The keys of the dict are the required annotation types and the
@@ -454,9 +454,9 @@ class DataPack:
                 also specify the component from which the annotations are
                 generated.
             offset (int): Will skip the first `offset` instances and generate
-                data from the `offset` + 1 instance.
+                ner_data from the `offset` + 1 instance.
         Returns:
-            A data generator, which generates one piece of data (a dict
+            A ner_data generator, which generates one piece of ner_data (a dict
             containing the required annotations and context).
         """
 

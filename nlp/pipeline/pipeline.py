@@ -38,7 +38,7 @@ class Pipeline:
                              instance_need: int,
                              instance_level: str = "sentence"):
         """
-        Load new data packs into `current_datapacks` according to the request.
+        Load new ner_data packs into `current_datapacks` according to the request.
 
         Args:
             instance_need: the number of instances needed.

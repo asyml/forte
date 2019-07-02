@@ -1,5 +1,5 @@
 """
-The reader that reads CoNLL data into our internal json data format.
+The reader that reads CoNLL ner_data into our internal json ner_data format.
 """
 import os
 import logging
@@ -7,10 +7,21 @@ import codecs
 from typing import Iterator
 from nlp.pipeline.data.readers.file_reader import MonoFileReader
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.conll03_ontology import CoNLL03Ontology
+from nlp.pipeline.data.base_ontology import BaseOntology
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+
+class CoNLL03Ontology(BaseOntology):
+    class Token(BaseOntology.Token):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
+            super().__init__(component, begin, end, tid)
+            self.chunk_tag = None
+            self.pos_tag = None
+            self.ner_tag = None
 
 
 class CoNLL03Reader(MonoFileReader):
@@ -26,7 +37,7 @@ class CoNLL03Reader(MonoFileReader):
         """
         for root, _, files in os.walk(dir_path):
             for data_file in files:
-                if data_file.endswith("gold_conll"):
+                if data_file.endswith("conll"):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:
