@@ -3,7 +3,7 @@ from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.io_utils import merge_batches, slice_batch
 from typing import Dict, List, Union, Iterable
-from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
+from nlp.pipeline.data.base_ontology import BaseOntology
 from nlp.pipeline.utils import *
 
 
@@ -139,7 +139,7 @@ class Predictor(BaseProcessor):
             input_pack.annotations,
             input_pack.links,
             input_pack.groups,
-            outer_type=OntonotesOntology.Sentence
+            outer_type=BaseOntology.Sentence
         )
         # print(input_pack.links)
 
