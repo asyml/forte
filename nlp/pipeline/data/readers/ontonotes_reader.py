@@ -1,5 +1,5 @@
 """
-The reader that reads Ontonotes data into Datapacks.
+The reader that reads Ontonotes ner_data into Datapacks.
 """
 import os
 import codecs

@@ -10,8 +10,8 @@ from nlp.pipeline.utils import *
 
 
 class BaseReader:
-    """The basic data reader class.
-    To be inherited by all data readers.
+    """The basic ner_data reader class.
+    To be inherited by all ner_data readers.
     """
     def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
@@ -28,7 +28,7 @@ class BaseReader:
         string-formatted :class:`DataPack`. If the cache file for a given
         ``file_path`` exists, we read the :class:`DataPack` from the cache
         (using :func:`deserialize_instance`).  If the cache file does not
-        exist, we will `create` it on our first pass through the data (using
+        exist, we will `create` it on our first pass through the ner_data (using
         :func:`serialize_instance`).
         """
         self._cache_directory = pathlib.Path(cache_directory)

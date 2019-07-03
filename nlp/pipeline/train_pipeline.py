@@ -1,23 +1,24 @@
-from nlp.pipeline.trainer import Trainer
+from nlp.pipeline.trainer.base_trainer import BaseTrainer
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.processors.predictor import Predictor
 from nlp.pipeline.common.evaluation import Evaluator
-from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
 import logging
 
 
 class TrainPipeline:
-    def __init__(self,
-                 train_reader: BaseReader,
-                 trainer: Trainer,
-                 dev_reader: BaseReader,
-                 # TODO: Let's define the config system.
-                 config,
-                 evaluator: Evaluator = None,
-                 predictor: Predictor = None,
-                 ):
-        resource = Resources(**config)
+    def __init__(
+            self,
+            train_reader: BaseReader,
+            trainer: BaseTrainer,
+            dev_reader: BaseReader,
+            # # TODO: Let's define the config system.
+            # config,
+            resource: Resources = None,
+            evaluator: Evaluator = None,
+            predictor: Predictor = None,
+    ):
+        # resource = Resources(config)
         trainer.initialize(resource)
 
         if predictor is not None:
@@ -31,15 +32,27 @@ class TrainPipeline:
         self.predictor = predictor
         self.evaluator = evaluator
         self.dev_reader = dev_reader
+        self.config_data = resource.resources["config_data"]
 
     def train(self):
-        epoch = 0
         pack_count = 0
+        epoch = 0
         while True:
-            for pack in self.train_reader.dataset_iterator():
-                for instance in pack.get_data(self.trainer.data_request()):
+            epoch += 1
+            # we need to have directory ready here
+            for pack in self.train_reader.dataset_iterator(
+                    self.config_data.train_path
+            ):
+                # data_request is a string. How to transform it to the
+                # function parameters? Or we can change the interface of
+                # get_data
+                # What if we want to do validate after several steps? We
+                # need to set this in the trainer.
+                for instance in pack.get_data(**self.trainer.data_request()):
                     if self.trainer.validation_requested():
-                        self.trainer.eval_call_back(self.eval_dev())
+                        dev_res = self.eval_dev(epoch)
+                        self.trainer.validation_done()
+                        self.trainer.post_validation_action(dev_res)
                     if self.trainer.stop_train():
                         return
                     # collect a batch of instances
@@ -47,20 +60,23 @@ class TrainPipeline:
                 self.trainer.pack_finish_action(pack_count)
             self.trainer.epoch_finish_action(epoch)
 
-    def eval_dev(self):
-        def dev_instances():
-            for dev_pack in self.dev_reader.dataset_iterator():
-                for instance in dev_pack.get_data(self.trainer.data_request()):
-                    yield instance
+    def eval_dev(self, epoch: int):
 
-        validation_result = {
-            "loss": self.trainer.get_loss(dev_instances())
-        }
+        validation_result = {"epoch": epoch}
 
         if self.predictor is not None and self.evaluator is not None:
-            for pack in self.dev_reader.dataset_iterator():
+            for pack in self.dev_reader.dataset_iterator(
+                    self.config_data.val_path
+            ):
                 self.predictor.process(pack)
                 self.evaluator.consume_next(pack)
-            validation_result['eval'] = self.evaluator.get_result()
+            validation_result["eval"] = self.evaluator.get_result()
+
+            for pack in self.dev_reader.dataset_iterator(
+                    self.config_data.test_path
+            ):
+                self.predictor.process(pack)
+                self.evaluator.consume_next(pack)
+            validation_result["test"] = self.evaluator.get_result()
 
         return validation_result

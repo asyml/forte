@@ -1,5 +1,5 @@
 """
-Unit tests for data pack related operations.
+Unit tests for ner_data pack related operations.
 """
 import os
 import unittest

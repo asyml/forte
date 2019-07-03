@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class MonoFileReader(BaseReader):
-    """Data reader that reads one data pack from each single text files.
-    To be inherited by all mono file data readers.
+    """Data reader that reads one ner_data pack from each single text files.
+    To be inherited by all mono file ner_data readers.
 
     Args:
         lazy (bool, optional): The reading strategy used when reading a
@@ -50,6 +50,8 @@ class MonoFileReader(BaseReader):
             logger.info("reading from cache file %s", cache_file)
             return list(self._instances_from_cache_file(cache_file))
 
+        if not os.path.exists(dir_path):
+            raise FileNotFoundError(f"{dir_path} does not exist.")
         logger.info("reading from original files in %s", dir_path)
         datapacks: List[DataPack] = []
         for file_path in self.dataset_path_iterator(dir_path):
@@ -70,6 +72,8 @@ class MonoFileReader(BaseReader):
             logger.info("reading from cache file %s", cache_file)
             yield from self._instances_from_cache_file(cache_file)
         else:
+            if not os.path.exists(dir_path):
+                raise FileNotFoundError(f"{dir_path} does not exist.")
             logger.info("reading from original files in %s", dir_path)
             for file_path in self.dataset_path_iterator(dir_path):
                 yield self.read(

@@ -22,7 +22,7 @@ class Meta:
     def __init__(self, doc_id: str = None):
         self.doc_id = doc_id
         self.process_state = None
-
+        self.cache_state = None
 
 class InternalMeta:
     """
@@ -349,7 +349,7 @@ class DataPack:
 
     Args:
         text (str, optional): A piece of natural language text.
-        doc_id (str, optional): A universal id of this data pack.
+        doc_id (str, optional): A universal id of this ner_data pack.
     """
 
     def __init__(self, text: str = None, doc_id: str = None):
@@ -369,7 +369,7 @@ class DataPack:
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
-            indexing (bool): Whether to update the data pack index. Indexing is
+            indexing (bool): Whether to update the ner_data pack index. Indexing is
                 always suggested unless you are sure that your pipeline will
                 never refer it.
 
@@ -402,7 +402,7 @@ class DataPack:
                 target.add(entry)
             self.internal_metas[name].id_counter += 1
 
-            # update the data pack index if needed
+            # update the ner_data pack index if needed
             self.index.update_basic_index([entry])
             if self.index.link_index_switch and isinstance(entry, Link):
                 self.index.update_link_index([entry])
@@ -417,7 +417,8 @@ class DataPack:
         """Record in the internal meta that ``component`` has generated
         ``fields`` for ``entry_type``.
         """
-        if entry_type not in self.internal_metas.keys():
+        if entry_type not in self.internal_metas.keys() or \
+                self.internal_metas[entry_type].default_component is None:
             self.internal_metas[entry_type].default_component = component
 
         # ensure to record entry_type if fields list is empty
@@ -457,7 +458,7 @@ class DataPack:
                 pack.get_data("sentence", antype)
 
         Args:
-            context_type (str): The granularity of the data context, which
+            context_type (str): The granularity of the ner_data context, which
                 could be either `"sentence"` or `"document"`
             annotation_types (dict): The annotation types and fields required.
                 The keys of the dict are the required annotation types and the
@@ -475,13 +476,14 @@ class DataPack:
                 also specify the component from which the annotations are
                 generated.
             offset (int): Will skip the first `offset` instances and generate
-                data from the `offset` + 1 instance.
+                ner_data from the `offset` + 1 instance.
         Returns:
-            A data generator, which generates one piece of data (a dict
+            A ner_data generator, which generates one piece of ner_data (a dict
             containing the required annotations and context).
         """
 
         if context_type.lower() == "document":
+            # print(self.meta.doc_id)
             data = dict()
             data["context"] = self.text
             data["offset"] = 0

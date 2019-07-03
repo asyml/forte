@@ -1,4 +1,6 @@
 from abc import abstractmethod
+from typing import Dict, Any, List
+from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.utils import *
 from nlp.pipeline.common.resources import Resources
 
@@ -16,7 +18,7 @@ class BaseProcessor:
         self.batch_size = None
 
     @abstractmethod
-    def initialize(self, resources: Resources):
+    def initialize(self, resource: Dict):
         """Initialize the processor with ``recources``."""
         pass
 
