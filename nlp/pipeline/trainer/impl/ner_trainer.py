@@ -10,13 +10,13 @@ import torchtext
 from tqdm import tqdm
 
 from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
-from nlp.pipeline.trainer.trainer import Trainer
+from nlp.pipeline.trainer.base_trainer import BaseTrainer
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class CoNLLNERTrainer(Trainer):
+class CoNLLNERTrainer(BaseTrainer):
     def __init__(self, config):
         super().__init__(config)
 
@@ -36,7 +36,8 @@ class CoNLLNERTrainer(Trainer):
 
         self.train_instances_cache = []
         self.max_char_length = 0
-        self.__dev_eval_result = None
+
+        self.__past_dev_result = None
 
     def initialize(self, resource):
 
@@ -150,7 +151,6 @@ class CoNLLNERTrainer(Trainer):
 
             # update log
             if bid % 200 == 0:
-
                 log_info = "train: %d loss: %.4f" % (
                     bid,
                     train_err / train_total,
@@ -166,7 +166,7 @@ class CoNLLNERTrainer(Trainer):
 
         if epoch % self.config_model.decay_interval == 0:
             lr = self.config_model.learning_rate / (
-                1.0 + self.trained_epochs * self.config_model.decay_rate
+                    1.0 + self.trained_epochs * self.config_model.decay_rate
             )
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
@@ -183,7 +183,7 @@ class CoNLLNERTrainer(Trainer):
         losses = 0
         val_data = list(instances)
         for i in tqdm(
-            range(0, len(val_data), self.config_data.test_batch_size)
+                range(0, len(val_data), self.config_data.test_batch_size)
         ):
             b_data = val_data[i: i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
@@ -195,22 +195,22 @@ class CoNLLNERTrainer(Trainer):
         mean_loss = losses / len(val_data)
         return mean_loss
 
-    def eval_call_back(self, eval_result):
-
+    def post_validation_action(self, eval_result):
         if (
-            not self.__dev_eval_result
-            or eval_result["eval"]["f1"] > self.__dev_eval_result["eval"]["f1"]
+                not self.__past_dev_result
+                or eval_result["eval"]["f1"] > self.__past_dev_result["eval"][
+            "f1"]
         ):
-            self.__dev_eval_result = eval_result
+            self.__past_dev_result = eval_result
             logger.info("validation f1 increased, saving model")
             self.save_model_checkpoint()
 
-        best_epoch = self.__dev_eval_result["epoch"]
+        best_epoch = self.__past_dev_result["epoch"]
         acc, prec, rec, f1 = (
-            self.__dev_eval_result["eval"]["accuracy"],
-            self.__dev_eval_result["eval"]["precision"],
-            self.__dev_eval_result["eval"]["recall"],
-            self.__dev_eval_result["eval"]["f1"],
+            self.__past_dev_result["eval"]["accuracy"],
+            self.__past_dev_result["eval"]["precision"],
+            self.__past_dev_result["eval"]["recall"],
+            self.__past_dev_result["eval"]["f1"],
         )
         logger.info(
             f"best val  acc: {acc}, precision: {prec}, recall: {rec}, "
@@ -218,16 +218,15 @@ class CoNLLNERTrainer(Trainer):
         )
 
         acc, prec, rec, f1 = (
-            self.__dev_eval_result["test"]["accuracy"],
-            self.__dev_eval_result["test"]["precision"],
-            self.__dev_eval_result["test"]["recall"],
-            self.__dev_eval_result["test"]["f1"],
+            self.__past_dev_result["test"]["accuracy"],
+            self.__past_dev_result["test"]["precision"],
+            self.__past_dev_result["test"]["recall"],
+            self.__past_dev_result["test"]["f1"],
         )
         logger.info(
             f"best test  acc: {acc}, precision: {prec}, recall: {rec}, "
             f"F1: {f1} % (epoch: {best_epoch})"
         )
-        self._validation_requested = False
 
     def finish(self):
         self.save_model_checkpoint()

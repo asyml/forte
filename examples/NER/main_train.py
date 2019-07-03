@@ -6,7 +6,7 @@ from torch.optim import SGD
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
 from nlp.pipeline.models.NER.model_factory import BiRecurrentConvCRF
-from nlp.pipeline.models.NER.utils import load_glove_embedding, set_random_seed
+from nlp.pipeline.models.NER.utils import load_glove_embedding
 from nlp.pipeline.models.NER.vocabulary_processor import \
     CoNLL03VocabularyProcessor, Alphabet
 from nlp.pipeline.processors.impl.ner_predictor import (
@@ -14,7 +14,7 @@ from nlp.pipeline.processors.impl.ner_predictor import (
     CoNLLNEREvaluator,
 )
 from nlp.pipeline.train_pipeline import TrainPipeline
-from nlp.pipeline.trainer.trainers.ner_trainer import CoNLLNERTrainer
+from nlp.pipeline.trainer.impl.ner_trainer import CoNLLNERTrainer
 
 config_data = importlib.import_module("config_data")
 config_model = importlib.import_module("config_model")
