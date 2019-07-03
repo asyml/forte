@@ -50,6 +50,9 @@ class TrainPipeline:
                 # need to set this in the trainer.
                 for instance in pack.get_data(**self.trainer.data_request()):
                     if self.trainer.validation_requested():
+                        # TODO(haoransh): How to record the epoch? Or we should
+                        #  leave out the epoch metric? Here the epoch will
+                        #  become ori_epoch+1
                         self.trainer.eval_call_back(self.eval_dev(epoch))
                     if self.trainer.stop_train():
                         return

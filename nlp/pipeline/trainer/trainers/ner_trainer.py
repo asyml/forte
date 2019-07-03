@@ -123,6 +123,7 @@ class CoNLLNERTrainer(Trainer):
         start_time = time.time()
         self.model.train()
 
+        # Each time we will clear and reload the train_instances_cache
         instances = self.train_instances_cache
         random.shuffle(self.train_instances_cache)
         data_iterator = torchtext.data.iterator.pool(
@@ -170,6 +171,7 @@ class CoNLLNERTrainer(Trainer):
             )
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
+            logger.info(f"update learning rate to {lr}")
 
         self.request_eval()
         self.train_instances_cache.clear()
@@ -213,7 +215,7 @@ class CoNLLNERTrainer(Trainer):
             self.__dev_eval_result["eval"]["f1"],
         )
         logger.info(
-            f"best val  acc: {acc}, precision: {prec}, recall: {rec}, "
+            f"best val acc: {acc}, precision: {prec}, recall: {rec}, "
             f"F1: {f1} % (epoch: {best_epoch})"
         )
 
@@ -224,7 +226,7 @@ class CoNLLNERTrainer(Trainer):
             self.__dev_eval_result["test"]["f1"],
         )
         logger.info(
-            f"best test  acc: {acc}, precision: {prec}, recall: {rec}, "
+            f"best test acc: {acc}, precision: {prec}, recall: {rec}, "
             f"F1: {f1} % (epoch: {best_epoch})"
         )
         self._validation_requested = False
