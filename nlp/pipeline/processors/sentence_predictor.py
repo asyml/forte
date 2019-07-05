@@ -12,12 +12,11 @@ class NLTKSentenceSegmenter(Predictor):
         super().__init__()
 
         self.context_type = "document"
-        self.batch_size = 20
+        self.batch_size = 4
         self.ontology = CoNLL03Ontology  # should specify for each pipeline
 
     def predict(self, data_batch: Dict):
         docs = data_batch["context"]
-        print(docs[10])
         offsets = data_batch["offset"]
         pred = {
             "Sentence": {
@@ -60,6 +59,6 @@ class NLTKSentenceSegmenter(Predictor):
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(
             [],
-            self.component_name,
             self.ontology.Sentence.__name__,
+            self.component_name,
         )

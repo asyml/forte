@@ -110,11 +110,11 @@ class CoNLL03Reader(MonoFileReader):
     def _record_fields(self):
         self.current_datapack.record_fields(
             [],
-            self.component_name,
             self.ner_ontology.Sentence.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["chunk_tag", "pos_tag", "ner_tag"],
-            self.component_name,
             self.ner_ontology.Token.__name__,
+            self.component_name,
         )

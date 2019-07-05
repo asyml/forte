@@ -15,7 +15,7 @@ class NLTKPOSTagger(Predictor):
         self.annotation_types = {
             "Token": [],
         }
-        self.batch_size = 3
+        self.batch_size = 4
         self.ontology = CoNLL03Ontology  # should specify for each pipeline
 
     def predict(self, data_batch: Dict):
@@ -52,7 +52,6 @@ class NLTKPOSTagger(Predictor):
 
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(
-            ["pos_tag"],
-            self.component_name,
+            ["pos_tag", "chunk_tag"],  # shouldn't have chunk tag here
             self.ontology.Token.__name__,
         )

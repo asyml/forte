@@ -35,6 +35,8 @@ class MonoFileReader(BaseReader):
             dir_path (str): The directory path of the dataset. The reader will
                 read all the files under this directory.
         """
+        if not os.path.exists(dir_path):
+            raise FileNotFoundError(f"{dir_path} does not exist.")
 
         if self._cache_directory:
             cache_file = self._get_cache_location_for_file_path(dir_path)
@@ -50,8 +52,6 @@ class MonoFileReader(BaseReader):
             logger.info("reading from cache file %s", cache_file)
             return list(self._instances_from_cache_file(cache_file))
 
-        if not os.path.exists(dir_path):
-            raise FileNotFoundError(f"{dir_path} does not exist.")
         logger.info("reading from original files in %s", dir_path)
         datapacks: List[DataPack] = []
         for file_path in self.dataset_path_iterator(dir_path):
@@ -72,8 +72,6 @@ class MonoFileReader(BaseReader):
             logger.info("reading from cache file %s", cache_file)
             yield from self._instances_from_cache_file(cache_file)
         else:
-            if not os.path.exists(dir_path):
-                raise FileNotFoundError(f"{dir_path} does not exist.")
             logger.info("reading from original files in %s", dir_path)
             for file_path in self.dataset_path_iterator(dir_path):
                 yield self.read(

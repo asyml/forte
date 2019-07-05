@@ -85,7 +85,7 @@ class DummyRelationExtractor(Predictor):
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(
             ["parent", "child", "rel_type"],
-            self.component_name,
             RelationOntology.RelationLink.__name__,
+            self.component_name,
         )
 

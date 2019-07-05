@@ -1,7 +1,5 @@
 from typing import Dict, List
-from abc import abstractmethod
 import os
-import sys
 import torch
 import numpy as np
 from nlp.pipeline.common.evaluation import Evaluator
@@ -38,12 +36,11 @@ class CoNLLNERPredictor(Predictor):
         # TODO(haoransh): reconsider these hard-coded parameters
         self.context_type = "sentence"
         self.annotation_types = {
-            "Token": ["chunk_tag", "pos_tag", "ner_tag"],
+            "Token": ["chunk_tag", "pos_tag"],
             "Sentence": [],  # span by default
         }
-        self.batch_size = 3
+        self.batch_size = 4
         self.ner_ontology = CoNLL03Ontology
-        self.component_name = "ner_predictor"
 
     def initialize(self, resource: Resources):
         self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
@@ -65,14 +62,12 @@ class CoNLLNERPredictor(Predictor):
     def predict(self, data_batch: Dict):
 
         tokens = data_batch["Token"]
-        offsets = data_batch["offset"]
 
-        pred_tokens, instances = [], []
-        for words, poses, chunks, ners in zip(
+        instances = []
+        for words, poses, chunks in zip(
             tokens["text"],
             tokens["pos_tag"],
-            tokens["chunk_tag"],
-            tokens["ner_tag"],
+            tokens["chunk_tag"]
         ):
             char_id_seqs = []
             word_ids = []
@@ -93,63 +88,79 @@ class CoNLLNERPredictor(Predictor):
                 pos_ids.append(self.pos_alphabet.get_index(pos))
             for chunk in chunks:
                 chunk_ids.append(self.chunk_alphabet.get_index(chunk))
-            for ner in ners:
-                ner_ids.append(self.ner_alphabet.get_index(ner))
             instances.append(
-                (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
+                (word_ids, char_id_seqs, pos_ids, chunk_ids)
             )
 
         self.model.eval()
         batch_data = self.get_batch_tensor(instances, device=self.device)
-        word, char, _, _, labels, masks, lengths = batch_data
+        word, char, _, _, masks, lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
-        for i in range(len(tokens["text"])):
-            sentence = tokens["text"][i]
-            spans = tokens["span"][i]
-            offset = offsets[i]
-            poses, chunks, ners = (
-                tokens["pos_tag"][i],
-                tokens["chunk_tag"][i],
-                tokens["ner_tag"][i],
-            )
-            for j in range(len(sentence)):
-                predicted_tag = self.ner_alphabet.get_instance(preds[i][j])
-                kwargs_i = {
-                    "pos_tag": poses[j],
-                    "chunk_tag": chunks[j],
-                    "ner_tag": predicted_tag,
-                }
-                token = self.ner_ontology.Token(
-                    self.component_name,
-                    spans[j][0] + offset,
-                    spans[j][1] + offset,
-                )
-                token.set_fields(**kwargs_i)
-                pred_tokens.append(token)
+        pred = {
+            "Token": {
+                "ner_tag": [],
+                "tid": [],
+            }
+        }
 
-        return pred_tokens
+        for i in range(len(tokens["tid"])):
+            tids = tokens["tid"][i]
+            ner_tags = []
+            for j in range(len(tids)):
+                ner_tags.append(self.ner_alphabet.get_instance(preds[i][j]))
 
-    def pack(self, data_pack: DataPack, *inputs):
-        tokens = inputs[0]
-        for i, token in enumerate(tokens):
-            self.add_cnt += 1
-            data_pack.add_entry(token)
+            pred["Token"]["ner_tag"].append(np.array(ner_tags))
+            pred["Token"]["tid"].append(np.array(tids))
 
-        # TODO: input_cnt != add_cnt, but why?
-        assert self.input_cnt == self.add_cnt
+        return pred
+
+    def pack(self, data_pack: DataPack, output_dict: Dict = None):
+        """
+        Write the prediction results back to datapack. If :attr:`_overwrite`
+        is `True`, write the predicted ner_tag to the original tokens.
+        Otherwise, create a new set of tokens and write the predicted ner_tag
+        to the new tokens (usually use this configuration for evaluation.)
+        """
+        if output_dict is None: return
+
+        if self._overwrite:
+            for i in range(len(output_dict["Token"]["tid"])):
+                for j in range(len(output_dict["Token"]["tid"][i])):
+                    tid = output_dict["Token"]["tid"][i][j]
+                    ner_tag = output_dict["Token"]["ner_tag"][i][j]
+                    data_pack.index.entry_index[tid].ner_tag = ner_tag
+
+        else:
+            for i in range(len(output_dict["Token"]["tid"])):
+                for j in range(len(output_dict["Token"]["tid"][i])):
+                    tid = output_dict["Token"]["tid"][i][j]
+                    orig_token = data_pack.index.entry_index[tid]
+                    ner_tag = output_dict["Token"]["ner_tag"][i][j]
+
+                    kwargs_i = {
+                        "ner_tag": ner_tag,
+                    }
+                    token = self.ner_ontology.Token(
+                        self.component_name,
+                        orig_token.span.begin,
+                        orig_token.span.end,
+                    )
+                    token.set_fields(**kwargs_i)
+                    data_pack.add_entry(token)
 
     def _record_fields(self, data_pack: DataPack):
-        # data_pack.record_fields(
-        #     [],
-        #     self.component_name,
-        #     self.ner_ontology.Sentence.__name__,
-        # )
-        data_pack.record_fields(
-            ["chunk_tag", "pos_tag", "ner_tag"],
-            self.component_name,
-            self.ner_ontology.Token.__name__,
-        )
+        if self._overwrite:
+            data_pack.record_fields(
+                ["ner_tag"],
+                self.ner_ontology.Token.__name__,
+            )
+        else:
+            data_pack.record_fields(
+                ["ner_tag"],
+                self.ner_ontology.Token.__name__,
+                self.component_name
+            )
 
     def get_batch_tensor(self, data: List, device=None):
         """
@@ -176,14 +187,13 @@ class CoNLLNERPredictor(Predictor):
         )
         pid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
         chid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
-        nid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
 
         masks = np.zeros([batch_size, batch_length], dtype=np.float32)
 
         lengths = np.empty(batch_size, dtype=np.int64)
 
         for i, inst in enumerate(data):
-            wids, cid_seqs, pids, chids, nids = inst
+            wids, cid_seqs, pids, chids = inst
 
             inst_size = len(wids)
             lengths[i] = inst_size
@@ -200,9 +210,6 @@ class CoNLLNERPredictor(Predictor):
             # chunk ids
             chid_inputs[i, :inst_size] = chids
             chid_inputs[i, inst_size:] = self.chunk_alphabet.pad_id
-            # ner ids
-            nid_inputs[i, :inst_size] = nids
-            nid_inputs[i, inst_size:] = self.ner_alphabet.pad_id
             # masks
             masks[i, :inst_size] = 1.0
 
@@ -210,40 +217,30 @@ class CoNLLNERPredictor(Predictor):
         chars = torch.from_numpy(cid_inputs).to(device)
         pos = torch.from_numpy(pid_inputs).to(device)
         chunks = torch.from_numpy(chid_inputs).to(device)
-        ners = torch.from_numpy(nid_inputs).to(device)
         masks = torch.from_numpy(masks).to(device)
         lengths = torch.from_numpy(lengths).to(device)
 
-        return words, chars, pos, chunks, ners, masks, lengths
+        return words, chars, pos, chunks, masks, lengths
 
 
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config):
         super().__init__(config)
         self.ner_ontology = CoNLL03Ontology
+        self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
         self.scores = {}
 
     def consume_next(self, pack: DataPack):
-        tokens = pack.get_entries(self.ner_ontology.Token)
-        ori_cnt, pred_cnt = 0, 0
-        for token in tokens:
-            if (
-                token.component
-                != "nlp.pipeline.data.readers.conll03_reader.CoNLL03Reader"
-            ):
-                pred_cnt += 1
-            else:
-                ori_cnt += 1
         opened_file = open(self.output_file, "w+")
         for pred_sentence, tgt_sentence in zip(
             pack.get_data(
                 context_type="sentence",
                 annotation_types={
                     "Token": {
-                        "component": "ner_predictor",
-                        "fields": ["chunk_tag", "pos_tag", "ner_tag"],
+                        "component": self.test_component,
+                        "fields": ["ner_tag"],
                     },
                     "Sentence": [],  # span by default
                 },
@@ -261,10 +258,12 @@ class CoNLLNEREvaluator(Evaluator):
                 pred_sentence["Token"],
                 tgt_sentence["Token"],
             )
+
+            # print(pred_tokens)
             for i in range(len(pred_tokens["text"])):
-                w = pred_tokens["text"][i]
-                p = pred_tokens["pos_tag"][i]
-                ch = pred_tokens["chunk_tag"][i]
+                w = tgt_tokens["text"][i]
+                p = tgt_tokens["pos_tag"][i]
+                ch = tgt_tokens["chunk_tag"][i]
                 tgt = tgt_tokens["ner_tag"][i]
                 pred = pred_tokens["ner_tag"][i]
 

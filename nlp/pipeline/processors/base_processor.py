@@ -18,7 +18,7 @@ class BaseProcessor:
         self.batch_size = None
 
     @abstractmethod
-    def initialize(self, resource: Dict):
+    def initialize(self, resource: Resources):
         """Initialize the processor with ``recources``."""
         pass
 

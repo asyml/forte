@@ -12,7 +12,7 @@ class NLTKWordTokenizer(Predictor):
         super().__init__()
 
         self.context_type = "sentence"
-        self.batch_size = 3
+        self.batch_size = 4
         self.ontology = CoNLL03Ontology  # should specify for each pipeline
 
     def predict(self, data_batch: Dict):
@@ -56,6 +56,6 @@ class NLTKWordTokenizer(Predictor):
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(
             [],
-            self.component_name,
             self.ontology.Token.__name__,
+            self.component_name,
         )

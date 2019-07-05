@@ -1,9 +1,11 @@
+import logging
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.processors.predictor import Predictor
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.data.readers.base_reader import BaseReader
-import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class TrainPipeline:
@@ -22,10 +24,11 @@ class TrainPipeline:
         trainer.initialize(resource)
 
         if predictor is not None:
-            logging.info(
+            logger.info(
                 "Training pipeline initialized with real eval setting."
             )
             predictor.initialize(resource)
+            predictor.set_mode(overwrite=False)
 
         self.train_reader = train_reader
         self.trainer = trainer
@@ -55,7 +58,6 @@ class TrainPipeline:
                         self.trainer.post_validation_action(dev_res)
                     if self.trainer.stop_train():
                         return
-                    # collect a batch of instances
                     self.trainer.process(instance)
                 self.trainer.pack_finish_action(pack_count)
             self.trainer.epoch_finish_action(epoch)

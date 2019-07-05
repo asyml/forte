@@ -35,6 +35,8 @@ class BaseReader:
         os.makedirs(self._cache_directory, exist_ok=True)
 
     def _get_cache_location_for_file_path(self, file_path: str) -> str:
+        while file_path[-1] == '/':
+            file_path = file_path[:-1]
         return f"{self._cache_directory / file_path.split('/')[-1]}.cache"
 
     def _instances_from_cache_file(self,

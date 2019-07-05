@@ -6,8 +6,7 @@ import itertools
 from collections import defaultdict
 from typing import Union, Dict, Optional, List, DefaultDict
 import numpy as np
-from sortedcontainers import SortedList
-
+from sortedcontainers import SortedSet
 from nlp.pipeline.data.base_ontology import *
 
 logging.basicConfig(level=logging.INFO)
@@ -185,7 +184,7 @@ class DataIndex:
                 self.group_index[member].add(group.tid)
 
     def build_coverage_index(self,
-                             annotations,
+                             annotations: SortedSet,
                              links: List[Link] = None,
                              groups: List[Group] = None,
                              outer_type: Optional[type] = None,
@@ -353,7 +352,7 @@ class DataPack:
     """
 
     def __init__(self, text: str = None, doc_id: str = None):
-        self.annotations = SortedList()
+        self.annotations = SortedSet()
         self.links: List[Link] = []
         self.groups: List[Group] = []
         self.meta: Meta = Meta(doc_id)
@@ -413,7 +412,7 @@ class DataPack:
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)].tid
 
-    def record_fields(self, fields: list, component: str, entry_type: str):
+    def record_fields(self, fields: list, entry_type: str, component: str = None):
         """Record in the internal meta that ``component`` has generated
         ``fields`` for ``entry_type``.
         """
@@ -421,6 +420,8 @@ class DataPack:
                 self.internal_metas[entry_type].default_component is None:
             self.internal_metas[entry_type].default_component = component
 
+        if component is None:
+            component = self.internal_metas[entry_type].default_component
         # ensure to record entry_type if fields list is empty
         if component not in self.internal_metas[
             entry_type].fields_created.keys():

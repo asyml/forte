@@ -294,41 +294,41 @@ class OntonotesReader(MonoFileReader):
     def _record_fields(self):
         self.current_datapack.record_fields(
             ["speaker", "part_id", "span"],
-            self.component_name,
             self.ontology.Sentence.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["sense", "pos_tag", "span"],
-            self.component_name,
             self.ontology.Token.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["ner_type", "span"],
-            self.component_name,
             self.ontology.EntityMention.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["pred_lemma", "pred_type", "span", "framenet_id"],
-            self.component_name,
             self.ontology.PredicateMention.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["span"],
-            self.component_name,
             self.ontology.PredicateArgument.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["parent", "child", "arg_type"],
-            self.component_name,
             self.ontology.PredicateLink.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["span"],
-            self.component_name,
             self.ontology.CoreferenceMention.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["coref_type", "members"],
-            self.component_name,
             self.ontology.CoreferenceGroup.__name__,
+            self.component_name,
         )

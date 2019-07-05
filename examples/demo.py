@@ -1,8 +1,10 @@
-from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors.dummy_processor import RelationOntology as Ont
-from nlp.pipeline.processors.sentence_predictor import NLTKSentenceSegmenter
-from nlp.pipeline.processors.tokenization_predictor import NLTKWordTokenizer
-from nlp.pipeline.processors.postag_predictor import NLTKPOSTagger
+from nlp.pipeline.pipeline import Pipeline
+from nlp.pipeline.processors import (
+    NLTKSentenceSegmenter, NLTKWordTokenizer,
+    NLTKPOSTagger, CoNLLNERPredictor
+)
+
 
 kwargs = {
     "dataset": {
@@ -15,8 +17,7 @@ pl = Pipeline(**kwargs)
 pl.processors.append(NLTKSentenceSegmenter())
 pl.processors.append(NLTKWordTokenizer())
 pl.processors.append(NLTKPOSTagger())
-# pl.processors.append(ner)
-# pl.processors.append(srl)
+pl.processors.append(CoNLLNERPredictor())
 
 
 for pack in pl.run():
@@ -32,6 +33,7 @@ for pack in pl.run():
             print(f"Relation: {parent.text} is {link.rel_type} {child.text}")
 
         # second method to get entry in a sentence
-        tokens = [(token.text, token.pos_tag) for token in pack.get(Ont.Token, sentence)]
-        print("Tokens:",tokens)
+        tokens = [(token.text, token.pos_tag) for token in
+                  pack.get(Ont.Token, sentence)]
+        print("Tokens:", tokens)
     input()

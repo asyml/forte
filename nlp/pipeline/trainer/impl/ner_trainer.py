@@ -112,11 +112,11 @@ class CoNLLNERTrainer(BaseTrainer):
         :return:
         """
         counter = len(self.train_instances_cache)
-        logging.info("Total number of ner_data: %d" % counter)
+        logger.info("Total number of ner_data: %d" % counter)
         lengths = sum(
             [len(instance[0]) for instance in self.train_instances_cache]
         )
-        logging.info("average sentence length: %f" % (lengths / counter))
+        logger.info("average sentence length: %f" % (lengths / counter))
 
         train_err = 0.0
         train_total = 0.0
@@ -197,6 +197,7 @@ class CoNLLNERTrainer(BaseTrainer):
         return mean_loss
 
     def post_validation_action(self, eval_result):
+        # TODO: generalize this method into base trainer
         if (
                 not self.__past_dev_result
                 or eval_result["eval"]["f1"] > self.__past_dev_result["eval"][
