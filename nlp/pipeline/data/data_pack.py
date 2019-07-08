@@ -4,13 +4,16 @@ such as reading, writing, checking and indexing.
 import logging
 import itertools
 from collections import defaultdict
-from typing import Union, Dict, Optional, List, DefaultDict
+from typing import Union, Dict, Optional, List, DefaultDict, Type, TypeVar
 import numpy as np
 from sortedcontainers import SortedSet
 from nlp.pipeline.data.base_ontology import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+E = TypeVar('E', bound=Entry)
 
 
 class Meta:
@@ -779,9 +782,9 @@ class DataPack:
             yield (batch, cnt)
 
     def get_entries(self,
-                    entry_type: type,
+                    entry_type: Type[E],
                     range_annotation: Annotation = None,
-                    component: str = None) -> Iterable:
+                    component: str = None) -> Iterable[E]:
         """
         Get ``entry_type`` entries from the span of ``range_annotation`` in a
         DataPack.
@@ -824,7 +827,7 @@ class DataPack:
                 yield entry
 
     def get(self,
-            entry_type: type,
+            entry_type: Type[E],
             range_annotation: Annotation = None,
-            component: str = None) -> Iterable:
+            component: str = None) -> Iterable[E]:
         return self.get_entries(entry_type, range_annotation, component)

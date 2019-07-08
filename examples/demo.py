@@ -1,39 +1,54 @@
+from nlp.pipeline import get_full_component_name
 from nlp.pipeline.processors.dummy_processor import RelationOntology as Ont
 from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors import (
     NLTKSentenceSegmenter, NLTKWordTokenizer,
-    NLTKPOSTagger, CoNLLNERPredictor
+    NLTKPOSTagger, CoNLLNERPredictor, SRLPredictor,
 )
 
 
-kwargs = {
-    "dataset": {
-        "dataset_dir": "./bbc",
-        "dataset_format": "plain"
+def main():
+    # kwargs = {
+    #     "dataset": {
+    #         "dataset_dir": "./bbc",
+    #         "dataset_format": "plain"
+    #     }
+    # }
+    kwargs = {
+        "dataset": {
+            "dataset_dir": "./ontonotes_sample_dataset",
+            "dataset_format": "ontonotes",
+        }
     }
-}
 
-pl = Pipeline(**kwargs)
-pl.processors.append(NLTKSentenceSegmenter())
-pl.processors.append(NLTKWordTokenizer())
-pl.processors.append(NLTKPOSTagger())
-pl.processors.append(CoNLLNERPredictor())
+    pl = Pipeline(**kwargs)
+    # pl.processors.append(NLTKSentenceSegmenter())
+    # pl.processors.append(NLTKWordTokenizer())
+    # pl.processors.append(NLTKPOSTagger())
+    # pl.processors.append(CoNLLNERPredictor())
+    pl.processors.append(SRLPredictor())
+
+    for pack in pl.run():
+        print(pack.meta.doc_id)
+        print(pack.text)
+        for sentence in pack.get(Ont.Sentence):
+            sent_text = sentence.text
+            print(sent_text)
+            # first method to get entry in a sentence
+            for link in pack.get(
+                    Ont.PredicateLink, sentence,
+                    component=get_full_component_name(pl.processors[0])):
+                parent = link.get_parent()
+                child = link.get_child()
+                print(f"SRL: \"{child.text}\" is role {link.arg_type} of "
+                      f"predicate \"{parent.text}\"")
+
+            # second method to get entry in a sentence
+            tokens = [(token.text, token.pos_tag) for token in
+                      pack.get(Ont.Token, sentence)]
+            print("Tokens:", tokens)
+        input("Press ENTER to continue...")
 
 
-for pack in pl.run():
-    print(pack.meta.doc_id)
-    print(pack.text)
-    for sentence in pack.get(Ont.Sentence):
-        sent_text = sentence.text
-        print(sent_text)
-        # first method to get entry in a sentence
-        for link in pack.get(Ont.RelationLink, sentence):
-            parent = link.get_parent()
-            child = link.get_child()
-            print(f"Relation: {parent.text} is {link.rel_type} {child.text}")
-
-        # second method to get entry in a sentence
-        tokens = [(token.text, token.pos_tag) for token in
-                  pack.get(Ont.Token, sentence)]
-        print("Tokens:", tokens)
-    input()
+if __name__ == '__main__':
+    main()

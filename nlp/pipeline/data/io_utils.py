@@ -35,6 +35,6 @@ def slice_batch(batch, start, length):
             for k, value in fields.items():
                 sliced_batch[entry][k] = value[start: start + length]
         else:  # context level feature
-            sliced_batch = fields[start: start + length]
+            sliced_batch[entry] = fields[start: start + length]
 
     return sliced_batch

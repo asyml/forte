@@ -22,7 +22,7 @@ class BaseTrainer(BaseProcessor):
         Returns:
 
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def data_request(self):
