@@ -11,6 +11,8 @@ from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
 from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
 from nlp.pipeline.processors.predictor import Predictor
 
+import logging
+logger = logging.getLogger(__name__)
 
 class CoNLLNERPredictor(Predictor):
     def __init__(self):
@@ -38,7 +40,6 @@ class CoNLLNERPredictor(Predictor):
         }
         self.batch_size = 3
         self.ner_ontology = CoNLL03Ontology
-        self.component_name = "ner_predictor"
 
     def initialize(self, resource: Resources):
         self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
@@ -109,7 +110,7 @@ class CoNLLNERPredictor(Predictor):
 
     def load_model_checkpoint(self):
         ckpt = torch.load(self.config_model.model_path)
-        print("restoring model from {}".format(self.config_model.model_path))
+        logger.info("restoring model from {}".format(self.config_model.model_path))
         self.model.load_state_dict(ckpt["model"])
 
     def pack(self, data_pack: DataPack, output_dict: Dict = None):
@@ -180,11 +181,6 @@ class CoNLLNERPredictor(Predictor):
                     )
                     token.set_fields(**kwargs_i)
                     data_pack.add_entry(token)
-
-    def load_model_checkpoint(self):
-        ckpt = torch.load(self.config_model.model_path)
-        print("restoring model from {}".format(self.config_model.model_path))
-        self.model.load_state_dict(ckpt["model"])
 
     def _record_fields(self, data_pack: DataPack):
         if self._overwrite:

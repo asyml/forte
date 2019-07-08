@@ -8,8 +8,9 @@ from typing import Iterator, List
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
 from nlp.pipeline.data.base_ontology import BaseOntology
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 __all__ = [
     "MonoFileReader",

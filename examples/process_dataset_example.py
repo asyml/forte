@@ -1,4 +1,5 @@
 import dill
+from termcolor import colored
 
 from nlp.pipeline.data import CoNLL03Ontology as Ont
 from nlp.pipeline.pipeline import Pipeline
@@ -12,10 +13,6 @@ def main():
         "dataset_dir": "../../bbc",
         "dataset_format": "plain"
     }
-    #dataset = {
-    #    "dataset_dir": "./ontonotes_sample_dataset",
-    #    "dataset_format": "ontonotes"
-    #}
 
     pl = Pipeline()
     pl.processors.append(NLTKSentenceSegmenter())
@@ -24,17 +21,17 @@ def main():
 
     ner_resource = dill.load(open('./NER/resources.pkl', 'rb'))
     ner_predictor = CoNLLNERPredictor()
-    ner_predictor.set_mode(True)
     ner_predictor.initialize(ner_resource)
     ner_predictor.load_model_checkpoint()
     pl.processors.append(ner_predictor)
+
     pl.processors.append(SRLPredictor(model_dir="./SRL_model/"))
 
     for pack in pl.process_dataset(dataset):
-        print(pack.meta.doc_id)
+        print(colored("Document", 'red'), pack.meta.doc_id)
         for sentence in pack.get(Ont.Sentence):
             sent_text = sentence.text
-            print("Sentence:", sent_text)
+            print("Sentence:", sent_text, "\n")
             # first method to get entry in a sentence
             for link in pack.get(
                     Ont.PredicateLink, sentence,
@@ -43,14 +40,16 @@ def main():
                 child = link.get_child()
                 print(f"SRL: \"{child.text}\" is role {link.arg_type} of "
                       f"predicate \"{parent.text}\"")
-
+            print()
             # second method to get entry in a sentence
             tokens = [(token.text, token.pos_tag) for token in
                       pack.get(Ont.Token, sentence)]
-            entities = [entity.text for entity in pack.get(Ont.EntityMention, sentence)]
-            print("Tokens:", tokens, "EntityMention", entities)
+            entities = [(entity.text, entity.ner_type) for entity in
+                        pack.get(Ont.EntityMention, sentence)]
+            print("Tokens:", tokens, "\n")
+            print("EntityMention:", entities, "\n")
 
-            input("Press ENTER to continue...")
+            input(colored("Press ENTER to continue...\n",'green'))
 
 
 if __name__ == '__main__':

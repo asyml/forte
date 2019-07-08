@@ -26,7 +26,7 @@ class Predictor(BaseProcessor):
 
         # TODO(haoransh): By default, we don't overwrite the original data
         #  pack with a processor
-        self._overwrite = False
+        self._overwrite = True
 
     def set_mode(self, overwrite: bool):
         self._overwrite = overwrite

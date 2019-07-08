@@ -32,10 +32,10 @@ class SRLPredictor(Predictor):
         self.annotation_types = {
             "Token": [],
         }
-        self.batch_size = 20
+        self.batch_size = 4
 
         self.ontology = OntonotesOntology
-        self.device = (torch.cuda.current_device()
+        self.device = (torch.device(torch.cuda.current_device())
                        if torch.cuda.is_available() else 'cpu')
 
         self.word_vocab = tx.data.Vocab(
@@ -84,6 +84,7 @@ class SRLPredictor(Predictor):
         batch_size = len(text)
         batch = tx.data.Batch(batch_size, text=text, text_ids=text_ids,
                               length=length, srl=[[]] * batch_size)
+        self.model = self.model.cuda()
         batch_srl_spans = self.model.decode(batch)
 
         # Convert predictions into annotations.
