@@ -8,26 +8,27 @@ from nlp.pipeline.processors.impl import CoNLLNERPredictor, SRLPredictor
 
 
 def main():
-    # dataset = {
-    #     "dataset_dir": "./bbc",
-    #     "dataset_format": "plain"
-    # }
     dataset = {
-        "dataset_dir": "./ontonotes_sample_dataset",
-        "dataset_format": "ontonotes"
+        "dataset_dir": "../../bbc",
+        "dataset_format": "plain"
     }
+    #dataset = {
+    #    "dataset_dir": "./ontonotes_sample_dataset",
+    #    "dataset_format": "ontonotes"
+    #}
 
     pl = Pipeline()
     pl.processors.append(NLTKSentenceSegmenter())
     pl.processors.append(NLTKWordTokenizer())
     pl.processors.append(NLTKPOSTagger())
 
-    # ner_resource = dill.load(open('./ner/resources.pkl', 'rb'))
-    # ner_predictor = CoNLLNERPredictor()
-    # ner_predictor.initialize(ner_resource)
-    # ner_predictor.load_model_checkpoint()
-    # pl.processors.append(ner_predictor)
-    pl.processors.append(SRLPredictor(model_dir="../../srl/texar-srl"))
+    ner_resource = dill.load(open('./NER/resources.pkl', 'rb'))
+    ner_predictor = CoNLLNERPredictor()
+    ner_predictor.set_mode(True)
+    ner_predictor.initialize(ner_resource)
+    ner_predictor.load_model_checkpoint()
+    pl.processors.append(ner_predictor)
+    pl.processors.append(SRLPredictor(model_dir="./SRL_model/"))
 
     for pack in pl.process_dataset(dataset):
         print(pack.meta.doc_id)
@@ -46,7 +47,8 @@ def main():
             # second method to get entry in a sentence
             tokens = [(token.text, token.pos_tag) for token in
                       pack.get(Ont.Token, sentence)]
-            print("Tokens:", tokens)
+            entities = [entity.text for entity in pack.get(Ont.EntityMention, sentence)]
+            print("Tokens:", tokens, "EntityMention", entities)
 
             input("Press ENTER to continue...")
 
