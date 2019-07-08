@@ -1,9 +1,9 @@
-from typing import List, Iterator
+from typing import List, Iterator, Union
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.processors.predictor import Predictor
 from nlp.pipeline.utils import *
-from nlp.pipeline.data.readers import (BaseReader, CoNLL03Reader,
-                                       OntonotesReader, PlainTextReader)
+from nlp.pipeline.data.readers import (
+    CoNLL03Reader, OntonotesReader, PlainTextReader)
 
 
 class Pipeline:
@@ -26,19 +26,29 @@ class Pipeline:
         Initialize the pipeline with configs
         """
         if "dataset" in kwargs.keys():
-            self.dataset_dir = kwargs["dataset"]["dataset_dir"]
-            dataset_format = kwargs["dataset"]["dataset_format"]
+            self.initialize_dataset(kwargs["dataset"])
 
-            if dataset_format.lower() == "ontonotes":
-                self.reader = OntonotesReader()
-            elif dataset_format.lower() == "conll03":
-                self.reader = CoNLL03Reader()
-            elif dataset_format.lower() == "plain":
-                self.reader = PlainTextReader()
-            else:
-                self.reader = BaseReader()
+    def initialize_dataset(self, dataset):
+        self.dataset_dir = dataset["dataset_dir"]
+        dataset_format = dataset["dataset_format"]
 
-    def run(self, hard_batch: bool = True) -> Iterator[DataPack]:
+        if dataset_format.lower() == "ontonotes":
+            self.reader = OntonotesReader()
+        elif dataset_format.lower() == "conll03":
+            self.reader = CoNLL03Reader()
+        else:
+            self.reader = PlainTextReader()
+
+    def process(self, text: str):
+        datapack = DataPack()
+        datapack.text = text
+        for processor_index, processor in enumerate(self.processors):
+            processor.process(datapack, hard_batch=False)
+        return datapack
+
+    def process_dataset(self,
+                dataset: dict = None,
+                hard_batch: bool = True) -> Iterator[DataPack]:
         """
         Process the documents in the dataset and return an iterator of DataPack.
 
@@ -51,19 +61,31 @@ class Pipeline:
                 datapack >> batch size), using soft batch is more
                 space-saving.)
         """
-        if hard_batch:
-            yield from self._process_next_in_hard_batch()
-        else:
-            yield from self._process_next_in_soft_batch()
 
-    def _process_next_in_soft_batch(self) -> Iterator[DataPack]:
-        for pack in self.reader.dataset_iterator(self.dataset_dir):
+        if isinstance(dataset, dict):
+            self.initialize_dataset(dataset)
+            data_iter = self.reader.dataset_iterator(self.dataset_dir)
+        elif isinstance(dataset, str):
+            self.dataset_dir = dataset
+            data_iter = self.reader.dataset_iterator(dataset)
+        elif dataset is None and self.reader and self.dataset_dir:
+            data_iter = self.reader.dataset_iterator(self.dataset_dir)
+        else:
+            raise ValueError
+
+        if hard_batch:
+            yield from self._process_next_in_hard_batch(data_iter)
+        else:
+            yield from self._process_next_in_soft_batch(data_iter)
+
+    def _process_next_in_soft_batch(self, dataset) -> Iterator[DataPack]:
+        for pack in dataset:
             for processor_index, processor in enumerate(self.processors):
                 processor.process(pack, hard_batch=False)
             yield pack
 
-    def _process_next_in_hard_batch(self) -> Iterator[DataPack]:
-        for pack in self.reader.dataset_iterator(self.dataset_dir):
+    def _process_next_in_hard_batch(self, dataset) -> Iterator[DataPack]:
+        for pack in dataset:
             # print(pack.meta.doc_id)
             self.current_packs.append(pack)
             for i, processor in enumerate(self.processors):
