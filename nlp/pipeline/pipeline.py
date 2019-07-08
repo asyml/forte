@@ -3,7 +3,7 @@ from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.processors.predictor import Predictor
 from nlp.pipeline.utils import *
 from nlp.pipeline.data.readers import (BaseReader, CoNLL03Reader,
-                                       OntonotesReader)
+                                       OntonotesReader, PlainTextReader)
 
 
 class Pipeline:
