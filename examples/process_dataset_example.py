@@ -1,3 +1,4 @@
+import dill
 from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors import CoNLL03Ontology as Ont
 from nlp.pipeline.processors import (
@@ -15,7 +16,13 @@ pl = Pipeline()
 pl.processors.append(NLTKSentenceSegmenter())
 pl.processors.append(NLTKWordTokenizer())
 pl.processors.append(NLTKPOSTagger())
-# pl.processors.append(CoNLLNERPredictor())
+
+ner_resource = dill.load(open('./ner/resources.pkl', 'rb'))
+ner_predictor = CoNLLNERPredictor()
+ner_predictor.initialize(ner_resource)
+ner_predictor.load_model_checkpoint()
+pl.processors.append(ner_predictor)
+
 
 for pack in pl.process_dataset(dataset):
     print(pack.meta.doc_id)

@@ -638,6 +638,7 @@ class DataPack:
             a_dict["text"].append(self.text[annotation.span.begin:
                                             annotation.span.end])
             for field in fields:
+                if field == "span" or field == "text": continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
                 ]:
@@ -699,6 +700,7 @@ class DataPack:
                 np.where(data[child_type]["tid"] == link.child)[0][0])
 
             for field in fields:
+                if field == "parent" or field == "child": continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
                 ]:

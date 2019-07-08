@@ -14,12 +14,13 @@ class TrainPipeline:
             train_reader: BaseReader,
             trainer: BaseTrainer,
             dev_reader: BaseReader,
-            # # TODO: Let's define the config system.
+            # TODO: Let's define the config system.
             # config,
             resource: Resources = None,
             evaluator: Evaluator = None,
             predictor: Predictor = None,
     ):
+        resource.save()
         # resource = Resources(config)
         trainer.initialize(resource)
 
@@ -61,6 +62,8 @@ class TrainPipeline:
                     self.trainer.process(instance)
                 self.trainer.pack_finish_action(pack_count)
             self.trainer.epoch_finish_action(epoch)
+            # Cannot call the `trainer.finish` function explicitly here since
+            # there is a return
 
     def eval_dev(self, epoch: int):
 
