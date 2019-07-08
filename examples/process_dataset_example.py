@@ -1,9 +1,10 @@
 import dill
 from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.processors import CoNLL03Ontology as Ont
+from nlp.pipeline.data import CoNLL03Ontology as Ont
+from nlp.pipeline.processors.impl import CoNLLNERPredictor
 from nlp.pipeline.processors import (
     NLTKSentenceSegmenter, NLTKWordTokenizer,
-    NLTKPOSTagger, CoNLLNERPredictor
+    NLTKPOSTagger
 )
 
 
