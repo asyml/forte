@@ -26,7 +26,7 @@ def main():
     # pl.processors.append(NLTKWordTokenizer())
     # pl.processors.append(NLTKPOSTagger())
     # pl.processors.append(CoNLLNERPredictor())
-    pl.processors.append(SRLPredictor())
+    pl.processors.append(SRLPredictor(model_dir="../../srl/texar-srl"))
 
     for pack in pl.run():
         print(pack.meta.doc_id)
@@ -37,7 +37,7 @@ def main():
             # first method to get entry in a sentence
             for link in pack.get(
                     Ont.PredicateLink, sentence,
-                    component=get_full_component_name(pl.processors[0])):
+                    component=pl.processors[0].component_name):
                 parent = link.get_parent()
                 child = link.get_child()
                 print(f"SRL: \"{child.text}\" is role {link.arg_type} of "

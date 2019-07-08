@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Tuple
 
 import texar as tx
@@ -23,7 +24,7 @@ class SRLPredictor(Predictor):
     char_vocab: tx.data.Vocab
     model: LabeledSpanGraphNetwork
 
-    def __init__(self):
+    def __init__(self, model_dir: str = "../../srl/texar-srl"):
         super().__init__()
 
         self.component_name = "srl_predictor"
@@ -37,20 +38,20 @@ class SRLPredictor(Predictor):
         self.device = (torch.cuda.current_device()
                        if torch.cuda.is_available() else 'cpu')
 
-        path_prefix = "../../srl/texar-srl/"
         self.word_vocab = tx.data.Vocab(
-            path_prefix + "embeddings/word_vocab.english.txt")
+            os.path.join(model_dir, "embeddings/word_vocab.english.txt"))
         self.char_vocab = tx.data.Vocab(
-            path_prefix + "embeddings/char_vocab.english.txt")
+            os.path.join(model_dir, "embeddings/char_vocab.english.txt"))
         model_hparams = LabeledSpanGraphNetwork.default_hparams()
-        model_hparams["context_embeddings"]["path"] = (
-                path_prefix + model_hparams["context_embeddings"]["path"])
-        model_hparams["head_embeddings"]["path"] = (
-                path_prefix + model_hparams["head_embeddings"]["path"])
+        model_hparams["context_embeddings"]["path"] = os.path.join(
+            model_dir, model_hparams["context_embeddings"]["path"])
+        model_hparams["head_embeddings"]["path"] = os.path.join(
+            model_dir, model_hparams["head_embeddings"]["path"])
         self.model = LabeledSpanGraphNetwork(
             self.word_vocab, self.char_vocab, model_hparams)
         self.model.load_state_dict(torch.load(
-            path_prefix + "pretrained/model.pt", map_location=self.device))
+            os.path.join(model_dir, "pretrained/model.pt"),
+            map_location=self.device))
 
     def initialize(self, resource: Resources):
         raise NotImplementedError
