@@ -60,7 +60,6 @@ class CoNLLNERPredictor(Predictor):
     def predict(self, data_batch: Dict):
 
         tokens = data_batch["Token"]
-        offsets = data_batch["offset"]
 
         pred_tokens, instances = [], []
         for words, poses, chunks, ners in zip(
@@ -99,12 +98,7 @@ class CoNLLNERPredictor(Predictor):
         word, char, _, _, labels, masks, lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
-        pred = {
-            "Token": {
-                "ner_tag": [],
-                "tid": [],
-            }
-        }
+        pred = {"Token": {"ner_tag": [], "tid": []}}
 
         for i in range(len(tokens["tid"])):
             tids = tokens["tid"][i]
@@ -124,23 +118,60 @@ class CoNLLNERPredictor(Predictor):
         Otherwise, create a new set of tokens and write the predicted ner_tag
         to the new tokens (usually use this configuration for evaluation.)
         """
-        if output_dict is None: return
+        if output_dict is None:
+            return
+        ### Add tokens
+        current_entity_mention: Tuple[int, str] = (-1, "None")
 
-    def load_model_checkpoint(self):
-        ckpt = torch.load(self.config_model.model_path)
-        print("restoring model from {}".format(self.config_model.model_path))
-        self.model.load_state_dict(ckpt["model"])
+        for i in range(len(output_dict["Token"]["tid"])):
+            # an instance
+            for j in range(len(output_dict["Token"]["tid"][i])):
+                tid = output_dict["Token"]["tid"][i][j]
+                orig_token = data_pack.index.entry_index[tid]
+                ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
-        else:
-            for i in range(len(output_dict["Token"]["tid"])):
-                for j in range(len(output_dict["Token"]["tid"][i])):
-                    tid = output_dict["Token"]["tid"][i][j]
-                    orig_token = data_pack.index.entry_index[tid]
-                    ner_tag = output_dict["Token"]["ner_tag"][i][j]
+                if self._overwrite:
+                    orig_token.ner_tag = ner_tag
+                    token = orig_token
+                    if token.ner_tag[0] == "B":
+                        current_entity_mention = (
+                            token.span.begin,
+                            token.ner_tag[2:],
+                        )
+                    elif token.ner_tag[0] == "I":
+                        continue
+                    elif token.ner_tag[0] == "O":
+                        continue
+                    elif token.ner_tag[0] == "E":
+                        assert token.ner_tag[2:] == current_entity_mention[1], (
+                            f"{token.ner_tag}, {current_entity_mention}, "
+                            f'all_tags:{output_dict["Token"]["ner_tag"][i]}'
+                        )
+                        kwargs_i = {"ner_type": current_entity_mention[1]}
+                        entity = self.ner_ontology.EntityMention(
+                            self.component_name,
+                            current_entity_mention[0],
+                            token.span.end,
+                        )
+                        entity.set_fields(**kwargs_i)
+                        data_pack.add_entry(entity)
+                    elif token.ner_tag[0] == "S":
+                        current_entity_mention: Tuple[int, str] = (
+                            token.span.begin,
+                            token.ner_tag[2:],
+                        )
+                        kwargs_i = {"ner_type": current_entity_mention[1]}
+                        entity = self.ner_ontology.EntityMention(
+                            self.component_name,
+                            current_entity_mention[0],
+                            token.span.end,
+                        )
+                        entity.set_fields(**kwargs_i)
+                        data_pack.add_entry(entity)
 
-                    kwargs_i = {
-                        "ner_tag": ner_tag,
-                    }
+                else:
+                    # Only Add EntityMention when overwrite is False
+                    kwargs_i = {"ner_tag": ner_tag}
                     token = self.ner_ontology.Token(
                         self.component_name,
                         orig_token.span.begin,
@@ -148,6 +179,11 @@ class CoNLLNERPredictor(Predictor):
                     )
                     token.set_fields(**kwargs_i)
                     data_pack.add_entry(token)
+
+    def load_model_checkpoint(self):
+        ckpt = torch.load(self.config_model.model_path)
+        print("restoring model from {}".format(self.config_model.model_path))
+        self.model.load_state_dict(ckpt["model"])
 
     def _record_fields(self, data_pack: DataPack):
         if self._overwrite:
@@ -159,8 +195,14 @@ class CoNLLNERPredictor(Predictor):
             data_pack.record_fields(
                 ["ner_tag"],
                 self.ner_ontology.Token.__name__,
-                self.component_name
+                self.component_name,
             )
+
+        data_pack.record_fields(
+            ["ner_type", "span"],
+            self.ner_ontology.EntityMention.__name__,
+            self.component_name,
+        )
 
     def get_batch_tensor(self, data: List, device=None):
         """
@@ -277,8 +319,7 @@ class CoNLLNEREvaluator(Evaluator):
             opened_file.write("\n")
         opened_file.close()
         os.system(
-            "./conll03eval.v2 < %s > %s"
-            % (self.output_file, self.score_file)
+            "./conll03eval.v2 < %s > %s" % (self.output_file, self.score_file)
         )
         with open(self.score_file, "r") as fin:
             fin.readline()
@@ -297,4 +338,3 @@ class CoNLLNEREvaluator(Evaluator):
 
     def get_result(self):
         return self.scores
-

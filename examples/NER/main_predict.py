@@ -1,7 +1,6 @@
 import dill
+
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
-
-
 from nlp.pipeline.processors.impl.ner_predictor import (
     CoNLLNERPredictor,
 )
@@ -13,6 +12,7 @@ output_file = 'predict_output.txt'
 resource = dill.load(open('resources.pkl', 'rb'))
 ner_predictor = CoNLLNERPredictor()
 ner_predictor.initialize(resource)
+ner_predictor.set_mode(overwrite=True)
 ner_predictor.load_model_checkpoint()
 
 opened_file = open(output_file, "w+")
@@ -22,21 +22,15 @@ for pack in reader.dataset_iterator(resource.resources[
     ner_predictor.process(pack)
 
     for pred_sentence in pack.get_data(
-        context_type="sentence",
-        annotation_types={
-            "Token": {
-                "component": "ner_predictor",
-                "fields": ["chunk_tag", "pos_tag", "ner_tag"],
-            },
-            "Sentence": [],  # span by default
-            "EntityMention": {
-                "component": "ner_predictor",
-            }
-        }):
+            context_type="sentence",
+            annotation_types={
+                "Token": {
+                    "fields": ["ner_tag"],
+                },
+                "Sentence": [],  # span by default
+                "EntityMention": {
+                }
+            }):
         print(pred_sentence)
-        exit()
 
 opened_file.close()
-
-
-

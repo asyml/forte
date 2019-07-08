@@ -11,7 +11,7 @@ class Predictor(BaseProcessor):
     """
     The base class of all predictors.
     """
-    def __init__(self, overwrite=True):
+    def __init__(self):
         super().__init__()
 
         self.current_batch: Dict = {}
@@ -19,7 +19,10 @@ class Predictor(BaseProcessor):
 
         self.data_pack_pool: List[DataPack] = []
         self.current_batch_sources: List[int] = []
-        self._overwrite = overwrite
+
+        # TODO(haoransh): By default, we don't overwrite the original data
+        #  pack with a processor
+        self._overwrite = False
 
     def set_mode(self, overwrite: bool):
         self._overwrite = overwrite
