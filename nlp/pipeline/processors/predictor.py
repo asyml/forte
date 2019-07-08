@@ -6,6 +6,10 @@ from typing import Dict, List, Union, Iterable
 from nlp.pipeline.data.base_ontology import BaseOntology
 from nlp.pipeline.utils import *
 
+__all__ = [
+    "Predictor",
+]
+
 
 class Predictor(BaseProcessor):
     """
@@ -53,7 +57,7 @@ class Predictor(BaseProcessor):
         Process the datapack strictly according to batch size. Will process
         as many batches in the input_pack as possible. For the tail instances
         that cannot make up a full batch, will store them in the
-        :attr:`current_batch` and process with the next ner_data pack when this
+        :attr:`current_batch` and process with the next data pack when this
         function is called next time.
 
         Args:
@@ -120,7 +124,7 @@ class Predictor(BaseProcessor):
 
     def finish_up_packs(self, end: int = None):
         """
-        Do finishing work for ner_data packs in :attr:`data_pack_pool` from the
+        Do finishing work for data packs in :attr:`data_pack_pool` from the
         beginning to ``end`` (``end`` is not included).
 
         Args:
@@ -154,7 +158,7 @@ class Predictor(BaseProcessor):
     @abstractmethod
     def _record_fields(self, data_pack: DataPack):
         """
-        Record the fields and entries that this processor add to ner_data packs.
+        Record the fields and entries that this processor add to data packs.
         """
         pass
 
@@ -167,7 +171,7 @@ class Predictor(BaseProcessor):
             group_types: Dict[str, Union[Dict, Iterable]] = None,
             offset: int = 0) -> Iterable[Dict]:
         """
-        Get a ner_data batch from ``data_pack``. If there is enough instances in
+        Get a data batch from ``data_pack``. If there is enough instances in
         ``data_pack``, the size of the batch is :attr:`batch_size` -
         :attr:`instance_num_in_current_batch`. Otherwise, the size is the
         number of instances left in ``data_pack``.

@@ -11,10 +11,14 @@ from nlp.pipeline.data.base_ontology import BaseOntology
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "MonoFileReader",
+]
+
 
 class MonoFileReader(BaseReader):
-    """Data reader that reads one ner_data pack from each single text files.
-    To be inherited by all mono file ner_data readers.
+    """Data reader that reads one data pack from each single text files.
+    To be inherited by all mono file data readers.
 
     Args:
         lazy (bool, optional): The reading strategy used when reading a

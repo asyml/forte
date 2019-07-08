@@ -5,6 +5,11 @@ from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
 from nlp.pipeline.data.base_ontology import Link
 
+__all__ = [
+    "RelationOntology",
+    "DummyRelationExtractor",
+]
+
 
 class RelationOntology(OntonotesOntology):
     class RelationLink(Link):

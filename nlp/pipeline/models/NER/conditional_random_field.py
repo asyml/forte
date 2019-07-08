@@ -17,8 +17,8 @@ def allowed_transitions(
 ) -> List[Tuple[int, int]]:
     """
     Given labels and a constraint type, returns the allowed transitions. It will
-    additionally include transitions for the start and end states, which are used
-    by the conditional random field.
+    additionally include transitions for the start and end states, which are
+    used by the conditional random field.
 
     Parameters
     ----------
@@ -26,8 +26,8 @@ def allowed_transitions(
         Indicates which constraint to apply. Current choices are
         "BIO", "IOB1", "BIOUL", and "BMES".
     labels : ``Dict[int, str]``, required
-        A mapping {label_id -> label}. Most commonly this would be the value from
-        Vocabulary.get_index_to_token_vocabulary()
+        A mapping {label_id -> label}. Most commonly this would be the value
+        from Vocabulary.get_index_to_token_vocabulary()
 
     Returns
     -------
@@ -207,11 +207,14 @@ class ConditionalRandomField(torch.nn.Module):
         super().__init__()
         self.num_tags = num_tags
 
-        # transitions[i, j] is the logit for transitioning from state i to state j.
+        # transitions[i, j] is the logit for transitioning from state i
+        # to state j.
         self.transitions = torch.nn.Parameter(torch.Tensor(num_tags, num_tags))
 
-        # _constraint_mask indicates valid transitions (based on supplied constraints).
-        # Include special start of sequence (num_tags + 1) and end of sequence tags (num_tags + 2)
+        # _constraint_mask indicates valid transitions (based on supplied
+        # constraints).
+        # Include special start of sequence (num_tags + 1) and end of sequence
+        # tags (num_tags + 2)
         if constraints is None:
             # All transitions are valid.
             constraint_mask = torch.Tensor(num_tags + 2, num_tags + 2).fill_(
@@ -228,7 +231,8 @@ class ConditionalRandomField(torch.nn.Module):
             constraint_mask, requires_grad=False
         )
 
-        # Also need logits for transitioning from "start" state and to "end" state.
+        # Also need logits for transitioning from "start" state and to "end"
+        # state.
         self.include_start_end_transitions = include_start_end_transitions
         if include_start_end_transitions:
             self.start_transitions = torch.nn.Parameter(torch.Tensor(num_tags))
@@ -246,8 +250,8 @@ class ConditionalRandomField(torch.nn.Module):
         self, logits: torch.Tensor, mask: torch.Tensor
     ) -> torch.Tensor:
         """
-        Computes the (batch_size,) denominator term for the log-likelihood, which is the
-        sum of the likelihoods across all possible state sequences.
+        Computes the (batch_size,) denominator term for the log-likelihood,
+        which is the um of the likelihoods across all possible state sequences.
         """
         batch_size, sequence_length, num_tags = logits.size()
 
@@ -255,29 +259,36 @@ class ConditionalRandomField(torch.nn.Module):
         mask = mask.float().transpose(0, 1).contiguous()
         logits = logits.transpose(0, 1).contiguous()
 
-        # Initial alpha is the (batch_size, num_tags) tensor of likelihoods combining the
-        # transitions to the initial states and the logits for the first timestep.
+        # Initial alpha is the (batch_size, num_tags) tensor of likelihoods
+        # combining the transitions to the initial states and the logits for
+        # the first timestep.
         if self.include_start_end_transitions:
             alpha = self.start_transitions.view(1, num_tags) + logits[0]
         else:
             alpha = logits[0]
 
-        # For each i we compute logits for the transitions from timestep i-1 to timestep i.
-        # We do so in a (batch_size, num_tags, num_tags) tensor where the axes are
-        # (instance, current_tag, next_tag)
+        # For each i we compute logits for the transitions from timestep i-1
+        # to timestep i.
+        # We do so in a (batch_size, num_tags, num_tags) tensor where the axes
+        # are (instance, current_tag, next_tag)
         for i in range(1, sequence_length):
-            # The emit scores are for time i ("next_tag") so we broadcast along the current_tag axis.
+            # The emit scores are for time i ("next_tag") so we broadcast along
+            # the current_tag axis.
             emit_scores = logits[i].view(batch_size, 1, num_tags)
-            # Transition scores are (current_tag, next_tag) so we broadcast along the instance axis.
+            # Transition scores are (current_tag, next_tag) so we broadcast
+            # along the instance axis.
             transition_scores = self.transitions.view(1, num_tags, num_tags)
-            # Alpha is for the current_tag, so we broadcast along the next_tag axis.
+            # Alpha is for the current_tag, so we broadcast along the next
+            # tag axis.
             broadcast_alpha = alpha.view(batch_size, num_tags, 1)
 
             # Add all the scores together and logexp over the current_tag axis
             inner = broadcast_alpha + emit_scores + transition_scores
 
-            # In valid positions (mask == 1) we want to take the logsumexp over the current_tag dimension
-            # of ``inner``. Otherwise (mask == 0) we want to retain the previous alpha.
+            # In valid positions (mask == 1) we want to take the logsumexp over
+            # the current_tag dimension
+            # of ``inner``. Otherwise (mask == 0) we want to retain the
+            # previous alpha.
             alpha = torch.logsumexp(inner, 1) * mask[i].view(
                 batch_size, 1
             ) + alpha * (1 - mask[i]).view(batch_size, 1)
@@ -295,7 +306,8 @@ class ConditionalRandomField(torch.nn.Module):
         self, logits: torch.Tensor, tags: torch.Tensor, mask: torch.LongTensor
     ) -> torch.Tensor:
         """
-        Computes the numerator term for the log-likelihood, which is just score(inputs, tags)
+        Computes the numerator term for the log-likelihood, which is just
+        score(inputs, tags)
         """
         batch_size, sequence_length, _ = logits.data.shape
 
@@ -304,13 +316,15 @@ class ConditionalRandomField(torch.nn.Module):
         mask = mask.float().transpose(0, 1).contiguous()
         tags = tags.transpose(0, 1).contiguous()
 
-        # Start with the transition scores from start_tag to the first tag in each input
+        # Start with the transition scores from start_tag to the first tag in
+        # each input
         if self.include_start_end_transitions:
             score = self.start_transitions.index_select(0, tags[0])
         else:
             score = 0.0
 
-        # Add up the scores for the observed transitions and all the inputs but the last
+        # Add up the scores for the observed transitions and all the inputs
+        # but the last
         for i in range(sequence_length - 1):
             # Each is shape (batch_size,)
             current_tag, next_tag = tags[i], tags[i + 1]
@@ -331,7 +345,8 @@ class ConditionalRandomField(torch.nn.Module):
                 score + transition_score * mask[i + 1] + emit_score * mask[i]
             )
 
-        # Transition from last state to "stop" state. To start with, we need to find the last tag
+        # Transition from last state to "stop" state. To start with, we need
+        # to find the last tag
         # for each instance.
         last_tag_index = mask.sum(0).long() - 1
         last_tags = tags.gather(0, last_tag_index.view(1, batch_size)).squeeze(
@@ -457,10 +472,10 @@ def viterbi_decode(
     tag_observations: Optional[List[int]] = None,
 ):
     """
-    Perform Viterbi decoding in log space over a sequence given a transition matrix
-    specifying pairwise (transition) potentials between tags and a matrix of shape
-    (sequence_length, num_tags) specifying unary potentials for possible tags per
-    timestep.
+    Perform Viterbi decoding in log space over a sequence given a transition
+    matrix specifying pairwise (transition) potentials between tags and a
+    matrix of shape (sequence_length, num_tags) specifying unary potentials for
+    possible tags per timestep.
 
     Parameters
     ----------
@@ -468,16 +483,17 @@ def viterbi_decode(
         A tensor of shape (sequence_length, num_tags) representing scores for
         a set of tags over a given sequence.
     transition_matrix : torch.Tensor, required.
-        A tensor of shape (num_tags, num_tags) representing the binary potentials
-        for transitioning between a given pair of tags.
+        A tensor of shape (num_tags, num_tags) representing the binary
+        potentials for transitioning between a given pair of tags.
     tag_observations : Optional[List[int]], optional, (default = None)
         A list of length ``sequence_length`` containing the class ids of observed
-        elements in the sequence, with unobserved elements being set to -1. Note that
-        it is possible to provide evidence which results in degenerate labelings if
-        the sequences of tags you provide as evidence cannot transition between each
-        other, or those transitions are extremely unlikely. In this situation we log a
-        warning, but the responsibility for providing self-consistent evidence ultimately
-        lies with the user.
+        elements in the sequence, with unobserved elements being set to -1.
+        Note that it is possible to provide evidence which results in
+        degenerate labelings if the sequences of tags you provide as evidence
+        cannot transition between each other, or those transitions are
+        extremely unlikely. In this situation we log a warning, but the
+        responsibility for providing self-consistent evidence
+        ultimately lies with the user.
 
     Returns
     -------
@@ -491,7 +507,8 @@ def viterbi_decode(
         if len(tag_observations) != sequence_length:
             raise ValueError(
                 "Observations were provided, but they were not the same length "
-                "as the sequence. Found sequence of length: {} and evidence: {}".format(
+                "as the sequence. "
+                "Found sequence of length: {} and evidence: {}".format(
                     sequence_length, tag_observations
                 )
             )
@@ -528,8 +545,8 @@ def viterbi_decode(
             ):
                 logger.warning(
                     "The pairwise potential between tags you have passed as "
-                    "observations is extremely unlikely. Double check your evidence "
-                    "or transition potentials!"
+                    "observations is extremely unlikely. Double check your"
+                    "evidence or transition potentials!"
                 )
         if observation != -1:
             one_hot = torch.zeros(num_tags)

@@ -1,26 +1,24 @@
-from typing import Dict, List, Tuple
 import os
-import torch
+from typing import Dict, List, Tuple
+
 import numpy as np
+import torch
+
 from nlp.pipeline.common.evaluation import Evaluator
-from nlp.pipeline.processors.predictor import Predictor
-from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
+from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
+from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
+from nlp.pipeline.processors.predictor import Predictor
 
 
 class CoNLLNERPredictor(Predictor):
     def __init__(self):
         super().__init__()
         self.model = None
-        self.word_alphabet, self.char_alphabet, self.chunk_alphabet, self.pos_alphabet, self.ner_alphabet = (
-            None,
-            None,
-            None,
-            None,
-            None,
-        )
+        self.word_alphabet, self.char_alphabet, self.chunk_alphabet,\
+            self.pos_alphabet, self.ner_alphabet = (
+                None, None, None, None, None)
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
@@ -63,10 +61,10 @@ class CoNLLNERPredictor(Predictor):
 
         pred_tokens, instances = [], []
         for words, poses, chunks, ners in zip(
-            tokens["text"],
-            tokens["pos_tag"],
-            tokens["chunk_tag"],
-            tokens["ner_tag"],
+                tokens["text"],
+                tokens["pos_tag"],
+                tokens["chunk_tag"],
+                tokens["ner_tag"],
         ):
             char_id_seqs = []
             word_ids = []
@@ -188,8 +186,7 @@ class CoNLLNERPredictor(Predictor):
     def _record_fields(self, data_pack: DataPack):
         if self._overwrite:
             data_pack.record_fields(
-                ["ner_tag"],
-                self.ner_ontology.Token.__name__,
+                ["ner_tag"], self.ner_ontology.Token.__name__
             )
         else:
             data_pack.record_fields(
@@ -245,7 +242,7 @@ class CoNLLNERPredictor(Predictor):
             wid_inputs[i, inst_size:] = self.word_alphabet.pad_id
             for c, cids in enumerate(cid_seqs):
                 cid_inputs[i, c, : len(cids)] = cids
-                cid_inputs[i, c, len(cids) :] = self.char_alphabet.pad_id
+                cid_inputs[i, c, len(cids):] = self.char_alphabet.pad_id
             cid_inputs[i, inst_size:, :] = self.char_alphabet.pad_id
             # pos ids
             pid_inputs[i, :inst_size] = pids
@@ -271,7 +268,7 @@ class CoNLLNERPredictor(Predictor):
 
 
 class CoNLLNEREvaluator(Evaluator):
-    def __init__(self, config):
+    def __init__(self, config=None):
         super().__init__(config)
         self.ner_ontology = CoNLL03Ontology
         self.test_component = CoNLLNERPredictor().component_name
@@ -282,23 +279,24 @@ class CoNLLNEREvaluator(Evaluator):
     def consume_next(self, pack: DataPack):
         opened_file = open(self.output_file, "w+")
         for pred_sentence, tgt_sentence in zip(
-            pack.get_data(
-                context_type="sentence",
-                annotation_types={
-                    "Token": {
-                        "component": self.test_component,
-                        "fields": ["ner_tag"],
+                pack.get_data(
+                    context_type="sentence",
+                    annotation_types={
+                        "Token": {
+                            "component": self.test_component,
+                            "fields": ["ner_tag"],
+                        },
+                        "Sentence": [],  # span by default
                     },
-                    "Sentence": [],  # span by default
-                },
-            ),
-            pack.get_data(
-                context_type="sentence",
-                annotation_types={
-                    "Token": {"fields": ["chunk_tag", "pos_tag", "ner_tag"]},
-                    "Sentence": [],  # span by default
-                },
-            ),
+                ),
+                pack.get_data(
+                    context_type="sentence",
+                    annotation_types={
+                        "Token": {
+                            "fields": ["chunk_tag", "pos_tag", "ner_tag"]},
+                        "Sentence": [],  # span by default
+                    },
+                ),
         ):
 
             pred_tokens, tgt_tokens = (

@@ -1,5 +1,5 @@
 """
-The reader that reads CoNLL ner_data into our internal json ner_data format.
+The reader that reads CoNLL ner_data into our internal json data format.
 """
 import os
 import logging

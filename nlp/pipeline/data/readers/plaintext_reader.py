@@ -49,3 +49,4 @@ class PlainTextReader(MonoFileReader):
 
     def _record_fields(self):
         pass
+
