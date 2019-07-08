@@ -1,5 +1,10 @@
 from typing import List, Dict
 
+__all__ = [
+    "merge_batches",
+    "slice_batch",
+]
+
 
 def merge_batches(batches: List[Dict]):
     merged_batch = {}

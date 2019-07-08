@@ -8,6 +8,10 @@ import jsonpickle
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.utils import *
 
+__all__ = [
+    "BaseReader",
+]
+
 
 class BaseReader:
     """The basic data reader class.

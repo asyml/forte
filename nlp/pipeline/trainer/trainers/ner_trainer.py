@@ -15,6 +15,10 @@ from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
 from nlp.pipeline.models.NER.model_factory import BiRecurrentConvCRF
 from nlp.pipeline.trainer import Trainer
 
+__all__ = [
+    "CoNLLNERTrainer",
+]
+
 
 class CoNLLNERTrainer(Trainer):
     def __init__(self, resources, model, optim, **kwargs):

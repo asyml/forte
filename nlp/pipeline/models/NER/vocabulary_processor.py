@@ -8,6 +8,12 @@ from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.data_pack import DataPack
 import texar
 
+__all__ = [
+    "Alphabet",
+    "VocabularyProcessor",
+    "CoNLL03VocabularyProcessor",
+]
+
 
 class Alphabet(object):
     def __init__(

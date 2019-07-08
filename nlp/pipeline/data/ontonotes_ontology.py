@@ -3,6 +3,10 @@ This class defines the ontology for Ontonotes dataset
 """
 from nlp.pipeline.data.base_ontology import BaseOntology
 
+__all__ = [
+    "OntonotesOntology",
+]
+
 
 class OntonotesOntology(BaseOntology):
     class Token(BaseOntology.Token):

@@ -9,6 +9,10 @@ from nlp.pipeline.data.readers.file_reader import MonoFileReader
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
 
+__all__ = [
+    "OntonotesReader",
+]
+
 
 class OntonotesReader(MonoFileReader):
     def __init__(self, lazy: bool = True):

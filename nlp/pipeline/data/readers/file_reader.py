@@ -10,6 +10,10 @@ from nlp.pipeline.data.base_ontology import BaseOntology
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "MonoFileReader",
+]
+
 
 class MonoFileReader(BaseReader):
     """Data reader that reads one data pack from each single text files.
