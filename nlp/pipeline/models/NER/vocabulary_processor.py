@@ -73,6 +73,9 @@ class Alphabet(object):
         :param instance: the input token
         :return: the index of the queried token in the dictionary
         """
+        if instance is None:
+            return self.instance2index[self.reserved_tokens.PAD]
+
         try:
             return self.instance2index[instance]
         except KeyError:
