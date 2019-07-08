@@ -27,7 +27,7 @@ class MonoFileReader(BaseReader):
     def __init__(self, lazy: bool = True) -> None:
         super().__init__(lazy)
 
-    def dataset_iterator(self, dir_path: str):
+    def dataset_iterator(self, dir_path: str) -> List[DataPack]:
         """
         An iterator over the entire dataset, yielding all documents processed.
 

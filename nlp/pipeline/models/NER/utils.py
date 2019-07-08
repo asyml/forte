@@ -8,7 +8,8 @@ from typing import Tuple
 import numpy as np
 import torch
 import torch.nn.utils.rnn as rnn_utils
-
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
 MAX_CHAR_LENGTH = 45
 NUM_CHAR_PAD = 2
 
@@ -243,3 +244,4 @@ def set_random_seed(seed):
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed(seed)
+
