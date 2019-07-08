@@ -29,7 +29,6 @@ class CoNLLNERPredictor(Predictor):
         self.embedding_dict = None
         self.embedding_dim = None
         self.device = None
-        self.optim, self.trained_epochs = None, None
         self.add_cnt = 0
         self.input_cnt = 0
 
@@ -58,8 +57,6 @@ class CoNLLNERPredictor(Predictor):
         self.model = resource.resources["model"]
         self.device = resource.resources["device"]
         self.normalize_func = lambda x: self.config_data.digit_re.sub("0", x)
-
-        self.trained_epochs = 0
 
     @torch.no_grad()
     def predict(self, data_batch: Dict):
@@ -129,6 +126,11 @@ class CoNLLNERPredictor(Predictor):
                 pred_tokens.append(token)
 
         return pred_tokens
+
+    def load_model_checkpoint(self):
+        ckpt = torch.load(self.config_model.model_path)
+        print("restoring model from {}".format(self.config_model.model_path))
+        self.model.load_state_dict(ckpt["model"])
 
     def pack(self, data_pack: DataPack, *inputs):
         tokens = inputs[0]
@@ -295,3 +297,4 @@ class CoNLLNEREvaluator(Evaluator):
 
     def get_result(self):
         return self.scores
+
