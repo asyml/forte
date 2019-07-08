@@ -4,6 +4,10 @@ from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.utils import *
 from nlp.pipeline.common.resources import Resources
 
+__all__ = [
+    "BaseProcessor",
+]
+
 
 class BaseProcessor:
     """The basic processor class. To be inherited by all kinds of processors

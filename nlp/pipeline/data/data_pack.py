@@ -4,13 +4,20 @@ such as reading, writing, checking and indexing.
 import logging
 import itertools
 from collections import defaultdict
-from typing import Union, Dict, Optional, List, DefaultDict, Type, TypeVar
+from typing import (
+    Union, Dict, Optional, List, DefaultDict, Type, TypeVar, Iterable)
 import numpy as np
 from sortedcontainers import SortedSet
 from nlp.pipeline.data.base_ontology import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "Meta",
+    "DataIndex",
+    "DataPack",
+]
 
 
 E = TypeVar('E', bound=Entry)
@@ -641,6 +648,7 @@ class DataPack:
             a_dict["text"].append(self.text[annotation.span.begin:
                                             annotation.span.end])
             for field in fields:
+                if field == "span" or field == "text": continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
                 ]:
@@ -702,6 +710,7 @@ class DataPack:
                 np.where(data[child_type]["tid"] == link.child)[0][0])
 
             for field in fields:
+                if field == "parent" or field == "child": continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
                 ]:

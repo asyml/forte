@@ -9,6 +9,12 @@ from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.common.resources import Resources
 import texar
 
+__all__ = [
+    "Alphabet",
+    "VocabularyProcessor",
+    "CoNLL03VocabularyProcessor",
+]
+
 
 class Alphabet(object):
     def __init__(
@@ -67,6 +73,9 @@ class Alphabet(object):
         :param instance: the input token
         :return: the index of the queried token in the dictionary
         """
+        if instance is None:
+            return self.instance2index[self.reserved_tokens.PAD]
+
         try:
             return self.instance2index[instance]
         except KeyError:
