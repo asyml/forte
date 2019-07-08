@@ -1,26 +1,24 @@
-from typing import Dict, List
 import os
-import torch
+from typing import Dict, List, Tuple
+
 import numpy as np
+import torch
+
 from nlp.pipeline.common.evaluation import Evaluator
-from nlp.pipeline.processors.predictor import Predictor
-from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
+from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
+from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
+from nlp.pipeline.processors.predictor import Predictor
 
 
 class CoNLLNERPredictor(Predictor):
     def __init__(self):
         super().__init__()
         self.model = None
-        self.word_alphabet, self.char_alphabet, self.chunk_alphabet, self.pos_alphabet, self.ner_alphabet = (
-            None,
-            None,
-            None,
-            None,
-            None,
-        )
+        self.word_alphabet, self.char_alphabet, self.chunk_alphabet,\
+            self.pos_alphabet, self.ner_alphabet = (
+                None, None, None, None, None)
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
@@ -35,11 +33,12 @@ class CoNLLNERPredictor(Predictor):
         # TODO(haoransh): reconsider these hard-coded parameters
         self.context_type = "sentence"
         self.annotation_types = {
-            "Token": ["chunk_tag", "pos_tag"],
+            "Token": ["chunk_tag", "pos_tag", "ner_tag"],
             "Sentence": [],  # span by default
         }
-        self.batch_size = 4
+        self.batch_size = 3
         self.ner_ontology = CoNLL03Ontology
+        self.component_name = "ner_predictor"
 
     def initialize(self, resource: Resources):
         self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
@@ -60,11 +59,12 @@ class CoNLLNERPredictor(Predictor):
 
         tokens = data_batch["Token"]
 
-        instances = []
-        for words, poses, chunks in zip(
-            tokens["text"],
-            tokens["pos_tag"],
-            tokens["chunk_tag"]
+        pred_tokens, instances = [], []
+        for words, poses, chunks, ners in zip(
+                tokens["text"],
+                tokens["pos_tag"],
+                tokens["chunk_tag"],
+                tokens["ner_tag"],
         ):
             char_id_seqs = []
             word_ids = []
@@ -85,21 +85,18 @@ class CoNLLNERPredictor(Predictor):
                 pos_ids.append(self.pos_alphabet.get_index(pos))
             for chunk in chunks:
                 chunk_ids.append(self.chunk_alphabet.get_index(chunk))
+            for ner in ners:
+                ner_ids.append(self.ner_alphabet.get_index(ner))
             instances.append(
-                (word_ids, char_id_seqs, pos_ids, chunk_ids)
+                (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
             )
 
         self.model.eval()
         batch_data = self.get_batch_tensor(instances, device=self.device)
-        word, char, _, _, masks, lengths = batch_data
+        word, char, _, _, labels, masks, lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
-        pred = {
-            "Token": {
-                "ner_tag": [],
-                "tid": [],
-            }
-        }
+        pred = {"Token": {"ner_tag": [], "tid": []}}
 
         for i in range(len(tokens["tid"])):
             tids = tokens["tid"][i]
@@ -124,25 +121,60 @@ class CoNLLNERPredictor(Predictor):
         Otherwise, create a new set of tokens and write the predicted ner_tag
         to the new tokens (usually use this configuration for evaluation.)
         """
-        if output_dict is None: return
+        if output_dict is None:
+            return
+        ### Add tokens
+        current_entity_mention: Tuple[int, str] = (-1, "None")
 
-        if self._overwrite:
-            for i in range(len(output_dict["Token"]["tid"])):
-                for j in range(len(output_dict["Token"]["tid"][i])):
-                    tid = output_dict["Token"]["tid"][i][j]
-                    ner_tag = output_dict["Token"]["ner_tag"][i][j]
-                    data_pack.index.entry_index[tid].ner_tag = ner_tag
+        for i in range(len(output_dict["Token"]["tid"])):
+            # an instance
+            for j in range(len(output_dict["Token"]["tid"][i])):
+                tid = output_dict["Token"]["tid"][i][j]
+                orig_token = data_pack.index.entry_index[tid]
+                ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
-        else:
-            for i in range(len(output_dict["Token"]["tid"])):
-                for j in range(len(output_dict["Token"]["tid"][i])):
-                    tid = output_dict["Token"]["tid"][i][j]
-                    orig_token = data_pack.index.entry_index[tid]
-                    ner_tag = output_dict["Token"]["ner_tag"][i][j]
+                if self._overwrite:
+                    orig_token.ner_tag = ner_tag
+                    token = orig_token
+                    if token.ner_tag[0] == "B":
+                        current_entity_mention = (
+                            token.span.begin,
+                            token.ner_tag[2:],
+                        )
+                    elif token.ner_tag[0] == "I":
+                        continue
+                    elif token.ner_tag[0] == "O":
+                        continue
+                    elif token.ner_tag[0] == "E":
+                        assert token.ner_tag[2:] == current_entity_mention[1], (
+                            f"{token.ner_tag}, {current_entity_mention}, "
+                            f'all_tags:{output_dict["Token"]["ner_tag"][i]}'
+                        )
+                        kwargs_i = {"ner_type": current_entity_mention[1]}
+                        entity = self.ner_ontology.EntityMention(
+                            self.component_name,
+                            current_entity_mention[0],
+                            token.span.end,
+                        )
+                        entity.set_fields(**kwargs_i)
+                        data_pack.add_entry(entity)
+                    elif token.ner_tag[0] == "S":
+                        current_entity_mention: Tuple[int, str] = (
+                            token.span.begin,
+                            token.ner_tag[2:],
+                        )
+                        kwargs_i = {"ner_type": current_entity_mention[1]}
+                        entity = self.ner_ontology.EntityMention(
+                            self.component_name,
+                            current_entity_mention[0],
+                            token.span.end,
+                        )
+                        entity.set_fields(**kwargs_i)
+                        data_pack.add_entry(entity)
 
-                    kwargs_i = {
-                        "ner_tag": ner_tag,
-                    }
+                else:
+                    # Only Add EntityMention when overwrite is False
+                    kwargs_i = {"ner_tag": ner_tag}
                     token = self.ner_ontology.Token(
                         self.component_name,
                         orig_token.span.begin,
@@ -151,18 +183,28 @@ class CoNLLNERPredictor(Predictor):
                     token.set_fields(**kwargs_i)
                     data_pack.add_entry(token)
 
+    def load_model_checkpoint(self):
+        ckpt = torch.load(self.config_model.model_path)
+        print("restoring model from {}".format(self.config_model.model_path))
+        self.model.load_state_dict(ckpt["model"])
+
     def _record_fields(self, data_pack: DataPack):
         if self._overwrite:
             data_pack.record_fields(
-                ["ner_tag"],
-                self.ner_ontology.Token.__name__,
+                ["ner_tag"], self.ner_ontology.Token.__name__
             )
         else:
             data_pack.record_fields(
                 ["ner_tag", "span"],
                 self.ner_ontology.Token.__name__,
-                self.component_name
+                self.component_name,
             )
+
+        data_pack.record_fields(
+            ["ner_type", "span"],
+            self.ner_ontology.EntityMention.__name__,
+            self.component_name,
+        )
 
     def get_batch_tensor(self, data: List, device=None):
         """
@@ -189,13 +231,14 @@ class CoNLLNERPredictor(Predictor):
         )
         pid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
         chid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
+        nid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
 
         masks = np.zeros([batch_size, batch_length], dtype=np.float32)
 
         lengths = np.empty(batch_size, dtype=np.int64)
 
         for i, inst in enumerate(data):
-            wids, cid_seqs, pids, chids = inst
+            wids, cid_seqs, pids, chids, nids = inst
 
             inst_size = len(wids)
             lengths[i] = inst_size
@@ -204,7 +247,7 @@ class CoNLLNERPredictor(Predictor):
             wid_inputs[i, inst_size:] = self.word_alphabet.pad_id
             for c, cids in enumerate(cid_seqs):
                 cid_inputs[i, c, : len(cids)] = cids
-                cid_inputs[i, c, len(cids) :] = self.char_alphabet.pad_id
+                cid_inputs[i, c, len(cids):] = self.char_alphabet.pad_id
             cid_inputs[i, inst_size:, :] = self.char_alphabet.pad_id
             # pos ids
             pid_inputs[i, :inst_size] = pids
@@ -212,6 +255,9 @@ class CoNLLNERPredictor(Predictor):
             # chunk ids
             chid_inputs[i, :inst_size] = chids
             chid_inputs[i, inst_size:] = self.chunk_alphabet.pad_id
+            # ner ids
+            nid_inputs[i, :inst_size] = nids
+            nid_inputs[i, inst_size:] = self.ner_alphabet.pad_id
             # masks
             masks[i, :inst_size] = 1.0
 
@@ -219,14 +265,15 @@ class CoNLLNERPredictor(Predictor):
         chars = torch.from_numpy(cid_inputs).to(device)
         pos = torch.from_numpy(pid_inputs).to(device)
         chunks = torch.from_numpy(chid_inputs).to(device)
+        ners = torch.from_numpy(nid_inputs).to(device)
         masks = torch.from_numpy(masks).to(device)
         lengths = torch.from_numpy(lengths).to(device)
 
-        return words, chars, pos, chunks, masks, lengths
+        return words, chars, pos, chunks, ners, masks, lengths
 
 
 class CoNLLNEREvaluator(Evaluator):
-    def __init__(self, config):
+    def __init__(self, config=None):
         super().__init__(config)
         self.ner_ontology = CoNLL03Ontology
         self.test_component = CoNLLNERPredictor().component_name
@@ -237,31 +284,30 @@ class CoNLLNEREvaluator(Evaluator):
     def consume_next(self, pack: DataPack):
         opened_file = open(self.output_file, "w+")
         for pred_sentence, tgt_sentence in zip(
-            pack.get_data(
-                context_type="sentence",
-                annotation_types={
-                    "Token": {
-                        "component": self.test_component,
-                        "fields": ["ner_tag"],
+                pack.get_data(
+                    context_type="sentence",
+                    annotation_types={
+                        "Token": {
+                            "component": self.test_component,
+                            "fields": ["ner_tag"],
+                        },
+                        "Sentence": [],  # span by default
                     },
-                    "Sentence": [],  # span by default
-                },
-            ),
-            pack.get_data(
-                context_type="sentence",
-                annotation_types={
-                    "Token": {"fields": ["chunk_tag", "pos_tag", "ner_tag"]},
-                    "Sentence": [],  # span by default
-                },
-            ),
+                ),
+                pack.get_data(
+                    context_type="sentence",
+                    annotation_types={
+                        "Token": {
+                            "fields": ["chunk_tag", "pos_tag", "ner_tag"]},
+                        "Sentence": [],  # span by default
+                    },
+                ),
         ):
 
             pred_tokens, tgt_tokens = (
                 pred_sentence["Token"],
                 tgt_sentence["Token"],
             )
-
-            # print(pred_tokens)
             for i in range(len(pred_tokens["text"])):
                 w = tgt_tokens["text"][i]
                 p = tgt_tokens["pos_tag"][i]
@@ -276,8 +322,7 @@ class CoNLLNEREvaluator(Evaluator):
             opened_file.write("\n")
         opened_file.close()
         os.system(
-            "./conll03eval.v2 < %s > %s"
-            % (self.output_file, self.score_file)
+            "./conll03eval.v2 < %s > %s" % (self.output_file, self.score_file)
         )
         with open(self.score_file, "r") as fin:
             fin.readline()

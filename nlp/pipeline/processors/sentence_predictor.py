@@ -5,7 +5,9 @@ from nlp.pipeline.processors import Predictor
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.readers import CoNLL03Ontology
 
-
+__all__ = [
+    "NLTKSentenceSegmenter",
+]
 class NLTKSentenceSegmenter(Predictor):
 
     def __init__(self):

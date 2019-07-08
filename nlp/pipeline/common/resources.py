@@ -5,6 +5,10 @@ trainer)
 import os
 import dill
 
+__all__ = [
+    "Resources",
+]
+
 
 class Resources:
     def __init__(self, **kwargs):

@@ -86,19 +86,21 @@ resources = Resources(
     device=device
 )
 
-ner_trainer = CoNLLNERTrainer(config=None)
-ner_predictor = CoNLLNERPredictor()
 
-ner_evaluator = CoNLLNEREvaluator(config=None)
+if __name__ == '__main__':
 
-mypipeline = TrainPipeline(
-    train_reader=reader,
-    trainer=ner_trainer,
-    predictor=ner_predictor,
-    evaluator=ner_evaluator,
-    dev_reader=reader,
-    resource=resources,
-)
+    ner_trainer = CoNLLNERTrainer()
+    ner_predictor = CoNLLNERPredictor()
+    ner_evaluator = CoNLLNEREvaluator()
+
+    mypipeline = TrainPipeline(
+        train_reader=reader,
+        trainer=ner_trainer,
+        predictor=ner_predictor,
+        evaluator=ner_evaluator,
+        dev_reader=reader,
+        resource=resources,
+    )
 
 # the training configuration are specified in config_model
-mypipeline.train()
+    mypipeline.train()
