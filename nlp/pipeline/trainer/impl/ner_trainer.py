@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class CoNLLNERTrainer(BaseTrainer):
-    def __init__(self, config):
+    def __init__(self, config=None):
         super().__init__(config)
 
         self.model = None

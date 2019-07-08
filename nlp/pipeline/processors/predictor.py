@@ -6,6 +6,10 @@ from typing import Dict, List, Union, Iterable
 from nlp.pipeline.data.base_ontology import BaseOntology
 from nlp.pipeline.utils import *
 
+__all__ = [
+    "Predictor",
+]
+
 
 class Predictor(BaseProcessor):
     """

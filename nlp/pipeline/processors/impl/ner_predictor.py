@@ -271,7 +271,7 @@ class CoNLLNERPredictor(Predictor):
 
 
 class CoNLLNEREvaluator(Evaluator):
-    def __init__(self, config):
+    def __init__(self, config=None):
         super().__init__(config)
         self.ner_ontology = CoNLL03Ontology
         self.test_component = CoNLLNERPredictor().component_name

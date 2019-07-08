@@ -10,6 +10,7 @@ reader = CoNLL03Reader(lazy=False)
 output_file = 'predict_output.txt'
 
 resource = dill.load(open('resources.pkl', 'rb'))
+
 ner_predictor = CoNLLNERPredictor()
 ner_predictor.initialize(resource)
 ner_predictor.set_mode(overwrite=True)

@@ -6,6 +6,15 @@ from functools import total_ordering
 from typing import Iterable, Set, Union
 from nlp.pipeline.utils import *
 
+__all__ = [
+    "Span",
+    "Entry",
+    "Annotation",
+    "Link",
+    "Group",
+    "BaseOntology",
+]
+
 
 @total_ordering
 class Span:
