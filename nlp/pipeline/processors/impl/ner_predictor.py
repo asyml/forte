@@ -33,7 +33,7 @@ class CoNLLNERPredictor(Predictor):
         # TODO(haoransh): reconsider these hard-coded parameters
         self.context_type = "sentence"
         self.annotation_types = {
-            "Token": ["chunk_tag", "pos_tag", "ner_tag"],
+            "Token": ["chunk_tag", "pos_tag"],
             "Sentence": [],  # span by default
         }
         self.batch_size = 3
@@ -60,11 +60,10 @@ class CoNLLNERPredictor(Predictor):
         tokens = data_batch["Token"]
 
         pred_tokens, instances = [], []
-        for words, poses, chunks, ners in zip(
+        for words, poses, chunks in zip(
                 tokens["text"],
                 tokens["pos_tag"],
                 tokens["chunk_tag"],
-                tokens["ner_tag"],
         ):
             char_id_seqs = []
             word_ids = []
@@ -85,15 +84,14 @@ class CoNLLNERPredictor(Predictor):
                 pos_ids.append(self.pos_alphabet.get_index(pos))
             for chunk in chunks:
                 chunk_ids.append(self.chunk_alphabet.get_index(chunk))
-            for ner in ners:
-                ner_ids.append(self.ner_alphabet.get_index(ner))
+
             instances.append(
-                (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
+                (word_ids, char_id_seqs, pos_ids, chunk_ids)
             )
 
         self.model.eval()
         batch_data = self.get_batch_tensor(instances, device=self.device)
-        word, char, _, _, labels, masks, lengths = batch_data
+        word, char, _, _, masks, lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
         pred = {"Token": {"ner_tag": [], "tid": []}}
@@ -226,14 +224,13 @@ class CoNLLNERPredictor(Predictor):
         )
         pid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
         chid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
-        nid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
 
         masks = np.zeros([batch_size, batch_length], dtype=np.float32)
 
         lengths = np.empty(batch_size, dtype=np.int64)
 
         for i, inst in enumerate(data):
-            wids, cid_seqs, pids, chids, nids = inst
+            wids, cid_seqs, pids, chids = inst
 
             inst_size = len(wids)
             lengths[i] = inst_size
@@ -250,9 +247,6 @@ class CoNLLNERPredictor(Predictor):
             # chunk ids
             chid_inputs[i, :inst_size] = chids
             chid_inputs[i, inst_size:] = self.chunk_alphabet.pad_id
-            # ner ids
-            nid_inputs[i, :inst_size] = nids
-            nid_inputs[i, inst_size:] = self.ner_alphabet.pad_id
             # masks
             masks[i, :inst_size] = 1.0
 
@@ -260,11 +254,10 @@ class CoNLLNERPredictor(Predictor):
         chars = torch.from_numpy(cid_inputs).to(device)
         pos = torch.from_numpy(pid_inputs).to(device)
         chunks = torch.from_numpy(chid_inputs).to(device)
-        ners = torch.from_numpy(nid_inputs).to(device)
         masks = torch.from_numpy(masks).to(device)
         lengths = torch.from_numpy(lengths).to(device)
 
-        return words, chars, pos, chunks, ners, masks, lengths
+        return words, chars, pos, chunks, masks, lengths
 
 
 class CoNLLNEREvaluator(Evaluator):
