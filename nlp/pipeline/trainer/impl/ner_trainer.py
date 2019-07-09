@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
+from nlp.pipeline.common.resources import Resources
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -23,8 +24,6 @@ class CoNLLNERTrainer(BaseTrainer):
         self.model = None
         self.word_alphabet = None
         self.char_alphabet = None
-        self.chunk_alphabet = None
-        self.pos_alphabet = None
         self.ner_alphabet = None
         self.config_model = None
         self.config_data = None
@@ -33,18 +32,20 @@ class CoNLLNERTrainer(BaseTrainer):
         self.embedding_dim = None
         self.device = None
         self.optim, self.trained_epochs = None, None
+        self.resource: Resources = None
 
         self.train_instances_cache = []
         self.max_char_length = 0
 
         self.__past_dev_result = None
 
-    def initialize(self, resource):
+    def initialize(self, resource: Resources):
+
+        self.resource = resource
+        # This reference is for saving the checkpoints
 
         self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
         self.char_alphabet: Alphabet = resource.resources["char_alphabet"]
-        self.chunk_alphabet: Alphabet = resource.resources["chunk_alphabet"]
-        self.pos_alphabet: Alphabet = resource.resources["pos_alphabet"]
         self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
         self.config_model = resource.resources["config_model"]
         self.config_data = resource.resources["config_data"]
@@ -62,7 +63,7 @@ class CoNLLNERTrainer(BaseTrainer):
         request_string = {
             "context_type": "sentence",
             "annotation_types": {
-                "Token": ["chunk_tag", "pos_tag", "ner_tag"],
+                "Token": ["ner_tag"],
                 "Sentence": [],  # span by default
             },
         }
@@ -73,8 +74,6 @@ class CoNLLNERTrainer(BaseTrainer):
         word_ids = []
         char_id_seqs = []
         ner_tags, ner_ids = tokens["ner_tag"], []
-        pos_tags, pos_ids = tokens["pos_tag"], []
-        chunk_tags, chunk_ids = tokens["chunk_tag"], []
 
         for word in tokens["text"]:
             char_ids = []
@@ -87,10 +86,6 @@ class CoNLLNERTrainer(BaseTrainer):
             word = self.normalize_func(word)
             word_ids.append(self.word_alphabet.get_index(word))
 
-        for pos in pos_tags:
-            pos_ids.append(self.pos_alphabet.get_index(pos))
-        for chunk in chunk_tags:
-            chunk_ids.append(self.chunk_alphabet.get_index(chunk))
         for ner in ner_tags:
             ner_ids.append(self.ner_alphabet.get_index(ner))
 
@@ -98,7 +93,7 @@ class CoNLLNERTrainer(BaseTrainer):
         self.max_char_length = max(self.max_char_length, max_len)
 
         self.train_instances_cache.append(
-            (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
+            (word_ids, char_id_seqs, ner_ids)
         )
 
     def pack_finish_action(self, pack_count):
@@ -139,7 +134,7 @@ class CoNLLNERTrainer(BaseTrainer):
         for batch in data_iterator:
             bid += 1
             batch_data = self.get_batch_tensor(batch, device=self.device)
-            word, char, _, _, labels, masks, lengths = batch_data
+            word, char, labels, masks, lengths = batch_data
 
             self.optim.zero_grad()
             loss = self.model(word, char, labels, mask=masks)
@@ -189,7 +184,7 @@ class CoNLLNERTrainer(BaseTrainer):
             b_data = val_data[i: i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
 
-            word, char, pos, chunk, labels, masks, lengths = batch
+            word, char, labels, masks, lengths = batch
             loss = self.model(word, char, labels, mask=masks)
             losses += loss.item()
 
@@ -205,7 +200,8 @@ class CoNLLNERTrainer(BaseTrainer):
         ):
             self.__past_dev_result = eval_result
             logger.info("validation f1 increased, saving model")
-            self.save_model_checkpoint()
+            self.save_resources()
+            # self.save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
         acc, prec, rec, f1 = (
@@ -231,7 +227,11 @@ class CoNLLNERTrainer(BaseTrainer):
         )
 
     def finish(self):
-        self.save_model_checkpoint()
+        self.save_resources()
+        # self.save_model_checkpoint()
+
+    def save_resources(self):
+        self.resource.save()
 
     def save_model_checkpoint(self):
         states = {
@@ -269,8 +269,6 @@ class CoNLLNERTrainer(BaseTrainer):
         cid_inputs = np.empty(
             [batch_size, batch_length, char_length], dtype=np.int64
         )
-        pid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
-        chid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
         nid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
 
         masks = np.zeros([batch_size, batch_length], dtype=np.float32)
@@ -278,7 +276,7 @@ class CoNLLNERTrainer(BaseTrainer):
         lengths = np.empty(batch_size, dtype=np.int64)
 
         for i, inst in enumerate(data):
-            wids, cid_seqs, pids, chids, nids = inst
+            wids, cid_seqs, nids = inst
 
             inst_size = len(wids)
             lengths[i] = inst_size
@@ -289,12 +287,6 @@ class CoNLLNERTrainer(BaseTrainer):
                 cid_inputs[i, c, : len(cids)] = cids
                 cid_inputs[i, c, len(cids):] = self.char_alphabet.pad_id
             cid_inputs[i, inst_size:, :] = self.char_alphabet.pad_id
-            # pos ids
-            pid_inputs[i, :inst_size] = pids
-            pid_inputs[i, inst_size:] = self.pos_alphabet.pad_id
-            # chunk ids
-            chid_inputs[i, :inst_size] = chids
-            chid_inputs[i, inst_size:] = self.chunk_alphabet.pad_id
             # ner ids
             nid_inputs[i, :inst_size] = nids
             nid_inputs[i, inst_size:] = self.ner_alphabet.pad_id
@@ -303,13 +295,11 @@ class CoNLLNERTrainer(BaseTrainer):
 
         words = torch.from_numpy(wid_inputs).to(device)
         chars = torch.from_numpy(cid_inputs).to(device)
-        pos = torch.from_numpy(pid_inputs).to(device)
-        chunks = torch.from_numpy(chid_inputs).to(device)
         ners = torch.from_numpy(nid_inputs).to(device)
         masks = torch.from_numpy(masks).to(device)
         lengths = torch.from_numpy(lengths).to(device)
 
-        return words, chars, pos, chunks, ners, masks, lengths
+        return words, chars, ners, masks, lengths
 
 
 def batch_size_fn(new: Tuple, count: int, _: int):

@@ -37,20 +37,18 @@ word_cnt, char_cnt, pos_cnt, chunk_cnt, ner_cnt = vocab_processor.process(
 
 word_alphabet = Alphabet("word", word_cnt)
 char_alphabet = Alphabet("character", char_cnt)
-pos_alphabet = Alphabet("pos", pos_cnt)
-chunk_alphabet = Alphabet("chunk", chunk_cnt)
+# pos_alphabet = Alphabet("pos", pos_cnt)
+# chunk_alphabet = Alphabet("chunk", chunk_cnt)
 ner_alphabet = Alphabet("ner", ner_cnt)
 
-# To facilitate model sharing between trainer and predictor, we build the model
-# as an instance of resource
 for word in embedding_dict:
     if word not in word_alphabet.instance2index:
         word_alphabet.add(word)
 
 word_alphabet.save(config_data.alphabet_directory)
 char_alphabet.save(config_data.alphabet_directory)
-pos_alphabet.save(config_data.alphabet_directory)
-chunk_alphabet.save(config_data.alphabet_directory)
+# pos_alphabet.save(config_data.alphabet_directory)
+# chunk_alphabet.save(config_data.alphabet_directory)
 ner_alphabet.save(config_data.alphabet_directory)
 
 device = (
@@ -71,11 +69,12 @@ optim = SGD(
     nesterov=True,
 )
 
+# To facilitate model sharing between trainer and predictor, we build the model
+# as an instance of resource
+
 resources = Resources(
     word_alphabet=word_alphabet,
     char_alphabet=char_alphabet,
-    pos_alphabet=pos_alphabet,
-    chunk_alphabet=chunk_alphabet,
     ner_alphabet=ner_alphabet,
     embedding_dict=embedding_dict,
     embedding_dim=embedding_dim,
