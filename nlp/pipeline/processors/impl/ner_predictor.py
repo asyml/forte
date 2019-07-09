@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Dict, List, Tuple
 
@@ -11,31 +12,28 @@ from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
 from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
 from nlp.pipeline.processors.predictor import Predictor
 
-import logging
 logger = logging.getLogger(__name__)
+
 
 class CoNLLNERPredictor(Predictor):
     def __init__(self):
         super().__init__()
         self.model = None
-        self.word_alphabet, self.char_alphabet, self.chunk_alphabet,\
-            self.pos_alphabet, self.ner_alphabet = (
-                None, None, None, None, None)
+        self.word_alphabet, self.char_alphabet, self.ner_alphabet = (
+            None, None, None)
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
         self.embedding_dict = None
         self.embedding_dim = None
         self.device = None
-        self.add_cnt = 0
-        self.input_cnt = 0
 
         self.train_instances_cache = []
 
         # TODO(haoransh): reconsider these hard-coded parameters
         self.context_type = "sentence"
         self.annotation_types = {
-            "Token": ["chunk_tag", "pos_tag"],
+            "Token": [],
             "Sentence": [],  # span by default
         }
         self.batch_size = 3
@@ -44,8 +42,6 @@ class CoNLLNERPredictor(Predictor):
     def initialize(self, resource: Resources):
         self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
         self.char_alphabet: Alphabet = resource.resources["char_alphabet"]
-        self.chunk_alphabet: Alphabet = resource.resources["chunk_alphabet"]
-        self.pos_alphabet: Alphabet = resource.resources["pos_alphabet"]
         self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
         self.config_model = resource.resources["config_model"]
         self.config_data = resource.resources["config_data"]
@@ -61,16 +57,10 @@ class CoNLLNERPredictor(Predictor):
         tokens = data_batch["Token"]
 
         pred_tokens, instances = [], []
-        for words, poses, chunks in zip(
-                tokens["text"],
-                tokens["pos_tag"],
-                tokens["chunk_tag"],
-        ):
+        for words in tokens["text"]:
             char_id_seqs = []
             word_ids = []
-            pos_ids, chunk_ids, ner_ids = [], [], []
             for word in words:
-                self.input_cnt += 1
                 char_ids = []
                 for char in word:
                     char_ids.append(self.char_alphabet.get_index(char))
@@ -81,18 +71,13 @@ class CoNLLNERPredictor(Predictor):
                 word = self.normalize_func(word)
                 word_ids.append(self.word_alphabet.get_index(word))
 
-            for pos in poses:
-                pos_ids.append(self.pos_alphabet.get_index(pos))
-            for chunk in chunks:
-                chunk_ids.append(self.chunk_alphabet.get_index(chunk))
-
             instances.append(
-                (word_ids, char_id_seqs, pos_ids, chunk_ids)
+                (word_ids, char_id_seqs)
             )
 
         self.model.eval()
         batch_data = self.get_batch_tensor(instances, device=self.device)
-        word, char, _, _, masks, lengths = batch_data
+        word, char, masks, lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
         pred = {"Token": {"ner_tag": [], "tid": []}}
@@ -108,9 +93,12 @@ class CoNLLNERPredictor(Predictor):
 
         return pred
 
-    def load_model_checkpoint(self):
-        ckpt = torch.load(self.config_model.model_path)
-        logger.info("restoring NER model from {}".format(self.config_model.model_path))
+    def load_model_checkpoint(self, model_path=None):
+        p = model_path if model_path is not None \
+            else self.config_model.model_path
+        ckpt = torch.load(p)
+        logger.info(
+            "restoring NER model from {}".format(self.config_model.model_path))
         self.model.load_state_dict(ckpt["model"])
 
     def pack(self, data_pack: DataPack, output_dict: Dict = None):
@@ -122,6 +110,7 @@ class CoNLLNERPredictor(Predictor):
         """
         if output_dict is None:
             return
+
         ### Add tokens
         current_entity_mention: Tuple[int, str] = (-1, "None")
 
@@ -145,10 +134,9 @@ class CoNLLNERPredictor(Predictor):
                     elif token.ner_tag[0] == "O":
                         continue
                     elif token.ner_tag[0] == "E":
-                        assert token.ner_tag[2:] == current_entity_mention[1], (
-                            f"{token.ner_tag}, {current_entity_mention}, "
-                            f'all_tags:{output_dict["Token"]["ner_tag"][i]}'
-                        )
+                        if token.ner_tag[2:] != current_entity_mention[1]:
+                            continue
+
                         kwargs_i = {"ner_type": current_entity_mention[1]}
                         entity = self.ner_ontology.EntityMention(
                             self.component_name,
@@ -223,15 +211,13 @@ class CoNLLNERPredictor(Predictor):
         cid_inputs = np.empty(
             [batch_size, batch_length, char_length], dtype=np.int64
         )
-        pid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
-        chid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
 
         masks = np.zeros([batch_size, batch_length], dtype=np.float32)
 
         lengths = np.empty(batch_size, dtype=np.int64)
 
         for i, inst in enumerate(data):
-            wids, cid_seqs, pids, chids = inst
+            wids, cid_seqs = inst
 
             inst_size = len(wids)
             lengths[i] = inst_size
@@ -242,23 +228,14 @@ class CoNLLNERPredictor(Predictor):
                 cid_inputs[i, c, : len(cids)] = cids
                 cid_inputs[i, c, len(cids):] = self.char_alphabet.pad_id
             cid_inputs[i, inst_size:, :] = self.char_alphabet.pad_id
-            # pos ids
-            pid_inputs[i, :inst_size] = pids
-            pid_inputs[i, inst_size:] = self.pos_alphabet.pad_id
-            # chunk ids
-            chid_inputs[i, :inst_size] = chids
-            chid_inputs[i, inst_size:] = self.chunk_alphabet.pad_id
-            # masks
             masks[i, :inst_size] = 1.0
 
         words = torch.from_numpy(wid_inputs).to(device)
         chars = torch.from_numpy(cid_inputs).to(device)
-        pos = torch.from_numpy(pid_inputs).to(device)
-        chunks = torch.from_numpy(chid_inputs).to(device)
         masks = torch.from_numpy(masks).to(device)
         lengths = torch.from_numpy(lengths).to(device)
 
-        return words, chars, pos, chunks, masks, lengths
+        return words, chars, masks, lengths
 
 
 class CoNLLNEREvaluator(Evaluator):
@@ -321,6 +298,7 @@ class CoNLLNEREvaluator(Evaluator):
             precision = float(fields[1].split(":")[1].strip()[:-1])
             recall = float(fields[2].split(":")[1].strip()[:-1])
             f1 = float(fields[3].split(":")[1].strip())
+
         self.scores = {
             "accuracy": acc,
             "precision": precision,

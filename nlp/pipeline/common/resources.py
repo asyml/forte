@@ -12,7 +12,8 @@ __all__ = [
 
 class Resources:
     def __init__(self, **kwargs):
-        self.resources = kwargs
+        self.resources = {}
+        self.resources.update(kwargs)
 
     def save(self, output_dir="./"):
         with open(os.path.join(output_dir, "resources.pkl"), "wb") as output:

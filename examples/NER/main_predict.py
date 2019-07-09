@@ -14,9 +14,7 @@ resource = dill.load(open('resources.pkl', 'rb'))
 ner_predictor = CoNLLNERPredictor()
 ner_predictor.initialize(resource)
 ner_predictor.set_mode(overwrite=True)
-ner_predictor.load_model_checkpoint()
-
-opened_file = open(output_file, "w+")
+# ner_predictor.load_model_checkpoint()
 
 for pack in reader.dataset_iterator(resource.resources[
                                         'config_data'].test_path):
@@ -33,5 +31,3 @@ for pack in reader.dataset_iterator(resource.resources[
                 }
             }):
         print(pred_sentence)
-
-opened_file.close()
