@@ -1,6 +1,6 @@
-from typing import List, Iterator, Union
+from typing import List, Iterator
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.processors.predictor import Predictor
+from nlp.pipeline.processors import Predictor
 from nlp.pipeline.data.readers import (
     CoNLL03Reader, OntonotesReader, PlainTextReader)
 
@@ -13,7 +13,7 @@ class Pipeline:
     def __init__(self, **kwargs):
         self.reader = None
         self.dataset_dir = None
-        self.processors: List[Predictor] = []
+        self._processors: List[Predictor] = []
 
         self.topology = None
         self.current_packs = []
@@ -37,6 +37,10 @@ class Pipeline:
             self.reader = CoNLL03Reader()
         else:
             self.reader = PlainTextReader()
+
+    @property
+    def processors(self):
+        return self._processors
 
     def add_processor(self, processor):
         self.processors.append(processor)

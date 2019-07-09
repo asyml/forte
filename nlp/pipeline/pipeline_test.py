@@ -3,7 +3,6 @@ Unit tests for Pipeline.
 """
 import unittest
 from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
 from nlp.pipeline.processors.dummy_processor import *
 
 
@@ -29,7 +28,7 @@ class PipelineTest(unittest.TestCase):
     def test_process_next(self):
 
         # get processed pack from dataset
-        for pack in self.nlp.run(hard_batch=False):
+        for pack in self.nlp.process_dataset(hard_batch=False):
             # get sentence from pack
             for sentence in pack.get_entries(RelationOntology.Sentence):
                 sent_text = sentence.text

@@ -1,11 +1,11 @@
 import dill
 from termcolor import colored
 
-from nlp.pipeline.data import CoNLL03Ontology as Ont
+from nlp.pipeline.data.readers import CoNLL03Ontology as Ont
 from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.processors import (NLTKPOSTagger, NLTKSentenceSegmenter,
-                                     NLTKWordTokenizer)
-from nlp.pipeline.processors.impl import CoNLLNERPredictor, SRLPredictor
+from nlp.pipeline.processors.impl import (NLTKPOSTagger, NLTKSentenceSegmenter,
+                                          NLTKWordTokenizer, CoNLLNERPredictor,
+                                          SRLPredictor)
 import os
 import sys
 
