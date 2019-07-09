@@ -93,8 +93,10 @@ class CoNLLNERPredictor(Predictor):
 
         return pred
 
-    def load_model_checkpoint(self):
-        ckpt = torch.load(self.config_model.model_path)
+    def load_model_checkpoint(self, model_path=None):
+        p = model_path if model_path is not None \
+            else self.config_model.model_path
+        ckpt = torch.load(p)
         logger.info(
             "restoring NER model from {}".format(self.config_model.model_path))
         self.model.load_state_dict(ckpt["model"])

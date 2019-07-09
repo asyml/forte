@@ -13,4 +13,5 @@
 1. Resource Manager.
 1. Other code clean up.
 1. Logging clean up.
+1. Reduce the interchange format verbosity if possible?
 1. Prepare to integrate with Executor.
