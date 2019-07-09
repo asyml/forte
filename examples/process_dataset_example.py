@@ -7,9 +7,10 @@ from nlp.pipeline.processors import (NLTKPOSTagger, NLTKSentenceSegmenter,
                                      NLTKWordTokenizer)
 from nlp.pipeline.processors.impl import CoNLLNERPredictor, SRLPredictor
 import os
+import sys
 
 
-def main(dataset_dir, srl_model_path, ner_model_path):
+def main(dataset_dir, ner_model_path, srl_model_path):
     dataset = {
         "dataset_dir": dataset_dir,
         "dataset_format": "plain"
@@ -61,4 +62,5 @@ def main(dataset_dir, srl_model_path, ner_model_path):
 
 
 if __name__ == '__main__':
-    main()
+    data_dir, ner_dir, srl_dir = sys.argv[1:]
+    main(data_dir, ner_dir, srl_dir)
