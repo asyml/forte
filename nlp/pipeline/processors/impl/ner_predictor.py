@@ -110,7 +110,7 @@ class CoNLLNERPredictor(Predictor):
 
     def load_model_checkpoint(self):
         ckpt = torch.load(self.config_model.model_path)
-        logger.info("restoring model from {}".format(self.config_model.model_path))
+        logger.info("restoring NER model from {}".format(self.config_model.model_path))
         self.model.load_state_dict(ckpt["model"])
 
     def pack(self, data_pack: DataPack, output_dict: Dict = None):

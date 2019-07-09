@@ -31,23 +31,27 @@ def main():
         print(colored("Document", 'red'), pack.meta.doc_id)
         for sentence in pack.get(Ont.Sentence):
             sent_text = sentence.text
-            print("Sentence:", sent_text, "\n")
+            print(colored("Sentence:",'red'), sent_text, "\n")
             # first method to get entry in a sentence
-            for link in pack.get(
-                    Ont.PredicateLink, sentence,
-                    component=pl.processors[-1].component_name):
-                parent = link.get_parent()
-                child = link.get_child()
-                print(f"SRL: \"{child.text}\" is role {link.arg_type} of "
-                      f"predicate \"{parent.text}\"")
-            print()
-            # second method to get entry in a sentence
             tokens = [(token.text, token.pos_tag) for token in
                       pack.get(Ont.Token, sentence)]
             entities = [(entity.text, entity.ner_type) for entity in
                         pack.get(Ont.EntityMention, sentence)]
-            print("Tokens:", tokens, "\n")
-            print("EntityMention:", entities, "\n")
+            print(colored("Tokens:",'red'), tokens, "\n")
+            print(colored("EntityMentions:",'red'), entities, "\n")
+
+            # second method to get entry in a sentence
+            print(colored("Semantic role labels:",'red'))
+            for link in pack.get(
+                    Ont.PredicateLink, sentence):
+                parent = link.get_parent()
+                child = link.get_child()
+                print(f"  - \"{child.text}\" is role {link.arg_type} of "
+                      f"predicate \"{parent.text}\"")
+                entities = [entity.text for entity
+                        in pack.get(Ont.EntityMention, child)]
+                print("      Entities in predicate argument:", entities, "\n")
+            print()
 
             input(colored("Press ENTER to continue...\n",'green'))
 

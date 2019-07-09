@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Dict, List, Tuple
 
 import texar as tx
@@ -9,6 +10,8 @@ from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
 from nlp.pipeline.processors.predictor import Predictor
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "SRLPredictor",
@@ -37,6 +40,8 @@ class SRLPredictor(Predictor):
         self.ontology = OntonotesOntology
         self.device = (torch.device(torch.cuda.current_device())
                        if torch.cuda.is_available() else 'cpu')
+
+        logger.info("restoring SRL model from {}".format(model_dir))
 
         self.word_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/word_vocab.english.txt"))
