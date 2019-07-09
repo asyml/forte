@@ -1,9 +1,8 @@
 from abc import abstractmethod
-from typing import Dict, Any, Iterator
-from nlp.pipeline.common.evaluation import Evaluator
-from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.data.data_pack import DataPack
+from typing import Dict, Iterator
+
 from nlp.pipeline.common.resources import Resources
+from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
     "Trainer",
