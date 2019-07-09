@@ -1,1 +1,1 @@
-from nlp.pipeline.models import NER
+from nlp.pipeline.models.NER import *

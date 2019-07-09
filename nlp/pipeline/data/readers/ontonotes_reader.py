@@ -15,6 +15,20 @@ __all__ = [
 
 
 class OntonotesReader(MonoFileReader):
+    """:class:`OntonotesReader` is designed to read in the English OntoNotes
+    v5.0 data in the format used by the CoNLL 2011/2012 shared tasks. To use
+    this Reader, you must follow the instructions provided `here (v12 release):
+    <http://cemantix.org/data/ontonotes.html>`_:, which will allow you to
+    download the CoNLL style annotations for the OntoNotes v5.0 release
+    – LDC2013T19.tgz obtained from LDC.
+
+    Args:
+        lazy (bool, optional): The reading strategy used when reading a
+            dataset containing multiple documents. If this is true,
+            ``dataset_iterator()`` will return an object whose ``__iter__``
+            method reloads the dataset each time it's called. Otherwise,
+            ``dataset_iterator()`` returns a list.
+    """
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ontology = OntonotesOntology
@@ -23,7 +37,7 @@ class OntonotesReader(MonoFileReader):
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
         """
         An iterator returning file_paths in a directory containing
-        CONLL-formatted files.
+        CoNLL-formatted files.
         """
         for root, _, files in os.walk(dir_path):
             for data_file in files:
@@ -284,41 +298,41 @@ class OntonotesReader(MonoFileReader):
     def _record_fields(self):
         self.current_datapack.record_fields(
             ["speaker", "part_id", "span"],
-            self.component_name,
             self.ontology.Sentence.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["sense", "pos_tag", "span"],
-            self.component_name,
             self.ontology.Token.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["ner_type", "span"],
-            self.component_name,
             self.ontology.EntityMention.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["pred_lemma", "pred_type", "span", "framenet_id"],
-            self.component_name,
             self.ontology.PredicateMention.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["span"],
-            self.component_name,
             self.ontology.PredicateArgument.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["parent", "child", "arg_type"],
-            self.component_name,
             self.ontology.PredicateLink.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["span"],
-            self.component_name,
             self.ontology.CoreferenceMention.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["coref_type", "members"],
-            self.component_name,
             self.ontology.CoreferenceGroup.__name__,
+            self.component_name,
         )

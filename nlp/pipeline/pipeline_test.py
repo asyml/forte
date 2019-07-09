@@ -11,11 +11,9 @@ class PipelineTest(unittest.TestCase):
 
     def setUp(self) -> None:
         # Define and config the Pipeline
-        reader = OntonotesReader()
         dataset_path = "/Users/wei.wei/Documents/nlp-pipeline" \
                        "/conll-formatted-ontonotes-5.0/data/" \
                        "test/data/english/annotations/bn/abc/"
-        self.data_packs_iter = reader.dataset_iterator(dataset_path)
 
         kwargs = {
             "dataset": {
@@ -31,9 +29,9 @@ class PipelineTest(unittest.TestCase):
     def test_process_next(self):
 
         # get processed pack from dataset
-        for pack in self.nlp.process_next(hard_batch=False):
+        for pack in self.nlp.run(hard_batch=False):
             # get sentence from pack
-            for sentence in pack.get_entries(OntonotesOntology.Sentence):
+            for sentence in pack.get_entries(RelationOntology.Sentence):
                 sent_text = sentence.text
 
                 # first method to get entry in a sentence
@@ -46,7 +44,7 @@ class PipelineTest(unittest.TestCase):
 
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
-                          pack.get_entries(OntonotesOntology.Token, sentence)]
+                          pack.get_entries(RelationOntology.Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
 
 

@@ -1,5 +1,4 @@
 from nlp.pipeline.data import readers
-from nlp.pipeline.data import writers
 from nlp.pipeline.data.base_ontology import *
 from nlp.pipeline.data.conll03_ontology import *
 from nlp.pipeline.data.data_pack import *

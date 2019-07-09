@@ -3,7 +3,7 @@ from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.io_utils import merge_batches, slice_batch
 from typing import Dict, List, Union, Iterable
-from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
+from nlp.pipeline.data.base_ontology import BaseOntology
 from nlp.pipeline.utils import *
 
 __all__ = [
@@ -12,6 +12,9 @@ __all__ = [
 
 
 class Predictor(BaseProcessor):
+    """
+    The base class of all predictors.
+    """
     def __init__(self):
         super().__init__()
 
@@ -20,6 +23,13 @@ class Predictor(BaseProcessor):
 
         self.data_pack_pool: List[DataPack] = []
         self.current_batch_sources: List[int] = []
+
+        # TODO(haoransh): By default, we don't overwrite the original data
+        #  pack with a processor
+        self._overwrite = True
+
+    def set_mode(self, overwrite: bool):
+        self._overwrite = overwrite
 
     def process(self, input_pack: DataPack, hard_batch=False):
         if hard_batch:
@@ -55,7 +65,8 @@ class Predictor(BaseProcessor):
         """
 
         self.data_pack_pool.append(input_pack)
-        for (data_batch, instance_num) in self.get_data_batch_by_need(
+        input_pack.meta.cache_state = self.component_name
+        for (data_batch, instance_num) in self._get_data_batch_by_need(
                 input_pack, self.context_type, self.annotation_types):
 
             self.current_batch = merge_batches([self.current_batch, data_batch])
@@ -76,6 +87,17 @@ class Predictor(BaseProcessor):
 
     @abstractmethod
     def predict(self, data_batch: Dict):
+        """
+        Make predictions for the input data_batch.
+
+        Args:
+              data_batch (Dict): A batch of instances in our dict format.
+
+        Returns:
+              The prediction results. This could be in any type and format,
+              and you just need to write the :meth:`pack` method according to
+              your prediction format.
+        """
         pass
 
     def pack_all(self, output_dict: Dict):
@@ -91,6 +113,12 @@ class Predictor(BaseProcessor):
         """
         Add corresponding fields to data_pack. Custom function of how
         to add the value back.
+
+        Args:
+            data_pack (DataPack): The data pack to add entries or fields to.
+            *inputs: The prediction results returned by :meth:`predict`. You
+                need to add entries or fields corresponding to this prediction
+                results to the ``data_pack``.
         """
         pass
 
@@ -98,8 +126,15 @@ class Predictor(BaseProcessor):
         """
         Do finishing work for data packs in :attr:`data_pack_pool` from the
         beginning to ``end`` (``end`` is not included).
+
+        Args:
+            end (int): Will do finishing work for data packs in
+                :attr:`data_pack_pool` from the beginning to ``end``
+                (``end`` is not included). If `None`, will finish up all the
+                packs in :attr:`data_pack_pool`.
         """
-        if end is None: end = len(self.data_pack_pool)
+        if end is None:
+            end = len(self.data_pack_pool)
         for pack in self.data_pack_pool[:end]:
             self.finish(pack)
         self.data_pack_pool = self.data_pack_pool[end:]
@@ -110,13 +145,13 @@ class Predictor(BaseProcessor):
         Do finishing work for one data_pack.
         """
         self._record_fields(input_pack)
-        input_pack.meta.process_state = get_full_component_name(self)
+        input_pack.meta.process_state = self.component_name
         # currently, need to build the coverage index after updating the entries
         input_pack.index.build_coverage_index(
             input_pack.annotations,
             input_pack.links,
             input_pack.groups,
-            outer_type=OntonotesOntology.Sentence
+            outer_type=BaseOntology.Sentence
         )
         # print(input_pack.links)
 
@@ -127,7 +162,7 @@ class Predictor(BaseProcessor):
         """
         pass
 
-    def get_data_batch_by_need(
+    def _get_data_batch_by_need(
             self,
             data_pack: DataPack,
             context_type: str,

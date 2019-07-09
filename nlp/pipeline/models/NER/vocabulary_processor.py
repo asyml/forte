@@ -6,6 +6,7 @@ import json
 from typing import Dict, List, Any, Iterator
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.common.resources import Resources
 import texar
 
 __all__ = [
@@ -17,8 +18,12 @@ __all__ = [
 
 class Alphabet(object):
     def __init__(
-        self, name, word_cnt: Counter = None,
-            keep_growing: bool = True, ignore_case_in_query: bool = True
+        self,
+        name,
+        word_cnt: Counter = None,
+        keep_growing: bool = True,
+        ignore_case_in_query: bool = True,
+        other_embeddings: Dict = None,
     ):
         """
 
@@ -43,17 +48,20 @@ class Alphabet(object):
             self.instance2index[sp] = len(self.instance2index)
             self.instances.append(sp)
 
-        self.pad_id = self.instance2index[self.reserved_tokens.PAD] # 0
-        self.bos_id = self.instance2index[self.reserved_tokens.BOS] # 1
-        self.eos_id = self.instance2index[self.reserved_tokens.EOS] # 2
-        self.unk_id = self.instance2index[self.reserved_tokens.UNK] # 3
+        self.pad_id = self.instance2index[self.reserved_tokens.PAD]  # 0
+        self.bos_id = self.instance2index[self.reserved_tokens.BOS]  # 1
+        self.eos_id = self.instance2index[self.reserved_tokens.EOS]  # 2
+        self.unk_id = self.instance2index[self.reserved_tokens.UNK]  # 3
 
         self.keep_growing = keep_growing
         self.ignore_case_in_query = ignore_case_in_query
 
+        self.other_embeddings = other_embeddings
+
         if word_cnt is not None:
             for word in word_cnt:
                 self.add(word)
+            self.close()
 
     def add(self, instance):
         if instance not in self.instance2index:
@@ -65,6 +73,9 @@ class Alphabet(object):
         :param instance: the input token
         :return: the index of the queried token in the dictionary
         """
+        if instance is None:
+            return self.instance2index[self.reserved_tokens.PAD]
+
         try:
             return self.instance2index[instance]
         except KeyError:
@@ -170,9 +181,12 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
 
     """
 
-    def __init__(self, min_frequency: int =-1,
-                 normalize_digit: bool = True,
-                 load_glove: bool = True) -> None:
+    def __init__(
+        self,
+        min_frequency: int = -1,
+        normalize_digit: bool = True,
+        load_glove: bool = True,
+    ) -> None:
         super().__init__(min_frequency)
         self.normalize_digit = normalize_digit
         self.load_glove = load_glove
@@ -181,13 +195,13 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         if self.normalize_digit:
             self.normalize_func = lambda x: digit_re.sub("0", x)
         else:
-            self.normalize_digit = lambda x: x
+            self.normalize_func = lambda x: x
 
     def process(self, input_pack: Iterator[DataPack]) -> List[Counter]:
         """
-        :param input_pack: The data packs to create vocabulary with
+        :param input_pack: The ner_data packs to create vocabulary with
         :return:
-            A list of five counters for different data features, for words,
+            A list of five counters for different ner_data features, for words,
             characters, POS tags, chunk IDs and Name Entity Recognition
         """
         word_cnt = Counter()
@@ -204,17 +218,17 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
                     "Sentence": [],  # span by default
                 },
             ):
-                for token in instance['Token']['text']:
+                for token in instance["Token"]["text"]:
                     for char in token:
                         char_cnt[char] += 1
                     word = self.normalize_func(token)
                     word_cnt[word] += 1
 
-                for pos in instance['Token']['pos_tag']:
+                for pos in instance["Token"]["pos_tag"]:
                     pos_cnt[pos] += 1
-                for chunk in instance['Token']['chunk_tag']:
+                for chunk in instance["Token"]["chunk_tag"]:
                     chunk_cnt[chunk] += 1
-                for ner in instance['Token']['ner_tag']:
+                for ner in instance["Token"]["ner_tag"]:
                     ner_cnt[ner] += 1
 
                 # if a singleton is in pre-trained embedding dict,
@@ -225,4 +239,3 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
                 del word_cnt[word]
 
         return [word_cnt, char_cnt, pos_cnt, chunk_cnt, ner_cnt]
-

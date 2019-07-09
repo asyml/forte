@@ -3,12 +3,14 @@ File readers.
 """
 import logging
 import os
+from abc import abstractmethod
 from typing import Iterator, List
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
 from nlp.pipeline.data.base_ontology import BaseOntology
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 __all__ = [
     "MonoFileReader",
@@ -30,7 +32,7 @@ class MonoFileReader(BaseReader):
     def __init__(self, lazy: bool = True) -> None:
         super().__init__(lazy)
 
-    def dataset_iterator(self, dir_path: str):
+    def dataset_iterator(self, dir_path: str) -> List[DataPack]:
         """
         An iterator over the entire dataset, yielding all documents processed.
 
@@ -38,6 +40,8 @@ class MonoFileReader(BaseReader):
             dir_path (str): The directory path of the dataset. The reader will
                 read all the files under this directory.
         """
+        if not os.path.exists(dir_path):
+            raise FileNotFoundError(f"{dir_path} does not exist.")
 
         if self._cache_directory:
             cache_file = self._get_cache_location_for_file_path(dir_path)
@@ -159,6 +163,7 @@ class MonoFileReader(BaseReader):
 
         return datapack
 
+    @abstractmethod
     def _read_document(self, file_path: str):
         """
         Process the original document. Should be Implemented according to the
@@ -166,5 +171,6 @@ class MonoFileReader(BaseReader):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def _record_fields(self):
         raise NotImplementedError

@@ -1,5 +1,5 @@
 """
-The reader that reads CoNLL data into our internal json data format.
+The reader that reads CoNLL ner_data into our internal json data format.
 """
 import os
 import logging
@@ -7,17 +7,33 @@ import codecs
 from typing import Iterator
 from nlp.pipeline.data.readers.file_reader import MonoFileReader
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.conll03_ontology import CoNLL03Ontology
+from nlp.pipeline.data.base_ontology import BaseOntology
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "CoNLL03Reader",
-]
+
+class CoNLL03Ontology(BaseOntology):
+    class Token(BaseOntology.Token):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
+            super().__init__(component, begin, end, tid)
+            self.chunk_tag = None
+            self.pos_tag = None
+            self.ner_tag = None
 
 
 class CoNLL03Reader(MonoFileReader):
+    """:class:`CoNLL03Reader` is designed to read in the CoNLL03-NER dataset.
+
+    Args:
+        lazy (bool, optional): The reading strategy used when reading a
+            dataset containing multiple documents. If this is true,
+            ``dataset_iterator()`` will return an object whose ``__iter__``
+            method reloads the dataset each time it's called. Otherwise,
+            ``dataset_iterator()`` returns a list.
+    """
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ner_ontology = CoNLL03Ontology
@@ -30,7 +46,7 @@ class CoNLL03Reader(MonoFileReader):
         """
         for root, _, files in os.walk(dir_path):
             for data_file in files:
-                if data_file.endswith("gold_conll"):
+                if data_file.endswith("conll"):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:
@@ -87,17 +103,18 @@ class CoNLL03Reader(MonoFileReader):
                 has_rows = False
 
         self.current_datapack.text = text
+        self.current_datapack.meta.doc_id = file_path
         doc.close()
         return self.current_datapack
 
     def _record_fields(self):
         self.current_datapack.record_fields(
             [],
-            self.component_name,
             self.ner_ontology.Sentence.__name__,
+            self.component_name,
         )
         self.current_datapack.record_fields(
             ["chunk_tag", "pos_tag", "ner_tag"],
-            self.component_name,
             self.ner_ontology.Token.__name__,
+            self.component_name,
         )
