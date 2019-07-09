@@ -2,16 +2,16 @@
 The reader that reads CoNLL ner_data into our internal json data format.
 """
 import os
-import logging
 import codecs
 from typing import Iterator
 from nlp.pipeline.data.readers.file_reader import MonoFileReader
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.base_ontology import BaseOntology
 
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+__all__ = [
+    "CoNLL03Ontology",
+    "CoNLL03Reader"
+]
 
 
 class CoNLL03Ontology(BaseOntology):
@@ -109,12 +109,12 @@ class CoNLL03Reader(MonoFileReader):
 
     def _record_fields(self):
         self.current_datapack.record_fields(
-            [],
+            ["span"],
             self.ner_ontology.Sentence.__name__,
             self.component_name,
         )
         self.current_datapack.record_fields(
-            ["chunk_tag", "pos_tag", "ner_tag"],
+            ["span", "chunk_tag", "pos_tag", "ner_tag"],
             self.ner_ontology.Token.__name__,
             self.component_name,
         )

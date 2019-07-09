@@ -1,16 +1,15 @@
 """
-The reader that reads CoNLL ner_data into our internal json ner_data format.
+The reader that reads plain text data into Datapacks.
 """
 import os
-import logging
 import codecs
 from typing import Iterator
 from nlp.pipeline.data.readers import MonoFileReader
 from nlp.pipeline.data.data_pack import DataPack
 
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+__all__ = [
+    "PlainTextReader",
+]
 
 
 class PlainTextReader(MonoFileReader):

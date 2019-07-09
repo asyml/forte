@@ -8,7 +8,7 @@ from typing import Iterator, List
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
 from nlp.pipeline.data.base_ontology import BaseOntology
-# logging.basicConfig(level=logging.ERROR)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
@@ -32,7 +32,7 @@ class MonoFileReader(BaseReader):
     def __init__(self, lazy: bool = True) -> None:
         super().__init__(lazy)
 
-    def dataset_iterator(self, dir_path: str) -> List[DataPack]:
+    def dataset_iterator(self, dir_path: str) -> Iterator[DataPack]:
         """
         An iterator over the entire dataset, yielding all documents processed.
 
