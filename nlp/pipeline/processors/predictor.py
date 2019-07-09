@@ -145,7 +145,7 @@ class Predictor(BaseProcessor):
         Do finishing work for one data_pack.
         """
         self._record_fields(input_pack)
-        input_pack.meta.process_state = get_full_component_name(self)
+        input_pack.meta.process_state = self.component_name
         # currently, need to build the coverage index after updating the entries
         input_pack.index.build_coverage_index(
             input_pack.annotations,
