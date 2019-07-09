@@ -1,7 +1,6 @@
 from typing import List, Iterator, Union
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.processors.predictor import Predictor
-from nlp.pipeline.utils import *
 from nlp.pipeline.data.readers import (
     CoNLL03Reader, OntonotesReader, PlainTextReader)
 
@@ -39,6 +38,9 @@ class Pipeline:
         else:
             self.reader = PlainTextReader()
 
+    def add_processor(self, processor):
+        self.processors.append(processor)
+
     def process(self, text: str):
         datapack = DataPack()
         datapack.text = text
@@ -47,8 +49,8 @@ class Pipeline:
         return datapack
 
     def process_dataset(self,
-                dataset: dict = None,
-                hard_batch: bool = True) -> Iterator[DataPack]:
+                        dataset: dict = None,
+                        hard_batch: bool = True) -> Iterator[DataPack]:
         """
         Process the documents in the dataset and return an iterator of DataPack.
 
@@ -99,8 +101,8 @@ class Pipeline:
                 for c_pack in list(self.current_packs):
                     # must iterate through a copy of the originial list because
                     # of the removing operation
-                    if c_pack.meta.process_state == get_full_component_name(
-                            self.processors[-1]):
+                    if (c_pack.meta.process_state ==
+                            self.processors[-1].component_name):
                         yield c_pack
                         self.current_packs.remove(c_pack)
                     else:
