@@ -1,69 +1,40 @@
 import logging
 import os
-from typing import Tuple, Dict
+from typing import Tuple
 
-import numpy as np
 import texar
 import torch
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
+from texar.hyperparams import HParams
 from texar.modules.embedders import WordEmbedder
 from torch import nn
 
-from nlp.pipeline.models.NER.conditional_random_field import (
+from examples.NER.conditional_random_field import (
     ConditionalRandomField,
 )
-from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
-from nlp.pipeline.models.NER.utils import set_random_seed
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
 class BiRecurrentConvCRF(nn.Module):
     def __init__(
-        self,
-        word_alphabet: Alphabet,
-        char_alphabet: Alphabet,
-        tag_alphabet: Alphabet,
-        embedding_dict: Dict,
-        embedding_dim: int,
-        config_model,
+            self,
+            word_embedding_table: torch.tensor,
+            char_vocab_size: int,
+            tag_vocab_size: int,
+            config_model: HParams,
     ):
         super().__init__()
 
-        set_random_seed(config_model.random_seed)
-
-        def construct_word_embedding_table():
-            scale = np.sqrt(3.0 / embedding_dim)
-            table = np.empty(
-                [word_alphabet.size(), embedding_dim], dtype=np.float32
-            )
-            oov = 0
-            for word, index in word_alphabet.items():
-                if word in embedding_dict:
-                    embedding = embedding_dict[word]
-                elif word.lower() in embedding_dict:
-                    embedding = embedding_dict[word.lower()]
-                else:
-                    embedding = np.random.uniform(
-                        -scale, scale, [1, embedding_dim]
-                    ).astype(np.float32)
-                    oov += 1
-                table[index, :] = embedding
-            logger.info("oov: %d when creating word embedding from "
-                        "predefined embedding" % oov)
-            return torch.from_numpy(table)
-
-        word_table = construct_word_embedding_table()
-
+        # TODO(haoransh): Fix this. init_value doesn't need to be tensor but
+        #  we have to set it for type check
         self.word_embedder = WordEmbedder(
-            vocab_size=word_alphabet.size(),
-            init_value=word_table,
-            hparams=config_model.word_emb,
-        )
+            init_value=word_embedding_table)
 
         self.char_embedder = WordEmbedder(
-            vocab_size=char_alphabet.size(), hparams=config_model.char_emb
+            vocab_size=char_vocab_size, hparams=config_model.char_emb
         )
 
         self.char_cnn = torch.nn.Conv1d(**config_model.char_cnn_conv)
@@ -73,34 +44,37 @@ class BiRecurrentConvCRF(nn.Module):
         self.dropout_rnn_in = nn.Dropout(config_model.dropout_rate)
         self.dropout_out = nn.Dropout(config_model.dropout_rate)
 
-        # self.rnn = BidirectionalRNNEncoder(
-        #     input_size=embedding_dim + config_model.char_cnn_conv[
-        #         "out_channels"],
-        #     hparams=config_model.bilstm_sentence_encoder,
-        # )
-
         self.rnn = nn.LSTM(
-            embedding_dim + config_model.char_cnn_conv["out_channels"],
-            config_model.rnn_hidden_size,
+            config_model.bilstm_sentence_encoder.rnn_cell_fw.input_size,
+            config_model.bilstm_sentence_encoder.rnn_cell_fw.kwargs.num_units,
             num_layers=1,
             batch_first=True,
             bidirectional=True,
         )
 
         self.dense = nn.Linear(
-            config_model.rnn_hidden_size * 2, config_model.output_hidden_size
+            config_model.bilstm_sentence_encoder.rnn_cell_fw.kwargs.num_units
+            * 2,
+            config_model.output_hidden_size
         )
 
         self.tag_projection_layer = nn.Linear(
-            config_model.output_hidden_size, tag_alphabet.size()
+            config_model.output_hidden_size, tag_vocab_size
         )
 
         self.crf = ConditionalRandomField(
-            tag_alphabet.size(),
+            tag_vocab_size,
             constraints=None,
             include_start_end_transitions=True,
         )
-        self.initializer = config_model.initializer
+
+        if config_model.initializer is None or callable(
+                config_model.initializer):
+            self.initializer = config_model.initializer
+        else:
+            self.initializer = texar.core.layers.get_initializer(
+                config_model["initializer"])
+
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -128,7 +102,7 @@ class BiRecurrentConvCRF(nn.Module):
 
         logits = self.tag_projection_layer(output)
         log_likelihood = (
-            self.crf.forward(logits, target, mask) / target.size()[0]
+                self.crf.forward(logits, target, mask) / target.size()[0]
         )
         return -log_likelihood
 
@@ -301,9 +275,9 @@ def evaluate(output_file: str) -> Tuple[float, float, float, float]:
 
 
 def get_logger(
-    name,
-    level=logging.INFO,
-    formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        name,
+        level=logging.INFO,
+        formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 ):
     logger = logging.getLogger(name)
     logger.setLevel(level)

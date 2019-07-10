@@ -3,7 +3,7 @@ The Resources class wraps necessary resources to build a processor ( or a
 trainer)
 """
 import os
-import dill
+import pickle
 
 __all__ = [
     "Resources",
@@ -17,4 +17,4 @@ class Resources:
 
     def save(self, output_dir="./"):
         with open(os.path.join(output_dir, "resources.pkl"), "wb") as output:
-            dill.dump(self, output, dill.HIGHEST_PROTOCOL)
+            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)

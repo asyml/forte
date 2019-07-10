@@ -9,7 +9,7 @@ import torch
 import torchtext
 from tqdm import tqdm
 
-from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
+from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
 from nlp.pipeline.common.resources import Resources
 
@@ -28,13 +28,12 @@ class CoNLLNERTrainer(BaseTrainer):
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
-        self.embedding_dict = None
-        self.embedding_dim = None
         self.device = None
         self.optim, self.trained_epochs = None, None
         self.resource: Resources = None
 
         self.train_instances_cache = []
+        # Just for recording
         self.max_char_length = 0
 
         self.__past_dev_result = None
@@ -49,13 +48,10 @@ class CoNLLNERTrainer(BaseTrainer):
         self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
         self.config_model = resource.resources["config_model"]
         self.config_data = resource.resources["config_data"]
-        self.embedding_dict = resource.resources["embedding_dict"]
-        self.embedding_dim = resource.resources["embedding_dim"]
         self.model = resource.resources["model"]
         self.optim = resource.resources["optim"]
         self.device = resource.resources["device"]
-
-        self.normalize_func = lambda x: self.config_data.digit_re.sub("0", x)
+        self.normalize_func = resource.resources['normalize_func']
 
         self.trained_epochs = 0
 
