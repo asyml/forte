@@ -25,8 +25,6 @@ def main(dataset_dir, ner_model_path, srl_model_path):
         open(os.path.join(ner_model_path, 'resources.pkl'), 'rb'))
     ner_predictor = CoNLLNERPredictor()
     ner_predictor.initialize(ner_resource)
-    ner_predictor.load_model_checkpoint(
-        os.path.join(ner_model_path, 'best_ner_crf_model.ckpt'))
 
     pl.processors.append(ner_predictor)
 

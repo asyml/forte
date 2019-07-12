@@ -4,4 +4,4 @@ jsonpickle
 torch
 torchtext
 tqdm
-dill
+yaml

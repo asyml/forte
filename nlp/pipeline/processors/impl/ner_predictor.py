@@ -9,7 +9,7 @@ from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
-from nlp.pipeline.models.NER.vocabulary_processor import Alphabet
+from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.processors.predictor import Predictor
 
 logger = logging.getLogger(__name__)
@@ -24,8 +24,6 @@ class CoNLLNERPredictor(Predictor):
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
-        self.embedding_dict = None
-        self.embedding_dim = None
         self.device = None
 
         self.train_instances_cache = []
@@ -45,11 +43,9 @@ class CoNLLNERPredictor(Predictor):
         self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
         self.config_model = resource.resources["config_model"]
         self.config_data = resource.resources["config_data"]
-        self.embedding_dict = resource.resources["embedding_dict"]
-        self.embedding_dim = resource.resources["embedding_dim"]
         self.model = resource.resources["model"]
         self.device = resource.resources["device"]
-        self.normalize_func = lambda x: self.config_data.digit_re.sub("0", x)
+        self.normalize_func = resource.resources['normalize_func']
 
     @torch.no_grad()
     def predict(self, data_batch: Dict):

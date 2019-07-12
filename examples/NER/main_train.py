@@ -1,23 +1,30 @@
-import importlib
-
+import numpy as np
 import torch
+import yaml
+from texar.hyperparams import HParams
 from torch.optim import SGD
 
+from examples.NER.model_factory import BiRecurrentConvCRF
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
-from nlp.pipeline.models.NER.model_factory import BiRecurrentConvCRF
 from nlp.pipeline.models.NER.utils import load_glove_embedding
-from nlp.pipeline.models.NER.vocabulary_processor import \
-    CoNLL03VocabularyProcessor, Alphabet
+from nlp.pipeline.models.NER.utils import set_random_seed
 from nlp.pipeline.processors.impl.ner_predictor import (
     CoNLLNERPredictor,
     CoNLLNEREvaluator,
 )
+from nlp.pipeline.processors.impl.vocabulary_processor import \
+    CoNLL03VocabularyProcessor, Alphabet
 from nlp.pipeline.train_pipeline import TrainPipeline
 from nlp.pipeline.trainer.impl.ner_trainer import CoNLLNERTrainer
 
-config_data = importlib.import_module("config_data")
-config_model = importlib.import_module("config_model")
+config_data = yaml.safe_load(open("config_data.yml", "r"))
+config_model = yaml.safe_load(open("config_model.yml", "r"))
+# This is the configuration for the whole task so there is not default_hparams
+config_data = HParams(config_data, default_hparams=None)
+config_model = HParams(config_model, default_hparams=None)
+
+set_random_seed(config_model.random_seed)
 
 reader = CoNLL03Reader(lazy=False)
 
@@ -26,7 +33,7 @@ embedding_path = config_model.embedding_path
 train_reader = reader.dataset_iterator(config_data.train_path)
 val_reader = reader.dataset_iterator(config_data.val_path)
 test_reader = reader.dataset_iterator(config_data.test_path)
-embedding_dict, embedding_dim = load_glove_embedding(embedding_path)
+embedding_dict = load_glove_embedding(embedding_path)
 
 # Keep the vocabulary processor as a simple counter
 vocab_processor = CoNLL03VocabularyProcessor()
@@ -37,26 +44,51 @@ word_cnt, char_cnt, pos_cnt, chunk_cnt, ner_cnt = vocab_processor.process(
 
 word_alphabet = Alphabet("word", word_cnt)
 char_alphabet = Alphabet("character", char_cnt)
-# pos_alphabet = Alphabet("pos", pos_cnt)
-# chunk_alphabet = Alphabet("chunk", chunk_cnt)
 ner_alphabet = Alphabet("ner", ner_cnt)
 
 for word in embedding_dict:
     if word not in word_alphabet.instance2index:
         word_alphabet.add(word)
 
-word_alphabet.save(config_data.alphabet_directory)
-char_alphabet.save(config_data.alphabet_directory)
-# pos_alphabet.save(config_data.alphabet_directory)
-# chunk_alphabet.save(config_data.alphabet_directory)
-ner_alphabet.save(config_data.alphabet_directory)
+word_alphabet.save(config_data["alphabet_directory"])
+char_alphabet.save(config_data["alphabet_directory"])
+ner_alphabet.save(config_data["alphabet_directory"])
 
 device = (
     torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 )
 
+
+def construct_word_embedding_table(embed_dict, alphabet):
+    embedding_dim = list(embed_dict.values())[0].shape[-1]
+
+    scale = np.sqrt(3.0 / embedding_dim)
+    table = np.empty(
+        [alphabet.size(), embedding_dim], dtype=np.float32
+    )
+    oov = 0
+    for word, index in alphabet.items():
+        if word in embed_dict:
+            embedding = embed_dict[word]
+        elif word.lower() in embed_dict:
+            embedding = embed_dict[word.lower()]
+        else:
+            embedding = np.random.uniform(
+                -scale, scale, [1, embedding_dim]
+            ).astype(np.float32)
+            oov += 1
+        table[index, :] = embedding
+    return torch.from_numpy(table)
+
+
+word_embedding_table = construct_word_embedding_table(embedding_dict,
+                                                      word_alphabet)
+
+print(f'word embedding table size:{word_embedding_table.size()}')
+normalize_func = vocab_processor.normalize_func
+
 model = BiRecurrentConvCRF(
-    word_alphabet, char_alphabet, ner_alphabet, embedding_dict, embedding_dim,
+    word_embedding_table, char_alphabet.size(), ner_alphabet.size(),
     config_model
 )
 
@@ -76,8 +108,7 @@ resources = Resources(
     word_alphabet=word_alphabet,
     char_alphabet=char_alphabet,
     ner_alphabet=ner_alphabet,
-    embedding_dict=embedding_dict,
-    embedding_dim=embedding_dim,
+    normalize_func=normalize_func,
     config_model=config_model,
     config_data=config_data,
     model=model,

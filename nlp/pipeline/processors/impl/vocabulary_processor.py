@@ -1,13 +1,13 @@
-from collections import Counter
-import numpy as np
+import json
 import os
 import re
-import json
+from collections import Counter
 from typing import Dict, List, Any, Iterator
-from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.common.resources import Resources
+
 import texar
+
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
     "Alphabet",
@@ -18,12 +18,12 @@ __all__ = [
 
 class Alphabet(object):
     def __init__(
-        self,
-        name,
-        word_cnt: Counter = None,
-        keep_growing: bool = True,
-        ignore_case_in_query: bool = True,
-        other_embeddings: Dict = None,
+            self,
+            name,
+            word_cnt: Counter = None,
+            keep_growing: bool = True,
+            ignore_case_in_query: bool = True,
+            other_embeddings: Dict = None,
     ):
         """
 
@@ -178,24 +178,26 @@ class VocabularyProcessor(BaseProcessor):
 
 class CoNLL03VocabularyProcessor(VocabularyProcessor):
     """
-
+    Vocabulary Processor for the format of CoNLL data
+    Create the vocabulary for the word, character, pos tag, chunk id and ner
+    tag
     """
 
     def __init__(
-        self,
-        min_frequency: int = -1,
-        normalize_digit: bool = True,
-        load_glove: bool = True,
+            self,
+            min_frequency: int = -1,
+            normalize_digit: bool = True,
     ) -> None:
         super().__init__(min_frequency)
         self.normalize_digit = normalize_digit
-        self.load_glove = load_glove
 
-        digit_re = re.compile(r"\d")
+        self.digit_re = re.compile(r"\d")
+
+    def normalize_func(self, x):
         if self.normalize_digit:
-            self.normalize_func = lambda x: digit_re.sub("0", x)
+            return self.digit_re.sub("0", x)
         else:
-            self.normalize_func = lambda x: x
+            return x
 
     def process(self, input_pack: Iterator[DataPack]) -> List[Counter]:
         """
@@ -212,11 +214,11 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
 
         for data_pack in input_pack:
             for instance in data_pack.get_data(
-                context_type="sentence",
-                annotation_types={
-                    "Token": ["chunk_tag", "pos_tag", "ner_tag"],
-                    "Sentence": [],  # span by default
-                },
+                    context_type="sentence",
+                    annotation_types={
+                        "Token": ["chunk_tag", "pos_tag", "ner_tag"],
+                        "Sentence": [],  # span by default
+                    },
             ):
                 for token in instance["Token"]["text"]:
                     for char in token:
