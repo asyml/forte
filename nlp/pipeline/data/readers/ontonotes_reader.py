@@ -5,13 +5,41 @@ import os
 import codecs
 from typing import DefaultDict, List, Optional, Iterator, Tuple
 from collections import defaultdict
-from nlp.pipeline.data.readers.file_reader import MonoFileReader
+from nlp.pipeline.data.readers import MonoFileReader
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
+from nlp.pipeline.data.base_ontology import BaseOntology
 
 __all__ = [
+    "OntonotesOntology",
     "OntonotesReader",
 ]
+
+
+class OntonotesOntology(BaseOntology):
+    """
+    The ontology for Ontonotes dataset
+    """
+    class Token(BaseOntology.Token):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
+            super().__init__(component, begin, end, tid)
+            self.sense = None
+            self.pos_tag = None
+
+    class Sentence(BaseOntology.Sentence):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
+            super().__init__(component, begin, end, tid)
+            self.speaker = None
+            self.part_id = None
+
+    class PredicateMention(BaseOntology.PredicateMention):
+        def __init__(self, component: str, begin: int, end: int,
+                     tid: str = None):
+            super().__init__(component, begin, end, tid)
+            self.pred_type = None
+            self.pred_lemma = None
+            self.framenet_id = None
 
 
 class OntonotesReader(MonoFileReader):

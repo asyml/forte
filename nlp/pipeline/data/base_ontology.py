@@ -51,7 +51,7 @@ class Entry:
     def __init__(self, component: str, tid: str = None):
         self.tid = f"{get_class_name(self)}.{tid}" if tid else None
         self.component = component
-        self.data_pack = None
+        self._data_pack = None
 
     def set_tid(self, tid: str):
         """Set the entry id"""
@@ -66,6 +66,14 @@ class Entry:
                     f" has no attribute {field_name}"
                 )
             setattr(self, field_name, field_value)
+
+    def attach(self, data_pack):
+        """Attach the entry itself to a data_pack"""
+        self._data_pack = data_pack
+
+    @property
+    def data_pack(self):
+        return self._data_pack
 
     @abstractmethod
     def hash(self):
@@ -193,7 +201,7 @@ class Link(Entry):
         Returns:
              An instance of :class:`Entry` that is the parent of the link.
         """
-        return self.data_pack.index.entry_index[self._parent]
+        return self.data_pack.index.entry_index[self.parent]
 
     def get_child(self):
         """
@@ -202,7 +210,7 @@ class Link(Entry):
         Returns:
              An instance of :class:`Entry` that is the child of the link.
         """
-        return self.data_pack.index.entry_index[self._child]
+        return self.data_pack.index.entry_index[self.child]
 
 
 class Group(Entry):

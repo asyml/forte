@@ -4,8 +4,7 @@ Unit tests for ner_data pack related operations.
 import os
 import unittest
 import nlp
-from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
-from nlp.pipeline.data.ontonotes_ontology import *
+from nlp.pipeline.data.readers import OntonotesOntology, OntonotesReader
 from nlp.pipeline.utils import *
 
 
@@ -60,12 +59,14 @@ class DataPackTest(unittest.TestCase):
         antype = {
             "Sentence": ["speaker"],
             "Token": ["pos_tag", "sense"],
-            "EntityMention": []
+            "EntityMention": [],
+            "PredicateMention": [],
+            "PredicateArgument": [],
         }
         linktype = {
             "PredicateLink": {
-                "component": get_full_component_name(self.reader),
-                "fields": ["parent", "parent.pred_lemma", "child", "arg_type"]
+                "component": self.reader.component_name,
+                "fields": ["parent","child", "arg_type"]
             }
         }
 
@@ -80,7 +81,7 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0]["offset"], 165)
 
-        # case 3: get document contect
+        # case 3: get document context
         instances = list(self.data_pack.get_data("Document", offset=0))
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0]["offset"], 0)
@@ -94,10 +95,10 @@ class DataPackTest(unittest.TestCase):
                                                  annotation_types=antype,
                                                  link_types=linktype,
                                                  offset=1))
-        self.assertEqual(len(instances[0].keys()), 6)
-        self.assertEqual(len(instances[0]["PredicateLink"]), 8)
-        self.assertEqual(len(instances[0]["Token"]), 4)
-        self.assertEqual(len(instances[0]["EntityMention"]), 2)
+        self.assertEqual(len(instances[0].keys()), 9)
+        self.assertEqual(len(instances[0]["PredicateLink"]), 4)
+        self.assertEqual(len(instances[0]["Token"]), 5)
+        self.assertEqual(len(instances[0]["EntityMention"]), 3)
 
         # case 5: get batch
         batch_size = 2
@@ -105,10 +106,10 @@ class DataPackTest(unittest.TestCase):
                                                        context_type="sentence",
                                                        annotation_types=antype,
                                                        link_types=linktype))
-        self.assertEqual(len(instances[0].keys()), 6)
-        self.assertEqual(len(instances[0]["Token"]), 4)
-        self.assertEqual(len(instances[0]["EntityMention"]), 2)
-        self.assertEqual(len(instances[0]["Token"]["text"]), batch_size)
+        self.assertEqual(len(instances[0][0].keys()), 9)
+        self.assertEqual(len(instances[0][0]["Token"]), 5)
+        self.assertEqual(len(instances[0][0]["EntityMention"]), 3)
+        self.assertEqual(len(instances[0][0]["Token"]["text"]), batch_size)
 
 
 if __name__ == '__main__':

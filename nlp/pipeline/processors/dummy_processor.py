@@ -2,7 +2,7 @@ import numpy as np
 from typing import Dict, List, Optional
 from nlp.pipeline.processors.predictor import Predictor
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontonotes_ontology import OntonotesOntology
+from nlp.pipeline.data.readers import OntonotesOntology
 from nlp.pipeline.data.base_ontology import Link
 
 __all__ = [

@@ -8,6 +8,8 @@ from nlp.pipeline.data.readers import CoNLL03Ontology
 __all__ = [
     "NLTKSentenceSegmenter",
 ]
+
+
 class NLTKSentenceSegmenter(Predictor):
 
     def __init__(self):

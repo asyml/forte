@@ -1,10 +1,9 @@
 from abc import abstractmethod
-from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.io_utils import merge_batches, slice_batch
 from typing import Dict, List, Union, Iterable
-from nlp.pipeline.data.base_ontology import BaseOntology
-from nlp.pipeline.utils import *
+
+from nlp.pipeline.processors import BaseProcessor
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data import merge_batches, slice_batch, BaseOntology
 
 __all__ = [
     "Predictor",
