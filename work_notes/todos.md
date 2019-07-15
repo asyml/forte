@@ -1,15 +1,19 @@
 # TODO Notes
 1. Prepare config system.
     1. How to join well with Texar.
+1. Ontology management.
+    1. When there are many ontologies, how can we simplify them?
+    1. How should we store them if the ontologies are all over the place.
 1. Batching support.
     1. Add a customizable sharable Batching interface.
 1. A name for nlp_pipeline, anyone?
-1. Some changes for Pack to tensor conversion.
+1. The process() function in Trainer need a name and a purpose.
+1. ~~Some changes for Pack to tensor conversion.~~
     1. ~~Always return the full offsets.~~
     1. ~~When requested, return additional token and context based (or other)
      offsets~~
-1. Trainer, Processor separation:
-    1. Trainer no need to extent Processor
+1. ~~Trainer, Processor separation:~~
+    1. ~~Trainer no need to extent Processor~~
 1. ~~Predictor revisit~~
     1. ~~Now no one is using the Process() function directly, some changes here~~
 1. Resource Manager.
@@ -20,10 +24,12 @@
 1. Reduce the interchange format size if possible?
     1. Probably no need to store all indexing along with it
 1. Prepare to integrate with Executor.
-1. Some simplification measures:
+1. Some pipeline usage problems:
     1. Use the with statement to simplify the load anv verbosity in processors
     1. Reduce the need to calling "__name__" for users
-1. There is no component in add_field(), might be confusing.
+    1. Now the way to create Link requires a user to pass in the "tid", which add
+     burden to the users to maintain such an id.
+1. There is no component in set_field(), might be confusing.
 1. Discussion of the Multipack interface.
 1. How about the "view" method?
     1. Can be used to deal with the train test problem

@@ -1,8 +1,9 @@
 from typing import List, Iterator
-from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.processors import Predictor
+from nlp.pipeline.data import DataPack, BaseOntology
+from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.data.readers import (
     CoNLL03Reader, OntonotesReader, PlainTextReader)
+from nlp.pipeline.utils import get_class
 
 
 class Pipeline:
@@ -13,8 +14,9 @@ class Pipeline:
     def __init__(self, **kwargs):
         self.reader = None
         self.dataset_dir = None
-        self._processors: List[Predictor] = []
+        self._processors: List[BaseProcessor] = []
 
+        self._ontology = None
         self.topology = None
         self.current_packs = []
 
@@ -26,6 +28,13 @@ class Pipeline:
         """
         if "dataset" in kwargs.keys():
             self.initialize_dataset(kwargs["dataset"])
+        if "ontology" in kwargs.keys():
+            module_path = ["__main__",
+                           "nlp.pipeline.data",
+                           "nlp.pipeline.data.readers"]
+            self._ontology = get_class(kwargs["ontology"], module_path)
+            for processor in self.processors:
+                processor.ontology = self._ontology
 
     def initialize_dataset(self, dataset):
         self.dataset_dir = dataset["dataset_dir"]
@@ -42,14 +51,19 @@ class Pipeline:
     def processors(self):
         return self._processors
 
-    def add_processor(self, processor):
+    def add_processor(self, processor: BaseProcessor):
+        if self._ontology:
+            processor.ontology = self._ontology
         self.processors.append(processor)
 
     def process(self, text: str):
         datapack = DataPack()
         datapack.text = text
         for processor_index, processor in enumerate(self.processors):
-            processor.process(datapack, hard_batch=False)
+            if isinstance(processor, BatchProcessor):
+                processor.process(datapack, hard_batch=False)
+            else:
+                processor.process(datapack)
         return datapack
 
     def process_dataset(self,
@@ -87,7 +101,10 @@ class Pipeline:
     def _process_next_in_soft_batch(self, dataset) -> Iterator[DataPack]:
         for pack in dataset:
             for processor_index, processor in enumerate(self.processors):
-                processor.process(pack, hard_batch=False)
+                if isinstance(processor, BatchProcessor):
+                    processor.process(pack, hard_batch=False)
+                else:
+                    processor.process(pack)
             yield pack
 
     def _process_next_in_hard_batch(self, dataset) -> Iterator[DataPack]:
@@ -101,7 +118,10 @@ class Pipeline:
                     can_process = (i == 0 or c_pack.meta.process_state ==
                                    self.processors[i - 1].component_name)
                     if can_process and not in_cache:
-                        processor.process(input_pack=c_pack, hard_batch=True)
+                        if isinstance(processor, BatchProcessor):
+                            processor.process(c_pack, hard_batch=True)
+                        else:
+                            processor.process(c_pack)
                 for c_pack in list(self.current_packs):
                     # must iterate through a copy of the originial list because
                     # of the removing operation
@@ -115,6 +135,9 @@ class Pipeline:
         # process tail instances in the whole dataset
         for c_pack in list(self.current_packs):
             for processor_index, processor in enumerate(self.processors):
-                processor.process(c_pack, hard_batch=False)
+                if isinstance(processor, BatchProcessor):
+                    processor.process(c_pack, hard_batch=True)
+                else:
+                    processor.process(c_pack)
             yield c_pack
             self.current_packs.remove(c_pack)

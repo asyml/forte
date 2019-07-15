@@ -10,12 +10,12 @@ from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
 from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
-from nlp.pipeline.processors.predictor import Predictor
+from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 logger = logging.getLogger(__name__)
 
 
-class CoNLLNERPredictor(Predictor):
+class CoNLLNERPredictor(BatchProcessor):
     def __init__(self):
         super().__init__()
         self.model = None
@@ -35,7 +35,7 @@ class CoNLLNERPredictor(Predictor):
             "Sentence": [],  # span by default
         }
         self.batch_size = 3
-        self.ner_ontology = CoNLL03Ontology
+        self.ontology = CoNLL03Ontology
 
     def initialize(self, resource: Resources):
         self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
@@ -134,7 +134,7 @@ class CoNLLNERPredictor(Predictor):
                             continue
 
                         kwargs_i = {"ner_type": current_entity_mention[1]}
-                        entity = self.ner_ontology.EntityMention(
+                        entity = self.ontology.EntityMention(
                             self.component_name,
                             current_entity_mention[0],
                             token.span.end,
@@ -147,7 +147,7 @@ class CoNLLNERPredictor(Predictor):
                             token.ner_tag[2:],
                         )
                         kwargs_i = {"ner_type": current_entity_mention[1]}
-                        entity = self.ner_ontology.EntityMention(
+                        entity = self.ontology.EntityMention(
                             self.component_name,
                             current_entity_mention[0],
                             token.span.end,
@@ -158,7 +158,7 @@ class CoNLLNERPredictor(Predictor):
                 else:
                     # Only Add EntityMention when overwrite is False
                     kwargs_i = {"ner_tag": ner_tag}
-                    token = self.ner_ontology.Token(
+                    token = self.ontology.Token(
                         self.component_name,
                         orig_token.span.begin,
                         orig_token.span.end,
@@ -169,18 +169,18 @@ class CoNLLNERPredictor(Predictor):
     def _record_fields(self, data_pack: DataPack):
         if self._overwrite:
             data_pack.record_fields(
-                ["ner_tag"], self.ner_ontology.Token.__name__
+                ["ner_tag"], self.ontology.Token.__name__
             )
         else:
             data_pack.record_fields(
                 ["ner_tag", "span"],
-                self.ner_ontology.Token.__name__,
+                self.ontology.Token.__name__,
                 self.component_name,
             )
 
         data_pack.record_fields(
             ["ner_type", "span"],
-            self.ner_ontology.EntityMention.__name__,
+            self.ontology.EntityMention.__name__,
             self.component_name,
         )
 
@@ -237,7 +237,7 @@ class CoNLLNERPredictor(Predictor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config=None):
         super().__init__(config)
-        self.ner_ontology = CoNLL03Ontology
+        self.ontology = CoNLL03Ontology
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
