@@ -1,0 +1,27 @@
+stages:
+  - verify
+  - test
+
+variables:
+  TAG_ID: gitlab_ci
+  PRODUCER_DEV_REGISTRY: registry.petuum.com/internal/pl/daisy/producer/dev
+  PRODUCER_PROD_REGISTRY: registry.petuum.com/internal/pl/daisy/producer/prod
+
+lint:
+  stage: verify
+  tags: [docker_runner]
+  image: python:3.6.1
+  script:
+    - pip install pylint==2.3.1 flake8==3.7.7
+    - flake8 nlp/ examples/
+    - pylint nlp/ examples/
+
+mypy-pytest:
+  stage: test
+  tags: [docker_runner]
+  image: python:3.6.1
+  script:
+    - pip3 install -q mypy==0.720 pytest
+    - pip3 install -q -r requirements.txt
+    - mypy .
+    - pytest
