@@ -1,7 +1,7 @@
 import logging
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.processors.predictor import Predictor
+from nlp.pipeline.processors import BaseProcessor
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.data.readers.base_reader import BaseReader
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +18,7 @@ class TrainPipeline:
             # config,
             resource: Resources = None,
             evaluator: Evaluator = None,
-            predictor: Predictor = None,
+            predictor: BaseProcessor = None,
     ):
         resource.save()
         # resource = Resources(config)

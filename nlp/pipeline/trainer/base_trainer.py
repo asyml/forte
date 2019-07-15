@@ -1,11 +1,9 @@
 from abc import abstractmethod
 from typing import Dict, Iterator
-
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.processors.base_processor import BaseProcessor
 
 
-class BaseTrainer(BaseProcessor):
+class BaseTrainer:
     def __init__(self, config):
         super().__init__()
         self._stop_train = False

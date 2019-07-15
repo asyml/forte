@@ -1,3 +1,5 @@
+import os
+import sys
 import dill
 from termcolor import colored
 
@@ -6,8 +8,7 @@ from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors.impl import (NLTKPOSTagger, NLTKSentenceSegmenter,
                                           NLTKWordTokenizer, CoNLLNERPredictor,
                                           SRLPredictor)
-import os
-import sys
+
 
 
 def main(dataset_dir, ner_model_path, srl_model_path):
@@ -17,18 +18,19 @@ def main(dataset_dir, ner_model_path, srl_model_path):
     }
 
     pl = Pipeline()
-    pl.processors.append(NLTKSentenceSegmenter())
-    pl.processors.append(NLTKWordTokenizer())
-    pl.processors.append(NLTKPOSTagger())
+    pl.initialize(ontology="CoNLL03Ontology")
+    pl.add_processor(NLTKSentenceSegmenter())
+    pl.add_processor(NLTKWordTokenizer())
+    pl.add_processor(NLTKPOSTagger())
 
     ner_resource = dill.load(
         open(os.path.join(ner_model_path, 'resources.pkl'), 'rb'))
     ner_predictor = CoNLLNERPredictor()
     ner_predictor.initialize(ner_resource)
 
-    pl.processors.append(ner_predictor)
+    pl.add_processor(ner_predictor)
 
-    pl.processors.append(SRLPredictor(model_dir=srl_model_path))
+    pl.add_processor(SRLPredictor(model_dir=srl_model_path))
 
     for pack in pl.process_dataset(dataset):
         print(colored("Document", 'red'), pack.meta.doc_id)
