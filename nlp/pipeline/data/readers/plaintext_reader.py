@@ -22,6 +22,7 @@ class PlainTextReader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
+
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
 
@@ -48,4 +49,3 @@ class PlainTextReader(MonoFileReader):
 
     def _record_fields(self):
         pass
-

@@ -34,6 +34,7 @@ class CoNLL03Reader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
+
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ner_ontology = CoNLL03Ontology
@@ -94,7 +95,7 @@ class CoNLL03Reader(MonoFileReader):
                     continue
                 # add sentence
                 sent = self.ner_ontology.Sentence(
-                    self.component_name, sentence_begin, offset-1
+                    self.component_name, sentence_begin, offset - 1
                 )
                 self.current_datapack.add_entry(sent)
 

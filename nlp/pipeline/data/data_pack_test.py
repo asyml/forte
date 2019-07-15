@@ -66,7 +66,7 @@ class DataPackTest(unittest.TestCase):
         linktype = {
             "PredicateLink": {
                 "component": self.reader.component_name,
-                "fields": ["parent","child", "arg_type"]
+                "fields": ["parent", "child", "arg_type"]
             }
         }
 

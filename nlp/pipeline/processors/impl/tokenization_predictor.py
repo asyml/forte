@@ -37,8 +37,8 @@ class NLTKWordTokenizer(Predictor):
             for word in words:
                 begin_pos = sent.find(word, end_pos)
                 end_pos = begin_pos + len(word)
-                begins.append(begin_pos+offset)
-                ends.append(end_pos+offset)
+                begins.append(begin_pos + offset)
+                ends.append(end_pos + offset)
 
             pred["Token"]["begin"].append(np.array(begins))
             pred["Token"]["end"].append(np.array(ends))
@@ -47,7 +47,8 @@ class NLTKWordTokenizer(Predictor):
 
     def pack(self, data_pack: DataPack, output_dict: Dict = None) -> None:
 
-        if output_dict is None: return
+        if output_dict is None:
+            return
 
         for i in range(len(output_dict["Token"]["begin"])):
             for j in range(len(output_dict["Token"]["begin"][i])):

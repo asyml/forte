@@ -107,7 +107,7 @@ class CoNLLNERPredictor(Predictor):
         if output_dict is None:
             return
 
-        ### Add tokens
+        # Add tokens
         current_entity_mention: Tuple[int, str] = (-1, "None")
 
         for i in range(len(output_dict["Token"]["tid"])):

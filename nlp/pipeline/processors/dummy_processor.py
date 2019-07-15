@@ -76,7 +76,8 @@ class DummyRelationExtractor(Predictor):
 
     def pack(self, data_pack: DataPack, output_dict: Dict = None):
         """Add corresponding fields to data_pack"""
-        if output_dict is None: return
+        if output_dict is None:
+            return
 
         for i in range(len(output_dict["RelationLink"]["parent.tid"])):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
@@ -93,4 +94,3 @@ class DummyRelationExtractor(Predictor):
             RelationOntology.RelationLink.__name__,
             self.component_name,
         )
-

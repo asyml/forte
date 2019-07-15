@@ -199,4 +199,3 @@ class Predictor(BaseProcessor):
 
         if batch:
             yield (batch, cnt)
-

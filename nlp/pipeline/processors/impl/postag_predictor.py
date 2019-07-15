@@ -46,7 +46,8 @@ class NLTKPOSTagger(Predictor):
 
     def pack(self, data_pack: DataPack, output_dict: Dict = None) -> None:
 
-        if output_dict is None: return
+        if output_dict is None:
+            return
 
         for i in range(len(output_dict["Token"]["tid"])):
             for j in range(len(output_dict["Token"]["tid"][i])):

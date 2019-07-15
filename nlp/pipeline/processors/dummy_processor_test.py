@@ -20,7 +20,7 @@ class DummyProcessorTest(unittest.TestCase):
         # case 1: process ner_data
         link_num = len(self.data_pack.links)
         self.processor.process(self.data_pack)
-        self.assertEqual(link_num+11, len(self.data_pack.links))
+        self.assertEqual(link_num + 11, len(self.data_pack.links))
 
 
 if __name__ == '__main__':

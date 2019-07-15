@@ -40,8 +40,8 @@ class NLTKSentenceSegmenter(Predictor):
                 for sent in sentences:
                     begin_pos = doc.find(sent, end_pos)
                     end_pos = begin_pos + len(sent)
-                    begins.append(begin_pos+offset)
-                    ends.append(end_pos+offset)
+                    begins.append(begin_pos + offset)
+                    ends.append(end_pos + offset)
 
             pred["Sentence"]["begin"].append(np.array(begins))
             pred["Sentence"]["end"].append(np.array(ends))
@@ -50,7 +50,8 @@ class NLTKSentenceSegmenter(Predictor):
 
     def pack(self, data_pack: DataPack, output_dict: Dict = None) -> None:
 
-        if output_dict is None: return
+        if output_dict is None:
+            return
 
         for i in range(len(output_dict["Sentence"]["begin"])):
             for j in range(len(output_dict["Sentence"]["begin"][i])):

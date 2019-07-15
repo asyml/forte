@@ -19,7 +19,6 @@ __all__ = [
     "DataPack",
 ]
 
-
 E = TypeVar('E', bound=Entry)
 
 
@@ -229,8 +228,10 @@ class DataIndex:
         """
 
         # Initialization
-        if outer_type is None: outer_type = Annotation
-        if inner_type is None: inner_type = Entry
+        if outer_type is None:
+            outer_type = Annotation
+        if inner_type is None:
+            inner_type = Entry
         if not issubclass(outer_type, Annotation):
             raise TypeError(f"'outer_type' must be a subclass of 'Annotation',"
                             f" but get {outer_type}.")
@@ -420,7 +421,8 @@ class DataPack:
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)].tid
 
-    def record_fields(self, fields: list, entry_type: str, component: str = None):
+    def record_fields(self, fields: list, entry_type: str,
+                      component: str = None):
         """Record in the internal meta that ``component`` has generated
         ``fields`` for ``entry_type``.
         """
@@ -648,7 +650,8 @@ class DataPack:
             a_dict["text"].append(self.text[annotation.span.begin:
                                             annotation.span.end])
             for field in fields:
-                if field == "span" or field == "text": continue
+                if field == "span" or field == "text":
+                    continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
                 ]:
@@ -710,7 +713,8 @@ class DataPack:
                 np.where(data[child_type]["tid"] == link.child)[0][0])
 
             for field in fields:
-                if field == "parent" or field == "child": continue
+                if field == "parent" or field == "child":
+                    continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
                 ]:

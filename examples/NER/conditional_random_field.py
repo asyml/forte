@@ -449,7 +449,7 @@ class ConditionalRandomField(torch.nn.Module):
             tag_sequence[0, start_tag] = 0.0
             # At steps 1, ..., sequence_length we just use the
             # incoming prediction
-            tag_sequence[1 : (sequence_length + 1), :num_tags] = prediction[
+            tag_sequence[1:(sequence_length + 1), :num_tags] = prediction[
                 :sequence_length
             ]
             # And at the last timestep we must have the END_TAG
