@@ -57,6 +57,7 @@ class SRLPredictor(Predictor):
         self.model.load_state_dict(torch.load(
             os.path.join(model_dir, "pretrained/model.pt"),
             map_location=self.device))
+        self.model.eval()
 
     def initialize(self, resource: Resources):
         raise NotImplementedError
