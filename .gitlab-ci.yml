@@ -7,21 +7,36 @@ variables:
   PRODUCER_DEV_REGISTRY: registry.petuum.com/internal/pl/daisy/producer/dev
   PRODUCER_PROD_REGISTRY: registry.petuum.com/internal/pl/daisy/producer/prod
 
-lint:
+pylint:
   stage: verify
   tags: [docker_runner]
   image: python:3.6.1
   script:
-    - pip install pylint==2.3.1 flake8==3.7.7
-    - flake8 nlp/ examples/
+    - pip install pylint==2.3.1
     - pylint nlp/ examples/
 
-mypy-pytest:
+flake8:
+  stage: verify
+  tags: [docker_runner]
+  image: python:3.6.1
+  script:
+    - pip install flake8==3.7.7
+    - flake8 nlp/ examples/
+
+mypy:
   stage: test
   tags: [docker_runner]
   image: python:3.6.1
   script:
-    - pip3 install -q mypy==0.720 pytest
+    - pip3 install -q mypy==0.720
     - pip3 install -q -r requirements.txt
     - mypy .
-    - pytest
+
+pytest:
+  stage: test
+  tags: [docker_runner]
+  image: python:3.6.1
+  script:
+    - pip3 install -q pytest
+    - pip3 install -q -r requirements.txt
+    - mypy .
