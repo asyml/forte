@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 from nltk.tokenize import sent_tokenize
@@ -50,7 +50,8 @@ class NLTKSentenceSegmenter(Predictor):
 
         return pred
 
-    def pack(self, data_pack: DataPack, output_dict: Dict = None) -> None:
+    def pack(self, data_pack: DataPack,
+             output_dict: Optional[Dict] = None) -> None:
 
         if output_dict is None:
             return

@@ -1,7 +1,7 @@
 import logging
 import random
 import time
-from typing import Iterator
+from typing import Iterator, Optional
 from typing import List, Tuple
 
 import numpy as np
@@ -30,7 +30,7 @@ class CoNLLNERTrainer(BaseTrainer):
         self.normalize_func = None
         self.device = None
         self.optim, self.trained_epochs = None, None
-        self.resource: Resources = None
+        self.resource: Optional[Resources] = None
 
         self.train_instances_cache = []
         # Just for recording

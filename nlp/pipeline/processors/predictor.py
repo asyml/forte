@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, List, Union, Iterable
+from typing import Dict, Iterable, List, Optional, Union
 
 from nlp.pipeline.data import merge_batches, slice_batch, BaseOntology
 from nlp.pipeline.data.data_pack import DataPack
@@ -121,7 +121,7 @@ class Predictor(BaseProcessor):
         """
         pass
 
-    def finish_up_packs(self, end: int = None):
+    def finish_up_packs(self, end: Optional[int] = None):
         """
         Do finishing work for data packs in :attr:`data_pack_pool` from the
         beginning to ``end`` (``end`` is not included).
@@ -139,7 +139,7 @@ class Predictor(BaseProcessor):
         self.data_pack_pool = self.data_pack_pool[end:]
         self.current_batch_sources = self.current_batch_sources[end:]
 
-    def finish(self, input_pack: DataPack = None):
+    def finish(self, input_pack: Optional[DataPack] = None):
         """
         Do finishing work for one data_pack.
         """
@@ -165,9 +165,9 @@ class Predictor(BaseProcessor):
             self,
             data_pack: DataPack,
             context_type: str,
-            annotation_types: Dict[str, Union[Dict, Iterable]] = None,
-            link_types: Dict[str, Union[Dict, Iterable]] = None,
-            group_types: Dict[str, Union[Dict, Iterable]] = None,
+            annotation_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
             offset: int = 0) -> Iterable[Dict]:
         """
         Get a data batch from ``data_pack``. If there is enough instances in

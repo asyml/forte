@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
@@ -18,9 +19,9 @@ class TrainPipeline:
             dev_reader: BaseReader,
             # TODO: Let's define the config system.
             # config,
-            resource: Resources = None,
-            evaluator: Evaluator = None,
-            predictor: Predictor = None,
+            resource: Optional[Resources] = None,
+            evaluator: Optional[Evaluator] = None,
+            predictor: Optional[Predictor] = None,
     ):
         resource.save()
         # resource = Resources(config)

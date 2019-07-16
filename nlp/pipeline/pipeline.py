@@ -1,4 +1,4 @@
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers import (
@@ -54,7 +54,7 @@ class Pipeline:
         return datapack
 
     def process_dataset(self,
-                        dataset: dict = None,
+                        dataset: Optional[dict] = None,
                         hard_batch: bool = True) -> Iterator[DataPack]:
         """
         Process the documents in the dataset and return an iterator of DataPack.

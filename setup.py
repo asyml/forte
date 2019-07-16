@@ -23,7 +23,7 @@ setuptools.setup(
     ],
     extras_require={
         'ner': ['pyyaml', 'torch', 'torchtext', 'tqdm'],
-        'srl': [],
+        'srl': ['mypy-extensions'],
     },
     package_data={
     },

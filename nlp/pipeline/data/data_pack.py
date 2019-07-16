@@ -30,7 +30,7 @@ class Meta:
     Meta information of a datapack.
     """
 
-    def __init__(self, doc_id: str = None):
+    def __init__(self, doc_id: Optional[str] = None):
         self.doc_id = doc_id
         self.process_state = None
         self.cache_state = None
@@ -198,8 +198,8 @@ class DataIndex:
 
     def build_coverage_index(self,
                              annotations: SortedSet,
-                             links: List[Link] = None,
-                             groups: List[Group] = None,
+                             links: Optional[List[Link]] = None,
+                             groups: Optional[List[Group]] = None,
                              outer_type: Optional[type] = None,
                              inner_type: Optional[type] = None):
         # TODO: update index when add entries. how to be better than O(n^2)?
@@ -366,15 +366,16 @@ class DataPack:
         doc_id (str, optional): A universal id of this ner_data pack.
     """
 
-    def __init__(self, text: str = None, doc_id: str = None):
+    def __init__(self, text: Optional[str] = None,
+                 doc_id: Optional[str] = None):
         self.annotations = SortedSet()
         self.links: List[Link] = []
         self.groups: List[Group] = []
         self.meta: Meta = Meta(doc_id)
-        self.text: str = text
+        self.text = text
 
         self.index: DataIndex = DataIndex(self)
-        self.internal_metas = defaultdict(InternalMeta)
+        self.internal_metas: Dict[str, InternalMeta] = defaultdict(InternalMeta)
 
     def add_entry(self, entry: Entry):
         """
@@ -425,7 +426,7 @@ class DataPack:
         return target[target.index(entry)].tid
 
     def record_fields(self, fields: list, entry_type: str,
-                      component: str = None):
+                      component: Optional[str] = None):
         """Record in the internal meta that ``component`` has generated
         ``fields`` for ``entry_type``.
         """
@@ -452,14 +453,16 @@ class DataPack:
     def get_data(
             self,
             context_type: str,
-            annotation_types: Dict[str, Union[Dict, Iterable]] = None,
-            link_types: Dict[str, Union[Dict, Iterable]] = None,
-            group_types: Dict[str, Union[Dict, Iterable]] = None,
+            annotation_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
             offset: int = 0
     ) -> Iterable[Dict]:
         """
         Example:
+
             .. code-block:: python
+
                 antype = {
                     "Sentence":
                         {
@@ -735,9 +738,9 @@ class DataPack:
             self,
             batch_size: int,
             context_type: str,
-            annotation_types: Dict[str, Union[Dict, Iterable]] = None,
-            link_types: Dict[str, Union[Dict, Iterable]] = None,
-            group_types: Dict[str, Union[Dict, Iterable]] = None,
+            annotation_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
             offset: int = 0) -> Iterable[Dict]:
         """
         Try to get batches of size ``batch_size``. If the tail instances cannot
@@ -799,8 +802,8 @@ class DataPack:
 
     def get_entries(self,
                     entry_type: Type[E],
-                    range_annotation: Annotation = None,
-                    component: str = None) -> Iterable[E]:
+                    range_annotation: Optional[Annotation] = None,
+                    component: Optional[str] = None) -> Iterable[E]:
         """
         Get ``entry_type`` entries from the span of ``range_annotation`` in a
         DataPack.
@@ -844,6 +847,6 @@ class DataPack:
 
     def get(self,
             entry_type: Type[E],
-            range_annotation: Annotation = None,
-            component: str = None) -> Iterable[E]:
+            range_annotation: Optional[Annotation] = None,
+            component: Optional[str] = None) -> Iterable[E]:
         return self.get_entries(entry_type, range_annotation, component)

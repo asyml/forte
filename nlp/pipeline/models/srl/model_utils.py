@@ -1,6 +1,5 @@
 from contextlib import contextmanager
-from typing import (
-    Any, ContextManager, Dict, List, Optional, Tuple, Union, overload)
+from typing import Any, Dict, List, Optional, Tuple, Union, overload
 
 import numpy as np
 import texar as tx
@@ -66,8 +65,7 @@ class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
         return (self._initial_hidden.expand(batch_size, -1),
                 self._initial_cell.expand(batch_size, -1))
 
-    def forward(self,  # type: ignore
-                input: torch.Tensor, state: Optional[LSTMState] = None) \
+    def forward(self, input: torch.Tensor, state: Optional[LSTMState] = None) \
             -> Tuple[torch.Tensor, LSTMState]:
         batch_size = input.size(0)
         if state is None:
@@ -117,8 +115,7 @@ class CustomBiLSTM(tx.modules.EncoderBase):
             "dropout": 0.2,
         }
 
-    def forward(self,  # type: ignore
-                inputs: torch.Tensor,
+    def forward(self, inputs: torch.Tensor,
                 sequence_length: Optional[torch.LongTensor] = None) \
             -> torch.Tensor:
         for idx in range(self._hparams.num_layers):
@@ -208,7 +205,7 @@ class CharCNN(tx.ModuleBase):
                 *embed.size()[:2], pad_length)], dim=2)
         kernel_outputs = [kernel(embed) for kernel in self.cnn_kernels]
         cnn_output = torch.cat(
-            [torch.max(out, dim=2).values for out in kernel_outputs], dim=1)
+            [torch.max(out, dim=2)[0] for out in kernel_outputs], dim=1)
 
         sent_cnn_outputs = torch.split(cnn_output, sent_lengths, dim=0)
         output = cnn_output.new_zeros(
@@ -330,10 +327,10 @@ class ConcatInputMLP(tx.ModuleBase):
         }
 
     @contextmanager
-    def cache_results(self, inputs: List[torch.Tensor]) -> ContextManager[None]:
+    def cache_results(self, inputs: List[torch.Tensor]):
         self._cached_inputs = inputs
         yield
-        self._cached_inputs = None
+        del self._cached_inputs
 
     def forward(self, inputs: List[Union[torch.Tensor,
                                          List[Tuple[torch.Tensor,

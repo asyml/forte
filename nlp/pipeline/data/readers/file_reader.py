@@ -4,7 +4,7 @@ File readers.
 import logging
 import os
 from abc import abstractmethod
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 
 from nlp.pipeline.data.base_ontology import BaseOntology
 from nlp.pipeline.data.data_pack import DataPack
@@ -41,12 +41,11 @@ class MonoFileReader(BaseReader):
         if not os.path.exists(dir_path):
             raise FileNotFoundError(f"{dir_path} does not exist.")
 
-        if self._cache_directory:
+        cache_file = None
+        if self._cache_directory is not None:
             cache_file = self._get_cache_location_for_file_path(dir_path)
-        else:
-            cache_file = None
 
-        has_cache = cache_file and os.path.exists(cache_file)
+        has_cache = cache_file is not None and cache_file
 
         if self.lazy:
             return self._lazy_dataset_iterator(dir_path, cache_file, has_cache)
@@ -95,7 +94,7 @@ class MonoFileReader(BaseReader):
 
     def read(self,
              file_path: str,
-             cache_file: str = None,
+             cache_file: Optional[str] = None,
              read_from_cache: bool = True,
              append_to_cache: bool = False) -> DataPack:
         """

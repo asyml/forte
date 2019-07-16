@@ -38,8 +38,8 @@ class SRLPredictor(Predictor):
         self.batch_size = 4
 
         self.ontology = OntonotesOntology
-        self.device = (torch.device(torch.cuda.current_device())
-                       if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device(
+            torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
         logger.info("restoring SRL model from %s", model_dir)
 

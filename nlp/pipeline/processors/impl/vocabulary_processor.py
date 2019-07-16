@@ -2,7 +2,7 @@ import json
 import os
 import re
 from collections import Counter
-from typing import Dict, List, Any, Iterator
+from typing import Any, Counter as CounterType, Dict, Iterator, List, Optional
 
 import texar
 
@@ -20,10 +20,10 @@ class Alphabet:
     def __init__(
             self,
             name,
-            word_cnt: Counter = None,
+            word_cnt: Optional[CounterType[str]] = None,
             keep_growing: bool = True,
             ignore_case_in_query: bool = True,
-            other_embeddings: Dict = None,
+            other_embeddings: Optional[Dict] = None,
     ):
         """
 
@@ -199,7 +199,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         else:
             return x
 
-    def process(self, input_pack: Iterator[DataPack]) -> List[Counter]:
+    def process(self, input_pack: Iterator[DataPack]) -> List[CounterType[str]]:
         """
         :param input_pack: The ner_data packs to create vocabulary with
         :return:

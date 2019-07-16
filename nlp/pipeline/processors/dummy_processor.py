@@ -18,7 +18,7 @@ class RelationOntology(OntonotesOntology):
         parent_type = "EntityMention"
         child_type = "EntityMention"
 
-        def __init__(self, component: str, tid: str = None):
+        def __init__(self, component: str, tid: Optional[str] = None):
             super().__init__(component, tid)
             self.rel_type = None
 
@@ -74,7 +74,7 @@ class DummyRelationExtractor(Predictor):
 
         return pred
 
-    def pack(self, data_pack: DataPack, output_dict: Dict = None):
+    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
         """Add corresponding fields to data_pack"""
         if output_dict is None:
             return

@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import nltk
 import numpy as np
@@ -46,7 +46,8 @@ class NLTKPOSTagger(Predictor):
 
         return pred
 
-    def pack(self, data_pack: DataPack, output_dict: Dict = None) -> None:
+    def pack(self, data_pack: DataPack,
+             output_dict: Optional[Dict] = None) -> None:
 
         if output_dict is None:
             return

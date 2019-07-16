@@ -9,7 +9,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from nlp.pipeline.models.srl import model_utils as utils
-from nlp.pipeline.models.srl.data import BatchExample, SRLSpan, Span
+from nlp.pipeline.models.srl.data import SRLSpan, Span
 
 
 class LabeledSpanGraphNetwork(tx.ModuleBase):
@@ -253,33 +253,6 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         gold_labels = gold_labels.to(device=device)
         return gold_labels
 
-    def _compute_soft_head_attention(self, start_ids: torch.LongTensor,
-                                     end_ids: torch.LongTensor,
-                                     states: torch.Tensor,
-                                     word_inputs: torch.Tensor) \
-            -> Tuple[torch.Tensor, List[Tuple[torch.LongTensor, torch.Tensor]]]:
-        batch_size = states.size(0)
-        # logits: (batch_size, max_len)
-        # use double to prevent tedious precision problems
-        logits = torch.exp(self.head_attention(states).squeeze(-1))
-        logits_prefix = torch.cat([
-            logits.new_zeros(batch_size, 1, dtype=torch.double),
-            torch.cumsum(logits.double(), dim=1)], dim=1)
-        # weighted_inputs: (batch_size, max_len, word_input_dim)
-        weighted_inputs = word_inputs * logits.unsqueeze(-1)
-        weighted_inputs_prefix = torch.cat([
-            weighted_inputs.new_zeros(batch_size, 1, weighted_inputs.size(-1)),
-            torch.cumsum(weighted_inputs, dim=1)], dim=1)
-        # *coef: (batch_size, num_spans)
-        inv_coef = (torch.gather(logits_prefix, dim=1, index=end_ids + 1) -
-                    torch.gather(logits_prefix, dim=1, index=start_ids))
-        inv_coef = inv_coef + torch.full_like(inv_coef, 1e-8)
-        coef = (1.0 / inv_coef).float()
-        if torch.any(torch.isinf(coef)).item():
-            assert False
-        indices = [(end_ids + 1, coef), (start_ids, -coef)]
-        return weighted_inputs_prefix, indices
-
     def _compute_soft_head_attention_brute(self, start_ids: torch.LongTensor,
                                            end_ids: torch.LongTensor,
                                            sent_lengths: torch.LongTensor,
@@ -340,7 +313,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
 
     class ReturnType(TypedDict):
         loss: torch.Tensor
-        label_log_probs: torch.Tensor
+        total_scores: torch.Tensor
         start_ids: torch.LongTensor
         end_ids: torch.LongTensor
         predicates: torch.LongTensor
@@ -348,7 +321,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
     def _arange(self, *args, **kwargs):
         return torch.arange(*args, device=self._device, **kwargs)
 
-    def forward(self, inputs: BatchExample) -> 'ReturnType':
+    def forward(self, inputs: tx.data.Batch) -> 'ReturnType':
         # Compute embeddings and recurrent states.
         char_embed = self.char_cnn(inputs.text)
         with torch.no_grad():
@@ -499,8 +472,9 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         # of core arguments (ARGA, ARG0 to ARG5) previously selected,
         # represented in binary (so {ARG0, ARG2, ARG5} would be
         # 2^0 + 2^2 + 2^5 = 37).
-        max_scores = [{0: 0}]
-        best_span_indices = [{}]  # only record selected spans
+        max_scores = [{0: 0.0}]
+        # only record selected spans
+        best_span_indices: List[Dict[int, int]] = [{}]
 
         for idx in range(max_len):
             cur_scores = max_scores[-1].copy()
@@ -526,21 +500,21 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         state = max((score, state)
                     for state, score in max_scores[max_len].items())[1]
         while pos > 0:
-            span_idx = best_span_indices[pos].get(state, None)
-            if span_idx is not None:
-                assert end_ids[span_idx] == pos - 1
+            best_span_idx = best_span_indices[pos].get(state, None)
+            if best_span_idx is not None:
+                assert end_ids[best_span_idx] == pos - 1
                 srl.append(Span(
-                    start_ids[span_idx], end_ids[span_idx],
-                    self.label_inverse_vocab[argmax_labels[span_idx]]))
-                pos = start_ids[span_idx]
-                if label_states[span_idx] != -1:
-                    state &= ~label_states[span_idx]
+                    start_ids[best_span_idx], end_ids[best_span_idx],
+                    self.label_inverse_vocab[argmax_labels[best_span_idx]]))
+                pos = start_ids[best_span_idx]
+                if label_states[best_span_idx] != -1:
+                    state &= ~label_states[best_span_idx]
             else:
                 pos -= 1
         return srl
 
     @torch.no_grad()
-    def decode(self, inputs: BatchExample, enforce_constraint: bool = False) \
+    def decode(self, inputs: tx.data.Batch, enforce_constraint: bool = False) \
             -> List[Dict[int, List[Span]]]:
         r"""Performs optimal decoding with dynamic programming.
 

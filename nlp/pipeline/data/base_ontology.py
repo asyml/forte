@@ -49,8 +49,8 @@ class Entry:
             for this entry when we add the entry to the DataPack.
     """
 
-    def __init__(self, component: str, tid: str = None):
-        self.tid = f"{get_class_name(self)}.{tid}" if tid else None
+    def __init__(self, component: str, tid: Optional[str] = None):
+        self.tid = f"{get_class_name(self)}.{tid}" if tid is not None else None
         self.component = component
         self._data_pack = None
 
@@ -134,11 +134,11 @@ class Link(Entry):
     """Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
     """
-    parent_type = None
-    child_type = None
+    parent_type: Optional[str] = None
+    child_type: Optional[str] = None
 
-    def __init__(self, component: str, parent_id: str = None,
-                 child_id: str = None, tid: str = None):
+    def __init__(self, component: str, parent_id: Optional[str] = None,
+                 child_id: Optional[str] = None, tid: Optional[str] = None):
         super().__init__(component, tid)
         self._parent = parent_id
         self._child = child_id
@@ -153,10 +153,6 @@ class Link(Entry):
     @property
     def parent(self):
         return self._parent
-
-    @property
-    def child(self):
-        return self._child
 
     @parent.setter
     def parent(self, parent_id: str):
@@ -175,6 +171,10 @@ class Link(Entry):
         if (self.data_pack is not None and
                 self.data_pack.index.link_index_switch):
             self.data_pack.index.update_link_index()
+
+    @property
+    def child(self):
+        return self._child
 
     @child.setter
     def child(self, child_id: str):
@@ -219,10 +219,10 @@ class Group(Entry):
     """Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    member_type = None
+    member_type: Optional[str] = None
 
-    def __init__(self, component: str, members: Set[str] = None,
-                 tid: str = None):
+    def __init__(self, component: str, members: Optional[Set[str]] = None,
+                 tid: Optional[str] = None):
         super().__init__(component, tid)
         self._members = set(members) if members else set()
 

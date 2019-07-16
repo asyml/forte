@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -97,7 +97,7 @@ class CoNLLNERPredictor(Predictor):
             "restoring NER model from %s", self.config_model.model_path)
         self.model.load_state_dict(ckpt["model"])
 
-    def pack(self, data_pack: DataPack, output_dict: Dict = None):
+    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
         """
         Write the prediction results back to datapack. If :attr:`_overwrite`
         is `True`, write the predicted ner_tag to the original tokens.

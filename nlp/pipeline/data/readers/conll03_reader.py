@@ -3,7 +3,7 @@ The reader that reads CoNLL ner_data into our internal json data format.
 """
 import codecs
 import os
-from typing import Iterator
+from typing import Iterator, Optional
 
 from nlp.pipeline.data.base_ontology import BaseOntology
 from nlp.pipeline.data.data_pack import DataPack
@@ -18,7 +18,7 @@ __all__ = [
 class CoNLL03Ontology(BaseOntology):
     class Token(BaseOntology.Token):
         def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
+                     tid: Optional[str] = None):
             super().__init__(component, begin, end, tid)
             self.chunk_tag = None
             self.pos_tag = None

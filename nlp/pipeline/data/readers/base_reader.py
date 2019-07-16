@@ -3,7 +3,7 @@ Base reader type to be inherited by all readers.
 """
 import os
 import pathlib
-from typing import Iterator
+from typing import Iterator, Optional
 
 import jsonpickle
 
@@ -21,7 +21,7 @@ class BaseReader:
     """
     def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
-        self._cache_directory = None
+        self._cache_directory: Optional[pathlib.Path] = None
         self.component_name = get_full_component_name(self)
         self.current_datapack = None
 
@@ -38,11 +38,15 @@ class BaseReader:
         :func:`serialize_instance`).
         """
         self._cache_directory = pathlib.Path(cache_directory)
+        # TODO: Change string-based path methods to pathlib equivalents,
+        #   e.g., os.makedirs -> Path.mkdir
         os.makedirs(self._cache_directory, exist_ok=True)
 
     def _get_cache_location_for_file_path(self, file_path: str) -> str:
         while file_path[-1] == '/':
             file_path = file_path[:-1]
+        # TODO: Return a pathlib.Path instead of a string, otherwise it's
+        #   pointless to use pathlib in the first place.
         return f"{self._cache_directory / file_path.split('/')[-1]}.cache"
 
     def _instances_from_cache_file(self,
