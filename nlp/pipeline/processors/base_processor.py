@@ -1,6 +1,7 @@
 from abc import abstractmethod
-from nlp.pipeline.utils import *
+
 from nlp.pipeline.common.resources import Resources
+from nlp.pipeline.utils import get_full_component_name
 
 __all__ = [
     "BaseProcessor",
@@ -21,7 +22,7 @@ class BaseProcessor:
 
     @abstractmethod
     def initialize(self, resource: Resources):
-        """Initialize the processor with ``recources``."""
+        """Initialize the processor with ``resources``."""
         pass
 
     @abstractmethod

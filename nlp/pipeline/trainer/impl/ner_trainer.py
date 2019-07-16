@@ -9,9 +9,9 @@ import torch
 import torchtext
 from tqdm import tqdm
 
+from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
-from nlp.pipeline.common.resources import Resources
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -103,11 +103,11 @@ class CoNLLNERTrainer(BaseTrainer):
         :return:
         """
         counter = len(self.train_instances_cache)
-        logger.info("Total number of ner_data: %d" % counter)
+        logger.info("Total number of ner_data: %d", counter)
         lengths = sum(
             [len(instance[0]) for instance in self.train_instances_cache]
         )
-        logger.info("average sentence length: %f" % (lengths / counter))
+        logger.info("average sentence length: %f", (lengths / counter))
 
         train_err = 0.0
         train_total = 0.0
@@ -150,8 +150,8 @@ class CoNLLNERTrainer(BaseTrainer):
                 logger.info(log_info)
 
         logger.info(
-            "Epoch: %d train: %d loss: %.4f, time: %.2fs"
-            % (epoch, bid, train_err / train_total, time.time() - start_time)
+            "Epoch: %d train: %d loss: %.4f, time: %.2fs",
+            epoch, bid, train_err / train_total, time.time() - start_time,
         )
 
         self.trained_epochs = epoch
@@ -162,7 +162,7 @@ class CoNLLNERTrainer(BaseTrainer):
             )
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
-            logger.info(f"update learning rate to {lr}")
+            logger.info("update learning rate to %f", lr)
 
         self.request_eval()
         self.train_instances_cache.clear()
@@ -180,7 +180,7 @@ class CoNLLNERTrainer(BaseTrainer):
             b_data = val_data[i: i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
 
-            word, char, labels, masks, lengths = batch
+            word, char, labels, masks, unused_lengths = batch
             loss = self.model(word, char, labels, mask=masks)
             losses += loss.item()
 
@@ -207,8 +207,9 @@ class CoNLLNERTrainer(BaseTrainer):
             self.__past_dev_result["eval"]["f1"],
         )
         logger.info(
-            f"best val acc: {acc}, precision: {prec}, recall: {rec}, "
-            f"F1: {f1} % (epoch: {best_epoch})"
+            "best val acc: %f, precision: %f, recall: %f, "
+            "F1: %f %% (epoch: %d)",
+            acc, prec, rec, f1, best_epoch,
         )
 
         acc, prec, rec, f1 = (
@@ -218,8 +219,9 @@ class CoNLLNERTrainer(BaseTrainer):
             self.__past_dev_result["test"]["f1"],
         )
         logger.info(
-            f"best test acc: {acc}, precision: {prec}, recall: {rec}, "
-            f"F1: {f1} % (epoch: {best_epoch})"
+            "best test acc: %f, precision: %f, recall: %f, "
+            "F1: %f %% (epoch: %d)",
+            acc, prec, rec, f1, best_epoch,
         )
 
     def finish(self):

@@ -52,7 +52,7 @@ class CoNLLNERPredictor(Predictor):
 
         tokens = data_batch["Token"]
 
-        pred_tokens, instances = [], []
+        instances = []
         for words in tokens["text"]:
             char_id_seqs = []
             word_ids = []
@@ -73,7 +73,7 @@ class CoNLLNERPredictor(Predictor):
 
         self.model.eval()
         batch_data = self.get_batch_tensor(instances, device=self.device)
-        word, char, masks, lengths = batch_data
+        word, char, masks, unused_lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
         pred = {"Token": {"ner_tag": [], "tid": []}}
@@ -94,7 +94,7 @@ class CoNLLNERPredictor(Predictor):
             else self.config_model.model_path
         ckpt = torch.load(p)
         logger.info(
-            "restoring NER model from {}".format(self.config_model.model_path))
+            "restoring NER model from %s", self.config_model.model_path)
         self.model.load_state_dict(ckpt["model"])
 
     def pack(self, data_pack: DataPack, output_dict: Dict = None):

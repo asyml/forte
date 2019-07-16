@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-class Alphabet(object):
+class Alphabet:
     def __init__(
             self,
             name,

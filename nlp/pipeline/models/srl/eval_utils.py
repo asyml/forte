@@ -7,7 +7,7 @@ import contextlib
 import os
 import subprocess
 from collections import Counter
-from typing import List, Dict, Optional, NamedTuple
+from typing import Dict, List, NamedTuple, Optional
 
 from nlp.pipeline.models.srl.data import Span
 
@@ -64,9 +64,7 @@ def compute_span_f1(gold_data, predictions, task_name):
     total_unlabeled_matched = 0
     label_confusions = Counter()  # Counter of (gold, pred) label pairs.
 
-    for i in range(len(gold_data)):
-        gold = gold_data[i]
-        pred = predictions[i]
+    for gold, pred in zip(gold_data, predictions):
         total_gold += len(gold)
         total_predicted += len(pred)
         for a0 in gold:
@@ -215,8 +213,8 @@ def print_sentence_to_conll(f, tokens, labels):
     """
     for label_column in labels:
         assert len(label_column) == len(tokens)
-    for i in range(len(tokens)):
-        f.write(tokens[i].ljust(15))
+    for i, token in enumerate(tokens):
+        f.write(token.ljust(15))
         for label_column in labels:
             f.write(label_column[i].rjust(15))
         f.write("\n")

@@ -1,8 +1,9 @@
-from typing import List, Iterator
+from typing import Iterator, List
+
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.processors import Predictor
 from nlp.pipeline.data.readers import (
     CoNLL03Reader, OntonotesReader, PlainTextReader)
+from nlp.pipeline.processors import Predictor
 
 
 class Pipeline:
@@ -48,7 +49,7 @@ class Pipeline:
     def process(self, text: str):
         datapack = DataPack()
         datapack.text = text
-        for processor_index, processor in enumerate(self.processors):
+        for processor in self.processors:
             processor.process(datapack, hard_batch=False)
         return datapack
 
@@ -86,7 +87,7 @@ class Pipeline:
 
     def _process_next_in_soft_batch(self, dataset) -> Iterator[DataPack]:
         for pack in dataset:
-            for processor_index, processor in enumerate(self.processors):
+            for processor in self.processors:
                 processor.process(pack, hard_batch=False)
             yield pack
 
@@ -114,7 +115,7 @@ class Pipeline:
 
         # process tail instances in the whole dataset
         for c_pack in list(self.current_packs):
-            for processor_index, processor in enumerate(self.processors):
+            for processor in self.processors:
                 processor.process(c_pack, hard_batch=False)
             yield c_pack
             self.current_packs.remove(c_pack)

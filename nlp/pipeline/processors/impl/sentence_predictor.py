@@ -1,9 +1,11 @@
 from typing import Dict
+
 import numpy as np
 from nltk.tokenize import sent_tokenize
-from nlp.pipeline.processors import Predictor
+
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.readers import CoNLL03Ontology
+from nlp.pipeline.processors import Predictor
 
 __all__ = [
     "NLTKSentenceSegmenter",

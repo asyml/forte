@@ -10,7 +10,7 @@ __all__ = [
 
 
 class Trainer(BaseProcessor):
-    def __init__(self, config):
+    def __init__(self, config):  # pylint: disable=unused-argument
         super().__init__()
         self.__stop_train = False
         self.__validation_requested = False

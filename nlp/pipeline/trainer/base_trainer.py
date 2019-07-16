@@ -6,7 +6,7 @@ from nlp.pipeline.processors.base_processor import BaseProcessor
 
 
 class BaseTrainer(BaseProcessor):
-    def __init__(self, config):
+    def __init__(self, config):  # pylint: disable=unused-argument
         super().__init__()
         self._stop_train = False
         self._validation_requested = False

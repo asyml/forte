@@ -3,8 +3,9 @@ This class defines the basic ontology supported by our system
 """
 from abc import abstractmethod
 from functools import total_ordering
-from typing import Iterable, Set, Union
-from nlp.pipeline.utils import *
+from typing import Iterable, Optional, Set, Union
+
+from nlp.pipeline.utils import get_class_name, get_qual_name
 
 __all__ = [
     "Span",
@@ -101,7 +102,8 @@ class Annotation(Entry):
     in the text.
     """
 
-    def __init__(self, component: str, begin: int, end: int, tid: str = None):
+    def __init__(self, component: str, begin: int, end: int,
+                 tid: Optional[str] = None):
         super().__init__(component, tid)
         self.span = Span(begin, end)
 
@@ -264,48 +266,38 @@ class BaseOntology:
      ontology"""
 
     class Token(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
+        pass
 
     class Sentence(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
+        pass
 
     class EntityMention(Annotation):
         def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
+                     tid: Optional[str] = None):
             super().__init__(component, begin, end, tid)
             self.ner_type = None
 
     class PredicateArgument(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
+        pass
 
     class PredicateLink(Link):
         parent_type = "PredicateMention"
         child_type = "PredicateArgument"
 
-        def __init__(self, component: str, parent_id: str = None,
-                     child_id: str = None, tid: str = None):
+        def __init__(self, component: str, parent_id: Optional[str] = None,
+                     child_id: Optional[str] = None, tid: Optional[str] = None):
             super().__init__(component, parent_id, child_id, tid)
             self.arg_type = None
 
     class PredicateMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
+        pass
 
     class CoreferenceGroup(Group):
         member_type = "CoreferenceMention"
 
-        def __init__(self, component: str, tid: str = None):
+        def __init__(self, component: str, tid: Optional[str] = None):
             super().__init__(component, tid)
             self.coref_type = None
 
     class CoreferenceMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
+        pass

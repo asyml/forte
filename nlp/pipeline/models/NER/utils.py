@@ -2,7 +2,6 @@ import logging
 import os
 import random
 import re
-from typing import List
 from typing import Tuple
 
 import numpy as np

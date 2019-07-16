@@ -22,6 +22,8 @@ setuptools.setup(
         'jsonpickle'
     ],
     extras_require={
+        'ner': ['torch', 'torchtext', 'tqdm', 'yaml'],
+        'srl': ['texar-pytorch']
     },
     package_data={
     },

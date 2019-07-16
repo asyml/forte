@@ -1,11 +1,12 @@
 """
 The reader that reads plain text data into Datapacks.
 """
-import os
 import codecs
+import os
 from typing import Iterator
-from nlp.pipeline.data.readers import MonoFileReader
+
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.readers.file_reader import MonoFileReader
 
 __all__ = [
     "PlainTextReader",
@@ -22,9 +23,6 @@ class PlainTextReader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
-
-    def __init__(self, lazy: bool = True):
-        super().__init__(lazy)
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:

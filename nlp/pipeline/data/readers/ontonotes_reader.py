@@ -1,13 +1,14 @@
 """
 The reader that reads Ontonotes data into Datapacks.
 """
-import os
 import codecs
-from typing import DefaultDict, List, Optional, Iterator, Tuple
+import os
 from collections import defaultdict
-from nlp.pipeline.data.readers import MonoFileReader
-from nlp.pipeline.data.data_pack import DataPack
+from typing import DefaultDict, Iterator, List, Optional, Tuple
+
 from nlp.pipeline.data.base_ontology import BaseOntology
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.readers.file_reader import MonoFileReader
 
 __all__ = [
     "OntonotesOntology",

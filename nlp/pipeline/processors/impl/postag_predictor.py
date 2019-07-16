@@ -1,9 +1,11 @@
 from typing import Dict
+
 import nltk
 import numpy as np
-from nlp.pipeline.processors import Predictor
+
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.readers import CoNLL03Ontology
+from nlp.pipeline.processors import Predictor
 
 __all__ = [
     "NLTKPOSTagger",
@@ -36,7 +38,7 @@ class NLTKPOSTagger(Predictor):
             pos_tags = []
             taggings = nltk.pos_tag(word_list)
 
-            for tag, tid in zip(taggings, tid_list):
+            for tag in taggings:
                 pos_tags.append(tag[1])
 
             pred["Token"]["pos_tag"].append(np.array(pos_tags))

@@ -1,9 +1,9 @@
 from abc import abstractmethod
 from typing import Dict, List, Union, Iterable
 
-from nlp.pipeline.processors import BaseProcessor
-from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data import merge_batches, slice_batch, BaseOntology
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
     "Predictor",
@@ -45,7 +45,7 @@ class Predictor(BaseProcessor):
         Args:
             input_pack (DataPack): A datapack to be processed.
         """
-        for (data_batch, instance_num) in input_pack.get_data_batch(
+        for (data_batch, unused_instance_num) in input_pack.get_data_batch(
                 self.batch_size, self.context_type, self.annotation_types):
             pred = self.predict(data_batch)
             self.pack(input_pack, pred)

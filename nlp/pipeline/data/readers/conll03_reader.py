@@ -1,12 +1,13 @@
 """
 The reader that reads CoNLL ner_data into our internal json data format.
 """
-import os
 import codecs
+import os
 from typing import Iterator
-from nlp.pipeline.data.readers.file_reader import MonoFileReader
-from nlp.pipeline.data.data_pack import DataPack
+
 from nlp.pipeline.data.base_ontology import BaseOntology
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.readers.file_reader import MonoFileReader
 
 __all__ = [
     "CoNLL03Ontology",
@@ -66,7 +67,7 @@ class CoNLL03Reader(MonoFileReader):
 
             if line != "" and not line.startswith("#"):
                 conll_components = line.split()
-                word_index_in_sent = conll_components[0]
+                unused_word_index_in_sent = conll_components[0]
                 word = conll_components[1]
                 pos_tag = conll_components[2]
                 chunk_id = conll_components[3]

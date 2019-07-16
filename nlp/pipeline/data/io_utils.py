@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict, List
 
 __all__ = [
     "merge_batches",

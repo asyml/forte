@@ -1,13 +1,14 @@
+import os
+import sys
+
 import dill
 from termcolor import colored
 
 from nlp.pipeline.data.readers import CoNLL03Ontology as Ont
 from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.processors.impl import (NLTKPOSTagger, NLTKSentenceSegmenter,
-                                          NLTKWordTokenizer, CoNLLNERPredictor,
-                                          SRLPredictor)
-import os
-import sys
+from nlp.pipeline.processors.impl import (
+    CoNLLNERPredictor, NLTKPOSTagger, NLTKSentenceSegmenter,
+    NLTKWordTokenizer, SRLPredictor)
 
 
 def main(dataset_dir, ner_model_path, srl_model_path):
@@ -60,5 +61,5 @@ def main(dataset_dir, ner_model_path, srl_model_path):
 
 
 if __name__ == '__main__':
-    data_dir, ner_dir, srl_dir = sys.argv[1:]
+    data_dir, ner_dir, srl_dir = sys.argv[1:]  # pylint: disable=unbalanced-tuple-unpacking
     main(data_dir, ner_dir, srl_dir)

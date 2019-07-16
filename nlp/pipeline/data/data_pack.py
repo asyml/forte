@@ -1,14 +1,17 @@
 """ This class defines the core interchange format, deals with basic operations
 such as reading, writing, checking and indexing.
 """
-import logging
 import itertools
+import logging
 from collections import defaultdict
 from typing import (
-    Union, Dict, Optional, List, DefaultDict, Type, TypeVar, Iterable)
+    DefaultDict, Dict, Iterable, List, Optional, Type, TypeVar, Union)
+
 import numpy as np
 from sortedcontainers import SortedSet
-from nlp.pipeline.data.base_ontology import *
+
+from nlp.pipeline.data.base_ontology import (
+    Annotation, BaseOntology, Entry, Group, Link, Span)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -268,8 +271,8 @@ class DataIndex:
         if dict_name not in self.coverage_index.keys():
             self.coverage_index[dict_name] = defaultdict(set)
 
-        def add_covered_entries(outer, stop, step):
-            for k in range(i, stop, step):
+        def add_covered_entries(outer, start, stop, step):
+            for k in range(start, stop, step):
                 inner = annotations[k]
                 if self._in_span(inner, outer.span):
                     if isinstance(inner, inner_type):
@@ -300,11 +303,11 @@ class DataIndex:
                 elif not self._have_overlap(outer, inner):
                     break
 
-        for i in range(len(annotations)):
-            if not isinstance(annotations[i], outer_type):
+        for i, annotation in enumerate(annotations):
+            if not isinstance(annotation, outer_type):
                 continue
-            add_covered_entries(annotations[i], -1, -1)
-            add_covered_entries(annotations[i], len(annotations), 1)
+            add_covered_entries(annotation, i, -1, -1)
+            add_covered_entries(annotation, i, len(annotations), 1)
         self.coverage_index_switch[dict_name] = True
 
     def get_coverage_index(self,
@@ -650,7 +653,7 @@ class DataPack:
             a_dict["text"].append(self.text[annotation.span.begin:
                                             annotation.span.end])
             for field in fields:
-                if field == "span" or field == "text":
+                if field in ("span", "text"):
                     continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
@@ -713,7 +716,7 @@ class DataPack:
                 np.where(data[child_type]["tid"] == link.child)[0][0])
 
             for field in fields:
-                if field == "parent" or field == "child":
+                if field in ("parent", "child"):
                     continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component

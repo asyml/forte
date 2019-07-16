@@ -5,9 +5,10 @@ import logging
 import os
 from abc import abstractmethod
 from typing import Iterator, List
+
+from nlp.pipeline.data.base_ontology import BaseOntology
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
-from nlp.pipeline.data.base_ontology import BaseOntology
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -28,9 +29,6 @@ class MonoFileReader(BaseReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
-
-    def __init__(self, lazy: bool = True) -> None:
-        super().__init__(lazy)
 
     def dataset_iterator(self, dir_path: str) -> Iterator[DataPack]:
         """

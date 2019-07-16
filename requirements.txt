@@ -1,7 +1,3 @@
 sortedcontainers
 numpy
 jsonpickle
-torch
-torchtext
-tqdm
-yaml

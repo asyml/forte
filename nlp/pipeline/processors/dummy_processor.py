@@ -1,9 +1,11 @@
-import numpy as np
 from typing import Dict, List, Optional
-from nlp.pipeline.processors.predictor import Predictor
+
+import numpy as np
+
+from nlp.pipeline.data.base_ontology import Link
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers import OntonotesOntology
-from nlp.pipeline.data.base_ontology import Link
+from nlp.pipeline.processors.predictor import Predictor
 
 __all__ = [
     "RelationOntology",
@@ -40,7 +42,7 @@ class DummyRelationExtractor(Predictor):
         }
 
     def predict(self, data_batch: Dict):
-        contexts = data_batch["context"]
+        unused_contexts = data_batch["context"]
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 
@@ -51,9 +53,7 @@ class DummyRelationExtractor(Predictor):
                 "rel_type": [],
             }
         }
-        for context, tid, entity in zip(contexts,
-                                        entities_tid,
-                                        entities_span):
+        for tid, entity in zip(entities_tid, entities_span):
             parent = []
             child = []
             ner_type = []

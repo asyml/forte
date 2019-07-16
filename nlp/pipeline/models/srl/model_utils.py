@@ -4,7 +4,6 @@ from typing import (
 
 import numpy as np
 import texar as tx
-import texar.utils.rnn
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -14,7 +13,8 @@ LSTMState = Tuple[torch.Tensor, torch.Tensor]
 
 class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
     def __init__(self, input_size: int, hidden_size: int, dropout: float = 0.0):
-        nn.Module.__init__(self)  # skip super class constructor
+        # skip super class constructor
+        nn.Module.__init__(self)  # pylint: disable=non-parent-init-called
 
         self._input_size = input_size
         self._hidden_size = hidden_size
@@ -95,7 +95,7 @@ class CustomBiLSTM(tx.modules.EncoderBase):
         self.bw_cells = nn.ModuleList()
         input_dim = self._hparams.input_dim
         hidden_dim = self._hparams.hidden_dim
-        for idx in range(self._hparams.num_layers):
+        for _ in range(self._hparams.num_layers):
             fw_cell = CustomLSTMCell(input_dim, hidden_dim)
             bw_cell = CustomLSTMCell(input_dim, hidden_dim)
             self.fw_cells.append(fw_cell)
@@ -136,6 +136,8 @@ class CustomBiLSTM(tx.modules.EncoderBase):
 
 
 class CharCNN(tx.ModuleBase):
+    __torch_device__: torch.device
+
     def __init__(self, char_vocab: tx.data.Vocab, hparams=None):
         super().__init__(hparams)
 
@@ -223,6 +225,7 @@ def sum_list(xs: List[torch.Tensor]) -> torch.Tensor:
     return sum_list(xs[:mid]) + sum_list(xs[mid:])
 
 
+# pylint: disable=unused-argument,function-redefined
 @overload
 def batch_gather(tensors: torch.Tensor,
                  index: torch.LongTensor) -> torch.Tensor: ...
@@ -259,6 +262,9 @@ def batch_gather(tensors, index):
 
     gathered_tensors = tx.utils.map_structure(_gather_fn, tensors)
     return gathered_tensors
+
+
+# pylint: enable=unused-argument,function-redefined
 
 
 class MLP(tx.ModuleBase):

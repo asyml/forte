@@ -41,7 +41,7 @@ class SRLPredictor(Predictor):
         self.device = (torch.device(torch.cuda.current_device())
                        if torch.cuda.is_available() else 'cpu')
 
-        logger.info("restoring SRL model from {}".format(model_dir))
+        logger.info("restoring SRL model from %s", model_dir)
 
         self.word_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/word_vocab.english.txt"))

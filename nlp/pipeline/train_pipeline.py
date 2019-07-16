@@ -1,9 +1,11 @@
 import logging
-from nlp.pipeline.trainer.base_trainer import BaseTrainer
-from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.processors.predictor import Predictor
+
 from nlp.pipeline.common.evaluation import Evaluator
+from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.readers.base_reader import BaseReader
+from nlp.pipeline.processors.predictor import Predictor
+from nlp.pipeline.trainer.base_trainer import BaseTrainer
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

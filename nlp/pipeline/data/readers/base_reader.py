@@ -4,9 +4,11 @@ Base reader type to be inherited by all readers.
 import os
 import pathlib
 from typing import Iterator
+
 import jsonpickle
+
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.utils import *
+from nlp.pipeline.utils import get_full_component_name
 
 __all__ = [
     "BaseReader",
