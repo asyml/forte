@@ -13,7 +13,6 @@ from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
 from nlp.pipeline.common.resources import Resources
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 

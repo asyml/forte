@@ -20,8 +20,9 @@ class BaseProcessor:
         self.component_name = get_full_component_name(self)
         self.ontology = BaseOntology
 
-    @abstractmethod
     def initialize(self, resource: Resources):
+        # TODO Move resource to __init__
+        # TODO Change docstring
         """Initialize the processor with ``recources``."""
         pass
 

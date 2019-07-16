@@ -59,6 +59,8 @@ class TrainPipeline:
                         self.trainer.post_validation_action(dev_res)
                     if self.trainer.stop_train():
                         return
+
+                    # TODO: Change to consume
                     self.trainer.process(instance)
                 self.trainer.pack_finish_action(pack_count)
             self.trainer.epoch_finish_action(epoch)
