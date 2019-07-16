@@ -29,6 +29,10 @@ mypy:
   image: python:3.6.1
   script:
     - pip3 install -q mypy==0.720
+    - git clone https://github.com/asyml/texar-pytorch
+    - cd texar-pytorch
+    - pip3 install -q -e .
+    - cd ..
     - pip3 install -q -e .[ner,srl]
     - mypy .
 
@@ -38,5 +42,5 @@ pytest:
   image: python:3.6.1
   script:
     - pip3 install -q pytest
-    - pip3 install -q -e .[ner,srl]
-    - mypy .
+    - pip3 install -q -e .
+    - pytest nlp/

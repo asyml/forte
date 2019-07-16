@@ -10,9 +10,7 @@ class PipelineTest(unittest.TestCase):
 
     def setUp(self) -> None:
         # Define and config the Pipeline
-        dataset_path = "/Users/wei.wei/Documents/nlp-pipeline" \
-                       "/conll-formatted-ontonotes-5.0/data/" \
-                       "test/data/english/annotations/bn/abc/"
+        dataset_path = "examples/ontonotes_sample_dataset/00"
 
         kwargs = {
             "dataset": {
