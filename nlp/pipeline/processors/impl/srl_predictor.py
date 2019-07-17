@@ -36,6 +36,7 @@ class SRLPredictor(BatchProcessor):
             "Token": [],
         }
         self.batch_size = 4
+        self.initialize_batcher()
 
         self.ontology = OntonotesOntology
         self.device = (torch.device(torch.cuda.current_device())

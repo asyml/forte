@@ -35,9 +35,11 @@ class CoNLLNERPredictor(BatchProcessor):
             "Sentence": [],  # span by default
         }
         self.batch_size = 3
+        self.initialize_batcher()
         self.ontology = CoNLL03Ontology
 
     def initialize(self, resource: Resources):
+        self.initialize_batcher()
         self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
         self.char_alphabet: Alphabet = resource.resources["char_alphabet"]
         self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]

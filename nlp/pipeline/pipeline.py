@@ -1,4 +1,4 @@
-from typing import List, Iterator
+from typing import List, Iterator, Dict
 from nlp.pipeline.data import DataPack, BaseOntology
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.data.readers import (
@@ -15,6 +15,7 @@ class Pipeline:
         self.reader = None
         self.dataset_dir = None
         self._processors: List[BaseProcessor] = []
+        self._processors_index: Dict = {'': -1}
 
         self._ontology = None
         self.topology = None
@@ -54,6 +55,7 @@ class Pipeline:
     def add_processor(self, processor: BaseProcessor):
         if self._ontology:
             processor.ontology = self._ontology
+        self._processors_index[processor.component_name] = len(self.processors)
         self.processors.append(processor)
 
     def process(self, text: str):
@@ -66,9 +68,7 @@ class Pipeline:
                 processor.process(datapack)
         return datapack
 
-    def process_dataset(self,
-                        dataset: dict = None,
-                        hard_batch: bool = True) -> Iterator[DataPack]:
+    def process_dataset(self, dataset: dict = None) -> Iterator[DataPack]:
         """
         Process the documents in the dataset and return an iterator of DataPack.
 
@@ -85,31 +85,15 @@ class Pipeline:
         if isinstance(dataset, dict):
             self.initialize_dataset(dataset)
             data_iter = self.reader.dataset_iterator(self.dataset_dir)
-        elif isinstance(dataset, str):
+        elif isinstance(dataset, str) and self.reader is not None:
             self.dataset_dir = dataset
             data_iter = self.reader.dataset_iterator(dataset)
         elif dataset is None and self.reader and self.dataset_dir:
             data_iter = self.reader.dataset_iterator(self.dataset_dir)
         else:
-            raise ValueError
+            raise ValueError("Please specify the path to the dataset")
 
-        if hard_batch:
-            yield from self._process_next_in_hard_batch(data_iter)
-        else:
-            yield from self._process_next_in_soft_batch(data_iter)
-
-    def _process_next_in_soft_batch(self, dataset) -> Iterator[DataPack]:
-        for pack in dataset:
-            for processor_index, processor in enumerate(self.processors):
-                if isinstance(processor, BatchProcessor):
-                    processor.process(pack, hard_batch=False)
-                else:
-                    processor.process(pack)
-            yield pack
-
-    def _process_next_in_hard_batch(self, dataset) -> Iterator[DataPack]:
-        for pack in dataset:
-            # print(pack.meta.doc_id)
+        for pack in data_iter:  # is it possible to add a stop sign at the end of data iter?
             self.current_packs.append(pack)
             for i, processor in enumerate(self.processors):
                 for c_pack in self.current_packs:
@@ -118,25 +102,21 @@ class Pipeline:
                     can_process = (i == 0 or c_pack.meta.process_state ==
                                    self.processors[i - 1].component_name)
                     if can_process and not in_cache:
-                        if isinstance(processor, BatchProcessor):
-                            processor.process(c_pack, hard_batch=True)
-                        else:
-                            processor.process(c_pack)
-                for c_pack in list(self.current_packs):
-                    # must iterate through a copy of the originial list because
-                    # of the removing operation
-                    if (c_pack.meta.process_state ==
-                            self.processors[-1].component_name):
-                        yield c_pack
-                        self.current_packs.remove(c_pack)
-                    else:
-                        break
+                        processor.process(c_pack)
+            for c_pack in list(self.current_packs):
+                # must iterate through a copy of the originial list
+                # because of the removing operation
+                if (c_pack.meta.process_state ==
+                        self.processors[-1].component_name):
+                    yield c_pack
+                    self.current_packs.remove(c_pack)
 
         # process tail instances in the whole dataset
         for c_pack in list(self.current_packs):
-            for processor_index, processor in enumerate(self.processors):
+            start = self._processors_index[c_pack.meta.process_state] + 1
+            for i, processor in enumerate(self.processors[start:]):
                 if isinstance(processor, BatchProcessor):
-                    processor.process(c_pack, hard_batch=False)
+                    processor.process(c_pack, tail_instances=True)
                 else:
                     processor.process(c_pack)
             yield c_pack
