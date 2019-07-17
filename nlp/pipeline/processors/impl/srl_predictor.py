@@ -7,7 +7,7 @@ import torch
 
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers import OntonotesOntology
+from nlp.pipeline.data.ontology import OntonotesOntology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 

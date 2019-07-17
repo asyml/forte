@@ -2,8 +2,7 @@ import numpy as np
 from typing import Dict
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers import OntonotesOntology
-from nlp.pipeline.data.base_ontology import Link
+from nlp.pipeline.data.ontology import OntonotesOntology, Link
 
 __all__ = [
     "RelationOntology",

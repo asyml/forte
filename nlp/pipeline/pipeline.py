@@ -1,5 +1,5 @@
 from typing import List, Iterator, Dict
-from nlp.pipeline.data import DataPack, BaseOntology
+from nlp.pipeline.data import DataPack
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.data.readers import (
     CoNLL03Reader, OntonotesReader, PlainTextReader)
@@ -31,8 +31,7 @@ class Pipeline:
             self.initialize_dataset(kwargs["dataset"])
         if "ontology" in kwargs.keys():
             module_path = ["__main__",
-                           "nlp.pipeline.data",
-                           "nlp.pipeline.data.readers"]
+                           "nlp.pipeline.data.ontology"]
             self._ontology = get_class(kwargs["ontology"], module_path)
             for processor in self.processors:
                 processor.ontology = self._ontology
@@ -63,7 +62,7 @@ class Pipeline:
         datapack.text = text
         for processor_index, processor in enumerate(self.processors):
             if isinstance(processor, BatchProcessor):
-                processor.process(datapack, hard_batch=False)
+                processor.process(datapack, tail_instances=True)
             else:
                 processor.process(datapack)
         return datapack
@@ -93,7 +92,7 @@ class Pipeline:
         else:
             raise ValueError("Please specify the path to the dataset")
 
-        for pack in data_iter:  # is it possible to add a stop sign at the end of data iter?
+        for pack in data_iter:
             self.current_packs.append(pack)
             for i, processor in enumerate(self.processors):
                 for c_pack in self.current_packs:

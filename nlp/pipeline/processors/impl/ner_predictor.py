@@ -8,7 +8,7 @@ import torch
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
+from nlp.pipeline.data.ontology import CoNLL03Ontology
 from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 

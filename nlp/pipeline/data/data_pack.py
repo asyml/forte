@@ -8,7 +8,7 @@ from typing import (
     Union, Dict, Optional, List, DefaultDict, Type, TypeVar, Iterable, Iterator)
 import numpy as np
 from sortedcontainers import SortedSet
-from nlp.pipeline.data.base_ontology import *
+from nlp.pipeline.data.ontology import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -4,7 +4,8 @@ The base class of processors
 from abc import abstractmethod
 from nlp.pipeline.utils import *
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.data import DataPack, BaseOntology
+from nlp.pipeline.data import DataPack
+from nlp.pipeline.data.ontology import BaseOntology
 
 __all__ = [
     "BaseProcessor",

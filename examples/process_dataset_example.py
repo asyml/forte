@@ -1,9 +1,9 @@
 import os
 import sys
-import dill
+import pickle
 from termcolor import colored
 
-from nlp.pipeline.data.readers import CoNLL03Ontology as Ont
+from nlp.pipeline.data.ontology import CoNLL03Ontology as Ont
 from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors.impl import (NLTKPOSTagger, NLTKSentenceSegmenter,
                                           NLTKWordTokenizer, CoNLLNERPredictor,
@@ -22,7 +22,7 @@ def main(dataset_dir, ner_model_path, srl_model_path):
     pl.add_processor(NLTKWordTokenizer())
     pl.add_processor(NLTKPOSTagger())
 
-    ner_resource = dill.load(
+    ner_resource = pickle.load(
         open(os.path.join(ner_model_path, 'resources.pkl'), 'rb'))
     ner_predictor = CoNLLNERPredictor()
     ner_predictor.initialize(ner_resource)

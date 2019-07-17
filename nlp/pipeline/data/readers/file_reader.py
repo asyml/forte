@@ -7,10 +7,9 @@ from abc import abstractmethod
 from typing import Iterator, List
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
-from nlp.pipeline.data.base_ontology import BaseOntology
+from nlp.pipeline.data.ontology import BaseOntology
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 __all__ = [
     "MonoFileReader",

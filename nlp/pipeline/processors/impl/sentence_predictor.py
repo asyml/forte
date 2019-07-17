@@ -1,6 +1,7 @@
 from nltk.tokenize import sent_tokenize
 from nlp.pipeline.processors import PackProcessor
-from nlp.pipeline.data import DataPack, BaseOntology
+from nlp.pipeline.data import DataPack
+from nlp.pipeline.data.ontology import BaseOntology
 
 __all__ = [
     "NLTKSentenceSegmenter",
