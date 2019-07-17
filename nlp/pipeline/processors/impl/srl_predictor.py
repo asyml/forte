@@ -9,7 +9,7 @@ from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers import OntonotesOntology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
-from nlp.pipeline.processors.predictor import Predictor
+from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ Prediction = Dict[
     List[Tuple[OntonotesOntology.PredicateArgument, str]]]
 
 
-class SRLPredictor(Predictor):
+class SRLPredictor(BatchProcessor):
     word_vocab: tx.data.Vocab
     char_vocab: tx.data.Vocab
     model: LabeledSpanGraphNetwork
@@ -96,19 +96,18 @@ class SRLPredictor(Predictor):
         # Convert predictions into annotations.
         batch_predictions: List[Prediction] = []
         for idx, srl_spans in enumerate(batch_srl_spans):
-            offset = data_batch["offset"][idx]
             word_spans = data_batch["Token"]["span"][idx]
             predictions: Prediction = {}
             for pred_idx, pred_args in srl_spans.items():
                 begin, end = word_spans[pred_idx]
                 pred_annotation = OntonotesOntology.PredicateMention(
-                    self.component_name, begin + offset, end + offset)
+                    self.component_name, begin, end)
                 arguments = []
                 for arg in pred_args:
                     begin = word_spans[arg.start][0]
                     end = word_spans[arg.end][1]
                     arg_annotation = OntonotesOntology.PredicateArgument(
-                        self.component_name, begin + offset, end + offset)
+                        self.component_name, begin, end)
                     arguments.append((arg_annotation, arg.label))
                 predictions[pred_annotation] = arguments
             batch_predictions.append(predictions)

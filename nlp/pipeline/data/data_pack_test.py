@@ -61,7 +61,10 @@ class DataPackTest(unittest.TestCase):
             "Token": ["pos_tag", "sense"],
             "EntityMention": [],
             "PredicateMention": [],
-            "PredicateArgument": [],
+            "PredicateArgument": {
+                "fields": [],
+                "unit": "Token"
+            },
         }
         linktype = {
             "PredicateLink": {

@@ -1,22 +1,28 @@
 from abc import abstractmethod
 from typing import Dict, Iterable, List, Optional, Union
 
-from nlp.pipeline.data import merge_batches, slice_batch, BaseOntology
+from nlp.pipeline.data import merge_batches, slice_batch
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
-    "Predictor",
+    "BatchProcessor",
 ]
 
 
-class Predictor(BaseProcessor):
+class BatchProcessor(BaseProcessor):
     """
-    The base class of all predictors.
+    The base class of processors that process data in batch.
     """
     def __init__(self):
         super().__init__()
 
+        self.context_type = None
+        self.annotation_types = None
+        self.link_types = None
+        self.group_types = None
+
+        self.batch_size = None
         self.current_batch: Dict = {}
         self.instance_num_in_current_batch = 0
 
@@ -93,9 +99,7 @@ class Predictor(BaseProcessor):
               data_batch (Dict): A batch of instances in our dict format.
 
         Returns:
-              The prediction results. This could be in any type and format,
-              and you just need to write the :meth:`pack` method according to
-              your prediction format.
+              The prediction results in dict format.
         """
         pass
 
@@ -108,14 +112,14 @@ class Predictor(BaseProcessor):
             start += self.current_batch_sources[i]
 
     @abstractmethod
-    def pack(self, data_pack: DataPack, *inputs) -> None:
+    def pack(self, data_pack: DataPack, inputs) -> None:
         """
         Add corresponding fields to data_pack. Custom function of how
         to add the value back.
 
         Args:
             data_pack (DataPack): The data pack to add entries or fields to.
-            *inputs: The prediction results returned by :meth:`predict`. You
+            inputs: The prediction results returned by :meth:`predict`. You
                 need to add entries or fields corresponding to this prediction
                 results to the ``data_pack``.
         """
@@ -138,28 +142,6 @@ class Predictor(BaseProcessor):
             self.finish(pack)
         self.data_pack_pool = self.data_pack_pool[end:]
         self.current_batch_sources = self.current_batch_sources[end:]
-
-    def finish(self, input_pack: Optional[DataPack] = None):
-        """
-        Do finishing work for one data_pack.
-        """
-        self._record_fields(input_pack)
-        input_pack.meta.process_state = self.component_name
-        # currently, need to build the coverage index after updating the entries
-        input_pack.index.build_coverage_index(
-            input_pack.annotations,
-            input_pack.links,
-            input_pack.groups,
-            outer_type=BaseOntology.Sentence
-        )
-        # print(input_pack.links)
-
-    @abstractmethod
-    def _record_fields(self, data_pack: DataPack):
-        """
-        Record the fields and entries that this processor add to data packs.
-        """
-        pass
 
     def _get_data_batch_by_need(
             self,

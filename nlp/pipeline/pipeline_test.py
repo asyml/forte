@@ -6,6 +6,10 @@ from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors.dummy_processor import *
 
 
+class Onto:
+    pass
+
+
 class PipelineTest(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -16,12 +20,13 @@ class PipelineTest(unittest.TestCase):
             "dataset": {
                 "dataset_dir": dataset_path,
                 "dataset_format": "Ontonotes"
-            }
+            },
+            "ontology": "RelationOntology"
         }
         self.nlp = Pipeline(**kwargs)
 
         self.processor = DummyRelationExtractor()
-        self.nlp.processors.append(self.processor)
+        self.nlp.add_processor(self.processor)
 
     def test_process_next(self):
 

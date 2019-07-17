@@ -1,11 +1,11 @@
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import numpy as np
 
 from nlp.pipeline.data.base_ontology import Link
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers import OntonotesOntology
-from nlp.pipeline.processors.predictor import Predictor
+from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 __all__ = [
     "RelationOntology",
@@ -23,7 +23,7 @@ class RelationOntology(OntonotesOntology):
             self.rel_type = None
 
 
-class DummyRelationExtractor(Predictor):
+class DummyRelationExtractor(BatchProcessor):
     """
     A dummy relation extractor
     """
@@ -37,9 +37,7 @@ class DummyRelationExtractor(Predictor):
             "EntityMention": ["ner_type", "tid"]
         }
         self.batch_size = 4
-        self.label: Dict[str, Optional[List]] = {
-            "RelationLink": ["parent.span", "child.text", "rel_type"]
-        }
+        self.ontology = RelationOntology
 
     def predict(self, data_batch: Dict):
         unused_contexts = data_batch["context"]
@@ -81,7 +79,7 @@ class DummyRelationExtractor(Predictor):
 
         for i in range(len(output_dict["RelationLink"]["parent.tid"])):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
-                link = RelationOntology.RelationLink(
+                link = self.ontology.RelationLink(
                     component=self.component_name)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
                 link.parent = output_dict["RelationLink"]["parent.tid"][i][j]
@@ -91,6 +89,6 @@ class DummyRelationExtractor(Predictor):
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(
             ["parent", "child", "rel_type"],
-            RelationOntology.RelationLink.__name__,
+            self.ontology.RelationLink.__name__,
             self.component_name,
         )

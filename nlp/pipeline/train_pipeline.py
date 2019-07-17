@@ -4,7 +4,7 @@ from typing import Optional
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.readers.base_reader import BaseReader
-from nlp.pipeline.processors.predictor import Predictor
+from nlp.pipeline.processors import BaseProcessor
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
 
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +21,7 @@ class TrainPipeline:
             # config,
             resource: Optional[Resources] = None,
             evaluator: Optional[Evaluator] = None,
-            predictor: Optional[Predictor] = None,
+            predictor: Optional[BaseProcessor] = None,
     ):
         resource.save()
         # resource = Resources(config)
@@ -62,6 +62,8 @@ class TrainPipeline:
                         self.trainer.post_validation_action(dev_res)
                     if self.trainer.stop_train():
                         return
+
+                    # TODO: Change to consume
                     self.trainer.process(instance)
                 self.trainer.pack_finish_action(pack_count)
             self.trainer.epoch_finish_action(epoch)
