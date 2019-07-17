@@ -15,8 +15,8 @@ class RelationOntology(OntonotesOntology):
         parent_type = "EntityMention"
         child_type = "EntityMention"
 
-        def __init__(self, component: str, tid: str = None):
-            super().__init__(component, tid)
+        def __init__(self, component: str):
+            super().__init__(component)
             self.rel_type = None
 
 

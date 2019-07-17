@@ -400,8 +400,7 @@ class DataPack:
         if entry not in target:
             # add the entry to the target entry list
             name = entry.__class__.__name__
-            if entry.tid is None:
-                entry.set_tid(str(self.internal_metas[name].id_counter))
+            entry.set_tid(str(self.internal_metas[name].id_counter))
             entry.attach(self)
             if isinstance(target, list):
                 target.append(entry)

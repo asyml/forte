@@ -26,7 +26,7 @@ class NLTKPOSTagger(PackProcessor):
             token_texts = [token.text for token in token_entries]
             taggings = pos_tag(token_texts)
             for token, tag in zip(token_entries, taggings):
-                token.pos_tag = tag
+                token.pos_tag = tag[1]
 
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(
