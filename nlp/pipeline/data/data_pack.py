@@ -534,7 +534,8 @@ class DataPack:
                               & self.index.component_index[sent_component])
 
             skipped = 0
-            for sent in self.annotations:  # to maintain the order
+            # must iterate through a copy here
+            for sent in list(self.annotations):
                 if sent.tid not in valid_sent_ids:
                     continue
                 if skipped < offset:

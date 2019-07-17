@@ -136,7 +136,7 @@ class Pipeline:
         for c_pack in list(self.current_packs):
             for processor_index, processor in enumerate(self.processors):
                 if isinstance(processor, BatchProcessor):
-                    processor.process(c_pack, hard_batch=True)
+                    processor.process(c_pack, hard_batch=False)
                 else:
                     processor.process(c_pack)
             yield c_pack
