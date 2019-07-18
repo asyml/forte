@@ -1,7 +1,8 @@
 from abc import abstractmethod
-from typing import Dict, Optional, List, Iterator, Iterable, Union
-import torch
+from typing import Dict, List, Iterator, Iterable, Union
+
 import texar as tx
+
 from nlp.pipeline.data.dataset import Dataset
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.io_utils import merge_batches, batch_instances
@@ -28,12 +29,11 @@ class DictData(tx.data.DataBase[Dict, Dict]):
             current CUDA device.
     """
 
-    def __init__(self, dataset: Iterator[Dict], hparams=None,
-                 device: Optional[torch.device] = None):
+    def __init__(self, dataset: Iterator[Dict], hparams=None):
 
         data: Iterator[Dict] = dataset
         source = tx.data.IterDataSource(data)
-        super().__init__(source, hparams, device)
+        super().__init__(source, hparams)
 
     @staticmethod
     def default_hparams():
