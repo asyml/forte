@@ -8,7 +8,7 @@ import torch
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers.conll03_reader import CoNLL03Ontology
+from nlp.pipeline.data.ontology import conll03_ontology
 from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
@@ -35,9 +35,11 @@ class CoNLLNERPredictor(BatchProcessor):
             "Sentence": [],  # span by default
         }
         self.batch_size = 3
-        self.ontology = CoNLL03Ontology
+        self.initialize_batcher()
+        self.ontology = conll03_ontology
 
     def initialize(self, resource: Resources):
+        self.initialize_batcher()
         self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
         self.char_alphabet: Alphabet = resource.resources["char_alphabet"]
         self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
@@ -237,7 +239,7 @@ class CoNLLNERPredictor(BatchProcessor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config=None):
         super().__init__(config)
-        self.ontology = CoNLL03Ontology
+        self.ontology = conll03_ontology
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"

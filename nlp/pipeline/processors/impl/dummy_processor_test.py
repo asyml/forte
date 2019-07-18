@@ -5,7 +5,7 @@ import os
 import unittest
 
 from nlp.pipeline.data.readers.ontonotes_reader import OntonotesReader
-from nlp.pipeline.processors.dummy_processor import DummyRelationExtractor
+from nlp.pipeline.processors.impl.dummy_processor import DummyRelationExtractor
 
 
 class DummyProcessorTest(unittest.TestCase):
@@ -20,7 +20,7 @@ class DummyProcessorTest(unittest.TestCase):
     def test_processor(self):
         # case 1: process ner_data
         link_num = len(self.data_pack.links)
-        self.processor.process(self.data_pack)
+        self.processor.process(self.data_pack, tail_instances=True)
         self.assertEqual(link_num + 11, len(self.data_pack.links))
 
 

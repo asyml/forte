@@ -4,8 +4,10 @@ The base class of processors
 from abc import abstractmethod
 
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.data import DataPack, BaseOntology
+from nlp.pipeline.data import DataPack
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.utils import get_full_component_name
+
 
 __all__ = [
     "BaseProcessor",
@@ -19,7 +21,7 @@ class BaseProcessor:
 
     def __init__(self):
         self.component_name = get_full_component_name(self)
-        self.ontology = BaseOntology
+        self.ontology = base_ontology
 
     def initialize(self, resource: Resources):
         # TODO Move resource to __init__
@@ -51,5 +53,5 @@ class BaseProcessor:
             input_pack.annotations,
             input_pack.links,
             input_pack.groups,
-            outer_type=BaseOntology.Sentence
+            outer_type=self.ontology.Sentence
         )

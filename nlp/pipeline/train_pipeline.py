@@ -64,7 +64,7 @@ class TrainPipeline:
                         return
 
                     # TODO: Change to consume
-                    self.trainer.process(instance)
+                    self.trainer.consume(instance)
                 self.trainer.pack_finish_action(pack_count)
             self.trainer.epoch_finish_action(epoch)
             # Cannot call the `trainer.finish` function explicitly here since

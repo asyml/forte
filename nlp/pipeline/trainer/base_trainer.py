@@ -28,8 +28,8 @@ class BaseTrainer:
         pass
 
     @abstractmethod
-    def process(self, instance: Dict):
-        # Do training
+    def consume(self, instance: Dict):
+        # consume the instance
         raise NotImplementedError
 
     @abstractmethod

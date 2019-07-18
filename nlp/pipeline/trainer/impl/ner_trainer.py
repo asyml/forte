@@ -64,7 +64,7 @@ class CoNLLNERTrainer(BaseTrainer):
         }
         return request_string
 
-    def process(self, instance):
+    def consume(self, instance):
         tokens = instance["Token"]
         word_ids = []
         char_id_seqs = []

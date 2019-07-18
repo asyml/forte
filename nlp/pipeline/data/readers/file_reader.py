@@ -6,12 +6,11 @@ import os
 from abc import abstractmethod
 from typing import Iterator, List, Optional
 
-from nlp.pipeline.data.base_ontology import BaseOntology
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 __all__ = [
     "MonoFileReader",
@@ -140,7 +139,7 @@ class MonoFileReader(BaseReader):
             datapack = self._read_document(file_path)
             datapack.index.build_coverage_index(
                 datapack.annotations, datapack.links, datapack.groups,
-                outer_type=BaseOntology.Sentence
+                outer_type=base_ontology.Sentence
             )
             if not isinstance(datapack, DataPack):
                 raise ValueError(

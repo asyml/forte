@@ -2,25 +2,13 @@ from typing import Dict, Optional
 
 import numpy as np
 
-from nlp.pipeline.data.base_ontology import Link
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers import OntonotesOntology
+from nlp.pipeline.data.ontology import relation_ontology
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 __all__ = [
-    "RelationOntology",
     "DummyRelationExtractor",
 ]
-
-
-class RelationOntology(OntonotesOntology):
-    class RelationLink(Link):
-        parent_type = "EntityMention"
-        child_type = "EntityMention"
-
-        def __init__(self, component: str, tid: Optional[str] = None):
-            super().__init__(component, tid)
-            self.rel_type = None
 
 
 class DummyRelationExtractor(BatchProcessor):
@@ -37,10 +25,10 @@ class DummyRelationExtractor(BatchProcessor):
             "EntityMention": ["ner_type", "tid"]
         }
         self.batch_size = 4
-        self.ontology = RelationOntology
+        self.initialize_batcher()
+        self.ontology = relation_ontology
 
     def predict(self, data_batch: Dict):
-        unused_contexts = data_batch["context"]
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 

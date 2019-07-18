@@ -9,9 +9,7 @@ from typing import (
 
 import numpy as np
 from sortedcontainers import SortedSet
-
-from nlp.pipeline.data.base_ontology import (
-    Annotation, BaseOntology, Entry, Group, Link, Span)
+from nlp.pipeline.data.ontology.base_ontology import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -32,8 +30,8 @@ class Meta:
 
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id = doc_id
-        self.process_state = None
-        self.cache_state = None
+        self.process_state = ''
+        self.cache_state = ''
 
 
 class InternalMeta:
@@ -405,8 +403,7 @@ class DataPack:
         if entry not in target:
             # add the entry to the target entry list
             name = entry.__class__.__name__
-            if entry.tid is None:
-                entry.set_tid(str(self.internal_metas[name].id_counter))
+            entry.set_tid(str(self.internal_metas[name].id_counter))
             entry.attach(self)
             if isinstance(target, list):
                 target.append(entry)
@@ -534,14 +531,16 @@ class DataPack:
             sent_args = annotation_types.get(
                 "Sentence") if annotation_types else None
 
-            sent_component, unused_unit, sent_fields = \
-                self._process_request_args("Sentence", sent_args)
+            sent_component, _, sent_fields = self._process_request_args(
+                "Sentence", sent_args
+            )
 
             valid_sent_ids = (self.index.type_index["Sentence"]
                               & self.index.component_index[sent_component])
 
             skipped = 0
-            for sent in self.annotations:  # to maintain the order
+            # must iterate through a copy here
+            for sent in list(self.annotations):
                 if sent.tid not in valid_sent_ids:
                     continue
                 if skipped < offset:
@@ -625,7 +624,7 @@ class DataPack:
             a_type: str,
             a_args: Union[Dict, List],
             data: Dict,
-            sent: Optional[BaseOntology.Sentence]) -> Dict:
+            sent: Optional[Sentence]) -> Dict:
 
         component, unit, fields = self._process_request_args(a_type, a_args)
 
@@ -706,7 +705,7 @@ class DataPack:
             a_type: str,
             a_args: Union[Dict, List],
             data: Dict,
-            sent: Optional[BaseOntology.Sentence]) -> Dict:
+            sent: Optional[Sentence]) -> Dict:
 
         component, unit, fields = self._process_request_args(a_type, a_args)
 

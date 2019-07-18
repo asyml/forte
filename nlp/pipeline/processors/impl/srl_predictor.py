@@ -7,7 +7,7 @@ import torch
 
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers import OntonotesOntology
+from nlp.pipeline.data.ontology import ontonotes_ontology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
@@ -18,8 +18,8 @@ __all__ = [
 ]
 
 Prediction = Dict[
-    OntonotesOntology.PredicateMention,
-    List[Tuple[OntonotesOntology.PredicateArgument, str]]]
+    ontonotes_ontology.PredicateMention,
+    List[Tuple[ontonotes_ontology.PredicateArgument, str]]]
 
 
 class SRLPredictor(BatchProcessor):
@@ -36,8 +36,9 @@ class SRLPredictor(BatchProcessor):
             "Token": [],
         }
         self.batch_size = 4
+        self.initialize_batcher()
 
-        self.ontology = OntonotesOntology
+        self.ontology = ontonotes_ontology
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
@@ -100,13 +101,13 @@ class SRLPredictor(BatchProcessor):
             predictions: Prediction = {}
             for pred_idx, pred_args in srl_spans.items():
                 begin, end = word_spans[pred_idx]
-                pred_annotation = OntonotesOntology.PredicateMention(
+                pred_annotation = self.ontology.PredicateMention(
                     self.component_name, begin, end)
                 arguments = []
                 for arg in pred_args:
                     begin = word_spans[arg.start][0]
                     end = word_spans[arg.end][1]
-                    arg_annotation = OntonotesOntology.PredicateArgument(
+                    arg_annotation = self.ontology.PredicateArgument(
                         self.component_name, begin, end)
                     arguments.append((arg_annotation, arg.label))
                 predictions[pred_annotation] = arguments
@@ -121,7 +122,7 @@ class SRLPredictor(BatchProcessor):
                 pred_id = data_pack.add_entry(pred)
                 for arg, label in args:
                     arg_id = data_pack.add_entry(arg)
-                    link = OntonotesOntology.PredicateLink(
+                    link = self.ontology.PredicateLink(
                         self.component_name, pred_id, arg_id)
                     link.set_fields(arg_type=label)
                     data_pack.add_entry(link)
