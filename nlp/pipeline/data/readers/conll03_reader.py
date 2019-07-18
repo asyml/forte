@@ -3,7 +3,7 @@ The reader that reads CoNLL ner_data into our internal json data format.
 """
 import codecs
 import os
-from typing import Iterator, Optional
+from typing import Iterator
 
 from nlp.pipeline.data.ontology import conll03_ontology
 from nlp.pipeline.data.data_pack import DataPack

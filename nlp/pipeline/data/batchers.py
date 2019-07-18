@@ -119,7 +119,8 @@ class ProcessingBatcher(Batcher):
         else:  # cache the new pack and generate batches
             self.data_pack_pool.append(input_pack)
             for (data_batch, instance_num) in self._get_data_batch_by_need(
-                    input_pack, context_type, annotation_types):
+                    input_pack, context_type, annotation_types, link_types,
+                    group_types):
 
                 self.current_batch = merge_batches(
                     [self.current_batch, data_batch])
@@ -168,4 +169,3 @@ class ProcessingBatcher(Batcher):
         if len(instances):
             batch = batch_instances(instances)
             yield (batch, len(instances))
-

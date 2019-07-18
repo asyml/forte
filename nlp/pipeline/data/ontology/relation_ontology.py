@@ -7,6 +7,7 @@ This is an example of multilevel inheritance:
 This is also an example of extending the parent ontology by add a new entry.
 
 """
+# pylint: disable=unused-wildcard-import, wildcard-import, function-redefined
 from nlp.pipeline.data.ontology.ontonotes_ontology import *
 
 

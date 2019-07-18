@@ -6,9 +6,6 @@ from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors.impl.dummy_processor import *
 from nlp.pipeline.data.ontology.relation_ontology import *
 
-class Onto:
-    pass
-
 
 class PipelineTest(unittest.TestCase):
 

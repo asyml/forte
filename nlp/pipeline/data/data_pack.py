@@ -9,9 +9,9 @@ from typing import (
 
 import numpy as np
 from sortedcontainers import SortedSet
-from nlp.pipeline.data.ontology.base_ontology import *
+from nlp.pipeline.data.ontology.base_ontology import (
+    Entry, Annotation, Link, Group, Sentence, Span)
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 __all__ = [

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Dict, Optional
 
 from nlp.pipeline.data import slice_batch
 from nlp.pipeline.data.data_pack import DataPack
@@ -43,7 +43,7 @@ class BatchProcessor(BaseProcessor):
         for batch in self.batcher.get_batch(input_pack,
                                             self.context_type,
                                             self.annotation_types,
-                                            tail_instances = tail_instances):
+                                            tail_instances=tail_instances):
             pred = self.predict(batch)
             self.pack_all(pred)
             self.finish_up_packs(-1)
@@ -101,4 +101,5 @@ class BatchProcessor(BaseProcessor):
         for pack in self.batcher.data_pack_pool[:end]:
             self.finish(pack)
         self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]
-        self.batcher.current_batch_sources = self.batcher.current_batch_sources[end:]
+        self.batcher.current_batch_sources = \
+            self.batcher.current_batch_sources[end:]

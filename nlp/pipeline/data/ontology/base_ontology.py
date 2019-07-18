@@ -273,12 +273,12 @@ class Group(Entry):
 class Token(Annotation):
     def __init__(self, component: str, begin: int, end: int):
         super().__init__(component, begin, end)
-        # will have attributes
+        self.pos_tag = None
+
 
 class Sentence(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
-        # will have attributes
+    pass
+
 
 class EntityMention(Annotation):
     def __init__(self, component: str, begin: int, end: int):
@@ -287,14 +287,12 @@ class EntityMention(Annotation):
 
 
 class PredicateArgument(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
-        # will have attributes
+    pass
+
 
 class PredicateMention(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
-        # will have attributes
+    pass
+
 
 class PredicateLink(Link):
     parent_type = "PredicateMention"
@@ -315,6 +313,4 @@ class CoreferenceGroup(Group):
 
 
 class CoreferenceMention(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
-        # will have attributes
+    pass

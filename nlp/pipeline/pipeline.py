@@ -68,7 +68,8 @@ class Pipeline:
                 processor.process(datapack)
         return datapack
 
-    def process_dataset(self, dataset: Optional[dict] = None) -> Iterator[DataPack]:
+    def process_dataset(self,
+                        dataset: Optional[dict] = None) -> Iterator[DataPack]:
         """
         Process the documents in the dataset and return an iterator of DataPack.
 
