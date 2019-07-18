@@ -41,10 +41,10 @@ class DictData(tx.data.DataBase[Dict, Dict]):
             **tx.data.DataBase.default_hparams(),
         }
 
-    def process(self, raw_example: Dict) -> Dict:
+    def process(self, raw_example: Dict) -> Dict:  # pylint: disable=no-self-use
         return raw_example
 
-    def collate(self, examples: List[Dict]) -> tx.data.Batch:
+    def collate(self, examples: List[Dict]) -> tx.data.Batch:  # pylint: disable=no-self-use
         batch = {}
         for e in examples:
             for entry, fields in e.items():
