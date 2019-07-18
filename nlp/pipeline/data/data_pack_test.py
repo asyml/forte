@@ -4,8 +4,8 @@ Unit tests for ner_data pack related operations.
 import os
 import unittest
 import nlp
-from nlp.pipeline.data.readers import OntonotesOntology, OntonotesReader
-from nlp.pipeline.utils import *
+from nlp.pipeline.data.readers import OntonotesReader
+from nlp.pipeline.data.ontology import ontonotes_ontology
 
 
 class DataPackTest(unittest.TestCase):
@@ -30,8 +30,8 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 1)
         self.data_pack.index.build_coverage_index(
             self.data_pack.annotations,
-            outer_type=OntonotesOntology.Sentence,
-            inner_type=OntonotesOntology.Token
+            outer_type=ontonotes_ontology.Sentence,
+            inner_type=ontonotes_ontology.Token
         )
         self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 2)
         self.assertIn("Sentence-to-Token",
@@ -44,7 +44,7 @@ class DataPackTest(unittest.TestCase):
         # case 3: build all-type to one-type index
         self.data_pack.index.build_coverage_index(
             self.data_pack.annotations,
-            inner_type=OntonotesOntology.Token
+            inner_type=ontonotes_ontology.Token
         )
         self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 3)
         self.assertIn("Annotation-to-Token",

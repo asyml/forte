@@ -7,7 +7,7 @@ from typing import DefaultDict, List, Optional, Iterator, Tuple
 from collections import defaultdict
 from nlp.pipeline.data.readers import MonoFileReader
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontology import OntonotesOntology
+from nlp.pipeline.data.ontology import ontonotes_ontology
 
 __all__ = [
     "OntonotesReader",
@@ -31,7 +31,7 @@ class OntonotesReader(MonoFileReader):
     """
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
-        self.ontology = OntonotesOntology
+        self.ontology = ontonotes_ontology
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:

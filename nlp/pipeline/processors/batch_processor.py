@@ -60,7 +60,6 @@ class BatchProcessor(BaseProcessor):
         Returns:
               The prediction results in dict format.
         """
-        return data_batch
         pass
 
     def pack_all(self, output_dict: Dict):

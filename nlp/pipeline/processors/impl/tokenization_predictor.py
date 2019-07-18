@@ -1,7 +1,7 @@
 from nltk.tokenize import word_tokenize
 from nlp.pipeline.processors import PackProcessor
 from nlp.pipeline.data import DataPack
-from nlp.pipeline.data.ontology import BaseOntology
+from nlp.pipeline.data.ontology import base_ontology
 
 __all__ = [
     "NLTKWordTokenizer",
@@ -12,7 +12,7 @@ class NLTKWordTokenizer(PackProcessor):
 
     def __init__(self):
         super().__init__()
-        self.ontology = BaseOntology  # should specify for each pipeline
+        self.ontology = base_ontology  # should specify for each pipeline
         self.sentence_component = None
 
     def _process(self, input_pack: DataPack):

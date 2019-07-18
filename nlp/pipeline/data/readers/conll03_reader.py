@@ -6,7 +6,7 @@ import codecs
 from typing import Iterator
 from nlp.pipeline.data.readers.file_reader import MonoFileReader
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontology import CoNLL03Ontology
+from nlp.pipeline.data.ontology import conll03_ontology
 
 __all__ = [
     "CoNLL03Reader"
@@ -25,7 +25,7 @@ class CoNLL03Reader(MonoFileReader):
     """
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
-        self.ner_ontology = CoNLL03Ontology
+        self.ner_ontology = conll03_ontology
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:

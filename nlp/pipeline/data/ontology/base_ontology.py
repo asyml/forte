@@ -12,7 +12,14 @@ __all__ = [
     "Annotation",
     "Link",
     "Group",
-    "BaseOntology",
+    "Token",
+    "EntityMention",
+    "Sentence",
+    "PredicateMention",
+    "PredicateLink",
+    "PredicateArgument",
+    "CoreferenceGroup",
+    "CoreferenceMention"
 ]
 
 
@@ -23,7 +30,6 @@ class Span:
     be totally ordered according to their :attr:`begin` as the first sort key
     and :attr:`end` as the second sort key.
     """
-
     def __init__(self, begin: int, end: int):
         self.begin = begin
         self.end = end
@@ -139,11 +145,11 @@ class Link(Entry):
     parent_type = None
     child_type = None
 
-    def __init__(self, component: str, parent_id: str = None,
-                 child_id: str = None):
+    def __init__(self, component: str,
+                 parent: str = None, child: str = None):
         super().__init__(component)
-        self._parent = parent_id
-        self._child = child_id
+        self._parent = parent
+        self._child = child
 
     def hash(self):
         return hash((self.component, type(self), self.parent, self.child))
@@ -262,47 +268,51 @@ class Group(Entry):
         return member_entries
 
 
-class BaseOntology:
-    """The basic ontology that could be inherited by other more specific
-     ontology"""
+class Token(Annotation):
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component, begin, end)
 
-    class Token(Annotation):
-        def __init__(self, component: str, begin: int, end: int):
-            super().__init__(component, begin, end)
 
-    class Sentence(Annotation):
-        def __init__(self, component: str, begin: int, end: int):
-            super().__init__(component, begin, end)
+class Sentence(Annotation):
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component, begin, end)
 
-    class EntityMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int):
-            super().__init__(component, begin, end)
-            self.ner_type = None
 
-    class PredicateArgument(Annotation):
-        def __init__(self, component: str, begin: int, end: int):
-            super().__init__(component, begin, end)
+class EntityMention(Annotation):
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component, begin, end)
+        self.ner_type = None
 
-    class PredicateLink(Link):
-        parent_type = "PredicateMention"
-        child_type = "PredicateArgument"
 
-        def __init__(self, component: str, parent_id: str = None,
-                     child_id: str = None):
-            super().__init__(component, parent_id, child_id)
-            self.arg_type = None
+class PredicateArgument(Annotation):
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component, begin, end)
 
-    class PredicateMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int):
-            super().__init__(component, begin, end)
 
-    class CoreferenceGroup(Group):
-        member_type = "CoreferenceMention"
+class PredicateMention(Annotation):
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component, begin, end)
 
-        def __init__(self, component: str, members: Set[str] = None):
-            super().__init__(component, members)
-            self.coref_type = None
 
-    class CoreferenceMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int):
-            super().__init__(component, begin, end)
+class PredicateLink(Link):
+    parent_type = "PredicateMention"
+    child_type = "PredicateArgument"
+
+    def __init__(self, component: str, parent_id: str = None,
+                 child_id: str = None):
+        super().__init__(component, parent_id, child_id)
+        self.arg_type = None
+
+
+class CoreferenceGroup(Group):
+    member_type = "CoreferenceMention"
+
+    def __init__(self, component: str, members: Set[str] = None):
+        super().__init__(component, members)
+        self.coref_type = None
+
+
+class CoreferenceMention(Annotation):
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component, begin, end)
+

@@ -3,7 +3,7 @@ import sys
 import pickle
 from termcolor import colored
 
-from nlp.pipeline.data.ontology import CoNLL03Ontology as Ont
+from nlp.pipeline.data.ontology.conll03_ontology import *
 from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors.impl import (NLTKPOSTagger, NLTKSentenceSegmenter,
                                           NLTKWordTokenizer, CoNLLNERPredictor,
@@ -17,7 +17,7 @@ def main(dataset_dir, ner_model_path, srl_model_path):
     }
 
     pl = Pipeline()
-    pl.initialize(ontology="CoNLL03Ontology")
+    pl.initialize(ontology="conll03_ontology")
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())
     pl.add_processor(NLTKPOSTagger())
@@ -32,27 +32,27 @@ def main(dataset_dir, ner_model_path, srl_model_path):
 
     for pack in pl.process_dataset(dataset):
         print(colored("Document", 'red'), pack.meta.doc_id)
-        for sentence in pack.get(Ont.Sentence):
+        for sentence in pack.get(Sentence):
             sent_text = sentence.text
             print(colored("Sentence:", 'red'), sent_text, "\n")
             # first method to get entry in a sentence
             tokens = [(token.text, token.pos_tag) for token in
-                      pack.get(Ont.Token, sentence)]
+                      pack.get(Token, sentence)]
             entities = [(entity.text, entity.ner_type) for entity in
-                        pack.get(Ont.EntityMention, sentence)]
+                        pack.get(EntityMention, sentence)]
             print(colored("Tokens:", 'red'), tokens, "\n")
             print(colored("EntityMentions:", 'red'), entities, "\n")
 
             # second method to get entry in a sentence
             print(colored("Semantic role labels:", 'red'))
             for link in pack.get(
-                    Ont.PredicateLink, sentence):
+                    PredicateLink, sentence):
                 parent = link.get_parent()
                 child = link.get_child()
                 print(f"  - \"{child.text}\" is role {link.arg_type} of "
                       f"predicate \"{parent.text}\"")
                 entities = [entity.text for entity
-                            in pack.get(Ont.EntityMention, child)]
+                            in pack.get(EntityMention, child)]
                 print("      Entities in predicate argument:", entities, "\n")
             print()
 

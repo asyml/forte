@@ -2,7 +2,7 @@
 Defines the Evaluator interface and related functions.
 """
 from abc import abstractmethod
-from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data import DataPack
 
 __all__ = [
     "Evaluator",

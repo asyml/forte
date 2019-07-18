@@ -8,7 +8,7 @@ from typing import (
     Union, Dict, Optional, List, DefaultDict, Type, TypeVar, Iterable, Iterator)
 import numpy as np
 from sortedcontainers import SortedSet
-from nlp.pipeline.data.ontology import *
+from nlp.pipeline.data.ontology.base_ontology import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,8 +30,8 @@ class Meta:
 
     def __init__(self, doc_id: str = None):
         self.doc_id = doc_id
-        self.process_state = None
-        self.cache_state = None
+        self.process_state = ''
+        self.cache_state = ''
 
 
 class InternalMeta:
@@ -618,7 +618,7 @@ class DataPack:
             a_type: str,
             a_args: Union[Dict, List],
             data: Dict,
-            sent: Optional[BaseOntology.Sentence]) -> Dict:
+            sent: Optional[Sentence]) -> Dict:
 
         component, unit, fields = self._process_request_args(a_type, a_args)
 
@@ -698,7 +698,7 @@ class DataPack:
             a_type: str,
             a_args: Union[Dict, List],
             data: Dict,
-            sent: Optional[BaseOntology.Sentence]) -> Dict:
+            sent: Optional[Sentence]) -> Dict:
 
         component, unit, fields = self._process_request_args(a_type, a_args)
 

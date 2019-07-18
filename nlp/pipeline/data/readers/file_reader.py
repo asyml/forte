@@ -7,7 +7,7 @@ from abc import abstractmethod
 from typing import Iterator, List
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
-from nlp.pipeline.data.ontology import BaseOntology
+from nlp.pipeline.data.ontology import base_ontology
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ class MonoFileReader(BaseReader):
             datapack = self._read_document(file_path)
             datapack.index.build_coverage_index(
                 datapack.annotations, datapack.links, datapack.groups,
-                outer_type=BaseOntology.Sentence
+                outer_type=base_ontology.Sentence
             )
             if not isinstance(datapack, DataPack):
                 raise ValueError(
