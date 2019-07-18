@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
-from nlp.pipeline.processors import BaseProcessor
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
     "PackProcessor",
