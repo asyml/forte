@@ -44,8 +44,7 @@ class DictData(tx.data.DataBase[Dict, Dict]):
     def process(self, raw_example: Dict) -> Dict:  # pylint: disable=no-self-use
         return raw_example
 
-    def collate(self, examples: List[
-        Dict]) -> tx.data.Batch:  # pylint: disable=no-self-use
+    def collate(self, examples: List[Dict]) -> tx.data.Batch:  # pylint: disable=no-self-use
         batch: Dict[str, Any] = {}
         for e in examples:
             for entry, fields in e.items():
