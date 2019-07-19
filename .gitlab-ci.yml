@@ -46,4 +46,5 @@ pytest:
     - git clone https://github.com/asyml/texar-pytorch
     - cd texar-pytorch
     - pip3 install -q -e .
+    - cd ..
     - pytest nlp/
