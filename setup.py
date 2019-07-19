@@ -19,6 +19,7 @@ setuptools.setup(
     install_requires=[
         'sortedcontainers',
         'numpy',
+        'nltk',
         'jsonpickle'
     ],
     extras_require={
