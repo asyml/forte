@@ -47,4 +47,5 @@ pytest:
     - cd texar-pytorch
     - pip3 install -q -e .
     - cd ..
+    - pip3 install --no-cache-dir -q -e .[ner,srl]
     - pytest nlp/
