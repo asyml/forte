@@ -4,8 +4,8 @@ such as reading, writing, checking and indexing.
 import itertools
 import logging
 from collections import defaultdict
-from typing import (
-    DefaultDict, Dict, Iterable, List, Optional, Type, TypeVar, Union)
+from typing import (DefaultDict, Dict, Iterable, Iterator, List, Optional,
+                    Type, TypeVar, Union, Any, Tuple)
 
 import numpy as np
 from sortedcontainers import SortedSet
@@ -364,13 +364,12 @@ class DataPack:
         doc_id (str, optional): A universal id of this ner_data pack.
     """
 
-    def __init__(self, text: Optional[str] = None,
-                 doc_id: Optional[str] = None):
+    def __init__(self, doc_id: Optional[str] = None):
         self.annotations = SortedSet()
         self.links: List[Link] = []
         self.groups: List[Group] = []
         self.meta: Meta = Meta(doc_id)
-        self.text = text
+        self.text = ""
 
         self.index: DataIndex = DataIndex(self)
         self.internal_metas: Dict[str, InternalMeta] = defaultdict(InternalMeta)
@@ -450,11 +449,11 @@ class DataPack:
     def get_data(
             self,
             context_type: str,
-            annotation_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
-            link_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
-            group_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
+            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
             offset: int = 0
-    ) -> Iterable[Dict]:
+    ) -> Iterator[Dict]:
         """
         Example:
 
@@ -502,7 +501,7 @@ class DataPack:
 
         if context_type.lower() == "document":
             # print(self.meta.doc_id)
-            data = dict()
+            data: Dict[str, Any] = dict()
             data["context"] = self.text
             data["offset"] = 0
 
@@ -622,13 +621,13 @@ class DataPack:
     def _generate_annotation_entry_data(
             self,
             a_type: str,
-            a_args: Union[Dict, List],
+            a_args: Union[Dict, Iterable],
             data: Dict,
             sent: Optional[Sentence]) -> Dict:
 
         component, unit, fields = self._process_request_args(a_type, a_args)
 
-        a_dict = dict()
+        a_dict: Dict[str, List] = dict()
 
         a_dict["span"] = []
         a_dict["text"] = []
@@ -670,7 +669,7 @@ class DataPack:
                     continue
                 if field == "context_span":
                     a_dict[field].append((annotation.span.begin - sent_begin,
-                                           annotation.span.end - sent_begin))
+                                          annotation.span.end - sent_begin))
                     continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
@@ -703,7 +702,7 @@ class DataPack:
     def _generate_link_entry_data(
             self,
             a_type: str,
-            a_args: Union[Dict, List],
+            a_args: Union[Dict, Iterable],
             data: Dict,
             sent: Optional[Sentence]) -> Dict:
 
@@ -712,7 +711,7 @@ class DataPack:
         if unit is not None:
             raise ValueError(f"Link entires cannot be indexed by {unit}.")
 
-        a_dict = dict()
+        a_dict: Dict[str, List] = dict()
         for field in fields:
             a_dict[field] = []
         a_dict["parent"] = []
@@ -769,10 +768,10 @@ class DataPack:
             self,
             batch_size: int,
             context_type: str,
-            annotation_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
-            link_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
-            group_types: Optional[Dict[str, Union[Dict, Iterable]]] = None,
-            offset: int = 0) -> Iterable[Dict]:
+            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         """
         Try to get batches of size ``batch_size``. If the tail instances cannot
         make up a full batch, will generate a small batch with the tail
@@ -806,7 +805,7 @@ class DataPack:
             the number of instances in the batch.
         """
 
-        batch = {}
+        batch: Dict[str, Any] = {}
         cnt = 0
         for data in self.get_data(context_type, annotation_types, link_types,
                                   group_types, offset):

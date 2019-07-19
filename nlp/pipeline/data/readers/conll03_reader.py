@@ -3,7 +3,7 @@ The reader that reads CoNLL ner_data into our internal json data format.
 """
 import codecs
 import os
-from typing import Iterator
+from typing import Iterator, no_type_check
 
 from nlp.pipeline.data.ontology import conll03_ontology
 from nlp.pipeline.data.data_pack import DataPack
@@ -67,7 +67,7 @@ class CoNLL03Reader(MonoFileReader):
                 # add tokens
                 kwargs_i = {"pos_tag": pos_tag, "chunk_tag": chunk_id,
                             "ner_tag": ner_tag}
-                token = self.ner_ontology.Token(
+                token = self.ner_ontology.Token(  # type: ignore
                     self.component_name, word_begin, word_end
                 )
 
@@ -83,7 +83,7 @@ class CoNLL03Reader(MonoFileReader):
                     # skip consecutive empty lines
                     continue
                 # add sentence
-                sent = self.ner_ontology.Sentence(
+                sent = self.ner_ontology.Sentence(  # type: ignore
                     self.component_name, sentence_begin, offset - 1
                 )
                 self.current_datapack.add_entry(sent)
@@ -97,6 +97,7 @@ class CoNLL03Reader(MonoFileReader):
         doc.close()
         return self.current_datapack
 
+    @no_type_check
     def _record_fields(self):
         self.current_datapack.record_fields(
             ["span"],

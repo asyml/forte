@@ -10,7 +10,6 @@ import torchtext
 from tqdm import tqdm
 
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
@@ -42,9 +41,9 @@ class CoNLLNERTrainer(BaseTrainer):
         self.resource = resource
         # This reference is for saving the checkpoints
 
-        self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
-        self.char_alphabet: Alphabet = resource.resources["char_alphabet"]
-        self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
+        self.word_alphabet = resource.resources["word_alphabet"]
+        self.char_alphabet = resource.resources["char_alphabet"]
+        self.ner_alphabet = resource.resources["ner_alphabet"]
         self.config_model = resource.resources["config_model"]
         self.config_data = resource.resources["config_data"]
         self.model = resource.resources["model"]
@@ -301,7 +300,8 @@ class CoNLLNERTrainer(BaseTrainer):
 
 def batch_size_fn(new: Tuple, count: int, _: int):
     if count == 1:
-        batch_size_fn.max_length = 0
-    batch_size_fn.max_length = max(batch_size_fn.max_length, len(new[0]))
-    elements = count * batch_size_fn.max_length
+        batch_size_fn.max_length = 0  # type: ignore
+    batch_size_fn.max_length = max(  # type: ignore
+        batch_size_fn.max_length, len(new[0]))  # type: ignore
+    elements = count * batch_size_fn.max_length  # type: ignore
     return elements

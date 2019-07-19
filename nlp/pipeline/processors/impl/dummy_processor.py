@@ -32,7 +32,7 @@ class DummyRelationExtractor(BatchProcessor):
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 
-        pred = {
+        pred: Dict = {
             "RelationLink": {
                 "parent.tid": [],
                 "child.tid": [],

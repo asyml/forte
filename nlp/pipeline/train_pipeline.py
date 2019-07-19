@@ -7,7 +7,6 @@ from nlp.pipeline.data.readers.base_reader import BaseReader
 from nlp.pipeline.processors import BaseProcessor
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +18,7 @@ class TrainPipeline:
             dev_reader: BaseReader,
             # TODO: Let's define the config system.
             # config,
-            resource: Optional[Resources] = None,
+            resource: Resources,
             evaluator: Optional[Evaluator] = None,
             predictor: Optional[BaseProcessor] = None,
     ):

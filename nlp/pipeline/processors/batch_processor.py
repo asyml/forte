@@ -26,17 +26,12 @@ class BatchProcessor(BaseProcessor):
         self.batch_size = None
         self.batcher = None
 
-        self._overwrite = True
-
     def initialize_batcher(self, hard_batch: bool = True):
         self.batcher = ProcessingBatcher(self.batch_size, hard_batch)
 
-    def set_mode(self, overwrite: bool):
-        self._overwrite = overwrite
-
     def process(self, input_pack: DataPack, tail_instances: bool = False):
         if input_pack.meta.cache_state == self.component_name:
-            input_pack = None
+            input_pack = None  # type: ignore
         else:
             input_pack.meta.cache_state = self.component_name
 

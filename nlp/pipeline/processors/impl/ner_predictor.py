@@ -9,7 +9,6 @@ from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import conll03_ontology
-from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 logger = logging.getLogger(__name__)
@@ -40,9 +39,9 @@ class CoNLLNERPredictor(BatchProcessor):
 
     def initialize(self, resource: Resources):
         self.initialize_batcher()
-        self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
-        self.char_alphabet: Alphabet = resource.resources["char_alphabet"]
-        self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
+        self.word_alphabet = resource.resources["word_alphabet"]
+        self.char_alphabet = resource.resources["char_alphabet"]
+        self.ner_alphabet = resource.resources["ner_alphabet"]
         self.config_model = resource.resources["config_model"]
         self.config_data = resource.resources["config_data"]
         self.model = resource.resources["model"]
@@ -78,7 +77,7 @@ class CoNLLNERPredictor(BatchProcessor):
         word, char, masks, unused_lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
-        pred = {"Token": {"ner_tag": [], "tid": []}}
+        pred: Dict = {"Token": {"ner_tag": [], "tid": []}}
 
         for i in range(len(tokens["tid"])):
             tids = tokens["tid"][i]
@@ -144,7 +143,7 @@ class CoNLLNERPredictor(BatchProcessor):
                         entity.set_fields(**kwargs_i)
                         data_pack.add_entry(entity)
                     elif token.ner_tag[0] == "S":
-                        current_entity_mention: Tuple[int, str] = (
+                        current_entity_mention = (
                             token.span.begin,
                             token.ner_tag[2:],
                         )

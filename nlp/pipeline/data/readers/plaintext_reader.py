@@ -37,7 +37,10 @@ class PlainTextReader(MonoFileReader):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:
-
+        if self.current_datapack is None:
+            raise ValueError("You shouldn never call _read_document() "
+                             "directly. Instead, call read() to read a file "
+                             "or dataset_iterator() to read a directory.")
         doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
         text = doc.read()
         self.current_datapack.text = text

@@ -58,7 +58,7 @@ class Entry:
 
     def __init__(self, component: str):
         self.component = component
-        self.__tid = None
+        self.__tid: Optional[str] = None
         self.__data_pack = None
 
     @property
