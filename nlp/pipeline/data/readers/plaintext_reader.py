@@ -47,6 +47,3 @@ class PlainTextReader(MonoFileReader):
         self.current_datapack.meta.doc_id = file_path
         doc.close()
         return self.current_datapack
-
-    def _record_fields(self):
-        pass

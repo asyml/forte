@@ -4,6 +4,7 @@ import numpy as np
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import relation_ontology
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 __all__ = [
@@ -18,15 +19,22 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self) -> None:
         super().__init__()
+        self.ontology = relation_ontology  # the output should be in this onto
 
         self.context_type = "sentence"
-        self.annotation_types = {
-            "Token": [],
-            "EntityMention": ["ner_type", "tid"]
+        self.input_info = {
+            base_ontology.Token: [],
+            base_ontology.EntityMention: {
+                "fields": ["ner_type", "tid"],
+            }
         }
+        self.output_info = {
+            self.ontology.RelationLink:  # type: ignore
+                ["parent", "child", "rel_type"]
+        }
+
         self.batch_size = 4
         self.initialize_batcher()
-        self.ontology = relation_ontology
 
     def predict(self, data_batch: Dict):
         entities_span = data_batch["EntityMention"]["span"]
@@ -77,10 +85,3 @@ class DummyRelationExtractor(BatchProcessor):
                     output_dict["RelationLink"]["child.tid"][i][j]]
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)
-
-    def _record_fields(self, data_pack: DataPack):
-        data_pack.record_fields(
-            ["parent", "child", "rel_type"],
-            self.ontology.RelationLink.__name__,
-            self.component_name,
-        )

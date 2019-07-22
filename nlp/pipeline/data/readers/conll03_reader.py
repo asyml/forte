@@ -24,10 +24,14 @@ class CoNLL03Reader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
-
+    @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ner_ontology = conll03_ontology
+        self.output_info = {
+            self.ner_ontology.Sentence: ["span"],
+            self.ner_ontology.Token: ["span", "chunk_tag", "pos_tag", "ner_tag"]
+        }
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -96,16 +100,3 @@ class CoNLL03Reader(MonoFileReader):
         self.current_datapack.meta.doc_id = file_path
         doc.close()
         return self.current_datapack
-
-    @no_type_check
-    def _record_fields(self):
-        self.current_datapack.record_fields(
-            ["span"],
-            self.ner_ontology.Sentence.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["span", "chunk_tag", "pos_tag", "ner_tag"],
-            self.ner_ontology.Token.__name__,
-            self.component_name,
-        )

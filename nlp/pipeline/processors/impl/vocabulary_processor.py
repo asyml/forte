@@ -7,6 +7,7 @@ from typing import Any, Counter as CounterType, Dict, Iterator, List, Optional
 import texar
 
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
@@ -218,9 +219,9 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         for data_pack in input_pack:
             for instance in data_pack.get_data(
                     context_type="sentence",
-                    annotation_types={
-                        "Token": ["chunk_tag", "pos_tag", "ner_tag"],
-                        "Sentence": [],  # span by default
+                    requests={
+                        base_ontology.Token:
+                            ["chunk_tag", "pos_tag", "ner_tag"],
                     },
             ):
                 for token in instance["Token"]["text"]:

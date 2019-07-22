@@ -56,18 +56,16 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(cov_index["Sentence.1"]), 12)
 
     def test_get_data(self):
-        antype = {
-            "Sentence": ["speaker"],
-            "Token": ["pos_tag", "sense"],
-            "EntityMention": [],
-            "PredicateMention": [],
-            "PredicateArgument": {
+        requests = {
+            ontonotes_ontology.Sentence: ["speaker"],
+            ontonotes_ontology.Token: ["pos_tag", "sense"],
+            ontonotes_ontology.EntityMention: [],
+            ontonotes_ontology.PredicateMention: [],
+            ontonotes_ontology.PredicateArgument: {
                 "fields": [],
                 "unit": "Token"
             },
-        }
-        linktype = {
-            "PredicateLink": {
+            ontonotes_ontology.PredicateLink: {
                 "component": self.reader.component_name,
                 "fields": ["parent", "child", "arg_type"]
             }
@@ -95,8 +93,7 @@ class DataPackTest(unittest.TestCase):
 
         # case 5: get entries
         instances = list(self.data_pack.get_data("sentence",
-                                                 annotation_types=antype,
-                                                 link_types=linktype,
+                                                 requests=requests,
                                                  offset=1))
         self.assertEqual(len(instances[0].keys()), 9)
         self.assertEqual(len(instances[0]["PredicateLink"]), 4)
@@ -107,8 +104,7 @@ class DataPackTest(unittest.TestCase):
         batch_size = 2
         instances = list(self.data_pack.get_data_batch(batch_size=batch_size,
                                                        context_type="sentence",
-                                                       annotation_types=antype,
-                                                       link_types=linktype))
+                                                       requests=requests))
         self.assertEqual(len(instances[0][0].keys()), 9)
         self.assertEqual(len(instances[0][0]["Token"]), 5)
         self.assertEqual(len(instances[0][0]["EntityMention"]), 3)

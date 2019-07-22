@@ -31,10 +31,21 @@ class OntonotesReader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
-
+    @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ontology = ontonotes_ontology
+        self.output_info = {
+            self.ontology.Sentence: ["speaker", "part_id", "span"],
+            self.ontology.Token: ["sense", "pos_tag", "span"],
+            self.ontology.EntityMention: ["ner_type", "span"],
+            self.ontology.PredicateMention:
+                ["pred_lemma", "pred_type", "span", "framenet_id"],
+            self.ontology.PredicateArgument: ["span"],
+            self.ontology.PredicateLink: ["parent", "child", "arg_type"],
+            self.ontology.CoreferenceMention: ["span"],
+            self.ontology.CoreferenceGroup: ["coref_type", "members"]
+        }
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -315,46 +326,3 @@ class OntonotesReader(MonoFileReader):
                 )
 
                 groups[group_id].append(coref_mention)
-
-    @no_type_check
-    def _record_fields(self):
-        self.current_datapack.record_fields(
-            ["speaker", "part_id", "span"],
-            self.ontology.Sentence.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["sense", "pos_tag", "span"],
-            self.ontology.Token.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["ner_type", "span"],
-            self.ontology.EntityMention.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["pred_lemma", "pred_type", "span", "framenet_id"],
-            self.ontology.PredicateMention.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["span"],
-            self.ontology.PredicateArgument.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["parent", "child", "arg_type"],
-            self.ontology.PredicateLink.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["span"],
-            self.ontology.CoreferenceMention.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["coref_type", "members"],
-            self.ontology.CoreferenceGroup.__name__,
-            self.component_name,
-        )

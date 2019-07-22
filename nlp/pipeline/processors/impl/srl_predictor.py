@@ -1,13 +1,13 @@
 import os
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, no_type_check
 
 import texar as tx
 import torch
 
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontology import ontonotes_ontology
+from nlp.pipeline.data.ontology import ontonotes_ontology, base_ontology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
@@ -30,15 +30,25 @@ class SRLPredictor(BatchProcessor):
     def __init__(self, model_dir: str):
         super().__init__()
 
+        self.ontology = ontonotes_ontology
         self.component_name = "srl_predictor"
+
         self.context_type = "sentence"
-        self.annotation_types = {
-            "Token": [],
+        self.input_info = {
+            base_ontology.Token: [],
         }
+        self.output_info = {
+            self.ontology.PredicateMention:  # type: ignore
+                ["pred_type", "span"],
+            self.ontology.PredicateArgument: ["span"],  # type: ignore
+            self.ontology.PredicateLink:  # type: ignore
+                ["parent", "child", "arg_type"],
+
+        }
+
         self.batch_size = 4
         self.initialize_batcher()
 
-        self.ontology = ontonotes_ontology
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
@@ -62,23 +72,6 @@ class SRLPredictor(BatchProcessor):
 
     def initialize(self, resource: Resources):
         raise NotImplementedError
-
-    def _record_fields(self, data_pack: DataPack):
-        data_pack.record_fields(
-            ["pred_type", "span"],
-            self.component_name,
-            self.ontology.PredicateMention.__name__,
-        )
-        data_pack.record_fields(
-            ["span"],
-            self.component_name,
-            self.ontology.PredicateArgument.__name__,
-        )
-        data_pack.record_fields(
-            ["parent", "child", "arg_type"],
-            self.component_name,
-            self.ontology.PredicateLink.__name__,
-        )
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [

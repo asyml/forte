@@ -2,7 +2,7 @@
 This class defines the basic ontology supported by our system
 """
 from typing import Optional, Set
-from nlp.pipeline.data.ontology.top import *
+from nlp.pipeline.data.ontology.top import Annotation, Link, Group
 
 __all__ = [
     "Token",
@@ -45,8 +45,8 @@ class PredicateLink(Link):
     child_type = PredicateArgument
 
     def __init__(self, component: str,
-                 parent: Optional[parent_type] = None,
-                 child: Optional[child_type] = None):
+                 parent: Optional[PredicateMention] = None,
+                 child: Optional[PredicateArgument] = None):
         super().__init__(component, parent, child)
         self.arg_type = None
 
@@ -59,8 +59,6 @@ class CoreferenceGroup(Group):
     member_type = CoreferenceMention
 
     def __init__(self, component: str,
-                 members: Optional[Set[member_type]] = None):
-        super().__init__(component, members)
+                 members: Optional[Set[CoreferenceMention]] = None):
+        super().__init__(component, members)  # type: ignore
         self.coref_type = None
-
-

@@ -174,6 +174,17 @@ class MonoFileReader(BaseReader):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def _record_fields(self):
-        raise NotImplementedError
+        """
+        Record the fields and entries that this processor add to data packs.
+        """
+        for entry_type, info in self.output_info.items():
+            component = self.component_name
+            fields: List[str] = []
+            if isinstance(info, list):
+                fields = info
+            elif isinstance(info, dict):
+                fields = info["fields"]
+                if "component" in info.keys():
+                    component = info["component"]
+            self.current_datapack.record_fields(fields, entry_type, component)

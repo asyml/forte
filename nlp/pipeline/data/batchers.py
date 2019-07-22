@@ -1,11 +1,13 @@
 from abc import abstractmethod
-from typing import Dict, List, Iterator, Iterable, Union, Any, Optional, Tuple
+from typing import (
+    Dict, List, Iterator, Iterable, Union, Any, Optional, Tuple, Type)
 
 import texar as tx
 
 from nlp.pipeline.data.dataset import Dataset
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.io_utils import merge_batches, batch_instances
+from nlp.pipeline.data.ontology import Entry
 
 
 class Batcher:
@@ -106,9 +108,7 @@ class ProcessingBatcher(Batcher):
             self,
             input_pack: Optional[DataPack],
             context_type: str,
-            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            requests: Dict[Type[Entry], Union[Dict, List]] = None,
             tail_instances: bool = False):
 
         if input_pack is None:  # No more packs, return the tail instances
@@ -120,8 +120,7 @@ class ProcessingBatcher(Batcher):
         else:  # cache the new pack and generate batches
             self.data_pack_pool.append(input_pack)
             for (data_batch, instance_num) in self._get_data_batch_by_need(
-                    input_pack, context_type, annotation_types, link_types,
-                    group_types):
+                    input_pack, context_type, requests):
 
                 self.current_batch = merge_batches(
                     [self.current_batch, data_batch])
@@ -141,9 +140,7 @@ class ProcessingBatcher(Batcher):
             self,
             data_pack: DataPack,
             context_type: str,
-            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         """
         Try to get batches of size ``batch_size``. If the tail instances cannot
@@ -157,8 +154,7 @@ class ProcessingBatcher(Batcher):
         """
 
         instances: List[Dict] = []
-        for data in data_pack.get_data(context_type, annotation_types,
-                                       link_types, group_types, offset):
+        for data in data_pack.get_data(context_type, requests, offset):
 
             instances.append(data)
             if (len(instances) ==

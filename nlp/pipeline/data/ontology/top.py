@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from functools import total_ordering
-from typing import Iterable, Optional, Set, Union
+from typing import Iterable, Optional, Set, Union, Type
 
 from nlp.pipeline.utils import get_class_name
 
@@ -134,11 +134,11 @@ class Link(Entry):
     """Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
     """
-    parent_type = Entry
-    child_type = Entry
+    parent_type: Type[Entry] = Annotation
+    child_type: Type[Entry] = Annotation
 
-    def __init__(self, component: str, parent: Optional[parent_type] = None,
-                 child: Optional[child_type] = None):
+    def __init__(self, component: str, parent: Optional[Entry] = None,
+                 child: Optional[Entry] = None):
         super().__init__(component)
         self._parent: Optional[str] = None
         self._child: Optional[str] = None
@@ -162,7 +162,7 @@ class Link(Entry):
     def child(self):
         return self._child
 
-    def set_parent(self, parent: parent_type):
+    def set_parent(self, parent: Entry):
         if not isinstance(parent, self.parent_type):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
@@ -174,7 +174,7 @@ class Link(Entry):
                 self.data_pack.index.link_index_switch):
             self.data_pack.index.update_link_index()
 
-    def set_child(self, child: child_type):
+    def set_child(self, child: Entry):
         if not isinstance(child, self.child_type):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
@@ -209,19 +209,19 @@ class Group(Entry):
     """Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    member_type = Entry
+    member_type: Type[Entry] = Annotation
 
     def __init__(self, component: str,
-                 members: Optional[Set[member_type]] = None):
+                 members: Optional[Set[Entry]] = None):
 
         super().__init__(component)
         self._members: Set[str] = set()
         if members is not None:
             self.add_members(members)
 
-    def add_members(self, members: Union[Iterable[member_type], member_type]):
+    def add_members(self, members: Union[Iterable[Entry], Entry]):
         """Add group members."""
-        if not isinstance(members, (list, set, tuple)):
+        if not isinstance(members, Iterable):
             members = {members}
 
         for member in members:

@@ -17,6 +17,13 @@ class NLTKPOSTagger(PackProcessor):
         self.ontology = base_ontology  # should specify for each pipeline
         self.token_component = None
 
+        self.output_info = {
+            self.ontology.Token: {
+                "component": None,
+                "fields": ["pos_tag"]
+            }
+        }
+
     def _process(self, input_pack: DataPack):
         # TODO: need to think about how to specify component, currently is
         #  getting all component
@@ -28,9 +35,3 @@ class NLTKPOSTagger(PackProcessor):
             taggings = pos_tag(token_texts)
             for token, tag in zip(token_entries, taggings):
                 token.pos_tag = tag[1]
-
-    def _record_fields(self, data_pack: DataPack):
-        data_pack.record_fields(
-            ["pos_tag"],
-            self.ontology.Token.__name__,
-        )
