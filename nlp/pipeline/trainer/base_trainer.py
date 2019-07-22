@@ -1,10 +1,11 @@
 from abc import abstractmethod
 from typing import Dict, Iterator
+
 from nlp.pipeline.common.resources import Resources
 
 
 class BaseTrainer:
-    def __init__(self, config):
+    def __init__(self, config):  # pylint: disable=unused-argument
         super().__init__()
         self._stop_train = False
         self._validation_requested = False
@@ -27,8 +28,8 @@ class BaseTrainer:
         pass
 
     @abstractmethod
-    def process(self, instance: Dict):
-        # Do training
+    def consume(self, instance: Dict):
+        # consume the instance
         raise NotImplementedError
 
     @abstractmethod

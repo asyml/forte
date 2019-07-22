@@ -3,8 +3,9 @@ This class defines the basic ontology supported by our system
 """
 from abc import abstractmethod
 from functools import total_ordering
-from typing import Iterable, Set, Union
-from nlp.pipeline.utils import *
+from typing import Iterable, Optional, Set, Union
+
+from nlp.pipeline.utils import get_class_name, get_qual_name
 
 __all__ = [
     "Span",
@@ -12,7 +13,14 @@ __all__ = [
     "Annotation",
     "Link",
     "Group",
-    "BaseOntology",
+    "Token",
+    "EntityMention",
+    "Sentence",
+    "PredicateMention",
+    "PredicateLink",
+    "PredicateArgument",
+    "CoreferenceGroup",
+    "CoreferenceMention"
 ]
 
 
@@ -48,14 +56,26 @@ class Entry:
             for this entry when we add the entry to the DataPack.
     """
 
-    def __init__(self, component: str, tid: str = None):
-        self.tid = f"{get_class_name(self)}.{tid}" if tid else None
+    def __init__(self, component: str):
         self.component = component
-        self._data_pack = None
+        self.__tid: Optional[str] = None
+        self.__data_pack = None
+
+    @property
+    def tid(self):
+        return self.__tid
 
     def set_tid(self, tid: str):
         """Set the entry id"""
-        self.tid = f"{get_class_name(self)}.{tid}"
+        self.__tid = f"{get_class_name(self)}.{tid}"
+
+    @property
+    def data_pack(self):
+        return self.__data_pack
+
+    def attach(self, data_pack):
+        """Attach the entry itself to a data_pack"""
+        self.__data_pack = data_pack
 
     def set_fields(self, **kwargs):
         """Set other entry fields"""
@@ -66,14 +86,6 @@ class Entry:
                     f" has no attribute {field_name}"
                 )
             setattr(self, field_name, field_value)
-
-    def attach(self, data_pack):
-        """Attach the entry itself to a data_pack"""
-        self._data_pack = data_pack
-
-    @property
-    def data_pack(self):
-        return self._data_pack
 
     @abstractmethod
     def hash(self):
@@ -101,8 +113,8 @@ class Annotation(Entry):
     in the text.
     """
 
-    def __init__(self, component: str, begin: int, end: int, tid: str = None):
-        super().__init__(component, tid)
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component)
         self.span = Span(begin, end)
 
     def hash(self):
@@ -132,12 +144,12 @@ class Link(Entry):
     """Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
     """
-    parent_type = None
-    child_type = None
+    parent_type: Optional[str] = None
+    child_type: Optional[str] = None
 
-    def __init__(self, component: str, parent_id: str = None,
-                 child_id: str = None, tid: str = None):
-        super().__init__(component, tid)
+    def __init__(self, component: str, parent_id: Optional[str] = None,
+                 child_id: Optional[str] = None):
+        super().__init__(component)
         self._parent = parent_id
         self._child = child_id
 
@@ -151,10 +163,6 @@ class Link(Entry):
     @property
     def parent(self):
         return self._parent
-
-    @property
-    def child(self):
-        return self._child
 
     @parent.setter
     def parent(self, parent_id: str):
@@ -173,6 +181,10 @@ class Link(Entry):
         if (self.data_pack is not None and
                 self.data_pack.index.link_index_switch):
             self.data_pack.index.update_link_index()
+
+    @property
+    def child(self):
+        return self._child
 
     @child.setter
     def child(self, child_id: str):
@@ -217,11 +229,10 @@ class Group(Entry):
     """Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    member_type = None
+    member_type: Optional[str] = None
 
-    def __init__(self, component: str, members: Set[str] = None,
-                 tid: str = None):
-        super().__init__(component, tid)
+    def __init__(self, component: str, members: Optional[Set[str]] = None):
+        super().__init__(component)
         self._members = set(members) if members else set()
 
     def add_members(self, members: Union[Iterable, str]):
@@ -259,53 +270,47 @@ class Group(Entry):
         return member_entries
 
 
-class BaseOntology:
-    """The basic ontology that could be inherited by other more specific
-     ontology"""
+class Token(Annotation):
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component, begin, end)
+        self.pos_tag = None
 
-    class Token(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
 
-    class Sentence(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
+class Sentence(Annotation):
+    pass
 
-    class EntityMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
-            self.ner_type = None
 
-    class PredicateArgument(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
+class EntityMention(Annotation):
+    def __init__(self, component: str, begin: int, end: int):
+        super().__init__(component, begin, end)
+        self.ner_type = None
 
-    class PredicateLink(Link):
-        parent_type = "PredicateMention"
-        child_type = "PredicateArgument"
 
-        def __init__(self, component: str, parent_id: str = None,
-                     child_id: str = None, tid: str = None):
-            super().__init__(component, parent_id, child_id, tid)
-            self.arg_type = None
+class PredicateArgument(Annotation):
+    pass
 
-    class PredicateMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
 
-    class CoreferenceGroup(Group):
-        member_type = "CoreferenceMention"
+class PredicateMention(Annotation):
+    pass
 
-        def __init__(self, component: str, tid: str = None):
-            super().__init__(component, tid)
-            self.coref_type = None
 
-    class CoreferenceMention(Annotation):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
+class PredicateLink(Link):
+    parent_type = "PredicateMention"
+    child_type = "PredicateArgument"
+
+    def __init__(self, component: str, parent_id: Optional[str] = None,
+                 child_id: Optional[str] = None):
+        super().__init__(component, parent_id, child_id)
+        self.arg_type = None
+
+
+class CoreferenceGroup(Group):
+    member_type = "CoreferenceMention"
+
+    def __init__(self, component: str, members: Optional[Set[str]] = None):
+        super().__init__(component, members)
+        self.coref_type = None
+
+
+class CoreferenceMention(Annotation):
+    pass

@@ -1,6 +1,8 @@
 from nltk import pos_tag
+
 from nlp.pipeline.processors import PackProcessor
-from nlp.pipeline.data import DataPack, BaseOntology
+from nlp.pipeline.data import DataPack
+from nlp.pipeline.data.ontology import base_ontology
 
 __all__ = [
     "NLTKPOSTagger"
@@ -12,7 +14,7 @@ class NLTKPOSTagger(PackProcessor):
     def __init__(self):
         super().__init__()
 
-        self.ontology = BaseOntology  # should specify for each pipeline
+        self.ontology = base_ontology  # should specify for each pipeline
         self.token_component = None
 
     def _process(self, input_pack: DataPack):
@@ -25,7 +27,7 @@ class NLTKPOSTagger(PackProcessor):
             token_texts = [token.text for token in token_entries]
             taggings = pos_tag(token_texts)
             for token, tag in zip(token_entries, taggings):
-                token.pos_tag = tag
+                token.pos_tag = tag[1]
 
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(

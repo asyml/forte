@@ -1,27 +1,17 @@
 """
 The reader that reads CoNLL ner_data into our internal json data format.
 """
-import os
 import codecs
-from typing import Iterator
-from nlp.pipeline.data.readers.file_reader import MonoFileReader
+import os
+from typing import Iterator, no_type_check
+
+from nlp.pipeline.data.ontology import conll03_ontology
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.base_ontology import BaseOntology
+from nlp.pipeline.data.readers.file_reader import MonoFileReader
 
 __all__ = [
-    "CoNLL03Ontology",
     "CoNLL03Reader"
 ]
-
-
-class CoNLL03Ontology(BaseOntology):
-    class Token(BaseOntology.Token):
-        def __init__(self, component: str, begin: int, end: int,
-                     tid: str = None):
-            super().__init__(component, begin, end, tid)
-            self.chunk_tag = None
-            self.pos_tag = None
-            self.ner_tag = None
 
 
 class CoNLL03Reader(MonoFileReader):
@@ -34,9 +24,10 @@ class CoNLL03Reader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
+
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
-        self.ner_ontology = CoNLL03Ontology
+        self.ner_ontology = conll03_ontology
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -65,7 +56,6 @@ class CoNLL03Reader(MonoFileReader):
 
             if line != "" and not line.startswith("#"):
                 conll_components = line.split()
-                word_index_in_sent = conll_components[0]
                 word = conll_components[1]
                 pos_tag = conll_components[2]
                 chunk_id = conll_components[3]
@@ -77,7 +67,7 @@ class CoNLL03Reader(MonoFileReader):
                 # add tokens
                 kwargs_i = {"pos_tag": pos_tag, "chunk_tag": chunk_id,
                             "ner_tag": ner_tag}
-                token = self.ner_ontology.Token(
+                token = self.ner_ontology.Token(  # type: ignore
                     self.component_name, word_begin, word_end
                 )
 
@@ -93,8 +83,8 @@ class CoNLL03Reader(MonoFileReader):
                     # skip consecutive empty lines
                     continue
                 # add sentence
-                sent = self.ner_ontology.Sentence(
-                    self.component_name, sentence_begin, offset-1
+                sent = self.ner_ontology.Sentence(  # type: ignore
+                    self.component_name, sentence_begin, offset - 1
                 )
                 self.current_datapack.add_entry(sent)
 
@@ -107,6 +97,7 @@ class CoNLL03Reader(MonoFileReader):
         doc.close()
         return self.current_datapack
 
+    @no_type_check
     def _record_fields(self):
         self.current_datapack.record_fields(
             ["span"],

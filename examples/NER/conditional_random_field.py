@@ -8,7 +8,6 @@ import logging
 import torch
 
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -449,7 +448,7 @@ class ConditionalRandomField(torch.nn.Module):
             tag_sequence[0, start_tag] = 0.0
             # At steps 1, ..., sequence_length we just use the
             # incoming prediction
-            tag_sequence[1 : (sequence_length + 1), :num_tags] = prediction[
+            tag_sequence[1:(sequence_length + 1), :num_tags] = prediction[
                 :sequence_length
             ]
             # And at the last timestep we must have the END_TAG
@@ -486,8 +485,9 @@ def viterbi_decode(
         A tensor of shape (num_tags, num_tags) representing the binary
         potentials for transitioning between a given pair of tags.
     tag_observations : Optional[List[int]], optional, (default = None)
-        A list of length ``sequence_length`` containing the class ids of observed
-        elements in the sequence, with unobserved elements being set to -1.
+        A list of length ``sequence_length`` containing the class ids of
+        observed elements in the sequence, with unobserved elements being set
+        to -1.
         Note that it is possible to provide evidence which results in
         degenerate labelings if the sequences of tags you provide as evidence
         cannot transition between each other, or those transitions are

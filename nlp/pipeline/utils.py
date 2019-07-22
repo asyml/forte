@@ -10,6 +10,7 @@ __all__ = [
     "get_qual_name",
 ]
 
+
 def get_full_component_name(o):
     """
     Returns the full module and class name of an object o.
@@ -63,6 +64,7 @@ def get_class(class_name, module_paths=None):
             "Class not found in {}: {}".format(module_paths, class_name))
 
     return class_
+
 
 def get_qual_name(o, lower=False):
     """

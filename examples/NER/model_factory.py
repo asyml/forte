@@ -2,20 +2,15 @@ import logging
 import os
 from typing import Tuple
 
-import texar
 import torch
+from torch import nn
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
+import texar
 from texar.hyperparams import HParams
 from texar.modules.embedders import WordEmbedder
-from torch import nn
 
-from examples.NER.conditional_random_field import (
-    ConditionalRandomField,
-)
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+from examples.NER.conditional_random_field import ConditionalRandomField
 
 
 class BiRecurrentConvCRF(nn.Module):
@@ -289,7 +284,7 @@ def get_logger(
     return logger
 
 
-def batch_size_fn(new: Tuple, count: int, size_so_far: int):
+def batch_size_fn(new: Tuple, count: int, size_so_far: int):  # pylint: disable=unused-argument
     if count == 1:
         batch_size_fn.max_length = 0
     batch_size_fn.max_length = max(batch_size_fn.max_length, len(new[0]))

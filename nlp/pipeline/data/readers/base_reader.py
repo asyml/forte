@@ -1,12 +1,13 @@
 """
 Base reader type to be inherited by all readers.
 """
-import os
-import pathlib
-from typing import Iterator
+from pathlib import Path
+from typing import Iterator, Optional
+
 import jsonpickle
+
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.utils import *
+from nlp.pipeline.utils import get_full_component_name
 
 __all__ = [
     "BaseReader",
@@ -19,9 +20,8 @@ class BaseReader:
     """
     def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
-        self._cache_directory = None
+        self._cache_directory: Optional[Path] = None
         self.component_name = get_full_component_name(self)
-        self.current_datapack = None
 
     def cache_data(self, cache_directory: str) -> None:
         """Specify the path to the cache directory.
@@ -35,17 +35,20 @@ class BaseReader:
         exist, we will `create` it on our first pass through the data (using
         :func:`serialize_instance`).
         """
-        self._cache_directory = pathlib.Path(cache_directory)
-        os.makedirs(self._cache_directory, exist_ok=True)
+        self._cache_directory = Path(cache_directory)
+        Path.mkdir(self._cache_directory, exist_ok=True)
 
-    def _get_cache_location_for_file_path(self, file_path: str) -> str:
+    def _get_cache_location_for_file_path(self,
+                                          file_path: str) -> Optional[Path]:
+        if self._cache_directory is None:
+            return None
         while file_path[-1] == '/':
             file_path = file_path[:-1]
-        return f"{self._cache_directory / file_path.split('/')[-1]}.cache"
+        return Path(f"{self._cache_directory / file_path.split('/')[-1]}.cache")
 
     def _instances_from_cache_file(self,
-                                   cache_filename: str) -> Iterator[DataPack]:
-        with open(cache_filename, "r") as cache_file:
+                                   cache_filename: Path) -> Iterator[DataPack]:
+        with cache_filename.open("r") as cache_file:
             for line in cache_file:
                 yield self.deserialize_instance(line.strip())
 
@@ -63,14 +66,14 @@ class BaseReader:
         """
         return jsonpickle.decode(string)
 
-    def dataset_iterator(self, *args):
+    def dataset_iterator(self, *args, **kwargs):
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.
         """
         raise NotImplementedError
 
-    def read(self, *args) -> DataPack:
+    def read(self, *args, **kwargs) -> DataPack:
         """
         Read a **single** document from the dataset.
         """

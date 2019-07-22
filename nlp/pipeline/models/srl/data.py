@@ -3,8 +3,9 @@ from typing import List, NamedTuple, Tuple
 
 import numpy as np
 import texar as tx
-import torch
 from mypy_extensions import TypedDict
+
+import torch
 
 
 class SRLSpan(NamedTuple):
@@ -34,13 +35,6 @@ class Example(TypedDict):
     text: List[str]
     text_ids: np.ndarray
     srl: List[SRLSpan]
-
-
-class BatchExample(TypedDict):
-    text: List[List[str]]
-    text_ids: torch.LongTensor
-    length: torch.LongTensor
-    srl: List[List[SRLSpan]]
 
 
 class SRLSpanData(tx.data.DataBase[str, Example]):

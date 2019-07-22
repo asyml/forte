@@ -1,6 +1,7 @@
 from abc import abstractmethod
-from nlp.pipeline.processors import BaseProcessor
+
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
     "PackProcessor",
@@ -11,6 +12,7 @@ class PackProcessor(BaseProcessor):
     """
     The base class of processors that process one pack each time.
     """
+
     def __init__(self):
         super().__init__()
         self._overwrite = True
@@ -31,5 +33,3 @@ class PackProcessor(BaseProcessor):
     @abstractmethod
     def _process(self, input_pack: DataPack):
         pass
-
-

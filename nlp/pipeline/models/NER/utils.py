@@ -2,7 +2,6 @@ import logging
 import os
 import random
 import re
-from typing import List
 from typing import Tuple
 
 import numpy as np
@@ -175,4 +174,3 @@ def set_random_seed(seed):
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed(seed)
-

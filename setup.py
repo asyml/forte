@@ -19,9 +19,12 @@ setuptools.setup(
     install_requires=[
         'sortedcontainers',
         'numpy',
+        'nltk',
         'jsonpickle'
     ],
     extras_require={
+        'ner': ['pyyaml', 'torch', 'torchtext', 'tqdm'],
+        'srl': ['mypy-extensions'],
     },
     package_data={
     },

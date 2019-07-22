@@ -4,13 +4,14 @@ File readers.
 import logging
 import os
 from abc import abstractmethod
-from typing import Iterator, List
+from pathlib import Path
+from typing import Iterator, List, Optional, Union
+
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
-from nlp.pipeline.data.base_ontology import BaseOntology
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 __all__ = [
     "MonoFileReader",
@@ -28,11 +29,12 @@ class MonoFileReader(BaseReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
-
     def __init__(self, lazy: bool = True) -> None:
         super().__init__(lazy)
+        self.current_datapack: DataPack = DataPack()
 
-    def dataset_iterator(self, dir_path: str) -> Iterator[DataPack]:
+    def dataset_iterator(  # type: ignore
+            self, dir_path: str) -> Union[List[DataPack], Iterator[DataPack]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
 
@@ -43,19 +45,19 @@ class MonoFileReader(BaseReader):
         if not os.path.exists(dir_path):
             raise FileNotFoundError(f"{dir_path} does not exist.")
 
-        if self._cache_directory:
+        cache_file = None
+        if self._cache_directory is not None:
             cache_file = self._get_cache_location_for_file_path(dir_path)
-        else:
-            cache_file = None
 
-        has_cache = cache_file and os.path.exists(cache_file)
+        has_cache = cache_file is not None and cache_file.exists()
 
         if self.lazy:
             return self._lazy_dataset_iterator(dir_path, cache_file, has_cache)
 
         if has_cache:
             logger.info("reading from cache file %s", cache_file)
-            return list(self._instances_from_cache_file(cache_file))
+            return list(
+                self._instances_from_cache_file(cache_file))  # type: ignore
 
         logger.info("reading from original files in %s", dir_path)
         datapacks: List[DataPack] = []
@@ -71,11 +73,12 @@ class MonoFileReader(BaseReader):
         return datapacks
 
     def _lazy_dataset_iterator(self, dir_path: str,
-                               cache_file: str,
+                               cache_file: Optional[Path],
                                has_cache: bool):
         if has_cache:
             logger.info("reading from cache file %s", cache_file)
-            yield from self._instances_from_cache_file(cache_file)
+            yield from self._instances_from_cache_file(  # type: ignore
+                cache_file)
         else:
             logger.info("reading from original files in %s", dir_path)
             for file_path in self.dataset_path_iterator(dir_path):
@@ -95,9 +98,9 @@ class MonoFileReader(BaseReader):
             for data_file in files:
                 yield os.path.join(root, data_file)
 
-    def read(self,
+    def read(self,  # type: ignore
              file_path: str,
-             cache_file: str = None,
+             cache_file: Optional[Path] = None,
              read_from_cache: bool = True,
              append_to_cache: bool = False) -> DataPack:
         """
@@ -127,7 +130,7 @@ class MonoFileReader(BaseReader):
         if cache_file is None and self._cache_directory:
             cache_file = self._get_cache_location_for_file_path(file_path)
 
-        if read_from_cache and cache_file and os.path.exists(cache_file):
+        if read_from_cache and cache_file and cache_file.exists():
             logger.info("reading from cache file %s", cache_file)
             datapack = next(self._instances_from_cache_file(cache_file))
 
@@ -143,7 +146,7 @@ class MonoFileReader(BaseReader):
             datapack = self._read_document(file_path)
             datapack.index.build_coverage_index(
                 datapack.annotations, datapack.links, datapack.groups,
-                outer_type=BaseOntology.Sentence
+                outer_type=base_ontology.Sentence
             )
             if not isinstance(datapack, DataPack):
                 raise ValueError(
@@ -155,10 +158,10 @@ class MonoFileReader(BaseReader):
             if cache_file:
                 logger.info("Caching datapack to %s", cache_file)
                 if append_to_cache:
-                    with open(cache_file, "a") as cache:
+                    with cache_file.open('a') as cache:
                         cache.write(self.serialize_instance(datapack) + "\n")
                 else:
-                    with open(cache_file, "w") as cache:
+                    with cache_file.open('w') as cache:
                         cache.write(self.serialize_instance(datapack) + "\n")
 
         return datapack

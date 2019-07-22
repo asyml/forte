@@ -1,10 +1,8 @@
 from contextlib import contextmanager
-from typing import (
-    Any, ContextManager, Dict, List, Optional, Tuple, Union, overload)
+from typing import Any, Dict, List, Optional, Tuple, Union, overload
 
 import numpy as np
 import texar as tx
-import texar.utils.rnn
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -14,7 +12,8 @@ LSTMState = Tuple[torch.Tensor, torch.Tensor]
 
 class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
     def __init__(self, input_size: int, hidden_size: int, dropout: float = 0.0):
-        nn.Module.__init__(self)  # skip super class constructor
+        # skip super class constructor
+        nn.Module.__init__(self)  # pylint: disable=non-parent-init-called
 
         self._input_size = input_size
         self._hidden_size = hidden_size
@@ -66,8 +65,7 @@ class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
         return (self._initial_hidden.expand(batch_size, -1),
                 self._initial_cell.expand(batch_size, -1))
 
-    def forward(self,  # type: ignore
-                input: torch.Tensor, state: Optional[LSTMState] = None) \
+    def forward(self, input: torch.Tensor, state: Optional[LSTMState] = None) \
             -> Tuple[torch.Tensor, LSTMState]:
         batch_size = input.size(0)
         if state is None:
@@ -95,7 +93,7 @@ class CustomBiLSTM(tx.modules.EncoderBase):
         self.bw_cells = nn.ModuleList()
         input_dim = self._hparams.input_dim
         hidden_dim = self._hparams.hidden_dim
-        for idx in range(self._hparams.num_layers):
+        for _ in range(self._hparams.num_layers):
             fw_cell = CustomLSTMCell(input_dim, hidden_dim)
             bw_cell = CustomLSTMCell(input_dim, hidden_dim)
             self.fw_cells.append(fw_cell)
@@ -117,8 +115,7 @@ class CustomBiLSTM(tx.modules.EncoderBase):
             "dropout": 0.2,
         }
 
-    def forward(self,  # type: ignore
-                inputs: torch.Tensor,
+    def forward(self, inputs: torch.Tensor,
                 sequence_length: Optional[torch.LongTensor] = None) \
             -> torch.Tensor:
         for idx in range(self._hparams.num_layers):
@@ -136,6 +133,8 @@ class CustomBiLSTM(tx.modules.EncoderBase):
 
 
 class CharCNN(tx.ModuleBase):
+    __torch_device__: torch.device
+
     def __init__(self, char_vocab: tx.data.Vocab, hparams=None):
         super().__init__(hparams)
 
@@ -206,7 +205,7 @@ class CharCNN(tx.ModuleBase):
                 *embed.size()[:2], pad_length)], dim=2)
         kernel_outputs = [kernel(embed) for kernel in self.cnn_kernels]
         cnn_output = torch.cat(
-            [torch.max(out, dim=2).values for out in kernel_outputs], dim=1)
+            [torch.max(out, dim=2)[0] for out in kernel_outputs], dim=1)
 
         sent_cnn_outputs = torch.split(cnn_output, sent_lengths, dim=0)
         output = cnn_output.new_zeros(
@@ -223,6 +222,7 @@ def sum_list(xs: List[torch.Tensor]) -> torch.Tensor:
     return sum_list(xs[:mid]) + sum_list(xs[mid:])
 
 
+# pylint: disable=unused-argument,function-redefined
 @overload
 def batch_gather(tensors: torch.Tensor,
                  index: torch.LongTensor) -> torch.Tensor: ...
@@ -259,6 +259,9 @@ def batch_gather(tensors, index):
 
     gathered_tensors = tx.utils.map_structure(_gather_fn, tensors)
     return gathered_tensors
+
+
+# pylint: enable=unused-argument,function-redefined
 
 
 class MLP(tx.ModuleBase):
@@ -324,10 +327,10 @@ class ConcatInputMLP(tx.ModuleBase):
         }
 
     @contextmanager
-    def cache_results(self, inputs: List[torch.Tensor]) -> ContextManager[None]:
+    def cache_results(self, inputs: List[torch.Tensor]):
         self._cached_inputs = inputs
         yield
-        self._cached_inputs = None
+        del self._cached_inputs
 
     def forward(self, inputs: List[Union[torch.Tensor,
                                          List[Tuple[torch.Tensor,

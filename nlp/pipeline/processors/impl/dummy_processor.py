@@ -1,24 +1,14 @@
+from typing import Dict, Optional
+
 import numpy as np
-from typing import Dict
-from nlp.pipeline.processors.batch_processor import BatchProcessor
+
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers import OntonotesOntology
-from nlp.pipeline.data.base_ontology import Link
+from nlp.pipeline.data.ontology import relation_ontology
+from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 __all__ = [
-    "RelationOntology",
     "DummyRelationExtractor",
 ]
-
-
-class RelationOntology(OntonotesOntology):
-    class RelationLink(Link):
-        parent_type = "EntityMention"
-        child_type = "EntityMention"
-
-        def __init__(self, component: str, tid: str = None):
-            super().__init__(component, tid)
-            self.rel_type = None
 
 
 class DummyRelationExtractor(BatchProcessor):
@@ -35,23 +25,21 @@ class DummyRelationExtractor(BatchProcessor):
             "EntityMention": ["ner_type", "tid"]
         }
         self.batch_size = 4
-        self.ontology = RelationOntology
+        self.initialize_batcher()
+        self.ontology = relation_ontology
 
     def predict(self, data_batch: Dict):
-        contexts = data_batch["context"]
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 
-        pred = {
+        pred: Dict = {
             "RelationLink": {
                 "parent.tid": [],
                 "child.tid": [],
                 "rel_type": [],
             }
         }
-        for context, tid, entity in zip(contexts,
-                                        entities_tid,
-                                        entities_span):
+        for tid, entity in zip(entities_tid, entities_span):
             parent = []
             child = []
             ner_type = []
@@ -72,9 +60,10 @@ class DummyRelationExtractor(BatchProcessor):
 
         return pred
 
-    def pack(self, data_pack: DataPack, output_dict: Dict = None):
+    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
         """Add corresponding fields to data_pack"""
-        if output_dict is None: return
+        if output_dict is None:
+            return
 
         for i in range(len(output_dict["RelationLink"]["parent.tid"])):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
@@ -91,4 +80,3 @@ class DummyRelationExtractor(BatchProcessor):
             self.ontology.RelationLink.__name__,
             self.component_name,
         )
-
