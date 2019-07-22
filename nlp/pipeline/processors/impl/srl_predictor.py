@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Dict, List, Tuple, no_type_check
+from typing import Dict, List, Tuple
 
 import texar as tx
 import torch
