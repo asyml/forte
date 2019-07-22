@@ -1,16 +1,17 @@
 """ This class defines the core interchange format, deals with basic operations
 such as reading, writing, checking and indexing.
 """
-import logging
 import itertools
+import logging
 from collections import defaultdict
-from typing import (
-    Union, Dict, Optional, List, DefaultDict, Type, TypeVar, Iterable, Iterator)
+from typing import (DefaultDict, Dict, Iterable, Iterator, List, Optional,
+                    Type, TypeVar, Union, Any, Tuple)
+
 import numpy as np
 from sortedcontainers import SortedSet
-from nlp.pipeline.data.ontology.base_ontology import *
+from nlp.pipeline.data.ontology.base_ontology import (
+    Entry, Annotation, Link, Group, Sentence, Span)
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -18,7 +19,6 @@ __all__ = [
     "DataIndex",
     "DataPack",
 ]
-
 
 E = TypeVar('E', bound=Entry)
 
@@ -28,7 +28,7 @@ class Meta:
     Meta information of a datapack.
     """
 
-    def __init__(self, doc_id: str = None):
+    def __init__(self, doc_id: Optional[str] = None):
         self.doc_id = doc_id
         self.process_state = ''
         self.cache_state = ''
@@ -196,8 +196,8 @@ class DataIndex:
 
     def build_coverage_index(self,
                              annotations: SortedSet,
-                             links: List[Link] = None,
-                             groups: List[Group] = None,
+                             links: Optional[List[Link]] = None,
+                             groups: Optional[List[Group]] = None,
                              outer_type: Optional[type] = None,
                              inner_type: Optional[type] = None):
         # TODO: update index when add entries. how to be better than O(n^2)?
@@ -229,8 +229,10 @@ class DataIndex:
         """
 
         # Initialization
-        if outer_type is None: outer_type = Annotation
-        if inner_type is None: inner_type = Entry
+        if outer_type is None:
+            outer_type = Annotation
+        if inner_type is None:
+            inner_type = Entry
         if not issubclass(outer_type, Annotation):
             raise TypeError(f"'outer_type' must be a subclass of 'Annotation',"
                             f" but get {outer_type}.")
@@ -267,8 +269,8 @@ class DataIndex:
         if dict_name not in self.coverage_index.keys():
             self.coverage_index[dict_name] = defaultdict(set)
 
-        def add_covered_entries(outer, stop, step):
-            for k in range(i, stop, step):
+        def add_covered_entries(outer, start, stop, step):
+            for k in range(start, stop, step):
                 inner = annotations[k]
                 if self._in_span(inner, outer.span):
                     if isinstance(inner, inner_type):
@@ -299,11 +301,11 @@ class DataIndex:
                 elif not self._have_overlap(outer, inner):
                     break
 
-        for i in range(len(annotations)):
-            if not isinstance(annotations[i], outer_type):
+        for i, annotation in enumerate(annotations):
+            if not isinstance(annotation, outer_type):
                 continue
-            add_covered_entries(annotations[i], -1, -1)
-            add_covered_entries(annotations[i], len(annotations), 1)
+            add_covered_entries(annotation, i, -1, -1)
+            add_covered_entries(annotation, i, len(annotations), 1)
         self.coverage_index_switch[dict_name] = True
 
     def get_coverage_index(self,
@@ -362,15 +364,15 @@ class DataPack:
         doc_id (str, optional): A universal id of this ner_data pack.
     """
 
-    def __init__(self, text: str = None, doc_id: str = None):
+    def __init__(self, doc_id: Optional[str] = None):
         self.annotations = SortedSet()
         self.links: List[Link] = []
         self.groups: List[Group] = []
         self.meta: Meta = Meta(doc_id)
-        self.text: str = text
+        self.text = ""
 
         self.index: DataIndex = DataIndex(self)
-        self.internal_metas = defaultdict(InternalMeta)
+        self.internal_metas: Dict[str, InternalMeta] = defaultdict(InternalMeta)
 
     def add_or_get_entry(self, entry: Entry):
         """
@@ -419,7 +421,8 @@ class DataPack:
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)].tid
 
-    def record_fields(self, fields: list, entry_type: str, component: str = None):
+    def record_fields(self, fields: list, entry_type: str,
+                      component: Optional[str] = None):
         """Record in the internal meta that ``component`` has generated
         ``fields`` for ``entry_type``.
         """
@@ -446,14 +449,16 @@ class DataPack:
     def get_data(
             self,
             context_type: str,
-            annotation_types: Dict[str, Union[Dict, Iterable]] = None,
-            link_types: Dict[str, Union[Dict, Iterable]] = None,
-            group_types: Dict[str, Union[Dict, Iterable]] = None,
+            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
             offset: int = 0
-    ) -> Iterable[Dict]:
+    ) -> Iterator[Dict]:
         """
         Example:
+
             .. code-block:: python
+
                 antype = {
                     "Sentence":
                         {
@@ -496,7 +501,7 @@ class DataPack:
 
         if context_type.lower() == "document":
             # print(self.meta.doc_id)
-            data = dict()
+            data: Dict[str, Any] = dict()
             data["context"] = self.text
             data["offset"] = 0
 
@@ -525,7 +530,7 @@ class DataPack:
             sent_args = annotation_types.get(
                 "Sentence") if annotation_types else None
 
-            sent_component, unit, sent_fields = self._process_request_args(
+            sent_component, _, sent_fields = self._process_request_args(
                 "Sentence", sent_args
             )
 
@@ -616,13 +621,13 @@ class DataPack:
     def _generate_annotation_entry_data(
             self,
             a_type: str,
-            a_args: Union[Dict, List],
+            a_args: Union[Dict, Iterable],
             data: Dict,
             sent: Optional[Sentence]) -> Dict:
 
         component, unit, fields = self._process_request_args(a_type, a_args)
 
-        a_dict = dict()
+        a_dict: Dict[str, List] = dict()
 
         a_dict["span"] = []
         a_dict["text"] = []
@@ -660,10 +665,11 @@ class DataPack:
             a_dict["text"].append(annotation.text)
 
             for field in fields:
-                if field == "span" or field == "text": continue
+                if field in ("span", "text"):
+                    continue
                 if field == "context_span":
                     a_dict[field].append((annotation.span.begin - sent_begin,
-                                           annotation.span.end - sent_begin))
+                                          annotation.span.end - sent_begin))
                     continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
@@ -675,14 +681,14 @@ class DataPack:
                 a_dict[field].append(getattr(annotation, field))
 
             if unit is not None:
-                while not self.index._in_span(data[unit]["tid"][unit_begin],
+                while not self.index._in_span(data[unit]["tid"][unit_begin],  # pylint: disable=protected-access
                                               annotation.span):
                     unit_begin += 1
 
                 unit_span_begin = unit_begin
-                unit_span_end = unit_span_begin+1
+                unit_span_end = unit_span_begin + 1
 
-                while self.index._in_span(data[unit]["tid"][unit_span_end],
+                while self.index._in_span(data[unit]["tid"][unit_span_end],  # pylint: disable=protected-access
                                           annotation.span):
                     unit_span_end += 1
 
@@ -696,7 +702,7 @@ class DataPack:
     def _generate_link_entry_data(
             self,
             a_type: str,
-            a_args: Union[Dict, List],
+            a_args: Union[Dict, Iterable],
             data: Dict,
             sent: Optional[Sentence]) -> Dict:
 
@@ -705,7 +711,7 @@ class DataPack:
         if unit is not None:
             raise ValueError(f"Link entires cannot be indexed by {unit}.")
 
-        a_dict = dict()
+        a_dict: Dict[str, List] = dict()
         for field in fields:
             a_dict[field] = []
         a_dict["parent"] = []
@@ -743,7 +749,8 @@ class DataPack:
                 np.where(data[child_type]["tid"] == link.child)[0][0])
 
             for field in fields:
-                if field == "parent" or field == "child": continue
+                if field in ("parent", "child"):
+                    continue
                 if field not in self.internal_metas[a_type].fields_created[
                     component
                 ]:
@@ -761,10 +768,10 @@ class DataPack:
             self,
             batch_size: int,
             context_type: str,
-            annotation_types: Dict[str, Union[Dict, Iterable]] = None,
-            link_types: Dict[str, Union[Dict, Iterable]] = None,
-            group_types: Dict[str, Union[Dict, Iterable]] = None,
-            offset: int = 0) -> Iterable[Dict]:
+            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         """
         Try to get batches of size ``batch_size``. If the tail instances cannot
         make up a full batch, will generate a small batch with the tail
@@ -798,7 +805,7 @@ class DataPack:
             the number of instances in the batch.
         """
 
-        batch = {}
+        batch: Dict[str, Any] = {}
         cnt = 0
         for data in self.get_data(context_type, annotation_types, link_types,
                                   group_types, offset):
@@ -825,8 +832,8 @@ class DataPack:
 
     def get_entries(self,
                     entry_type: Type[E],
-                    range_annotation: Annotation = None,
-                    component: str = None) -> Iterator[E]:
+                    range_annotation: Optional[Annotation] = None,
+                    component: Optional[str] = None) -> Iterable[E]:
         """
         Get ``entry_type`` entries from the span of ``range_annotation`` in a
         DataPack.
@@ -870,6 +877,6 @@ class DataPack:
 
     def get(self,
             entry_type: Type[E],
-            range_annotation: Annotation = None,
-            component: str = None) -> Iterator[E]:
+            range_annotation: Optional[Annotation] = None,
+            component: Optional[str] = None) -> Iterable[E]:
         return self.get_entries(entry_type, range_annotation, component)

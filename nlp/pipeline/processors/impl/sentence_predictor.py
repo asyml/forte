@@ -1,4 +1,5 @@
 from nltk.tokenize import sent_tokenize
+
 from nlp.pipeline.processors import PackProcessor
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.ontology import base_ontology
@@ -12,6 +13,7 @@ class NLTKSentenceSegmenter(PackProcessor):
 
     def __init__(self):
         super().__init__()
+
         self.ontology = base_ontology  # should specify for each pipeline
 
     def _process(self, input_pack: DataPack):
@@ -35,4 +37,3 @@ class NLTKSentenceSegmenter(PackProcessor):
             self.ontology.Sentence.__name__,
             self.component_name,
         )
-

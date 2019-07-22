@@ -1,4 +1,5 @@
 from nltk.tokenize import word_tokenize
+
 from nlp.pipeline.processors import PackProcessor
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.ontology import base_ontology

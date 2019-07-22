@@ -1,8 +1,9 @@
-from typing import List, Iterator, Dict
+from typing import Iterator, List, Optional, Dict
+
 from nlp.pipeline.data import DataPack
-from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.data.readers import (
     CoNLL03Reader, OntonotesReader, PlainTextReader)
+from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.utils import get_class
 
 
@@ -60,14 +61,15 @@ class Pipeline:
     def process(self, text: str):
         datapack = DataPack()
         datapack.text = text
-        for processor_index, processor in enumerate(self.processors):
+        for processor in self.processors:
             if isinstance(processor, BatchProcessor):
                 processor.process(datapack, tail_instances=True)
             else:
                 processor.process(datapack)
         return datapack
 
-    def process_dataset(self, dataset: dict = None) -> Iterator[DataPack]:
+    def process_dataset(self,
+                        dataset: Optional[dict] = None) -> Iterator[DataPack]:
         """
         Process the documents in the dataset and return an iterator of DataPack.
 
@@ -113,7 +115,7 @@ class Pipeline:
         # process tail instances in the whole dataset
         for c_pack in list(self.current_packs):
             start = self._processors_index[c_pack.meta.process_state] + 1
-            for i, processor in enumerate(self.processors[start:]):
+            for processor in self.processors[start:]:
                 if isinstance(processor, BatchProcessor):
                     processor.process(c_pack, tail_instances=True)
                 else:

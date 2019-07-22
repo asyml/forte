@@ -3,8 +3,9 @@ This class defines the basic ontology supported by our system
 """
 from abc import abstractmethod
 from functools import total_ordering
-from typing import Iterable, Set, Union
-from nlp.pipeline.utils import *
+from typing import Iterable, Optional, Set, Union
+
+from nlp.pipeline.utils import get_class_name, get_qual_name
 
 __all__ = [
     "Span",
@@ -30,6 +31,7 @@ class Span:
     be totally ordered according to their :attr:`begin` as the first sort key
     and :attr:`end` as the second sort key.
     """
+
     def __init__(self, begin: int, end: int):
         self.begin = begin
         self.end = end
@@ -56,7 +58,7 @@ class Entry:
 
     def __init__(self, component: str):
         self.component = component
-        self.__tid = None
+        self.__tid: Optional[str] = None
         self.__data_pack = None
 
     @property
@@ -142,14 +144,14 @@ class Link(Entry):
     """Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
     """
-    parent_type = None
-    child_type = None
+    parent_type: Optional[str] = None
+    child_type: Optional[str] = None
 
-    def __init__(self, component: str,
-                 parent: str = None, child: str = None):
+    def __init__(self, component: str, parent_id: Optional[str] = None,
+                 child_id: Optional[str] = None):
         super().__init__(component)
-        self._parent = parent
-        self._child = child
+        self._parent = parent_id
+        self._child = child_id
 
     def hash(self):
         return hash((self.component, type(self), self.parent, self.child))
@@ -161,10 +163,6 @@ class Link(Entry):
     @property
     def parent(self):
         return self._parent
-
-    @property
-    def child(self):
-        return self._child
 
     @parent.setter
     def parent(self, parent_id: str):
@@ -183,6 +181,10 @@ class Link(Entry):
         if (self.data_pack is not None and
                 self.data_pack.index.link_index_switch):
             self.data_pack.index.update_link_index()
+
+    @property
+    def child(self):
+        return self._child
 
     @child.setter
     def child(self, child_id: str):
@@ -227,9 +229,9 @@ class Group(Entry):
     """Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    member_type = None
+    member_type: Optional[str] = None
 
-    def __init__(self, component: str, members: Set[str] = None):
+    def __init__(self, component: str, members: Optional[Set[str]] = None):
         super().__init__(component)
         self._members = set(members) if members else set()
 
@@ -271,11 +273,11 @@ class Group(Entry):
 class Token(Annotation):
     def __init__(self, component: str, begin: int, end: int):
         super().__init__(component, begin, end)
+        self.pos_tag = None
 
 
 class Sentence(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
+    pass
 
 
 class EntityMention(Annotation):
@@ -285,21 +287,19 @@ class EntityMention(Annotation):
 
 
 class PredicateArgument(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
+    pass
 
 
 class PredicateMention(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
+    pass
 
 
 class PredicateLink(Link):
     parent_type = "PredicateMention"
     child_type = "PredicateArgument"
 
-    def __init__(self, component: str, parent_id: str = None,
-                 child_id: str = None):
+    def __init__(self, component: str, parent_id: Optional[str] = None,
+                 child_id: Optional[str] = None):
         super().__init__(component, parent_id, child_id)
         self.arg_type = None
 
@@ -307,12 +307,10 @@ class PredicateLink(Link):
 class CoreferenceGroup(Group):
     member_type = "CoreferenceMention"
 
-    def __init__(self, component: str, members: Set[str] = None):
+    def __init__(self, component: str, members: Optional[Set[str]] = None):
         super().__init__(component, members)
         self.coref_type = None
 
 
 class CoreferenceMention(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
-
+    pass

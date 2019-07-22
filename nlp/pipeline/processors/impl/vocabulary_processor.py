@@ -2,7 +2,7 @@ import json
 import os
 import re
 from collections import Counter
-from typing import Dict, List, Any, Iterator
+from typing import Any, Counter as CounterType, Dict, Iterator, List, Optional
 
 import texar
 
@@ -16,14 +16,14 @@ __all__ = [
 ]
 
 
-class Alphabet(object):
+class Alphabet:
     def __init__(
             self,
             name,
-            word_cnt: Counter = None,
+            word_cnt: Optional[CounterType[str]] = None,
             keep_growing: bool = True,
             ignore_case_in_query: bool = True,
-            other_embeddings: Dict = None,
+            other_embeddings: Optional[Dict] = None,
     ):
         """
 
@@ -36,8 +36,8 @@ class Alphabet(object):
         self.__name = name
         self.reserved_tokens = texar.data.SpecialTokens
 
-        self.instance2index = {}
-        self.instances = []
+        self.instance2index: Dict = {}
+        self.instances: List = []
 
         for sp in [
             self.reserved_tokens.PAD,
@@ -167,7 +167,8 @@ class VocabularyProcessor(BaseProcessor):
         super().__init__()
         self.min_frequency = min_frequency
 
-    def process(self, input_pack: Iterator[DataPack]) -> Dict[str, Any]:
+    def process(self,  # type: ignore
+                input_pack: Iterator[DataPack]) -> Dict[str, Any]:
         """
 
         :param input_pack:
@@ -199,18 +200,20 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         else:
             return x
 
-    def process(self, input_pack: Iterator[DataPack]) -> List[Counter]:
+    def process(  # type: ignore
+            self,
+            input_pack: Iterator[DataPack]) -> List[CounterType[str]]:
         """
         :param input_pack: The ner_data packs to create vocabulary with
         :return:
             A list of five counters for different ner_data features, for words,
             characters, POS tags, chunk IDs and Name Entity Recognition
         """
-        word_cnt = Counter()
-        char_cnt = Counter()
-        pos_cnt = Counter()
-        chunk_cnt = Counter()
-        ner_cnt = Counter()
+        word_cnt: Counter = Counter()
+        char_cnt: Counter = Counter()
+        pos_cnt: Counter = Counter()
+        chunk_cnt: Counter = Counter()
+        ner_cnt: Counter = Counter()
 
         for data_pack in input_pack:
             for instance in data_pack.get_data(

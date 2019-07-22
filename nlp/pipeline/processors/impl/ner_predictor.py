@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -9,7 +9,6 @@ from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import conll03_ontology
-from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 logger = logging.getLogger(__name__)
@@ -40,9 +39,9 @@ class CoNLLNERPredictor(BatchProcessor):
 
     def initialize(self, resource: Resources):
         self.initialize_batcher()
-        self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
-        self.char_alphabet: Alphabet = resource.resources["char_alphabet"]
-        self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
+        self.word_alphabet = resource.resources["word_alphabet"]
+        self.char_alphabet = resource.resources["char_alphabet"]
+        self.ner_alphabet = resource.resources["ner_alphabet"]
         self.config_model = resource.resources["config_model"]
         self.config_data = resource.resources["config_data"]
         self.model = resource.resources["model"]
@@ -54,7 +53,7 @@ class CoNLLNERPredictor(BatchProcessor):
 
         tokens = data_batch["Token"]
 
-        pred_tokens, instances = [], []
+        instances = []
         for words in tokens["text"]:
             char_id_seqs = []
             word_ids = []
@@ -75,10 +74,10 @@ class CoNLLNERPredictor(BatchProcessor):
 
         self.model.eval()
         batch_data = self.get_batch_tensor(instances, device=self.device)
-        word, char, masks, lengths = batch_data
+        word, char, masks, unused_lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
-        pred = {"Token": {"ner_tag": [], "tid": []}}
+        pred: Dict = {"Token": {"ner_tag": [], "tid": []}}
 
         for i in range(len(tokens["tid"])):
             tids = tokens["tid"][i]
@@ -96,10 +95,10 @@ class CoNLLNERPredictor(BatchProcessor):
             else self.config_model.model_path
         ckpt = torch.load(p)
         logger.info(
-            "restoring NER model from {}".format(self.config_model.model_path))
+            "restoring NER model from %s", self.config_model.model_path)
         self.model.load_state_dict(ckpt["model"])
 
-    def pack(self, data_pack: DataPack, output_dict: Dict = None):
+    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
         """
         Write the prediction results back to datapack. If :attr:`_overwrite`
         is `True`, write the predicted ner_tag to the original tokens.
@@ -109,7 +108,7 @@ class CoNLLNERPredictor(BatchProcessor):
         if output_dict is None:
             return
 
-        ### Add tokens
+        # Add tokens
         current_entity_mention: Tuple[int, str] = (-1, "None")
 
         for i in range(len(output_dict["Token"]["tid"])):
@@ -144,7 +143,7 @@ class CoNLLNERPredictor(BatchProcessor):
                         entity.set_fields(**kwargs_i)
                         data_pack.add_or_get_entry(entity)
                     elif token.ner_tag[0] == "S":
-                        current_entity_mention: Tuple[int, str] = (
+                        current_entity_mention = (
                             token.span.begin,
                             token.ner_tag[2:],
                         )

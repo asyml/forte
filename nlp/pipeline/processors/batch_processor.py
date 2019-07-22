@@ -1,8 +1,9 @@
 from abc import abstractmethod
-from typing import Dict
-from nlp.pipeline.processors import BaseProcessor
-from nlp.pipeline.data.data_pack import DataPack
+from typing import Dict, Optional
+
 from nlp.pipeline.data import slice_batch
+from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.batchers import ProcessingBatcher
 
 __all__ = [
@@ -25,24 +26,19 @@ class BatchProcessor(BaseProcessor):
         self.batch_size = None
         self.batcher = None
 
-        self._overwrite = True
-
     def initialize_batcher(self, hard_batch: bool = True):
         self.batcher = ProcessingBatcher(self.batch_size, hard_batch)
 
-    def set_mode(self, overwrite: bool):
-        self._overwrite = overwrite
-
     def process(self, input_pack: DataPack, tail_instances: bool = False):
         if input_pack.meta.cache_state == self.component_name:
-            input_pack = None
+            input_pack = None  # type: ignore
         else:
             input_pack.meta.cache_state = self.component_name
 
         for batch in self.batcher.get_batch(input_pack,
                                             self.context_type,
                                             self.annotation_types,
-                                            tail_instances = tail_instances):
+                                            tail_instances=tail_instances):
             pred = self.predict(batch)
             self.pack_all(pred)
             self.finish_up_packs(-1)
@@ -84,7 +80,7 @@ class BatchProcessor(BaseProcessor):
         """
         pass
 
-    def finish_up_packs(self, end: int = None):
+    def finish_up_packs(self, end: Optional[int] = None):
         """
         Do finishing work for data packs in :attr:`data_pack_pool` from the
         beginning to ``end`` (``end`` is not included).
@@ -100,4 +96,5 @@ class BatchProcessor(BaseProcessor):
         for pack in self.batcher.data_pack_pool[:end]:
             self.finish(pack)
         self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]
-        self.batcher.current_batch_sources = self.batcher.current_batch_sources[end:]
+        self.batcher.current_batch_sources = \
+            self.batcher.current_batch_sources[end:]

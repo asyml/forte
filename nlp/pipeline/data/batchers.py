@@ -1,7 +1,8 @@
 from abc import abstractmethod
-from typing import Dict, Optional, List, Iterator, Iterable, Union
-import torch
+from typing import Dict, List, Iterator, Iterable, Union, Any, Optional, Tuple
+
 import texar as tx
+
 from nlp.pipeline.data.dataset import Dataset
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.io_utils import merge_batches, batch_instances
@@ -28,12 +29,11 @@ class DictData(tx.data.DataBase[Dict, Dict]):
             current CUDA device.
     """
 
-    def __init__(self, dataset: Iterator[Dict], hparams=None,
-                 device: Optional[torch.device] = None):
+    def __init__(self, dataset: Iterator[Dict], hparams=None):
 
         data: Iterator[Dict] = dataset
         source = tx.data.IterDataSource(data)
-        super().__init__(source, hparams, device)
+        super().__init__(source, hparams)
 
     @staticmethod
     def default_hparams():
@@ -41,11 +41,11 @@ class DictData(tx.data.DataBase[Dict, Dict]):
             **tx.data.DataBase.default_hparams(),
         }
 
-    def process(self, raw_example: Dict) -> Dict:
+    def process(self, raw_example: Dict) -> Dict:  # pylint: disable=no-self-use
         return raw_example
 
-    def collate(self, examples: List[Dict]) -> tx.data.Batch:
-        batch = {}
+    def collate(self, examples: List[Dict]) -> tx.data.Batch:  # pylint: disable=no-self-use
+        batch: Dict[str, Any] = {}
         for e in examples:
             for entry, fields in e.items():
                 if isinstance(fields, dict):
@@ -69,18 +69,17 @@ class TexarBatcher(Batcher):
 
     def __init__(self,
                  data_packs: Iterable[DataPack],
-                 batch_size: int = None,
+                 batch_size: Optional[int] = None,
                  hparams=None):
-        super().__init__(batch_size)
 
         if batch_size is not None:
             hparams["batch_size"] = batch_size
         dataset = Dataset(data_packs)
         data = DictData(dataset.get_data("sentence"), hparams=hparams)
-        self.batch_size = data.batch_size
+        super().__init__(data.batch_size)
         self.batch_iter = tx.data.DataIterator(data)
 
-    def get_batch(self) -> Iterator[tx.data.Batch]:
+    def get_batch(self) -> Iterator[tx.data.Batch]:   # type: ignore
         for batch in self.batch_iter:
             yield batch
 
@@ -91,6 +90,7 @@ class ProcessingBatcher(Batcher):
     dynamically and stores the current packs so that the processors can
     pack prediction results into the data packs.
     """
+
     def __init__(self, batch_size: int, hard_batch: bool = False):
         super().__init__(batch_size)
 
@@ -102,13 +102,14 @@ class ProcessingBatcher(Batcher):
         self.data_pack_pool: List[DataPack] = []
         self.current_batch_sources: List[int] = []
 
-    def get_batch(self,
-                  input_pack: DataPack,
-                  context_type: str,
-                  annotation_types: Dict[str, Union[Dict, Iterable]] = None,
-                  link_types: Dict[str, Union[Dict, Iterable]] = None,
-                  group_types: Dict[str, Union[Dict, Iterable]] = None,
-                  tail_instances: bool = False):
+    def get_batch(  # type: ignore
+            self,
+            input_pack: Optional[DataPack],
+            context_type: str,
+            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            tail_instances: bool = False):
 
         if input_pack is None:  # No more packs, return the tail instances
             if self.current_batch:
@@ -119,7 +120,8 @@ class ProcessingBatcher(Batcher):
         else:  # cache the new pack and generate batches
             self.data_pack_pool.append(input_pack)
             for (data_batch, instance_num) in self._get_data_batch_by_need(
-                    input_pack, context_type, annotation_types):
+                    input_pack, context_type, annotation_types, link_types,
+                    group_types):
 
                 self.current_batch = merge_batches(
                     [self.current_batch, data_batch])
@@ -139,10 +141,10 @@ class ProcessingBatcher(Batcher):
             self,
             data_pack: DataPack,
             context_type: str,
-            annotation_types: Dict[str, Union[Dict, Iterable]] = None,
-            link_types: Dict[str, Union[Dict, Iterable]] = None,
-            group_types: Dict[str, Union[Dict, Iterable]] = None,
-            offset: int = 0) -> Iterable[Dict]:
+            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         """
         Try to get batches of size ``batch_size``. If the tail instances cannot
         make up a full batch, will generate a small batch with the tail
@@ -168,4 +170,3 @@ class ProcessingBatcher(Batcher):
         if len(instances):
             batch = batch_instances(instances)
             yield (batch, len(instances))
-

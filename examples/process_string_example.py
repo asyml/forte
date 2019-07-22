@@ -1,11 +1,13 @@
 import pickle
 from termcolor import colored
 
-from nlp.pipeline.data.ontology.conll03_ontology import *
+from nlp.pipeline.data.ontology.conll03_ontology import (
+    Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.processors.impl import (NLTKPOSTagger, NLTKSentenceSegmenter,
-                                          NLTKWordTokenizer, CoNLLNERPredictor,
-                                          SRLPredictor)
+
+from nlp.pipeline.processors.impl import (
+    NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
+    CoNLLNERPredictor, SRLPredictor)
 
 
 def main():
@@ -24,9 +26,10 @@ def main():
 
     pl.processors.append(SRLPredictor(model_dir="./SRL_model/"))
 
-    text = "The plain green Norway spruce is displayed in the gallery's foyer. " \
-           "Wentworth worked as an assistant to sculptor Henry Moore in the " \
-           "late 1960s. His reputation as a sculptor grew in the 1980s." \
+    text = (
+        "The plain green Norway spruce is displayed in the gallery's foyer. "
+        "Wentworth worked as an assistant to sculptor Henry Moore in the "
+        "late 1960s. His reputation as a sculptor grew in the 1980s.")
 
     pack = pl.process(text)
 

@@ -1,10 +1,12 @@
 import logging
-from nlp.pipeline.trainer.base_trainer import BaseTrainer
-from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.processors import BaseProcessor
+from typing import Optional
+
 from nlp.pipeline.common.evaluation import Evaluator
+from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.readers.base_reader import BaseReader
-logging.basicConfig(level=logging.INFO)
+from nlp.pipeline.processors import BaseProcessor
+from nlp.pipeline.trainer.base_trainer import BaseTrainer
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,9 +18,9 @@ class TrainPipeline:
             dev_reader: BaseReader,
             # TODO: Let's define the config system.
             # config,
-            resource: Resources = None,
-            evaluator: Evaluator = None,
-            predictor: BaseProcessor = None,
+            resource: Resources,
+            evaluator: Optional[Evaluator] = None,
+            predictor: Optional[BaseProcessor] = None,
     ):
         resource.save()
         # resource = Resources(config)

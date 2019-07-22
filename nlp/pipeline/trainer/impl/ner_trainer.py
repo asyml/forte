@@ -1,7 +1,7 @@
 import logging
 import random
 import time
-from typing import Iterator
+from typing import Iterator, Optional
 from typing import List, Tuple
 
 import numpy as np
@@ -9,9 +9,8 @@ import torch
 import torchtext
 from tqdm import tqdm
 
-from nlp.pipeline.processors.impl.vocabulary_processor import Alphabet
-from nlp.pipeline.trainer.base_trainer import BaseTrainer
 from nlp.pipeline.common.resources import Resources
+from nlp.pipeline.trainer.base_trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class CoNLLNERTrainer(BaseTrainer):
         self.normalize_func = None
         self.device = None
         self.optim, self.trained_epochs = None, None
-        self.resource: Resources = None
+        self.resource: Optional[Resources] = None
 
         self.train_instances_cache = []
         # Just for recording
@@ -42,9 +41,9 @@ class CoNLLNERTrainer(BaseTrainer):
         self.resource = resource
         # This reference is for saving the checkpoints
 
-        self.word_alphabet: Alphabet = resource.resources["word_alphabet"]
-        self.char_alphabet: Alphabet = resource.resources["char_alphabet"]
-        self.ner_alphabet: Alphabet = resource.resources["ner_alphabet"]
+        self.word_alphabet = resource.resources["word_alphabet"]
+        self.char_alphabet = resource.resources["char_alphabet"]
+        self.ner_alphabet = resource.resources["ner_alphabet"]
         self.config_model = resource.resources["config_model"]
         self.config_data = resource.resources["config_data"]
         self.model = resource.resources["model"]
@@ -102,11 +101,11 @@ class CoNLLNERTrainer(BaseTrainer):
         :return:
         """
         counter = len(self.train_instances_cache)
-        logger.info("Total number of ner_data: %d" % counter)
+        logger.info("Total number of ner_data: %d", counter)
         lengths = sum(
             [len(instance[0]) for instance in self.train_instances_cache]
         )
-        logger.info("average sentence length: %f" % (lengths / counter))
+        logger.info("average sentence length: %f", (lengths / counter))
 
         train_err = 0.0
         train_total = 0.0
@@ -149,8 +148,8 @@ class CoNLLNERTrainer(BaseTrainer):
                 logger.info(log_info)
 
         logger.info(
-            "Epoch: %d train: %d loss: %.4f, time: %.2fs"
-            % (epoch, bid, train_err / train_total, time.time() - start_time)
+            "Epoch: %d train: %d loss: %.4f, time: %.2fs",
+            epoch, bid, train_err / train_total, time.time() - start_time,
         )
 
         self.trained_epochs = epoch
@@ -161,7 +160,7 @@ class CoNLLNERTrainer(BaseTrainer):
             )
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
-            logger.info(f"update learning rate to {lr}")
+            logger.info("update learning rate to %f", lr)
 
         self.request_eval()
         self.train_instances_cache.clear()
@@ -179,7 +178,7 @@ class CoNLLNERTrainer(BaseTrainer):
             b_data = val_data[i: i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
 
-            word, char, labels, masks, lengths = batch
+            word, char, labels, masks, unused_lengths = batch
             loss = self.model(word, char, labels, mask=masks)
             losses += loss.item()
 
@@ -206,8 +205,9 @@ class CoNLLNERTrainer(BaseTrainer):
             self.__past_dev_result["eval"]["f1"],
         )
         logger.info(
-            f"best val acc: {acc}, precision: {prec}, recall: {rec}, "
-            f"F1: {f1} % (epoch: {best_epoch})"
+            "best val acc: %f, precision: %f, recall: %f, "
+            "F1: %f %% (epoch: %d)",
+            acc, prec, rec, f1, best_epoch,
         )
 
         acc, prec, rec, f1 = (
@@ -217,8 +217,9 @@ class CoNLLNERTrainer(BaseTrainer):
             self.__past_dev_result["test"]["f1"],
         )
         logger.info(
-            f"best test acc: {acc}, precision: {prec}, recall: {rec}, "
-            f"F1: {f1} % (epoch: {best_epoch})"
+            "best test acc: %f, precision: %f, recall: %f, "
+            "F1: %f %% (epoch: %d)",
+            acc, prec, rec, f1, best_epoch,
         )
 
     def finish(self):
@@ -299,7 +300,8 @@ class CoNLLNERTrainer(BaseTrainer):
 
 def batch_size_fn(new: Tuple, count: int, _: int):
     if count == 1:
-        batch_size_fn.max_length = 0
-    batch_size_fn.max_length = max(batch_size_fn.max_length, len(new[0]))
-    elements = count * batch_size_fn.max_length
+        batch_size_fn.max_length = 0  # type: ignore
+    batch_size_fn.max_length = max(  # type: ignore
+        batch_size_fn.max_length, len(new[0]))  # type: ignore
+    elements = count * batch_size_fn.max_length  # type: ignore
     return elements
