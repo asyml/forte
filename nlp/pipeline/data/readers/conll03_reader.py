@@ -71,7 +71,7 @@ class CoNLL03Reader(MonoFileReader):
                 )
 
                 token.set_fields(**kwargs_i)
-                self.current_datapack.add_entry(token)
+                self.current_datapack.add_or_get_entry(token)
 
                 text += word + " "
                 offset = word_end + 1
@@ -85,7 +85,7 @@ class CoNLL03Reader(MonoFileReader):
                 sent = self.ner_ontology.Sentence(
                     self.component_name, sentence_begin, offset-1
                 )
-                self.current_datapack.add_entry(sent)
+                self.current_datapack.add_or_get_entry(sent)
 
                 sentence_begin = offset
                 sentence_cnt += 1

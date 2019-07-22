@@ -27,7 +27,7 @@ class NLTKSentenceSegmenter(PackProcessor):
                 sentence_entry = self.ontology.Sentence(self.component_name,
                                                         begin_pos,
                                                         end_pos)
-                input_pack.add_entry(sentence_entry)
+                input_pack.add_or_get_entry(sentence_entry)
 
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(

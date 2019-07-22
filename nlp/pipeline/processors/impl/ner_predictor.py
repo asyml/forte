@@ -142,7 +142,7 @@ class CoNLLNERPredictor(BatchProcessor):
                             token.span.end,
                         )
                         entity.set_fields(**kwargs_i)
-                        data_pack.add_entry(entity)
+                        data_pack.add_or_get_entry(entity)
                     elif token.ner_tag[0] == "S":
                         current_entity_mention: Tuple[int, str] = (
                             token.span.begin,
@@ -155,7 +155,7 @@ class CoNLLNERPredictor(BatchProcessor):
                             token.span.end,
                         )
                         entity.set_fields(**kwargs_i)
-                        data_pack.add_entry(entity)
+                        data_pack.add_or_get_entry(entity)
 
                 else:
                     # Only Add EntityMention when overwrite is False
@@ -166,7 +166,7 @@ class CoNLLNERPredictor(BatchProcessor):
                         orig_token.span.end,
                     )
                     token.set_fields(**kwargs_i)
-                    data_pack.add_entry(token)
+                    data_pack.add_or_get_entry(token)
 
     def _record_fields(self, data_pack: DataPack):
         if self._overwrite:

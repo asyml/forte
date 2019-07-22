@@ -119,10 +119,10 @@ class SRLPredictor(BatchProcessor):
         batch_predictions = inputs["predictions"]
         for predictions in batch_predictions:
             for pred, args in predictions.items():
-                pred_id = data_pack.add_entry(pred)
+                pred_id = data_pack.add_or_get_entry(pred)
                 for arg, label in args:
-                    arg_id = data_pack.add_entry(arg)
+                    arg_id = data_pack.add_or_get_entry(arg)
                     link = self.ontology.PredicateLink(
                         self.component_name, pred_id, arg_id)
                     link.set_fields(arg_type=label)
-                    data_pack.add_entry(link)
+                    data_pack.add_or_get_entry(link)

@@ -72,7 +72,7 @@ class DummyRelationExtractor(BatchProcessor):
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
                 link.parent = output_dict["RelationLink"]["parent.tid"][i][j]
                 link.child = output_dict["RelationLink"]["child.tid"][i][j]
-                data_pack.add_entry(link)
+                data_pack.add_or_get_entry(link)
 
     def _record_fields(self, data_pack: DataPack):
         data_pack.record_fields(

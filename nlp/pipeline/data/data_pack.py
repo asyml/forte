@@ -372,7 +372,7 @@ class DataPack:
         self.index: DataIndex = DataIndex(self)
         self.internal_metas = defaultdict(InternalMeta)
 
-    def add_entry(self, entry: Entry):
+    def add_or_get_entry(self, entry: Entry):
         """
         Try to add an :class:`Entry` object to the :class:`DataPack` object.
         If a same entry already exists, will not add the new one.

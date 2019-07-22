@@ -92,7 +92,7 @@ class OntonotesReader(MonoFileReader):
                     self.component_name, word_begin, word_end
                 )
                 token.set_fields(**kwargs_i)
-                self.current_datapack.add_entry(token)
+                self.current_datapack.add_or_get_entry(token)
 
                 # add entity mentions
                 current_entity_mention = self._process_entity_annotations(
@@ -114,7 +114,7 @@ class OntonotesReader(MonoFileReader):
                         self.component_name, word_begin, word_end
                     )
                     pred_mention.set_fields(**kwargs_i)
-                    pred_mention_id = self.current_datapack.add_entry(
+                    pred_mention_id = self.current_datapack.add_or_get_entry(
                         pred_mention
                     )
 
@@ -162,7 +162,7 @@ class OntonotesReader(MonoFileReader):
                         }
                         link = self.ontology.PredicateLink(self.component_name)
                         link.set_fields(**kwargs_i)
-                        self.current_datapack.add_entry(link)
+                        self.current_datapack.add_or_get_entry(link)
 
                 verbal_predicates = []
                 current_pred_arg = []
@@ -175,7 +175,7 @@ class OntonotesReader(MonoFileReader):
                     self.component_name, sentence_begin, offset - 1
                 )
                 sent.set_fields(**kwargs_i)
-                self.current_datapack.add_entry(sent)
+                self.current_datapack.add_or_get_entry(sent)
 
                 sentence_begin = offset
 
@@ -187,7 +187,7 @@ class OntonotesReader(MonoFileReader):
             group = self.ontology.CoreferenceGroup(self.component_name)
             group.set_fields(**kwargs_i)
             group.add_members(mention_list)
-            self.current_datapack.add_entry(group)
+            self.current_datapack.add_or_get_entry(group)
 
         kwargs_i = {"doc_id": document_id}
         self.current_datapack.set_meta(**kwargs_i)
@@ -215,7 +215,7 @@ class OntonotesReader(MonoFileReader):
                 self.component_name, current_entity_mention[0], word_end
             )
             entity.set_fields(**kwargs_i)
-            self.current_datapack.add_entry(entity)
+            self.current_datapack.add_or_get_entry(entity)
 
             current_entity_mention = None
 
@@ -247,7 +247,7 @@ class OntonotesReader(MonoFileReader):
                 pred_arg = self.ontology.PredicateArgument(
                     self.component_name, arg_begin, word_end
                 )
-                pred_arg_id = self.current_datapack.add_entry(pred_arg)
+                pred_arg_id = self.current_datapack.add_or_get_entry(pred_arg)
 
                 verbal_pred_args[label_index].append((pred_arg_id, arg_type))
                 current_pred_arg[label_index] = None
@@ -273,7 +273,7 @@ class OntonotesReader(MonoFileReader):
                     coref_mention = self.ontology.CoreferenceMention(
                         self.component_name, word_begin, word_end
                     )
-                    coref_mention_id = self.current_datapack.add_entry(
+                    coref_mention_id = self.current_datapack.add_or_get_entry(
                         coref_mention
                     )
 
@@ -289,7 +289,7 @@ class OntonotesReader(MonoFileReader):
                 coref_mention = self.ontology.CoreferenceMention(
                     self.component_name, start, word_end
                 )
-                coref_mention_id = self.current_datapack.add_entry(
+                coref_mention_id = self.current_datapack.add_or_get_entry(
                     coref_mention
                 )
 
