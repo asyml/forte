@@ -8,9 +8,10 @@ from typing import (DefaultDict, Dict, Iterable, Iterator, List, Optional,
                     Type, TypeVar, Union, Any, Tuple)
 
 import numpy as np
-from sortedcontainers import SortedSet
-from nlp.pipeline.data.ontology.base_ontology import (
-    Entry, Annotation, Link, Group, Sentence, Span)
+from sortedcontainers import SortedList
+from nlp.pipeline.data.ontology.base_ontology import Sentence
+from nlp.pipeline.data.ontology import Entry, Annotation, Link, Group, Span
+from nlp.pipeline.utils import get_class_name
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +196,7 @@ class DataIndex:
                 self.group_index[member].add(group.tid)
 
     def build_coverage_index(self,
-                             annotations: SortedSet,
+                             annotations: SortedList,
                              links: Optional[List[Link]] = None,
                              groups: Optional[List[Group]] = None,
                              outer_type: Optional[type] = None,
@@ -365,7 +366,7 @@ class DataPack:
     """
 
     def __init__(self, doc_id: Optional[str] = None):
-        self.annotations = SortedSet()
+        self.annotations = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
         self.meta: Meta = Meta(doc_id)
@@ -383,9 +384,8 @@ class DataPack:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
 
         Returns:
-            If a same annotation already exists, returns the tid of the
-            existing annotation. Otherwise, return the tid of the annotation
-            just added.
+            If a same annotation already exists, returns the existing
+            annotation. Otherwise, return the (input) annotation just added.
         """
         if isinstance(entry, Annotation):
             target = self.annotations
@@ -417,9 +417,51 @@ class DataPack:
             if self.index.group_index_switch and isinstance(entry, Group):
                 self.index.update_group_index([entry])
 
-            return entry.tid
+            return entry
         # logger.debug(f"Annotation already exist {annotation.tid}")
-        return target[target.index(entry)].tid
+        return target[target.index(entry)]
+
+    def add_entry(self, entry: Entry):
+        """
+        Force add an :class:`Entry` object to the :class:`DataPack` object.
+        Allow duplicate entries in a datapack.
+
+        Args:
+            entry (Entry): An :class:`Entry` object to be added to the datapack.
+
+        Returns:
+            The input entry itself
+        """
+        if isinstance(entry, Annotation):
+            target = self.annotations
+        elif isinstance(entry, Link):
+            target = self.links
+        elif isinstance(entry, Group):
+            target = self.groups
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(entry)}. A valid entry "
+                f"should be an instance of Annotation, Link, or Group."
+            )
+
+        # add the entry to the target entry list
+        name = entry.__class__.__name__
+        entry.set_tid(str(self.internal_metas[name].id_counter))
+        entry.attach(self)
+        if isinstance(target, list):
+            target.append(entry)
+        else:
+            target.add(entry)
+        self.internal_metas[name].id_counter += 1
+
+        # update the ner_data pack index if needed
+        self.index.update_basic_index([entry])
+        if self.index.link_index_switch and isinstance(entry, Link):
+            self.index.update_link_index([entry])
+        if self.index.group_index_switch and isinstance(entry, Group):
+            self.index.update_group_index([entry])
+
+        return entry
 
     def record_fields(self, fields: list, entry_type: str,
                       component: Optional[str] = None):
@@ -731,8 +773,8 @@ class DataPack:
             if not isinstance(link, Link):
                 raise TypeError(f"expect Link object, but get {type(link)}")
 
-            parent_type = link.parent_type
-            child_type = link.child_type
+            parent_type = link.parent_type.__name__
+            child_type = link.child_type.__name__
 
             if parent_type not in data.keys():
                 raise KeyError(f"The Parent entry of {a_type} is not requested."

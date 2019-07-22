@@ -70,8 +70,12 @@ class DummyRelationExtractor(BatchProcessor):
                 link = self.ontology.RelationLink(
                     component=self.component_name)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
-                link.parent = output_dict["RelationLink"]["parent.tid"][i][j]
-                link.child = output_dict["RelationLink"]["child.tid"][i][j]
+                parent = data_pack.index.entry_index[
+                    output_dict["RelationLink"]["parent.tid"][i][j]]
+                link.set_parent(parent)
+                child = data_pack.index.entry_index[
+                    output_dict["RelationLink"]["child.tid"][i][j]]
+                link.set_child(child)
                 data_pack.add_or_get_entry(link)
 
     def _record_fields(self, data_pack: DataPack):
