@@ -8,9 +8,10 @@ from typing import (DefaultDict, Dict, Iterable, Iterator, List, Optional,
                     Type, TypeVar, Union, Any, Tuple)
 
 import numpy as np
-from sortedcontainers import SortedSet
-from nlp.pipeline.data.ontology.base_ontology import (
-    Entry, Annotation, Link, Group, Sentence, Span)
+from sortedcontainers import SortedList
+from nlp.pipeline.data.ontology.base_ontology import Sentence
+from nlp.pipeline.data.ontology import Entry, Annotation, Link, Group, Span
+
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +196,7 @@ class DataIndex:
                 self.group_index[member].add(group.tid)
 
     def build_coverage_index(self,
-                             annotations: SortedSet,
+                             annotations: SortedList,
                              links: Optional[List[Link]] = None,
                              groups: Optional[List[Group]] = None,
                              outer_type: Optional[type] = None,
@@ -365,7 +366,7 @@ class DataPack:
     """
 
     def __init__(self, doc_id: Optional[str] = None):
-        self.annotations = SortedSet()
+        self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
         self.meta: Meta = Meta(doc_id)
@@ -374,18 +375,18 @@ class DataPack:
         self.index: DataIndex = DataIndex(self)
         self.internal_metas: Dict[str, InternalMeta] = defaultdict(InternalMeta)
 
-    def add_entry(self, entry: Entry):
+    def add_or_get_entry(self, entry: Entry):
         """
         Try to add an :class:`Entry` object to the :class:`DataPack` object.
-        If a same entry already exists, will not add the new one.
+        If a same entry already exists, will return the existing annotation
+        instead of not add the new one.
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
 
         Returns:
-            If a same annotation already exists, returns the tid of the
-            existing annotation. Otherwise, return the tid of the annotation
-            just added.
+            If a same annotation already exists, returns the existing
+            annotation. Otherwise, return the (input) annotation just added.
         """
         if isinstance(entry, Annotation):
             target = self.annotations
@@ -417,15 +418,58 @@ class DataPack:
             if self.index.group_index_switch and isinstance(entry, Group):
                 self.index.update_group_index([entry])
 
-            return entry.tid
+            return entry
         # logger.debug(f"Annotation already exist {annotation.tid}")
-        return target[target.index(entry)].tid
+        return target[target.index(entry)]
 
-    def record_fields(self, fields: list, entry_type: str,
+    def add_entry(self, entry: Entry):
+        """
+        Force add an :class:`Entry` object to the :class:`DataPack` object.
+        Allow duplicate entries in a datapack.
+
+        Args:
+            entry (Entry): An :class:`Entry` object to be added to the datapack.
+
+        Returns:
+            The input entry itself
+        """
+        if isinstance(entry, Annotation):
+            target = self.annotations
+        elif isinstance(entry, Link):
+            target = self.links
+        elif isinstance(entry, Group):
+            target = self.groups
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(entry)}. A valid entry "
+                f"should be an instance of Annotation, Link, or Group."
+            )
+
+        # add the entry to the target entry list
+        name = entry.__class__.__name__
+        entry.set_tid(str(self.internal_metas[name].id_counter))
+        entry.attach(self)
+        if isinstance(target, list):
+            target.append(entry)
+        else:
+            target.add(entry)
+        self.internal_metas[name].id_counter += 1
+
+        # update the ner_data pack index if needed
+        self.index.update_basic_index([entry])
+        if self.index.link_index_switch and isinstance(entry, Link):
+            self.index.update_link_index([entry])
+        if self.index.group_index_switch and isinstance(entry, Group):
+            self.index.update_group_index([entry])
+
+        return entry
+
+    def record_fields(self, fields: List[str], entry_type: Type[Entry],
                       component: Optional[str] = None):
         """Record in the internal meta that ``component`` has generated
         ``fields`` for ``entry_type``.
         """
+        entry_type = entry_type.__name__
         if entry_type not in self.internal_metas.keys() or \
                 self.internal_metas[entry_type].default_component is None:
             self.internal_metas[entry_type].default_component = component
@@ -449,17 +493,15 @@ class DataPack:
     def get_data(
             self,
             context_type: str,
-            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
+            requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0
-    ) -> Iterator[Dict]:
+    ) -> Iterator[Dict[str, Any]]:
         """
         Example:
 
             .. code-block:: python
 
-                antype = {
+                requests = {
                     "Sentence":
                         {
                             "component": "dummy",
@@ -470,34 +512,35 @@ class DataPack:
                         "unit": "Token",
                     },
                 }
-                pack.get_data("sentence", antype)
+                pack.get_data("sentence", requests)
 
         Args:
             context_type (str): The granularity of the ner_data context, which
                 could be either `"sentence"` or `"document"`
-            annotation_types (dict): The annotation types and fields required.
-                The keys of the dict are the required annotation types and the
-                values could be a list, set, or tuple of field names. Users can
-                also specify the component from which the annotations are
-                generated by using dict as value. Note that for all annotations,
-                "text" and "span" are given by default.
-            link_types (dict): The link types and fields required.
-                The keys of the dict are the required link types and the
-                values could be a list, set, or tuple of field names. Users can
-                also specify the component from which the annotations are
-                generated. Note that for all links, "child" and "parent" are
+            requests (dict): The entry types and fields required.
+                The keys of the dict are the required entry types and the
+                value should be a listof field names. Users can also specify
+                the component from which the annotations are generated by using
+                dict as value. Note that for all annotations, "text" and "span"
+                are given by default; for all links, "child" and "parent" are
                 given by default.
-            group_types (dict): The group types and fields required.
-                The keys of the dict are the required group types and the
-                values could be a list, set, or tuple of field names. Users can
-                also specify the component from which the annotations are
-                generated.
             offset (int): Will skip the first `offset` instances and generate
                 ner_data from the `offset` + 1 instance.
         Returns:
             A ner_data generator, which generates one piece of ner_data (a dict
             containing the required annotations and context).
         """
+        annotation_types: Dict[Type[Annotation], Union[Dict, List]] = dict()
+        link_types: Dict[Type[Link], Union[Dict, List]] = dict()
+        group_types: Dict[Type[Group], Union[Dict, List]] = dict()
+        if requests is not None:
+            for key, value in requests.items():
+                if issubclass(key, Annotation):
+                    annotation_types[key] = value
+                elif issubclass(key, Link):
+                    link_types[key] = value
+                elif issubclass(key, Group):
+                    group_types[key] = value
 
         if context_type.lower() == "document":
             # print(self.meta.doc_id)
@@ -507,14 +550,15 @@ class DataPack:
 
             if annotation_types:
                 for a_type, a_args in annotation_types.items():
-                    data[a_type] = self._generate_annotation_entry_data(
-                        a_type, a_args, data, None
-                    )
+                    data[a_type.__name__] = \
+                        self._generate_annotation_entry_data(
+                            a_type, a_args, data, None
+                        )
 
             if link_types:
-                for a_type, a_args in link_types.items():
-                    data[a_type] = self._generate_link_entry_data(
-                        a_type, a_args, data, None
+                for l_type, l_args in link_types.items():
+                    data[l_type.__name__] = self._generate_link_entry_data(
+                        l_type, l_args, data, None
                     )
             yield data
 
@@ -527,11 +571,17 @@ class DataPack:
                     f"annotations'"
                 )
 
-            sent_args = annotation_types.get(
-                "Sentence") if annotation_types else None
+            sent_type = Sentence
+            sent_args = None
+            if annotation_types:
+                for a_type, a_args in annotation_types.items():
+                    if issubclass(a_type, Sentence):
+                        sent_type = a_type
+                        sent_args = a_args
+                        break
 
             sent_component, _, sent_fields = self._process_request_args(
-                "Sentence", sent_args
+                sent_type, sent_args
             )
 
             valid_sent_ids = (self.index.type_index["Sentence"]
@@ -540,7 +590,8 @@ class DataPack:
             skipped = 0
             # must iterate through a copy here
             for sent in list(self.annotations):
-                if sent.tid not in valid_sent_ids:
+                if (sent.tid not in valid_sent_ids or
+                        not isinstance(sent, sent_type)):
                     continue
                 if skipped < offset:
                     skipped += 1
@@ -559,22 +610,23 @@ class DataPack:
 
                     data[field] = getattr(sent, field)
 
-                if annotation_types is not None:
+                if annotation_types:
                     for a_type, a_args in annotation_types.items():
-                        if a_type == "Sentence":
+                        if issubclass(a_type, Sentence):
                             continue
 
-                        data[a_type] = self._generate_annotation_entry_data(
-                            a_type, a_args, data, sent
-                        )
-                if link_types is not None:
-                    for a_type, a_args in link_types.items():
-                        data[a_type] = self._generate_link_entry_data(
-                            a_type, a_args, data, sent
+                        data[a_type.__name__] = \
+                            self._generate_annotation_entry_data(
+                                a_type, a_args, data, sent
+                            )
+                if link_types:
+                    for l_type, l_args in link_types.items():
+                        data[l_type.__name__] = self._generate_link_entry_data(
+                            l_type, l_args, data, sent
                         )
 
-                if group_types is not None:
-                    for a_type, a_args in group_types.items():
+                if group_types:
+                    for g_type, g_args in group_types.items():  # pylint: disable=unused-variable
                         pass
 
                 yield data
@@ -582,7 +634,7 @@ class DataPack:
     def _process_request_args(self, a_type, a_args):
 
         # check the existence of ``a_type`` annotation in ``doc``
-        a_meta = self.internal_metas.get(a_type)
+        a_meta = self.internal_metas.get(a_type.__name__)
         if a_meta is None:
             raise AttributeError(
                 f"Document '{self.meta.doc_id}' has no '{a_type}' "
@@ -620,14 +672,14 @@ class DataPack:
 
     def _generate_annotation_entry_data(
             self,
-            a_type: str,
+            a_type: Type[Annotation],
             a_args: Union[Dict, Iterable],
             data: Dict,
             sent: Optional[Sentence]) -> Dict:
 
         component, unit, fields = self._process_request_args(a_type, a_args)
 
-        a_dict: Dict[str, List] = dict()
+        a_dict: Dict[str, Any] = dict()
 
         a_dict["span"] = []
         a_dict["text"] = []
@@ -644,10 +696,10 @@ class DataPack:
         # ``a_type`` annotations generated by ``component`` in this ``sent``
         if sent:
             valid_id = (self.index.coverage_index["Sentence-to-Entry"][sent.tid]
-                        & self.index.type_index[a_type]
+                        & self.index.type_index[a_type.__name__]
                         & self.index.component_index[component])
         else:
-            valid_id = (self.index.type_index[a_type]
+            valid_id = (self.index.type_index[a_type.__name__]
                         & self.index.component_index[component])
 
         sent_begin = sent.span.begin if sent else 0
@@ -657,6 +709,8 @@ class DataPack:
 
         for annotation in self.annotations[begin_index: end_index]:
             if annotation.tid not in valid_id:
+                continue
+            if not isinstance(annotation, a_type):
                 continue
 
             # we provide span, text (and also tid) by default
@@ -671,8 +725,8 @@ class DataPack:
                     a_dict[field].append((annotation.span.begin - sent_begin,
                                           annotation.span.end - sent_begin))
                     continue
-                if field not in self.internal_metas[a_type].fields_created[
-                    component
+                if field not in self.internal_metas[
+                    a_type.__name__].fields_created[component
                 ]:
                     raise AttributeError(
                         f"'{a_type}' annotation generated by "
@@ -701,7 +755,7 @@ class DataPack:
 
     def _generate_link_entry_data(
             self,
-            a_type: str,
+            a_type: Type[Link],
             a_args: Union[Dict, Iterable],
             data: Dict,
             sent: Optional[Sentence]) -> Dict:
@@ -711,7 +765,7 @@ class DataPack:
         if unit is not None:
             raise ValueError(f"Link entires cannot be indexed by {unit}.")
 
-        a_dict: Dict[str, List] = dict()
+        a_dict: Dict[str, Any] = dict()
         for field in fields:
             a_dict[field] = []
         a_dict["parent"] = []
@@ -728,11 +782,11 @@ class DataPack:
 
         for link_id in valid_id:
             link = self.index.entry_index[link_id]
-            if not isinstance(link, Link):
-                raise TypeError(f"expect Link object, but get {type(link)}")
+            if not isinstance(link, a_type):
+                continue
 
-            parent_type = link.parent_type
-            child_type = link.child_type
+            parent_type = link.parent_type.__name__
+            child_type = link.child_type.__name__
 
             if parent_type not in data.keys():
                 raise KeyError(f"The Parent entry of {a_type} is not requested."
@@ -751,8 +805,8 @@ class DataPack:
             for field in fields:
                 if field in ("parent", "child"):
                     continue
-                if field not in self.internal_metas[a_type].fields_created[
-                    component
+                if field not in self.internal_metas[
+                    a_type.__name__].fields_created[component
                 ]:
                     raise AttributeError(
                         f"'{a_type}' annotation generated by "
@@ -768,10 +822,8 @@ class DataPack:
             self,
             batch_size: int,
             context_type: str,
-            annotation_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            link_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            group_types: Optional[Dict[str, Union[Dict, List]]] = None,
-            offset: int = 0) -> Iterable[Tuple[Dict, int]]:
+            requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
+            offset: int = 0) -> Iterable[Tuple[Dict[str, Any], int]]:
         """
         Try to get batches of size ``batch_size``. If the tail instances cannot
         make up a full batch, will generate a small batch with the tail
@@ -782,21 +834,13 @@ class DataPack:
             batch_size (int): The number of instances in the data batch.
             context_type (str): The granularity of the data context, which
                 could be either `"sentence"` or `"document"`.
-            annotation_types (dict): The annotation types and fields required.
-                The keys of the dict are the required annotation types and the
-                values could be a list, set, or tuple of field names. Users can
-                also specify the component from which the annotations are
-                generated by using dict as value.
-            link_types (dict): The link types and fields required.
-                The keys of the dict are the required link types and the
-                values could be a list, set, or tuple of field names. Users can
-                also specify the component from which the annotations are
-                generated.
-            group_types (dict): The group types and fields required.
-                The keys of the dict are the required group types and the
-                values could be a list, set, or tuple of field names. Users can
-                also specify the component from which the annotations are
-                generated.
+            requests (dict): The entry types and fields required.
+                The keys of the dict are the required entry types and the
+                value should be a listof field names. Users can also specify
+                the component from which the annotations are generated by using
+                dict as value. Note that for all annotations, "text" and "span"
+                are given by default; for all links, "child" and "parent" are
+                given by default.
             offset (int): Will skip the first `offset` instances and generate
                 data from the `offset` + 1 instance.
         Returns:
@@ -807,8 +851,7 @@ class DataPack:
 
         batch: Dict[str, Any] = {}
         cnt = 0
-        for data in self.get_data(context_type, annotation_types, link_types,
-                                  group_types, offset):
+        for data in self.get_data(context_type, requests, offset):
             for entry, fields in data.items():
                 if isinstance(fields, dict):
                     if entry not in batch.keys():
@@ -845,7 +888,7 @@ class DataPack:
                 whole data_pack.
             component (str, optional): The component generating the entries
                 requested. If `None`, will return valid entries generated by
-                any component. #TODO:or should we return default component?
+                any component. #TODO: return default component
         """
         sent_begin = range_annotation.span.begin if range_annotation else 0
         sent_end = (range_annotation.span.end if range_annotation else

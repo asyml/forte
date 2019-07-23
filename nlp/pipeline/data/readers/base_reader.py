@@ -2,11 +2,12 @@
 Base reader type to be inherited by all readers.
 """
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Dict, Type, List, Union
 
 import jsonpickle
 
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.ontology import Entry
 from nlp.pipeline.utils import get_full_component_name
 
 __all__ = [
@@ -21,6 +22,7 @@ class BaseReader:
     def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
         self._cache_directory: Optional[Path] = None
+        self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_component_name(self)
 
     def cache_data(self, cache_directory: str) -> None:

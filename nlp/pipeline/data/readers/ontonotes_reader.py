@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import (DefaultDict, Iterator, List, Optional, Tuple,
                     Dict, Any, no_type_check)
 
-from nlp.pipeline.data.ontology import ontonotes_ontology
+from nlp.pipeline.data.ontology import ontonotes_ontology, Entry
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.file_reader import MonoFileReader
 
@@ -31,10 +31,21 @@ class OntonotesReader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
-
+    @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self.ontology = ontonotes_ontology
+        self.output_info = {
+            self.ontology.Sentence: ["speaker", "part_id", "span"],
+            self.ontology.Token: ["sense", "pos_tag", "span"],
+            self.ontology.EntityMention: ["ner_type", "span"],
+            self.ontology.PredicateMention:
+                ["pred_lemma", "pred_type", "span", "framenet_id"],
+            self.ontology.PredicateArgument: ["span"],
+            self.ontology.PredicateLink: ["parent", "child", "arg_type"],
+            self.ontology.CoreferenceMention: ["span"],
+            self.ontology.CoreferenceGroup: ["coref_type", "members"]
+        }
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -65,12 +76,12 @@ class OntonotesReader(MonoFileReader):
 
         # auxiliary structures
         current_entity_mention: Optional[Tuple[int, str]] = None
-        verbal_predicates: List[str] = []
+        verbal_predicates: List[Entry] = []
 
         current_pred_arg: List[Optional[Tuple[int, str]]] = []
-        verbal_pred_args: List[List[Tuple[str, str]]] = []
+        verbal_pred_args: List[List[Tuple[Entry, str]]] = []
 
-        groups: DefaultDict[int, List[str]] = defaultdict(list)
+        groups: DefaultDict[int, List[Entry]] = defaultdict(list)
         coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
 
         for line in doc:
@@ -102,7 +113,7 @@ class OntonotesReader(MonoFileReader):
                     self.component_name, word_begin, word_end
                 )
                 token.set_fields(**kwargs_i)
-                self.current_datapack.add_entry(token)
+                self.current_datapack.add_or_get_entry(token)
 
                 # add entity mentions
                 current_entity_mention = self._process_entity_annotations(
@@ -125,12 +136,12 @@ class OntonotesReader(MonoFileReader):
                         self.component_name, word_begin, word_end
                     )
                     pred_mention.set_fields(**kwargs_i)
-                    pred_mention_id = self.current_datapack.add_entry(
+                    pred_mention = self.current_datapack.add_or_get_entry(
                         pred_mention
                     )
 
                     if word_is_verbal_predicate:
-                        verbal_predicates.append(pred_mention_id)
+                        verbal_predicates.append(pred_mention)
 
                 if not verbal_pred_args:
                     current_pred_arg = [None for _ in pred_labels]
@@ -168,13 +179,11 @@ class OntonotesReader(MonoFileReader):
                     for arg in pred_arg:
                         kwargs_i = {
                             "arg_type": arg[1],
-                            "parent": predicate,
-                            "child": arg[0],
                         }
                         link = self.ontology.PredicateLink(  # type: ignore
-                            self.component_name)
+                            self.component_name, predicate, arg[0])
                         link.set_fields(**kwargs_i)
-                        self.current_datapack.add_entry(link)
+                        self.current_datapack.add_or_get_entry(link)
 
                 verbal_predicates = []
                 current_pred_arg = []
@@ -187,7 +196,7 @@ class OntonotesReader(MonoFileReader):
                     self.component_name, sentence_begin, offset - 1
                 )
                 sent.set_fields(**kwargs_i)
-                self.current_datapack.add_entry(sent)
+                self.current_datapack.add_or_get_entry(sent)
 
                 sentence_begin = offset
 
@@ -200,7 +209,7 @@ class OntonotesReader(MonoFileReader):
                 self.component_name)
             group.set_fields(**kwargs_i)
             group.add_members(mention_list)
-            self.current_datapack.add_entry(group)
+            self.current_datapack.add_or_get_entry(group)
 
         kwargs_i = {"doc_id": document_id}
         self.current_datapack.set_meta(**kwargs_i)
@@ -232,7 +241,7 @@ class OntonotesReader(MonoFileReader):
                 self.component_name, current_entity_mention[0], word_end
             )
             entity.set_fields(**kwargs_i)
-            self.current_datapack.add_entry(entity)
+            self.current_datapack.add_or_get_entry(entity)
 
             current_entity_mention = None
 
@@ -244,7 +253,7 @@ class OntonotesReader(MonoFileReader):
             word_begin: int,
             word_end: int,
             current_pred_arg: List[Optional[Tuple[int, str]]],
-            verbal_pred_args: List[List[Tuple[str, str]]],
+            verbal_pred_args: List[List[Tuple[Entry, str]]],
     ) -> None:
 
         for label_index, label in enumerate(labels):
@@ -268,9 +277,9 @@ class OntonotesReader(MonoFileReader):
                 pred_arg = self.ontology.PredicateArgument(  # type: ignore
                     self.component_name, arg_begin, word_end
                 )
-                pred_arg_id = self.current_datapack.add_entry(pred_arg)
+                pred_arg = self.current_datapack.add_or_get_entry(pred_arg)
 
-                verbal_pred_args[label_index].append((pred_arg_id, arg_type))
+                verbal_pred_args[label_index].append((pred_arg, arg_type))
                 current_pred_arg[label_index] = None
 
     def _process_coref_annotations(
@@ -279,7 +288,7 @@ class OntonotesReader(MonoFileReader):
             word_begin: int,
             word_end: int,
             coref_stacks: DefaultDict[int, List[int]],
-            groups: DefaultDict[int, List[str]],
+            groups: DefaultDict[int, List[Entry]],
     ) -> None:
 
         if label == "-":
@@ -295,11 +304,11 @@ class OntonotesReader(MonoFileReader):
                         self.ontology.CoreferenceMention(  # type: ignore
                         self.component_name, word_begin, word_end
                     )
-                    coref_mention_id = self.current_datapack.add_entry(
+                    coref_mention = self.current_datapack.add_or_get_entry(
                         coref_mention
                     )
 
-                    groups[group_id].append(coref_mention_id)
+                    groups[group_id].append(coref_mention)
                 else:
                     # The span is starting, so we record the index of the word.
                     group_id = int(segment[1:])
@@ -312,51 +321,8 @@ class OntonotesReader(MonoFileReader):
                     self.ontology.CoreferenceMention(  # type: ignore
                     self.component_name, start, word_end
                 )
-                coref_mention_id = self.current_datapack.add_entry(
+                coref_mention = self.current_datapack.add_or_get_entry(
                     coref_mention
                 )
 
-                groups[group_id].append(coref_mention_id)
-
-    @no_type_check
-    def _record_fields(self):
-        self.current_datapack.record_fields(
-            ["speaker", "part_id", "span"],
-            self.ontology.Sentence.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["sense", "pos_tag", "span"],
-            self.ontology.Token.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["ner_type", "span"],
-            self.ontology.EntityMention.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["pred_lemma", "pred_type", "span", "framenet_id"],
-            self.ontology.PredicateMention.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["span"],
-            self.ontology.PredicateArgument.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["parent", "child", "arg_type"],
-            self.ontology.PredicateLink.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["span"],
-            self.ontology.CoreferenceMention.__name__,
-            self.component_name,
-        )
-        self.current_datapack.record_fields(
-            ["coref_type", "members"],
-            self.ontology.CoreferenceGroup.__name__,
-            self.component_name,
-        )
+                groups[group_id].append(coref_mention)

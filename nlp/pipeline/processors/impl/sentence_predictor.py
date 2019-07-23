@@ -16,6 +16,10 @@ class NLTKSentenceSegmenter(PackProcessor):
 
         self.ontology = base_ontology  # should specify for each pipeline
 
+        self.output_info = {
+            self.ontology.Sentence: ["span"]
+        }
+
     def _process(self, input_pack: DataPack):
         text = input_pack.text
 
@@ -29,11 +33,4 @@ class NLTKSentenceSegmenter(PackProcessor):
                 sentence_entry = self.ontology.Sentence(self.component_name,
                                                         begin_pos,
                                                         end_pos)
-                input_pack.add_entry(sentence_entry)
-
-    def _record_fields(self, data_pack: DataPack):
-        data_pack.record_fields(
-            ["span"],
-            self.ontology.Sentence.__name__,
-            self.component_name,
-        )
+                input_pack.add_or_get_entry(sentence_entry)

@@ -7,7 +7,7 @@ import torch
 
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontology import ontonotes_ontology
+from nlp.pipeline.data.ontology import ontonotes_ontology, base_ontology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
@@ -30,15 +30,25 @@ class SRLPredictor(BatchProcessor):
     def __init__(self, model_dir: str):
         super().__init__()
 
+        self.ontology = ontonotes_ontology
         self.component_name = "srl_predictor"
+
         self.context_type = "sentence"
-        self.annotation_types = {
-            "Token": [],
+        self.input_info = {
+            base_ontology.Token: [],
         }
+        self.output_info = {
+            self.ontology.PredicateMention:  # type: ignore
+                ["pred_type", "span"],
+            self.ontology.PredicateArgument: ["span"],  # type: ignore
+            self.ontology.PredicateLink:  # type: ignore
+                ["parent", "child", "arg_type"],
+
+        }
+
         self.batch_size = 4
         self.initialize_batcher()
 
-        self.ontology = ontonotes_ontology
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
@@ -62,23 +72,6 @@ class SRLPredictor(BatchProcessor):
 
     def initialize(self, resource: Resources):
         raise NotImplementedError
-
-    def _record_fields(self, data_pack: DataPack):
-        data_pack.record_fields(
-            ["pred_type", "span"],
-            self.component_name,
-            self.ontology.PredicateMention.__name__,
-        )
-        data_pack.record_fields(
-            ["span"],
-            self.component_name,
-            self.ontology.PredicateArgument.__name__,
-        )
-        data_pack.record_fields(
-            ["parent", "child", "arg_type"],
-            self.component_name,
-            self.ontology.PredicateLink.__name__,
-        )
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
@@ -119,10 +112,10 @@ class SRLPredictor(BatchProcessor):
         batch_predictions = inputs["predictions"]
         for predictions in batch_predictions:
             for pred, args in predictions.items():
-                pred_id = data_pack.add_entry(pred)
+                pred = data_pack.add_or_get_entry(pred)
                 for arg, label in args:
-                    arg_id = data_pack.add_entry(arg)
+                    arg = data_pack.add_or_get_entry(arg)
                     link = self.ontology.PredicateLink(
-                        self.component_name, pred_id, arg_id)
+                        self.component_name, pred, arg)
                     link.set_fields(arg_type=label)
-                    data_pack.add_entry(link)
+                    data_pack.add_or_get_entry(link)

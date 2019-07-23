@@ -15,6 +15,9 @@ class NLTKWordTokenizer(PackProcessor):
         super().__init__()
         self.ontology = base_ontology  # should specify for each pipeline
         self.sentence_component = None
+        self.output_info = {
+            self.ontology.Token: ["span"]
+        }
 
     def _process(self, input_pack: DataPack):
         # TODO: need to think about how to specify component
@@ -27,11 +30,4 @@ class NLTKWordTokenizer(PackProcessor):
                 end_pos = begin_pos + len(word)
                 token = self.ontology.Token(
                     self.component_name, begin_pos + offset, end_pos + offset)
-                input_pack.add_entry(token)
-
-    def _record_fields(self, data_pack: DataPack):
-        data_pack.record_fields(
-            ["span"],
-            self.ontology.Token.__name__,
-            self.component_name,
-        )
+                input_pack.add_or_get_entry(token)

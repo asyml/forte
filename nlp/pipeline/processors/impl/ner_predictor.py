@@ -8,13 +8,14 @@ import torch
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontology import conll03_ontology
+from nlp.pipeline.data.ontology import conll03_ontology, base_ontology
 from nlp.pipeline.processors.batch_processor import BatchProcessor
 
 logger = logging.getLogger(__name__)
 
 
 class CoNLLNERPredictor(BatchProcessor):
+
     def __init__(self):
         super().__init__()
         self.model = None
@@ -26,16 +27,19 @@ class CoNLLNERPredictor(BatchProcessor):
         self.device = None
 
         self.train_instances_cache = []
+        self.ontology = conll03_ontology
 
-        # TODO(haoransh): reconsider these hard-coded parameters
         self.context_type = "sentence"
-        self.annotation_types = {
-            "Token": [],
-            "Sentence": [],  # span by default
+        self.input_info = {
+            base_ontology.Token: [],
+            base_ontology.Sentence: [],
         }
+        self.output_info = {
+            self.ontology.EntityMention: ["ner_type", "span"],
+        }
+
         self.batch_size = 3
         self.initialize_batcher()
-        self.ontology = conll03_ontology
 
     def initialize(self, resource: Resources):
         self.initialize_batcher()
@@ -141,7 +145,7 @@ class CoNLLNERPredictor(BatchProcessor):
                             token.span.end,
                         )
                         entity.set_fields(**kwargs_i)
-                        data_pack.add_entry(entity)
+                        data_pack.add_or_get_entry(entity)
                     elif token.ner_tag[0] == "S":
                         current_entity_mention = (
                             token.span.begin,
@@ -154,7 +158,7 @@ class CoNLLNERPredictor(BatchProcessor):
                             token.span.end,
                         )
                         entity.set_fields(**kwargs_i)
-                        data_pack.add_entry(entity)
+                        data_pack.add_or_get_entry(entity)
 
                 else:
                     # Only Add EntityMention when overwrite is False
@@ -165,25 +169,7 @@ class CoNLLNERPredictor(BatchProcessor):
                         orig_token.span.end,
                     )
                     token.set_fields(**kwargs_i)
-                    data_pack.add_entry(token)
-
-    def _record_fields(self, data_pack: DataPack):
-        if self._overwrite:
-            data_pack.record_fields(
-                ["ner_tag"], self.ontology.Token.__name__
-            )
-        else:
-            data_pack.record_fields(
-                ["ner_tag", "span"],
-                self.ontology.Token.__name__,
-                self.component_name,
-            )
-
-        data_pack.record_fields(
-            ["ner_type", "span"],
-            self.ontology.EntityMention.__name__,
-            self.component_name,
-        )
+                    data_pack.add_or_get_entry(token)
 
     def get_batch_tensor(self, data: List, device=None):
         """
@@ -249,20 +235,20 @@ class CoNLLNEREvaluator(Evaluator):
         for pred_sentence, tgt_sentence in zip(
                 pack.get_data(
                     context_type="sentence",
-                    annotation_types={
-                        "Token": {
+                    requests={
+                        base_ontology.Token: {
                             "component": self.test_component,
                             "fields": ["ner_tag"],
                         },
-                        "Sentence": [],  # span by default
+                        base_ontology.Sentence: [],  # span by default
                     },
                 ),
                 pack.get_data(
                     context_type="sentence",
-                    annotation_types={
-                        "Token": {
+                    requests={
+                        base_ontology.Token: {
                             "fields": ["chunk_tag", "pos_tag", "ner_tag"]},
-                        "Sentence": [],  # span by default
+                        base_ontology.Sentence: [],  # span by default
                     },
                 ),
         ):

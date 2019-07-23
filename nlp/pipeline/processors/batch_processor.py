@@ -1,10 +1,11 @@
 from abc import abstractmethod
-from typing import Dict, Optional
+from typing import Dict, Optional, Type, Union, List
 
 from nlp.pipeline.data import slice_batch
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.batchers import ProcessingBatcher
+from nlp.pipeline.data.ontology import Entry
 
 __all__ = [
     "BatchProcessor",
@@ -19,9 +20,7 @@ class BatchProcessor(BaseProcessor):
         super().__init__()
 
         self.context_type = None
-        self.annotation_types = None
-        self.link_types = None
-        self.group_types = None
+        self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
 
         self.batch_size = None
         self.batcher = None
@@ -37,7 +36,7 @@ class BatchProcessor(BaseProcessor):
 
         for batch in self.batcher.get_batch(input_pack,
                                             self.context_type,
-                                            self.annotation_types,
+                                            self.input_info,
                                             tail_instances=tail_instances):
             pred = self.predict(batch)
             self.pack_all(pred)
