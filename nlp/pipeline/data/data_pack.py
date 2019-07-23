@@ -381,7 +381,9 @@ class DataPack:
         """
         Try to add an :class:`Entry` object to the :class:`DataPack` object.
         If a same entry already exists, will return the existing annotation
-        instead of not add the new one.
+        instead of adding the new one. Note that we regard two entries to be
+        same if their :meth:`eq` have the same return value, and users could
+        override :meth:`eq` in their custom entry classes.
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
