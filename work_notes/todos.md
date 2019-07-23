@@ -10,15 +10,15 @@
         1. ResourceManager.put(resource_name, resource)
         1. zecong
 1. Reorg initialize and init: weiwei
-1. Ontology management: weiwei
-    1. When there are many ontologies, how can we simplify them?
-    1. How should we store them if the ontologies are all over the place.
+1. ~~Ontology management: weiwei~~
+    1. ~~When there are many ontologies, how can we simplify them?~~
+    1. ~~How should we store them if the ontologies are all over the place.~~
 1. Batching support.
     1. Add a customizable sharable Batching interface.
 1. ~~The process() function in Trainer need a name and a purpose.~~
     1. ~~Haoran gives a new name: consume()~~
-1. Logging clean up.
-    1. Delete logging config.
+1. ~~Logging clean up.~~
+    1. ~~Delete logging config.~~
 1. Assessing problem:
     1. Many fields should be stored as private, such as text, annotations in data_pack
     1. Use getter, setter and add_xxx function instead of directly manipulating the fields.

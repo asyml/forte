@@ -60,7 +60,7 @@ class Pipeline:
 
     def process(self, text: str):
         datapack = DataPack()
-        datapack.text = text
+        datapack.set_text(text)
         for processor in self.processors:
             if isinstance(processor, BatchProcessor):
                 processor.process(datapack, tail_instances=True)

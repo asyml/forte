@@ -55,11 +55,11 @@ class BaseReader:
                 yield self.deserialize_instance(line.strip())
 
     @staticmethod
-    def serialize_instance(instance: DataPack, unpicklable: bool = True) -> str:
+    def serialize_instance(instance: DataPack) -> str:
         """
         Serializes an ``DataPack`` to a string.
         """
-        return jsonpickle.encode(instance, unpicklable=unpicklable)
+        return jsonpickle.encode(instance, unpicklable=True)
 
     @staticmethod
     def deserialize_instance(string: str) -> DataPack:

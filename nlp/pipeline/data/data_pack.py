@@ -370,8 +370,7 @@ class DataPack:
     def __init__(self, doc_id: Optional[str] = None):
         self._text = ""
 
-        self.annotations: \
-            Union[SortedList[Annotation], List[Annotation]] = SortedList()
+        self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
 
