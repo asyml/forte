@@ -31,6 +31,8 @@ class Meta:
 
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id = doc_id
+        self.language = 'english'
+        self.span_unit = 'character'
         self.process_state = ''
         self.cache_state = ''
 
