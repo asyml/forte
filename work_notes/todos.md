@@ -15,8 +15,8 @@
     1. How should we store them if the ontologies are all over the place.
 1. Batching support.
     1. Add a customizable sharable Batching interface.
-1. The process() function in Trainer need a name and a purpose.
-    1. Haoran gives a new name: consume()
+1. ~~The process() function in Trainer need a name and a purpose.~~
+    1. ~~Haoran gives a new name: consume()~~
 1. Logging clean up.
     1. Delete logging config.
 1. Assessing problem:
@@ -36,3 +36,11 @@
     1. Can be used to deal with the train test problem
     1. Can be used to do ensemble: the center distribute the views to different 
     classes, and it will take them back for ensemble.
+
+## Symphony Problem:
+1. Make sure the pipeline is stateless, so that in symphony
+ you can start a new pipeline all the time.
+1. Let's try to have a JSON schema in the future.
+    1. Useful for validation
+1. Let the med team use the non-symphony version.
+1. Is it possible to ignore entries in JSON that the ontology that it doesn't know
