@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+from nlp.pipeline import config
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.processors.base_processor import BaseProcessor
 
@@ -27,8 +28,10 @@ class PackProcessor(BaseProcessor):
         Args:
             input_pack (DataPack): A datapack to be processed.
         """
+        config.working_component = self.component_name
         self._process(input_pack)
         self.finish(input_pack)
+        config.working_component = None
 
     @abstractmethod
     def _process(self, input_pack: DataPack):

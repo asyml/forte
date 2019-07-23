@@ -9,7 +9,6 @@ from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.ontology import base_ontology, Entry
 from nlp.pipeline.utils import get_full_component_name
 
-
 __all__ = [
     "BaseProcessor",
 ]

@@ -1,4 +1,4 @@
-from typing import Iterator, List, Optional, Dict
+from typing import Iterator, List, Optional, Dict, Union
 
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.readers import (
@@ -37,7 +37,7 @@ class Pipeline:
             for processor in self.processors:
                 processor.ontology = self._ontology
 
-    def initialize_dataset(self, dataset):
+    def initialize_dataset(self, dataset: Dict):
         self.dataset_dir = dataset["dataset_dir"]
         dataset_format = dataset["dataset_format"]
 
@@ -60,7 +60,7 @@ class Pipeline:
 
     def process(self, text: str):
         datapack = DataPack()
-        datapack.text = text
+        datapack.set_text(text)
         for processor in self.processors:
             if isinstance(processor, BatchProcessor):
                 processor.process(datapack, tail_instances=True)
@@ -68,19 +68,16 @@ class Pipeline:
                 processor.process(datapack)
         return datapack
 
-    def process_dataset(self,
-                        dataset: Optional[dict] = None) -> Iterator[DataPack]:
+    def process_dataset(
+            self,
+            dataset: Optional[Union[Dict, str]] = None) -> Iterator[DataPack]:
         """
         Process the documents in the dataset and return an iterator of DataPack.
 
         Args:
-            hard_batch (bool): Determines whether to process the dataset
-                strictly according to batch_size. (This will only influence
-                the efficiency of this method, but will not change the
-                result. For small datapacks, using hard batch should be more
-                time-saving; for large datapacks (avg instance num in each
-                datapack >> batch size), using soft batch is more
-                space-saving.)
+            dataset (str or dict, optional): the dataset to be processed. This
+                could be a str path to the dataset or a dict including the str
+                path and the data format.
         """
 
         if isinstance(dataset, dict):

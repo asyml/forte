@@ -31,7 +31,6 @@ class SRLPredictor(BatchProcessor):
         super().__init__()
 
         self.ontology = ontonotes_ontology
-        self.component_name = "srl_predictor"
 
         self.context_type = "sentence"
         self.input_info = {
@@ -94,14 +93,12 @@ class SRLPredictor(BatchProcessor):
             predictions: Prediction = {}
             for pred_idx, pred_args in srl_spans.items():
                 begin, end = word_spans[pred_idx]
-                pred_annotation = self.ontology.PredicateMention(
-                    self.component_name, begin, end)
+                pred_annotation = self.ontology.PredicateMention(begin, end)
                 arguments = []
                 for arg in pred_args:
                     begin = word_spans[arg.start][0]
                     end = word_spans[arg.end][1]
-                    arg_annotation = self.ontology.PredicateArgument(
-                        self.component_name, begin, end)
+                    arg_annotation = self.ontology.PredicateArgument(begin, end)
                     arguments.append((arg_annotation, arg.label))
                 predictions[pred_annotation] = arguments
             batch_predictions.append(predictions)
@@ -115,7 +112,6 @@ class SRLPredictor(BatchProcessor):
                 pred = data_pack.add_or_get_entry(pred)
                 for arg, label in args:
                     arg = data_pack.add_or_get_entry(arg)
-                    link = self.ontology.PredicateLink(
-                        self.component_name, pred, arg)
+                    link = self.ontology.PredicateLink(pred, arg)
                     link.set_fields(arg_type=label)
                     data_pack.add_or_get_entry(link)

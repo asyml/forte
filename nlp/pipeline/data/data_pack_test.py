@@ -100,16 +100,6 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(instances[0]["Token"]), 5)
         self.assertEqual(len(instances[0]["EntityMention"]), 3)
 
-        # case 5: get batch
-        batch_size = 2
-        instances = list(self.data_pack.get_data_batch(batch_size=batch_size,
-                                                       context_type="sentence",
-                                                       requests=requests))
-        self.assertEqual(len(instances[0][0].keys()), 9)
-        self.assertEqual(len(instances[0][0]["Token"]), 5)
-        self.assertEqual(len(instances[0][0]["EntityMention"]), 3)
-        self.assertEqual(len(instances[0][0]["Token"]["text"]), batch_size)
-
 
 if __name__ == '__main__':
     unittest.main()

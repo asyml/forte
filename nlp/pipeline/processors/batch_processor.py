@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Dict, Optional, Type, Union, List
 
+from nlp.pipeline import config
 from nlp.pipeline.data import slice_batch
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.processors.base_processor import BaseProcessor
@@ -29,6 +30,7 @@ class BatchProcessor(BaseProcessor):
         self.batcher = ProcessingBatcher(self.batch_size, hard_batch)
 
     def process(self, input_pack: DataPack, tail_instances: bool = False):
+        config.working_component = self.component_name
         if input_pack.meta.cache_state == self.component_name:
             input_pack = None  # type: ignore
         else:
@@ -43,6 +45,7 @@ class BatchProcessor(BaseProcessor):
             self.finish_up_packs(-1)
         if len(self.batcher.current_batch_sources) == 0:
             self.finish_up_packs()
+        config.working_component = None
 
     @abstractmethod
     def predict(self, data_batch: Dict):

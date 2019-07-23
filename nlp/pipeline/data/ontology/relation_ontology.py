@@ -8,6 +8,7 @@ This is also an example of extending the parent ontology by add a new entry.
 
 """
 # pylint: disable=unused-wildcard-import, wildcard-import, function-redefined
+from typing import Optional
 from nlp.pipeline.data.ontology.ontonotes_ontology import *
 from nlp.pipeline.data.ontology.top import Link
 
@@ -16,6 +17,7 @@ class RelationLink(Link):
     parent_type = EntityMention
     child_type = EntityMention
 
-    def __init__(self, component: str):
-        super().__init__(component)
+    def __init__(self, parent: Optional[EntityMention] = None,
+                 child: Optional[EntityMention] = None):
+        super().__init__(parent, child)
         self.rel_type = None
