@@ -43,7 +43,7 @@ class PlainTextReader(MonoFileReader):
                              "or dataset_iterator() to read a directory.")
         doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
         text = doc.read()
-        self.current_datapack.text = text
+        self.current_datapack.set_text(text)
         self.current_datapack.meta.doc_id = file_path
         doc.close()
         return self.current_datapack

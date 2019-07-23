@@ -96,7 +96,7 @@ class CoNLL03Reader(MonoFileReader):
                 sentence_cnt += 1
                 has_rows = False
 
-        self.current_datapack.text = text
+        self.current_datapack.set_text(text)
         self.current_datapack.meta.doc_id = file_path
         doc.close()
         return self.current_datapack
