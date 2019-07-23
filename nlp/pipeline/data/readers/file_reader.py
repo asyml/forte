@@ -7,6 +7,7 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Iterator, List, Optional, Union
 
+from nlp.pipeline import config
 from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
@@ -127,6 +128,7 @@ class MonoFileReader(BaseReader):
                 will overwrite the existing caching file. If ``True``, we will
                 cache the datapack append to end of the caching file.
         """
+        config.working_component = self.component_name
         if cache_file is None and self._cache_directory:
             cache_file = self._get_cache_location_for_file_path(file_path)
 
@@ -164,6 +166,7 @@ class MonoFileReader(BaseReader):
                     with cache_file.open('w') as cache:
                         cache.write(self.serialize_instance(datapack) + "\n")
 
+        config.working_component = None
         return datapack
 
     @abstractmethod

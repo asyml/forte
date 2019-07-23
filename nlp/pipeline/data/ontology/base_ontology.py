@@ -17,8 +17,8 @@ __all__ = [
 
 
 class Token(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
+    def __init__(self, begin: int, end: int):
+        super().__init__(begin, end)
         self.pos_tag = None
 
 
@@ -27,8 +27,8 @@ class Sentence(Annotation):
 
 
 class EntityMention(Annotation):
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component, begin, end)
+    def __init__(self, begin: int, end: int):
+        super().__init__(begin, end)
         self.ner_type = None
 
 
@@ -44,10 +44,10 @@ class PredicateLink(Link):
     parent_type = PredicateMention
     child_type = PredicateArgument
 
-    def __init__(self, component: str,
+    def __init__(self,
                  parent: Optional[PredicateMention] = None,
                  child: Optional[PredicateArgument] = None):
-        super().__init__(component, parent, child)
+        super().__init__(parent, child)
         self.arg_type = None
 
 
@@ -58,7 +58,6 @@ class CoreferenceMention(Annotation):
 class CoreferenceGroup(Group):
     member_type = CoreferenceMention
 
-    def __init__(self, component: str,
-                 members: Optional[Set[CoreferenceMention]] = None):
-        super().__init__(component, members)  # type: ignore
+    def __init__(self, members: Optional[Set[CoreferenceMention]] = None):
+        super().__init__(members)  # type: ignore
         self.coref_type = None

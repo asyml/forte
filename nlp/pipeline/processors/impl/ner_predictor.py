@@ -140,7 +140,6 @@ class CoNLLNERPredictor(BatchProcessor):
 
                         kwargs_i = {"ner_type": current_entity_mention[1]}
                         entity = self.ontology.EntityMention(
-                            self.component_name,
                             current_entity_mention[0],
                             token.span.end,
                         )
@@ -153,7 +152,6 @@ class CoNLLNERPredictor(BatchProcessor):
                         )
                         kwargs_i = {"ner_type": current_entity_mention[1]}
                         entity = self.ontology.EntityMention(
-                            self.component_name,
                             current_entity_mention[0],
                             token.span.end,
                         )
@@ -164,7 +162,6 @@ class CoNLLNERPredictor(BatchProcessor):
                     # Only Add EntityMention when overwrite is False
                     kwargs_i = {"ner_tag": ner_tag}
                     token = self.ontology.Token(
-                        self.component_name,
                         orig_token.span.begin,
                         orig_token.span.end,
                     )

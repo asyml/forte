@@ -29,5 +29,6 @@ class NLTKWordTokenizer(PackProcessor):
                 begin_pos = sentence.text.find(word, end_pos)
                 end_pos = begin_pos + len(word)
                 token = self.ontology.Token(
-                    self.component_name, begin_pos + offset, end_pos + offset)
+                    begin_pos + offset, end_pos + offset
+                )
                 input_pack.add_or_get_entry(token)

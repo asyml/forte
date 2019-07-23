@@ -72,7 +72,7 @@ class CoNLL03Reader(MonoFileReader):
                 kwargs_i = {"pos_tag": pos_tag, "chunk_tag": chunk_id,
                             "ner_tag": ner_tag}
                 token = self.ner_ontology.Token(  # type: ignore
-                    self.component_name, word_begin, word_end
+                    word_begin, word_end
                 )
 
                 token.set_fields(**kwargs_i)
@@ -88,7 +88,7 @@ class CoNLL03Reader(MonoFileReader):
                     continue
                 # add sentence
                 sent = self.ner_ontology.Sentence(  # type: ignore
-                    self.component_name, sentence_begin, offset - 1
+                    sentence_begin, offset - 1
                 )
                 self.current_datapack.add_or_get_entry(sent)
 

@@ -3,7 +3,7 @@ from functools import total_ordering
 from typing import Iterable, Optional, Set, Union, Type
 
 from nlp.pipeline.utils import get_class_name
-
+from nlp.pipeline import config
 
 __all__ = [
     "Span",
@@ -46,8 +46,8 @@ class Entry:
             for this entry when we add the entry to the DataPack.
     """
 
-    def __init__(self, component: str):
-        self.component = component
+    def __init__(self):
+        self.component = config.working_component
         self.__tid: Optional[str] = None
         self.__data_pack = None
 
@@ -103,8 +103,8 @@ class Annotation(Entry):
     in the text.
     """
 
-    def __init__(self, component: str, begin: int, end: int):
-        super().__init__(component)
+    def __init__(self, begin: int, end: int):
+        super().__init__()
         self.span = Span(begin, end)
 
     def hash(self):
@@ -137,9 +137,9 @@ class Link(Entry):
     parent_type: Type[Entry] = Annotation
     child_type: Type[Entry] = Annotation
 
-    def __init__(self, component: str, parent: Optional[Entry] = None,
+    def __init__(self, parent: Optional[Entry] = None,
                  child: Optional[Entry] = None):
-        super().__init__(component)
+        super().__init__()
         self._parent: Optional[str] = None
         self._child: Optional[str] = None
         if parent is not None:
@@ -211,10 +211,9 @@ class Group(Entry):
     """
     member_type: Type[Entry] = Annotation
 
-    def __init__(self, component: str,
-                 members: Optional[Set[Entry]] = None):
+    def __init__(self, members: Optional[Set[Entry]] = None):
 
-        super().__init__(component)
+        super().__init__()
         self._members: Set[str] = set()
         if members is not None:
             self.add_members(members)

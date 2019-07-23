@@ -77,6 +77,7 @@ class BaseReader:
 
     def read(self, *args, **kwargs) -> DataPack:
         """
-        Read a **single** document from the dataset.
+        Read and return one Datapack. Should update config.working_component
+        at the begining and the end of this method.
         """
         raise NotImplementedError

@@ -708,8 +708,8 @@ class DataPack:
 
         sent_begin = sent.span.begin if sent else 0
         sent_end = sent.span.end if sent else self.annotations[-1].span.end
-        begin_index = self.annotations.bisect(Annotation('', sent_begin, -1))
-        end_index = self.annotations.bisect(Annotation('', sent_end, -1))
+        begin_index = self.annotations.bisect(Annotation(sent_begin, -1))
+        end_index = self.annotations.bisect(Annotation(sent_end, -1))
 
         for annotation in self.annotations[begin_index: end_index]:
             if annotation.tid not in valid_id:
@@ -909,8 +909,8 @@ class DataPack:
 
         if issubclass(entry_type, Annotation):
             begin_index = self.annotations.bisect(
-                Annotation('', sent_begin, -1))
-            end_index = self.annotations.bisect(Annotation('', sent_end, -1))
+                Annotation(sent_begin, -1))
+            end_index = self.annotations.bisect(Annotation(sent_end, -1))
             for annotation in self.annotations[begin_index: end_index]:
                 if annotation.tid not in valid_id:
                     continue

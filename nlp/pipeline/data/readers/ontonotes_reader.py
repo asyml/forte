@@ -110,7 +110,7 @@ class OntonotesReader(MonoFileReader):
                 kwargs_i: Dict[str, Any] = {"pos_tag": pos_tag,
                                             "sense": word_sense}
                 token = self.ontology.Token(  # type: ignore
-                    self.component_name, word_begin, word_end
+                    word_begin, word_end
                 )
                 token.set_fields(**kwargs_i)
                 self.current_datapack.add_or_get_entry(token)
@@ -133,7 +133,7 @@ class OntonotesReader(MonoFileReader):
                     }
                     pred_mention = \
                         self.ontology.PredicateMention(  # type: ignore
-                        self.component_name, word_begin, word_end
+                        word_begin, word_end
                     )
                     pred_mention.set_fields(**kwargs_i)
                     pred_mention = self.current_datapack.add_or_get_entry(
@@ -181,7 +181,8 @@ class OntonotesReader(MonoFileReader):
                             "arg_type": arg[1],
                         }
                         link = self.ontology.PredicateLink(  # type: ignore
-                            self.component_name, predicate, arg[0])
+                            predicate, arg[0]
+                        )
                         link.set_fields(**kwargs_i)
                         self.current_datapack.add_or_get_entry(link)
 
@@ -193,7 +194,7 @@ class OntonotesReader(MonoFileReader):
 
                 kwargs_i = {"speaker": speaker, "part_id": part_id}
                 sent = self.ontology.Sentence(  # type: ignore
-                    self.component_name, sentence_begin, offset - 1
+                    sentence_begin, offset - 1
                 )
                 sent.set_fields(**kwargs_i)
                 self.current_datapack.add_or_get_entry(sent)
@@ -205,8 +206,7 @@ class OntonotesReader(MonoFileReader):
         # group the coreference mentions in the whole document
         for group_id, mention_list in groups.items():
             kwargs_i = {"coref_type": group_id}
-            group = self.ontology.CoreferenceGroup(  # type: ignore
-                self.component_name)
+            group = self.ontology.CoreferenceGroup()  # type: ignore
             group.set_fields(**kwargs_i)
             group.add_members(mention_list)
             self.current_datapack.add_or_get_entry(group)
@@ -238,7 +238,7 @@ class OntonotesReader(MonoFileReader):
             # Exiting a span, add and then reset the current span.
             kwargs_i = {"ner_type": current_entity_mention[1]}
             entity = self.ontology.EntityMention(  # type: ignore
-                self.component_name, current_entity_mention[0], word_end
+                current_entity_mention[0], word_end
             )
             entity.set_fields(**kwargs_i)
             self.current_datapack.add_or_get_entry(entity)
@@ -275,7 +275,7 @@ class OntonotesReader(MonoFileReader):
                 arg_type = current_pred_arg[label_index][1]  # type: ignore
 
                 pred_arg = self.ontology.PredicateArgument(  # type: ignore
-                    self.component_name, arg_begin, word_end
+                    arg_begin, word_end
                 )
                 pred_arg = self.current_datapack.add_or_get_entry(pred_arg)
 
@@ -302,7 +302,7 @@ class OntonotesReader(MonoFileReader):
 
                     coref_mention = \
                         self.ontology.CoreferenceMention(  # type: ignore
-                        self.component_name, word_begin, word_end
+                            word_begin, word_end
                     )
                     coref_mention = self.current_datapack.add_or_get_entry(
                         coref_mention
@@ -319,7 +319,7 @@ class OntonotesReader(MonoFileReader):
                 start = coref_stacks[group_id].pop()
                 coref_mention = \
                     self.ontology.CoreferenceMention(  # type: ignore
-                    self.component_name, start, word_end
+                        start, word_end
                 )
                 coref_mention = self.current_datapack.add_or_get_entry(
                     coref_mention
