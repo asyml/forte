@@ -19,7 +19,7 @@ class NLTKPOSTagger(PackProcessor):
 
         self.output_info = {
             self.ontology.Token: {
-                "component": None,
+                "component": self.token_component,
                 "fields": ["pos_tag"]
             }
         }

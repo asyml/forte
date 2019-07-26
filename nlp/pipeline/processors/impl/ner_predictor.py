@@ -119,7 +119,7 @@ class CoNLLNERPredictor(BatchProcessor):
             # an instance
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid = output_dict["Token"]["tid"][i][j]
-                orig_token = data_pack.index.entry_index[tid]
+                orig_token = data_pack.index.entry_index(tid)
                 ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
                 if self._overwrite:

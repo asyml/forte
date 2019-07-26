@@ -2,7 +2,7 @@ from abc import abstractmethod
 from functools import total_ordering
 from typing import Iterable, Optional, Set, Union, Type
 
-from nlp.pipeline.utils import get_class_name
+from nlp.pipeline.utils import get_class_name, get_full_module_name
 from nlp.pipeline import config
 
 __all__ = [
@@ -49,7 +49,7 @@ class Entry:
 
     def set_tid(self, tid: str):
         """Set the entry id"""
-        self._tid = f"{get_class_name(self)}.{tid}"
+        self._tid = f"{get_full_module_name(self)}.{tid}"
 
     @property
     def data_pack(self):
@@ -199,7 +199,7 @@ class Link(Entry):
         if self.data_pack is None:
             raise ValueError(f"Cannot get parent because link is not "
                              f"attached to any data pack.")
-        return self.data_pack.index.entry_index[self._parent]
+        return self.data_pack.index.entry_index(self._parent)
 
     def get_child(self):
         """
@@ -211,7 +211,7 @@ class Link(Entry):
         if self.data_pack is None:
             raise ValueError(f"Cannot get child because link is not"
                              f" attached to any data pack.")
-        return self.data_pack.index.entry_index[self._child]
+        return self.data_pack.index.entry_index(self._child)
 
 
 class Group(Entry):
@@ -273,5 +273,5 @@ class Group(Entry):
                              f"attached to any data pack.")
         member_entries = set()
         for m in self.members:
-            member_entries.add(self.data_pack.index.entry_index[m])
+            member_entries.add(self.data_pack.index.entry_index(m))
         return member_entries

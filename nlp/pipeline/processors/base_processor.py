@@ -7,7 +7,7 @@ from typing import Dict, List, Union, Type
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.ontology import base_ontology, Entry
-from nlp.pipeline.utils import get_full_component_name
+from nlp.pipeline.utils import get_full_module_name
 
 __all__ = [
     "BaseProcessor",
@@ -20,7 +20,7 @@ class BaseProcessor:
     """
 
     def __init__(self):
-        self.component_name = get_full_component_name(self)
+        self.component_name = get_full_module_name(self)
         self.ontology = base_ontology
         self._overwrite = True
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
@@ -61,10 +61,3 @@ class BaseProcessor:
         """
         self._record_fields(input_pack)
         input_pack.meta.process_state = self.component_name
-        # currently, need to build the coverage index after updating the entries
-        input_pack.index.build_coverage_index(
-            input_pack.annotations,
-            input_pack.links,
-            input_pack.groups,
-            outer_type=self.ontology.Sentence
-        )

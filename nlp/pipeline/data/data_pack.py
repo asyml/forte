@@ -1,17 +1,15 @@
 """ This class defines the core interchange format, deals with basic operations
 such as reading, writing, checking and indexing.
 """
-import itertools
 import logging
 from collections import defaultdict
 from typing import (DefaultDict, Dict, Iterable, Iterator, List, Optional,
-                    Type, TypeVar, Union, Any)
+                    Type, TypeVar, Union, Any, Set)
 
 import numpy as np
 from sortedcontainers import SortedList
 from nlp.pipeline.data.ontology.base_ontology import Sentence
 from nlp.pipeline.data.ontology import Entry, Annotation, Link, Group, Span
-
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +42,7 @@ class InternalMeta:
 
     def __init__(self):
         self.id_counter = 0
-        self.fields_created = dict()
+        self.fields_created = defaultdict(set)
         self.default_component = None
 
 
@@ -64,18 +62,58 @@ class DataIndex:
 
     def __init__(self, data_pack):
         self.data_pack: DataPack = data_pack
-        # basic indexes
-        self.entry_index = defaultdict(Entry)
-        self.type_index = defaultdict(set)
-        self.component_index = defaultdict(set)
+        # basic indexes (switch always on)
+        self._entry_index: DefaultDict[str, Entry] = defaultdict(Entry)
+        self._type_index: DefaultDict[Type, Set[str]] = defaultdict(set)
+        self._component_index: DefaultDict[str, Set[str]] = defaultdict(set)
         # other indexes
-        self.group_index = defaultdict(set)
-        self.link_index: Dict[str, DefaultDict[str, set]] = dict()
-        self.coverage_index: Dict[str, DefaultDict[str, set]] = dict()
+        self._group_index = defaultdict(set)
+        self._link_index: Dict[str, DefaultDict[str, set]] = dict()
         # indexing switches
-        self.group_index_switch = False
-        self.link_index_switch = False
-        self.coverage_index_switch: Dict[str, bool] = dict()
+        self._group_index_switch = False
+        self._link_index_switch = False
+
+    @property
+    def link_index_switch(self):
+        return self._link_index_switch
+
+    def turn_link_index_switch(self, on: bool):
+        self._link_index_switch = on
+
+    @property
+    def group_index_switch(self):
+        return self._group_index_switch
+
+    def turn_group_index_switch(self, on: bool):
+        self._group_index_switch = on
+
+    def entry_index(self, tid: str):
+        return self._entry_index[tid]
+
+    def component_index(self, component: str):
+        return self._component_index[component]
+
+    def type_index(self, tp: Type):
+        subclass_index = set()
+        for index_key, index_val in self._type_index.items():
+            if issubclass(index_key, tp):
+                subclass_index.update(index_val)
+        return subclass_index
+
+    def link_index(self, tid: str, as_parent: bool = True) -> Set[str]:
+        if not self._link_index_switch:
+            self.update_link_index(self.data_pack.links)
+            self._link_index_switch = True
+        if as_parent:
+            return self._link_index["parent_index"][tid]
+        else:
+            return self._link_index["child_index"][tid]
+
+    def group_index(self, tid: str) -> Set[str]:
+        if not self._group_index_switch:
+            self.update_group_index(self.data_pack.groups)
+            self._group_index_switch = True
+        return self._group_index[tid]
 
     def in_span(self,
                 inner_entry: Union[str, Entry],
@@ -93,21 +131,20 @@ class DataIndex:
         """
 
         if isinstance(inner_entry, str):
-            inner_entry = self.entry_index.get(inner_entry)
+            inner_entry = self.entry_index(inner_entry)
 
         if isinstance(inner_entry, Annotation):
             inner_begin = inner_entry.span.begin
             inner_end = inner_entry.span.end
         elif isinstance(inner_entry, Link):
-            child = self.entry_index.get(inner_entry.child)
-            parent = self.entry_index.get(inner_entry.parent)
+            child = inner_entry.get_child()
+            parent = inner_entry.get_parent()
             inner_begin = min(child.span.begin, parent.span.begin)
             inner_end = max(child.span.end, parent.span.end)
         elif isinstance(inner_entry, Group):
             inner_begin = -1
             inner_end = -1
-            for m_id in inner_entry.members:
-                mem = self.entry_index.get(m_id)
+            for mem in inner_entry.get_members():
                 if inner_begin == -1:
                     inner_begin = mem.span.begin
                 inner_begin = min(inner_begin, mem.span.begin)
@@ -131,14 +168,14 @@ class DataIndex:
                 checked, or the tid of the Annotation.
         """
         if isinstance(entry1, str):
-            entry1 = self.entry_index.get(entry1)
+            entry1 = self.entry_index(entry1)
 
         if not isinstance(entry1, Annotation):
             raise TypeError(f"'entry1' should be an instance of Annotation,"
                             f" but get {type(entry1)}")
 
         if isinstance(entry2, str):
-            entry2 = self.entry_index.get(entry2)
+            entry2 = self.entry_index(entry2)
 
         if not isinstance(entry2, Annotation):
             raise TypeError(f"'entry2' should be an instance of Annotation,"
@@ -158,10 +195,9 @@ class DataIndex:
             entries (list): a list of entires to be added into the basic index.
         """
         for entry in entries:
-            name = entry.__class__.__name__
-            self.entry_index[entry.tid] = entry
-            self.type_index[name].add(entry.tid)
-            self.component_index[entry.component].add(entry.tid)
+            self._entry_index[entry.tid] = entry
+            self._type_index[type(entry)].add(entry.tid)
+            self._component_index[entry.component].add(entry.tid)
 
     def update_link_index(self, links: List[Link]):
         """Build or update :attr:`link_index`, the index from child and parent
@@ -174,15 +210,15 @@ class DataIndex:
             links (list): a list of links to be added into the index.
         """
         logger.debug("Updating link index")
-        self.link_index_switch = True
-        if "child_index" not in self.link_index.keys():
-            self.link_index["child_index"] = defaultdict(set)
-        if "parent_index" not in self.link_index.keys():
-            self.link_index["parent_index"] = defaultdict(set)
+        self._link_index_switch = True
+        if "child_index" not in self._link_index.keys():
+            self._link_index["child_index"] = defaultdict(set)
+        if "parent_index" not in self._link_index.keys():
+            self._link_index["parent_index"] = defaultdict(set)
 
         for link in links:
-            self.link_index["child_index"][link.child].add(link.tid)
-            self.link_index["parent_index"][link.parent].add(link.tid)
+            self._link_index["child_index"][link.child].add(link.tid)
+            self._link_index["parent_index"][link.parent].add(link.tid)
 
     def update_group_index(self, groups: List[Group]):
         """Build or update :attr:`group_index`, the index from group members
@@ -192,168 +228,10 @@ class DataIndex:
             groups (list): a list of groups to be added into the index.
         """
         logger.debug("Updating group index")
-        self.group_index_switch = True
+        self._group_index_switch = True
         for group in groups:
             for member in group.members:
-                self.group_index[member].add(group.tid)
-
-    def build_coverage_index(self,
-                             annotations: SortedList,
-                             links: Optional[List[Link]] = None,
-                             groups: Optional[List[Group]] = None,
-                             outer_type: Optional[type] = None,
-                             inner_type: Optional[type] = None):
-        # TODO: update index when add entries. how to be better than O(n^2)?
-        #   dynamically updating might be very complex and time consuming.
-        """
-        Index the coverage relationship from annotations of outer_type to
-        entries of inner_type, and store in
-        ``self.index.coverage_index["outer_type-to-inner_type"]``. An outer
-        annotation is considered to (1) cover an inner annotation if inner.begin
-        >= outer.begin and inner.end <= outer.end; (2) cover an inner link if it
-        covers both the child and parent of the link. (3) cover an inner group
-        if it covers all the members of the group.
-
-        Args:
-            annotations (list): A list of all the annotations in the datapack.
-            links (list, optional): A list of all the links in the datapack.
-                Needed if inner_type includes link types and link_index has not
-                been built.
-            groups (list, optional): A list of all the groups in the datapack.
-                Needed if inner_type includes group types and group_index has
-                not been built.
-            outer_type (str, optional): The type of the outer annotations. If
-                `None`, the outer annotations could be all types of
-                annotations, and the index name will be
-                "Annotation-to-inner_type".
-            inner_type (str, optional): The type of the inner entries. If
-                `None`, the inner entries could be all types of entries, and the
-                index name will be "outer_type-to-Entry".
-        """
-
-        # Initialization
-        if outer_type is None:
-            outer_type = Annotation
-        if inner_type is None:
-            inner_type = Entry
-        if not issubclass(outer_type, Annotation):
-            raise TypeError(f"'outer_type' must be a subclass of 'Annotation',"
-                            f" but get {outer_type}.")
-        if not issubclass(inner_type, Entry):
-            raise TypeError(f"'inner_type' must be a subclass of Entry,"
-                            f" but get {inner_type}.")
-        dict_name = outer_type.__name__ + "-to-" + inner_type.__name__
-        logger.debug("Building coverage index %s", dict_name)
-
-        # Check whether inner_type includes Link and Group.
-        # If yes, build link_index and group_index first.
-        if inner_type is Entry or issubclass(inner_type, Link):
-            if not self.link_index_switch:
-                if links is None:
-                    raise ValueError("'links' parameter should be 'None'. "
-                                     "Before building coverage index for links"
-                                     ", we must build link index first.")
-                self.update_link_index(links)
-            index_link_as_inner = True
-        else:
-            index_link_as_inner = False
-        if inner_type is Entry or issubclass(inner_type, Group):
-            if not self.group_index_switch:
-                if groups is None:
-                    raise ValueError("'groups' parameter should be 'None'. "
-                                     "Before building coverage index for "
-                                     "groups, we must build group index first.")
-                self.update_group_index(groups)
-            index_group_as_inner = True
-        else:
-            index_group_as_inner = False
-
-        # Build coverage index
-        if dict_name not in self.coverage_index.keys():
-            self.coverage_index[dict_name] = defaultdict(set)
-
-        def add_covered_entries(outer, start, stop, step):
-            for k in range(start, stop, step):
-                inner = annotations[k]
-                if self.in_span(inner, outer.span):
-                    if isinstance(inner, inner_type):
-                        self.coverage_index[dict_name][outer.tid].add(
-                            inner.tid)
-
-                    if index_link_as_inner:
-                        for link_id in itertools.chain(
-                                self.link_index["child_index"][inner.tid],
-                                self.link_index["parent_index"][inner.tid]
-                        ):
-                            link = self.entry_index[link_id]
-                            if not isinstance(link, inner_type):
-                                continue
-                            if self.in_span(link, outer.span):
-                                self.coverage_index[dict_name][
-                                    outer.tid].add(
-                                    link_id)
-                    if index_group_as_inner:
-                        for group_id in self.group_index[inner.tid]:
-                            group = self.entry_index[group_id]
-                            if not isinstance(group, inner_type):
-                                continue
-                            if self.in_span(group, outer.span):
-                                self.coverage_index[dict_name][
-                                    outer.tid].add(
-                                    group_id)
-                elif not self.have_overlap(outer, inner):
-                    break
-
-        for i, annotation in enumerate(annotations):
-            if not isinstance(annotation, outer_type):
-                continue
-            add_covered_entries(annotation, i, -1, -1)
-            add_covered_entries(annotation, i, len(annotations), 1)
-        self.coverage_index_switch[dict_name] = True
-
-    def get_coverage_index(self,
-                           outer_type: Optional[type] = None,
-                           inner_type: Optional[type] = None) -> Dict[str, set]:
-        """
-        Return the coverage index that includes the coverage relationship
-        between ``outer_type`` and ``inner_type``. Will check the existance
-        of coverage indexes from tightest ("outer_type-to-inner_type") to
-        loosest ("Annotation-to-Entry"). If not exist, will build the tightest
-        coverage index.
-
-        Args:
-            outer_type (str, optional): The type of the outer annotations. If
-                `None`, the outer annotations could be all types of
-                annotations, and the index name will be
-                "Annotation-to-inner_type".
-            inner_type (str, optional): The type of the inner entries. If
-                `None`, the inner entries could be all types of entries, and the
-                index name will be "outer_type-to-Entry".
-        """
-        if outer_type is None:
-            outer_name = "Annotation"
-        else:
-            outer_name = outer_type.__name__
-        if inner_type is None:
-            inner_name = "Entry"
-        else:
-            inner_name = inner_type.__name__
-
-        if self.coverage_index_switch.get(outer_name + "-to-" + inner_name):
-            return self.coverage_index[outer_name + "-to-" + inner_name]
-        if self.coverage_index_switch.get("Annotation" + "-to-" + inner_name):
-            return self.coverage_index["Annotation" + "-to-" + inner_name]
-        if self.coverage_index_switch.get(outer_name + "-to-" + "Entry"):
-            return self.coverage_index[outer_name + "-to-" + "Entry"]
-        if self.coverage_index_switch.get("Annotation" + "-to-" + "Entry"):
-            return self.coverage_index["Annotation" + "-to-" + "Entry"]
-
-        self.build_coverage_index(self.data_pack.annotations,
-                                  self.data_pack.links,
-                                  self.data_pack.groups,
-                                  outer_type,
-                                  inner_type)
-        return self.coverage_index[outer_name + "-to-" + inner_name]
+                self._group_index[member].add(group.tid)
 
 
 class DataPack:
@@ -363,7 +241,6 @@ class DataPack:
     language text could be a document, paragraph or in any other granularity.
 
     Args:
-        text (str, optional): A piece of natural language text.
         doc_id (str, optional): A universal id of this ner_data pack.
     """
 
@@ -377,15 +254,24 @@ class DataPack:
         self.index: DataIndex = DataIndex(self)
 
         self.meta: Meta = Meta(doc_id)
-        self.internal_metas: Dict[str, InternalMeta] = defaultdict(InternalMeta)
+        self.internal_metas: \
+            Dict[type, InternalMeta] = defaultdict(InternalMeta)
 
     def __getstate__(self):
+        """
+        In serialization, 1) will serialize the annotation sorted list as a
+        normal list; 2) will not serialize the indexes
+        """
         state = self.__dict__.copy()
         state['annotations'] = list(state['annotations'])
         del state['index']
         return state
 
     def __setstate__(self, state):
+        """
+        In deserialization, 1) will transform the annotation list back to a
+        sorted list; 2) will initialize the indexes (to be empty indexes).
+        """
         self.__dict__.update(state)
         self.annotations = SortedList(self.annotations)
         self.index = DataIndex(self)
@@ -429,7 +315,7 @@ class DataPack:
 
         if entry not in target:
             # add the entry to the target entry list
-            name = entry.__class__.__name__
+            name = entry.__class__
             entry.set_tid(str(self.internal_metas[name].id_counter))
             entry.attach(self)
             if isinstance(target, list):
@@ -473,14 +359,13 @@ class DataPack:
             )
 
         # add the entry to the target entry list
-        name = entry.__class__.__name__
-        entry.set_tid(str(self.internal_metas[name].id_counter))
+        entry.set_tid(str(self.internal_metas[entry.__class__].id_counter))
         entry.attach(self)
         if isinstance(target, list):
             target.append(entry)
         else:
             target.add(entry)
-        self.internal_metas[name].id_counter += 1
+        self.internal_metas[entry.__class__].id_counter += 1
 
         # update the ner_data pack index if needed
         self.index.update_basic_index([entry])
@@ -492,21 +377,14 @@ class DataPack:
         return entry
 
     def record_fields(self, fields: List[str], entry_type: Type[Entry],
-                      component: Optional[str] = None):
+                      component: str):
         """Record in the internal meta that ``component`` has generated
         ``fields`` for ``entry_type``.
         """
-        entry_type = entry_type.__name__
         if entry_type not in self.internal_metas.keys() or \
                 self.internal_metas[entry_type].default_component is None:
             self.internal_metas[entry_type].default_component = component
 
-        if component is None:
-            component = self.internal_metas[entry_type].default_component
-        # ensure to record entry_type if fields list is empty
-        if component not in self.internal_metas[
-            entry_type].fields_created.keys():
-            self.internal_metas[entry_type].fields_created[component] = set()
         fields.append("tid")
         for field in fields:
             self.internal_metas[entry_type].fields_created[component].add(field)
@@ -529,13 +407,13 @@ class DataPack:
             .. code-block:: python
 
                 requests = {
-                    "Sentence":
+                    base_ontology.Sentence:
                         {
                             "component": "dummy",
                             "fields": ["speaker"],
                         },
-                    "Token": ["pos_tag", "sense""],
-                    "EntityMention": {
+                    base_ontology.Token: ["pos_tag", "sense""],
+                    base_ontology.EntityMention: {
                         "unit": "Token",
                     },
                 }
@@ -570,7 +448,6 @@ class DataPack:
                     group_types[key] = value
 
         if context_type.lower() == "document":
-            # print(self.meta.doc_id)
             data: Dict[str, Any] = dict()
             data["context"] = self.text
             data["offset"] = 0
@@ -587,17 +464,14 @@ class DataPack:
                     data[l_type.__name__] = self._generate_link_entry_data(
                         l_type, l_args, data, None
                     )
+
+            if group_types:
+                for g_type, g_args in group_types.items():  # pylint: disable=unused-variable
+                    pass
+
             yield data
 
         elif context_type.lower() == "sentence":
-
-            sent_meta = self.internal_metas.get("Sentence")
-            if sent_meta is None:
-                raise AttributeError(
-                    f"Document '{self.meta.doc_id}' has no sentence "
-                    f"annotations'"
-                )
-
             sent_type = Sentence
             sent_args = None
             if annotation_types:
@@ -607,12 +481,12 @@ class DataPack:
                         sent_args = a_args
                         break
 
-            sent_component, _, sent_fields = self._process_request_args(
+            sent_component, _, sent_fields = self._parse_request_args(
                 sent_type, sent_args
             )
 
-            valid_sent_ids = (self.index.type_index["Sentence"]
-                              & self.index.component_index[sent_component])
+            valid_sent_ids = (self.index.type_index(Sentence)
+                              & self.index.component_index(sent_component))
 
             skipped = 0
             # must iterate through a copy here
@@ -629,12 +503,6 @@ class DataPack:
                 data["offset"] = sent.span.begin
 
                 for field in sent_fields:
-                    if field not in sent_meta.fields_created[sent_component]:
-                        raise AttributeError(
-                            f"Sentence annotation generated by "
-                            f"'{sent_component}' has no field named '{field}'."
-                        )
-
                     data[field] = getattr(sent, field)
 
                 if annotation_types:
@@ -658,16 +526,7 @@ class DataPack:
 
                 yield data
 
-    def _process_request_args(self, a_type, a_args):
-
-        # check the existence of ``a_type`` annotation in ``doc``
-        a_meta = self.internal_metas.get(a_type.__name__)
-        if a_meta is None:
-            raise AttributeError(
-                f"Document '{self.meta.doc_id}' has no '{a_type}' "
-                f"annotations."
-            )
-
+    def _parse_request_args(self, a_type, a_args):
         # request which fields generated by which component
         component = None
         unit = None
@@ -681,18 +540,37 @@ class DataPack:
             fields = set(a_args)
         elif a_args is not None:
             raise TypeError(
-                f"Invalid request for '{a_type}'. "
+                f"Invalid request format for '{a_type}'. "
                 f"The request should be of an iterable type or a dict."
             )
 
+        a_meta = None
+        for meta_key, meta_val in self.internal_metas.items():
+            if issubclass(meta_key, a_type):
+                valid_meta = True
+                if component is not None:
+                    if component not in meta_val.fields_created.keys():
+                        continue
+                    for field in fields:
+                        if field not in meta_val.fields_created[component]:
+                            valid_meta = False
+                            break
+                else:
+                    for field in fields:
+                        if field not in meta_val.fields_created[
+                            meta_val.default_component
+                        ]:
+                            valid_meta = False
+                            break
+                if valid_meta:
+                    a_meta = meta_val
+                    break
+
+        if a_meta is None:
+            raise AttributeError(f"No valid {type(a_type)} in datapack. ")
+
         if component is None:
             component = a_meta.default_component
-
-        if component not in a_meta.fields_created.keys():
-            raise AttributeError(
-                f"DataPack has no {a_type} annotations generated"
-                f" by {component}"
-            )
 
         fields.add("tid")
         return component, unit, fields
@@ -704,7 +582,7 @@ class DataPack:
             data: Dict,
             sent: Optional[Sentence]) -> Dict:
 
-        component, unit, fields = self._process_request_args(a_type, a_args)
+        component, unit, fields = self._parse_request_args(a_type, a_args)
 
         a_dict: Dict[str, Any] = dict()
 
@@ -720,26 +598,10 @@ class DataPack:
                                f"request {unit} before {a_type}.")
             a_dict["unit_span"] = []
 
-        # ``a_type`` annotations generated by ``component`` in this ``sent``
-        if sent:
-            valid_id = (self.index.coverage_index["Sentence-to-Entry"][sent.tid]
-                        & self.index.type_index[a_type.__name__]
-                        & self.index.component_index[component])
-        else:
-            valid_id = (self.index.type_index[a_type.__name__]
-                        & self.index.component_index[component])
-
         sent_begin = sent.span.begin if sent else 0
-        sent_end = sent.span.end if sent else self.annotations[-1].span.end
-        begin_index = self.annotations.bisect(Annotation(sent_begin, -1))
-        end_index = self.annotations.bisect(Annotation(sent_end, -1))
+        annotations = self.get_entries(a_type, sent, component)
 
-        for annotation in self.annotations[begin_index: end_index]:
-            if annotation.tid not in valid_id:
-                continue
-            if not isinstance(annotation, a_type):
-                continue
-
+        for annotation in annotations:
             # we provide span, text (and also tid) by default
             a_dict["span"].append((annotation.span.begin,
                                    annotation.span.end))
@@ -752,13 +614,7 @@ class DataPack:
                     a_dict[field].append((annotation.span.begin - sent_begin,
                                           annotation.span.end - sent_begin))
                     continue
-                if field not in self.internal_metas[
-                    a_type.__name__].fields_created[component
-                ]:
-                    raise AttributeError(
-                        f"'{a_type}' annotation generated by "
-                        f"'{component}' has no field named '{field}'"
-                    )
+
                 a_dict[field].append(getattr(annotation, field))
 
             if unit is not None:
@@ -787,7 +643,7 @@ class DataPack:
             data: Dict,
             sent: Optional[Sentence]) -> Dict:
 
-        component, unit, fields = self._process_request_args(a_type, a_args)
+        component, unit, fields = self._parse_request_args(a_type, a_args)
 
         if unit is not None:
             raise ValueError(f"Link entires cannot be indexed by {unit}.")
@@ -798,20 +654,9 @@ class DataPack:
         a_dict["parent"] = []
         a_dict["child"] = []
 
-        # ``a_type`` annotations generated by ``component`` in this ``sent``
-        if sent:
-            valid_id = (self.index.coverage_index["Sentence-to-Entry"][sent.tid]
-                        & self.index.type_index[a_type]
-                        & self.index.component_index[component])
-        else:
-            valid_id = (self.index.type_index[a_type]
-                        & self.index.component_index[component])
+        links = self.get(a_type, sent, component)
 
-        for link_id in valid_id:
-            link = self.index.entry_index[link_id]
-            if not isinstance(link, a_type):
-                continue
-
+        for link in links:
             parent_type = link.parent_type.__name__
             child_type = link.child_type.__name__
 
@@ -832,13 +677,7 @@ class DataPack:
             for field in fields:
                 if field in ("parent", "child"):
                     continue
-                if field not in self.internal_metas[
-                    a_type.__name__].fields_created[component
-                ]:
-                    raise AttributeError(
-                        f"'{a_type}' annotation generated by "
-                        f"'{component}' has no field named '{field}'"
-                    )
+
                 a_dict[field].append(getattr(link, field))
 
         for key, value in a_dict.items():
@@ -860,35 +699,34 @@ class DataPack:
                 whole data_pack.
             component (str, optional): The component generating the entries
                 requested. If `None`, will return valid entries generated by
-                any component. #TODO: return default component
+                any component.
         """
-        sent_begin = range_annotation.span.begin if range_annotation else 0
-        sent_end = (range_annotation.span.end if range_annotation else
-                    self.annotations[-1].span.end)
+        range_begin = range_annotation.span.begin if range_annotation else 0
+        range_end = (range_annotation.span.end if range_annotation else
+                     self.annotations[-1].span.end)
 
         # ``a_type`` annotations generated by ``component`` in ``range``
-        valid_id = self.index.type_index[entry_type.__name__]
+        valid_id = self.index.type_index(entry_type)
         if component:
-            valid_id = valid_id & self.index.component_index[component]
-        if range_annotation:
-            c_index = self.index.get_coverage_index(type(range_annotation),
-                                                    entry_type)
-            valid_id = valid_id & c_index[range_annotation.tid]
+            valid_id = valid_id & self.index.component_index(component)
 
         if issubclass(entry_type, Annotation):
             begin_index = self.annotations.bisect(
-                Annotation(sent_begin, -1))
-            end_index = self.annotations.bisect(Annotation(sent_end, -1))
+                Annotation(range_begin, -1))
+            end_index = self.annotations.bisect(Annotation(range_end, -1))
             for annotation in self.annotations[begin_index: end_index]:
                 if annotation.tid not in valid_id:
                     continue
-                else:
+                if (range_annotation is None or
+                        self.index.in_span(annotation, range_annotation.span)):
                     yield annotation
 
         elif issubclass(entry_type, (Link, Group)):
             for entry_id in valid_id:
-                entry = self.index.entry_index[entry_id]
-                yield entry
+                entry = self.index.entry_index(entry_id)
+                if (range_annotation is None or
+                        self.index.in_span(entry, range_annotation.span)):
+                    yield entry
 
     def get(self,
             entry_type: Type[E],

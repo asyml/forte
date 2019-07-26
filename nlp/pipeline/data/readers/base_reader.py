@@ -8,7 +8,7 @@ import jsonpickle
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import Entry
-from nlp.pipeline.utils import get_full_component_name
+from nlp.pipeline.utils import get_full_module_name
 
 __all__ = [
     "BaseReader",
@@ -23,7 +23,7 @@ class BaseReader:
         self.lazy = lazy
         self._cache_directory: Optional[Path] = None
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
-        self.component_name = get_full_component_name(self)
+        self.component_name = get_full_module_name(self)
 
     def cache_data(self, cache_directory: str) -> None:
         """Specify the path to the cache directory.

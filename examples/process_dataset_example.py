@@ -4,7 +4,7 @@ import sys
 import pickle
 from termcolor import colored
 
-from nlp.pipeline.data.ontology.conll03_ontology import (
+from nlp.pipeline.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
 
@@ -20,7 +20,6 @@ def main(dataset_dir, ner_model_path, srl_model_path):
     }
 
     pl = Pipeline()
-    pl.initialize(ontology="conll03_ontology")
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())
     pl.add_processor(NLTKPOSTagger())

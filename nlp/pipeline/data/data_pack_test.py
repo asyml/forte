@@ -6,6 +6,8 @@ import unittest
 import nlp
 from nlp.pipeline.data.readers import OntonotesReader
 from nlp.pipeline.data.ontology import ontonotes_ontology
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 class DataPackTest(unittest.TestCase):
@@ -15,45 +17,6 @@ class DataPackTest(unittest.TestCase):
         data_path = os.path.join(os.path.dirname(
             os.path.dirname(nlp.__file__)), "examples/abc_0059.gold_conll")
         self.data_pack = self.reader.read(data_path)
-
-    def test_coverage_index(self):
-        # case 1: automatically built one-type to all-type index
-        self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 1)
-        self.assertIn("Sentence-to-Entry",
-                      self.data_pack.index.coverage_index.keys())
-
-        cov_index = self.data_pack.index.coverage_index["Sentence-to-Entry"]
-        self.assertEqual(len(cov_index["Sentence.0"]), 27 + 22 + 10)  # 10 links
-        self.assertEqual(len(cov_index["Sentence.1"]), 12 + 15 + 6)  # 6 links
-
-        # case 2: build one-type to one-type index
-        self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 1)
-        self.data_pack.index.build_coverage_index(
-            self.data_pack.annotations,
-            outer_type=ontonotes_ontology.Sentence,
-            inner_type=ontonotes_ontology.Token
-        )
-        self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 2)
-        self.assertIn("Sentence-to-Token",
-                      self.data_pack.index.coverage_index.keys())
-
-        cov_index = self.data_pack.index.coverage_index["Sentence-to-Token"]
-        self.assertEqual(len(cov_index["Sentence.0"]), 27)
-        self.assertEqual(len(cov_index["Sentence.1"]), 12)
-
-        # case 3: build all-type to one-type index
-        self.data_pack.index.build_coverage_index(
-            self.data_pack.annotations,
-            inner_type=ontonotes_ontology.Token
-        )
-        self.assertEqual(len(self.data_pack.index.coverage_index.keys()), 3)
-        self.assertIn("Annotation-to-Token",
-                      self.data_pack.index.coverage_index.keys())
-
-        cov_index = self.data_pack.index.coverage_index["Annotation-to-Token"]
-        self.assertEqual(len(cov_index.keys()),
-                         27 + 22 + 12 + 15)  # annotation num
-        self.assertEqual(len(cov_index["Sentence.1"]), 12)
 
     def test_get_data(self):
         requests = {
