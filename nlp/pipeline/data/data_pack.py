@@ -77,9 +77,9 @@ class DataIndex:
         self.link_index_switch = False
         self.coverage_index_switch: Dict[str, bool] = dict()
 
-    def _in_span(self,
-                 inner_entry: Union[str, Entry],
-                 span: Span) -> bool:
+    def in_span(self,
+                inner_entry: Union[str, Entry],
+                span: Span) -> bool:
         """Check whether the ``inner entry`` is within the given ``span``.
         Link entries are considered in a span if both the
         parent and the child are within the span. Group entries are
@@ -119,9 +119,9 @@ class DataIndex:
             )
         return inner_begin >= span.begin and inner_end <= span.end
 
-    def _have_overlap(self,
-                      entry1: Union[Annotation, str],
-                      entry2: Union[Annotation, str]) -> bool:
+    def have_overlap(self,
+                     entry1: Union[Annotation, str],
+                     entry2: Union[Annotation, str]) -> bool:
         """Check whether the two annotations have overlap in span.
 
         Args:
@@ -275,7 +275,7 @@ class DataIndex:
         def add_covered_entries(outer, start, stop, step):
             for k in range(start, stop, step):
                 inner = annotations[k]
-                if self._in_span(inner, outer.span):
+                if self.in_span(inner, outer.span):
                     if isinstance(inner, inner_type):
                         self.coverage_index[dict_name][outer.tid].add(
                             inner.tid)
@@ -288,7 +288,7 @@ class DataIndex:
                             link = self.entry_index[link_id]
                             if not isinstance(link, inner_type):
                                 continue
-                            if self._in_span(link, outer.span):
+                            if self.in_span(link, outer.span):
                                 self.coverage_index[dict_name][
                                     outer.tid].add(
                                     link_id)
@@ -297,11 +297,11 @@ class DataIndex:
                             group = self.entry_index[group_id]
                             if not isinstance(group, inner_type):
                                 continue
-                            if self._in_span(group, outer.span):
+                            if self.in_span(group, outer.span):
                                 self.coverage_index[dict_name][
                                     outer.tid].add(
                                     group_id)
-                elif not self._have_overlap(outer, inner):
+                elif not self.have_overlap(outer, inner):
                     break
 
         for i, annotation in enumerate(annotations):
@@ -762,15 +762,15 @@ class DataPack:
                 a_dict[field].append(getattr(annotation, field))
 
             if unit is not None:
-                while not self.index._in_span(data[unit]["tid"][unit_begin],  # pylint: disable=protected-access
-                                              annotation.span):
+                while not self.index.in_span(data[unit]["tid"][unit_begin],
+                                             annotation.span):
                     unit_begin += 1
 
                 unit_span_begin = unit_begin
                 unit_span_end = unit_span_begin + 1
 
-                while self.index._in_span(data[unit]["tid"][unit_span_end],  # pylint: disable=protected-access
-                                          annotation.span):
+                while self.index.in_span(data[unit]["tid"][unit_span_end],
+                                         annotation.span):
                     unit_span_end += 1
 
                 a_dict["unit_span"].append((unit_span_begin, unit_span_end))

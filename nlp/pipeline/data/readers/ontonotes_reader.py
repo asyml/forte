@@ -7,7 +7,9 @@ from collections import defaultdict
 from typing import (DefaultDict, Iterator, List, Optional, Tuple,
                     Dict, Any, no_type_check)
 
-from nlp.pipeline.data.ontology import ontonotes_ontology, Entry
+from nlp.pipeline.data.ontology import ontonotes_ontology
+from nlp.pipeline.data.ontology.base_ontology import (
+    PredicateMention, PredicateArgument, CoreferenceMention)
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.file_reader import MonoFileReader
 
@@ -76,12 +78,12 @@ class OntonotesReader(MonoFileReader):
 
         # auxiliary structures
         current_entity_mention: Optional[Tuple[int, str]] = None
-        verbal_predicates: List[Entry] = []
+        verbal_predicates: List[PredicateMention] = []
 
         current_pred_arg: List[Optional[Tuple[int, str]]] = []
-        verbal_pred_args: List[List[Tuple[Entry, str]]] = []
+        verbal_pred_args: List[List[Tuple[PredicateArgument, str]]] = []
 
-        groups: DefaultDict[int, List[Entry]] = defaultdict(list)
+        groups: DefaultDict[int, List[CoreferenceMention]] = defaultdict(list)
         coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
 
         for line in doc:
@@ -253,7 +255,7 @@ class OntonotesReader(MonoFileReader):
             word_begin: int,
             word_end: int,
             current_pred_arg: List[Optional[Tuple[int, str]]],
-            verbal_pred_args: List[List[Tuple[Entry, str]]],
+            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]],
     ) -> None:
 
         for label_index, label in enumerate(labels):
@@ -288,7 +290,7 @@ class OntonotesReader(MonoFileReader):
             word_begin: int,
             word_end: int,
             coref_stacks: DefaultDict[int, List[int]],
-            groups: DefaultDict[int, List[Entry]],
+            groups: DefaultDict[int, List[CoreferenceMention]],
     ) -> None:
 
         if label == "-":
