@@ -1,8 +1,7 @@
 from typing import Iterator, List, Optional, Dict, Union
 
 from nlp.pipeline.data import DataPack
-from nlp.pipeline.data.readers import (
-    CoNLL03Reader, OntonotesReader, PlainTextReader)
+from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.utils import get_class
 
@@ -13,8 +12,7 @@ class Pipeline:
     """
 
     def __init__(self, **kwargs):
-        self.reader = None
-        self.dataset_dir = None
+        self._reader: BaseReader = BaseReader()
         self._processors: List[BaseProcessor] = []
         self._processors_index: Dict = {'': -1}
 
@@ -28,8 +26,6 @@ class Pipeline:
         """
         Initialize the pipeline with configs
         """
-        if "dataset" in kwargs.keys():
-            self.initialize_dataset(kwargs["dataset"])
         if "ontology" in kwargs.keys():
             module_path = ["__main__",
                            "nlp.pipeline.data.ontology"]
@@ -37,16 +33,8 @@ class Pipeline:
             for processor in self.processors:
                 processor.ontology = self._ontology
 
-    def initialize_dataset(self, dataset: Dict):
-        self.dataset_dir = dataset["dataset_dir"]
-        dataset_format = dataset["dataset_format"]
-
-        if dataset_format.lower() == "ontonotes":
-            self.reader = OntonotesReader()
-        elif dataset_format.lower() == "conll03":
-            self.reader = CoNLL03Reader()
-        else:
-            self.reader = PlainTextReader()
+    def set_reader(self, reader: BaseReader):
+        self._reader = reader
 
     @property
     def processors(self):
@@ -80,16 +68,7 @@ class Pipeline:
                 path and the data format.
         """
 
-        if isinstance(dataset, dict):
-            self.initialize_dataset(dataset)
-            data_iter = self.reader.dataset_iterator(self.dataset_dir)
-        elif isinstance(dataset, str) and self.reader is not None:
-            self.dataset_dir = dataset
-            data_iter = self.reader.dataset_iterator(dataset)
-        elif dataset is None and self.reader and self.dataset_dir:
-            data_iter = self.reader.dataset_iterator(self.dataset_dir)
-        else:
-            raise ValueError("Please specify the path to the dataset")
+        data_iter = self._reader.dataset_iterator(dataset)
 
         for pack in data_iter:
             self.current_packs.append(pack)

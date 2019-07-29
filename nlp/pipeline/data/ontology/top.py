@@ -2,7 +2,7 @@ from abc import abstractmethod
 from functools import total_ordering
 from typing import Iterable, Optional, Set, Union, Type
 
-from nlp.pipeline.utils import get_class_name
+from nlp.pipeline.utils import get_class_name, get_full_module_name
 from nlp.pipeline import config
 
 __all__ = [
@@ -36,44 +36,36 @@ class Span:
 
 
 class Entry:
-    """The base class inherited by all NLP entries.
-
-    Args:
-        component (str): the name of the engine that creates this entry,
-            it should at least include the full engine name.
-        tid (str, optional): a doc level universal id to identify
-            this entry. If `None`, the DataPack will assign a unique id
-            for this entry when we add the entry to the DataPack.
-    """
+    """The base class inherited by all NLP entries."""
 
     def __init__(self):
         self.component = config.working_component
-        self.__tid: Optional[str] = None
-        self.__data_pack = None
+        self._tid: Optional[str] = None
+        self._data_pack = None
 
     @property
     def tid(self):
-        return self.__tid
+        return self._tid
 
     def set_tid(self, tid: str):
         """Set the entry id"""
-        self.__tid = f"{get_class_name(self)}.{tid}"
+        self._tid = f"{get_full_module_name(self)}.{tid}"
 
     @property
     def data_pack(self):
-        return self.__data_pack
+        return self._data_pack
 
     def attach(self, data_pack):
         """Attach the entry itself to a data_pack"""
-        self.__data_pack = data_pack
+        self._data_pack = data_pack
 
     def set_fields(self, **kwargs):
         """Set other entry fields"""
         for field_name, field_value in kwargs.items():
             if not hasattr(self, field_name):
                 raise AttributeError(
-                    f"class {get_class_name(self)}"
-                    f" has no attribute {field_name}"
+                    f"class {get_class_name(self)} "
+                    f"has no attribute {field_name}"
                 )
             setattr(self, field_name, field_value)
 
@@ -105,7 +97,14 @@ class Annotation(Entry):
 
     def __init__(self, begin: int, end: int):
         super().__init__()
-        self.span = Span(begin, end)
+        self._span = Span(begin, end)
+
+    @property
+    def span(self):
+        return self._span
+
+    def set_span(self, begin: int, end: int):
+        self._span = Span(begin, end)
 
     def hash(self):
         return hash(
@@ -127,6 +126,9 @@ class Annotation(Entry):
 
     @property
     def text(self):
+        if self.data_pack is None:
+            raise ValueError(f"Cannot get text because annotation is not "
+                             f"attached to any data pack.")
         return self.data_pack.text[self.span.begin: self.span.end]
 
 
@@ -134,8 +136,8 @@ class Link(Entry):
     """Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
     """
-    parent_type: Type[Entry] = Annotation
-    child_type: Type[Entry] = Annotation
+    parent_type: Type[Entry] = Entry  # type: ignore
+    child_type: Type[Entry] = Entry  # type: ignore
 
     def __init__(self, parent: Optional[Entry] = None,
                  child: Optional[Entry] = None):
@@ -156,10 +158,18 @@ class Link(Entry):
 
     @property
     def parent(self):
+        """
+        tid of the parent node. To get the object of the parent node, call
+        :meth:`get_parent`.
+        """
         return self._parent
 
     @property
     def child(self):
+        """
+        tid of the child node. To get the object of the child node, call
+        :meth:`get_child`.
+        """
         return self._child
 
     def set_parent(self, parent: Entry):
@@ -172,7 +182,7 @@ class Link(Entry):
 
         if (self.data_pack is not None and
                 self.data_pack.index.link_index_switch):
-            self.data_pack.index.update_link_index()
+            self.data_pack.index.update_link_index(links=[self])
 
     def set_child(self, child: Entry):
         if not isinstance(child, self.child_type):
@@ -184,7 +194,7 @@ class Link(Entry):
 
         if (self.data_pack is not None and
                 self.data_pack.index.link_index_switch):
-            self.data_pack.index.update_link_index()
+            self.data_pack.index.update_link_index(links=[self])
 
     def get_parent(self):
         """
@@ -193,7 +203,10 @@ class Link(Entry):
         Returns:
              An instance of :class:`Entry` that is the parent of the link.
         """
-        return self.data_pack.index.entry_index[self._parent]
+        if self.data_pack is None:
+            raise ValueError(f"Cannot get parent because link is not "
+                             f"attached to any data pack.")
+        return self.data_pack.get_entry_by_id(self._parent)
 
     def get_child(self):
         """
@@ -202,14 +215,17 @@ class Link(Entry):
         Returns:
              An instance of :class:`Entry` that is the child of the link.
         """
-        return self.data_pack.index.entry_index[self._child]
+        if self.data_pack is None:
+            raise ValueError(f"Cannot get child because link is not"
+                             f" attached to any data pack.")
+        return self.data_pack.get_entry_by_id(self._child)
 
 
 class Group(Entry):
     """Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    member_type: Type[Entry] = Annotation
+    member_type: Type[Entry] = Entry  # type: ignore
 
     def __init__(self, members: Optional[Set[Entry]] = None):
 
@@ -237,6 +253,11 @@ class Group(Entry):
 
     @property
     def members(self):
+        """
+        A list of member tids. To get the member objects, call
+        :meth:`get_members` instead.
+        :return:
+        """
         return self._members
 
     def hash(self):
@@ -254,7 +275,10 @@ class Group(Entry):
              An set of instances of :class:`Entry` that are the members of the
              group.
         """
+        if self.data_pack is None:
+            raise ValueError(f"Cannot get members because group is not "
+                             f"attached to any data pack.")
         member_entries = set()
         for m in self.members:
-            member_entries.add(self.data_pack.index.entry_index[m])
+            member_entries.add(self.data_pack.get_entry_by_id(m))
         return member_entries

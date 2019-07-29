@@ -2,7 +2,7 @@ import numpy as np
 import yaml
 import torch
 from torch.optim import SGD
-from texar.hyperparams import HParams
+from texar.torch.hyperparams import HParams
 
 from examples.NER.model_factory import BiRecurrentConvCRF
 from nlp.pipeline.common.resources import Resources

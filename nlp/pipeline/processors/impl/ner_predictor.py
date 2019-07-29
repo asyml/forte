@@ -119,47 +119,46 @@ class CoNLLNERPredictor(BatchProcessor):
             # an instance
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid = output_dict["Token"]["tid"][i][j]
-                orig_token = data_pack.index.entry_index[tid]
+                orig_token = data_pack.get_entry_by_id(tid)
                 ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
                 if self._overwrite:
                     orig_token.ner_tag = ner_tag
-                    token = orig_token
-                    if token.ner_tag[0] == "B":
+                    if orig_token.ner_tag[0] == "B":
                         current_entity_mention = (
-                            token.span.begin,
-                            token.ner_tag[2:],
+                            orig_token.span.begin,
+                            orig_token.ner_tag[2:],
                         )
-                    elif token.ner_tag[0] == "I":
+                    elif orig_token.ner_tag[0] == "I":
                         continue
-                    elif token.ner_tag[0] == "O":
+                    elif orig_token.ner_tag[0] == "O":
                         continue
-                    elif token.ner_tag[0] == "E":
-                        if token.ner_tag[2:] != current_entity_mention[1]:
+                    elif orig_token.ner_tag[0] == "E":
+                        if orig_token.ner_tag[2:] != current_entity_mention[1]:
                             continue
 
                         kwargs_i = {"ner_type": current_entity_mention[1]}
                         entity = self.ontology.EntityMention(
                             current_entity_mention[0],
-                            token.span.end,
+                            orig_token.span.end,
                         )
                         entity.set_fields(**kwargs_i)
                         data_pack.add_or_get_entry(entity)
-                    elif token.ner_tag[0] == "S":
+                    elif orig_token.ner_tag[0] == "S":
                         current_entity_mention = (
-                            token.span.begin,
-                            token.ner_tag[2:],
+                            orig_token.span.begin,
+                            orig_token.ner_tag[2:],
                         )
                         kwargs_i = {"ner_type": current_entity_mention[1]}
                         entity = self.ontology.EntityMention(
                             current_entity_mention[0],
-                            token.span.end,
+                            orig_token.span.end,
                         )
                         entity.set_fields(**kwargs_i)
                         data_pack.add_or_get_entry(entity)
 
                 else:
-                    # Only Add EntityMention when overwrite is False
+                    # Only Add EntityMention when overwrite is True
                     kwargs_i = {"ner_tag": ner_tag}
                     token = self.ontology.Token(
                         orig_token.span.begin,

@@ -13,7 +13,6 @@ from nlp.pipeline.processors.impl import (
 def main():
 
     pl = Pipeline()
-    pl.initialize(ontology="conll03_ontology")
     pl.processors.append(NLTKSentenceSegmenter())
     pl.processors.append(NLTKWordTokenizer())
     pl.processors.append(NLTKPOSTagger())

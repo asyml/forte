@@ -4,23 +4,19 @@ import sys
 import pickle
 from termcolor import colored
 
-from nlp.pipeline.data.ontology.conll03_ontology import (
+from nlp.pipeline.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
-
+from nlp.pipeline.data.readers import PlainTextReader
 from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
 
 
 def main(dataset_dir, ner_model_path, srl_model_path):
-    dataset = {
-        "dataset_dir": dataset_dir,
-        "dataset_format": "plain"
-    }
 
     pl = Pipeline()
-    pl.initialize(ontology="conll03_ontology")
+    pl.set_reader(PlainTextReader())
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())
     pl.add_processor(NLTKPOSTagger())
@@ -33,7 +29,7 @@ def main(dataset_dir, ner_model_path, srl_model_path):
 
     pl.add_processor(SRLPredictor(model_dir=srl_model_path))
 
-    for pack in pl.process_dataset(dataset):
+    for pack in pl.process_dataset(dataset_dir):
         print(colored("Document", 'red'), pack.meta.doc_id)
         for sentence in pack.get(Sentence):
             sent_text = sentence.text

@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Iterator, List, Optional, Union
 
 from nlp.pipeline import config
-from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
 
@@ -146,10 +145,6 @@ class MonoFileReader(BaseReader):
             self.current_datapack = DataPack()
             self._record_fields()
             datapack = self._read_document(file_path)
-            datapack.index.build_coverage_index(
-                datapack.annotations, datapack.links, datapack.groups,
-                outer_type=base_ontology.Sentence
-            )
             if not isinstance(datapack, DataPack):
                 raise ValueError(
                     f"No DataPack object read from the given "
