@@ -1,3 +1,18 @@
+# Final Action Items
+1. Documentation (Everyone)
+1. Unit test (Everyone)
+1. Config system integration
+1. Executor integration
+1. Multi-pipe wrap up
+1. Type control:
+    1. How to handle unknown types and stuff.
+    1. Validation: a full validation is also too much work.
+    1. Generation: probably too much work in 2 weeks.
+1. A couple more modules would be nice.
+1. Pre-processing support.
+1. UI Integration (reader writer for annotation UI.)
+
+
 # TODO Notes
 1. A name for nlp_pipeline, anyone?
     1. Assigned to everyone
