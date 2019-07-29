@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Iterator, List, Optional, Union
 
 from nlp.pipeline import config
-from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.readers.base_reader import BaseReader
 

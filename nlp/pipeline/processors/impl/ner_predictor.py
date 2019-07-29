@@ -120,9 +120,6 @@ class CoNLLNERPredictor(BatchProcessor):
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid = output_dict["Token"]["tid"][i][j]
                 orig_token = data_pack.get_entry_by_id(tid)
-                if not isinstance(orig_token, base_ontology.Token):
-                    raise
-
                 ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
                 if self._overwrite:
