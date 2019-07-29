@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Tuple, Union, overload
 
 import numpy as np
-import texar as tx
+import texar.torch as tx
 import torch
 from torch import nn
 from torch.nn import functional as F

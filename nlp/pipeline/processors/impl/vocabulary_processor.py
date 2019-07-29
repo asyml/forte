@@ -4,7 +4,7 @@ import re
 from collections import Counter
 from typing import Any, Counter as CounterType, Dict, Iterator, List, Optional
 
-import texar
+import texar.torch as tx
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import base_ontology
@@ -35,7 +35,7 @@ class Alphabet:
             it's vocabulary if it cannot find the input in its keys.
         """
         self.__name = name
-        self.reserved_tokens = texar.data.SpecialTokens
+        self.reserved_tokens = tx.data.SpecialTokens
 
         self.instance2index: Dict = {}
         self.instances: List = []
