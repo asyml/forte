@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Dict, List, Tuple
 
-import texar as tx
+import texar.torch as tx
 import torch
 
 from nlp.pipeline.common.resources import Resources

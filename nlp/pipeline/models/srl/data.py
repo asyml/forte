@@ -2,7 +2,7 @@ import json
 from typing import List, NamedTuple, Tuple
 
 import numpy as np
-import texar as tx
+import texar.torch as tx
 from mypy_extensions import TypedDict
 
 import torch

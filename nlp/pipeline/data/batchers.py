@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import (
     Dict, List, Iterator, Iterable, Union, Any, Optional, Tuple, Type)
 
-import texar as tx
+import texar.torch as tx
 
 from nlp.pipeline.data.dataset import Dataset
 from nlp.pipeline.data.data_pack import DataPack

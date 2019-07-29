@@ -2,7 +2,7 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple
 
-import texar as tx
+import texar.torch as tx
 from mypy_extensions import TypedDict
 import torch
 from torch import nn
