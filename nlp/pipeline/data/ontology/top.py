@@ -199,7 +199,7 @@ class Link(Entry):
         if self.data_pack is None:
             raise ValueError(f"Cannot get parent because link is not "
                              f"attached to any data pack.")
-        return self.data_pack.index.entry_index(self._parent)
+        return self.data_pack.get_entry_by_id(self._parent)
 
     def get_child(self):
         """
@@ -211,7 +211,7 @@ class Link(Entry):
         if self.data_pack is None:
             raise ValueError(f"Cannot get child because link is not"
                              f" attached to any data pack.")
-        return self.data_pack.index.entry_index(self._child)
+        return self.data_pack.get_entry_by_id(self._child)
 
 
 class Group(Entry):
@@ -273,5 +273,5 @@ class Group(Entry):
                              f"attached to any data pack.")
         member_entries = set()
         for m in self.members:
-            member_entries.add(self.data_pack.index.entry_index(m))
+            member_entries.add(self.data_pack.get_entry_by_id(m))
         return member_entries
