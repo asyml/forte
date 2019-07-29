@@ -97,7 +97,14 @@ class Annotation(Entry):
 
     def __init__(self, begin: int, end: int):
         super().__init__()
-        self.span = Span(begin, end)
+        self._span = Span(begin, end)
+
+    @property
+    def span(self):
+        return self._span
+
+    def set_span(self, begin: int, end: int):
+        self._span = Span(begin, end)
 
     def hash(self):
         return hash(
