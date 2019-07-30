@@ -31,6 +31,7 @@ class BaseProcessor:
         """Initialize the processor with ``recources``."""
         pass
 
+    # TODO: remove this mode.
     def set_mode(self, overwrite: bool):
         self._overwrite = overwrite
 
