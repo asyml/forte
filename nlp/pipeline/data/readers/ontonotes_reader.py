@@ -38,6 +38,7 @@ class OntonotesReader(MonoFileReader):
         super().__init__(lazy)
         self.ontology = ontonotes_ontology
         self.output_info = {
+            self.ontology.Document:["span"],
             self.ontology.Sentence: ["speaker", "part_id", "span"],
             self.ontology.Token: ["sense", "pos_tag", "span"],
             self.ontology.EntityMention: ["ner_type", "span"],
@@ -212,6 +213,9 @@ class OntonotesReader(MonoFileReader):
             group.set_fields(**kwargs_i)
             group.add_members(mention_list)
             self.current_datapack.add_or_get_entry(group)
+
+        document = self.ontology.Document(0, len(text))  # type: ignore
+        self.current_datapack.add_or_get_entry(document)
 
         kwargs_i = {"doc_id": document_id}
         self.current_datapack.set_meta(**kwargs_i)

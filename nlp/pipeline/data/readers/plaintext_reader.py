@@ -3,9 +3,10 @@ The reader that reads plain text data into Datapacks.
 """
 import codecs
 import os
-from typing import Iterator
+from typing import Iterator, no_type_check
 
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -23,6 +24,14 @@ class PlainTextReader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
+
+    @no_type_check
+    def __init__(self, lazy: bool = True):
+        super().__init__(lazy)
+        self.ontology = base_ontology
+        self.output_info = {
+            self.ontology.Document: ["span"],
+        }
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -43,6 +52,10 @@ class PlainTextReader(MonoFileReader):
                              "or dataset_iterator() to read a directory.")
         doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
         text = doc.read()
+
+        document = self.ontology.Document(0, len(text))  # type: ignore
+        self.current_datapack.add_or_get_entry(document)
+
         self.current_datapack.set_text(text)
         self.current_datapack.meta.doc_id = file_path
         doc.close()

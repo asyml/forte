@@ -4,7 +4,7 @@ from termcolor import colored
 from nlp.pipeline.data.ontology.conll03_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
-
+from nlp.pipeline.data.readers import StringReader
 from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
@@ -13,6 +13,7 @@ from nlp.pipeline.processors.impl import (
 def main():
 
     pl = Pipeline()
+    pl.set_reader(StringReader())
     pl.processors.append(NLTKSentenceSegmenter())
     pl.processors.append(NLTKWordTokenizer())
     pl.processors.append(NLTKPOSTagger())

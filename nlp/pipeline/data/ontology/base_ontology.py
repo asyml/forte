@@ -6,6 +6,7 @@ from nlp.pipeline.data.ontology.top import Annotation, Link, Group
 
 __all__ = [
     "Token",
+    "Document",
     "EntityMention",
     "Sentence",
     "PredicateMention",
@@ -23,6 +24,10 @@ class Token(Annotation):
 
 
 class Sentence(Annotation):
+    pass
+
+
+class Document(Annotation):
     pass
 
 

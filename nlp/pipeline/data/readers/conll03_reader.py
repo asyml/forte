@@ -29,6 +29,7 @@ class CoNLL03Reader(MonoFileReader):
         super().__init__(lazy)
         self.ner_ontology = conll03_ontology
         self.output_info = {
+            self.ner_ontology.Document: ["span"],
             self.ner_ontology.Sentence: ["span"],
             self.ner_ontology.Token: ["span", "chunk_tag", "pos_tag", "ner_tag"]
         }
@@ -95,6 +96,9 @@ class CoNLL03Reader(MonoFileReader):
                 sentence_begin = offset
                 sentence_cnt += 1
                 has_rows = False
+
+        document = self.ner_ontology.Document(0, len(text))  # type: ignore
+        self.current_datapack.add_or_get_entry(document)
 
         self.current_datapack.set_text(text)
         self.current_datapack.meta.doc_id = file_path
