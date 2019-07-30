@@ -27,11 +27,14 @@ class CoNLL03Reader(MonoFileReader):
     @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
-        self.ner_ontology = conll03_ontology
+        self._ontology = conll03_ontology
+        self.define_output_info()
+
+    def define_output_info(self):
         self.output_info = {
-            self.ner_ontology.Document: ["span"],
-            self.ner_ontology.Sentence: ["span"],
-            self.ner_ontology.Token: ["span", "chunk_tag", "pos_tag", "ner_tag"]
+            self._ontology.Document: ["span"],
+            self._ontology.Sentence: ["span"],
+            self._ontology.Token: ["span", "chunk_tag", "pos_tag", "ner_tag"]
         }
 
     @staticmethod
@@ -72,7 +75,7 @@ class CoNLL03Reader(MonoFileReader):
                 # add tokens
                 kwargs_i = {"pos_tag": pos_tag, "chunk_tag": chunk_id,
                             "ner_tag": ner_tag}
-                token = self.ner_ontology.Token(  # type: ignore
+                token = self._ontology.Token(  # type: ignore
                     word_begin, word_end
                 )
 
@@ -88,7 +91,7 @@ class CoNLL03Reader(MonoFileReader):
                     # skip consecutive empty lines
                     continue
                 # add sentence
-                sent = self.ner_ontology.Sentence(  # type: ignore
+                sent = self._ontology.Sentence(  # type: ignore
                     sentence_begin, offset - 1
                 )
                 self.current_datapack.add_or_get_entry(sent)
@@ -97,7 +100,7 @@ class CoNLL03Reader(MonoFileReader):
                 sentence_cnt += 1
                 has_rows = False
 
-        document = self.ner_ontology.Document(0, len(text))  # type: ignore
+        document = self._ontology.Document(0, len(text))  # type: ignore
         self.current_datapack.add_or_get_entry(document)
 
         self.current_datapack.set_text(text)

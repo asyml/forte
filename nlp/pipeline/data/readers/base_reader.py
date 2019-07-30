@@ -1,6 +1,7 @@
 """
 Base reader type to be inherited by all readers.
 """
+from abc import abstractmethod
 from pathlib import Path
 from typing import Iterator, Optional, Dict, Type, List, Union
 
@@ -22,8 +23,17 @@ class BaseReader:
     def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
         self._cache_directory: Optional[Path] = None
+        self._ontology = None
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
+
+    def set_ontology(self, ontology):
+        self._ontology = ontology
+        self.define_output_info()
+
+    @abstractmethod
+    def define_output_info(self):
+        pass
 
     def cache_data(self, cache_directory: str) -> None:
         """Specify the path to the cache directory.

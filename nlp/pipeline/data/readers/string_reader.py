@@ -31,9 +31,12 @@ class StringReader(BaseReader):
     @no_type_check
     def __init__(self):
         super().__init__()
-        self.ontology = base_ontology
+        self._ontology = base_ontology
+        self.define_output_info()
+
+    def define_output_info(self):
         self.output_info = {
-            self.ontology.Document: ["span"],
+            self._ontology.Document: ["span"],
         }
 
     def dataset_iterator(self,
@@ -52,7 +55,7 @@ class StringReader(BaseReader):
 
         data_pack = DataPack()
 
-        document = self.ontology.Document(0, len(data))  # type: ignore
+        document = self._ontology.Document(0, len(data))  # type: ignore
         data_pack.add_or_get_entry(document)
 
         data_pack.set_text(data)

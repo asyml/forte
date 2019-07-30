@@ -394,17 +394,25 @@ class DataPack:
         return entry
 
     def record_fields(self, fields: List[str], entry_type: Type[Entry],
-                      component: str):
+                      component: Optional[str]):
         """Record in the internal meta that ``component`` has generated
         ``fields`` for ``entry_type``.
-        """
-        if entry_type not in self.internal_metas.keys() or \
-                self.internal_metas[entry_type].default_component is None:
-            self.internal_metas[entry_type].default_component = component
 
+        If ``component`` is None, we will record fields for all existing
+        component. For example, a Postagger might label all the tokens
+        (no matter which tokenizer generated them) in the datapack and want
+        to record "pos_tag" field for all tokens. In this case, Postagger
+        could record fields with `component = None`.
+        """
         fields.append("tid")
-        for field in fields:
-            self.internal_metas[entry_type].fields_created[component].add(field)
+        internal_meta = self.internal_metas[entry_type]
+        if component is not None:
+            if internal_meta.default_component is None:
+                internal_meta.default_component = component
+            internal_meta.fields_created[component].update(fields)
+        else:
+            for field_set in internal_meta.fields_created.values():
+                field_set.update(fields)
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():

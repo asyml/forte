@@ -14,11 +14,18 @@ class NLTKSentenceSegmenter(PackProcessor):
 
     def __init__(self):
         super().__init__()
+        self._ontology = base_ontology
+        self.define_input_info()
+        self.define_output_info()
 
-        self.ontology = base_ontology  # should specify for each pipeline
+    def define_input_info(self):
+        self.input_info = {
+            base_ontology.Document: ["span"]
+        }
 
+    def define_output_info(self):
         self.output_info = {
-            self.ontology.Sentence: ["span"]
+            self._ontology.Sentence: ["span"]
         }
 
     def _process(self, input_pack: DataPack):
@@ -31,7 +38,7 @@ class NLTKSentenceSegmenter(PackProcessor):
             for sentence_text in sentences:
                 begin_pos = text.find(sentence_text, end_pos)
                 end_pos = begin_pos + len(sentence_text)
-                sentence_entry = self.ontology.Sentence(begin_pos, end_pos)
+                sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
                 input_pack.add_or_get_entry(sentence_entry)
 
 
@@ -42,10 +49,18 @@ class PeriodSentenceSegmenter(PackProcessor):
     """
     def __init__(self):
         super().__init__()
+        self._ontology = base_ontology
+        self.define_input_info()
+        self.define_output_info()
 
-        self.ontology = base_ontology
+    def define_input_info(self):
+        self.input_info = {
+            base_ontology.Document: ["span"]
+        }
+
+    def define_output_info(self):
         self.output_info = {
-            self.ontology.Sentence: ["span"]
+            self._ontology.Sentence: ["span"]
         }
 
     def _process(self, input_pack: DataPack):
@@ -56,7 +71,7 @@ class PeriodSentenceSegmenter(PackProcessor):
             end_pos = min(text.find('.', begin_pos))
             if end_pos == -1:
                 end_pos = len(text) - 1
-            sentence_entry = self.ontology.Sentence(begin_pos, end_pos + 1)
+            sentence_entry = self._ontology.Sentence(begin_pos, end_pos + 1)
             input_pack.add_or_get_entry(sentence_entry)
 
             begin_pos = end_pos + 1

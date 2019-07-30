@@ -6,7 +6,6 @@ from nlp.pipeline.data import slice_batch
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.batchers import ProcessingBatcher
-from nlp.pipeline.data.ontology import Entry
 
 __all__ = [
     "BatchProcessor",
@@ -21,8 +20,6 @@ class BatchProcessor(BaseProcessor):
         super().__init__()
 
         self.context_type = None
-        self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
-
         self.batch_size = None
         self.batcher = None
 

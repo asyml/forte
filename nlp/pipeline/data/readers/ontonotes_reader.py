@@ -36,18 +36,21 @@ class OntonotesReader(MonoFileReader):
     @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
-        self.ontology = ontonotes_ontology
+        self._ontology = ontonotes_ontology
+        self.define_output_info()
+
+    def define_output_info(self):
         self.output_info = {
-            self.ontology.Document:["span"],
-            self.ontology.Sentence: ["speaker", "part_id", "span"],
-            self.ontology.Token: ["sense", "pos_tag", "span"],
-            self.ontology.EntityMention: ["ner_type", "span"],
-            self.ontology.PredicateMention:
+            self._ontology.Document:["span"],
+            self._ontology.Sentence: ["speaker", "part_id", "span"],
+            self._ontology.Token: ["sense", "pos_tag", "span"],
+            self._ontology.EntityMention: ["ner_type", "span"],
+            self._ontology.PredicateMention:
                 ["pred_lemma", "pred_type", "span", "framenet_id"],
-            self.ontology.PredicateArgument: ["span"],
-            self.ontology.PredicateLink: ["parent", "child", "arg_type"],
-            self.ontology.CoreferenceMention: ["span"],
-            self.ontology.CoreferenceGroup: ["coref_type", "members"]
+            self._ontology.PredicateArgument: ["span"],
+            self._ontology.PredicateLink: ["parent", "child", "arg_type"],
+            self._ontology.CoreferenceMention: ["span"],
+            self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
 
     @staticmethod
@@ -112,7 +115,7 @@ class OntonotesReader(MonoFileReader):
                 # add tokens
                 kwargs_i: Dict[str, Any] = {"pos_tag": pos_tag,
                                             "sense": word_sense}
-                token = self.ontology.Token(  # type: ignore
+                token = self._ontology.Token(  # type: ignore
                     word_begin, word_end
                 )
                 token.set_fields(**kwargs_i)
@@ -135,7 +138,7 @@ class OntonotesReader(MonoFileReader):
                         else "other"
                     }
                     pred_mention = \
-                        self.ontology.PredicateMention(  # type: ignore
+                        self._ontology.PredicateMention(  # type: ignore
                         word_begin, word_end
                     )
                     pred_mention.set_fields(**kwargs_i)
@@ -183,7 +186,7 @@ class OntonotesReader(MonoFileReader):
                         kwargs_i = {
                             "arg_type": arg[1],
                         }
-                        link = self.ontology.PredicateLink(  # type: ignore
+                        link = self._ontology.PredicateLink(  # type: ignore
                             predicate, arg[0]
                         )
                         link.set_fields(**kwargs_i)
@@ -196,7 +199,7 @@ class OntonotesReader(MonoFileReader):
                 # add sentence
 
                 kwargs_i = {"speaker": speaker, "part_id": part_id}
-                sent = self.ontology.Sentence(  # type: ignore
+                sent = self._ontology.Sentence(  # type: ignore
                     sentence_begin, offset - 1
                 )
                 sent.set_fields(**kwargs_i)
@@ -209,12 +212,12 @@ class OntonotesReader(MonoFileReader):
         # group the coreference mentions in the whole document
         for group_id, mention_list in groups.items():
             kwargs_i = {"coref_type": group_id}
-            group = self.ontology.CoreferenceGroup()  # type: ignore
+            group = self._ontology.CoreferenceGroup()  # type: ignore
             group.set_fields(**kwargs_i)
             group.add_members(mention_list)
             self.current_datapack.add_or_get_entry(group)
 
-        document = self.ontology.Document(0, len(text))  # type: ignore
+        document = self._ontology.Document(0, len(text))  # type: ignore
         self.current_datapack.add_or_get_entry(document)
 
         kwargs_i = {"doc_id": document_id}
@@ -243,7 +246,7 @@ class OntonotesReader(MonoFileReader):
                     "current_entity_mention is None when meet right blanket.")
             # Exiting a span, add and then reset the current span.
             kwargs_i = {"ner_type": current_entity_mention[1]}
-            entity = self.ontology.EntityMention(  # type: ignore
+            entity = self._ontology.EntityMention(  # type: ignore
                 current_entity_mention[0], word_end
             )
             entity.set_fields(**kwargs_i)
@@ -280,7 +283,7 @@ class OntonotesReader(MonoFileReader):
                 arg_begin = current_pred_arg[label_index][0]  # type: ignore
                 arg_type = current_pred_arg[label_index][1]  # type: ignore
 
-                pred_arg = self.ontology.PredicateArgument(  # type: ignore
+                pred_arg = self._ontology.PredicateArgument(  # type: ignore
                     arg_begin, word_end
                 )
                 pred_arg = self.current_datapack.add_or_get_entry(pred_arg)
@@ -307,7 +310,7 @@ class OntonotesReader(MonoFileReader):
                     group_id = int(segment[1:-1])
 
                     coref_mention = \
-                        self.ontology.CoreferenceMention(  # type: ignore
+                        self._ontology.CoreferenceMention(  # type: ignore
                             word_begin, word_end
                     )
                     coref_mention = self.current_datapack.add_or_get_entry(
@@ -324,7 +327,7 @@ class OntonotesReader(MonoFileReader):
                 group_id = int(segment[:-1])
                 start = coref_stacks[group_id].pop()
                 coref_mention = \
-                    self.ontology.CoreferenceMention(  # type: ignore
+                    self._ontology.CoreferenceMention(  # type: ignore
                         start, word_end
                 )
                 coref_mention = self.current_datapack.add_or_get_entry(

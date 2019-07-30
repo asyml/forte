@@ -27,19 +27,26 @@ class CoNLLNERPredictor(BatchProcessor):
         self.device = None
 
         self.train_instances_cache = []
-        self.ontology = conll03_ontology
+
+        self._ontology = conll03_ontology
+        self.define_input_info()
+        self.define_input_info()
 
         self.context_type = "sentence"
+
+        self.batch_size = 3
+        self.initialize_batcher()
+
+    def define_input_info(self):
         self.input_info = {
             base_ontology.Token: [],
             base_ontology.Sentence: [],
         }
-        self.output_info = {
-            self.ontology.EntityMention: ["ner_type", "span"],
-        }
 
-        self.batch_size = 3
-        self.initialize_batcher()
+    def define_output_info(self):
+        self.output_info = {
+            self._ontology.EntityMention: ["ner_type", "span"],
+        }
 
     def initialize(self, resource: Resources):
         self.initialize_batcher()
@@ -138,7 +145,7 @@ class CoNLLNERPredictor(BatchProcessor):
                             continue
 
                         kwargs_i = {"ner_type": current_entity_mention[1]}
-                        entity = self.ontology.EntityMention(
+                        entity = self._ontology.EntityMention(
                             current_entity_mention[0],
                             orig_token.span.end,
                         )
@@ -150,7 +157,7 @@ class CoNLLNERPredictor(BatchProcessor):
                             orig_token.ner_tag[2:],
                         )
                         kwargs_i = {"ner_type": current_entity_mention[1]}
-                        entity = self.ontology.EntityMention(
+                        entity = self._ontology.EntityMention(
                             current_entity_mention[0],
                             orig_token.span.end,
                         )
@@ -160,7 +167,7 @@ class CoNLLNERPredictor(BatchProcessor):
                 else:
                     # Only Add EntityMention when overwrite is True
                     kwargs_i = {"ner_tag": ner_tag}
-                    token = self.ontology.Token(
+                    token = self._ontology.Token(
                         orig_token.span.begin,
                         orig_token.span.end,
                     )
@@ -220,7 +227,7 @@ class CoNLLNERPredictor(BatchProcessor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config=None):
         super().__init__(config)
-        self.ontology = conll03_ontology
+        self._ontology = conll03_ontology
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"

@@ -13,12 +13,23 @@ class NLTKPOSTagger(PackProcessor):
 
     def __init__(self):
         super().__init__()
-
-        self.ontology = base_ontology  # should specify for each pipeline
         self.token_component = None
+        self._ontology = base_ontology
+        self.define_input_info()
+        self.define_output_info()
 
+    def define_input_info(self):
+        self.input_info = {
+            base_ontology.Sentence: ["span"],
+            self._ontology.Token: {
+                "fields": ["span"],
+                "component": self.token_component
+            }
+        }
+
+    def define_output_info(self):
         self.output_info = {
-            self.ontology.Token: {
+            self._ontology.Token: {
                 "component": self.token_component,
                 "fields": ["pos_tag"]
             }
@@ -27,8 +38,8 @@ class NLTKPOSTagger(PackProcessor):
     def _process(self, input_pack: DataPack):
         # TODO: need to think about how to specify component, currently is
         #  getting all component
-        for sentence in input_pack.get(self.ontology.Sentence):
-            token_entries = list(input_pack.get(entry_type=self.ontology.Token,
+        for sentence in input_pack.get(self._ontology.Sentence):
+            token_entries = list(input_pack.get(entry_type=self._ontology.Token,
                                                 range_annotation=sentence,
                                                 component=self.token_component))
             token_texts = [token.text for token in token_entries]

@@ -28,9 +28,12 @@ class PlainTextReader(MonoFileReader):
     @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
-        self.ontology = base_ontology
+        self._ontology = base_ontology
+        self.define_output_info()
+
+    def define_output_info(self):
         self.output_info = {
-            self.ontology.Document: ["span"],
+            self._ontology.Document: ["span"],
         }
 
     @staticmethod
@@ -53,7 +56,7 @@ class PlainTextReader(MonoFileReader):
         doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
         text = doc.read()
 
-        document = self.ontology.Document(0, len(text))  # type: ignore
+        document = self._ontology.Document(0, len(text))  # type: ignore
         self.current_datapack.add_or_get_entry(document)
 
         self.current_datapack.set_text(text)

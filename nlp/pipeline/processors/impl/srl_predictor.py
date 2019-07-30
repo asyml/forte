@@ -30,20 +30,11 @@ class SRLPredictor(BatchProcessor):
     def __init__(self, model_dir: str):
         super().__init__()
 
-        self.ontology = ontonotes_ontology
+        self._ontology = ontonotes_ontology
+        self.define_input_info()
+        self.define_input_info()
 
         self.context_type = "sentence"
-        self.input_info = {
-            base_ontology.Token: [],
-        }
-        self.output_info = {
-            self.ontology.PredicateMention:  # type: ignore
-                ["pred_type", "span"],
-            self.ontology.PredicateArgument: ["span"],  # type: ignore
-            self.ontology.PredicateLink:  # type: ignore
-                ["parent", "child", "arg_type"],
-
-        }
 
         self.batch_size = 4
         self.initialize_batcher()
@@ -69,6 +60,21 @@ class SRLPredictor(BatchProcessor):
             map_location=self.device))
         self.model.eval()
 
+    def define_input_info(self):
+        self.input_info = {
+            base_ontology.Token: [],
+        }
+
+    def define_output_info(self):
+        self.output_info = {
+            self._ontology.PredicateMention:  # type: ignore
+                ["pred_type", "span"],
+            self._ontology.PredicateArgument: ["span"],  # type: ignore
+            self._ontology.PredicateLink:  # type: ignore
+                ["parent", "child", "arg_type"],
+
+        }
+
     def initialize(self, resource: Resources):
         raise NotImplementedError
 
@@ -93,12 +99,12 @@ class SRLPredictor(BatchProcessor):
             predictions: Prediction = {}
             for pred_idx, pred_args in srl_spans.items():
                 begin, end = word_spans[pred_idx]
-                pred_annotation = self.ontology.PredicateMention(begin, end)
+                pred_annotation = self._ontology.PredicateMention(begin, end)
                 arguments = []
                 for arg in pred_args:
                     begin = word_spans[arg.start][0]
                     end = word_spans[arg.end][1]
-                    arg_annotation = self.ontology.PredicateArgument(begin, end)
+                    arg_annotation = self._ontology.PredicateArgument(begin, end)
                     arguments.append((arg_annotation, arg.label))
                 predictions[pred_annotation] = arguments
             batch_predictions.append(predictions)
@@ -112,6 +118,6 @@ class SRLPredictor(BatchProcessor):
                 pred = data_pack.add_or_get_entry(pred)
                 for arg, label in args:
                     arg = data_pack.add_or_get_entry(arg)
-                    link = self.ontology.PredicateLink(pred, arg)
+                    link = self._ontology.PredicateLink(pred, arg)
                     link.set_fields(arg_type=label)
                     data_pack.add_or_get_entry(link)

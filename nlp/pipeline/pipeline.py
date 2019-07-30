@@ -27,13 +27,17 @@ class Pipeline:
         Initialize the pipeline with configs
         """
         if "ontology" in kwargs.keys():
-            module_path = ["__main__",
-                           "nlp.pipeline.data.ontology"]
-            self._ontology = get_class(kwargs["ontology"], module_path)
+            # module_path = ["__main__",
+            #                "nlp.pipeline.data.ontology"]
+            # self._ontology = get_class(kwargs["ontology"], module_path)
+            self._ontology = kwargs["ontology"]
+            self._reader.set_ontology(self._ontology)
             for processor in self.processors:
-                processor.ontology = self._ontology
+                processor.set_ontology(self._ontology)
 
     def set_reader(self, reader: BaseReader):
+        if self._ontology is not None:
+            reader.set_ontology(self._ontology)
         self._reader = reader
 
     @property
@@ -41,14 +45,14 @@ class Pipeline:
         return self._processors
 
     def add_processor(self, processor: BaseProcessor):
-        if self._ontology:
-            processor.ontology = self._ontology
+        if self._ontology is not None:
+            processor.set_ontology(self._ontology)
         self._processors_index[processor.component_name] = len(self.processors)
         self.processors.append(processor)
 
     def process(self, text: str):
-        datapack = DataPack()
-        datapack.set_text(text)
+        datapack = self._reader.read(text)
+
         for processor in self.processors:
             if isinstance(processor, BatchProcessor):
                 processor.process(datapack, tail_instances=True)

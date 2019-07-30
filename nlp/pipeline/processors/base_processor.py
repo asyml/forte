@@ -21,8 +21,9 @@ class BaseProcessor:
 
     def __init__(self):
         self.component_name = get_full_module_name(self)
-        self.ontology = base_ontology
+        self._ontology = base_ontology
         self._overwrite = True
+        self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
 
     def initialize(self, resource: Resources):
@@ -30,6 +31,19 @@ class BaseProcessor:
         # TODO Change docstring
         """Initialize the processor with ``recources``."""
         pass
+
+    def set_ontology(self, ontology):
+        self._ontology = ontology
+        self.define_input_info()
+        self.define_output_info()
+
+    @abstractmethod
+    def define_output_info(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def define_input_info(self):
+        raise NotImplementedError
 
     def set_mode(self, overwrite: bool):
         self._overwrite = overwrite
