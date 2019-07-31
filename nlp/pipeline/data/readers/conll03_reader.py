@@ -36,6 +36,7 @@ class CoNLL03Reader(MonoFileReader):
             self._ontology.Sentence: ["span"],
             self._ontology.Token: ["span", "chunk_tag", "pos_tag", "ner_tag"]
         }
+        self.current_datapack: DataPack = DataPack()
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:

@@ -1,5 +1,5 @@
 import pickle
-
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
 from nlp.pipeline.processors.impl.ner_predictor import (
     CoNLLNERPredictor,
@@ -15,8 +15,6 @@ resource: Resources = pickle.load(open('resources.pkl', 'rb'))
 
 ner_predictor = CoNLLNERPredictor()
 ner_predictor.initialize(resource)
-ner_predictor.set_mode(overwrite=True)
-# ner_predictor.load_model_checkpoint()
 
 for pack in reader.dataset_iterator(resource.resources[
                                         'config_data'].test_path):
@@ -24,12 +22,12 @@ for pack in reader.dataset_iterator(resource.resources[
 
     for pred_sentence in pack.get_data(
             context_type="sentence",
-            annotation_types={
-                "Token": {
+            requests={
+                base_ontology.Token: {
                     "fields": ["ner_tag"],
                 },
-                "Sentence": [],  # span by default
-                "EntityMention": {
+                base_ontology.Sentence: [],  # span by default
+                base_ontology.EntityMention: {
                 }
             }):
         print(pred_sentence)

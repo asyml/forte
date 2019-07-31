@@ -52,6 +52,7 @@ class OntonotesReader(MonoFileReader):
             self._ontology.CoreferenceMention: ["span"],
             self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
+        self.current_datapack: DataPack = DataPack()
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:

@@ -1,13 +1,18 @@
+import logging
+
 import numpy as np
-import yaml
+from texar.torch.hyperparams import HParams
+
 import torch
 from torch.optim import SGD
-from texar.torch.hyperparams import HParams
+
+import yaml
 
 from examples.NER.model_factory import BiRecurrentConvCRF
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
-from nlp.pipeline.models.NER.utils import load_glove_embedding
+from nlp.pipeline.models.NER.utils import load_glove_embedding, \
+    normalize_digit_word
 from nlp.pipeline.models.NER.utils import set_random_seed
 from nlp.pipeline.processors.impl.ner_predictor import (
     CoNLLNEREvaluator, CoNLLNERPredictor)
@@ -15,6 +20,8 @@ from nlp.pipeline.processors.impl.vocabulary_processor import (
     Alphabet, CoNLL03VocabularyProcessor)
 from nlp.pipeline.train_pipeline import TrainPipeline
 from nlp.pipeline.trainer.impl.ner_trainer import CoNLLNERTrainer
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def construct_word_embedding_table(embed_dict, alphabet):
@@ -54,15 +61,13 @@ def main():
     embedding_path = config_model.embedding_path
 
     train_reader = reader.dataset_iterator(config_data.train_path)
-    unused_val_reader = reader.dataset_iterator(config_data.val_path)
-    unused_test_reader = reader.dataset_iterator(config_data.test_path)
     embedding_dict = load_glove_embedding(embedding_path)
 
     # Keep the vocabulary processor as a simple counter
     vocab_processor = CoNLL03VocabularyProcessor()
 
-    (word_cnt, char_cnt, unused_pos_cnt,
-     unused_chunk_cnt, ner_cnt) = vocab_processor.process(train_reader)
+    (word_cnt, char_cnt, _, _, ner_cnt) = vocab_processor.process(train_reader)
+    print(f'data reading and vocabulary creation is done.')
 
     word_alphabet = Alphabet("word", word_cnt)
     char_alphabet = Alphabet("character", char_cnt)
@@ -72,9 +77,9 @@ def main():
         if word not in word_alphabet.instance2index:
             word_alphabet.add(word)
 
-    word_alphabet.save(config_data["alphabet_directory"])
-    char_alphabet.save(config_data["alphabet_directory"])
-    ner_alphabet.save(config_data["alphabet_directory"])
+    # word_alphabet.save(config_data["alphabet_directory"])
+    # char_alphabet.save(config_data["alphabet_directory"])
+    # ner_alphabet.save(config_data["alphabet_directory"])
 
     device = (
         torch.device("cuda") if torch.cuda.is_available() else torch.device(
@@ -85,8 +90,7 @@ def main():
                                                           word_alphabet)
 
     print(f'word embedding table size:{word_embedding_table.size()}')
-    normalize_func = vocab_processor.normalize_func
-
+    normalize_func = normalize_digit_word
     model = BiRecurrentConvCRF(
         word_embedding_table, char_alphabet.size(), ner_alphabet.size(),
         config_model

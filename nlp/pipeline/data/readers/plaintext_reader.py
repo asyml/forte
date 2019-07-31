@@ -44,7 +44,7 @@ class PlainTextReader(MonoFileReader):
         """
         for root, _, files in os.walk(dir_path):
             files.sort()
-            for data_file in files:
+            for data_file in sorted(files):
                 if data_file.endswith(".txt"):
                     yield os.path.join(root, data_file)
 
@@ -53,6 +53,7 @@ class PlainTextReader(MonoFileReader):
             raise ValueError("You shouldn never call _read_document() "
                              "directly. Instead, call read() to read a file "
                              "or dataset_iterator() to read a directory.")
+        assert isinstance(self.current_datapack, DataPack)
         doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
         text = doc.read()
 

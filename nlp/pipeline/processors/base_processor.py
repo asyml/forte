@@ -22,7 +22,6 @@ class BaseProcessor:
     def __init__(self):
         self.component_name = get_full_module_name(self)
         self._ontology = base_ontology
-        self._overwrite = True
         self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
 
@@ -44,10 +43,6 @@ class BaseProcessor:
     @abstractmethod
     def define_input_info(self):
         raise NotImplementedError
-
-    # TODO: remove this mode.
-    def set_mode(self, overwrite: bool):
-        self._overwrite = overwrite
 
     @abstractmethod
     def process(self, input_pack: DataPack):

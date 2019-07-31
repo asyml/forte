@@ -1,7 +1,4 @@
-"""
-This class defines the core interchange format, deals with basic operations
-such as adding entries, getting data, and indexing.
-"""
+import copy
 import logging
 from collections import defaultdict
 from typing import (DefaultDict, Dict, Iterable, Iterator, List, Optional,
@@ -445,7 +442,7 @@ class DataPack:
                 pack.get_data("sentence", requests)
 
         Args:
-            context_type (str): The granularity of the ner_data context, which
+            context_type (str): The granularity of the data context, which
                 could be either `"sentence"` or `"document"`
             requests (dict): The entry types and fields required.
                 The keys of the dict are the required entry types and the
@@ -581,7 +578,8 @@ class DataPack:
                         )
 
                 if group_types:
-                    for g_type, g_args in group_types.items():  # pylint: disable=unused-variable
+                    # pylint: disable=unused-variable
+                    for g_type, g_args in group_types.items():
                         pass
 
                 yield data
@@ -885,3 +883,6 @@ class DataPack:
             if isinstance(entry, Group):
                 groups.add(entry)
         return groups
+
+    def view(self):
+        return copy.deepcopy(self)
