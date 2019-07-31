@@ -1,6 +1,5 @@
 import json
 import os
-import re
 from collections import Counter
 from typing import Any, Counter as CounterType, Dict, Iterator, List, Optional
 
@@ -9,6 +8,7 @@ import texar.torch as tx
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.processors.base_processor import BaseProcessor
+from nlp.pipeline.models.NER.utils import normalize_digit_word
 
 __all__ = [
     "Alphabet",
@@ -193,11 +193,9 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         super().__init__(min_frequency)
         self.normalize_digit = normalize_digit
 
-        self.digit_re = re.compile(r"\d")
-
     def normalize_func(self, x):
         if self.normalize_digit:
-            return self.digit_re.sub("0", x)
+            return normalize_digit_word(x)
         else:
             return x
 

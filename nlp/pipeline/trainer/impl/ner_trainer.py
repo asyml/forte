@@ -9,6 +9,7 @@ import torch
 import torchtext
 from tqdm import tqdm
 
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.trainer.base_trainer import BaseTrainer
 
@@ -28,6 +29,7 @@ class CoNLLNERTrainer(BaseTrainer):
         self.normalize_func = None
         self.device = None
         self.optim, self.trained_epochs = None, None
+        self.ontology = base_ontology
         self.resource: Optional[Resources] = None
 
         self.train_instances_cache = []
@@ -56,9 +58,9 @@ class CoNLLNERTrainer(BaseTrainer):
     def data_request(self):
         request_string = {
             "context_type": "sentence",
-            "annotation_types": {
-                "Token": ["ner_tag"],
-                "Sentence": [],  # span by default
+            "requests": {
+                self.ontology.Token: ["ner_tag"],
+                self.ontology.Sentence: [],  # span by default
             },
         }
         return request_string
@@ -102,6 +104,7 @@ class CoNLLNERTrainer(BaseTrainer):
         """
         counter = len(self.train_instances_cache)
         logger.info("Total number of ner_data: %d", counter)
+
         lengths = sum(
             [len(instance[0]) for instance in self.train_instances_cache]
         )
@@ -238,7 +241,8 @@ class CoNLLNERTrainer(BaseTrainer):
 
     def load_model_checkpoint(self):
         ckpt = torch.load(self.config_model.model_path)
-        print("restoring model from {}".format(self.config_model.model_path))
+        logger.info("restoring model from %s",
+                    self.config_model.model_path)
         self.model.load_state_dict(ckpt["model"])
         self.optim.load_state_dict(ckpt["optimizer"])
 
