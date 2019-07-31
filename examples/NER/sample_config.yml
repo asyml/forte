@@ -1,0 +1,35 @@
+# This provides a configuration for interence only
+
+PipelineType: SinglePackPipeline or MultiPackPipeline or TrainPipeline
+# Or maybe MultiPackTrainPipeline
+Resources:
+  # Instructions on how to build resources
+  storage_path: "/home/hector/models/NER_model/resources.pkl"
+
+GlobalConfig:
+
+DataInput:
+  reader:
+    type: CoNLL03Reader
+    kwargs:
+
+globalconfig:
+
+Processors:
+  - type: VocularyProcessor
+    - config_file
+    -
+
+  - type: NERPredictor
+
+  - type: NLTKSentenceSegmenter
+    kwargs:
+  - type: NLTKWordTokenizer
+    kwargs:
+  - type: NLTKPOSTagger
+    kwargs:
+  - type: CoNLLNERPredictor
+    kwargs:
+#  - type: SRLPredictor
+# - type: this is not in a config+resource format
+

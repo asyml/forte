@@ -20,9 +20,20 @@ class Pipeline:
         self.topology = None
         self.current_packs = []
 
-        self.initialize(**kwargs)
+    def init_from_config_path(self, path):
+        """
+        Hparam
 
-    def initialize(self, **kwargs):
+        Hprams....
+        init_from_config(self, config: HParams):
+        :return:
+        """
+
+    def init_from_config(self, config: HParams):
+        """
+        parse the configuration sections from the input config,
+        into a list of [processor, config]
+        """
         """
         Initialize the pipeline with configs
         """
@@ -47,8 +58,16 @@ class Pipeline:
         self.processors.append(processor)
 
     def process(self, text: str):
+        """
+        delegate to reader...
+
+        :param text:
+        :return:
+        """
+
         datapack = DataPack()
         datapack.set_text(text)
+
         for processor in self.processors:
             if isinstance(processor, BatchProcessor):
                 processor.process(datapack, tail_instances=True)
