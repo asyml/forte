@@ -77,15 +77,15 @@ class TrainPipeline:
             for pack in self.dev_reader.dataset_iterator(
                     self.config_data.val_path
             ):
-                self.predictor.process(pack)
-                self.evaluator.consume_next(pack)
+                predicted_pack = self.predictor.process(pack.view())
+                self.evaluator.consume_next(pack, predicted_pack)
             validation_result["eval"] = self.evaluator.get_result()
 
             for pack in self.dev_reader.dataset_iterator(
                     self.config_data.test_path
             ):
-                self.predictor.process(pack)
-                self.evaluator.consume_next(pack)
+                predicted_pack = self.predictor.process(pack.view())
+                self.evaluator.consume_next(pack, predicted_pack)
             validation_result["test"] = self.evaluator.get_result()
 
         return validation_result

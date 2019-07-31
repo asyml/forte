@@ -112,7 +112,8 @@ class CoNLLNERPredictor(BatchProcessor):
         if output_dict is None:
             return
 
-        # Add tokens
+        # Overwrite the tokens in the data_pack
+
         current_entity_mention: Tuple[int, str] = (-1, "None")
 
         for i in range(len(output_dict["Token"]["tid"])):
@@ -122,50 +123,41 @@ class CoNLLNERPredictor(BatchProcessor):
                 orig_token = data_pack.get_entry_by_id(tid)
                 ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
-                if self._overwrite:
-                    orig_token.ner_tag = ner_tag
-                    if orig_token.ner_tag[0] == "B":
-                        current_entity_mention = (
-                            orig_token.span.begin,
-                            orig_token.ner_tag[2:],
-                        )
-                    elif orig_token.ner_tag[0] == "I":
-                        continue
-                    elif orig_token.ner_tag[0] == "O":
-                        continue
-                    elif orig_token.ner_tag[0] == "E":
-                        if orig_token.ner_tag[2:] != current_entity_mention[1]:
-                            continue
-
-                        kwargs_i = {"ner_type": current_entity_mention[1]}
-                        entity = self.ontology.EntityMention(
-                            current_entity_mention[0],
-                            orig_token.span.end,
-                        )
-                        entity.set_fields(**kwargs_i)
-                        data_pack.add_or_get_entry(entity)
-                    elif orig_token.ner_tag[0] == "S":
-                        current_entity_mention = (
-                            orig_token.span.begin,
-                            orig_token.ner_tag[2:],
-                        )
-                        kwargs_i = {"ner_type": current_entity_mention[1]}
-                        entity = self.ontology.EntityMention(
-                            current_entity_mention[0],
-                            orig_token.span.end,
-                        )
-                        entity.set_fields(**kwargs_i)
-                        data_pack.add_or_get_entry(entity)
-
-                else:
-                    # Only Add EntityMention when overwrite is True
-                    kwargs_i = {"ner_tag": ner_tag}
-                    token = self.ontology.Token(
-                        orig_token.span.begin,
-                        orig_token.span.end,
+                orig_token.ner_tag = ner_tag
+                token = orig_token
+                if token.ner_tag[0] == "B":
+                    current_entity_mention = (
+                        token.span.begin,
+                        token.ner_tag[2:],
                     )
-                    token.set_fields(**kwargs_i)
-                    data_pack.add_or_get_entry(token)
+                elif token.ner_tag[0] == "I":
+                    continue
+                elif token.ner_tag[0] == "O":
+                    continue
+
+                elif token.ner_tag[0] == "E":
+                    if token.ner_tag[2:] != current_entity_mention[1]:
+                        continue
+
+                    kwargs_i = {"ner_type": current_entity_mention[1]}
+                    entity = self.ontology.EntityMention(
+                        current_entity_mention[0],
+                        token.span.end,
+                    )
+                    entity.set_fields(**kwargs_i)
+                    data_pack.add_or_get_entry(entity)
+                elif token.ner_tag[0] == "S":
+                    current_entity_mention = (
+                        token.span.begin,
+                        token.ner_tag[2:],
+                    )
+                    kwargs_i = {"ner_type": current_entity_mention[1]}
+                    entity = self.ontology.EntityMention(
+                        current_entity_mention[0],
+                        token.span.end,
+                    )
+                    entity.set_fields(**kwargs_i)
+                    data_pack.add_or_get_entry(entity)
 
     def get_batch_tensor(self, data: List, device=None):
         """
@@ -226,20 +218,19 @@ class CoNLLNEREvaluator(Evaluator):
         self.score_file = "tmp_eval.score"
         self.scores = {}
 
-    def consume_next(self, pack: DataPack):
+    def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
         opened_file = open(self.output_file, "w+")
         for pred_sentence, tgt_sentence in zip(
-                pack.get_data(
+                pred_pack.get_data(
                     context_type="sentence",
                     requests={
                         base_ontology.Token: {
-                            "component": self.test_component,
                             "fields": ["ner_tag"],
                         },
                         base_ontology.Sentence: [],  # span by default
                     },
                 ),
-                pack.get_data(
+                refer_pack.get_data(
                     context_type="sentence",
                     requests={
                         base_ontology.Token: {

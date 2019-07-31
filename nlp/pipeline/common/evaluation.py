@@ -11,11 +11,14 @@ __all__ = [
 
 
 class Evaluator:
-    def __init__(self, config):
+    def __init__(self, config=None):
         pass
 
     @abstractmethod
-    def consume_next(self, pack: DataPack):
+    def consume_next(self, pred_pack: DataPack, ref_pack: DataPack):
+        # TODO: We may want to adjust this function signature.
+        # I had used (self, *args, **kwargs)
+        # But in the NEREvaluator we have to override the function signature
         raise NotImplementedError
 
     @abstractmethod
