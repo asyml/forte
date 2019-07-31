@@ -241,7 +241,8 @@ class CoNLLNERTrainer(BaseTrainer):
 
     def load_model_checkpoint(self):
         ckpt = torch.load(self.config_model.model_path)
-        logger.info("restoring model from {}".format(self.config_model.model_path))
+        logger.info("restoring model from %s",
+                    self.config_model.model_path)
         self.model.load_state_dict(ckpt["model"])
         self.optim.load_state_dict(ckpt["optimizer"])
 
