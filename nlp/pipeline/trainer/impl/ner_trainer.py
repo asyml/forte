@@ -104,13 +104,11 @@ class CoNLLNERTrainer(BaseTrainer):
         """
         counter = len(self.train_instances_cache)
         logger.info("Total number of ner_data: %d", counter)
-        print("Total number of ner_data: %d", counter)
 
         lengths = sum(
             [len(instance[0]) for instance in self.train_instances_cache]
         )
         logger.info("average sentence length: %f", (lengths / counter))
-        print("average sentence length: %f", (lengths / counter))
 
         train_err = 0.0
         train_total = 0.0
@@ -151,13 +149,8 @@ class CoNLLNERTrainer(BaseTrainer):
                     train_err / train_total,
                 )
                 logger.info(log_info)
-                print(log_info)
 
         logger.info(
-            "Epoch: %d train: %d loss: %.4f, time: %.2fs",
-            epoch, bid, train_err / train_total, time.time() - start_time,
-        )
-        print(
             "Epoch: %d train: %d loss: %.4f, time: %.2fs",
             epoch, bid, train_err / train_total, time.time() - start_time,
         )
@@ -171,7 +164,6 @@ class CoNLLNERTrainer(BaseTrainer):
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
             logger.info("update learning rate to %f", lr)
-            print("update learning rate to %f", lr)
 
         self.request_eval()
         self.train_instances_cache.clear()
@@ -249,7 +241,7 @@ class CoNLLNERTrainer(BaseTrainer):
 
     def load_model_checkpoint(self):
         ckpt = torch.load(self.config_model.model_path)
-        print("restoring model from {}".format(self.config_model.model_path))
+        logger.info("restoring model from {}".format(self.config_model.model_path))
         self.model.load_state_dict(ckpt["model"])
         self.optim.load_state_dict(ckpt["optimizer"])
 
