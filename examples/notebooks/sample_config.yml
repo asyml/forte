@@ -1,27 +1,25 @@
 # This provides a configuration for interence only
 
-PipelineType: SinglePackPipeline or MultiPackPipeline or TrainPipeline
+PipelineType: SinglePackPipeline
 # Or maybe MultiPackTrainPipeline
 Resources:
   # Instructions on how to build resources
-  storage_path: "/home/hector/models/NER_model/resources.pkl"
+  storage_path: "/home/shr/nlp_pipeline/examples/NER/resources.pkl"
 
-GlobalConfig:
+GlobalConfig: null
 
 DataInput:
   reader:
     type: CoNLL03Reader
-    kwargs:
+    kwargs: null
 
 globalconfig:
 
 Processors:
   - type: VocularyProcessor
-    - config_file
-    -
-
+    kwargs: null
   - type: NERPredictor
-
+    kwargs:
   - type: NLTKSentenceSegmenter
     kwargs:
   - type: NLTKWordTokenizer

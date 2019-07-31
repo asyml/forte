@@ -102,7 +102,7 @@ class MonoFileReader(BaseReader):
     # read should replace the dataset_iterator as the entry point
     # support string reader: read(input: string) -> yield a datapack
     # standard IO
-    def read_file_as_pack(self,  # type: ignore
+    def read(self,  # type: ignore
              file_path: str,
              cache_file: Optional[Path] = None,
              read_from_cache: bool = True,

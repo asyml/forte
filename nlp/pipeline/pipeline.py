@@ -5,6 +5,8 @@ from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.utils import get_class
 
+from texar.torch import HParams
+import yaml
 
 class Pipeline:
     """
@@ -20,7 +22,7 @@ class Pipeline:
         self.topology = None
         self.current_packs = []
 
-    def init_from_config_path(self, path):
+    def init_from_config_path(self, config_path):
         """
         Hparam
 
@@ -28,6 +30,12 @@ class Pipeline:
         init_from_config(self, config: HParams):
         :return:
         """
+
+        configs = yaml.safe_load(open(config_path))
+
+        config = HParams(configs, default_hparams=None)
+
+        print(config)
 
     def init_from_config(self, config: HParams):
         """
