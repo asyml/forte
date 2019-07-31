@@ -477,6 +477,7 @@ class DataPack:
                 elif issubclass(key, Group):
                     group_types[key] = value
 
+        # TODO(Wei): support all kinds annotation to be context
         if context_type.lower() == "document":
             data: Dict[str, Any] = dict()
             data["context"] = self.text

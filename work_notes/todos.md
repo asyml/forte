@@ -1,3 +1,36 @@
+# Final Action Items
+1. Documentation (Everyone)
+1. Unit test (Everyone)
+1. Config system integration (Haoran)
+1. Executor integration (Zecong)
+1. Multi-pipe wrap up (Haoran)
+    1. Some updates in the pipeline are needed.
+    1. There should be a BasePack
+        1. This pack stores essential information needed to handle 
+        batching and processing state.
+    1. There should be a BasePipeline
+        1. This pipeline stores control the basic flow, such as chaining
+        processors and check processor input-output compatibility.
+        1. This will later be extended by Pipeline and MultiPackPipeline
+        1. Multipack pipeline will have special logic check for selector, 
+        let's think about how to make this fit with the interface.
+            1. we may allow additional parameter in add_processor
+            1. when we are adding Processor to the MultipackPipeline then the
+            check should complain of a missing selector.
+    1. There should be a BaseProcessor
+        1. This processor stores basic input-output requirements. Its interface
+         should accept a BasePack
+        1. This will later be extend by Processor and MultiPackProcessor
+1. Type control: (Wei wei)
+    1. How to handle unknown types and stuff: cannot handle due to serialization
+    1. Validation: a full validation is also too much work.
+    1. Generation: probably too much work in 2 weeks.
+
+# Follow ups
+1. Pre-processing support.
+1. UI Integration (reader writer for annotation UI.)
+1. An BPE example
+
 # TODO Notes
 1. A name for nlp_pipeline, anyone?
     1. Assigned to everyone

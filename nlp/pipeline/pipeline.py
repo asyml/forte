@@ -1,48 +1,19 @@
-from typing import Iterator, List, Optional, Dict, Union
+from typing import Iterator
 
 from nlp.pipeline.data import DataPack
-from nlp.pipeline.data.readers import BaseReader
+from nlp.pipeline.base_pipeline import BasePipeline
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
-from nlp.pipeline.utils import get_class
 
 
-class Pipeline:
+class Pipeline(BasePipeline):
     """
     The pipeline consists of a list of predictors.
+    TODO(Wei): check fields when concatenating processors
     """
 
     def __init__(self, **kwargs):
-        self._reader: BaseReader = BaseReader()
-        self._processors: List[BaseProcessor] = []
-        self._processors_index: Dict = {'': -1}
-
-        self._ontology = None
-        self.topology = None
-        self.current_packs = []
-
+        super().__init__()
         self.initialize(**kwargs)
-
-    def initialize(self, **kwargs):
-        """
-        Initialize the pipeline with configs
-        """
-        if "ontology" in kwargs.keys():
-            # module_path = ["__main__",
-            #                "nlp.pipeline.data.ontology"]
-            # self._ontology = get_class(kwargs["ontology"], module_path)
-            self._ontology = kwargs["ontology"]
-            self._reader.set_ontology(self._ontology)
-            for processor in self.processors:
-                processor.set_ontology(self._ontology)
-
-    def set_reader(self, reader: BaseReader):
-        if self._ontology is not None:
-            reader.set_ontology(self._ontology)
-        self._reader = reader
-
-    @property
-    def processors(self):
-        return self._processors
 
     def add_processor(self, processor: BaseProcessor):
         if self._ontology is not None:
@@ -50,8 +21,11 @@ class Pipeline:
         self._processors_index[processor.component_name] = len(self.processors)
         self.processors.append(processor)
 
-    def process(self, text: str):
-        datapack = self._reader.read(text)
+    def process(self, data: str):
+        """
+        Process a string text
+        """
+        datapack = self._reader.read(data)
 
         for processor in self.processors:
             if isinstance(processor, BatchProcessor):
@@ -60,16 +34,13 @@ class Pipeline:
                 processor.process(datapack)
         return datapack
 
-    def process_dataset(
-            self,
-            dataset: Optional[Union[Dict, str]] = None) -> Iterator[DataPack]:
+    def process_dataset(self, dataset: str) -> Iterator[DataPack]:
         """
         Process the documents in the dataset and return an iterator of DataPack.
 
         Args:
-            dataset (str or dict, optional): the dataset to be processed. This
-                could be a str path to the dataset or a dict including the str
-                path and the data format.
+            dataset (str): the directory of the dataset to be processed.
+
         """
 
         data_iter = self._reader.dataset_iterator(dataset)

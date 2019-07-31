@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, Optional, Type, Union, List
+from typing import Dict, Optional
 
 from nlp.pipeline import config
 from nlp.pipeline.data import slice_batch
