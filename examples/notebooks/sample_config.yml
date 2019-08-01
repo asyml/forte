@@ -16,18 +16,18 @@ DataInput:
 globalconfig:
 
 Processors:
-  - type: VocularyProcessor
-    kwargs: null
-  - type: NERPredictor
+  - type: "nlp.pipeline.processors.impl.tokenization_predictor.NLTKSentenceSegmenter"
     kwargs:
-  - type: NLTKSentenceSegmenter
+    configs:
+  - type: "nlp.pipeline.processors.impl.tokenization_predictor.NLTKWordTokenizer"
     kwargs:
-  - type: NLTKWordTokenizer
+    configs:
+  - type: "nlp.pipeline.processors.impl.postag_predictor.NLTKPOSTagger"
     kwargs:
-  - type: NLTKPOSTagger
+    configs:
+  - type: "nlp.pipeline.processors.impl.ner_predictor.CoNLLNERPredictor"
     kwargs:
-  - type: CoNLLNERPredictor
-    kwargs:
+    configs:
 #  - type: SRLPredictor
 # - type: this is not in a config+resource format
 

@@ -17,6 +17,8 @@ class NLTKPOSTagger(PackProcessor):
         self.ontology = base_ontology  # should specify for each pipeline
         self.token_component = None
 
+        # TODO: why this is None
+
         self.output_info = {
             self.ontology.Token: {
                 "component": self.token_component,

@@ -1,12 +1,13 @@
 from typing import Iterator, List, Optional, Dict, Union
-
+from pydoc import locate
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.utils import get_class
-
+from nlp.pipeline.common.resources import Resources
 from texar.torch import HParams
 import yaml
+
 
 class Pipeline:
     """
@@ -30,12 +31,20 @@ class Pipeline:
         init_from_config(self, config: HParams):
         :return:
         """
-
+        # TODO: Typically, we should also set the reader here,
+        # We need to modify the read -> read_file_as_pack then.
         configs = yaml.safe_load(open(config_path))
 
-        config = HParams(configs, default_hparams=None)
+        configs = HParams(configs, default_hparams=None)
+        resources = Resources().load(configs["Resources"]["storage_path"])
 
-        print(config)
+        print(configs)
+        for processor in configs.Processors:
+            print(type(processor), processor)
+            kwargs = getattr(processor, "kwargs")
+            p = locate(processor["type"])(**kwargs)
+            p.initialize(resources)
+            self.add_processor(p)
 
     def init_from_config(self, config: HParams):
         """

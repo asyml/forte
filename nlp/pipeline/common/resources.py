@@ -13,6 +13,13 @@ __all__ = [
 class Resources:
     def __init__(self, **kwargs):
         self.resources = {}
+        self.update(**kwargs)
+
+    def save(self, output_dir="./"):
+        with open(os.path.join(output_dir, "resources.pkl"), "wb") as output:
+            pickle.dump(self.resources, output, pickle.HIGHEST_PROTOCOL)
+
+    def update(self, **kwargs):
         for key, value in kwargs.items():
             try:
                 pickle.dumps(value)
@@ -21,6 +28,6 @@ class Resources:
                 print(f'Value:{value} cannot be pickled. {e}')
             self.resources[key] = value
 
-    def save(self, output_dir="./"):
-        with open(os.path.join(output_dir, "resources.pkl"), "wb") as output:
-            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+    def load(self, path):
+        resources = pickle.load(open(path, 'rb'))
+        self.update(**resources)
