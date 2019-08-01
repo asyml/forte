@@ -8,7 +8,6 @@ __all__ = [
     "get_class_name",
     "get_class",
     "get_qual_name",
-    "get_class"
 ]
 
 
@@ -87,12 +86,3 @@ def get_qual_name(o, lower=False):
         return o.__qualname__.lower()
     else:
         return o.__qualname__
-
-def get_processor(class_name: str):
-    module_paths = [
-        "nlp.pipeline.processors.impl",
-    ]
-    for module in module_paths:
-        m = __import__(module)
-        m = getattr(m, class_name)
-    return
