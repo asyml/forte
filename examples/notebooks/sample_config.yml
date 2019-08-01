@@ -1,33 +1,36 @@
 # This provides a configuration for interence only
 
-PipelineType: SinglePackPipeline
+# TODO: since we use pipeline.init_from_config(Hparams), we cannot set the PipelineType in the config
+# Unless we have an external code parsing this configuratoin and create the Pipeline itself.
+
+# PipelineType: SinglePackPipeline
 # Or maybe MultiPackTrainPipeline
 Resources:
   # Instructions on how to build resources
   storage_path: "/home/shr/nlp_pipeline/examples/NER/resources.pkl"
-
-GlobalConfig: null
 
 DataInput:
   reader:
     type: CoNLL03Reader
     kwargs: null
 
-globalconfig:
+GlobalConfig:
+  # This can be used as global configuration used in processor.initialize function
 
 Processors:
-  - type: "nlp.pipeline.processors.impl.tokenization_predictor.NLTKSentenceSegmenter"
+  - type: "nlp.pipeline.processors.NLTKSentenceSegmenter"
     kwargs:
     configs:
-  - type: "nlp.pipeline.processors.impl.tokenization_predictor.NLTKWordTokenizer"
+  - type: "nlp.pipeline.processors.NLTKWordTokenizer"
     kwargs:
     configs:
-  - type: "nlp.pipeline.processors.impl.postag_predictor.NLTKPOSTagger"
+  - type: "nlp.pipeline.processors.NLTKPOSTagger"
     kwargs:
     configs:
-  - type: "nlp.pipeline.processors.impl.ner_predictor.CoNLLNERPredictor"
+  - type: "nlp.pipeline.processors.CoNLLNERPredictor"
     kwargs:
     configs:
-#  - type: SRLPredictor
-# - type: this is not in a config+resource format
+  - type: "nlp.pipeline.processors.SRLPredictor"
+    kwargs:
+      model_dir: "/home/hector/models/SRL_model/"
 

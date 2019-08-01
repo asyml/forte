@@ -70,7 +70,7 @@ class SRLPredictor(BatchProcessor):
         self.model.eval()
 
     def initialize(self, resource: Resources):
-        raise NotImplementedError
+        pass
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [

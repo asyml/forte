@@ -11,13 +11,14 @@ reader = CoNLL03Reader(lazy=False)
 
 output_file = 'predict_output.txt'
 
-resource: Resources = pickle.load(open('resources.pkl', 'rb'))
+resources: Resources = Resources()
+resources.load('resources.pkl')
 
 ner_predictor = CoNLLNERPredictor()
-ner_predictor.initialize(resource)
+ner_predictor.initialize(resources)
 ner_predictor.set_mode(overwrite=True)
 
-for pack in reader.dataset_iterator(resource.resources[
+for pack in reader.dataset_iterator(resources.resources[
                                         'config_data'].test_path):
     ner_predictor.process(pack)
 

@@ -1,5 +1,6 @@
 from typing import Iterator, List, Optional, Dict, Union
 from pydoc import locate
+import nlp  # pylint: disable=unused-import
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
@@ -32,17 +33,21 @@ class Pipeline:
         :return:
         """
         # TODO: Typically, we should also set the reader here,
+        # This will be done after StringReader is merged
         # We need to modify the read -> read_file_as_pack then.
         configs = yaml.safe_load(open(config_path))
 
         configs = HParams(configs, default_hparams=None)
-        resources = Resources().load(configs["Resources"]["storage_path"])
+        resources = Resources()
+        resources.load(configs["Resources"]["storage_path"])
 
         print(configs)
         for processor in configs.Processors:
             print(type(processor), processor)
-            kwargs = getattr(processor, "kwargs")
-            p = locate(processor["type"])(**kwargs)
+            kwargs = processor["kwargs"] or {}
+            p = locate(processor["type"])
+            print(f'processor class:{p}')
+            p = p(**kwargs)
             p.initialize(resources)
             self.add_processor(p)
 
