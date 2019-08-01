@@ -30,7 +30,7 @@ class NLTKSentenceSegmenter(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         text = input_pack.text
-
+        print(text)
         end_pos = 0
         paragraphs = [p for p in text.split('\n') if p]
         for paragraph in paragraphs:

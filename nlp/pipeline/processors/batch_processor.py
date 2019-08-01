@@ -4,15 +4,18 @@ from typing import Dict, Optional
 from nlp.pipeline import config
 from nlp.pipeline.data import slice_batch
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.base_pack import BasePack
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.batchers import ProcessingBatcher
 
 __all__ = [
+    "BaseBatchProcessor",
     "BatchProcessor",
+    "MultiPackBatchProcessor"
 ]
 
 
-class BatchProcessor(BaseProcessor):
+class BaseBatchProcessor(BaseProcessor):
     """
     The base class of processors that process data in batch.
     """
@@ -23,10 +26,16 @@ class BatchProcessor(BaseProcessor):
         self.batch_size = None
         self.batcher = None
 
+    @abstractmethod
     def initialize_batcher(self, hard_batch: bool = True):
-        self.batcher = ProcessingBatcher(self.batch_size, hard_batch)
+        """
+        Single pack :class:`BatchProcessor` initialize the batcher to be a
+        :class:`ProcessingBatcher`. And MultiPackBatchProcessor might need
+        something like "MultiPackProcessingBatcher".
+        """
+        raise NotImplementedError
 
-    def process(self, input_pack: DataPack, tail_instances: bool = False):
+    def process(self, input_pack: BasePack, tail_instances: bool = False):
         config.working_component = self.component_name
         if input_pack.meta.cache_state == self.component_name:
             input_pack = None  # type: ignore
@@ -66,7 +75,7 @@ class BatchProcessor(BaseProcessor):
             start += self.batcher.current_batch_sources[i]
 
     @abstractmethod
-    def pack(self, data_pack: DataPack, inputs) -> None:
+    def pack(self, data_pack: BasePack, inputs) -> None:
         """
         Add corresponding fields to data_pack. Custom function of how
         to add the value back.
@@ -77,7 +86,7 @@ class BatchProcessor(BaseProcessor):
                 need to add entries or fields corresponding to this prediction
                 results to the ``data_pack``.
         """
-        pass
+        raise NotImplementedError
 
     def finish_up_packs(self, end: Optional[int] = None):
         """
@@ -97,3 +106,19 @@ class BatchProcessor(BaseProcessor):
         self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]
         self.batcher.current_batch_sources = \
             self.batcher.current_batch_sources[end:]
+
+
+class BatchProcessor(BaseBatchProcessor):
+    """
+    The batch processors that process DataPacks.
+    """
+    def initialize_batcher(self, hard_batch: bool = True):
+        self.batcher = ProcessingBatcher(self.batch_size, hard_batch)
+
+
+class MultiPackBatchProcessor(BaseBatchProcessor):
+    """
+        The batch processors that process MultiPacks.
+    """
+    def initialize_batcher(self, hard_batch: bool = True):
+        pass

@@ -4,11 +4,14 @@ from nlp.pipeline.data import DataPack
 from nlp.pipeline.base_pipeline import BasePipeline
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 
+__all__ = [
+    "Pipeline"
+]
+
 
 class Pipeline(BasePipeline):
     """
     The pipeline consists of a list of predictors.
-    TODO(Wei): check fields when concatenating processors
     """
 
     def __init__(self, **kwargs):
@@ -21,9 +24,15 @@ class Pipeline(BasePipeline):
         self._processors_index[processor.component_name] = len(self.processors)
         self.processors.append(processor)
 
-    def process(self, data: str):
+    def process(self, data: str) -> DataPack:
         """
-        Process a string text
+        Process a string text or a single file.
+
+        Args:
+            data (str): the path to a file a string text. If :attr:`_reader` is
+                :class:`StringReader`, `data` should be a text in the form of
+                a string variable. If :attr:`_reader` is a file reader, `data`
+                should be the path to a file.
         """
         datapack = self._reader.read(data)
 

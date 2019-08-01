@@ -5,7 +5,7 @@ from abc import abstractmethod
 from typing import Dict, List, Union, Type
 
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.data import DataPack
+from nlp.pipeline.data import BasePack
 from nlp.pipeline.data.ontology import base_ontology, Entry
 from nlp.pipeline.utils import get_full_module_name
 
@@ -38,19 +38,24 @@ class BaseProcessor:
 
     @abstractmethod
     def define_output_info(self):
+        """
+        User should define the output_info here
+        """
         raise NotImplementedError
 
     @abstractmethod
     def define_input_info(self):
+        """
+        User should define the input_info here
+        """
         raise NotImplementedError
 
     @abstractmethod
-    def process(self, input_pack: DataPack):
-        """Process the input data, such as train on the inputs and make
-        predictions for the inputs"""
+    def process(self, input_pack: BasePack):
+        """Process the input datapack"""
         pass
 
-    def _record_fields(self, data_pack: DataPack):
+    def _record_fields(self, input_pack: BasePack):
         """
         Record the fields and entries that this processor add to data packs.
         """
@@ -63,11 +68,13 @@ class BaseProcessor:
                 fields = info["fields"]
                 if "component" in info.keys():
                     component = info["component"]
-            data_pack.record_fields(fields, entry_type, component)
+            input_pack.record_fields(fields, entry_type, component)
 
-    def finish(self, input_pack: DataPack):
+    def finish(self, input_pack: BasePack):
         """
         Do finishing work for one data_pack.
         """
+        # TODO (haoran): please check whether this function is
+        #  sharable between pack processor and multipack processor
         self._record_fields(input_pack)
         input_pack.meta.process_state = self.component_name
