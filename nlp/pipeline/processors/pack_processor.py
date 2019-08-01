@@ -15,10 +15,6 @@ class BasePackProcessor(BaseProcessor):
     """
     The base class of processors that process one pack each time.
     """
-
-    def __init__(self):
-        super().__init__()
-
     def process(self, input_pack: BasePack):
         """
         Process one datapack at a time.
@@ -40,7 +36,6 @@ class PackProcessor(BasePackProcessor):
     """
     The base class of processors that process one pack each time.
     """
-    pass
 
 
 class MultiPackProcessor(BasePackProcessor):

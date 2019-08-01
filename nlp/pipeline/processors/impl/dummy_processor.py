@@ -19,7 +19,7 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self) -> None:
         super().__init__()
-        self.ontology = relation_ontology
+        self._ontology = relation_ontology
         self.define_input_info()
         self.define_output_info()
 
@@ -38,7 +38,7 @@ class DummyRelationExtractor(BatchProcessor):
 
     def define_output_info(self):
         self.output_info = {
-            self.ontology.RelationLink:  # type: ignore
+            self._ontology.RelationLink:
                 ["parent", "child", "rel_type"]
         }
 
@@ -74,14 +74,15 @@ class DummyRelationExtractor(BatchProcessor):
 
         return pred
 
-    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
+    def pack(self, data_pack: DataPack,  # type: ignore
+             output_dict: Optional[Dict] = None):
         """Add corresponding fields to data_pack"""
         if output_dict is None:
             return
 
         for i in range(len(output_dict["RelationLink"]["parent.tid"])):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
-                link = self.ontology.RelationLink()
+                link = self._ontology.RelationLink()
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
                 parent = data_pack.get_entry_by_id(
                     output_dict["RelationLink"]["parent.tid"][i][j])

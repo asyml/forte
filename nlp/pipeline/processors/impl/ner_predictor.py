@@ -110,7 +110,8 @@ class CoNLLNERPredictor(BatchProcessor):
             "restoring NER model from %s", self.config_model.model_path)
         self.model.load_state_dict(ckpt["model"])
 
-    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
+    def pack(self, data_pack: DataPack,  # type: ignore
+             output_dict: Optional[Dict] = None):
         """
         Write the prediction results back to datapack. by writing the predicted
         ner_tag to the original tokens.

@@ -41,7 +41,7 @@ class OntonotesReader(MonoFileReader):
 
     def define_output_info(self):
         self.output_info = {
-            self._ontology.Document:["span"],
+            self._ontology.Document: ["span"],
             self._ontology.Sentence: ["speaker", "part_id", "span"],
             self._ontology.Token: ["sense", "pos_tag", "span"],
             self._ontology.EntityMention: ["ner_type", "span"],

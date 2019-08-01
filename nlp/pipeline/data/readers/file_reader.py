@@ -33,7 +33,7 @@ class MonoFileReader(BaseReader):
         super().__init__(lazy)
         self.current_datapack: DataPack = DataPack()
 
-    def dataset_iterator(  # type: ignore
+    def dataset_iterator(
             self, dir_path: str) -> Union[List[DataPack], Iterator[DataPack]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
@@ -98,7 +98,7 @@ class MonoFileReader(BaseReader):
             for data_file in files:
                 yield os.path.join(root, data_file)
 
-    def read(self,  # type: ignore
+    def read(self,
              file_path: str,
              cache_file: Optional[Path] = None,
              read_from_cache: bool = True,
@@ -171,18 +171,3 @@ class MonoFileReader(BaseReader):
         document formant.
         """
         raise NotImplementedError
-
-    def _record_fields(self):
-        """
-        Record the fields and entries that this processor add to data packs.
-        """
-        for entry_type, info in self.output_info.items():
-            component = self.component_name
-            fields: List[str] = []
-            if isinstance(info, list):
-                fields = info
-            elif isinstance(info, dict):
-                fields = info["fields"]
-                if "component" in info.keys():
-                    component = info["component"]
-            self.current_datapack.record_fields(fields, entry_type, component)

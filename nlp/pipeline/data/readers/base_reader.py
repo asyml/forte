@@ -26,6 +26,7 @@ class BaseReader:
         self._ontology = None
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
+        self.current_datapack: DataPack = DataPack()
 
     def set_ontology(self, ontology):
         self._ontology = ontology
@@ -78,16 +79,31 @@ class BaseReader:
         """
         return jsonpickle.decode(string)
 
-    def dataset_iterator(self, *args, **kwargs):
+    def dataset_iterator(self, dataset):
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.
         """
         raise NotImplementedError
 
-    def read(self, *args, **kwargs) -> DataPack:
+    def read(self, data) -> DataPack:
         """
         Read and return one Datapack. Should update config.working_component
         at the begining and the end of this method.
         """
         raise NotImplementedError
+
+    def _record_fields(self):
+        """
+        Record the fields and entries that this processor add to packs.
+        """
+        for entry_type, info in self.output_info.items():
+            component = self.component_name
+            fields: List[str] = []
+            if isinstance(info, list):
+                fields = info
+            elif isinstance(info, dict):
+                fields = info["fields"]
+                if "component" in info.keys():
+                    component = info["component"]
+            self.current_datapack.record_fields(fields, entry_type, component)

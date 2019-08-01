@@ -3,7 +3,6 @@ from typing import Dict, Optional
 
 from nlp.pipeline import config
 from nlp.pipeline.data import slice_batch
-from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.base_pack import BasePack
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.batchers import ProcessingBatcher
@@ -81,7 +80,7 @@ class BaseBatchProcessor(BaseProcessor):
         to add the value back.
 
         Args:
-            data_pack (DataPack): The data pack to add entries or fields to.
+            data_pack (BasePack): The data pack to add entries or fields to.
             inputs: The prediction results returned by :meth:`predict`. You
                 need to add entries or fields corresponding to this prediction
                 results to the ``data_pack``.

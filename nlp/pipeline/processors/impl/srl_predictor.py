@@ -67,10 +67,10 @@ class SRLPredictor(BatchProcessor):
 
     def define_output_info(self):
         self.output_info = {
-            self._ontology.PredicateMention:  # type: ignore
+            self._ontology.PredicateMention:
                 ["pred_type", "span"],
-            self._ontology.PredicateArgument: ["span"],  # type: ignore
-            self._ontology.PredicateLink:  # type: ignore
+            self._ontology.PredicateArgument: ["span"],
+            self._ontology.PredicateLink:
                 ["parent", "child", "arg_type"],
 
         }
@@ -104,13 +104,14 @@ class SRLPredictor(BatchProcessor):
                 for arg in pred_args:
                     begin = word_spans[arg.start][0]
                     end = word_spans[arg.end][1]
-                    arg_annotation = self._ontology.PredicateArgument(begin, end)
+                    arg_annotation = self._ontology.PredicateArgument(begin,
+                                                                      end)
                     arguments.append((arg_annotation, arg.label))
                 predictions[pred_annotation] = arguments
             batch_predictions.append(predictions)
         return {"predictions": batch_predictions}
 
-    def pack(self, data_pack: DataPack,
+    def pack(self, data_pack: DataPack,  # type: ignore
              inputs: Dict[str, List[Prediction]]) -> None:
         batch_predictions = inputs["predictions"]
         for predictions in batch_predictions:

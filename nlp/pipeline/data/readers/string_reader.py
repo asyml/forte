@@ -33,14 +33,14 @@ class StringReader(BaseReader):
         super().__init__()
         self._ontology = base_ontology
         self.define_output_info()
+        self.current_datapack: DataPack = DataPack()
 
     def define_output_info(self):
         self.output_info = {
             self._ontology.Document: ["span"],
         }
 
-    def dataset_iterator(self,
-                         dataset: List[str]) -> Iterator[DataPack]:
+    def dataset_iterator(self, dataset: List[str]) -> Iterator[DataPack]:
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.
@@ -53,12 +53,13 @@ class StringReader(BaseReader):
              append_to_cache: bool = False) -> DataPack:
         config.working_component = self.component_name
 
-        data_pack = DataPack()
+        self.current_datapack = DataPack()
+        self._record_fields()
 
         document = self._ontology.Document(0, len(data))  # type: ignore
-        data_pack.add_or_get_entry(document)
+        self.current_datapack.add_or_get_entry(document)
 
-        data_pack.set_text(data)
+        self.current_datapack.set_text(data)
 
         if cache_file is None and self._cache_directory:
             cache_file = self._cache_directory / "dataset.cache"
@@ -67,10 +68,11 @@ class StringReader(BaseReader):
             logger.info("Caching datapack to %s", cache_file)
             if append_to_cache:
                 with cache_file.open('a') as cache:
-                    cache.write(self.serialize_instance(data_pack) + "\n")
+                    cache.write(self.serialize_instance(self.current_datapack)
+                                + "\n")
             else:
                 with cache_file.open('w') as cache:
-                    cache.write(self.serialize_instance(data_pack) + "\n")
-        # TODO: record fields
+                    cache.write(self.serialize_instance(self.current_datapack)
+                                + "\n")
         config.working_component = None
-        return data_pack
+        return self.current_datapack

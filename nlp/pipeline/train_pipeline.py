@@ -31,7 +31,7 @@ class TrainPipeline:
                 "Training pipeline initialized with real eval setting."
             )
             predictor.initialize(resource)
-            predictor.set_mode(overwrite=False)
+            # predictor.set_mode(overwrite=False)
 
         self.train_reader = train_reader
         self.trainer = trainer
