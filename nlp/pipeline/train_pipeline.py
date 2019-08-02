@@ -30,7 +30,7 @@ class TrainPipeline:
             logger.info(
                 "Training pipeline initialized with real eval setting."
             )
-            predictor.initialize(resource)
+            predictor.initialize(configs=None, resource=resource)
             predictor.set_mode(overwrite=False)
 
         self.train_reader = train_reader

@@ -2,7 +2,7 @@ from nltk import pos_tag
 
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.ontology import base_ontology
-from nlp.pipeline.processors import PackProcessor
+from nlp.pipeline.processors.pack_processor import PackProcessor
 
 __all__ = [
     "NLTKPOSTagger"
@@ -16,6 +16,8 @@ class NLTKPOSTagger(PackProcessor):
 
         self.ontology = base_ontology  # should specify for each pipeline
         self.token_component = None
+
+        # TODO: why this is None
 
         self.output_info = {
             self.ontology.Token: {

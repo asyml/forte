@@ -14,10 +14,11 @@ class PipelineTest(unittest.TestCase):
         # Define and config the Pipeline
         self.dataset_path = "examples/ontonotes_sample_dataset/00"
 
-        kwargs = {
+        configs = {
             "ontology": "relation_ontology"
         }
-        self.nlp = Pipeline(**kwargs)
+        self.nlp = Pipeline()
+        self.nlp.init_from_config(configs)
         self.nlp.set_reader(OntonotesReader())
         self.processor = DummyRelationExtractor()
         self.nlp.add_processor(self.processor)

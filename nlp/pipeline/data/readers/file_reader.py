@@ -98,6 +98,10 @@ class MonoFileReader(BaseReader):
             for data_file in files:
                 yield os.path.join(root, data_file)
 
+    # TODO: change current read to read_file_as_pack
+    # read should replace the dataset_iterator as the entry point
+    # support string reader: read(input: string) -> yield a datapack
+    # standard IO
     def read(self,  # type: ignore
              file_path: str,
              cache_file: Optional[Path] = None,

@@ -1,29 +1,42 @@
-import pickle
 from termcolor import colored
 
 from nlp.pipeline.data.ontology.conll03_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
-
 from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
+
+from texar.torch import HParams
 
 
 def main():
 
     pl = Pipeline()
-    pl.processors.append(NLTKSentenceSegmenter())
-    pl.processors.append(NLTKWordTokenizer())
-    pl.processors.append(NLTKPOSTagger())
+    pl.add_processor(NLTKSentenceSegmenter())
+    pl.add_processor(NLTKSentenceSegmenter())
+    pl.add_processor(NLTKWordTokenizer())
+    pl.add_processor(NLTKPOSTagger())
 
-    ner_resource = pickle.load(open('./NER/resources.pkl', 'rb'))
+    ner_configs = HParams(
+        {
+            'storage_path': './NER/resources.pkl',
+        },
+        CoNLLNERPredictor.default_hparams())
+
     ner_predictor = CoNLLNERPredictor()
-    ner_predictor.initialize(ner_resource)
-    ner_predictor.load_model_checkpoint()
-    pl.processors.append(ner_predictor)
 
-    pl.processors.append(SRLPredictor(model_dir="./SRL_model/"))
+    pl.add_processor(ner_predictor, ner_configs)
+
+    srl_configs = HParams(
+        {
+            'storage_path': './SRL_model/',
+        },
+        SRLPredictor.default_hparams()
+    )
+    pl.add_processor(SRLPredictor(), srl_configs)
+
+    pl.initialize_processors()
 
     text = (
         "The plain green Norway spruce is displayed in the gallery's foyer. "
