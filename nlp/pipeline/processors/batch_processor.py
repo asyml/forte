@@ -120,4 +120,4 @@ class MultiPackBatchProcessor(BaseBatchProcessor):
         The batch processors that process MultiPacks.
     """
     def initialize_batcher(self, hard_batch: bool = True):
-        pass
+        raise NotImplementedError

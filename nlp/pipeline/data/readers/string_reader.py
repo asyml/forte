@@ -8,7 +8,7 @@ from typing import Iterator, no_type_check, List, Optional
 from nlp.pipeline import config
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import base_ontology
-from nlp.pipeline.data.readers.base_reader import BaseReader
+from nlp.pipeline.data.readers.base_reader import PackReader
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-class StringReader(BaseReader):
+class StringReader(PackReader):
     """:class:`String` is designed to read in a list of string variables.
 
     Args:
@@ -33,7 +33,6 @@ class StringReader(BaseReader):
         super().__init__()
         self._ontology = base_ontology
         self.define_output_info()
-        self.current_datapack: DataPack = DataPack()
 
     def define_output_info(self):
         self.output_info = {
@@ -53,13 +52,13 @@ class StringReader(BaseReader):
              append_to_cache: bool = False) -> DataPack:
         config.working_component = self.component_name
 
-        self.current_datapack = DataPack()
-        self._record_fields()
+        pack = DataPack()
+        self._record_fields(pack)
 
         document = self._ontology.Document(0, len(data))  # type: ignore
-        self.current_datapack.add_or_get_entry(document)
+        pack.add_or_get_entry(document)
 
-        self.current_datapack.set_text(data)
+        pack.set_text(data)
 
         if cache_file is None and self._cache_directory:
             cache_file = self._cache_directory / "dataset.cache"
@@ -68,11 +67,11 @@ class StringReader(BaseReader):
             logger.info("Caching datapack to %s", cache_file)
             if append_to_cache:
                 with cache_file.open('a') as cache:
-                    cache.write(self.serialize_instance(self.current_datapack)
+                    cache.write(self.serialize_instance(pack)
                                 + "\n")
             else:
                 with cache_file.open('w') as cache:
-                    cache.write(self.serialize_instance(self.current_datapack)
+                    cache.write(self.serialize_instance(pack)
                                 + "\n")
         config.working_component = None
-        return self.current_datapack
+        return pack

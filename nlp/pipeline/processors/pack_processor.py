@@ -36,6 +36,7 @@ class PackProcessor(BasePackProcessor):
     """
     The base class of processors that process one pack each time.
     """
+    pass
 
 
 class MultiPackProcessor(BasePackProcessor):

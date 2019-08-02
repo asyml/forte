@@ -49,18 +49,14 @@ class PlainTextReader(MonoFileReader):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:
-        if self.current_datapack is None:
-            raise ValueError("You shouldn never call _read_document() "
-                             "directly. Instead, call read() to read a file "
-                             "or dataset_iterator() to read a directory.")
-        assert isinstance(self.current_datapack, DataPack)
+        pack = DataPack()
         doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
         text = doc.read()
 
         document = self._ontology.Document(0, len(text))  # type: ignore
-        self.current_datapack.add_or_get_entry(document)
+        pack.add_or_get_entry(document)
 
-        self.current_datapack.set_text(text)
-        self.current_datapack.meta.doc_id = file_path
+        pack.set_text(text)
+        pack.meta.doc_id = file_path
         doc.close()
-        return self.current_datapack
+        return pack

@@ -9,7 +9,7 @@ from typing import Iterator, List, Optional, Union
 
 from nlp.pipeline import config
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers.base_reader import BaseReader
+from nlp.pipeline.data.readers.base_reader import PackReader
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-class MonoFileReader(BaseReader):
+class MonoFileReader(PackReader):
     """Data reader that reads one data pack from each single text files.
     To be inherited by all mono file data readers.
 
@@ -29,9 +29,6 @@ class MonoFileReader(BaseReader):
             method reloads the dataset each time it's called. Otherwise,
             ``dataset_iterator()`` returns a list.
     """
-    def __init__(self, lazy: bool = True) -> None:
-        super().__init__(lazy)
-        self.current_datapack: DataPack = DataPack()
 
     def dataset_iterator(
             self, dir_path: str) -> Union[List[DataPack], Iterator[DataPack]]:
@@ -142,9 +139,8 @@ class MonoFileReader(BaseReader):
                 )
         else:
             logger.info("reading from original file %s", file_path)
-            self.current_datapack = DataPack()
-            self._record_fields()
             datapack = self._read_document(file_path)
+            self._record_fields(datapack)
             if not isinstance(datapack, DataPack):
                 raise ValueError(
                     f"No DataPack object read from the given "

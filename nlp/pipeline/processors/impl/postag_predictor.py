@@ -36,8 +36,6 @@ class NLTKPOSTagger(PackProcessor):
         }
 
     def _process(self, input_pack: DataPack):  # type: ignore
-        # TODO: need to think about how to specify component, currently is
-        #  getting all component
         for sentence in input_pack.get(self._ontology.Sentence):
             token_entries = list(input_pack.get(entry_type=self._ontology.Token,
                                                 range_annotation=sentence,

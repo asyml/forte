@@ -38,6 +38,7 @@ class OntonotesReader(MonoFileReader):
         super().__init__(lazy)
         self._ontology = ontonotes_ontology
         self.define_output_info()
+        self.current_datapack: DataPack = DataPack()
 
     def define_output_info(self):
         self.output_info = {
@@ -52,7 +53,6 @@ class OntonotesReader(MonoFileReader):
             self._ontology.CoreferenceMention: ["span"],
             self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
-        self.current_datapack: DataPack = DataPack()
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -67,10 +67,7 @@ class OntonotesReader(MonoFileReader):
 
     def _read_document(self, file_path: str) -> DataPack:
 
-        if self.current_datapack is None:
-            raise ValueError("You shouldn never call _read_document() "
-                             "directly. Instead, call read() to read a file "
-                             "or dataset_iterator() to read a directory.")
+        self.current_datapack = DataPack()
 
         doc = codecs.open(file_path, "r", encoding="utf8")
 

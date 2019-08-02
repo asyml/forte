@@ -8,11 +8,13 @@ from typing import Iterator, Optional, Dict, Type, List, Union
 import jsonpickle
 
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.base_pack import BasePack
 from nlp.pipeline.data.ontology import Entry
 from nlp.pipeline.utils import get_full_module_name
 
 __all__ = [
     "BaseReader",
+    "PackReader"
 ]
 
 
@@ -26,7 +28,6 @@ class BaseReader:
         self._ontology = None
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
-        self.current_datapack: DataPack = DataPack()
 
     def set_ontology(self, ontology):
         self._ontology = ontology
@@ -36,14 +37,49 @@ class BaseReader:
     def define_output_info(self):
         pass
 
+    @staticmethod
+    def serialize_instance(instance: BasePack) -> str:
+        """
+        Serializes an ``BasePack`` to a string.
+        """
+        return jsonpickle.encode(instance, unpicklable=True)
+
+    @staticmethod
+    def deserialize_instance(string: str) -> BasePack:
+        """
+        Deserializes an ``BasePack`` from a string.
+        """
+        return jsonpickle.decode(string)
+
+    @abstractmethod
+    def dataset_iterator(self, dataset):
+        """
+        An iterator over the entire dataset, yielding all documents processed.
+        Should call :meth:`read` to read each document.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def read(self, data):
+        """
+        Read and return one :class:`BasePack` object. Should update
+        config.working_component at the begining and the end of this method.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _instances_from_cache_file(self,
+                                   cache_filename: Path):
+        raise NotImplementedError
+
     def cache_data(self, cache_directory: str) -> None:
         """Specify the path to the cache directory.
 
         After you call this method, the dataset reader will use this
-        :attr:`cache_directory` to store a cache of :class:`DataPack` read
+        :attr:`cache_directory` to store a cache of :class:`BasePack` read
         from every document passed to :func:`read`, serialized as one
-        string-formatted :class:`DataPack`. If the cache file for a given
-        ``file_path`` exists, we read the :class:`DataPack` from the cache
+        string-formatted :class:`BasePack`. If the cache file for a given
+        ``file_path`` exists, we read the :class:`BasePack` from the cache
         (using :func:`deserialize_instance`).  If the cache file does not
         exist, we will `create` it on our first pass through the data (using
         :func:`serialize_instance`).
@@ -59,41 +95,7 @@ class BaseReader:
             file_path = file_path[:-1]
         return Path(f"{self._cache_directory / file_path.split('/')[-1]}.cache")
 
-    def _instances_from_cache_file(self,
-                                   cache_filename: Path) -> Iterator[DataPack]:
-        with cache_filename.open("r") as cache_file:
-            for line in cache_file:
-                yield self.deserialize_instance(line.strip())
-
-    @staticmethod
-    def serialize_instance(instance: DataPack) -> str:
-        """
-        Serializes an ``DataPack`` to a string.
-        """
-        return jsonpickle.encode(instance, unpicklable=True)
-
-    @staticmethod
-    def deserialize_instance(string: str) -> DataPack:
-        """
-        Deserializes an ``DataPack`` from a string.
-        """
-        return jsonpickle.decode(string)
-
-    def dataset_iterator(self, dataset):
-        """
-        An iterator over the entire dataset, yielding all documents processed.
-        Should call :meth:`read` to read each document.
-        """
-        raise NotImplementedError
-
-    def read(self, data) -> DataPack:
-        """
-        Read and return one Datapack. Should update config.working_component
-        at the begining and the end of this method.
-        """
-        raise NotImplementedError
-
-    def _record_fields(self):
+    def _record_fields(self, pack: BasePack):
         """
         Record the fields and entries that this processor add to packs.
         """
@@ -106,4 +108,37 @@ class BaseReader:
                 fields = info["fields"]
                 if "component" in info.keys():
                     component = info["component"]
-            self.current_datapack.record_fields(fields, entry_type, component)
+            pack.record_fields(fields, entry_type, component)
+
+
+class PackReader(BaseReader):
+    """The basic data reader class.
+    To be inherited by all data readers.
+    """
+
+    def _instances_from_cache_file(self,
+                                   cache_filename: Path) -> Iterator[DataPack]:
+        with cache_filename.open("r") as cache_file:
+            for line in cache_file:
+                pack = self.deserialize_instance(line.strip())
+                if not isinstance(pack, DataPack):
+                    raise TypeError(f"Pack deserialized from {cache_filename} "
+                                    f"is {type(pack)}, but expect {DataPack}")
+                yield pack
+
+    @abstractmethod
+    def dataset_iterator(self,
+                         dataset) -> Union[List[DataPack], Iterator[DataPack]]:
+        """
+        An iterator over the entire dataset, yielding all documents processed.
+        Should call :meth:`read` to read each document.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def read(self, data) -> DataPack:
+        """
+        Read and return one Datapack. Should update config.working_component
+        at the begining and the end of this method.
+        """
+        raise NotImplementedError

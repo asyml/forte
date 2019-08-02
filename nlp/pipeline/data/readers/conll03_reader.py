@@ -36,7 +36,6 @@ class CoNLL03Reader(MonoFileReader):
             self._ontology.Sentence: ["span"],
             self._ontology.Token: ["span", "chunk_tag", "pos_tag", "ner_tag"]
         }
-        self.current_datapack: DataPack = DataPack()
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -51,6 +50,7 @@ class CoNLL03Reader(MonoFileReader):
 
     def _read_document(self, file_path: str) -> DataPack:
 
+        pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
 
         text = ""
@@ -81,7 +81,7 @@ class CoNLL03Reader(MonoFileReader):
                 )
 
                 token.set_fields(**kwargs_i)
-                self.current_datapack.add_or_get_entry(token)
+                pack.add_or_get_entry(token)
 
                 text += word + " "
                 offset = word_end + 1
@@ -95,16 +95,16 @@ class CoNLL03Reader(MonoFileReader):
                 sent = self._ontology.Sentence(  # type: ignore
                     sentence_begin, offset - 1
                 )
-                self.current_datapack.add_or_get_entry(sent)
+                pack.add_or_get_entry(sent)
 
                 sentence_begin = offset
                 sentence_cnt += 1
                 has_rows = False
 
         document = self._ontology.Document(0, len(text))  # type: ignore
-        self.current_datapack.add_or_get_entry(document)
+        pack.add_or_get_entry(document)
 
-        self.current_datapack.set_text(text)
-        self.current_datapack.meta.doc_id = file_path
+        pack.set_text(text)
+        pack.meta.doc_id = file_path
         doc.close()
-        return self.current_datapack
+        return pack
