@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
+from texar.torch.hyperparams import HParams
 
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
@@ -42,8 +43,12 @@ class CoNLLNERPredictor(BatchProcessor):
         self.batch_size = 3
         self.initialize_batcher()
 
-    def initialize(self, resource: Resources):
+    def initialize(self, configs: HParams, resource: Resources):
+        print(f'ner predictor configs: {configs}')
         self.initialize_batcher()
+
+        resource.load(configs.storage_path)
+
         self.word_alphabet = resource.resources["word_alphabet"]
         self.char_alphabet = resource.resources["char_alphabet"]
         self.ner_alphabet = resource.resources["ner_alphabet"]
@@ -206,6 +211,17 @@ class CoNLLNERPredictor(BatchProcessor):
         lengths = torch.from_numpy(lengths).to(device)
 
         return words, chars, masks, lengths
+
+    @staticmethod
+    def default_hparams():
+        """
+        This defines a basic Hparams structure
+        :return:
+        """
+        hparams_dict = {
+            'storage_path': None,
+        }
+        return hparams_dict
 
 
 class CoNLLNEREvaluator(Evaluator):

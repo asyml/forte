@@ -5,33 +5,22 @@
 
 # PipelineType: SinglePackPipeline
 # Or maybe MultiPackTrainPipeline
-Resources:
-  # Instructions on how to build resources
-  storage_path: "/home/shr/nlp_pipeline/examples/NER/resources.pkl"
 
-Ontology:
-DataInput:
-  reader:
-    type: CoNLL03Reader
-    kwargs: null
-
-GlobalConfig:
-  # This can be used as global configuration used in processor.initialize function
+# Ontology:
+Reader:
+  type: CoNLL03Reader
+  kwargs: null
 
 Processors:
   - type: "nlp.pipeline.processors.impl.NLTKSentenceSegmenter"
-    kwargs:
-    configs:
   - type: "nlp.pipeline.processors.impl.NLTKWordTokenizer"
-    kwargs:
-    configs:
   - type: "nlp.pipeline.processors.impl.NLTKPOSTagger"
-    kwargs:
-    configs:
   - type: "nlp.pipeline.processors.impl.CoNLLNERPredictor"
-    kwargs:
-    configs:
+    hparams:
+      config_path: # Load config from the specified file if any
+      overwrite_configs: # You can still define other configurations here
+        storage_path: "/home/shr/nlp_pipeline/examples/NER/resources.pkl"
   - type: "nlp.pipeline.processors.impl.SRLPredictor"
     kwargs:
       model_dir: "/home/hector/models/SRL_model/"
-
+    hparams:

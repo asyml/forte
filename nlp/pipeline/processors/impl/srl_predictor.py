@@ -69,7 +69,7 @@ class SRLPredictor(BatchProcessor):
             map_location=self.device))
         self.model.eval()
 
-    def initialize(self, resource: Resources):
+    def initialize(self, configs, resource: Resources):
         pass
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:

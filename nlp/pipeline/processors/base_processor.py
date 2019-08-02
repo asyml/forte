@@ -25,10 +25,10 @@ class BaseProcessor:
         self._overwrite = True
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
 
-    def initialize(self, resource: Resources):
-        # TODO Move resource to __init__
-        # TODO Change docstring
-        """Initialize the processor with ``recources``."""
+    def initialize(self, configs, resource: Resources):
+        """Initialize the processor with ``configs``, and register global
+        resources into ``resource``.
+        """
         pass
 
     # TODO: remove this mode.
@@ -62,3 +62,14 @@ class BaseProcessor:
         """
         self._record_fields(input_pack)
         input_pack.meta.process_state = self.component_name
+
+    @staticmethod
+    def default_hparams():
+        """
+        This defines a basic Hparams structure
+        :return:
+        """
+        hparams_dict = {
+        }
+        return hparams_dict
+
