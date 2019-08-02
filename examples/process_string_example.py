@@ -1,26 +1,33 @@
-import pickle
 from termcolor import colored
 
 from nlp.pipeline.data.ontology.conll03_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
-
-from nlp.pipeline.processors import (
+from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
+from nlp.pipeline.common.resources import Resources
+
+from texar.torch import HParams
 
 
 def main():
 
     pl = Pipeline()
+    resource = Resources()
     pl.processors.append(NLTKSentenceSegmenter())
     pl.processors.append(NLTKWordTokenizer())
     pl.processors.append(NLTKPOSTagger())
 
-    ner_resource = pickle.load(open('./NER/resources.pkl', 'rb'))
+    ner_configs = HParams(
+        {
+            'storage_path': './NER/resources.pkl',
+        },
+        CoNLLNERPredictor.default_hparams())
+
     ner_predictor = CoNLLNERPredictor()
-    ner_predictor.initialize(ner_resource)
-    ner_predictor.load_model_checkpoint()
+    ner_predictor.initialize(ner_configs, resource)
+
     pl.processors.append(ner_predictor)
 
     pl.processors.append(SRLPredictor(model_dir="./SRL_model/"))

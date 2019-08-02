@@ -1,11 +1,12 @@
+from typing import Iterator, List, Optional, Dict, Union
+import yaml
+
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.utils import get_class
 from nlp.pipeline.common.resources import Resources
 from texar.torch import HParams
-from typing import Iterator, List, Optional, Dict, Union
-import yaml
 
 
 class Pipeline:
@@ -18,8 +19,8 @@ class Pipeline:
         self._processors: List[BaseProcessor] = []
         self._processors_index: Dict = {'': -1}
 
-        self._ontology = None
         self.topology = None
+        self._ontology = None
         self.current_packs = []
 
     def init_from_config_path(self, config_path):
@@ -48,44 +49,44 @@ class Pipeline:
         # TODO: processors is a list of dict
         # HParams cannot create HParams from the inner dict of list
 
-        for processor_configs in configs["Processors"]:
+        if "Processors" in configs and configs["Processors"] is not None:
 
-            p_class = get_class(processor_configs["type"])
-            if "kwargs" in processor_configs:
-                processor_kwargs = processor_configs["kwargs"]
-            else:
-                processor_kwargs = {}
-            p = p_class(**processor_kwargs)
+            for processor_configs in configs["Processors"]:
 
-            hparams = {}
-
-            if "hparams" in processor_configs \
-                    and processor_configs["hparams"] is not None:
-                # Extract the hparams section and build hparams
-                processor_hparams = processor_configs["hparams"]
-
-                # if p_class == "nlp.pipeline.processors.impl.CoNLLNERPredictor":
-
-                if "config_path" in processor_hparams and \
-                        processor_hparams["config_path"] is not None:
-                    filebased_hparams = yaml.safe_load(
-                        open(processor_hparams["config_path"]))
+                p_class = get_class(processor_configs["type"])
+                if "kwargs" in processor_configs:
+                    processor_kwargs = processor_configs["kwargs"]
                 else:
-                    filebased_hparams = {}
-                hparams.update(filebased_hparams)
+                    processor_kwargs = {}
+                p = p_class(**processor_kwargs)
 
-                if "overwrite_configs" in processor_hparams:
-                    overwrite_hparams = processor_hparams["overwrite_configs"]
-                else:
-                    overwrite_hparams = {}
+                hparams: Dict = {}
 
-                hparams.update(overwrite_hparams)
-            default_processor_hparams = p.default_hparams()
+                if "hparams" in processor_configs \
+                        and processor_configs["hparams"] is not None:
+                    # Extract the hparams section and build hparams
+                    processor_hparams = processor_configs["hparams"]
 
-            processor_hparams = HParams(hparams,
-                                        default_processor_hparams)
-            p.initialize(processor_hparams, resources)
-            self.add_processor(p)
+                    if "config_path" in processor_hparams and \
+                            processor_hparams["config_path"] is not None:
+                        filebased_hparams = yaml.safe_load(
+                            open(processor_hparams["config_path"]))
+                    else:
+                        filebased_hparams = {}
+                    hparams.update(filebased_hparams)
+
+                    if "overwrite_configs" in processor_hparams:
+                        overwrite_hparams = processor_hparams[
+                            "overwrite_configs"]
+                    else:
+                        overwrite_hparams = {}
+                    hparams.update(overwrite_hparams)
+                default_processor_hparams = p.default_hparams()
+
+                processor_hparams = HParams(hparams,
+                                            default_processor_hparams)
+                p.initialize(processor_hparams, resources)
+                self.add_processor(p)
 
         if "Ontology" in configs.keys() and configs["Ontology"] is not None:
             module_path = ["__main__",

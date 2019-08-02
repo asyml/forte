@@ -1,32 +1,37 @@
 import os
 import sys
 
-import pickle
 from termcolor import colored
 
 from nlp.pipeline.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.data.readers import PlainTextReader
-from nlp.pipeline.processors import (
+from nlp.pipeline.common.resources import Resources
+from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
+from texar.torch import HParams
 
 
 def main(dataset_dir, ner_model_path, srl_model_path):
 
     pl = Pipeline()
+    resource = Resources()
     pl.set_reader(PlainTextReader())
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())
     pl.add_processor(NLTKPOSTagger())
 
-    ner_resource = pickle.load(
-        open(os.path.join(ner_model_path, 'resources.pkl'), 'rb'))
-    ner_predictor = CoNLLNERPredictor()
-    ner_predictor.initialize(ner_resource)
-    pl.add_processor(ner_predictor)
+    ner_configs = HParams(
+        {
+            'storage_path': os.path.join(ner_model_path, 'resources.pkl')
+        },
+        CoNLLNERPredictor.default_hparams())
 
+    ner_predictor = CoNLLNERPredictor()
+    ner_predictor.initialize(ner_configs, resource)
+    pl.add_processor(ner_predictor)
     pl.add_processor(SRLPredictor(model_dir=srl_model_path))
 
     for pack in pl.process_dataset(dataset_dir):
