@@ -18,7 +18,7 @@ __all__ = [
 
 
 class StringReader(PackReader):
-    """:class:`String` is designed to read in a list of string variables.
+    """:class:`StringReader` is designed to read in a list of string variables.
 
     Args:
         lazy (bool, optional): The reading strategy used when reading a
@@ -36,7 +36,7 @@ class StringReader(PackReader):
 
     def define_output_info(self):
         self.output_info = {
-            self._ontology.Document: ["span"],
+            self._ontology.Document: [],
         }
 
     def iter(self, dataset: List[str]) -> Iterator[DataPack]:

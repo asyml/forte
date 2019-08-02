@@ -33,7 +33,7 @@ class PlainTextReader(MonoFileReader):
 
     def define_output_info(self):
         self.output_info = {
-            self._ontology.Document: ["span"],
+            self._ontology.Document: [],
         }
 
     @staticmethod

@@ -42,15 +42,15 @@ class OntonotesReader(MonoFileReader):
 
     def define_output_info(self):
         self.output_info = {
-            self._ontology.Document: ["span"],
-            self._ontology.Sentence: ["speaker", "part_id", "span"],
-            self._ontology.Token: ["sense", "pos_tag", "span"],
-            self._ontology.EntityMention: ["ner_type", "span"],
+            self._ontology.Document: [],
+            self._ontology.Sentence: ["speaker", "part_id"],
+            self._ontology.Token: ["sense", "pos_tag"],
+            self._ontology.EntityMention: ["ner_type"],
             self._ontology.PredicateMention:
-                ["pred_lemma", "pred_type", "span", "framenet_id"],
-            self._ontology.PredicateArgument: ["span"],
+                ["pred_lemma", "pred_type", "framenet_id"],
+            self._ontology.PredicateArgument: [],
             self._ontology.PredicateLink: ["parent", "child", "arg_type"],
-            self._ontology.CoreferenceMention: ["span"],
+            self._ontology.CoreferenceMention: [],
             self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
 

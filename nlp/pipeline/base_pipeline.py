@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import List, Dict, Iterator, Generic
 
 from nlp.pipeline.data.base_pack import PackType
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor
 
@@ -17,11 +18,11 @@ class BasePipeline(Generic[PackType]):
     """
 
     def __init__(self, **kwargs):
-        self._reader: BaseReader = BaseReader()
+        self._reader: BaseReader = None
         self._processors: List[BaseProcessor] = []
         self._processors_index: Dict = {'': -1}
 
-        self._ontology = None
+        self._ontology = base_ontology
         self.topology = None
         self.current_packs = []
 
@@ -33,13 +34,13 @@ class BasePipeline(Generic[PackType]):
         """
         if "ontology" in kwargs.keys():
             self._ontology = kwargs["ontology"]
-            self._reader.set_ontology(self._ontology)
+            if self._reader is not None:
+                self._reader.set_ontology(self._ontology)
             for processor in self.processors:
                 processor.set_ontology(self._ontology)
 
     def set_reader(self, reader: BaseReader):
-        if self._ontology is not None:
-            reader.set_ontology(self._ontology)
+        reader.set_ontology(self._ontology)
         self._reader = reader
 
     @property

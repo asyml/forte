@@ -125,19 +125,3 @@ class PackReader(BaseReader[DataPack]):
                     raise TypeError(f"Pack deserialized from {cache_filename} "
                                     f"is {type(pack)}, but expect {DataPack}")
                 yield pack
-
-    @abstractmethod
-    def iter(self, dataset) -> Union[List[DataPack], Iterator[DataPack]]:
-        """
-        An iterator over the entire dataset, yielding all documents processed.
-        Should call :meth:`read` to read each document.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def read(self, data) -> DataPack:
-        """
-        Read and return one Datapack. Should update config.working_component
-        at the begining and the end of this method.
-        """
-        raise NotImplementedError

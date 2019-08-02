@@ -188,6 +188,8 @@ class DataPack(BasePack):
         could record fields with `component = None`.
         """
         fields.append("tid")
+        if issubclass(entry_type, Annotation):
+            fields.append("span")
         internal_meta = self.internal_metas[entry_type]
         if component is not None:
             if internal_meta.default_component is None:

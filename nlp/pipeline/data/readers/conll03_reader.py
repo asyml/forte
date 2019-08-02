@@ -32,9 +32,9 @@ class CoNLL03Reader(MonoFileReader):
 
     def define_output_info(self):
         self.output_info = {
-            self._ontology.Document: ["span"],
-            self._ontology.Sentence: ["span"],
-            self._ontology.Token: ["span", "chunk_tag", "pos_tag", "ner_tag"]
+            self._ontology.Document: [],
+            self._ontology.Sentence: [],
+            self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
         }
 
     @staticmethod
