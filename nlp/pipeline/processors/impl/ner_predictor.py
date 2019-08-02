@@ -44,7 +44,6 @@ class CoNLLNERPredictor(BatchProcessor):
         self.initialize_batcher()
 
     def initialize(self, configs: HParams, resource: Resources):
-        print(f'ner predictor configs: {configs}')
         self.initialize_batcher()
 
         resource.load(configs.storage_path)
