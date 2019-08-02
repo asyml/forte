@@ -9,6 +9,7 @@ Resources:
   # Instructions on how to build resources
   storage_path: "/home/shr/nlp_pipeline/examples/NER/resources.pkl"
 
+Ontology:
 DataInput:
   reader:
     type: CoNLL03Reader
@@ -18,19 +19,19 @@ GlobalConfig:
   # This can be used as global configuration used in processor.initialize function
 
 Processors:
-  - type: "nlp.pipeline.processors.NLTKSentenceSegmenter"
+  - type: "nlp.pipeline.processors.impl.NLTKSentenceSegmenter"
     kwargs:
     configs:
-  - type: "nlp.pipeline.processors.NLTKWordTokenizer"
+  - type: "nlp.pipeline.processors.impl.NLTKWordTokenizer"
     kwargs:
     configs:
-  - type: "nlp.pipeline.processors.NLTKPOSTagger"
+  - type: "nlp.pipeline.processors.impl.NLTKPOSTagger"
     kwargs:
     configs:
-  - type: "nlp.pipeline.processors.CoNLLNERPredictor"
+  - type: "nlp.pipeline.processors.impl.CoNLLNERPredictor"
     kwargs:
     configs:
-  - type: "nlp.pipeline.processors.SRLPredictor"
+  - type: "nlp.pipeline.processors.impl.SRLPredictor"
     kwargs:
       model_dir: "/home/hector/models/SRL_model/"
 

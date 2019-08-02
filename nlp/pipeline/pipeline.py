@@ -1,12 +1,10 @@
-from typing import Iterator, List, Optional, Dict, Union
-from pydoc import locate
-import nlp  # pylint: disable=unused-import
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 from nlp.pipeline.utils import get_class
 from nlp.pipeline.common.resources import Resources
 from texar.torch import HParams
+from typing import Iterator, List, Optional, Dict, Union
 import yaml
 
 
@@ -15,7 +13,7 @@ class Pipeline:
     The pipeline consists of a list of predictors.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self._reader: BaseReader = BaseReader()
         self._processors: List[BaseProcessor] = []
         self._processors_index: Dict = {'': -1}
@@ -38,31 +36,28 @@ class Pipeline:
         configs = yaml.safe_load(open(config_path))
 
         configs = HParams(configs, default_hparams=None)
+        self.init_from_config(configs)
+
+    def init_from_config(self, configs: HParams):
+        """
+        parse the configuration sections from the input config,
+        into a list of [processor, config]
+        Initialize the pipeline with configs
+        """
         resources = Resources()
         resources.load(configs["Resources"]["storage_path"])
 
-        print(configs)
         for processor in configs.Processors:
-            print(type(processor), processor)
             kwargs = processor["kwargs"] or {}
-            p = locate(processor["type"])
-            print(f'processor class:{p}')
+            p = get_class(processor["type"])
             p = p(**kwargs)
             p.initialize(resources)
             self.add_processor(p)
 
-    def init_from_config(self, config: HParams):
-        """
-        parse the configuration sections from the input config,
-        into a list of [processor, config]
-        """
-        """
-        Initialize the pipeline with configs
-        """
-        if "ontology" in kwargs.keys():
+        if "Ontology" in configs.keys() and configs["Ontology"] is not None:
             module_path = ["__main__",
                            "nlp.pipeline.data.ontology"]
-            self._ontology = get_class(kwargs["ontology"], module_path)
+            self._ontology = get_class(configs["Ontology"], module_path)
             for processor in self.processors:
                 processor.ontology = self._ontology
 

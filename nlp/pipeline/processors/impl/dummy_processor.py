@@ -5,7 +5,7 @@ import numpy as np
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import relation_ontology
 from nlp.pipeline.data.ontology import base_ontology
-from nlp.pipeline.processors.batch_processor import BatchProcessor
+from nlp.pipeline.processors import BatchProcessor
 
 __all__ = [
     "DummyRelationExtractor",

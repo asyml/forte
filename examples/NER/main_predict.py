@@ -1,4 +1,3 @@
-import pickle
 from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
 from nlp.pipeline.processors.impl.ner_predictor import (

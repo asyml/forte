@@ -9,7 +9,7 @@ from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import ontonotes_ontology, base_ontology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
-from nlp.pipeline.processors.batch_processor import BatchProcessor
+from nlp.pipeline.processors import BatchProcessor
 
 logger = logging.getLogger(__name__)
 

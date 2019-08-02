@@ -10,7 +10,7 @@ from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.format import conll_utils
 from nlp.pipeline.data.ontology import base_ontology, conll03_ontology
-from nlp.pipeline.processors.batch_processor import BatchProcessor
+from nlp.pipeline.processors import BatchProcessor
 
 logger = logging.getLogger(__name__)
 

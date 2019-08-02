@@ -2,7 +2,7 @@ from nltk import pos_tag
 
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.data.ontology import base_ontology
-from nlp.pipeline.processors import PackProcessor
+from nlp.pipeline.processors.pack_processor import PackProcessor
 
 __all__ = [
     "NLTKPOSTagger"

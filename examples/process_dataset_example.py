@@ -8,7 +8,7 @@ from nlp.pipeline.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.data.readers import PlainTextReader
-from nlp.pipeline.processors.impl import (
+from nlp.pipeline.processors import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
 
