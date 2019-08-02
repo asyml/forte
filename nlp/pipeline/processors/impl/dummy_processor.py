@@ -74,8 +74,7 @@ class DummyRelationExtractor(BatchProcessor):
 
         return pred
 
-    def pack(self, data_pack: DataPack,  # type: ignore
-             output_dict: Optional[Dict] = None):
+    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
         """Add corresponding fields to data_pack"""
         if output_dict is None:
             return

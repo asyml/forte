@@ -28,7 +28,7 @@ class NLTKSentenceSegmenter(PackProcessor):
             self._ontology.Sentence: ["span"]
         }
 
-    def _process(self, input_pack: DataPack):  # type: ignore
+    def _process(self, input_pack: DataPack):
         text = input_pack.text
         end_pos = 0
         paragraphs = [p for p in text.split('\n') if p]
@@ -62,7 +62,7 @@ class PeriodSentenceSegmenter(PackProcessor):
             self._ontology.Sentence: ["span"]
         }
 
-    def _process(self, input_pack: DataPack):  # type: ignore
+    def _process(self, input_pack: DataPack):
         text = input_pack.text
 
         begin_pos = 0

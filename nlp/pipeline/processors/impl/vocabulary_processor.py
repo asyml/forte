@@ -168,10 +168,8 @@ class VocabularyProcessor(BaseProcessor):
         super().__init__()
         self.min_frequency = min_frequency
 
-    def process(self,  # type: ignore
-                input_pack: Iterator[DataPack]) -> Dict[str, Any]:
+    def process(self, input_pack: Iterator[DataPack]) -> Dict[str, Any]:
         """
-
         :param input_pack:
         :return:
         """

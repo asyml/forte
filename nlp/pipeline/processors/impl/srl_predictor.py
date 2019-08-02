@@ -111,7 +111,7 @@ class SRLPredictor(BatchProcessor):
             batch_predictions.append(predictions)
         return {"predictions": batch_predictions}
 
-    def pack(self, data_pack: DataPack,  # type: ignore
+    def pack(self, data_pack: DataPack,
              inputs: Dict[str, List[Prediction]]) -> None:
         batch_predictions = inputs["predictions"]
         for predictions in batch_predictions:

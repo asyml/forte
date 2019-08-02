@@ -2,10 +2,10 @@
 The base class of processors
 """
 from abc import abstractmethod
-from typing import Dict, List, Union, Type
+from typing import Dict, List, Union, Type, Generic
 
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.data import BasePack
+from nlp.pipeline.data import PackType
 from nlp.pipeline.data.ontology import base_ontology, Entry
 from nlp.pipeline.utils import get_full_module_name
 
@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class BaseProcessor:
+class BaseProcessor(Generic[PackType]):
     """The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
     """
@@ -51,13 +51,13 @@ class BaseProcessor:
         raise NotImplementedError
 
     @abstractmethod
-    def process(self, input_pack: BasePack):
-        """Process the input datapack"""
+    def process(self, input_pack: PackType):
+        """Process the input pack"""
         pass
 
-    def _record_fields(self, input_pack: BasePack):
+    def _record_fields(self, input_pack: PackType):
         """
-        Record the fields and entries that this processor add to data packs.
+        Record the fields and entries that this processor add to packs.
         """
         for entry_type, info in self.output_info.items():
             component = self.component_name
@@ -70,9 +70,9 @@ class BaseProcessor:
                     component = info["component"]
             input_pack.record_fields(fields, entry_type, component)
 
-    def finish(self, input_pack: BasePack):
+    def finish(self, input_pack: PackType):
         """
-        Do finishing work for one data_pack.
+        Do finishing work for one pack.
         """
         # TODO (haoran): please check whether this function is
         #  sharable between pack processor and multipack processor

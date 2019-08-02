@@ -1,14 +1,14 @@
 import copy
 import logging
-from typing import (Dict, Iterable, Iterator, List, Optional,
-                    Type, TypeVar, Union, Any, Set)
+from typing import (
+    Dict, Iterable, Iterator, List, Optional, Type, Union, Any, Set)
 
 import numpy as np
 from sortedcontainers import SortedList
 
 from nlp.pipeline.data.base_pack import BaseMeta, BasePack, BaseIndex
 from nlp.pipeline.data.ontology.base_ontology import Sentence
-from nlp.pipeline.data.ontology import Entry, Annotation, Link, Group
+from nlp.pipeline.data.ontology import Entry, EntryType, Annotation, Link, Group
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +17,6 @@ __all__ = [
     "DataIndex",
     "DataPack",
 ]
-
-E = TypeVar('E', bound=Entry)
 
 
 class Meta(BaseMeta):
@@ -88,7 +86,7 @@ class DataPack(BasePack):
                            "which might cause unexpected behavior.")
         self._text = text
 
-    def add_or_get_entry(self, entry: E) -> E:
+    def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """
         Try to add an :class:`Entry` object to the :class:`DataPack` object.
         If a same entry already exists, will return the existing entry
@@ -137,7 +135,7 @@ class DataPack(BasePack):
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)]
 
-    def add_entry(self, entry: E) -> E:
+    def add_entry(self, entry: EntryType) -> EntryType:
         """
         Force add an :class:`Entry` object to the :class:`DataPack` object.
         Allow duplicate entries in a datapack.
@@ -517,10 +515,10 @@ class DataPack(BasePack):
         return a_dict
 
     def get_entries(self,
-                    entry_type: Type[E],
+                    entry_type: Type[EntryType],
                     range_annotation: Optional[Annotation] = None,
                     components: Optional[Union[str, List[str]]] = None
-                    ) -> Iterable[E]:
+                    ) -> Iterable[EntryType]:
         """
         Get ``entry_type`` entries from the span of ``range_annotation`` in a
         DataPack.
@@ -590,7 +588,7 @@ class DataPack(BasePack):
         return {self.get_entry_by_id(tid)
                     for tid in self.get_ids_by_compoent(component)}
 
-    def get_ids_by_type(self, tp: Type[E]) -> Set[str]:
+    def get_ids_by_type(self, tp: Type[EntryType]) -> Set[str]:
         """
         Look up the type_index with key ``tp``.
 
@@ -607,7 +605,7 @@ class DataPack(BasePack):
             logging.warning("There is no %s type entry in this datapack", tp)
         return subclass_index
 
-    def get_entries_by_type(self, tp: Type[E]) -> Set[E]:
+    def get_entries_by_type(self, tp: Type[EntryType]) -> Set[EntryType]:
         entries: Set = set()
         for tid in self.get_ids_by_type(tp):
             entry = self.get_entry_by_id(tid)

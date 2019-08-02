@@ -2,9 +2,11 @@ import logging
 from abc import abstractmethod
 from collections import defaultdict
 
-from typing import (Dict, Iterator, List, Optional, Type, Union, Any,
-                    Iterable, TypeVar, DefaultDict, Set)
-from nlp.pipeline.data.ontology import Entry, Annotation, Span, Link, Group
+from typing import (
+    Dict, Iterator, List, Optional, Type, Union, Any, Iterable,
+    TypeVar, DefaultDict, Set)
+from nlp.pipeline.data.ontology import (
+    Entry, EntryType, Annotation, Span, Link, Group)
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +14,9 @@ __all__ = [
     "BasePack",
     "BaseMeta",
     "InternalMeta",
-    "BaseIndex"
+    "BaseIndex",
+    "PackType"
 ]
-
-E = TypeVar('E', bound=Entry)
 
 
 class BaseMeta:
@@ -259,7 +260,7 @@ class BasePack:
             setattr(self.meta, k, v)
 
     @abstractmethod
-    def add_entry(self, entry: E) -> E:
+    def add_entry(self, entry: EntryType) -> EntryType:
         """
         Force add an :class:`Entry` object to the :class:`BasePack` object.
         Allow duplicate entries in a pack.
@@ -273,7 +274,7 @@ class BasePack:
         raise NotImplementedError
 
     @abstractmethod
-    def add_or_get_entry(self, entry: E) -> E:
+    def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """
         Try to add an :class:`Entry` object to the :class:`DataPack` object.
         If a same entry already exists, will return the existing entry
@@ -312,10 +313,10 @@ class BasePack:
 
     @abstractmethod
     def get_entries(self,
-                    entry_type: Type[E],
+                    entry_type: Type[EntryType],
                     range_annotation: Optional[Annotation] = None,
                     components: Optional[Union[str, List[str]]] = None
-                    ) -> Iterable[E]:
+                    ) -> Iterable[EntryType]:
         """
         Get ``entry_type`` entries from the span of ``range_annotation`` in a
         DataPack.
@@ -332,7 +333,10 @@ class BasePack:
         raise NotImplementedError
 
     def get(self,
-            entry_type: Type[E],
+            entry_type: Type[EntryType],
             range_annotation: Optional[Annotation] = None,
-            component: Optional[str] = None) -> Iterable[E]:
+            component: Optional[str] = None) -> Iterable[EntryType]:
         return self.get_entries(entry_type, range_annotation, component)
+
+
+PackType = TypeVar('PackType', bound=BasePack)

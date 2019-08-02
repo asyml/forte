@@ -1,20 +1,19 @@
 from abc import abstractmethod
-from typing import Dict, Optional
+from typing import Dict, Optional, Generic
 
 from nlp.pipeline import config
-from nlp.pipeline.data import slice_batch
-from nlp.pipeline.data.base_pack import BasePack
+from nlp.pipeline.data import BasePack, PackType, DataPack
+from nlp.pipeline.data.io_utils import slice_batch
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.batchers import ProcessingBatcher
 
 __all__ = [
     "BaseBatchProcessor",
     "BatchProcessor",
-    "MultiPackBatchProcessor"
 ]
 
 
-class BaseBatchProcessor(BaseProcessor):
+class BaseBatchProcessor(BaseProcessor[PackType]):
     """
     The base class of processors that process data in batch.
     """
@@ -34,7 +33,7 @@ class BaseBatchProcessor(BaseProcessor):
         """
         raise NotImplementedError
 
-    def process(self, input_pack: BasePack, tail_instances: bool = False):
+    def process(self, input_pack: PackType, tail_instances: bool = False):
         config.working_component = self.component_name
         if input_pack.meta.cache_state == self.component_name:
             input_pack = None  # type: ignore
@@ -74,13 +73,13 @@ class BaseBatchProcessor(BaseProcessor):
             start += self.batcher.current_batch_sources[i]
 
     @abstractmethod
-    def pack(self, data_pack: BasePack, inputs) -> None:
+    def pack(self, pack: PackType, inputs) -> None:
         """
-        Add corresponding fields to data_pack. Custom function of how
+        Add corresponding fields to pack. Custom function of how
         to add the value back.
 
         Args:
-            data_pack (BasePack): The data pack to add entries or fields to.
+            pack (BasePack): The pack to add entries or fields to.
             inputs: The prediction results returned by :meth:`predict`. You
                 need to add entries or fields corresponding to this prediction
                 results to the ``data_pack``.
@@ -89,7 +88,7 @@ class BaseBatchProcessor(BaseProcessor):
 
     def finish_up_packs(self, end: Optional[int] = None):
         """
-        Do finishing work for data packs in :attr:`data_pack_pool` from the
+        Do finishing work for packs in :attr:`data_pack_pool` from the
         beginning to ``end`` (``end`` is not included).
 
         Args:
@@ -107,7 +106,7 @@ class BaseBatchProcessor(BaseProcessor):
             self.batcher.current_batch_sources[end:]
 
 
-class BatchProcessor(BaseBatchProcessor):
+class BatchProcessor(BaseBatchProcessor[DataPack]):
     """
     The batch processors that process DataPacks.
     """
@@ -115,9 +114,5 @@ class BatchProcessor(BaseBatchProcessor):
         self.batcher = ProcessingBatcher(self.batch_size, hard_batch)
 
 
-class MultiPackBatchProcessor(BaseBatchProcessor):
-    """
-        The batch processors that process MultiPacks.
-    """
-    def initialize_batcher(self, hard_batch: bool = True):
-        raise NotImplementedError
+# TODO (Haoran): define MultiPackBatchProcessor
+
