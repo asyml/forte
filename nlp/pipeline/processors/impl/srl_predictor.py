@@ -38,10 +38,10 @@ class SRLPredictor(BatchProcessor):
             base_ontology.Token: [],
         }
         self.output_info = {
-            self.ontology.PredicateMention:  # type: ignore
+            self.ontology.PredicateMention:
                 ["pred_type", "span"],
-            self.ontology.PredicateArgument: ["span"],  # type: ignore
-            self.ontology.PredicateLink:  # type: ignore
+            self.ontology.PredicateArgument: ["span"],
+            self.ontology.PredicateLink:
                 ["parent", "child", "arg_type"],
 
         }
