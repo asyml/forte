@@ -16,7 +16,7 @@ lists = pack.get_data(
     context_type="sentence",
     requests={
         Token: ["chunk_tag", "pos_tag", "ner_tag"],
-        Sentence: [] # span by default
+        Sentence: []  # span by default
     },
 )
 print(next(lists)['Token'])

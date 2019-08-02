@@ -57,6 +57,7 @@ class CoNLLNERPredictor(BatchProcessor):
         self.model = resource.resources["model"]
         self.device = resource.resources["device"]
         self.normalize_func = resource.resources['normalize_func']
+        self.model.eval()
 
     @torch.no_grad()
     def predict(self, data_batch: Dict):

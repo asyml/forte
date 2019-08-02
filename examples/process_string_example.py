@@ -6,7 +6,6 @@ from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
-from nlp.pipeline.common.resources import Resources
 
 from texar.torch import HParams
 
@@ -14,10 +13,10 @@ from texar.torch import HParams
 def main():
 
     pl = Pipeline()
-    resource = Resources()
-    pl.processors.append(NLTKSentenceSegmenter())
-    pl.processors.append(NLTKWordTokenizer())
-    pl.processors.append(NLTKPOSTagger())
+    pl.add_processor(NLTKSentenceSegmenter())
+    pl.add_processor(NLTKSentenceSegmenter())
+    pl.add_processor(NLTKWordTokenizer())
+    pl.add_processor(NLTKPOSTagger())
 
     ner_configs = HParams(
         {
@@ -26,11 +25,18 @@ def main():
         CoNLLNERPredictor.default_hparams())
 
     ner_predictor = CoNLLNERPredictor()
-    ner_predictor.initialize(ner_configs, resource)
 
-    pl.processors.append(ner_predictor)
+    pl.add_processor(ner_predictor, ner_configs)
 
-    pl.processors.append(SRLPredictor(model_dir="./SRL_model/"))
+    srl_configs = HParams(
+        {
+            'storage_path': './SRL_model/',
+        },
+        SRLPredictor.default_hparams()
+    )
+    pl.add_processor(SRLPredictor(), srl_configs)
+
+    pl.initialize_processors()
 
     text = (
         "The plain green Norway spruce is displayed in the gallery's foyer. "

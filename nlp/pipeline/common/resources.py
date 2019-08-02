@@ -1,7 +1,3 @@
-"""
-The Resources class wraps necessary resources to build a processor ( or a
-trainer)
-"""
 import os
 import pickle
 
@@ -11,6 +7,11 @@ __all__ = [
 
 
 class Resources:
+    """
+    The Resources object is a global registry used in the pipeline
+    The objects defined as the ``Resources`` will be passed on to the
+        processors in the pipeline for the initialization
+    """
     def __init__(self, **kwargs):
         self.resources = {}
         self.update(**kwargs)

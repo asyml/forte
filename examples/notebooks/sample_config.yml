@@ -21,6 +21,6 @@ Processors:
       overwrite_configs: # You can still define other configurations here
         storage_path: "/home/shr/nlp_pipeline/examples/NER/resources.pkl"
   - type: "nlp.pipeline.processors.impl.SRLPredictor"
-    kwargs:
-      model_dir: "/home/hector/models/SRL_model/"
     hparams:
+      overwrite_configs:
+        storage_path: "/home/hector/models/SRL_model/"

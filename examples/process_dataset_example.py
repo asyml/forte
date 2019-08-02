@@ -7,7 +7,6 @@ from nlp.pipeline.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.data.readers import PlainTextReader
-from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
@@ -17,7 +16,6 @@ from texar.torch import HParams
 def main(dataset_dir, ner_model_path, srl_model_path):
 
     pl = Pipeline()
-    resource = Resources()
     pl.set_reader(PlainTextReader())
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())
@@ -29,10 +27,16 @@ def main(dataset_dir, ner_model_path, srl_model_path):
         },
         CoNLLNERPredictor.default_hparams())
 
-    ner_predictor = CoNLLNERPredictor()
-    ner_predictor.initialize(ner_configs, resource)
-    pl.add_processor(ner_predictor)
-    pl.add_processor(SRLPredictor(model_dir=srl_model_path))
+    pl.add_processor(CoNLLNERPredictor(), ner_configs)
+
+    srl_configs = HParams(
+        {
+            'storage_path': srl_model_path,
+        },
+        SRLPredictor.default_hparams()
+    )
+    pl.add_processor(SRLPredictor(), srl_configs)
+    pl.initialize_processors()
 
     for pack in pl.process_dataset(dataset_dir):
         print(colored("Document", 'red'), pack.meta.doc_id)
