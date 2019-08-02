@@ -16,6 +16,7 @@ class PipelineTest(unittest.TestCase):
         self.dataset_path = "examples/ontonotes_sample_dataset/00"
 
         self.nlp = Pipeline(ontology=relation_ontology)
+
         self.nlp.set_reader(OntonotesReader())
         self.processor = DummyRelationExtractor()
         self.nlp.add_processor(self.processor)

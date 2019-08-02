@@ -1,5 +1,6 @@
-from typing import Iterator
+from typing import Iterator, Optional
 
+from texar.torch import HParams
 from nlp.pipeline.data import DataPack
 from nlp.pipeline.base_pipeline import BasePipeline
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
@@ -18,11 +19,14 @@ class Pipeline(BasePipeline[DataPack]):
         super().__init__()
         self.initialize(**kwargs)
 
-    def add_processor(self, processor: BaseProcessor):
-        if self._ontology is not None:
+    def add_processor(self,
+                      processor: BaseProcessor,
+                      config: Optional[HParams] = None):
+        if self._ontology:
             processor.set_ontology(self._ontology)
         self._processors_index[processor.component_name] = len(self.processors)
         self.processors.append(processor)
+        self.processor_configs.append(config)
 
     def process(self, data: str) -> DataPack:
         """

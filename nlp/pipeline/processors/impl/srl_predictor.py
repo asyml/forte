@@ -3,13 +3,14 @@ import logging
 from typing import Dict, List, Tuple
 
 import texar.torch as tx
+from texar.torch.hyperparams import HParams
 import torch
 
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import ontonotes_ontology, base_ontology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
-from nlp.pipeline.processors.batch_processor import BatchProcessor
+from nlp.pipeline.processors import BatchProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class SRLPredictor(BatchProcessor):
     char_vocab: tx.data.Vocab
     model: LabeledSpanGraphNetwork
 
-    def __init__(self, model_dir: str):
+    def __init__(self):
         super().__init__()
 
         self._ontology = ontonotes_ontology
@@ -42,6 +43,10 @@ class SRLPredictor(BatchProcessor):
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
+    def initialize(self, configs: HParams, resource: Resources):
+        self.initialize_batcher()
+
+        model_dir = configs.storage_path
         logger.info("restoring SRL model from %s", model_dir)
 
         self.word_vocab = tx.data.Vocab(
@@ -74,9 +79,6 @@ class SRLPredictor(BatchProcessor):
                 ["parent", "child", "arg_type"],
 
         }
-
-    def initialize(self, resource: Resources):
-        raise NotImplementedError
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
@@ -122,3 +124,14 @@ class SRLPredictor(BatchProcessor):
                     link = self._ontology.PredicateLink(pred, arg)
                     link.set_fields(arg_type=label)
                     data_pack.add_or_get_entry(link)
+
+    @staticmethod
+    def default_hparams():
+        """
+        This defines a basic Hparams structure
+        :return:
+        """
+        hparams_dict = {
+            'storage_path': None,
+        }
+        return hparams_dict

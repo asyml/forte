@@ -4,13 +4,14 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
+from texar.torch.hyperparams import HParams
 
 from nlp.pipeline.common.evaluation import Evaluator
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.format import conll_utils
 from nlp.pipeline.data.ontology import base_ontology, conll03_ontology
-from nlp.pipeline.processors.batch_processor import BatchProcessor
+from nlp.pipeline.processors import BatchProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +50,11 @@ class CoNLLNERPredictor(BatchProcessor):
             self._ontology.EntityMention: ["ner_type", "span"],
         }
 
-    def initialize(self, resource: Resources):
+    def initialize(self, configs: HParams, resource: Resources):
         self.initialize_batcher()
+
+        resource.load(configs.storage_path)
+
         self.word_alphabet = resource.resources["word_alphabet"]
         self.char_alphabet = resource.resources["char_alphabet"]
         self.ner_alphabet = resource.resources["ner_alphabet"]
@@ -59,6 +63,7 @@ class CoNLLNERPredictor(BatchProcessor):
         self.model = resource.resources["model"]
         self.device = resource.resources["device"]
         self.normalize_func = resource.resources['normalize_func']
+        self.model.eval()
 
     @torch.no_grad()
     def predict(self, data_batch: Dict):
@@ -213,6 +218,17 @@ class CoNLLNERPredictor(BatchProcessor):
         lengths = torch.from_numpy(lengths).to(device)
 
         return words, chars, masks, lengths
+
+    @staticmethod
+    def default_hparams():
+        """
+        This defines a basic Hparams structure
+        :return:
+        """
+        hparams_dict = {
+            'storage_path': None,
+        }
+        return hparams_dict
 
 
 class CoNLLNEREvaluator(Evaluator):

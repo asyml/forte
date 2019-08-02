@@ -1,4 +1,3 @@
-import pickle
 from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
 from nlp.pipeline.processors.impl.ner_predictor import (
@@ -11,12 +10,13 @@ reader = CoNLL03Reader(lazy=False)
 
 output_file = 'predict_output.txt'
 
-resource: Resources = pickle.load(open('resources.pkl', 'rb'))
+resources: Resources = Resources()
+resources.load('resources.pkl')
 
 ner_predictor = CoNLLNERPredictor()
-ner_predictor.initialize(resource)
+ner_predictor.initialize(resources)
 
-for pack in reader.iter(resource.resources[
+for pack in reader.iter(resources.resources[
                                         'config_data'].test_path):
     ner_predictor.process(pack)
 

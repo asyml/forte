@@ -7,7 +7,7 @@ import texar.torch as tx
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import base_ontology
-from nlp.pipeline.processors.base_processor import BaseProcessor
+from nlp.pipeline.processors import BaseProcessor
 from nlp.pipeline.models.NER.utils import normalize_digit_word
 
 __all__ = [

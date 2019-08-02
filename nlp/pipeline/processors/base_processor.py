@@ -25,10 +25,10 @@ class BaseProcessor(Generic[PackType]):
         self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
 
-    def initialize(self, resource: Resources):
-        # TODO Move resource to __init__
-        # TODO Change docstring
-        """Initialize the processor with ``recources``."""
+    def initialize(self, configs, resource: Resources):
+        """Initialize the processor with ``configs``, and register global
+        resources into ``resource``.
+        """
         pass
 
     def set_ontology(self, ontology):
@@ -78,3 +78,13 @@ class BaseProcessor(Generic[PackType]):
         #  sharable between pack processor and multipack processor
         self._record_fields(input_pack)
         input_pack.meta.process_state = self.component_name
+
+    @staticmethod
+    def default_hparams():
+        """
+        This defines a basic Hparams structure
+        :return:
+        """
+        hparams_dict = {
+        }
+        return hparams_dict
