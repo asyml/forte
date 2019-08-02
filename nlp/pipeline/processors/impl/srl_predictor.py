@@ -37,7 +37,7 @@ class SRLPredictor(BatchProcessor):
         self.context_type = "sentence"
 
         self.batch_size = 4
-        self.initialize_batcher()
+        self.batcher = self.initialize_batcher()
 
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')

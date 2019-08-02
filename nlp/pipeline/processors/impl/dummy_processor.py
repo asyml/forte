@@ -26,7 +26,7 @@ class DummyRelationExtractor(BatchProcessor):
         self.context_type = "sentence"
 
         self.batch_size = 4
-        self.initialize_batcher()
+        self.batcher = self.initialize_batcher()
 
     def define_input_info(self):
         self.input_info = {

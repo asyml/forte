@@ -111,7 +111,7 @@ class BatchProcessor(BaseBatchProcessor[DataPack]):
     The batch processors that process DataPacks.
     """
     def initialize_batcher(self, hard_batch: bool = True):
-        self.batcher = ProcessingBatcher(self.batch_size, hard_batch)
+        return ProcessingBatcher(self.batch_size, hard_batch)
 
 
 # TODO (Haoran): define MultiPackBatchProcessor
