@@ -52,8 +52,7 @@ class BaseReader(Generic[PackType]):
         return jsonpickle.decode(string)
 
     @abstractmethod
-    def dataset_iterator(self,
-                         dataset) -> Union[List[PackType], Iterator[PackType]]:
+    def iter(self, dataset) -> Union[List[PackType], Iterator[PackType]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.
@@ -128,8 +127,7 @@ class PackReader(BaseReader[DataPack]):
                 yield pack
 
     @abstractmethod
-    def dataset_iterator(self,
-                         dataset) -> Union[List[DataPack], Iterator[DataPack]]:
+    def iter(self, dataset) -> Union[List[DataPack], Iterator[DataPack]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.

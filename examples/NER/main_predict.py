@@ -16,7 +16,7 @@ resource: Resources = pickle.load(open('resources.pkl', 'rb'))
 ner_predictor = CoNLLNERPredictor()
 ner_predictor.initialize(resource)
 
-for pack in reader.dataset_iterator(resource.resources[
+for pack in reader.iter(resource.resources[
                                         'config_data'].test_path):
     ner_predictor.process(pack)
 

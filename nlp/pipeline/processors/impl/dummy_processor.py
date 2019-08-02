@@ -42,7 +42,7 @@ class DummyRelationExtractor(BatchProcessor):
                 ["parent", "child", "rel_type"]
         }
 
-    def predict(self, data_batch: Dict):
+    def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 

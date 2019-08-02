@@ -20,9 +20,9 @@ class PlainTextReader(MonoFileReader):
     Args:
         lazy (bool, optional): The reading strategy used when reading a
             dataset containing multiple documents. If this is true,
-            ``dataset_iterator()`` will return an object whose ``__iter__``
+            ``iter()`` will return an object whose ``__iter__``
             method reloads the dataset each time it's called. Otherwise,
-            ``dataset_iterator()`` returns a list.
+            ``iter()`` returns a list.
     """
 
     @no_type_check

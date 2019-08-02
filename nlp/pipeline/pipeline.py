@@ -52,7 +52,7 @@ class Pipeline(BasePipeline[DataPack]):
 
         """
 
-        data_iter = self._reader.dataset_iterator(dataset)
+        data_iter = self._reader.iter(dataset)
 
         for pack in data_iter:
             self.current_packs.append(pack)

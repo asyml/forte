@@ -46,7 +46,7 @@ class TrainPipeline:
         while True:
             epoch += 1
             # we need to have directory ready here
-            for pack in self.train_reader.dataset_iterator(
+            for pack in self.train_reader.iter(
                     self.config_data.train_path
             ):
                 # data_request is a string. How to transform it to the
@@ -74,7 +74,7 @@ class TrainPipeline:
         validation_result = {"epoch": epoch}
 
         if self.predictor is not None and self.evaluator is not None:
-            for pack in self.dev_reader.dataset_iterator(
+            for pack in self.dev_reader.iter(
                     self.config_data.val_path
             ):
                 predicted_pack = pack.view()
@@ -82,7 +82,7 @@ class TrainPipeline:
                 self.evaluator.consume_next(pack, predicted_pack)
             validation_result["eval"] = self.evaluator.get_result()
 
-            for pack in self.dev_reader.dataset_iterator(
+            for pack in self.dev_reader.iter(
                     self.config_data.test_path
             ):
                 predicted_pack = pack.view()

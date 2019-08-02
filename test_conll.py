@@ -5,7 +5,7 @@ reader = CoNLL03Reader(lazy=False)
 
 config_data = importlib.import_module("config_data")
 train_path = config_data.train_path  # type: ignore
-pack = reader.dataset_iterator('examples/NER/' + train_path)
+pack = reader.iter('examples/NER/' + train_path)
 
 pack = list(pack)[0]
 
