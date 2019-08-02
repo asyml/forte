@@ -1,8 +1,8 @@
 from abc import abstractmethod
-from typing import Dict, Optional, Generic
+from typing import Dict, Optional
 
 from nlp.pipeline import config
-from nlp.pipeline.data import BasePack, PackType, DataPack
+from nlp.pipeline.data import PackType, DataPack
 from nlp.pipeline.data.io_utils import slice_batch
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.batchers import ProcessingBatcher
@@ -79,7 +79,7 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         to add the value back.
 
         Args:
-            pack (BasePack): The pack to add entries or fields to.
+            pack (PackType): The pack to add entries or fields to.
             inputs: The prediction results returned by :meth:`predict`. You
                 need to add entries or fields corresponding to this prediction
                 results to the ``data_pack``.
@@ -115,4 +115,3 @@ class BatchProcessor(BaseBatchProcessor[DataPack]):
 
 
 # TODO (Haoran): define MultiPackBatchProcessor
-

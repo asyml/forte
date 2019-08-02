@@ -3,12 +3,12 @@ Base reader type to be inherited by all readers.
 """
 from abc import abstractmethod
 from pathlib import Path
-from typing import Iterator, Optional, Dict, Type, List, Union
+from typing import Iterator, Optional, Dict, Type, List, Union, Generic
 
 import jsonpickle
 
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.base_pack import BasePack
+from nlp.pipeline.data.base_pack import PackType
 from nlp.pipeline.data.ontology import Entry
 from nlp.pipeline.utils import get_full_module_name
 
@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-class BaseReader:
+class BaseReader(Generic[PackType]):
     """The basic data reader class.
     To be inherited by all data readers.
     """
@@ -38,21 +38,22 @@ class BaseReader:
         pass
 
     @staticmethod
-    def serialize_instance(instance: BasePack) -> str:
+    def serialize_instance(instance: PackType) -> str:
         """
-        Serializes an ``BasePack`` to a string.
+        Serializes a pack to a string.
         """
         return jsonpickle.encode(instance, unpicklable=True)
 
     @staticmethod
-    def deserialize_instance(string: str) -> BasePack:
+    def deserialize_instance(string: str) -> PackType:
         """
-        Deserializes an ``BasePack`` from a string.
+        Deserializes an pack from a string.
         """
         return jsonpickle.decode(string)
 
     @abstractmethod
-    def dataset_iterator(self, dataset):
+    def dataset_iterator(self,
+                         dataset) -> Union[List[PackType], Iterator[PackType]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.
@@ -95,7 +96,7 @@ class BaseReader:
             file_path = file_path[:-1]
         return Path(f"{self._cache_directory / file_path.split('/')[-1]}.cache")
 
-    def _record_fields(self, pack: BasePack):
+    def _record_fields(self, pack: PackType):
         """
         Record the fields and entries that this processor add to packs.
         """
@@ -111,7 +112,7 @@ class BaseReader:
             pack.record_fields(fields, entry_type, component)
 
 
-class PackReader(BaseReader):
+class PackReader(BaseReader[DataPack]):
     """The basic data reader class.
     To be inherited by all data readers.
     """

@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from nlp.pipeline import config
-from nlp.pipeline.data import BasePack, DataPack, PackType
+from nlp.pipeline.data import DataPack, PackType
 from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
@@ -18,7 +18,7 @@ class BasePackProcessor(BaseProcessor[PackType]):
         Process one datapack at a time.
 
         Args:
-            input_pack (BasePack): A datapack to be processed.
+            input_pack (PackType): A datapack to be processed.
         """
         config.working_component = self.component_name
         self._process(input_pack)

@@ -9,7 +9,7 @@ __all__ = [
 ]
 
 
-class Pipeline(BasePipeline):
+class Pipeline(BasePipeline[DataPack]):
     """
     The pipeline consists of a list of predictors.
     """

@@ -31,7 +31,7 @@ class CoNLLNERPredictor(BatchProcessor):
 
         self._ontology = conll03_ontology
         self.define_input_info()
-        self.define_input_info()
+        self.define_output_info()
 
         self.context_type = "sentence"
 

@@ -32,7 +32,7 @@ class SRLPredictor(BatchProcessor):
 
         self._ontology = ontonotes_ontology
         self.define_input_info()
-        self.define_input_info()
+        self.define_output_info()
 
         self.context_type = "sentence"
 

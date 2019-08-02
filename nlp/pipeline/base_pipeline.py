@@ -1,7 +1,7 @@
 from abc import abstractmethod
-from typing import List, Dict, Iterator
+from typing import List, Dict, Iterator, Generic
 
-from nlp.pipeline.data.base_pack import BasePack
+from nlp.pipeline.data.base_pack import PackType
 from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor
 
@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-class BasePipeline:
+class BasePipeline(Generic[PackType]):
     """
     The pipeline consists of a list of predictors.
     TODO(Wei): check fields when concatenating processors
@@ -51,7 +51,7 @@ class BasePipeline:
         raise NotImplementedError
 
     @abstractmethod
-    def process(self, data: str) -> BasePack:
+    def process(self, data: str) -> PackType:
         """
         Process a string text or a single file.
 
@@ -64,7 +64,7 @@ class BasePipeline:
         raise NotImplementedError
 
     @abstractmethod
-    def process_dataset(self, dataset: str) -> Iterator[BasePack]:
+    def process_dataset(self, dataset: str) -> Iterator[PackType]:
         """
         Process the documents in the dataset and return an iterator of DataPack.
 
