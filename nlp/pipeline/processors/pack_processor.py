@@ -1,32 +1,24 @@
 from abc import abstractmethod
-
 from nlp.pipeline import config
-from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data import DataPack, PackType
 from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
+    "BasePackProcessor",
     "PackProcessor",
 ]
 
 
-class PackProcessor(BaseProcessor):
+class BasePackProcessor(BaseProcessor[PackType]):
     """
     The base class of processors that process one pack each time.
     """
-
-    def __init__(self):
-        super().__init__()
-        self._overwrite = True
-
-    def set_mode(self, overwrite: bool):
-        self._overwrite = overwrite
-
-    def process(self, input_pack: DataPack):
+    def process(self, input_pack: PackType):
         """
         Process one datapack at a time.
 
         Args:
-            input_pack (DataPack): A datapack to be processed.
+            input_pack (PackType): A datapack to be processed.
         """
         config.working_component = self.component_name
         self._process(input_pack)
@@ -34,5 +26,15 @@ class PackProcessor(BaseProcessor):
         config.working_component = None
 
     @abstractmethod
-    def _process(self, input_pack: DataPack):
+    def _process(self, input_pack: PackType):
         pass
+
+
+class PackProcessor(BasePackProcessor[DataPack]):
+    """
+    The base class of processors that process one pack each time.
+    """
+    pass
+
+
+# TODO (Haoran): define MultiPackProcessor

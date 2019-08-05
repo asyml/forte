@@ -19,24 +19,30 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self) -> None:
         super().__init__()
-        self.ontology = relation_ontology  # the output should be in this onto
+        self._ontology = relation_ontology
+        self.define_input_info()
+        self.define_output_info()
 
         self.context_type = "sentence"
+
+        self.batch_size = 4
+        self.batcher = self.initialize_batcher()
+
+    def define_input_info(self):
         self.input_info = {
             base_ontology.Token: [],
             base_ontology.EntityMention: {
                 "fields": ["ner_type", "tid"],
             }
         }
+
+    def define_output_info(self):
         self.output_info = {
-            self.ontology.RelationLink:  # type: ignore
+            self._ontology.RelationLink:
                 ["parent", "child", "rel_type"]
         }
 
-        self.batch_size = 4
-        self.initialize_batcher()
-
-    def predict(self, data_batch: Dict):
+    def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 
@@ -75,7 +81,7 @@ class DummyRelationExtractor(BatchProcessor):
 
         for i in range(len(output_dict["RelationLink"]["parent.tid"])):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
-                link = self.ontology.RelationLink()
+                link = self._ontology.RelationLink()
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
                 parent = data_pack.get_entry_by_id(
                     output_dict["RelationLink"]["parent.tid"][i][j])

@@ -5,6 +5,7 @@ import unittest
 from nlp.pipeline.pipeline import Pipeline
 from nlp.pipeline.data.readers import OntonotesReader
 from nlp.pipeline.processors.impl.dummy_processor import *
+from nlp.pipeline.data.ontology import relation_ontology
 from nlp.pipeline.data.ontology.relation_ontology import *
 
 
@@ -14,11 +15,8 @@ class PipelineTest(unittest.TestCase):
         # Define and config the Pipeline
         self.dataset_path = "examples/ontonotes_sample_dataset/00"
 
-        configs = {
-            "ontology": "relation_ontology"
-        }
-        self.nlp = Pipeline()
-        self.nlp.init_from_config(configs)
+        self.nlp = Pipeline(ontology=relation_ontology)
+
         self.nlp.set_reader(OntonotesReader())
         self.processor = DummyRelationExtractor()
         self.nlp.add_processor(self.processor)

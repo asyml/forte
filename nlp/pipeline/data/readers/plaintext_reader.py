@@ -6,6 +6,7 @@ import os
 from typing import Iterator
 
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -19,10 +20,20 @@ class PlainTextReader(MonoFileReader):
     Args:
         lazy (bool, optional): The reading strategy used when reading a
             dataset containing multiple documents. If this is true,
-            ``dataset_iterator()`` will return an object whose ``__iter__``
+            ``iter()`` will return an object whose ``__iter__``
             method reloads the dataset each time it's called. Otherwise,
-            ``dataset_iterator()`` returns a list.
+            ``iter()`` returns a list.
     """
+
+    def __init__(self, lazy: bool = True):
+        super().__init__(lazy)
+        self._ontology = base_ontology
+        self.define_output_info()
+
+    def define_output_info(self):
+        self.output_info = {
+            self._ontology.Document: [],
+        }
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -37,14 +48,14 @@ class PlainTextReader(MonoFileReader):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:
-        if self.current_datapack is None:
-            raise ValueError("You shouldn never call _read_document() "
-                             "directly. Instead, call read() to read a file "
-                             "or dataset_iterator() to read a directory.")
-        assert isinstance(self.current_datapack, DataPack)
+        pack = DataPack()
         doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
         text = doc.read()
-        self.current_datapack.set_text(text)
-        self.current_datapack.meta.doc_id = file_path
+
+        document = self._ontology.Document(0, len(text))  # type: ignore
+        pack.add_or_get_entry(document)
+
+        pack.set_text(text)
+        pack.meta.doc_id = file_path
         doc.close()
-        return self.current_datapack
+        return pack

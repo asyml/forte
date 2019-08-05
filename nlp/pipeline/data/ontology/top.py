@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from functools import total_ordering
-from typing import Iterable, Optional, Set, Union, Type
+from typing import Iterable, Optional, Set, Union, Type, TypeVar
 
 from nlp.pipeline.utils import get_class_name, get_full_module_name
 from nlp.pipeline import config
@@ -8,6 +8,7 @@ from nlp.pipeline import config
 __all__ = [
     "Span",
     "Entry",
+    "EntryType",
     "Annotation",
     "Link",
     "Group"
@@ -86,6 +87,9 @@ class Entry:
 
     def __eq__(self, other):
         return self.eq(other)
+
+
+EntryType = TypeVar('EntryType', bound=Entry)
 
 
 @total_ordering

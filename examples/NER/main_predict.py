@@ -15,9 +15,8 @@ resources.load('resources.pkl')
 
 ner_predictor = CoNLLNERPredictor()
 ner_predictor.initialize(resources)
-ner_predictor.set_mode(overwrite=True)
 
-for pack in reader.dataset_iterator(resources.resources[
+for pack in reader.iter(resources.resources[
                                         'config_data'].test_path):
     ner_predictor.process(pack)
 

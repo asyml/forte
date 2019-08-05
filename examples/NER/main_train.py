@@ -60,7 +60,7 @@ def main():
 
     embedding_path = config_model.embedding_path
 
-    train_reader = reader.dataset_iterator(config_data.train_path)
+    train_reader = reader.iter(config_data.train_path)
     embedding_dict = load_glove_embedding(embedding_path)
 
     # Keep the vocabulary processor as a simple counter

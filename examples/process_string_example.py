@@ -1,19 +1,19 @@
 from termcolor import colored
+from texar.torch import HParams
 
 from nlp.pipeline.data.ontology.conll03_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
 from nlp.pipeline.pipeline import Pipeline
+from nlp.pipeline.data.readers import StringReader
 from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
-
-from texar.torch import HParams
 
 
 def main():
 
     pl = Pipeline()
-    pl.add_processor(NLTKSentenceSegmenter())
+    pl.set_reader(StringReader())
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())
     pl.add_processor(NLTKPOSTagger())

@@ -1,19 +1,19 @@
 from abc import abstractmethod
-from typing import Dict, Optional, Type, Union, List
+from typing import Dict, Optional
 
 from nlp.pipeline import config
-from nlp.pipeline.data import slice_batch
-from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data import PackType, DataPack
+from nlp.pipeline.data.io_utils import slice_batch
 from nlp.pipeline.processors.base_processor import BaseProcessor
 from nlp.pipeline.data.batchers import ProcessingBatcher
-from nlp.pipeline.data.ontology import Entry
 
 __all__ = [
+    "BaseBatchProcessor",
     "BatchProcessor",
 ]
 
 
-class BatchProcessor(BaseProcessor):
+class BaseBatchProcessor(BaseProcessor[PackType]):
     """
     The base class of processors that process data in batch.
     """
@@ -21,15 +21,19 @@ class BatchProcessor(BaseProcessor):
         super().__init__()
 
         self.context_type = None
-        self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
-
         self.batch_size = None
         self.batcher = None
 
+    @abstractmethod
     def initialize_batcher(self, hard_batch: bool = True):
-        self.batcher = ProcessingBatcher(self.batch_size, hard_batch)
+        """
+        Single pack :class:`BatchProcessor` initialize the batcher to be a
+        :class:`ProcessingBatcher`. And MultiPackBatchProcessor might need
+        something like "MultiPackProcessingBatcher".
+        """
+        raise NotImplementedError
 
-    def process(self, input_pack: DataPack, tail_instances: bool = False):
+    def process(self, input_pack: PackType, tail_instances: bool = False):
         config.working_component = self.component_name
         if input_pack.meta.cache_state == self.component_name:
             input_pack = None  # type: ignore
@@ -69,22 +73,22 @@ class BatchProcessor(BaseProcessor):
             start += self.batcher.current_batch_sources[i]
 
     @abstractmethod
-    def pack(self, data_pack: DataPack, inputs) -> None:
+    def pack(self, pack: PackType, inputs) -> None:
         """
-        Add corresponding fields to data_pack. Custom function of how
+        Add corresponding fields to pack. Custom function of how
         to add the value back.
 
         Args:
-            data_pack (DataPack): The data pack to add entries or fields to.
+            pack (PackType): The pack to add entries or fields to.
             inputs: The prediction results returned by :meth:`predict`. You
                 need to add entries or fields corresponding to this prediction
                 results to the ``data_pack``.
         """
-        pass
+        raise NotImplementedError
 
     def finish_up_packs(self, end: Optional[int] = None):
         """
-        Do finishing work for data packs in :attr:`data_pack_pool` from the
+        Do finishing work for packs in :attr:`data_pack_pool` from the
         beginning to ``end`` (``end`` is not included).
 
         Args:
@@ -100,3 +104,14 @@ class BatchProcessor(BaseProcessor):
         self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]
         self.batcher.current_batch_sources = \
             self.batcher.current_batch_sources[end:]
+
+
+class BatchProcessor(BaseBatchProcessor[DataPack]):
+    """
+    The batch processors that process DataPacks.
+    """
+    def initialize_batcher(self, hard_batch: bool = True):
+        return ProcessingBatcher(self.batch_size, hard_batch)
+
+
+# TODO (Haoran): define MultiPackBatchProcessor

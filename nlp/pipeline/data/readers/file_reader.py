@@ -9,7 +9,7 @@ from typing import Iterator, List, Optional, Union
 
 from nlp.pipeline import config
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers.base_reader import BaseReader
+from nlp.pipeline.data.readers.base_reader import PackReader
 
 logger = logging.getLogger(__name__)
 
@@ -18,22 +18,19 @@ __all__ = [
 ]
 
 
-class MonoFileReader(BaseReader):
+class MonoFileReader(PackReader):
     """Data reader that reads one data pack from each single text files.
     To be inherited by all mono file data readers.
 
     Args:
         lazy (bool, optional): The reading strategy used when reading a
             dataset containing multiple documents. If this is true,
-            ``dataset_iterator()`` will return an object whose ``__iter__``
+            ``iter()`` will return an object whose ``__iter__``
             method reloads the dataset each time it's called. Otherwise,
-            ``dataset_iterator()`` returns a list.
+            ``iter()`` returns a list.
     """
-    def __init__(self, lazy: bool = True) -> None:
-        super().__init__(lazy)
-        self.current_datapack: DataPack = DataPack()
 
-    def dataset_iterator(  # type: ignore
+    def iter(
             self, dir_path: str) -> Union[List[DataPack], Iterator[DataPack]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
@@ -52,7 +49,7 @@ class MonoFileReader(BaseReader):
         has_cache = cache_file is not None and cache_file.exists()
 
         if self.lazy:
-            return self._lazy_dataset_iterator(dir_path, cache_file, has_cache)
+            return self._lazy_iter(dir_path, cache_file, has_cache)
 
         if has_cache:
             logger.info("reading from cache file %s", cache_file)
@@ -72,7 +69,7 @@ class MonoFileReader(BaseReader):
             )
         return datapacks
 
-    def _lazy_dataset_iterator(self, dir_path: str,
+    def _lazy_iter(self, dir_path: str,
                                cache_file: Optional[Path],
                                has_cache: bool):
         if has_cache:
@@ -98,11 +95,7 @@ class MonoFileReader(BaseReader):
             for data_file in files:
                 yield os.path.join(root, data_file)
 
-    # TODO: change current read to read_file_as_pack
-    # read should replace the dataset_iterator as the entry point
-    # support string reader: read(input: string) -> yield a datapack
-    # standard IO
-    def read(self,  # type: ignore
+    def read(self,
              file_path: str,
              cache_file: Optional[Path] = None,
              read_from_cache: bool = True,
@@ -146,9 +139,8 @@ class MonoFileReader(BaseReader):
                 )
         else:
             logger.info("reading from original file %s", file_path)
-            self.current_datapack = DataPack()
-            self._record_fields()
             datapack = self._read_document(file_path)
+            self._record_fields(datapack)
             if not isinstance(datapack, DataPack):
                 raise ValueError(
                     f"No DataPack object read from the given "
@@ -175,18 +167,3 @@ class MonoFileReader(BaseReader):
         document formant.
         """
         raise NotImplementedError
-
-    def _record_fields(self):
-        """
-        Record the fields and entries that this processor add to data packs.
-        """
-        for entry_type, info in self.output_info.items():
-            component = self.component_name
-            fields: List[str] = []
-            if isinstance(info, list):
-                fields = info
-            elif isinstance(info, dict):
-                fields = info["fields"]
-                if "component" in info.keys():
-                    component = info["component"]
-            self.current_datapack.record_fields(fields, entry_type, component)

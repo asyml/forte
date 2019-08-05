@@ -2,10 +2,10 @@
 The base class of processors
 """
 from abc import abstractmethod
-from typing import Dict, List, Union, Type
+from typing import Dict, List, Union, Type, Generic
 
 from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.data import DataPack
+from nlp.pipeline.data import PackType
 from nlp.pipeline.data.ontology import base_ontology, Entry
 from nlp.pipeline.utils import get_full_module_name
 
@@ -14,15 +14,15 @@ __all__ = [
 ]
 
 
-class BaseProcessor:
+class BaseProcessor(Generic[PackType]):
     """The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
     """
 
     def __init__(self):
         self.component_name = get_full_module_name(self)
-        self.ontology = base_ontology
-        self._overwrite = True
+        self._ontology = base_ontology
+        self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
 
     def initialize(self, configs, resource: Resources):
@@ -31,19 +31,33 @@ class BaseProcessor:
         """
         pass
 
-    # TODO: remove this mode.
-    def set_mode(self, overwrite: bool):
-        self._overwrite = overwrite
+    def set_ontology(self, ontology):
+        self._ontology = ontology
+        self.define_input_info()
+        self.define_output_info()
 
     @abstractmethod
-    def process(self, input_pack: DataPack):
-        """Process the input data, such as train on the inputs and make
-        predictions for the inputs"""
+    def define_output_info(self):
+        """
+        User should define the output_info here
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def define_input_info(self):
+        """
+        User should define the input_info here
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def process(self, input_pack: PackType):
+        """Process the input pack"""
         pass
 
-    def _record_fields(self, data_pack: DataPack):
+    def _record_fields(self, input_pack: PackType):
         """
-        Record the fields and entries that this processor add to data packs.
+        Record the fields and entries that this processor add to packs.
         """
         for entry_type, info in self.output_info.items():
             component = self.component_name
@@ -54,12 +68,14 @@ class BaseProcessor:
                 fields = info["fields"]
                 if "component" in info.keys():
                     component = info["component"]
-            data_pack.record_fields(fields, entry_type, component)
+            input_pack.record_fields(fields, entry_type, component)
 
-    def finish(self, input_pack: DataPack):
+    def finish(self, input_pack: PackType):
         """
-        Do finishing work for one data_pack.
+        Do finishing work for one pack.
         """
+        # TODO (haoran): please check whether this function is
+        #  sharable between pack processor and multipack processor
         self._record_fields(input_pack)
         input_pack.meta.process_state = self.component_name
 

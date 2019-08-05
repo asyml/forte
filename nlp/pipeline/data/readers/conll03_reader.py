@@ -20,19 +20,22 @@ class CoNLL03Reader(MonoFileReader):
     Args:
         lazy (bool, optional): The reading strategy used when reading a
             dataset containing multiple documents. If this is true,
-            ``dataset_iterator()`` will return an object whose ``__iter__``
+            ``iter()`` will return an object whose ``__iter__``
             method reloads the dataset each time it's called. Otherwise,
-            ``dataset_iterator()`` returns a list.
+            ``iter()`` returns a list.
     """
     @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
-        self.ner_ontology = conll03_ontology
+        self._ontology = conll03_ontology
+        self.define_output_info()
+
+    def define_output_info(self):
         self.output_info = {
-            self.ner_ontology.Sentence: ["span"],
-            self.ner_ontology.Token: ["span", "chunk_tag", "pos_tag", "ner_tag"]
+            self._ontology.Document: [],
+            self._ontology.Sentence: [],
+            self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
         }
-        self.current_datapack: DataPack = DataPack()
 
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
@@ -47,6 +50,7 @@ class CoNLL03Reader(MonoFileReader):
 
     def _read_document(self, file_path: str) -> DataPack:
 
+        pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
 
         text = ""
@@ -72,12 +76,12 @@ class CoNLL03Reader(MonoFileReader):
                 # add tokens
                 kwargs_i = {"pos_tag": pos_tag, "chunk_tag": chunk_id,
                             "ner_tag": ner_tag}
-                token = self.ner_ontology.Token(  # type: ignore
+                token = self._ontology.Token(  # type: ignore
                     word_begin, word_end
                 )
 
                 token.set_fields(**kwargs_i)
-                self.current_datapack.add_or_get_entry(token)
+                pack.add_or_get_entry(token)
 
                 text += word + " "
                 offset = word_end + 1
@@ -88,16 +92,19 @@ class CoNLL03Reader(MonoFileReader):
                     # skip consecutive empty lines
                     continue
                 # add sentence
-                sent = self.ner_ontology.Sentence(  # type: ignore
+                sent = self._ontology.Sentence(  # type: ignore
                     sentence_begin, offset - 1
                 )
-                self.current_datapack.add_or_get_entry(sent)
+                pack.add_or_get_entry(sent)
 
                 sentence_begin = offset
                 sentence_cnt += 1
                 has_rows = False
 
-        self.current_datapack.set_text(text)
-        self.current_datapack.meta.doc_id = file_path
+        document = self._ontology.Document(0, len(text))  # type: ignore
+        pack.add_or_get_entry(document)
+
+        pack.set_text(text)
+        pack.meta.doc_id = file_path
         doc.close()
-        return self.current_datapack
+        return pack

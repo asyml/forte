@@ -29,19 +29,26 @@ class CoNLLNERPredictor(BatchProcessor):
         self.device = None
 
         self.train_instances_cache = []
-        self.ontology = conll03_ontology
+
+        self._ontology = conll03_ontology
+        self.define_input_info()
+        self.define_output_info()
 
         self.context_type = "sentence"
+
+        self.batch_size = 3
+        self.batcher = self.initialize_batcher()
+
+    def define_input_info(self):
         self.input_info = {
             base_ontology.Token: [],
             base_ontology.Sentence: [],
         }
-        self.output_info = {
-            self.ontology.EntityMention: ["ner_type", "span"],
-        }
 
-        self.batch_size = 3
-        self.initialize_batcher()
+    def define_output_info(self):
+        self.output_info = {
+            self._ontology.EntityMention: ["ner_type", "span"],
+        }
 
     def initialize(self, configs: HParams, resource: Resources):
         self.initialize_batcher()
@@ -144,7 +151,7 @@ class CoNLLNERPredictor(BatchProcessor):
                         continue
 
                     kwargs_i = {"ner_type": current_entity_mention[1]}
-                    entity = self.ontology.EntityMention(
+                    entity = self._ontology.EntityMention(
                         current_entity_mention[0],
                         token.span.end,
                     )
@@ -156,7 +163,7 @@ class CoNLLNERPredictor(BatchProcessor):
                         token.ner_tag[2:],
                     )
                     kwargs_i = {"ner_type": current_entity_mention[1]}
-                    entity = self.ontology.EntityMention(
+                    entity = self._ontology.EntityMention(
                         current_entity_mention[0],
                         token.span.end,
                     )
@@ -227,7 +234,7 @@ class CoNLLNERPredictor(BatchProcessor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config=None):
         super().__init__(config)
-        self.ontology = conll03_ontology
+        self._ontology = conll03_ontology
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
