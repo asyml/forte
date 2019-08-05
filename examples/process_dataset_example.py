@@ -2,6 +2,7 @@ import os
 import sys
 
 from termcolor import colored
+from texar.torch import HParams
 
 from nlp.pipeline.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
@@ -10,7 +11,6 @@ from nlp.pipeline.data.readers import PlainTextReader
 from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
-from texar.torch import HParams
 
 
 def main(dataset_dir, ner_model_path, srl_model_path):

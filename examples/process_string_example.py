@@ -1,4 +1,5 @@
 from termcolor import colored
+from texar.torch import HParams
 
 from nlp.pipeline.data.ontology.conll03_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
@@ -7,8 +8,6 @@ from nlp.pipeline.data.readers import StringReader
 from nlp.pipeline.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
-
-from texar.torch import HParams
 
 
 def main():
