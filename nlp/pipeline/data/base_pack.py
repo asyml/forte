@@ -274,6 +274,10 @@ class BasePack:
         raise NotImplementedError
 
     @abstractmethod
+    def delete_entry(self, entry: EntryType):
+        raise NotImplementedError
+
+    @abstractmethod
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """
         Try to add an :class:`Entry` object to the :class:`DataPack` object.
