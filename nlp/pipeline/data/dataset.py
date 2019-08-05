@@ -3,7 +3,7 @@ level meta.
 """
 from typing import Dict, Union, Iterable, Optional, List, Type
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontology import Entry
+from nlp.pipeline.data.ontology import Entry, Annotation
 
 __all__ = [
     "Dataset",
@@ -16,7 +16,7 @@ class Dataset:
 
     def get_data(
             self,
-            context_type: str,
+            context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None
     ):
         for pack in self.dataset:

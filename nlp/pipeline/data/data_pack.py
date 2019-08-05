@@ -7,7 +7,6 @@ import numpy as np
 from sortedcontainers import SortedList
 
 from nlp.pipeline.data.base_pack import BaseMeta, BasePack, BaseIndex
-from nlp.pipeline.data.ontology.base_ontology import Sentence
 from nlp.pipeline.data.ontology import Entry, EntryType, Annotation, Link, Group
 
 logger = logging.getLogger(__name__)
@@ -194,7 +193,7 @@ class DataPack(BasePack):
 
         for i, e in enumerate(target[begin:]):
             if e.tid == entry.tid:
-                del target[i+begin]
+                del target[i + begin]
                 break
 
     def record_fields(self, fields: List[str], entry_type: Type[Entry],
@@ -221,7 +220,7 @@ class DataPack(BasePack):
 
     def get_data(
             self,
-            context_type: str,
+            context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0
     ) -> Iterator[Dict[str, Any]]:
@@ -276,115 +275,66 @@ class DataPack(BasePack):
                 elif issubclass(key, Group):
                     group_types[key] = value
 
-        # TODO(Wei): support all kinds annotation to be context
-        if context_type.lower() == "document":
-            data: Dict[str, Any] = dict()
-            data["context"] = self.text
-            data["offset"] = 0
+        context_args = annotation_types.get(context_type)
+
+        context_components, _, context_fields = self._parse_request_args(
+            context_type, context_args
+        )
+
+        valid_context_ids = self.get_ids_by_type(context_type)
+        if context_components:
+            valid_component_id: Set[str] = set()
+            for component in context_components:
+                valid_component_id |= self.get_ids_by_compoent(component)
+            valid_context_ids &= valid_component_id
+
+        skipped = 0
+        # must iterate through a copy here because self.annotations is changing
+        for context in list(self.annotations):
+            if (context.tid not in valid_context_ids or
+                    not isinstance(context, context_type)):
+                continue
+            if skipped < offset:
+                skipped += 1
+                continue
+
+            data = dict()
+            data["context"] = self.text[context.span.begin: context.span.end]
+            data["offset"] = context.span.begin
+
+            for field in context_fields:
+                data[field] = getattr(context, field)
 
             if annotation_types:
                 for a_type, a_args in annotation_types.items():
+                    if issubclass(a_type, context_type):
+                        continue
                     if a_type.__name__ in data.keys():
                         raise KeyError(
-                            f"Requesting two types of entries with the same "
-                            f"class name {a_type.__name__} at the same time is "
-                            f"not allowed")
+                            f"Requesting two types of entries with the "
+                            f"same class name {a_type.__name__} at the "
+                            f"same time is not allowed")
                     data[a_type.__name__] = \
                         self._generate_annotation_entry_data(
-                            a_type, a_args, data, None
+                            a_type, a_args, data, context
                         )
-
             if link_types:
                 for l_type, l_args in link_types.items():
                     if l_type.__name__ in data.keys():
                         raise KeyError(
-                            f"Requesting two types of entries with the same "
-                            f"class name {l_type.__name__} at the same time is "
-                            f"not allowed")
+                            f"Requesting two types of entries with the "
+                            f"same class name {l_type.__name__} at the "
+                            f"same time is not allowed")
                     data[l_type.__name__] = self._generate_link_entry_data(
-                        l_type, l_args, data, None
+                        l_type, l_args, data, context
                     )
 
             if group_types:
-                for g_type, g_args in group_types.items():  # pylint: disable=unused-variable
+                # pylint: disable=unused-variable
+                for g_type, g_args in group_types.items():
                     pass
 
             yield data
-
-        elif context_type.lower() == "sentence":
-            sent_type = Sentence
-            sent_args = None
-            if annotation_types:
-                has_sentence_args = False
-                for a_type, a_args in annotation_types.items():
-                    if issubclass(a_type, Sentence):
-                        if has_sentence_args:
-                            raise KeyError(
-                                f'At most one sentence request is allowed, '
-                                f'but got {sent_type} and {a_type} at the '
-                                f'same time.')
-                        has_sentence_args = True
-                        sent_type = a_type
-                        sent_args = a_args
-
-            sent_components, _, sent_fields = self._parse_request_args(
-                sent_type, sent_args
-            )
-
-            valid_sent_ids = self.get_ids_by_type(Sentence)
-            if sent_components:
-                valid_component_id: Set[str] = set()
-                for component in sent_components:
-                    valid_component_id |= self.get_ids_by_compoent(component)
-                valid_sent_ids &= valid_component_id
-
-            skipped = 0
-            # must iterate through a copy here
-            for sent in list(self.annotations):
-                if (sent.tid not in valid_sent_ids or
-                        not isinstance(sent, sent_type)):
-                    continue
-                if skipped < offset:
-                    skipped += 1
-                    continue
-
-                data = dict()
-                data["context"] = self.text[sent.span.begin: sent.span.end]
-                data["offset"] = sent.span.begin
-
-                for field in sent_fields:
-                    data[field] = getattr(sent, field)
-
-                if annotation_types:
-                    for a_type, a_args in annotation_types.items():
-                        if issubclass(a_type, Sentence):
-                            continue
-                        if a_type.__name__ in data.keys():
-                            raise KeyError(
-                                f"Requesting two types of entries with the "
-                                f"same class name {a_type.__name__} at the "
-                                f"same time is not allowed")
-                        data[a_type.__name__] = \
-                            self._generate_annotation_entry_data(
-                                a_type, a_args, data, sent
-                            )
-                if link_types:
-                    for l_type, l_args in link_types.items():
-                        if l_type.__name__ in data.keys():
-                            raise KeyError(
-                                f"Requesting two types of entries with the "
-                                f"same class name {l_type.__name__} at the "
-                                f"same time is not allowed")
-                        data[l_type.__name__] = self._generate_link_entry_data(
-                            l_type, l_args, data, sent
-                        )
-
-                if group_types:
-                    # pylint: disable=unused-variable
-                    for g_type, g_args in group_types.items():
-                        pass
-
-                yield data
 
     def _parse_request_args(self, a_type, a_args):
         # request which fields generated by which component
@@ -432,7 +382,7 @@ class DataPack(BasePack):
             a_type: Type[Annotation],
             a_args: Union[Dict, Iterable],
             data: Dict,
-            sent: Optional[Sentence]) -> Dict:
+            cont: Optional[Annotation]) -> Dict:
 
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
@@ -450,8 +400,8 @@ class DataPack(BasePack):
                                f"request {unit} before {a_type}.")
             a_dict["unit_span"] = []
 
-        sent_begin = sent.span.begin if sent else 0
-        annotations = self.get_entries(a_type, sent, components)
+        cont_begin = cont.span.begin if cont else 0
+        annotations = self.get_entries(a_type, cont, components)
 
         for annotation in annotations:
             # we provide span, text (and also tid) by default
@@ -463,8 +413,8 @@ class DataPack(BasePack):
                 if field in ("span", "text"):
                     continue
                 if field == "context_span":
-                    a_dict[field].append((annotation.span.begin - sent_begin,
-                                          annotation.span.end - sent_begin))
+                    a_dict[field].append((annotation.span.begin - cont_begin,
+                                          annotation.span.end - cont_begin))
                     continue
 
                 a_dict[field].append(getattr(annotation, field))
@@ -493,7 +443,7 @@ class DataPack(BasePack):
             a_type: Type[Link],
             a_args: Union[Dict, Iterable],
             data: Dict,
-            sent: Optional[Sentence]) -> Dict:
+            cont: Optional[Annotation]) -> Dict:
 
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
@@ -506,7 +456,7 @@ class DataPack(BasePack):
         a_dict["parent"] = []
         a_dict["child"] = []
 
-        links = self.get(a_type, sent, components)
+        links = self.get(a_type, cont, components)
 
         for link in links:
             parent_type = link.parent_type.__name__

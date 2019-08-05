@@ -309,7 +309,7 @@ class BasePack:
     @abstractmethod
     def get_data(
             self,
-            context_type: str,
+            context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0
     ) -> Iterator[Dict[str, Any]]:
