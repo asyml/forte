@@ -15,9 +15,9 @@ def main():
 
     pl = Pipeline()
     pl.set_reader(StringReader())
-    pl.processors.append(NLTKSentenceSegmenter())
-    pl.processors.append(NLTKWordTokenizer())
-    pl.processors.append(NLTKPOSTagger())
+    pl.add_processor(NLTKSentenceSegmenter())
+    pl.add_processor(NLTKWordTokenizer())
+    pl.add_processor(NLTKPOSTagger())
 
     ner_configs = HParams(
         {

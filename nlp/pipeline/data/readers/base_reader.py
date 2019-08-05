@@ -9,7 +9,7 @@ import jsonpickle
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.base_pack import PackType
-from nlp.pipeline.data.ontology import Entry
+from nlp.pipeline.data.ontology import Entry, base_ontology
 from nlp.pipeline.utils import get_full_module_name
 
 __all__ = [
@@ -25,7 +25,7 @@ class BaseReader(Generic[PackType]):
     def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
         self._cache_directory: Optional[Path] = None
-        self._ontology = None
+        self._ontology = base_ontology
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
 

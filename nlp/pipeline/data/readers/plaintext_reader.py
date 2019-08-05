@@ -3,7 +3,7 @@ The reader that reads plain text data into Datapacks.
 """
 import codecs
 import os
-from typing import Iterator, no_type_check
+from typing import Iterator
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import base_ontology
@@ -25,7 +25,6 @@ class PlainTextReader(MonoFileReader):
             ``iter()`` returns a list.
     """
 
-    @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self._ontology = base_ontology
