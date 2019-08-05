@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import List, Dict, Iterator, Generic, Optional
 import yaml
+import logging
 
 from texar.torch import HParams
 
@@ -10,6 +11,9 @@ from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.data.readers import BaseReader
 from nlp.pipeline.processors import BaseProcessor
 from nlp.pipeline.common.resources import Resources
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = [
     "BasePipeline"
@@ -43,8 +47,6 @@ class BasePipeline(Generic[PackType]):
             self._ontology = kwargs["ontology"]
             if self._reader is not None:
                 self._reader.set_ontology(self._ontology)
-            for processor in self.processors:
-                processor.set_ontology(self._ontology)
 
     def init_from_config_path(self, config_path):
         """
@@ -102,13 +104,17 @@ class BasePipeline(Generic[PackType]):
                 processor_hparams = HParams(hparams,
                                             default_processor_hparams)
                 self.add_processor(p, processor_hparams)
+                self.initialize_processors()
 
         if "Ontology" in configs.keys() and configs["Ontology"] is not None:
             module_path = ["__main__",
                            "nlp.pipeline.data.ontology"]
             self._ontology = get_class(configs["Ontology"], module_path)
-
-        self.initialize_processors()
+            for processor in self.processors:
+                processor.set_ontology(self._ontology)
+        else:
+            logger.warning("Ontology not specified in config, will use "
+                           "base_ontology by default.")
 
     def initialize_processors(self):
         for processor, config in zip(self.processors, self.processor_configs):
