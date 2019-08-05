@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing import List, Dict, Iterator, Generic, Optional
-import yaml
 import logging
 
+import yaml
 from texar.torch import HParams
 
 from nlp.pipeline.utils import get_class
