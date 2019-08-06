@@ -29,7 +29,7 @@ class Meta(BaseMeta):
 
 class DataPack(BasePack):
     """
-    A :class:`DataPack' contains a piece of natural language text and a
+    A :class:`DataPack` contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural
     language text could be a document, paragraph or in any other granularity.
 
