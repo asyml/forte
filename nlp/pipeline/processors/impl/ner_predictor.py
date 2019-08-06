@@ -34,7 +34,7 @@ class CoNLLNERPredictor(BatchProcessor):
         self.define_input_info()
         self.define_output_info()
 
-        self.context_type = "sentence"
+        self.context_type = base_ontology.Sentence
 
         self.batch_size = 3
         self.batcher = self.initialize_batcher()
