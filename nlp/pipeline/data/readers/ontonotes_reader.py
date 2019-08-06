@@ -62,7 +62,7 @@ class OntonotesReader(MonoFileReader):
         """
         for root, _, files in os.walk(dir_path):
             for data_file in files:
-                if data_file.endswith("gold_conll"):
+                if data_file.endswith(".gold_conll"):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:

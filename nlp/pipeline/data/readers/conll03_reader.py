@@ -45,7 +45,7 @@ class CoNLL03Reader(MonoFileReader):
         """
         for root, _, files in os.walk(dir_path):
             for data_file in files:
-                if data_file.endswith("conll"):
+                if data_file.endswith(".conll"):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:

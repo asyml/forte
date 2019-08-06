@@ -31,6 +31,10 @@ class BaseProcessor(Generic[PackType]):
         """
         pass
 
+    @property
+    def ontology(self):
+        return self._ontology
+
     def set_ontology(self, ontology):
         self._ontology = ontology
         self.define_input_info()

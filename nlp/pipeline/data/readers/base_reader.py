@@ -36,6 +36,10 @@ class BaseReader(Generic[PackType]):
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
 
+    @property
+    def ontology(self):
+        return self._ontology
+
     def set_ontology(self, ontology):
         self._ontology = ontology
         self.define_output_info()

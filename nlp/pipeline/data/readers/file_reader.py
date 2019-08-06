@@ -82,7 +82,10 @@ class MonoFileReader(PackReader):
     @staticmethod
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
         """
-        An iterator returning file paths in a directory
+        An iterator over valid file paths in a directory.
+
+        By default, we iterate through all file paths under the given directory.
+        Users can override this function to restrict the returned file paths.
         """
         for root, _, files in os.walk(dir_path):
             for data_file in files:

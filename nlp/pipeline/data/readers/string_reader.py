@@ -50,6 +50,13 @@ class StringReader(PackReader):
     def read(self, data: str,
              cache_file: Optional[Path] = None,
              append_to_cache: bool = False) -> DataPack:
+        """
+        Read a string variable into a :class:`DataPack` and add entries
+        into the :class:`DataPack`.
+
+        Returns:
+             one :class:`DataPack` object.
+        """
         config.working_component = self.component_name
 
         pack = DataPack()
