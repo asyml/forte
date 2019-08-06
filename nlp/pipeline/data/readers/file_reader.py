@@ -21,13 +21,6 @@ __all__ = [
 class MonoFileReader(PackReader):
     """Data reader that reads one data pack from each single text files.
     To be inherited by all mono file data readers.
-
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
     """
 
     def iter(

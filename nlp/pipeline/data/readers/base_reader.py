@@ -21,6 +21,13 @@ __all__ = [
 class BaseReader(Generic[PackType]):
     """The basic data reader class.
     To be inherited by all data readers.
+
+    Args:
+        lazy (bool, optional): The reading strategy used when reading a
+            dataset containing multiple documents. If this is true,
+            :meth:`iter()` will return an object whose ``__iter__``
+            method reloads the dataset each time it's called. Otherwise,
+            :meth:`iter()` returns a list.
     """
     def __init__(self, lazy: bool = True) -> None:
         self.lazy = lazy
@@ -35,7 +42,11 @@ class BaseReader(Generic[PackType]):
 
     @abstractmethod
     def define_output_info(self):
-        pass
+        """
+        Define :attr:`output_info` according to the entries and fields the
+        reader will generate.
+        """
+        raise NotImplementedError
 
     @staticmethod
     def serialize_instance(instance: PackType) -> str:
@@ -47,7 +58,7 @@ class BaseReader(Generic[PackType]):
     @staticmethod
     def deserialize_instance(string: str) -> PackType:
         """
-        Deserializes an pack from a string.
+        Deserializes a pack from a string.
         """
         return jsonpickle.decode(string)
 
@@ -55,15 +66,24 @@ class BaseReader(Generic[PackType]):
     def iter(self, dataset) -> Union[List[PackType], Iterator[PackType]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
-        Should call :meth:`read` to read each document.
+        A suggested design is to call :meth:`read` in a loop to read each
+        document.
+
+        Returns:
+            If :attr:`lazy` is `True`, returns an iterator of :class:`BasePack`
+            objects. Otherwise, returns a list of :class:`BasePack` objects.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def read(self, data):
+    def read(self, data) -> PackType:
         """
-        Read and return one :class:`BasePack` object. Should update
-        config.working_component at the begining and the end of this method.
+        Read a single document and add entries into the :class:`BasePack`.
+        Should **update config.working_component** at the beginning and the end
+        of this method.
+
+        Returns:
+             one :class:`BasePack` object.
         """
         raise NotImplementedError
 
@@ -112,8 +132,9 @@ class BaseReader(Generic[PackType]):
 
 
 class PackReader(BaseReader[DataPack]):
-    """The basic data reader class.
-    To be inherited by all data readers.
+    """
+    The basic :class:`DataPack` reader class.
+    To be inherited by all :class:`DataPack` readers.
     """
 
     def _instances_from_cache_file(self,
