@@ -19,12 +19,12 @@ __all__ = [
 
 
 class MonoFileReader(PackReader):
-    """Data reader that reads one data pack from each single text files.
+    """
+    :class:`DataPack` reader that reads one data pack from each single file.
     To be inherited by all mono file data readers.
     """
 
-    def iter(
-            self, dir_path: str) -> Union[List[DataPack], Iterator[DataPack]]:
+    def iter(self, dir_path: str) -> Union[List[DataPack], Iterator[DataPack]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
 
