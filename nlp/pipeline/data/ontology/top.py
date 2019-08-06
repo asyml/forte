@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from functools import total_ordering
-from typing import Iterable, Optional, Set, Union, Type, TypeVar, Generic
+from typing import Iterable, Optional, Set, Union, Type, TypeVar
 
 from nlp.pipeline.utils import get_class_name, get_full_module_name
 from nlp.pipeline import config
