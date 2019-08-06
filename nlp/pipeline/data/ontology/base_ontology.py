@@ -18,34 +18,56 @@ __all__ = [
 
 
 class Token(Annotation):
+    """
+    A span based annotation :class:`Token`.
+    """
     def __init__(self, begin: int, end: int):
         super().__init__(begin, end)
         self.pos_tag = None
 
 
 class Sentence(Annotation):
+    """
+    A span based annotation :class:`Sentence`.
+    """
     pass
 
 
 class Document(Annotation):
+    """
+    A span based annotation :class:`Document`.
+    """
     pass
 
 
 class EntityMention(Annotation):
+    """
+    A span based annotation :class:`EntityMention`.
+    """
     def __init__(self, begin: int, end: int):
         super().__init__(begin, end)
         self.ner_type = None
 
 
 class PredicateArgument(Annotation):
+    """
+    A span based annotation :class:`PredicateArgument`.
+    """
     pass
 
 
 class PredicateMention(Annotation):
+    """
+    A span based annotation :class:`PredicateMention`.
+    """
     pass
 
 
 class PredicateLink(Link):
+    """
+    A :class:`Link` type entry which take :class:`PredicateMention` as parent
+    and :class:`PredicateArgument` as child.
+    """
     parent_type = PredicateMention
     child_type = PredicateArgument
 
@@ -57,10 +79,17 @@ class PredicateLink(Link):
 
 
 class CoreferenceMention(Annotation):
+    """
+    A span based annotation :class:`CoreferenceMention`.
+    """
     pass
 
 
 class CoreferenceGroup(Group):
+    """
+    A :class:`Group` type entry which take :class:`CoreferenceMention` as
+    members.
+    """
     member_type = CoreferenceMention
 
     def __init__(self, members: Optional[Set[CoreferenceMention]] = None):
