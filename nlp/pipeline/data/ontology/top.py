@@ -58,9 +58,9 @@ class Entry:
         Set the entry id.
 
         To avoid duplicate, we use the full module path and class name as the
-        prefix of the ``tid``. A pack-level unique ``tid`` is automatically
+        prefix of ``tid``. A pack-level unique ``tid`` is automatically
         assigned when you add an entry to a pack, so users are **not** suggested
-        to set ``tid`` directly by hand.
+        to set ``tid`` directly.
         """
         self._tid = f"{get_full_module_name(self)}.{tid}"
 
@@ -121,6 +121,10 @@ class Annotation(Entry):
     Annotation type entries, such as "token", "entity mention" and
     "sentence". Each annotation has a :class:`Span` corresponding to its offset
     in the text.
+
+    Args:
+        begin (int): The offset of the first character in the annotation.
+        end (int): The offset of the last character in the annotation + 1.
     """
 
     def __init__(self, begin: int, end: int):
@@ -188,9 +192,15 @@ class Link(Entry):
     """
     Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
+
+    Args:
+        parent (Entry, optional): the parent entry of the link.
+        child (Entry, optional): the child entry of the link.
     """
     parent_type: Type[Entry] = Entry  # type: ignore
+    """The entry type of the parent node."""
     child_type: Type[Entry] = Entry  # type: ignore
+    """The entry type of the child node."""
 
     def __init__(self,
                  parent: Optional[Entry] = None,
@@ -228,7 +238,7 @@ class Link(Entry):
     @property
     def parent(self):
         """
-        Return tid of the parent node. To get the object of the parent node,
+        Get ``tid`` of the parent node. To get the object of the parent node,
         call :meth:`get_parent`.
         """
         return self._parent
@@ -236,7 +246,7 @@ class Link(Entry):
     @property
     def child(self):
         """
-        Return tid of the child node. To get the object of the child node,
+        Get ``tid`` of the child node. To get the object of the child node,
         call :meth:`get_child`.
         """
         return self._child
@@ -307,6 +317,7 @@ class Group(Entry):
     of members.
     """
     member_type: Type[Entry] = Entry  # type: ignore
+    """The entry type of group members."""
 
     def __init__(self, members: Optional[Set[Entry]] = None):
 
@@ -341,8 +352,8 @@ class Group(Entry):
     @property
     def members(self):
         """
-        Return a list of member tids. To get the member objects, call
-        :meth:`get_members` instead.
+        Return a list of ``tid`` of the group members. To get the
+        member objects, call :meth:`get_members` instead.
         """
         return self._members
 

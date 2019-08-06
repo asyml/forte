@@ -45,7 +45,12 @@ class InternalMeta:
 
 class BasePack:
     """
-    The base class of DataPack and MultiPack
+    The base class of :class:`~nlp.pipeline.data.data_pack.DataPack` and
+    :class:`~nlp.pipeline.data.multi_pack.MultiPack`.
+
+    Args:
+        doc_id (str, optional): a string identifier of the pack.
+
     """
     def __init__(self, doc_id: Optional[str] = None):
         self.links: List[Link] = []

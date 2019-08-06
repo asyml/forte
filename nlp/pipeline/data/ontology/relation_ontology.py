@@ -11,11 +11,18 @@ from nlp.pipeline.data.ontology.top import Link
 
 class RelationLink(Link):
     """
-    A :class:`Link` type entry which take :class:`EntityMention` objects as
-    parent and child.
+    A :class:`~nlp.pipeline.data.ontology.top.Link` type entry which take
+    :class:`~nlp.pipeline.data.ontology.base_ontology.EntityMention` objects
+    as parent and child.
+
+    Args:
+        parent (Entry, optional): the parent entry of the link.
+        child (Entry, optional): the child entry of the link.
     """
     parent_type = EntityMention
+    """The entry type of the parent node of :class:`RelationLink`."""
     child_type = EntityMention
+    """The entry type of the child node of :class:`RelationLink`."""
 
     def __init__(self, parent: Optional[EntityMention] = None,
                  child: Optional[EntityMention] = None):

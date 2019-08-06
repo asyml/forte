@@ -6,6 +6,10 @@ class Token(Token):  # type: ignore
     """
     A subclass of :class:`~nlp.pipeline.data.ontology.base_ontology.Token`.
     Includes token fields that are specific to Ontonotes dataset.
+
+    Args:
+        begin (int): The offset of the first character in the token.
+        end (int): The offset of the last character in the token + 1.
     """
     def __init__(self, begin: int, end: int):
         super().__init__(begin, end)
@@ -16,6 +20,11 @@ class Sentence(Sentence):  # type: ignore
     """
     A subclass of :class:`~nlp.pipeline.data.ontology.base_ontology.Sentence`.
     Includes sentence fields that are specific to Ontonotes dataset.
+
+     Args:
+        begin (int): The offset of the first character in the sentence.
+        end (int): The offset of the last character in the sentence + 1.
+
     """
     def __init__(self, begin: int, end: int):
         super().__init__(begin, end)
@@ -28,6 +37,11 @@ class PredicateMention(PredicateMention):  # type: ignore
     A subclass of
     :class:`~nlp.pipeline.data.ontology.base_ontology.PredicateMention`.
     Includes predicate mention fields that are specific to Ontonotes dataset.
+
+    Args:
+        begin (int): The offset of the first character in the predicate mention.
+        end (int): The offset of the last character in the predicate mention
+            + 1.
     """
     def __init__(self, begin: int, end: int):
         super().__init__(begin, end)
