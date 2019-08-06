@@ -124,7 +124,7 @@ class DataPack(BasePack):
                 self.index.update_link_index([entry])
             if self.index.group_index_switch and isinstance(entry, Group):
                 self.index.update_group_index([entry])
-            self.index.activate_or_deactivate_coverage_index(activate=False)
+            self.index.toggle_coverage_index(activate=False)
             return entry
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)]
@@ -167,7 +167,7 @@ class DataPack(BasePack):
             self.index.update_link_index([entry])
         if self.index.group_index_switch and isinstance(entry, Group):
             self.index.update_group_index([entry])
-        self.index.activate_or_deactivate_coverage_index(activate=False)
+        self.index.toggle_coverage_index(activate=False)
 
         return entry
 
@@ -199,7 +199,7 @@ class DataPack(BasePack):
         # set other index invalid
         self.index.turn_link_index_switch(on=False)
         self.index.turn_group_index_switch(on=False)
-        self.index.activate_or_deactivate_coverage_index(activate=False)
+        self.index.toggle_coverage_index(activate=False)
 
     def record_fields(self, fields: List[str], entry_type: Type[Entry],
                       component: str):
@@ -655,7 +655,7 @@ class DataIndex(BaseIndex[DataPack]):
     def coverage_index_is_valid(self):
         return self._coverage_index_valid
 
-    def activate_or_deactivate_coverage_index(self, activate: bool):
+    def toggle_coverage_index(self, activate: bool):
         self._coverage_index_valid = activate
 
     def coverage_index(
@@ -673,7 +673,7 @@ class DataIndex(BaseIndex[DataPack]):
             self._coverage_index = dict()
 
         # prevent the index from being used during construction
-        self.activate_or_deactivate_coverage_index(activate=False)
+        self.toggle_coverage_index(activate=False)
 
         self._coverage_index[(outter_type, inner_type)] = dict()
         for range_annotation in self.data_pack.get_entries_by_type(outter_type):
@@ -682,4 +682,4 @@ class DataIndex(BaseIndex[DataPack]):
             self._coverage_index[(outter_type,
                                   inner_type)][range_annotation.tid] = entry_ids
 
-        self.activate_or_deactivate_coverage_index(activate=True)
+        self.toggle_coverage_index(activate=True)
