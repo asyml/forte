@@ -55,7 +55,7 @@ class DataPack(BasePack):
         """
         state = self.__dict__.copy()
         state['annotations'] = list(state['annotations'])
-        del state['index']
+        state.pop('index')
         return state
 
     def __setstate__(self, state):
@@ -189,7 +189,7 @@ class DataPack(BasePack):
 
         for i, e in enumerate(target[begin:]):
             if e.tid == entry.tid:
-                del target[i + begin]
+                target.pop(i + begin)
                 break
 
         # update basic index
