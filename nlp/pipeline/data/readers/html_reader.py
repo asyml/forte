@@ -3,7 +3,7 @@ The reader that reads plain text data into Datapacks.
 """
 import codecs
 import os
-from typing import Iterator, Optional, List, Union
+from typing import Iterator
 import re
 from re import Pattern
 
