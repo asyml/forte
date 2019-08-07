@@ -137,7 +137,7 @@ class TexarBatcher(Batcher):
 
     def get_batch(self) -> Iterator[Dict]:   # type: ignore
         for batch in self.batch_iter:
-            yield batch._batch
+            yield batch._batch  # pylint: disable=protected-access
 
 
 class ProcessingBatcher(Batcher):

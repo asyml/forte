@@ -20,6 +20,7 @@ class Pipeline(BasePipeline[DataPack]):
         super().__init__()
         self.initialize(**kwargs)
         self._reader: DataPackReader = DataPackReader()
+
     def add_processor(self,
                       processor: BaseProcessor,
                       config: Optional[HParams] = None):
