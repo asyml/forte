@@ -58,6 +58,9 @@ class Pipeline(BasePipeline[DataPack]):
 
         data_iter = self._reader.iter(dataset)
 
+        if len(self.processors) == 0:
+            yield from data_iter
+
         for pack in data_iter:
             self.current_packs.append(pack)
             for i, processor in enumerate(self.processors):
