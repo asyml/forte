@@ -16,8 +16,19 @@ __all__ = [
     "CoNLL03VocabularyProcessor",
 ]
 
+# TODO (haoran): add documentation
+
 
 class Alphabet:
+    """
+    Args:
+        name:
+        keep_growing:
+        ignore_case_in_query:
+            If it's True, Alphabet will try to query the lowercased input from
+            it's vocabulary if it cannot find the input in its keys.
+    """
+
     def __init__(
             self,
             name,
@@ -26,14 +37,7 @@ class Alphabet:
             ignore_case_in_query: bool = True,
             other_embeddings: Optional[Dict] = None,
     ):
-        """
 
-        :param name:
-        :param keep_growing:
-        :param ignore_case_in_query:
-            If it's True, Alphabet will try to query the lowercased input from
-            it's vocabulary if it cannot find the input in its keys.
-        """
         self.__name = name
         self.reserved_tokens = tx.data.SpecialTokens
 
@@ -71,8 +75,11 @@ class Alphabet:
 
     def get_index(self, instance):
         """
-        :param instance: the input token
-        :return: the index of the queried token in the dictionary
+        Args:
+            instance: the input token
+
+        Returns:
+            the index of the queried token in the dictionary
         """
         if instance is None:
             return self.instance2index[self.reserved_tokens.PAD]
@@ -123,9 +130,10 @@ class Alphabet:
     def save(self, output_directory, name=None):
         """
         Save both alhpabet records to the given directory.
-        :param output_directory: Directory to save model and weights.
-        :param name: The alphabet saving name, optional.
-        :return:
+
+        Args:
+            output_directory: Directory to save model and weights.
+            name: The alphabet saving name, optional.
         """
         saving_name = name if name else self.__name
 
@@ -139,11 +147,7 @@ class Alphabet:
         )
 
     def load(self, input_directory, name=None):
-        """
-        :param input_directory:
-        :param name:
-        :return:
-        """
+
         loading_name = name if name else self.__name
         self.__from_json(
             json.load(
@@ -157,10 +161,12 @@ class VocabularyProcessor(BaseProcessor):
     """
     Build vocabulary from the input DataPack,
     Write the result to either:
-        1. Another file
-        2. write into the DataPack directly? Then if we want to build a joint
-         vocabulary multiple Datapacks, we need to extract these vocabulary from
-         datapacks, and then where to write this?
+
+    #. Another file
+    #. write into the DataPack directly? Then if we want to build a joint
+       vocabulary multiple Datapacks, we need to extract these vocabulary
+       from datapacks, and then where to write this?
+
     Format: token, count
     """
 
@@ -170,8 +176,9 @@ class VocabularyProcessor(BaseProcessor):
 
     def process(self, input_pack: Iterator[DataPack]) -> Dict[str, Any]:
         """
-        :param input_pack:
-        :return:
+        Args:
+            input_pack:
+
         """
         pass
 
@@ -201,8 +208,10 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
             self,
             input_pack: Iterator[DataPack]) -> List[CounterType[str]]:
         """
-        :param input_pack: The ner_data packs to create vocabulary with
-        :return:
+        Args:
+            input_pack: The ner_data packs to create vocabulary with
+
+        Returns:
             A list of five counters for different ner_data features, for words,
             characters, POS tags, chunk IDs and Name Entity Recognition
         """

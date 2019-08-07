@@ -1,7 +1,7 @@
 """
 Base reader type to be inherited by all readers.
 """
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Iterator, Optional, Dict, Type, List, Union, Generic
 
@@ -135,7 +135,7 @@ class BaseReader(Generic[PackType]):
             pack.record_fields(fields, entry_type, component)
 
 
-class DataPackReader(BaseReader[DataPack]):
+class DataPackReader(BaseReader[DataPack], ABC):
     """
     The basic :class:`DataPack` reader class.
     To be inherited by all :class:`DataPack` readers.
