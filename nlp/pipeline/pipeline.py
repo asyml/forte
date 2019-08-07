@@ -61,31 +61,32 @@ class Pipeline(BasePipeline[DataPack]):
         if len(self.processors) == 0:
             yield from data_iter
 
-        for pack in data_iter:
-            self.current_packs.append(pack)
-            for i, processor in enumerate(self.processors):
-                for c_pack in self.current_packs:
-                    in_cache = (c_pack.meta.cache_state ==
-                                processor.component_name)
-                    can_process = (i == 0 or c_pack.meta.process_state ==
-                                   self.processors[i - 1].component_name)
-                    if can_process and not in_cache:
-                        processor.process(c_pack)
-            for c_pack in list(self.current_packs):
-                # must iterate through a copy of the originial list
-                # because of the removing operation
-                if (c_pack.meta.process_state ==
-                        self.processors[-1].component_name):
-                    yield c_pack
-                    self.current_packs.remove(c_pack)
+        else:
+            for pack in data_iter:
+                self.current_packs.append(pack)
+                for i, processor in enumerate(self.processors):
+                    for c_pack in self.current_packs:
+                        in_cache = (c_pack.meta.cache_state ==
+                                    processor.component_name)
+                        can_process = (i == 0 or c_pack.meta.process_state ==
+                                       self.processors[i - 1].component_name)
+                        if can_process and not in_cache:
+                            processor.process(c_pack)
+                for c_pack in list(self.current_packs):
+                    # must iterate through a copy of the originial list
+                    # because of the removing operation
+                    if (c_pack.meta.process_state ==
+                            self.processors[-1].component_name):
+                        yield c_pack
+                        self.current_packs.remove(c_pack)
 
-        # process tail instances in the whole dataset
-        for c_pack in list(self.current_packs):
-            start = self._processors_index[c_pack.meta.process_state] + 1
-            for processor in self.processors[start:]:
-                if isinstance(processor, BatchProcessor):
-                    processor.process(c_pack, tail_instances=True)
-                else:
-                    processor.process(c_pack)
-            yield c_pack
-            self.current_packs.remove(c_pack)
+            # process tail instances in the whole dataset
+            for c_pack in list(self.current_packs):
+                start = self._processors_index[c_pack.meta.process_state] + 1
+                for processor in self.processors[start:]:
+                    if isinstance(processor, BatchProcessor):
+                        processor.process(c_pack, tail_instances=True)
+                    else:
+                        processor.process(c_pack)
+                yield c_pack
+                self.current_packs.remove(c_pack)
