@@ -8,7 +8,7 @@ from typing import Iterator, no_type_check, List, Optional
 from nlp.pipeline import config
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import base_ontology
-from nlp.pipeline.data.readers.base_reader import PackReader
+from nlp.pipeline.data.readers.base_reader import DataPackReader
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +17,9 @@ __all__ = [
 ]
 
 
-class StringReader(PackReader):
-    """:class:`StringReader` is designed to read in a list of string variables.
+class StringReader(DataPackReader):
+    """
+    :class:`StringReader` is designed to read in string variables.
 
     Args:
         lazy (bool, optional): The reading strategy used when reading a
@@ -42,7 +43,15 @@ class StringReader(PackReader):
     def iter(self, dataset: List[str]) -> Iterator[DataPack]:
         """
         An iterator over the entire dataset, yielding all documents processed.
-        Should call :meth:`read` to read each document.
+        Call :meth:`read` to read each document.
+
+        Args:
+            dataset (list[str]): a list of string variables. Each string will
+                be read into a :class:`DataPack`.
+
+        Returns:
+            If :attr:`lazy` is `True`, returns an iterator of :class:`DataPack`
+            objects. Otherwise, returns a list of :class:`DataPack` objects.
         """
         for data in dataset:
             yield self.read(data)
@@ -55,7 +64,7 @@ class StringReader(PackReader):
         into the :class:`DataPack`.
 
         Returns:
-             one :class:`DataPack` object.
+             A :class:`DataPack` object.
         """
         config.working_component = self.component_name
 

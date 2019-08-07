@@ -11,6 +11,11 @@ __all__ = [
 
 
 class Dataset:
+    """
+    A wrapper of the dataset iterator.
+
+    # currently only used to support texar batcher.
+    """
     def __init__(self, dataset: Iterable[DataPack]):
         self.dataset: Iterable[DataPack] = dataset
 

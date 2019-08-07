@@ -9,7 +9,7 @@ from typing import Iterator, List, Optional, Union
 
 from nlp.pipeline import config
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.readers.base_reader import PackReader
+from nlp.pipeline.data.readers.base_reader import DataPackReader
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-class MonoFileReader(PackReader):
+class MonoFileReader(DataPackReader):
     """
     :class:`DataPack` reader that reads one data pack from each single file.
     To be inherited by all mono file data readers.
@@ -30,7 +30,8 @@ class MonoFileReader(PackReader):
 
         Args:
             dir_path (str): The directory path of the dataset. The reader will
-                read all the files under this directory.
+                read all the files according to :meth:`dataset_path_iterator`
+                under this directory.
         """
         if not os.path.exists(dir_path):
             raise FileNotFoundError(f"{dir_path} does not exist.")
@@ -84,7 +85,7 @@ class MonoFileReader(PackReader):
         """
         An iterator over valid file paths in a directory.
 
-        By default, we iterate through all file paths under the given directory.
+        By default, we iterate through all file paths under ``dir_path``.
         Users can override this function to restrict the returned file paths.
         """
         for root, _, files in os.walk(dir_path):
@@ -97,27 +98,27 @@ class MonoFileReader(PackReader):
              read_from_cache: bool = True,
              append_to_cache: bool = False) -> DataPack:
         """
-        Read a **single** document from original file or from caching file.
-        If the cache file contains multiple lines, only read the datapack
-        in the first line. The reader automatically build the link index,
-        group index, and sentence-to-entry coverage index.
+        Read a **single** :class:`DataPack` from original file or from caching
+        file. The cache file is supposed to contain only one line corresponding
+        to the json format of a :class:`DataPack. If the cache file contains
+        multiple lines, only read the :class:`DataPack` in the first line.
 
         Args:
             file_path (str): The path to the original file to read.
             cache_file (str, optional): The path of the caching file. If
-                :attr:`cache_file_path` is ``None`` and
+                ``cache_file`` is ``None`` and
                 :attr:`self._cache_directory` is not ``None``, use the result
                 of :meth:`_get_cache_location_for_file_path`. If both
-                :attr:`cache_file_path` and :attr:`self._cache_directory`
-                are ``None``, will not read from or write to a caching file.
+                ``cache_file`` and :attr:`self._cache_directory`
+                are ``None``, will disable cache reading and writing.
             read_from_cache (bool, optional): Decide whether to read from cache
-                if cache file exists. By default (``True``), the reader will
+                if cache file exists. By default (`True`), the reader will
                 try to read an datapack from the first line of the caching file.
-                If ``False``, the reader will only read from the original file
+                If `False`, the reader will only read from the original file
                 and use the cache file path only for output.
             append_to_cache (bool, optional): Decide whether to append write
-                if cache file already exists.  By default (``False``), we
-                will overwrite the existing caching file. If ``True``, we will
+                if cache file already exists.  By default (`False`), we
+                will overwrite the existing caching file. If `True`, we will
                 cache the datapack append to end of the caching file.
         """
         config.working_component = self.component_name

@@ -14,7 +14,7 @@ from nlp.pipeline.utils import get_full_module_name
 
 __all__ = [
     "BaseReader",
-    "PackReader"
+    "DataPackReader"
 ]
 
 
@@ -55,14 +55,14 @@ class BaseReader(Generic[PackType]):
     @staticmethod
     def serialize_instance(instance: PackType) -> str:
         """
-        Serializes a pack to a string.
+        Serializes a pack to a string in json format.
         """
         return jsonpickle.encode(instance, unpicklable=True)
 
     @staticmethod
     def deserialize_instance(string: str) -> PackType:
         """
-        Deserializes a pack from a string.
+        Deserializes a pack from a string in json format.
         """
         return jsonpickle.decode(string)
 
@@ -87,13 +87,13 @@ class BaseReader(Generic[PackType]):
         of this method.
 
         Returns:
-             one :class:`BasePack` object.
+             A :class:`BasePack` object.
         """
         raise NotImplementedError
 
     @abstractmethod
     def _instances_from_cache_file(self,
-                                   cache_filename: Path):
+                                   cache_filename: Path) -> Iterator[PackType]:
         raise NotImplementedError
 
     def cache_data(self, cache_directory: str) -> None:
@@ -135,7 +135,7 @@ class BaseReader(Generic[PackType]):
             pack.record_fields(fields, entry_type, component)
 
 
-class PackReader(BaseReader[DataPack]):
+class DataPackReader(BaseReader[DataPack]):
     """
     The basic :class:`DataPack` reader class.
     To be inherited by all :class:`DataPack` readers.

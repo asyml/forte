@@ -2,6 +2,7 @@ from typing import Iterator, Optional
 
 from texar.torch import HParams
 from nlp.pipeline.data import DataPack
+from nlp.pipeline.data.readers import DataPackReader
 from nlp.pipeline.base_pipeline import BasePipeline
 from nlp.pipeline.processors import BaseProcessor, BatchProcessor
 
@@ -18,7 +19,7 @@ class Pipeline(BasePipeline[DataPack]):
     def __init__(self, **kwargs):
         super().__init__()
         self.initialize(**kwargs)
-
+        self._reader: DataPackReader = DataPackReader()
     def add_processor(self,
                       processor: BaseProcessor,
                       config: Optional[HParams] = None):

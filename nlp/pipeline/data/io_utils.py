@@ -9,7 +9,7 @@ __all__ = [
 
 def batch_instances(instances: List[Dict]):
     """
-    Merge a list of instances.
+    Merge a list of ``instances``.
     """
     batch: Dict = {}
     for instance in instances:
@@ -30,7 +30,7 @@ def batch_instances(instances: List[Dict]):
 
 def merge_batches(batches: List[Dict]):
     """
-    Merge a list of instances or batches.
+    Merge a list of or ``batches``.
     """
     merged_batch: Dict = {}
     for batch in batches:

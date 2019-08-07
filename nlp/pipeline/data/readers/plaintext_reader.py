@@ -39,7 +39,7 @@ class PlainTextReader(MonoFileReader):
     def dataset_path_iterator(dir_path: str) -> Iterator[str]:
         """
         An iterator returning file_paths in a directory containing
-        .txt files.
+        `.txt` files.
         """
         for root, _, files in os.walk(dir_path):
             files.sort()

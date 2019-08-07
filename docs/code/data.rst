@@ -101,6 +101,11 @@ Packs
 .. autoclass:: nlp.pipeline.data.data_pack.Meta
     :members:
 
+:hidden:`InternalMeta`
+------------------------
+.. autoclass:: nlp.pipeline.data.base_pack.InternalMeta
+    :members:
+
 :hidden:`BaseIndex`
 ------------------------
 .. autoclass:: nlp.pipeline.data.base_pack.BaseIndex
@@ -111,11 +116,6 @@ Packs
 .. autoclass:: nlp.pipeline.data.data_pack.DataIndex
     :members:
 
-:hidden:`InternalMeta`
-------------------------
-.. autoclass:: nlp.pipeline.data.base_pack.InternalMeta
-    :members:
-
 Readers
 ==========
 
@@ -124,9 +124,9 @@ Readers
 .. autoclass:: nlp.pipeline.data.readers.base_reader.BaseReader
     :members:
 
-:hidden:`PackReader`
+:hidden:`DataPackReader`
 ------------------------
-.. autoclass:: nlp.pipeline.data.readers.base_reader.PackReader
+.. autoclass:: nlp.pipeline.data.readers.base_reader.DataPackReader
     :members:
 
 :hidden:`StringReader`
@@ -153,4 +153,38 @@ Readers
 --------------------------
 .. autoclass:: nlp.pipeline.data.readers.ontonotes_reader.OntonotesReader
     :members:
+
+Batchers
+==========
+
+:hidden:`Batcher`
+------------------------
+.. autoclass:: nlp.pipeline.data.batchers.Batcher
+    :members:
+
+:hidden:`ProcessingBatcher`
+------------------------------
+.. autoclass:: nlp.pipeline.data.batchers.ProcessingBatcher
+    :members:
+
+:hidden:`TexarBatcher`
+------------------------
+.. autoclass:: nlp.pipeline.data.batchers.TexarBatcher
+    :members:
+
+
+io_utils
+==========
+
+:hidden:`batch_instances`
+----------------------------------
+.. autofunction:: nlp.pipeline.data.io_utils.batch_instances
+
+:hidden:`merge_batches`
+----------------------------------
+.. autofunction:: nlp.pipeline.data.io_utils.merge_batches
+
+:hidden:`slice_batch`
+----------------------------------
+.. autofunction:: nlp.pipeline.data.io_utils.slice_batch
 
