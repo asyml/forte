@@ -15,9 +15,15 @@ from nlp.pipeline.processors import BatchProcessor
 
 logger = logging.getLogger(__name__)
 
+# TODO (haoran): documentation
+
 
 class CoNLLNERPredictor(BatchProcessor):
-
+    """
+    An Named Entity Recognizer trained according to `Ma, Xuezhe, and Eduard
+    Hovy. "End-to-end sequence labeling via bi-directional lstm-cnns-crf."
+    <https://arxiv.org/abs/1603.01354>`_.
+    """
     def __init__(self):
         super().__init__()
         self.model = None

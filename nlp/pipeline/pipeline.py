@@ -19,7 +19,7 @@ class Pipeline(BasePipeline[DataPack]):
     def __init__(self, **kwargs):
         super().__init__()
         self.initialize(**kwargs)
-        self._reader: DataPackReader = DataPackReader()
+        self._reader: DataPackReader = None
 
     def add_processor(self,
                       processor: BaseProcessor,

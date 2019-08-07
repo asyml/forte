@@ -18,12 +18,21 @@ __all__ = [
     "SRLPredictor",
 ]
 
+# TODO (zecong): documentation
+
+
 Prediction = Dict[
     ontonotes_ontology.PredicateMention,
     List[Tuple[ontonotes_ontology.PredicateArgument, str]]]
 
 
 class SRLPredictor(BatchProcessor):
+    """
+    An Semantic Role labeler trained according to `He, Luheng, et al.
+    "Jointly predicting predicates and arguments in neural semantic role
+    labeling." <https://aclweb.org/anthology/P18-2058>`_.
+    """
+
     word_vocab: tx.data.Vocab
     char_vocab: tx.data.Vocab
     model: LabeledSpanGraphNetwork

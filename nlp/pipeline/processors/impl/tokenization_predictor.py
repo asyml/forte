@@ -10,7 +10,9 @@ __all__ = [
 
 
 class NLTKWordTokenizer(PackProcessor):
-
+    """
+    A wrapper of NLTK word tokenizer.
+    """
     def __init__(self):
         super().__init__()
         self.sentence_component = None
