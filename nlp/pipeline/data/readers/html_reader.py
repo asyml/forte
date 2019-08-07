@@ -1,9 +1,8 @@
 """
 The reader that reads plain text data into Datapacks.
 """
-import codecs
 import os
-from typing import Iterator
+from typing import Iterator, List, Union, Tuple
 import re
 from re import Pattern
 
@@ -54,39 +53,48 @@ class HTMLReader(MonoFileReader):
                         break
 
     def _read_document(self,
-                       file_path: str,
-                       replace_ops=[],
+                       filepath: str,
+                       replace_ops: List[Tuple[Union[Span, Pattern], str]] = None,
                        ) -> DataPack:
         pack = DataPack()
-        doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
-        text = doc.read()
+        with open(filepath, "r", encoding="utf8", errors='ignore') as file:
+            text = file.read()
 
+        text, _ = self.replace(text, replace_ops)
+
+        document = self._ontology.Document(0, len(text))
+        pack.add_or_get_entry(document)
+        pack.set_text(text)
+        pack.meta.doc_id = filepath
+        return pack
+
+    @staticmethod
+    def replace(text: str, replace_ops: List[Tuple[Union[Span, Pattern], str]] = None):
+        if replace_ops is None:
+            return text, []
+
+        # Converting regex in replace_ops to spans
         span_ops = []
         for op, replacement in replace_ops:
             spans = [Span(result.start(), result.end()) for result in op.finditer(text)] \
                 if isinstance(op, Pattern) else [op]
-            replacements = ['' if not replacement else replacement] * len(spans)
+            replacements = [replacement] * len(spans)
             span_ops.extend(list(zip(spans, replacements)))
 
-        text, inverse_ops = self.replace(text, span_ops)
-
-        document = self._ontology.Document(0, len(text))
-        pack.add_or_get_entry(document)
-
-        pack.set_text(text)
-        pack.meta.doc_id = file_path
-        doc.close()
-        return text, inverse_ops, pack
-
-    @staticmethod
-    def replace(text, span_ops):
-        # Assuming that the spans are mutually exclusive
-        # TODO: check for the above assumption
-        # Stable sort is required for it to work
+        # Sorting the spans such that the order of replacement strings is maintained - utilizing the stable sort
+        # property of python sort
         span_ops.sort(key=lambda item: item[0])
+
+        if len(span_ops) == 0:
+            return text, []
+
+        # The spans should be mutually exclusive
         inverse_ops = []
         increment = 0
+        prev_span_end = 0
         for span, replacement in span_ops:
+            if span.begin < prev_span_end:
+                raise ValueError("The replacement spans should be mutually exclusive")
             span_begin = span.begin + increment
             span_end = span.end + increment
             original_span_text = text[span_begin: span_end]
@@ -94,23 +102,7 @@ class HTMLReader(MonoFileReader):
             increment += len(replacement) - (span.end - span.begin)
             replacement_span = Span(span_begin, span_begin + len(replacement))
             inverse_ops.append((replacement_span, original_span_text))
+            prev_span_end = span.end
 
         return text, inverse_ops
 
-
-if __name__ == "__main__":
-    file_path = 'test.html'
-    file_text = '<html>' \
-                '<head><title>The Original Title </title></head>' \
-                '<body>HTML web page contents </body></html>'
-    with open(file_path, 'w') as f:
-        f.write(file_text)
-
-    reader = HTMLReader()
-    span_ops = [(re.compile("</?[a-z]+>"), ''), (Span(19, 31), 'The Replaced')]
-    text, inverse_ops, pack = reader._read_document(file_path, span_ops)
-    assert text == 'The Replaced Title ' \
-                   'HTML web page contents '
-
-    orig_text, _ = HTMLReader.replace(text, inverse_ops)
-    assert orig_text == file_text
