@@ -43,20 +43,20 @@ class BaseProcessor(Generic[PackType]):
     @abstractmethod
     def define_output_info(self):
         """
-        User should define the output_info here
+        User should define the :attr:`output_info` here
         """
         raise NotImplementedError
 
     @abstractmethod
     def define_input_info(self):
         """
-        User should define the input_info here
+        User should define the :attr:`input_info` here
         """
         raise NotImplementedError
 
     @abstractmethod
     def process(self, input_pack: PackType):
-        """Process the input pack"""
+        """Process the ``input_pack``."""
         pass
 
     def _record_fields(self, input_pack: PackType):
@@ -76,7 +76,7 @@ class BaseProcessor(Generic[PackType]):
 
     def finish(self, input_pack: PackType):
         """
-        Do finishing work for one pack.
+        Do finish-up work for ``input_pack``.
         """
         # TODO (haoran): please check whether this function is
         #  sharable between pack processor and multipack processor
@@ -87,7 +87,6 @@ class BaseProcessor(Generic[PackType]):
     def default_hparams():
         """
         This defines a basic Hparams structure
-        :return:
         """
         hparams_dict = {
         }

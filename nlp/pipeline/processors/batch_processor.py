@@ -29,8 +29,9 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
     def initialize_batcher(self, hard_batch: bool = True):
         """
         Single pack :class:`BatchProcessor` initialize the batcher to be a
-        :class:`ProcessingBatcher`. And MultiPackBatchProcessor might need
-        something like "MultiPackProcessingBatcher".
+        :class:`~nlp.pipeline.data.batchers.ProcessingBatcher`.
+        And :class:`MultiPackBatchProcessor` initialize the batcher to be a
+        :class:`~nlp.pipeline.data.batchers.MultiPackProcessingBatcher`.
         """
         raise NotImplementedError
 
@@ -44,8 +45,6 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         if self.use_coverage_index:
             self.prepare_coverage_index(input_pack)
         for batch in self.batcher.get_batch(input_pack,
-                                            self.context_type,
-                                            self.input_info,
                                             tail_instances=tail_instances):
             pred = self.predict(batch)
             self.pack_all(pred)
@@ -57,10 +56,12 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
     @abstractmethod
     def predict(self, data_batch: Dict):
         """
-        Make predictions for the input data_batch.
+        The function that task processors should implement.
+
+        Make predictions for the input ``data_batch``.
 
         Args:
-              data_batch (Dict): A batch of instances in our dict format.
+              data_batch (dict): A batch of instances in our dict format.
 
         Returns:
               The prediction results in dict format.
@@ -68,6 +69,10 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         pass
 
     def pack_all(self, output_dict: Dict):
+        """
+        Pack the prediction results ``output_dict`` back to the
+        corresponding packs.
+        """
         start = 0
         for i in range(len(self.batcher.data_pack_pool)):
             output_dict_i = slice_batch(output_dict, start,
@@ -76,16 +81,18 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
             start += self.batcher.current_batch_sources[i]
 
     @abstractmethod
-    def pack(self, pack: PackType, inputs) -> None:
+    def pack(self, pack: PackType, output_dict: Dict) -> None:
         """
-        Add corresponding fields to pack. Custom function of how
+        The function that task processors should implement.
+
+        Add corresponding fields to ``pack``. Custom function of how
         to add the value back.
 
         Args:
             pack (PackType): The pack to add entries or fields to.
-            inputs: The prediction results returned by :meth:`predict`. You
+            output_dict: The prediction results returned by :meth:`predict`. You
                 need to add entries or fields corresponding to this prediction
-                results to the ``data_pack``.
+                results to ``pack``.
         """
         raise NotImplementedError
 
@@ -110,15 +117,20 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
 
     @abstractmethod
     def prepare_coverage_index(self, input_pack: PackType):
+        """
+        Build the coverage index for ``input_pack`` according to
+        :attr:`input_info`.
+        """
         pass
 
 
 class BatchProcessor(BaseBatchProcessor[DataPack]):
     """
-    The batch processors that process DataPacks.
+    The batch processors that process :class:`DataPack`.
     """
     def initialize_batcher(self, hard_batch: bool = True):
-        return ProcessingBatcher(self.batch_size, hard_batch)
+        return ProcessingBatcher(self.batch_size, self.context_type,
+                                 self.input_info, hard_batch)
 
     def prepare_coverage_index(self, input_pack: DataPack):
         for entry_type in self.input_info.keys():
