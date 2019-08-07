@@ -3,7 +3,6 @@ The reader that reads plain text data into Datapacks.
 """
 import os
 from typing import Iterator, List, Union, Tuple
-import re
 from re import Pattern
 
 from nlp.pipeline.data.data_pack import DataPack
@@ -52,10 +51,9 @@ class HTMLReader(MonoFileReader):
                         yield os.path.join(root, data_file)
                         break
 
-    def _read_document(self,
-                       filepath: str,
-                       replace_ops: List[Tuple[Union[Span, Pattern], str]] = None,
-                       ) -> DataPack:
+    def _read_document(self, filepath: str,
+                       replace_ops: List[Tuple[Union[Span, Pattern], str]]
+                       = None) -> DataPack:
         pack = DataPack()
         with open(filepath, "r", encoding="utf8", errors='ignore') as file:
             text = file.read()
@@ -69,20 +67,22 @@ class HTMLReader(MonoFileReader):
         return pack
 
     @staticmethod
-    def replace(text: str, replace_ops: List[Tuple[Union[Span, Pattern], str]] = None):
+    def replace(text: str,
+                replace_ops: List[Tuple[Union[Span, Pattern], str]] = None):
         if replace_ops is None:
             return text, []
 
         # Converting regex in replace_ops to spans
         span_ops = []
         for op, replacement in replace_ops:
-            spans = [Span(result.start(), result.end()) for result in op.finditer(text)] \
+            spans = [Span(result.start(), result.end())
+                     for result in op.finditer(text)] \
                 if isinstance(op, Pattern) else [op]
             replacements = [replacement] * len(spans)
             span_ops.extend(list(zip(spans, replacements)))
 
-        # Sorting the spans such that the order of replacement strings is maintained - utilizing the stable sort
-        # property of python sort
+        # Sorting the spans such that the order of replacement strings
+        # is maintained - utilizing the stable sort property of python sort
         span_ops.sort(key=lambda item: item[0])
 
         if len(span_ops) == 0:
@@ -94,7 +94,8 @@ class HTMLReader(MonoFileReader):
         prev_span_end = 0
         for span, replacement in span_ops:
             if span.begin < prev_span_end:
-                raise ValueError("The replacement spans should be mutually exclusive")
+                raise ValueError(
+                    "The replacement spans should be mutually exclusive")
             span_begin = span.begin + increment
             span_end = span.end + increment
             original_span_text = text[span_begin: span_end]
@@ -105,4 +106,3 @@ class HTMLReader(MonoFileReader):
             prev_span_end = span.end
 
         return text, inverse_ops
-

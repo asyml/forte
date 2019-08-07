@@ -18,7 +18,8 @@ class HTMLReaderTest(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def test_html_reader_replace_regex_test(self):
-        # Test the replace function with only regex based replacements - removing all tags
+        # Test the replace function with only regex based replacements -
+        # removing all tags
         text = get_sample_html_text()
         span_ops = [(re.compile("</?[a-z]+>"), '')]
         mod_text, inverse_ops = HTMLReader().replace(text, span_ops)
