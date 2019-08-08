@@ -15,7 +15,7 @@ class BasePackProcessor(BaseProcessor[PackType]):
     """
 
     def set_ontology(self, ontology):
-        self._ontology = ontology
+        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
         self.define_input_info()
         self.define_output_info()
 
