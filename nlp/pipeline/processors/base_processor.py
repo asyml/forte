@@ -6,7 +6,7 @@ from typing import Dict, List, Union, Type, Generic
 
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data import PackType
-from nlp.pipeline.data.ontology import Entry
+from nlp.pipeline.data.ontology import base_ontology, Entry
 from nlp.pipeline.utils import get_full_module_name
 
 __all__ = [
@@ -21,7 +21,7 @@ class BaseProcessor(Generic[PackType]):
 
     def __init__(self):
         self.component_name = get_full_module_name(self)
-        self._ontology = None
+        self._ontology = base_ontology
         self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
 
