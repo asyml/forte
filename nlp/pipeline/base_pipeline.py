@@ -24,8 +24,6 @@ class BasePipeline(Generic[PackType]):
     """
     The basic processing pipeline consists of a reader and  a list of
     predictors.
-
-    #TODO(Wei): check fields when concatenating processors
     """
 
     def __init__(self, **kwargs):
@@ -136,7 +134,8 @@ class BasePipeline(Generic[PackType]):
         Set the reader in the :class:`Pipeline`.
 
         Args:
-            reader
+            reader (BaseReader): the reader that can parse the format of your
+                dataset.
         """
         reader.set_ontology(self._ontology)
         self._reader = reader
@@ -159,6 +158,11 @@ class BasePipeline(Generic[PackType]):
                       config: Optional[HParams] = None):
         """
         Add a processor at the end of the :class:`Pipeline`.
+
+        Args:
+            processor (BaseProcessor): the processor to be added to the
+                pipeline.
+            config (HParams, optional): the config of the processor.
         """
         raise NotImplementedError
 
