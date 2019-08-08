@@ -26,7 +26,7 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         self.use_coverage_index = False
 
     def set_ontology(self, ontology):
-        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
+        self._ontology = ontology
         self.define_input_info()
         self.define_output_info()
         self.define_context()
