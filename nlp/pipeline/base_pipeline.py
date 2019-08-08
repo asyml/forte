@@ -22,8 +22,10 @@ __all__ = [
 
 class BasePipeline(Generic[PackType]):
     """
-    The pipeline consists of a list of predictors.
-    TODO(Wei): check fields when concatenating processors
+    The basic processing pipeline consists of a reader and  a list of
+    predictors.
+
+    #TODO(Wei): check fields when concatenating processors
     """
 
     def __init__(self, **kwargs):
@@ -41,7 +43,7 @@ class BasePipeline(Generic[PackType]):
 
     def initialize(self, **kwargs):
         """
-        Initialize the pipeline with configs
+        Initialize the pipeline with dict configs
         """
         if "ontology" in kwargs.keys():
             self._ontology = kwargs["ontology"]
@@ -49,11 +51,16 @@ class BasePipeline(Generic[PackType]):
                 self._reader.set_ontology(self._ontology)
             for processor in self.processors:
                 processor.set_ontology(self._ontology)
+        else:
+            logger.warning("Ontology not specified in **kwags. "
+                           "The pipeline Will use the ontology specified in "
+                           "config file if provided. Otherwise, will use "
+                           "base_ontology by default.")
 
     def init_from_config_path(self, config_path):
         """
         Read the configs from the given path ``config_path``
-        and initialize the pipeline including processors
+        and initialize the pipeline including processors.
         """
         # TODO: Typically, we should also set the reader here
         # This will be done after StringReader is merged
@@ -65,8 +72,9 @@ class BasePipeline(Generic[PackType]):
     def init_from_config(self, configs: Dict):
         """
         Parse the configuration sections from the input config,
-            into a list of [processor, config]
-        Initialize the pipeline with the configurations
+        into a list of ``[processor, config]``.
+
+        Initialize the pipeline with the configurations.
         """
 
         # HParams cannot create HParams from the inner dict of list
@@ -124,6 +132,12 @@ class BasePipeline(Generic[PackType]):
             processor.set_ontology(self._ontology)
 
     def set_reader(self, reader: BaseReader):
+        """
+        Set the reader in the :class:`Pipeline`.
+
+        Args:
+            reader
+        """
         reader.set_ontology(self._ontology)
         self._reader = reader
 
@@ -135,10 +149,17 @@ class BasePipeline(Generic[PackType]):
     def processor_configs(self):
         return self._configs
 
+    @property
+    def ontology(self):
+        return self._ontology
+
     @abstractmethod
     def add_processor(self,
                       processor: BaseProcessor,
                       config: Optional[HParams] = None):
+        """
+        Add a processor at the end of the :class:`Pipeline`.
+        """
         raise NotImplementedError
 
     @abstractmethod

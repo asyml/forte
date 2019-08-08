@@ -18,5 +18,7 @@ API
    :maxdepth: 2
 
    code/data.rst
+   code/pipeline.rst
    code/processors.rst
-
+   code/models.rst
+   code/trainers.rst

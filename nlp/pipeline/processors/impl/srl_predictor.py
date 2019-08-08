@@ -31,6 +31,10 @@ class SRLPredictor(BatchProcessor):
     An Semantic Role labeler trained according to `He, Luheng, et al.
     "Jointly predicting predicates and arguments in neural semantic role
     labeling." <https://aclweb.org/anthology/P18-2058>`_.
+
+    Note that to use :class:`SRLPredictor`, the :attr:`ontology` of
+    :class:`Pipeline` must be an ontology that includes
+    ``nlp.pipeline.data.ontology.ontonotes_ontology``.
     """
 
     word_vocab: tx.data.Vocab

@@ -23,6 +23,10 @@ class CoNLLNERPredictor(BatchProcessor):
     An Named Entity Recognizer trained according to `Ma, Xuezhe, and Eduard
     Hovy. "End-to-end sequence labeling via bi-directional lstm-cnns-crf."
     <https://arxiv.org/abs/1603.01354>`_.
+
+    Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
+    :class:`Pipeline` must be an ontology that includes
+    ``nlp.pipeline.data.ontology.conll03_ontology``.
     """
     def __init__(self):
         super().__init__()
