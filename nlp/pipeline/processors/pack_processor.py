@@ -13,6 +13,12 @@ class BasePackProcessor(BaseProcessor[PackType]):
     """
     The base class of processors that process one pack each time.
     """
+
+    def set_ontology(self, ontology):
+        self._ontology = ontology
+        self.define_input_info()
+        self.define_output_info()
+
     def process(self, input_pack: PackType):
         """
         Process one datapack at a time.

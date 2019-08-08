@@ -20,7 +20,7 @@ class NLTKSentenceSegmenter(PackProcessor):
 
     def define_input_info(self):
         self.input_info = {
-            base_ontology.Document: ["span"]
+            self._ontology.Document: ["span"]
         }
 
     def define_output_info(self):

@@ -8,7 +8,7 @@ import torch
 
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data.data_pack import DataPack
-from nlp.pipeline.data.ontology import ontonotes_ontology, base_ontology
+from nlp.pipeline.data.ontology import ontonotes_ontology
 from nlp.pipeline.models.srl.model import LabeledSpanGraphNetwork
 from nlp.pipeline.processors import BatchProcessor
 
@@ -34,8 +34,7 @@ class SRLPredictor(BatchProcessor):
         self._ontology = ontonotes_ontology
         self.define_input_info()
         self.define_output_info()
-
-        self.context_type = base_ontology.Sentence
+        self.define_context()
 
         self.batch_size = 4
         self.batcher = self.initialize_batcher()
@@ -64,9 +63,12 @@ class SRLPredictor(BatchProcessor):
             map_location=self.device))
         self.model.eval()
 
+    def define_context(self):
+        self.context_type = self._ontology.Sentence
+
     def define_input_info(self):
         self.input_info = {
-            base_ontology.Token: [],
+            self._ontology.Token: [],
         }
 
     def define_output_info(self):

@@ -25,6 +25,19 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         self.batcher = None
         self.use_coverage_index = False
 
+    def set_ontology(self, ontology):
+        self._ontology = ontology
+        self.define_input_info()
+        self.define_output_info()
+        self.define_context()
+
+    @abstractmethod
+    def define_context(self):
+        """
+        User should define the context type for batch processors here
+        """
+        raise NotImplementedError
+
     @abstractmethod
     def initialize_batcher(self, hard_batch: bool = True):
         """
