@@ -2,8 +2,8 @@
 The reader that reads plain text data into Datapacks.
 """
 import os
-from typing import Iterator, List, Union, Tuple
-from re import Pattern
+from typing import Iterator, List, Union, Tuple, Optional
+import re
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import base_ontology
@@ -52,15 +52,16 @@ class HTMLReader(MonoFileReader):
                         break
 
     def _read_document(self, filepath: str,
-                       replace_ops: List[Tuple[Union[Span, Pattern], str]]
-                       = None) -> DataPack:
+                       replace_ops:
+                       Optional[List[Tuple[Union[Span, str], str]]] = None
+                       ) -> DataPack:
         pack = DataPack()
         with open(filepath, "r", encoding="utf8", errors='ignore') as file:
             text = file.read()
 
         text, _ = self.replace(text, replace_ops)
 
-        document = self._ontology.Document(0, len(text))
+        document = self._ontology.Document(0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
         pack.set_text(text)
         pack.meta.doc_id = filepath
@@ -68,7 +69,8 @@ class HTMLReader(MonoFileReader):
 
     @staticmethod
     def replace(text: str,
-                replace_ops: List[Tuple[Union[Span, Pattern], str]] = None):
+                replace_ops: Optional[List[Tuple[Union[Span, str], str]]] = None
+                ) -> Tuple[str, List[Tuple[Span, str]]]:
         if replace_ops is None:
             return text, []
 
@@ -76,8 +78,8 @@ class HTMLReader(MonoFileReader):
         span_ops = []
         for op, replacement in replace_ops:
             spans = [Span(result.start(), result.end())
-                     for result in op.finditer(text)] \
-                if isinstance(op, Pattern) else [op]
+                     for result in re.compile(op).finditer(text)] \
+                if not isinstance(op, Span) else [op]
             replacements = [replacement] * len(spans)
             span_ops.extend(list(zip(spans, replacements)))
 

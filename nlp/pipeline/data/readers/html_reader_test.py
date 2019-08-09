@@ -2,7 +2,6 @@ import unittest
 import os
 import shutil
 import tempfile
-import re
 
 from nlp.pipeline.data.ontology.top import Span
 from nlp.pipeline.data.readers.html_reader import HTMLReader
@@ -21,7 +20,7 @@ class HTMLReaderTest(unittest.TestCase):
         # Test the replace function with only regex based replacements -
         # removing all tags
         text = get_sample_html_text()
-        span_ops = [(re.compile("</?[a-z]+>"), '')]
+        span_ops = [("</?[a-z]+>", '')]
         mod_text, inverse_ops = HTMLReader().replace(text, span_ops)
         self.assertEqual(mod_text, 'The Original Title HTML web page contents ')
 
@@ -29,7 +28,7 @@ class HTMLReaderTest(unittest.TestCase):
         # Test the replace function with only regex based replacements -
         # removing all tags and changing it back to original
         text = get_sample_html_text()
-        span_ops = [(re.compile("</?[a-z]+>"), '')]
+        span_ops = [("</?[a-z]+>", '')]
         reader = HTMLReader()
         mod_text, inverse_ops = reader.replace(text, span_ops)
         orig_text, _ = reader.replace(mod_text, inverse_ops)
@@ -40,7 +39,7 @@ class HTMLReaderTest(unittest.TestCase):
         # removing all tags, replacing a span and changing it back to original
         text = get_sample_html_text()
         reader = HTMLReader()
-        span_ops = [(re.compile("</?[a-z]+>"), ''), (Span(19, 31), 'The New')]
+        span_ops = [("</?[a-z]+>", ''), (Span(19, 31), 'The New')]
         mod_text, inverse_ops = reader.replace(text, span_ops)
         self.assertEqual(mod_text, 'The New Title HTML web page contents ')
 
@@ -52,7 +51,7 @@ class HTMLReaderTest(unittest.TestCase):
         text = get_sample_html_text()
         reader = HTMLReader()
         # the span(5,8) overlaps with one of the tags
-        span_ops = [(re.compile("</?[a-z]+>"), ''), (Span(5, 8), '')]
+        span_ops = [("</?[a-z]+>", ''), (Span(5, 8), '')]
         try:
             reader.replace(text, span_ops)
         except ValueError:
@@ -65,8 +64,8 @@ class HTMLReaderTest(unittest.TestCase):
     def test_html_reader_replace_test(self):
         # Test reading an html file with and without any replacement
         text = get_sample_html_text()
-        file_path = 'test.html'
-        with open(os.path.join(self.test_dir, file_path), 'w') as f:
+        file_path = os.path.join(self.test_dir, 'test.html')
+        with open(file_path, 'w') as f:
             f.write(text)
         reader = HTMLReader()
 
@@ -75,7 +74,7 @@ class HTMLReaderTest(unittest.TestCase):
         self.assertEqual(pack.text, text)
 
         # regex replacement
-        span_ops = [(re.compile("</?[a-z]+>"), '')]
+        span_ops = [("</?[a-z]+>", '')]
         pack = reader._read_document(file_path, span_ops)
         expected_mod_text = 'The Original Title HTML web page contents '
         self.assertEqual(pack.text, expected_mod_text)
