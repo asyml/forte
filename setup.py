@@ -23,7 +23,7 @@ setuptools.setup(
         'jsonpickle'
     ],
     extras_require={
-        'ner': ['pyyaml', 'torch', 'torchtext', 'tqdm'],
+        'ner': ['pyyaml', 'torch==1.1', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions'],
     },
     package_data={
