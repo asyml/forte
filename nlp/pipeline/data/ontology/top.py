@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from functools import total_ordering
-from typing import Iterable, Optional, Set, Union, Type, TypeVar
+from typing import Iterable, Optional, Set, Union, Type, TypeVar, Any
 
 from nlp.pipeline.utils import get_class_name, get_full_module_name
 from nlp.pipeline import config
@@ -37,12 +37,18 @@ class Span:
 
 
 class Entry:
-    """The base class inherited by all NLP entries."""
+    """The base class inherited by all NLP entries.
+    There will be some associated attributes for each entry.
+    - component: specify the creator of the entry
+    - _data_pack: each entry can be attached to a pack with
+        ``attach`` function.
+    - _tid: a unique identifier of this entry in the data pack
+    """
 
     def __init__(self):
         self.component = config.working_component
-        self._tid: Optional[str] = None
         self._data_pack = None
+        self._tid: Optional[str] = None
 
     @property
     def tid(self):
@@ -146,8 +152,8 @@ class Link(Entry):
     def __init__(self, parent: Optional[Entry] = None,
                  child: Optional[Entry] = None):
         super().__init__()
-        self._parent: Optional[str] = None
-        self._child: Optional[str] = None
+        self._parent: Any = None
+        self._child: Any = None
         if parent is not None:
             self.set_parent(parent)
         if child is not None:
@@ -234,7 +240,7 @@ class Group(Entry):
     def __init__(self, members: Optional[Set[Entry]] = None):
 
         super().__init__()
-        self._members: Set[str] = set()
+        self._members: Set = set()
         if members is not None:
             self.add_members(members)
 

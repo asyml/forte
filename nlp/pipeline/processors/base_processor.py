@@ -7,6 +7,7 @@ from typing import Dict, List, Union, Type, Generic
 from nlp.pipeline.common.resources import Resources
 from nlp.pipeline.data import PackType
 from nlp.pipeline.data.ontology import base_ontology, Entry
+from nlp.pipeline.data.selector import DummySelector
 from nlp.pipeline.utils import get_full_module_name
 
 __all__ = [
@@ -24,6 +25,7 @@ class BaseProcessor(Generic[PackType]):
         self._ontology = base_ontology
         self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
+        self.selector = DummySelector()
 
     def initialize(self, configs, resource: Resources):
         """Initialize the processor with ``configs``, and register global
@@ -78,8 +80,6 @@ class BaseProcessor(Generic[PackType]):
         """
         Do finishing work for one pack.
         """
-        # TODO (haoran): please check whether this function is
-        #  sharable between pack processor and multipack processor
         self._record_fields(input_pack)
         input_pack.meta.process_state = self.component_name
 
@@ -89,6 +89,10 @@ class BaseProcessor(Generic[PackType]):
         This defines a basic Hparams structure
         :return:
         """
-        hparams_dict = {
+        return {
+            'selector': {
+                'type': 'nlp.pipeline.data.selector.DummySelector',
+                'args': None,
+                'kwargs': {}
+            }
         }
-        return hparams_dict

@@ -16,8 +16,6 @@ class TrainPipeline:
             train_reader: BaseReader,
             trainer: BaseTrainer,
             dev_reader: BaseReader,
-            # TODO: Let's define the config system.
-            # config,
             resource: Resources,
             evaluator: Optional[Evaluator] = None,
             predictor: Optional[BaseProcessor] = None,
@@ -61,7 +59,6 @@ class TrainPipeline:
                     if self.trainer.stop_train():
                         return
 
-                    # TODO: Change to consume
                     self.trainer.consume(instance)
                 self.trainer.pack_finish_action(pack_count)
             self.trainer.epoch_finish_action(epoch)

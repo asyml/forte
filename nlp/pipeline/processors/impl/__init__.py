@@ -5,4 +5,5 @@ from nlp.pipeline.processors.impl.srl_predictor import *
 from nlp.pipeline.processors.impl.tokenization_predictor import *
 from nlp.pipeline.processors.impl.dummy_processor import *
 from nlp.pipeline.processors.impl.vocabulary_processor import *
+from nlp.pipeline.processors.impl.txtgen_predictor import *
 from nlp.pipeline.processors.impl.dummy_pack_processor import *

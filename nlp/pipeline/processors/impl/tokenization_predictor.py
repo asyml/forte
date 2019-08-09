@@ -29,7 +29,6 @@ class NLTKWordTokenizer(PackProcessor):
         }
 
     def _process(self, input_pack: DataPack):
-        # TODO: need to think about how to specify component
         for sentence in input_pack.get(entry_type=self._ontology.Sentence,
                                        component=self.sentence_component):
             offset = sentence.span.begin

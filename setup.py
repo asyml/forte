@@ -25,6 +25,7 @@ setuptools.setup(
     extras_require={
         'ner': ['pyyaml', 'torch==1.1', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions'],
+        'txtgen': ['regex']
     },
     package_data={
     },

@@ -189,7 +189,6 @@ class CoNLLNERTrainer(BaseTrainer):
         return mean_loss
 
     def post_validation_action(self, eval_result):
-        # TODO: generalize this method into base trainer
         if (
                 not self.__past_dev_result
                 or eval_result["eval"]["f1"] > self.__past_dev_result["eval"][
