@@ -35,10 +35,14 @@ class BaseProcessor(Generic[PackType]):
     def ontology(self):
         return self._ontology
 
+    @abstractmethod
     def set_ontology(self, ontology):
-        self._ontology = ontology
-        self.define_input_info()
-        self.define_output_info()
+        """
+        Set the ontology of this processor, and accordingly update
+        :attr:`input_info`, :attr:`output_info`, and :attr:`context_type` (for
+        :class:`~nlp.pipeline.processors.batch_processor.BatchProcessor`)
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def define_output_info(self):

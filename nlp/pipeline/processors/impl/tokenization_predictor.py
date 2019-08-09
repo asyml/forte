@@ -22,7 +22,7 @@ class NLTKWordTokenizer(PackProcessor):
 
     def define_input_info(self):
         self.input_info = {
-            base_ontology.Sentence: ["span"]
+            self._ontology.Sentence: ["span"]
         }
 
     def define_output_info(self):

@@ -129,6 +129,9 @@ class Annotation(Entry):
 
     def __init__(self, begin: int, end: int):
         super().__init__()
+        if begin > end:
+            raise ValueError(
+                f"The begin {begin} of span is greater than the end {end}")
         self._span = Span(begin, end)
 
     @property
