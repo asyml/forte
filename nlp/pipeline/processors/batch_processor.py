@@ -2,14 +2,16 @@ from abc import abstractmethod
 from typing import Dict, Optional
 
 from nlp.pipeline import config
-from nlp.pipeline.data import PackType, DataPack
+from nlp.pipeline.data import DataPack, MultiPack, PackType
+from nlp.pipeline.data.batchers import ProcessingBatcher, \
+    TxtgenMultiPackProcessingBatcher
 from nlp.pipeline.data.io_utils import slice_batch
 from nlp.pipeline.processors.base_processor import BaseProcessor
-from nlp.pipeline.data.batchers import ProcessingBatcher
 
 __all__ = [
     "BaseBatchProcessor",
     "BatchProcessor",
+    "MultiPackTxtgenBatchProcessor"
 ]
 
 
@@ -130,6 +132,7 @@ class BatchProcessor(BaseBatchProcessor[DataPack]):
     """
     The batch processors that process DataPacks.
     """
+
     def initialize_batcher(self, hard_batch: bool = True):
         return ProcessingBatcher(self.batch_size, hard_batch)
 
@@ -141,4 +144,26 @@ class BatchProcessor(BaseBatchProcessor[DataPack]):
                                                       entry_type)
 
 
-# TODO (Haoran): define MultiPackBatchProcessor
+class MultiPackTxtgenBatchProcessor(BaseBatchProcessor[MultiPack]):
+    """
+    The batch processors that process MultiPack in Txtgen Tasks.
+    In this scenario, we don't need to build special bathers since we only need
+        to read sentences from one single DataPack
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.input_pack_name = None
+        self.output_pack_name = None
+
+    def initialize_batcher(self, hard_batch: bool = True):
+        return TxtgenMultiPackProcessingBatcher(self.input_pack_name,
+                                                self.batch_size,
+                                                hard_batch)
+
+    def prepare_coverage_index(self, input_pack: MultiPack):
+        for entry_type in self.input_info.keys():
+            if input_pack.packs[self.input_pack_name].index.coverage_index(
+                    self.context_type, entry_type) is None:
+                input_pack.packs[self.input_pack_name
+                    ].index.build_coverage_index(self.context_type, entry_type)

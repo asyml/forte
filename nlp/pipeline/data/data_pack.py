@@ -1,12 +1,13 @@
+import copy
 import logging
-from typing import (
-    Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union, Any, Set)
+from typing import (Any, Dict, Iterable, Iterator, List, Optional, Set, Type,
+                    Union, Tuple)
 
 import numpy as np
 from sortedcontainers import SortedList
 
-from nlp.pipeline.data.base_pack import BaseMeta, BasePack, BaseIndex
-from nlp.pipeline.data.ontology import Entry, EntryType, Annotation, Link, Group
+from nlp.pipeline.data.base_pack import BaseIndex, BaseMeta, BasePack
+from nlp.pipeline.data.ontology import Annotation, Entry, EntryType, Group, Link
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +22,15 @@ class Meta(BaseMeta):
     """
     Meta information of a datapack.
     """
-    def __init__(self, doc_id: Optional[str] = None):
+    def __init__(self, doc_id: Optional[str] = None,
+                 name: Optional[str] = ""):
         super().__init__(doc_id)
         self.language = 'english'
         self.span_unit = 'character'
+        self.name: Optional[str] = name
+
+    def set_name_in_multipack(self, name: str):
+        self.name = name
 
 
 class DataPack(BasePack):
@@ -34,10 +40,11 @@ class DataPack(BasePack):
     language text could be a document, paragraph or in any other granularity.
 
     Args:
-        doc_id (str, optional): A universal id of this ner_data pack.
+        doc_id (str, optional): A universal id of this data pack.
     """
 
-    def __init__(self, doc_id: Optional[str] = None):
+    def __init__(self, doc_id: Optional[str] = None,
+                 name: Optional[str] = None):
         super().__init__()
         self._text = ""
 
@@ -46,7 +53,7 @@ class DataPack(BasePack):
         self.groups: List[Group] = []
 
         self.index: DataIndex = DataIndex(self)
-        self.meta: Meta = Meta(doc_id)
+        self.meta: Meta = Meta(doc_id, name)
 
     def __getstate__(self):
         """
@@ -642,6 +649,15 @@ class DataPack(BasePack):
             if isinstance(entry, Group):
                 groups.add(entry)
         return groups
+
+    def get(self,
+            entry_type: Type[EntryType],
+            range_annotation: Optional[Annotation] = None,
+            component: Optional[str] = None) -> Iterable[EntryType]:
+        return self.get_entries(entry_type, range_annotation, component)
+
+    def view(self):
+        return copy.deepcopy(self)
 
 
 class DataIndex(BaseIndex[DataPack]):

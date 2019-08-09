@@ -8,13 +8,15 @@ from typing import Iterator, Optional, Dict, Type, List, Union, Generic
 import jsonpickle
 
 from nlp.pipeline.data.data_pack import DataPack
+from nlp.pipeline.data.multi_pack import MultiPack
 from nlp.pipeline.data.base_pack import PackType
 from nlp.pipeline.data.ontology import Entry, base_ontology
 from nlp.pipeline.utils import get_full_module_name
 
 __all__ = [
     "BaseReader",
-    "PackReader"
+    "PackReader",
+    'MultiPackReader'
 ]
 
 
@@ -124,4 +126,20 @@ class PackReader(BaseReader[DataPack]):
                 if not isinstance(pack, DataPack):
                     raise TypeError(f"Pack deserialized from {cache_filename} "
                                     f"is {type(pack)}, but expect {DataPack}")
+                yield pack
+
+
+class MultiPackReader(BaseReader[MultiPack]):
+    """The basic MultiPack data reader class.
+    To be inherited by all data readers which return MultiPack.
+    """
+
+    def _instances_from_cache_file(self,
+                                   cache_filename: Path) -> Iterator[MultiPack]:
+        with cache_filename.open("r") as cache_file:
+            for line in cache_file:
+                pack = self.deserialize_instance(line.strip())
+                if not isinstance(pack, MultiPack):
+                    raise TypeError(f"Pack deserialized from {cache_filename} "
+                                    f"is {type(pack)}, but expect {MultiPack}")
                 yield pack

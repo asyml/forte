@@ -1,24 +1,36 @@
 import logging
-from typing import Dict
+from typing import Dict, List
+
 import yaml
 from texar.torch import HParams
 
-from nlp.pipeline.data import DataPack
 from nlp.pipeline.base_pipeline import BasePipeline
-from nlp.pipeline.processors import BatchProcessor
+from nlp.pipeline.data import MultiPack
+from nlp.pipeline.data.selector import Selector
+from nlp.pipeline.processors import BaseBatchProcessor
 from nlp.pipeline.utils import get_class
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "Pipeline"
+    "MultiPackPipeline"
 ]
 
 
-class Pipeline(BasePipeline[DataPack]):
+# pylint: disable=attribute-defined-outside-init
+
+class MultiPackPipeline(BasePipeline[MultiPack]):
     """
     The pipeline consists of a list of predictors.
     """
+    def __init__(self):
+        super().__init__()
+        self._selectors: List[Selector] = []
+
+    @property
+    def selectors(self):
+        return self._selectors
+
     def init_from_config(self, configs: Dict):
         """
         Parse the configuration sections from the input config,
@@ -64,18 +76,30 @@ class Pipeline(BasePipeline[DataPack]):
                                             default_processor_hparams)
                 self.add_processor(p, processor_hparams)
 
+                selector_hparams = processor_hparams.selector
+                selector_class = get_class(selector_hparams['type'])
+                selector_kwargs = selector_hparams["kwargs"]
+                selector = selector_class(**selector_kwargs)
+                self.add_selector(selector)
+
             self.initialize_processors()
 
         if "Ontology" in configs.keys() and configs["Ontology"] is not None:
             module_path = ["__main__",
                            "nlp.pipeline.data.ontology"]
-            self.set_ontology(get_class(configs["Ontology"], module_path))
-
+            self._ontology = get_class(
+                configs["Ontology"],
+                module_path)
+            for processor in self.processors:
+                processor.set_ontology(self._ontology)
         else:
             logger.warning("Ontology not specified in config, will use "
                            "base_ontology by default.")
 
-    def process(self, data: str) -> DataPack:
+    def add_selector(self, selector: Selector):
+        self._selectors.append(selector)
+
+    def process(self, data: str) -> MultiPack:
         """
         Process a string text or a single file.
 
@@ -87,9 +111,10 @@ class Pipeline(BasePipeline[DataPack]):
         """
         datapack = self._reader.read(data)
 
-        for processor in self.processors:
-            if isinstance(processor, BatchProcessor):
-                processor.process(datapack, tail_instances=True)
+        for processor, selector in zip(self.processors, self.selectors):
+            input_pack = selector.select(datapack)
+            if isinstance(processor, BaseBatchProcessor):
+                processor.process(input_pack, tail_instances=True)
             else:
-                processor.process(datapack)
+                processor.process(input_pack)
         return datapack

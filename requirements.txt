@@ -1,3 +1,4 @@
 sortedcontainers
 numpy
 jsonpickle
+regex

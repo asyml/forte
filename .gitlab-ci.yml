@@ -21,7 +21,7 @@ flake8:
   image: python:3.6.1
   script:
     - pip install flake8==3.7.7
-    - flake8 nlp/ examples/
+    - flake8 nlp/ examples/XK
 
 mypy:
   stage: test
@@ -33,7 +33,7 @@ mypy:
     - cd texar-pytorch
     - pip3 install -q -e .
     - cd ..
-    - pip3 install --no-cache-dir -q -e .[ner,srl]
+    - pip3 install --no-cache-dir -q -e .[ner,srl,txtgen]
     - mypy .
 
 pytest:
@@ -47,5 +47,5 @@ pytest:
     - cd texar-pytorch
     - pip3 install -q -e .
     - cd ..
-    - pip3 install --no-cache-dir -q -e .[ner,srl]
+    - pip3 install --no-cache-dir -q -e .[ner,srl,txtgen]
     - pytest nlp/

@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from nlp.pipeline import config
-from nlp.pipeline.data import DataPack, PackType
+from nlp.pipeline.data import DataPack, PackType, MultiPack
 from nlp.pipeline.processors.base_processor import BaseProcessor
 
 __all__ = [
@@ -43,4 +43,8 @@ class PackProcessor(BasePackProcessor[DataPack]):
     pass
 
 
-# TODO (Haoran): define MultiPackProcessor
+class MultiPackProcessor(BasePackProcessor[MultiPack]):
+    """
+    The base class of processors that process MultiPack each time
+    """
+    pass

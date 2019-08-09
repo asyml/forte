@@ -17,7 +17,8 @@ class PipelineTest(unittest.TestCase):
         # Define and config the Pipeline
         self.dataset_path = "examples/ontonotes_sample_dataset/00"
 
-        self.nlp = Pipeline(ontology=relation_ontology)
+        self.nlp = Pipeline()
+        self.nlp.set_ontology(relation_ontology)
 
         self.nlp.set_reader(OntonotesReader())
         self.processor = DummyRelationExtractor()
@@ -48,7 +49,7 @@ class ProdigyPipelineTest(unittest.TestCase):
     def setUp(self) -> None:
         # Define and config the Pipeline
         self.fp = tempfile.NamedTemporaryFile(mode='w')
-        self.nlp = Pipeline(ontology=base_ontology)
+        self.nlp = Pipeline()
         self.nlp.set_reader(ProdigyReader())
         self.processor = DummyPackProcessor()
         self.nlp.add_processor(self.processor)
