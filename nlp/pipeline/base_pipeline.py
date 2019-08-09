@@ -47,6 +47,8 @@ class BasePipeline(Generic[PackType]):
             self._ontology = kwargs["ontology"]
             if self._reader is not None:
                 self._reader.set_ontology(self._ontology)
+            for processor in self.processors:
+                processor.set_ontology(self._ontology)
 
     def init_from_config_path(self, config_path):
         """
@@ -119,8 +121,7 @@ class BasePipeline(Generic[PackType]):
     def initialize_processors(self):
         for processor, config in zip(self.processors, self.processor_configs):
             processor.initialize(config, self.resource)
-            if self._ontology is not None:
-                processor.ontology = self._ontology
+            processor.set_ontology(self._ontology)
 
     def set_reader(self, reader: BaseReader):
         reader.set_ontology(self._ontology)

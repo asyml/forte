@@ -23,6 +23,20 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         self.context_type = None
         self.batch_size = None
         self.batcher = None
+        self.use_coverage_index = False
+
+    def set_ontology(self, ontology):
+        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
+        self.define_input_info()
+        self.define_output_info()
+        self.define_context()
+
+    @abstractmethod
+    def define_context(self):
+        """
+        User should define the context type for batch processors here
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def initialize_batcher(self, hard_batch: bool = True):
@@ -40,6 +54,8 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         else:
             input_pack.meta.cache_state = self.component_name
 
+        if self.use_coverage_index:
+            self.prepare_coverage_index(input_pack)
         for batch in self.batcher.get_batch(input_pack,
                                             self.context_type,
                                             self.input_info,
@@ -105,6 +121,10 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         self.batcher.current_batch_sources = \
             self.batcher.current_batch_sources[end:]
 
+    @abstractmethod
+    def prepare_coverage_index(self, input_pack: PackType):
+        pass
+
 
 class BatchProcessor(BaseBatchProcessor[DataPack]):
     """
@@ -112,6 +132,13 @@ class BatchProcessor(BaseBatchProcessor[DataPack]):
     """
     def initialize_batcher(self, hard_batch: bool = True):
         return ProcessingBatcher(self.batch_size, hard_batch)
+
+    def prepare_coverage_index(self, input_pack: DataPack):
+        for entry_type in self.input_info.keys():
+            if input_pack.index.coverage_index(self.context_type,
+                                               entry_type) is None:
+                input_pack.index.build_coverage_index(self.context_type,
+                                                      entry_type)
 
 
 # TODO (Haoran): define MultiPackBatchProcessor

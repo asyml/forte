@@ -20,7 +20,7 @@ class NLTKPOSTagger(PackProcessor):
 
     def define_input_info(self):
         self.input_info = {
-            base_ontology.Sentence: ["span"],
+            self._ontology.Sentence: ["span"],
             self._ontology.Token: {
                 "fields": ["span"],
                 "component": self.token_component

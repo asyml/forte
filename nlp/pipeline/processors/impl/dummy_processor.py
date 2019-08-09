@@ -4,7 +4,6 @@ import numpy as np
 
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.ontology import relation_ontology
-from nlp.pipeline.data.ontology import base_ontology
 from nlp.pipeline.processors import BatchProcessor
 
 __all__ = [
@@ -22,16 +21,18 @@ class DummyRelationExtractor(BatchProcessor):
         self._ontology = relation_ontology
         self.define_input_info()
         self.define_output_info()
-
-        self.context_type = "sentence"
+        self.define_context()
 
         self.batch_size = 4
         self.batcher = self.initialize_batcher()
 
+    def define_context(self):
+        self.context_type = self._ontology.Sentence
+
     def define_input_info(self):
         self.input_info = {
-            base_ontology.Token: [],
-            base_ontology.EntityMention: {
+            self._ontology.Token: [],
+            self._ontology.EntityMention: {
                 "fields": ["ner_type", "tid"],
             }
         }

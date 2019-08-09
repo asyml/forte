@@ -7,7 +7,7 @@ import texar.torch as tx
 from nlp.pipeline.data.dataset import Dataset
 from nlp.pipeline.data.data_pack import DataPack
 from nlp.pipeline.data.io_utils import merge_batches, batch_instances
-from nlp.pipeline.data.ontology import Entry
+from nlp.pipeline.data.ontology import Entry, Annotation
 
 
 class Batcher:
@@ -71,13 +71,14 @@ class TexarBatcher(Batcher):
 
     def __init__(self,
                  data_packs: Iterable[DataPack],
+                 context_type: Type[Annotation],
                  batch_size: Optional[int] = None,
                  hparams=None):
 
         if batch_size is not None:
             hparams["batch_size"] = batch_size
         dataset = Dataset(data_packs)
-        data = DictData(dataset.get_data("sentence"), hparams=hparams)
+        data = DictData(dataset.get_data(context_type), hparams=hparams)
         super().__init__(data.batch_size)
         self.batch_iter = tx.data.DataIterator(data)
 
@@ -107,7 +108,7 @@ class ProcessingBatcher(Batcher):
     def get_batch(  # type: ignore
             self,
             input_pack: Optional[DataPack],
-            context_type: str,
+            context_type: Type[Annotation],
             requests: Dict[Type[Entry], Union[Dict, List]] = None,
             tail_instances: bool = False):
 
@@ -139,7 +140,7 @@ class ProcessingBatcher(Batcher):
     def _get_data_batch_by_need(
             self,
             data_pack: DataPack,
-            context_type: str,
+            context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         """
