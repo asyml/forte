@@ -1,5 +1,5 @@
 # pylint: disable=unused-wildcard-import, wildcard-import, function-redefined
-from forte.data.ontology import *
+from forte.data.ontology.base_ontology import *
 
 
 class Token(Token):  # type: ignore

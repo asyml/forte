@@ -4,10 +4,10 @@ from typing import (
 
 import texar.torch as tx
 
-from forte.data import Dataset
+from forte.data.dataset import Dataset
 from forte.data import DataPack, MultiPack
-from forte.data import merge_batches, batch_instances
-from forte.data import Entry, Annotation
+from forte.data.io_utils import merge_batches, batch_instances
+from forte.data.ontology import Entry, Annotation
 
 
 class Batcher:

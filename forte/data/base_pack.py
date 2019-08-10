@@ -5,8 +5,8 @@ from collections import defaultdict
 from typing import (DefaultDict, Dict, Generic, List, Optional, Set, Type,
                     TypeVar, Union)
 
-from forte.data import (Annotation, Entry, EntryType, Group,
-                        Link, Span)
+from forte.data.ontology import (Annotation, Entry, EntryType, Group,
+                                 Link, Span)
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ class BaseMeta:
     """
     Basic Meta information for both DataPack and MultiPack.
     """
+
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id = doc_id
         self.process_state = ''
@@ -36,6 +37,7 @@ class InternalMeta:
     which the keys are entries types and the values are objects of
     :class:`InternalMeta`.
     """
+
     def __init__(self):
         self.id_counter = 0
         self.fields_created = defaultdict(set)
@@ -46,6 +48,7 @@ class BasePack:
     """
     The base class of DataPack and MultiPack
     """
+
     def __init__(self, doc_id: Optional[str] = None):
         self.links: List[Link] = []
         self.groups: List[Group] = []

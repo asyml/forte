@@ -7,11 +7,11 @@ from typing import Iterator, Optional, Dict, Type, List, Union, Generic
 
 import jsonpickle
 
-from forte.data import DataPack
-from forte.data import MultiPack
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.data.base_pack import PackType
-from forte.data import Entry, base_ontology
-from nlp.forte.utils import get_full_module_name
+from forte.data.ontology import Entry, base_ontology
+from forte.utils import get_full_module_name
 
 __all__ = [
     "BaseReader",

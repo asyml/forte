@@ -6,7 +6,7 @@ from forte.data import DataPack, MultiPack, PackType
 from forte.data.batchers import ProcessingBatcher, \
     TxtgenMultiPackProcessingBatcher
 from forte.data import slice_batch
-from nlp.forte.processors.base_processor import BaseProcessor
+from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [
     "BaseBatchProcessor",

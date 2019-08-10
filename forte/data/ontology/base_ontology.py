@@ -2,7 +2,7 @@
 This class defines the basic ontology supported by our system
 """
 from typing import Optional, Set
-from forte.data import Annotation, Link, Group
+from forte.data.ontology.top import Annotation, Link, Group
 
 __all__ = [
     "Token",

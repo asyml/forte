@@ -1,6 +1,6 @@
 from typing import Iterable, Optional, Type, Union, Tuple
 
-from forte.data.ontology import Entry, Link, Group
+from forte.data.ontology.top import Entry, Link, Group
 
 
 class MultiPackLink(Link):
