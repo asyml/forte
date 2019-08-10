@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from forte import config
 from forte.data import DataPack, PackType, MultiPack
-from nlp.forte.processors.base_processor import BaseProcessor
+from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [
     "BasePackProcessor",

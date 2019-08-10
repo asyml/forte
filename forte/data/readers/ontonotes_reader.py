@@ -7,11 +7,11 @@ from collections import defaultdict
 from typing import (DefaultDict, Iterator, List, Optional, Tuple,
                     Dict, Any, no_type_check)
 
-from forte.data import ontonotes_ontology
-from forte.data import (
+from forte.data.ontology import ontonotes_ontology
+from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
-from forte.data import DataPack
-from forte.data import MonoFileReader
+from forte.data.data_pack import DataPack
+from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
     "OntonotesReader",

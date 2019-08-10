@@ -3,8 +3,8 @@ import logging
 from typing import (Dict, List, Optional, Type, Any)
 
 from forte.data.base_pack import BaseMeta, BasePack
-from forte.data import DataPack
-from forte.data import Entry, EntryType, Link, Group,\
+from forte.data.data_pack import DataPack
+from forte.data.ontology import Entry, EntryType, Link, Group,\
     MultiPackGroup, MultiPackLink
 
 logger = logging.getLogger(__name__)

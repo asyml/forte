@@ -9,7 +9,8 @@ This is also an example of extending the parent ontology by add a new entry.
 """
 # pylint: disable=unused-wildcard-import, wildcard-import, function-redefined
 from typing import Optional
-from forte.data.ontology import *
+from forte.data.ontology.ontonotes_ontology import *
+from forte.data.ontology.top import Link
 
 
 class RelationLink(Link):

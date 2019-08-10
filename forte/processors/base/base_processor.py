@@ -7,7 +7,7 @@ from typing import Dict, List, Union, Type, Generic
 from forte.common.resources import Resources
 from forte.data import PackType
 from forte.data.ontology import base_ontology, Entry
-from forte.data import DummySelector
+from forte.data.selector import DummySelector
 from forte.utils import get_full_module_name
 
 __all__ = [

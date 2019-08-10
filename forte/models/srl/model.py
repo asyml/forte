@@ -8,8 +8,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from nlp.forte.models.srl import model_utils as utils
-from nlp.forte.models.srl.data import SRLSpan, Span
+from forte.models.srl import model_utils as utils
+from forte.models.srl.data import SRLSpan, Span
 
 
 class LabeledSpanGraphNetwork(tx.ModuleBase):

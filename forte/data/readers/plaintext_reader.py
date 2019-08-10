@@ -5,9 +5,9 @@ import codecs
 import os
 from typing import Iterator
 
-from forte.data import DataPack
-from forte.data import base_ontology
-from forte.data import MonoFileReader
+from forte.data.data_pack import DataPack
+from forte.data.ontology import base_ontology
+from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
     "PlainTextReader",

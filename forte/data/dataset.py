@@ -2,8 +2,8 @@
 level meta.
 """
 from typing import Dict, Union, Iterable, Optional, List, Type
-from forte.data import DataPack
-from forte.data import Entry, Annotation
+from forte.data.data_pack import DataPack
+from forte.data.ontology import Entry, Annotation
 
 __all__ = [
     "Dataset",

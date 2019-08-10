@@ -4,9 +4,9 @@ The reader that reads CoNLL ner_data into our internal json data format.
 import os
 from typing import Iterator
 
-from forte.data import DataPack
-from forte.data import MultiPack
-from forte.data import MonoFileMultiPackReader
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
+from forte.data.readers.file_reader import MonoFileMultiPackReader
 
 __all__ = [
     "PlainSentenceTxtgenReader"

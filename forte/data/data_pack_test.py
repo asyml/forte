@@ -5,10 +5,10 @@ import os
 import unittest
 import logging
 
-import nlp
-from forte.data import Sentence, Document
-from forte.data import OntonotesReader
-from forte.data import ontonotes_ontology
+import forte
+from forte.data.ontology.ontonotes_ontology import Sentence, Document
+from forte.data.readers import OntonotesReader
+from forte.data.ontology import ontonotes_ontology
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -18,7 +18,7 @@ class DataPackTest(unittest.TestCase):
     def setUp(self) -> None:
         self.reader = OntonotesReader()
         data_path = os.path.join(os.path.dirname(
-            os.path.dirname(nlp.__file__)), "examples/abc_0059.gold_conll")
+            os.path.dirname(forte.__file__)), "examples/abc_0059.gold_conll")
         self.data_pack = self.reader.read(data_path)
 
     def test_get_data(self):

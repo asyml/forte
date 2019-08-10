@@ -5,9 +5,9 @@ import codecs
 import os
 from typing import Iterator, no_type_check
 
-from forte.data import conll03_ontology
-from forte.data import DataPack
-from forte.data import MonoFileReader
+from forte.data.ontology import conll03_ontology
+from forte.data.data_pack import DataPack
+from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
     "CoNLL03Reader"

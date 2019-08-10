@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Iterator, no_type_check, List, Optional
 
 from forte import config
-from forte.data import DataPack
-from forte.data import base_ontology
-from forte.data import PackReader
+from forte.data.data_pack import DataPack
+from forte.data.ontology import base_ontology
+from forte.data.readers.file_reader import PackReader
 
 logger = logging.getLogger(__name__)
 

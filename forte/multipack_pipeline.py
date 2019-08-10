@@ -5,8 +5,8 @@ import yaml
 from texar.torch import HParams
 
 from forte.base_pipeline import BasePipeline
-from forte.data import MultiPack
-from forte.data import Selector
+from forte.data.multi_pack import MultiPack
+from forte.data.selector import Selector
 from forte.processors.base import BaseBatchProcessor
 from forte.utils import get_class
 
