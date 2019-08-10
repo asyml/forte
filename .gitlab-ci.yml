@@ -13,7 +13,7 @@ pylint:
   image: python:3.6.1
   script:
     - pip install pylint==2.3.1
-    - pylint nlp/ examples/
+    - pylint forte/ examples/
 
 flake8:
   stage: verify
@@ -21,7 +21,7 @@ flake8:
   image: python:3.6.1
   script:
     - pip install flake8==3.7.7
-    - flake8 nlp/ examples/XK
+    - flake8 forte/ examples/XK
 
 mypy:
   stage: test
@@ -48,4 +48,4 @@ pytest:
     - pip3 install -q -e .
     - cd ..
     - pip3 install --no-cache-dir -q -e .[ner,srl,txtgen]
-    - pytest nlp/
+    - pytest forte/
