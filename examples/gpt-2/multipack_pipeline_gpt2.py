@@ -1,16 +1,11 @@
 import argparse
-import os
 import json
-import texar.torch as tx
 import torch
 import yaml
-from termcolor import colored
-from nlp.pipeline.data.ontology import base_ontology
-from nlp.pipeline.data.ontology.base_ontology import (
-    Token, Sentence, EntityMention, PredicateLink)
+from forte.data import base_ontology
 
-from nlp.pipeline.data.readers import PlainSentenceTxtgenReader
-from nlp.pipeline.multipack_pipeline import MultiPackPipeline
+from forte.data import PlainSentenceTxtgenReader
+from nlp.forte.multipack_pipeline import MultiPackPipeline
 
 
 pl = MultiPackPipeline()

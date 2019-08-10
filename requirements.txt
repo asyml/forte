@@ -2,3 +2,4 @@ sortedcontainers
 numpy
 jsonpickle
 regex
+torch

@@ -1,5 +1,5 @@
-from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
-from nlp.pipeline.data.ontology.base_ontology import Token, Sentence
+from forte.data.readers.conll03_reader import CoNLL03Reader
+from forte.data.ontology import Token, Sentence
 import importlib
 
 reader = CoNLL03Reader(lazy=False)

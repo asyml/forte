@@ -1,11 +1,11 @@
 from termcolor import colored
 from texar.torch import HParams
 
-from nlp.pipeline.data.ontology.conll03_ontology import (
+from forte.data import (
     Token, Sentence, EntityMention, PredicateLink)
-from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.data.readers import StringReader
-from nlp.pipeline.processors.impl import (
+from nlp.forte.pipeline import Pipeline
+from forte.data import StringReader
+from nlp.forte.processors.impl import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
 
