@@ -1,5 +1,5 @@
-from termcolor import colored
 from texar.torch import HParams
+from termcolor import colored
 
 from forte.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
@@ -11,7 +11,6 @@ from forte.processors import (
 
 
 def main():
-
     pl = Pipeline()
     pl.set_reader(StringReader())
     pl.add_processor(NLTKSentenceSegmenter())

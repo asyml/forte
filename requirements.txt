@@ -1,5 +1,5 @@
 sortedcontainers
 numpy
 jsonpickle
-regex
 torch
+pyyaml

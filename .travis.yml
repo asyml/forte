@@ -10,7 +10,14 @@ env:
 install:
   - pip install --upgrade pip
   - pip install --progress-bar off torch==$TORCH_VER
-  - pip install --progress-bar off .[extras]
+  - pip install --progress-bar off .[ner,srl,txtgen]
+  # Install texar-pytorch.
+  - git clone https://github.com/asyml/texar-pytorch.git
+  - cd texar-pytorch
+  - pip install .
+  - cd ..
+  - rm -rf texar-pytorch
+  # Install test tools.
   - pip install pylint==2.3.1 flake8==3.7.7
   - pip install mypy==0.720
   - pip install pytest
@@ -18,7 +25,7 @@ install:
 script:
   # linting
   - pylint forte/ examples/
-  - flake8 texar/ examples/
+  - flake8 forte/ examples/
   # type checking
   - mypy .
   # unit tests
