@@ -1,4 +1,46 @@
 language: python
-rvm:
-  - 3.6
+sudo: required
+
+python:
+  - "3.6"
+
+env:
+  - TORCH_VER="1.1.0"
+
+install:
+  - pip install --upgrade pip
+  - pip install --progress-bar off torch==$TORCH_VER
+  - pip install --progress-bar off .[extras]
+  - pip install pylint==2.3.1 flake8==3.7.7
+  - pip install mypy==0.720
+  - pip install pytest
+
+script:
+  # linting
+  - pylint forte/ examples/
+  - flake8 texar/ examples/
+  # type checking
+  - mypy .
+  # unit tests
+  - pytest
+
+#jobs:
+#  include:
+#    - stage: docs
+#      python: "3.6"
+#      install:
+#        - pip install --upgrade pip
+#        - pip install --progress-bar off -r requirements.txt
+#        # install library required for spellcheck
+#        - sudo apt-get install libenchant1c2a myspell-en-us
+#        - pip install --progress-bar off -r docs/requirements.txt
+#      script:
+#        - cd docs
+#        # build documents
+#        - sphinx-build -W -b html -d _build/doctrees . _build/html
+#        # check for typos
+#        - sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
+
+notifications:
+  email: false
 

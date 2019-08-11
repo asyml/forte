@@ -21,7 +21,7 @@ flake8:
   image: python:3.6.1
   script:
     - pip install flake8==3.7.7
-    - flake8 forte/ examples/XK
+    - flake8 forte/ examples/
 
 mypy:
   stage: test
