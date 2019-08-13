@@ -48,7 +48,7 @@ class ProdigyReader(MonoFileReader):
                 DataPacks.append(self.read(line))
         return DataPacks
 
-    def read(self, data: str) -> DataPack:
+    def _read_document(self, data: str) -> DataPack:
         """
         Extracts the contents of the dict (in str form) into a Datapack
         :param single_doc: json dictionary
