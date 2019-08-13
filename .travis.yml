@@ -30,6 +30,7 @@ script:
   - mypy .
   # unit tests
   - pytest
+  - python -m unittest discover -s ./forte/ -p '*_test.py'
 
 #jobs:
 #  include:
