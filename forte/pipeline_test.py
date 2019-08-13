@@ -98,6 +98,7 @@ class ProdigyPipelineTest(unittest.TestCase):
 
     def token_check(self, doc, pack):
         doc_text = doc.text
+        print(doc_text)
         # Compare document text with tokens
         tokens = [token.text for token in
                   pack.get_entries(base_ontology.Token, doc)]
