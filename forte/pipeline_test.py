@@ -61,7 +61,6 @@ class ProdigyPipelineTest(unittest.TestCase):
     def tearDown(self):
         os.system("rm {}".format(self.fp.name))
 
-
     def create_sample_file(self) -> None:
 
         prodigy_entry = {

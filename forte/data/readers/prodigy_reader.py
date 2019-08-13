@@ -33,7 +33,6 @@ class ProdigyReader(MonoFileReader):
             EntityMention: ["ner_type"]
         }
 
-
     def iter(self, file_path: str) -> List[DataPack]:
         """
         This is the first method called in the pipeline
@@ -50,7 +49,7 @@ class ProdigyReader(MonoFileReader):
 
     def _read_document(self, data: str) -> DataPack:
         """
-        Extracts the contents of the dict (in str form) into a Datapack
+        Extracts the contents of the dict (in str form) into a DataPack
         :param single_doc: json dictionary
         :return: DataPack object
         """
