@@ -1,6 +1,7 @@
 """
 Unit tests for Pipeline.
 """
+import os
 import unittest
 import json
 import tempfile
@@ -8,7 +9,7 @@ from forte.pipeline import Pipeline
 from forte.data.readers import OntonotesReader, ProdigyReader
 from forte.processors.dummy_processor import *
 from forte.processors.dummy_pack_processor import DummyPackProcessor
-from forte.data.ontology import relation_ontology
+from forte.data.ontology import relation_ontology, base_ontology
 from forte.data.ontology.relation_ontology import *
 
 
@@ -46,17 +47,20 @@ class PipelineTest(unittest.TestCase):
 
 
 class ProdigyPipelineTest(unittest.TestCase):
-    def setUp(self) -> None:
+
+    def setUp(self):
         # Define and config the Pipeline
-        self.fp = tempfile.NamedTemporaryFile(mode='w')
+        self.fp = tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl', delete=False)
         self.nlp = Pipeline()
+        self.nlp.set_ontology(base_ontology)
         self.nlp.set_reader(ProdigyReader())
         self.processor = DummyPackProcessor()
         self.nlp.add_processor(self.processor)
         self.create_sample_file()
 
-    def tearDown(self) -> None:
-        self.fp.close()
+    def tearDown(self):
+        os.system("rm {}".format(self.fp.name))
+
 
     def create_sample_file(self) -> None:
 
@@ -80,6 +84,9 @@ class ProdigyPipelineTest(unittest.TestCase):
         # for entry in JSON_file:
         json.dump(prodigy_entry, self.fp)
         self.fp.write('\n')
+        json.dump(prodigy_entry, self.fp)
+        self.fp.write('\n')
+        self.fp.close()
 
     def test_packs(self):
         # get processed pack from dataset
@@ -94,7 +101,7 @@ class ProdigyPipelineTest(unittest.TestCase):
         # Compare document text with tokens
         tokens = [token.text for token in
                   pack.get_entries(base_ontology.Token, doc)]
-        self.assertEquals(tokens[2], "dolor")
+        self.assertEqual(tokens[2], "dolor")
         self.assertEqual(doc_text.replace(" ", ""), "".join(tokens))
 
     def label_check(self, doc, pack):
