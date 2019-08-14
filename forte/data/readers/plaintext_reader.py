@@ -7,14 +7,14 @@ from typing import Iterator, List
 
 from forte.data.data_pack import DataPack
 from forte.data.ontology import base_ontology
-from forte.data.readers.file_reader import MonoFileReader
+from forte.data.readers.file_reader import MultiFileReader
 
 __all__ = [
     "PlainTextReader",
 ]
 
 
-class PlainTextReader(MonoFileReader):
+class PlainTextReader(MultiFileReader):
     """:class:`PlainTextReader` is designed to read in plain text dataset.
 
     Args:
