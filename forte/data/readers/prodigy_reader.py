@@ -5,14 +5,14 @@ from typing import List
 from forte.data.ontology.base_ontology import Token, \
     Document, EntityMention
 from forte.data.data_pack import DataPack
-from forte.data.readers.file_reader import MonoFileReader
+from forte.data.readers.file_reader import MultiFileReader
 
 __all__ = [
     "ProdigyReader"
 ]
 
 
-class ProdigyReader(MonoFileReader):
+class ProdigyReader(MultiFileReader):
     """:class:`ProdigyTextReader` is designed to read in Prodigy output text
     Args:
         lazy (bool, optional): The reading strategy used when reading a
@@ -34,26 +34,22 @@ class ProdigyReader(MonoFileReader):
         }
 
     def iter(self, file_path: str) -> List[DataPack]:
-        """
-        This is the first method called in the pipeline
-        Reads a jsonl file into a list of DataPacks
-        TODO add another lazy function that gives an Iterator
-        :param dir_path:
-        :return: List[DataPack]
-        """
-        DataPacks = []
-        with open(file_path) as f:
-            for line in f:
-                DataPacks.append(self.read(line))
-        return DataPacks
+        return self._read_packs_from_file(file_path)
 
-    def _read_document(self, data: str) -> DataPack:
+    def _read_packs_from_file(self, file_path: str) -> List[DataPack]:
         """
         Extracts the contents of the dict (in str form) into a DataPack
         :param single_doc: json dictionary
         :return: DataPack object
         """
+        DataPacks = []
+        with open(file_path) as f:
+            for line in f:
+                DataPacks.append(self.process_text(line))
+        return DataPacks
 
+
+    def process_text(self, data: str) -> DataPack:
         single_doc = json.loads(data)
         pack = DataPack()
         text = single_doc['text']
