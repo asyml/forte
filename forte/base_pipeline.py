@@ -1,7 +1,7 @@
 from abc import abstractmethod
-from typing import List, Dict, Iterator, Generic, Optional
+from typing import List, Dict, Iterator, Generic, Optional, Any
 import logging
-
+import os
 import yaml
 from texar.torch import HParams
 
@@ -87,7 +87,7 @@ class BasePipeline(Generic[PackType]):
         self.processor_configs.append(config)
 
     @abstractmethod
-    def process(self, data: str) -> PackType:
+    def process(self, data_source: Any) -> PackType:
         """
         Process a string text or a single file.
 
@@ -97,27 +97,40 @@ class BasePipeline(Generic[PackType]):
                 a string variable. If :attr:`_reader` is a file reader, `data`
                 should be the path to a file.
         """
-        raise NotImplementedError
+        first_pack = []
+        for p in self._reader.iter(data_source):
+            first_pack.append(p)
+            break
 
-    def process_dataset(self, dataset: str) -> Iterator[PackType]:
+        if len(first_pack) == 1:
+            results = [p for p in self.process_dataset(first_pack)]
+            return results[0]
+        else:
+            raise ValueError("Input data source contains no packs.")
+
+
+    def process_dataset(self, data_source: Any) -> Iterator[PackType]:
         """
-        Process the documents in the dataset and return an iterator of DataPack.
+        Process the documents in the data source and return an iterator of DataPack.
 
         Args:
             dataset (str): the directory of the dataset to be processed.
 
         """
+        data_iter = self._reader.iter(data_source)
+        return self.process_packs(data_iter)
 
-        data_iter = self._reader.iter(dataset)
-
+    def process_packs(self, data_iter: Iterator[PackType]) -> Iterator[PackType]:
         if len(self.processors) == 0:
             yield from data_iter
 
         else:
             for pack in data_iter:
                 self.current_packs.append(pack)
+                print("pack is ",type(pack))
                 for i, processor in enumerate(self.processors):
                     for c_pack in self.current_packs:
+                        print("c_pack is ", type(c_pack))
                         in_cache = (c_pack.meta.cache_state ==
                                     processor.component_name)
                         can_process = (i == 0 or c_pack.meta.process_state ==
