@@ -299,7 +299,8 @@ class MultiFileReader(PackReader):
                     f"No DataPack object read from the given "
                     f"file path {file_path}, returned {type(datapack)}."
                 )
-            self._record_fields(datapacks)
+            for datapack in datapacks:
+                self._record_fields(datapack)
 
             # write to the cache if we need to.
             if cache_file:
