@@ -127,10 +127,8 @@ class BasePipeline(Generic[PackType]):
         else:
             for pack in data_iter:
                 self.current_packs.append(pack)
-                print("pack is ",type(pack))
                 for i, processor in enumerate(self.processors):
                     for c_pack in self.current_packs:
-                        print("c_pack is ", type(c_pack))
                         in_cache = (c_pack.meta.cache_state ==
                                     processor.component_name)
                         can_process = (i == 0 or c_pack.meta.process_state ==
