@@ -51,5 +51,5 @@ class PlainTextReader(MultiFileReader):
             pack.meta.doc_id = file_path
             datapacks.append(pack)
 
-        doc.close()
+        file.close()
         return datapacks

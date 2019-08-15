@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from typing import List, Dict, Iterator, Generic, Optional, Any
 import logging
-import os
 import yaml
 from texar.torch import HParams
 
@@ -109,9 +108,11 @@ class BasePipeline(Generic[PackType]):
             raise ValueError("Input data source contains no packs.")
 
 
-    def process_dataset(self, data_source: Any, **kwargs) -> Iterator[PackType]:
+    def process_dataset(self,
+                        data_source: Any, **kwargs) -> Iterator[PackType]:
         """
-        Process the documents in the data source and return an iterator of DataPack.
+        Process the documents in the data source and return an
+        iterator of DataPacks.
 
         Args:
             dataset (str): the directory of the dataset to be processed.
@@ -120,7 +121,8 @@ class BasePipeline(Generic[PackType]):
         data_iter = self._reader.iter(data_source, **kwargs)
         return self.process_packs(data_iter)
 
-    def process_packs(self, data_iter: Iterator[PackType]) -> Iterator[PackType]:
+    def process_packs(self,
+                      data_iter: Iterator[PackType]) -> Iterator[PackType]:
         if len(self.processors) == 0:
             yield from data_iter
 

@@ -48,8 +48,8 @@ class ProdigyReader(MultiFileReader):
                 DataPacks.append(self.process_text(line))
         return DataPacks
 
-
-    def process_text(self, data: str) -> DataPack:
+    @staticmethod
+    def process_text(data: str) -> DataPack:
         single_doc = json.loads(data)
         pack = DataPack()
         text = single_doc['text']

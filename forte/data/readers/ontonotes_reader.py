@@ -2,11 +2,10 @@
 The reader that reads Ontonotes data into Datapacks.
 """
 import codecs
-from forte.data.data_utils import DataUtils
 from collections import defaultdict
 from typing import (DefaultDict, List, Optional, Tuple,
                     Dict, Any, no_type_check)
-
+from forte.data.data_utils import DataUtils
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)

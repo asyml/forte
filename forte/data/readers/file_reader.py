@@ -216,7 +216,7 @@ class MultiFileReader(PackReader):
                     read_from_cache=False,
                     append_to_cache=True,
                 )
-            assert type(packs_from_doc) == list
+            assert isinstance(packs_from_doc, list)
             datapacks = datapacks + packs_from_doc
         return datapacks
 
@@ -292,12 +292,12 @@ class MultiFileReader(PackReader):
             logger.info("reading from original file %s", file_path)
             datapacks = self._read_packs_from_file(file_path)
 
-            assert type(datapacks) == list
+            assert isinstance(datapacks, list)
 
             if len(datapacks) == 0:
                 raise ValueError(
                     f"No DataPack object read from the given "
-                    f"file path {file_path}, returned {type(datapack)}."
+                    f"file path {file_path}."
                 )
             for datapack in datapacks:
                 self._record_fields(datapack)
