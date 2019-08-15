@@ -87,7 +87,7 @@ class BasePipeline(Generic[PackType]):
         self.processor_configs.append(config)
 
     @abstractmethod
-    def process(self, data_source: Any) -> PackType:
+    def process(self, data_source: Any, **kwargs) -> PackType:
         """
         Process a string text or a single file.
 
@@ -98,7 +98,7 @@ class BasePipeline(Generic[PackType]):
                 should be the path to a file.
         """
         first_pack = []
-        for p in self._reader.iter(data_source):
+        for p in self._reader.iter(data_source, **kwargs):
             first_pack.append(p)
             break
 
@@ -109,7 +109,7 @@ class BasePipeline(Generic[PackType]):
             raise ValueError("Input data source contains no packs.")
 
 
-    def process_dataset(self, data_source: Any) -> Iterator[PackType]:
+    def process_dataset(self, data_source: Any, **kwargs) -> Iterator[PackType]:
         """
         Process the documents in the data source and return an iterator of DataPack.
 
@@ -117,7 +117,7 @@ class BasePipeline(Generic[PackType]):
             dataset (str): the directory of the dataset to be processed.
 
         """
-        data_iter = self._reader.iter(data_source)
+        data_iter = self._reader.iter(data_source, **kwargs)
         return self.process_packs(data_iter)
 
     def process_packs(self, data_iter: Iterator[PackType]) -> Iterator[PackType]:
