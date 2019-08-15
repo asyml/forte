@@ -2,9 +2,8 @@
 The reader that reads CoNLL ner_data into our internal json data format.
 """
 import codecs
-import os
-from typing import Iterator, no_type_check
-
+from typing import no_type_check
+from forte.data.data_utils import DataUtils
 from forte.data.ontology import conll03_ontology
 from forte.data.data_pack import DataPack
 from forte.data.readers.file_reader import MonoFileReader
@@ -29,6 +28,8 @@ class CoNLL03Reader(MonoFileReader):
         super().__init__(lazy)
         self._ontology = conll03_ontology
         self.define_output_info()
+        util = DataUtils("conll")
+        self.dataset_path_iterator = util.dataset_path_iterator
 
     def define_output_info(self):
         self.output_info = {
@@ -36,17 +37,6 @@ class CoNLL03Reader(MonoFileReader):
             self._ontology.Sentence: [],
             self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
         }
-
-    @staticmethod
-    def dataset_path_iterator(dir_path: str) -> Iterator[str]:
-        """
-        An iterator returning file_paths in a directory containing
-        CONLL-formatted files.
-        """
-        for root, _, files in os.walk(dir_path):
-            for data_file in files:
-                if data_file.endswith("conll"):
-                    yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str) -> DataPack:
 
