@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterator, Optional, Dict, Type, List, Union, Generic
 
 import jsonpickle
+import logging
 
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -19,6 +20,7 @@ __all__ = [
     'MultiPackReader'
 ]
 
+logger = logging.getLogger(__name__)
 
 class BaseReader(Generic[PackType]):
     """The basic data reader class.
@@ -58,12 +60,35 @@ class BaseReader(Generic[PackType]):
         return jsonpickle.decode(string)
 
     @abstractmethod
-    def iter(self, data_source) -> Union[List[PackType], Iterator[PackType]]:
+    def iter(self, **kwargs) -> Union[List[PackType], Iterator[PackType]]:
         """
-        An iterator over the entire dataset, yielding all documents processed.
-        Should call :meth:`read` to read each document.
+        An iterator over the entire dataset, yielding all Packs processed.
+        If not reading from cache, should call collect()
         """
-        raise NotImplementedError
+        cache_file = None
+        if self._cache_directory is not None:
+            cache_file = self._get_cache_location_for_file_path(dir_path)
+
+        has_cache = cache_file is not None and cache_file.exists()
+
+        if has_cache:
+            logger.info("reading from cache file %s", cache_file)
+            return List(self._instances_from_cache_file(cache_file))
+
+        logger.info("reading from original files in %s", dir_path)\
+
+
+        if self.lazy:
+            for collection in self.collect(**kwargs):
+                yield self.parse_packs(collection)
+        else:
+
+            datapacks: List[DataPack] = []
+
+            for collection in self.collect(**kwargs):
+                datapacks.append(self.parse_packs(collection))
+            return datapacks
+
 
     def cache_data(self, cache_directory: str) -> None:
         """Specify the path to the cache directory.
@@ -83,6 +108,7 @@ class BaseReader(Generic[PackType]):
 
     @abstractmethod
     def _cache_key_function(collection):
+        # Computes the cache key based on the type of data
         # To be implemented by the reader
         raise NotImplementedError
 
