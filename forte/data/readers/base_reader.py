@@ -31,6 +31,10 @@ class BaseReader(Generic[PackType]):
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
 
+    @property
+    def pack_type(self):
+        raise NotImplementedError
+
     def set_ontology(self, ontology):
         self._ontology = ontology
         self.define_output_info()
@@ -61,11 +65,6 @@ class BaseReader(Generic[PackType]):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def _instances_from_cache_file(self,
-                                   cache_filename: Path):
-        raise NotImplementedError
-
     def cache_data(self, cache_directory: str) -> None:
         """Specify the path to the cache directory.
 
@@ -80,6 +79,21 @@ class BaseReader(Generic[PackType]):
         """
         self._cache_directory = Path(cache_directory)
         Path.mkdir(self._cache_directory, exist_ok=True)
+
+
+    @abstractmethod
+    def _cache_key_function(collection):
+        # To be implemented by the reader
+        raise NotImplementedError
+
+    # TODO:
+    def _get_cache_location(self, collection):
+        """
+
+        :param collect: information to compute cache key
+        :return:
+        """
+        raise NotImplementedError
 
     def _get_cache_location_for_file_path(self,
                                           file_path: str) -> Optional[Path]:
@@ -104,21 +118,25 @@ class BaseReader(Generic[PackType]):
                     component = info["component"]
             pack.record_fields(fields, entry_type, component)
 
+    def _instances_from_cache_file(self,
+                                   cache_filename: Path) -> Iterator[PackType]:
+        with cache_filename.open("r") as cache_file:
+            for line in cache_file:
+                pack = self.deserialize_instance(line.strip())
+                if not isinstance(pack, self.pack_type):
+                    raise TypeError(f"Pack deserialized from {cache_filename} "
+                                    f"is {type(pack)}, but expect {self.pack_type}")
+                yield pack
+
 
 class PackReader(BaseReader[DataPack]):
     """The basic data reader class.
     To be inherited by all data readers.
     """
 
-    def _instances_from_cache_file(self,
-                                   cache_filename: Path) -> Iterator[DataPack]:
-        with cache_filename.open("r") as cache_file:
-            for line in cache_file:
-                pack = self.deserialize_instance(line.strip())
-                if not isinstance(pack, DataPack):
-                    raise TypeError(f"Pack deserialized from {cache_filename} "
-                                    f"is {type(pack)}, but expect {DataPack}")
-                yield pack
+    @property
+    def pack_type(self):
+        return DataPack
 
 
 class MultiPackReader(BaseReader[MultiPack]):
@@ -126,12 +144,6 @@ class MultiPackReader(BaseReader[MultiPack]):
     To be inherited by all data readers which return MultiPack.
     """
 
-    def _instances_from_cache_file(self,
-                                   cache_filename: Path) -> Iterator[MultiPack]:
-        with cache_filename.open("r") as cache_file:
-            for line in cache_file:
-                pack = self.deserialize_instance(line.strip())
-                if not isinstance(pack, MultiPack):
-                    raise TypeError(f"Pack deserialized from {cache_filename} "
-                                    f"is {type(pack)}, but expect {MultiPack}")
-                yield pack
+    @property
+    def pack_type(self):
+        return MultiPack
