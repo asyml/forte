@@ -336,7 +336,7 @@ class MonoFileMultiPackReader(MultiPackReader):
     """
 
     def iter(
-            self, dir_path: str) -> Iterator[MultiPack]:
+            self, dir_path: str) -> Union[List[MultiPack], Iterator[MultiPack]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
 
