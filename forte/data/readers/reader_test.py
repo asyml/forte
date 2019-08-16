@@ -6,9 +6,9 @@ import unittest
 import json
 import tempfile
 from forte.pipeline import Pipeline
-from forte.data.readers import OntonotesReader, ProdigyReader
+from forte.data.readers import OntonotesReader, ProdigyReader, CoNLL03Reader
 from forte.processors.dummy_pack_processor import DummyPackProcessor
-from forte.data.ontology import relation_ontology, base_ontology
+from forte.data.ontology import relation_ontology, base_ontology, conll03_ontology
 from forte.data.ontology.relation_ontology import *
 
 
@@ -35,6 +35,31 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
                 tokens = [token.text for token in
                           pack.get_entries(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
+
+
+class CoNLLReaderPipelineTest(unittest.TestCase):
+    def setUp(self) -> None:
+        # Define and config the Pipeline
+        self.dataset_path = "examples/"
+
+        self.nlp = Pipeline()
+        self.nlp.set_ontology(conll03_ontology)
+
+        self.nlp.set_reader(CoNLL03Reader())
+        self.processor = DummyPackProcessor()
+        self.nlp.add_processor(self.processor)
+
+    def test_process_next(self):
+
+        # get processed pack from dataset
+        for pack in self.nlp.process_dataset(self.dataset_path):
+            # get sentence from pack
+            for doc in pack.get_entries(conll03_ontology.Document):
+                doc_text = doc.text
+                # second method to get entry in a sentence
+                tokens = [token.text for token in
+                          pack.get_entries(conll03_ontology.Token, doc)]
+                self.assertEqual(doc_text.strip(), " ".join(tokens))
 
 
 class ProdigyReaderTest(unittest.TestCase):
