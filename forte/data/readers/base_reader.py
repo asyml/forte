@@ -54,7 +54,7 @@ class BaseReader(Generic[PackType]):
         return jsonpickle.decode(string)
 
     @abstractmethod
-    def iter(self, data_source) -> Iterator[PackType]:
+    def iter(self, data_source) -> Union[List[PackType], Iterator[PackType]]:
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.

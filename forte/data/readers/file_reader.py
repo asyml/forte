@@ -182,7 +182,7 @@ class MultiFileReader(PackReader):
             ``iter()`` returns a list.
     """
 
-    def iter(self, dir_path: str) -> Iterator[DataPack]:
+    def iter(self, dir_path: str) -> List[DataPack]:
         """
         An iterator over the entire dataset, yielding all documents processed.
 
@@ -204,7 +204,7 @@ class MultiFileReader(PackReader):
 
         if has_cache:
             logger.info("reading from cache file %s", cache_file)
-            return list(
+            return List(
                 self._instances_from_cache_file(cache_file))  # type: ignore
 
         logger.info("reading from original files in %s", dir_path)
@@ -281,18 +281,18 @@ class MultiFileReader(PackReader):
 
         if read_from_cache and cache_file and cache_file.exists():
             logger.info("reading from cache file %s", cache_file)
-            datapacks = next(self._instances_from_cache_file(cache_file))
+            datapack = next(self._instances_from_cache_file(cache_file))
 
-            if not isinstance(datapacks[0], DataPack):
+            if not isinstance(datapack, DataPack):
                 raise ValueError(
                     f"No Datapack object read from the given "
-                    f"file path {file_path}, returned {type(datapacks[0])}."
+                    f"file path {file_path}, returned {type(datapack)}."
                 )
         else:
             logger.info("reading from original file %s", file_path)
             datapacks = self._read_packs_from_file(file_path)
 
-            assert isinstance(datapacks, list)
+            assert isinstance(datapacks, Iterator)
 
             if len(datapacks) == 0:
                 raise ValueError(
