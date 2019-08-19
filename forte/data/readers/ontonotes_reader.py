@@ -4,8 +4,8 @@ The reader that reads Ontonotes data into Datapacks.
 import codecs
 from collections import defaultdict
 from typing import (DefaultDict, List, Optional, Tuple,
-                    Dict, Any, no_type_check)
-from forte.data.data_utils import DataUtils
+                    Dict, Any, no_type_check, Iterator)
+from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
@@ -38,8 +38,6 @@ class OntonotesReader(MonoFileReader):
         self._ontology = ontonotes_ontology
         self.define_output_info()
         self.current_datapack: DataPack = DataPack()
-        util = DataUtils("gold_conll")
-        self.dataset_path_iterator = util.dataset_path_iterator
 
     def define_output_info(self):
         self.output_info = {
@@ -55,7 +53,11 @@ class OntonotesReader(MonoFileReader):
             self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
 
-    def _read_document(self, file_path: str) -> DataPack:
+    @staticmethod
+    def collect(data_source: str) -> Iterator[Any]:
+        return dataset_path_iterator(data_source, "gold_conll")
+
+    def parse_pack(self, file_path: str) -> DataPack:
 
         self.current_datapack = DataPack()
 

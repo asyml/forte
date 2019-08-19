@@ -2,18 +2,18 @@
 The reader that reads plain text data into Datapacks.
 """
 import codecs
-from typing import List
-from forte.data.data_utils import DataUtils
+from typing import Iterator, Any
+from forte.data.io_utils import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.ontology import base_ontology
-from forte.data.readers.file_reader import MultiFileReader
+from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
     "PlainTextReader",
 ]
 
 
-class PlainTextReader(MultiFileReader):
+class PlainTextReader(MonoFileReader):
     """:class:`PlainTextReader` is designed to read in plain text dataset.
 
     Args:
@@ -28,28 +28,26 @@ class PlainTextReader(MultiFileReader):
         super().__init__(lazy)
         self._ontology = base_ontology
         self.define_output_info()
-        util = DataUtils(".txt")
-        self.dataset_path_iterator = util.dataset_path_iterator
+
+
+    @staticmethod
+    def collect(dir_path: str) -> Iterator[Any]:
+        return dataset_path_iterator(dir_path, ".txt")
 
     def define_output_info(self):
         self.output_info = {
             self._ontology.Document: [],
         }
 
-    def _read_packs_from_file(self, file_path: str) -> List[DataPack]:
+    def parse_pack(self, file_path: str) -> DataPack:
+        pack = DataPack()
+        doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
+        text = doc.read()
 
-        datapacks = []
-        file = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
+        document = self._ontology.Document(0, len(text))  # type: ignore
+        pack.add_or_get_entry(document)
 
-        docs = file.read().split('\n')
-
-        for doc in docs:
-            pack = DataPack()
-            document = self._ontology.Document(0, len(doc))  # type: ignore
-            pack.add_or_get_entry(document)
-            pack.set_text(doc)
-            pack.meta.doc_id = file_path
-            datapacks.append(pack)
-
-        file.close()
-        return datapacks
+        pack.set_text(text)
+        pack.meta.doc_id = file_path
+        doc.close()
+        return pack

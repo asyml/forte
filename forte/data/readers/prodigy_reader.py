@@ -1,18 +1,18 @@
 """The reader that reads prodigy text data with annotations into Datapacks."""
 
 import json
-from typing import List
+from typing import Iterator, Any
 from forte.data.ontology.base_ontology import Token, \
     Document, EntityMention
 from forte.data.data_pack import DataPack
-from forte.data.readers.file_reader import MultiFileReader
+from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
     "ProdigyReader"
 ]
 
 
-class ProdigyReader(MultiFileReader):
+class ProdigyReader(MonoFileReader):
     """:class:`ProdigyTextReader` is designed to read in Prodigy output text
     Args:
         lazy (bool, optional): The reading strategy used when reading a
@@ -33,23 +33,18 @@ class ProdigyReader(MultiFileReader):
             EntityMention: ["ner_type"]
         }
 
-    def iter(self, file_path: str) -> List[DataPack]:
-        return self._read_packs_from_file(file_path)
-
-    def _read_packs_from_file(self, file_path: str) -> List[DataPack]:
+    @staticmethod
+    def collect(data_source: str) -> Iterator[Any]:
         """
         Extracts the contents of the dict (in str form) into a DataPack
         :param single_doc: json dictionary
         :return: DataPack object
         """
-        DataPacks = []
-        with open(file_path) as f:
+        with open(data_source) as f:
             for line in f:
-                DataPacks.append(self.process_text(line))
-        return DataPacks
+                yield line
 
-    @staticmethod
-    def process_text(data: str) -> DataPack:
+    def parse_pack(self, data: str) -> DataPack:
         single_doc = json.loads(data)
         pack = DataPack()
         text = single_doc['text']
