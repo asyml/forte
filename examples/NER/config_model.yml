@@ -21,15 +21,11 @@ char_emb:
     initializer:
         'type': 'normal_'
 
-
-
-# TODO(haoransh): we may consider wrap this in Texar modules later
 char_cnn_conv:
     in_channels: 30
     out_channels: 30
     kernel_size: 3
     padding: 2
-
 
 bilstm_sentence_encoder:
     rnn_cell_fw:
@@ -42,8 +38,6 @@ bilstm_sentence_encoder:
     output_layer_fw:
         num_layers: 0
     output_layer_share_config: yes
-
-
 
 learning_rate: 0.01
 momentum: 0.9

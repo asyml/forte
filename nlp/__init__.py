@@ -1,1 +1,0 @@
-from nlp import pipeline

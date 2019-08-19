@@ -7,7 +7,7 @@ NLP pipeline project to facilitate the production usage of NLP techniques.
 setuptools.setup(
     name="nlp",
     version="0.0.1",
-    url="https://gitlab.int.petuum.com/internal/aml/nlp_pipeline",
+    url="https://github.com/hunterhector/forte",
 
     description="NLP pipeline",
     long_description=long_description,
@@ -20,11 +20,13 @@ setuptools.setup(
         'sortedcontainers',
         'numpy',
         'nltk',
-        'jsonpickle'
+        'jsonpickle',
+        'pyyaml',
     ],
     extras_require={
-        'ner': ['pyyaml', 'torch==1.1', 'torchtext', 'tqdm'],
+        'ner': ['pyyaml', 'torch==1.1.0', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions'],
+        'txtgen': ['regex']
     },
     package_data={
     },

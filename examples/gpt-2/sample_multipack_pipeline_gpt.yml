@@ -1,0 +1,35 @@
+# This provides a configuration for interence only
+
+# TODO: since we use pipeline.init_from_config(Hparams), we cannot set the PipelineType in the config
+# Unless we have an external code parsing this configuratoin and create the Pipeline itself.
+
+Reader:
+  type: PlainSentenceTxtgenReader
+  kwargs: null
+
+Processors:
+  - type: "nlp.forte.processors.impl.TxtgenPredictor"
+    kwargs:
+    hparams:
+      config_path:
+      overwrite_configs:
+        max_decoding_length: 128
+        temperature: 0.7
+        top_k: 40
+        pretrained_model_name: "117M"
+        input_pack_name: "input_src"
+        output_pack_name: "output_tgt"
+  - type: "nlp.forte.processors.impl.NLTKWordTokenizer"
+    hparams:
+      overwrite_configs:
+        selector:
+          type: "nlp.forte.data.selector.SinglePackSelector"
+          kwargs:
+            select_name: output_tgt
+  - type: "nlp.forte.processors.impl.NLTKPOSTagger"
+    hparams:
+      overwrite_configs:
+        selector:
+          type: "nlp.forte.data.selector.SinglePackSelector"
+          kwargs:
+            select_name: output_tgt

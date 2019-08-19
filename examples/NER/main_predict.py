@@ -1,9 +1,9 @@
-from nlp.pipeline.data.ontology import base_ontology
-from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
-from nlp.pipeline.processors.impl.ner_predictor import (
+from forte.data.ontology import base_ontology
+from forte.data.readers.conll03_reader import CoNLL03Reader
+from forte.processors.ner_predictor import (
     CoNLLNERPredictor,
 )
-from nlp.pipeline.common.resources import Resources
+from forte.common.resources import Resources
 
 
 reader = CoNLL03Reader(lazy=False)

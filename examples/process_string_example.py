@@ -1,17 +1,16 @@
-from termcolor import colored
 from texar.torch import HParams
+from termcolor import colored
 
-from nlp.pipeline.data.ontology.conll03_ontology import (
+from forte.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
-from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.data.readers import StringReader
-from nlp.pipeline.processors.impl import (
+from forte.pipeline import Pipeline
+from forte.data.readers import StringReader
+from forte.processors import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
 
 
 def main():
-
     pl = Pipeline()
     pl.set_reader(StringReader())
     pl.add_processor(NLTKSentenceSegmenter())
