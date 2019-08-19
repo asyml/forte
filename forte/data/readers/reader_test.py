@@ -25,16 +25,18 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         self.nlp.add_processor(self.processor)
 
     def test_process_next(self):
-
+        doc_exists = False
         # get processed pack from dataset
-        for pack in self.nlp.process_dataset(self.dataset_path):
+        for pack in self.nlp.process_dataset(data_source=self.dataset_path):
             # get sentence from pack
             for sentence in pack.get_entries(Sentence):
+                doc_exists = True
                 sent_text = sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
                           pack.get_entries(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
+        self.assertTrue(doc_exists)
 
 
 class ProdigyReaderTest(unittest.TestCase):
@@ -79,12 +81,15 @@ class ProdigyReaderTest(unittest.TestCase):
         self.fp.close()
 
     def test_packs(self):
+        doc_exists = False
         # get processed pack from dataset
-        for pack in self.nlp.process_dataset(self.fp.name):
+        for pack in self.nlp.process_dataset(data_source=self.fp.name):
             # get documents from pack
             for doc in pack.get_entries(base_ontology.Document):
+                doc_exists = True
                 self.token_check(doc, pack)
                 self.label_check(doc, pack)
+        self.assertTrue(doc_exists)
 
     def token_check(self, doc, pack):
         doc_text = doc.text
