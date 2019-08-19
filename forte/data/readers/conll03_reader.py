@@ -37,8 +37,8 @@ class CoNLL03Reader(MonoFileReader):
         }
 
     @staticmethod
-    def collect(dir_path: str) -> Iterator[Any]:
-        return dataset_path_iterator(dir_path, "conll")
+    def collect(data_source: str) -> Iterator[Any]:
+        return dataset_path_iterator(data_source, "conll")
 
     def parse_pack(self, file_path: str) -> DataPack:
 
