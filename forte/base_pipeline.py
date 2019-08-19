@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, Iterator, Generic, Optional, Any
+from typing import List, Dict, Iterator, Generic, Optional, Union
 import logging
 import yaml
 from texar.torch import HParams
@@ -86,7 +86,7 @@ class BasePipeline(Generic[PackType]):
         self.processor_configs.append(config)
 
     @abstractmethod
-    def process(self, data_source: Any, **kwargs) -> PackType:
+    def process_one(self, **kwargs) -> PackType:
         """
         Process a string text or a single file.
 
@@ -97,7 +97,7 @@ class BasePipeline(Generic[PackType]):
                 should be the path to a file.
         """
         first_pack = []
-        for p in self._reader.iter(data_source, **kwargs):
+        for p in self._reader.iter(**kwargs):
             first_pack.append(p)
             break
 
@@ -108,21 +108,21 @@ class BasePipeline(Generic[PackType]):
             raise ValueError("Input data source contains no packs.")
 
 
-    def process_dataset(self,
-                        data_source: Any, **kwargs) -> Iterator[PackType]:
+    def process_dataset(self, **kwargs) -> Union[Iterator[PackType], List[PackType]]:
         """
-        Process the documents in the data source and return an
-        iterator of DataPacks.
+        Process the documents in the data source(s) and return an
+        iterator or list of DataPacks.
 
         Args:
-            dataset (str): the directory of the dataset to be processed.
-
+            **kwargs, which can be one or more data sources.
         """
-        data_iter = self._reader.iter(data_source, **kwargs)
+        data_iter = self._reader.iter(**kwargs)
         return self.process_packs(data_iter)
 
     def process_packs(self,
-                      data_iter: Iterator[PackType]) -> Iterator[PackType]:
+                      data_iter:
+                      Union[Iterator[PackType],
+                            List[PackType]]) -> Iterator[PackType]:
         if len(self.processors) == 0:
             yield from data_iter
 
