@@ -89,18 +89,23 @@ class DataPack(BasePack):
         return self._text
 
     def set_text(self, text: str,
-                 replace_operations: Optional[ReplaceOperationsType] = []):
+                 replace_operations: Optional[ReplaceOperationsType] = None):
 
         if not text.startswith(self._text):
             logger.warning("The new text is overwriting the original one, "
                            "which might cause unexpected behavior.")
 
+        replace_operations = [] if replace_operations is None \
+            else replace_operations
+
         # Converting regex in replace_ops to spans
         span_ops = []
         for op, replacement in replace_operations:
-            spans = [Span(result.start(), result.end())
-                     for result in re.compile(op).finditer(text)] \
-                if not isinstance(op, Tuple) else [Span(op[0], op[1])]
+            if isinstance(op, str):
+                spans = [Span(result.start(), result.end())
+                         for result in re.compile(op).finditer(text)]
+            else:
+                spans = [Span(op[0], op[1])]
             replacements = [replacement] * len(spans)
             span_ops.extend(list(zip(spans, replacements)))
 

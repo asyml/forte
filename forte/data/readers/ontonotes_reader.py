@@ -10,7 +10,7 @@ from typing import (DefaultDict, Iterator, List, Optional, Tuple,
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
-from forte.data.data_pack import DataPack
+from forte.data.data_pack import DataPack, ReplaceOperationsType
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -65,7 +65,9 @@ class OntonotesReader(MonoFileReader):
                 if data_file.endswith("gold_conll"):
                     yield os.path.join(root, data_file)
 
-    def _read_document(self, file_path: str) -> DataPack:
+    def _read_document(self, file_path: str,
+                       replace_operations: Optional[ReplaceOperationsType]
+                       ) -> DataPack:
 
         self.current_datapack = DataPack()
 

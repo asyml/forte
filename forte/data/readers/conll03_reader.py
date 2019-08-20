@@ -49,8 +49,8 @@ class CoNLL03Reader(MonoFileReader):
                     yield os.path.join(root, data_file)
 
     def _read_document(self, file_path: str,
-        replace_operations: Optional[ReplaceOperationsType]
-        ) -> DataPack:
+                       replace_operations: Optional[ReplaceOperationsType]
+                       ) -> DataPack:
 
         pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")

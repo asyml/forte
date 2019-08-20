@@ -20,12 +20,25 @@ class HTMLReaderTest(unittest.TestCase):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
 
+    def test_html_reader_no_replace_test(self):
+        # Test the replace function with only regex based replacements -
+        # removing all tags
+        pack = PlainTextReader().read(self.file_path)
+        self.assertEqual(pack.text, self.orig_text)
+
+        pack = PlainTextReader().read(self.file_path, [])
+        self.assertEqual(pack.text, self.orig_text)
+
+        pack = PlainTextReader().read(self.file_path, None)
+        self.assertEqual(pack.text, self.orig_text)
+
     def test_html_reader_replace_regex_test(self):
         # Test the replace function with only regex based replacements -
         # removing all tags
         span_ops = [("</?[a-z]+>", '')]
         pack = PlainTextReader().read(self.file_path, span_ops)
-        self.assertEqual(pack.text, 'The Original Title HTML web page contents ')
+        self.assertEqual(pack.text,
+                         'The Original Title HTML web page contents ')
 
     def test_html_reader_replace_back_regex_test(self):
         # Test the replace function with only regex based replacements -

@@ -11,7 +11,6 @@ from forte import config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
 from forte.data.data_pack import DataPack, ReplaceOperationsType
-from forte.data.readers.base_reader import PackReader
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +171,7 @@ class MonoFileReader(PackReader):
 
     @abstractmethod
     def _read_document(self, file_path: str,
-        replace_operations: Optional[ReplaceOperationsType]):
+                       replace_operations: Optional[ReplaceOperationsType]):
         """
         Process the original document. Should be Implemented according to the
         document formant.
