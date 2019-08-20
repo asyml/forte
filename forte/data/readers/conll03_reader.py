@@ -3,10 +3,10 @@ The reader that reads CoNLL ner_data into our internal json data format.
 """
 import codecs
 import os
-from typing import Iterator, no_type_check
+from typing import Iterator, Optional, no_type_check
 
 from forte.data.ontology import conll03_ontology
-from forte.data.data_pack import DataPack
+from forte.data.data_pack import DataPack, ReplaceOperationsType
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -48,7 +48,9 @@ class CoNLL03Reader(MonoFileReader):
                 if data_file.endswith("conll"):
                     yield os.path.join(root, data_file)
 
-    def _read_document(self, file_path: str) -> DataPack:
+    def _read_document(self, file_path: str,
+                       replace_operations: Optional[ReplaceOperationsType]
+                       ) -> DataPack:
 
         pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
@@ -104,7 +106,7 @@ class CoNLL03Reader(MonoFileReader):
         document = self._ontology.Document(0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(text)
+        pack.set_text(text, replace_operations)
         pack.meta.doc_id = file_path
         doc.close()
         return pack

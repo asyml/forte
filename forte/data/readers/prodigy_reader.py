@@ -1,9 +1,11 @@
 """The reader that reads prodigy text data with annotations into Datapacks."""
 
 import json
+from typing import Optional
+
 from forte.data.ontology.base_ontology import Token, \
     Document, EntityMention
-from forte.data.data_pack import DataPack
+from forte.data.data_pack import DataPack, ReplaceOperationsType
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -32,7 +34,9 @@ class ProdigyReader(MonoFileReader):
             EntityMention: ["ner_type"]
         }
 
-    def _read_document(self, file_path: str) -> DataPack:
+    def _read_document(self, file_path: str,
+                       replace_operations: Optional[ReplaceOperationsType]
+                       ) -> DataPack:
         """
         Extracts the contents of a Prodigy data output (in JSON format) into
         a Datapack.
