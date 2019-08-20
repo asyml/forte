@@ -1,11 +1,10 @@
 """
 The reader that reads plain text data into Datapacks.
 """
-import codecs
 import os
-from typing import Iterator
+from typing import Iterator, Optional
 
-from forte.data.data_pack import DataPack
+from forte.data.data_pack import DataPack, ReplaceOperationsType
 from forte.data.ontology import base_ontology
 from forte.data.readers.file_reader import MonoFileReader
 
@@ -47,15 +46,16 @@ class PlainTextReader(MonoFileReader):
                 if data_file.endswith(".txt"):
                     yield os.path.join(root, data_file)
 
-    def _read_document(self, file_path: str) -> DataPack:
+    def _read_document(self, file_path: str,
+                       replace_operations: Optional[ReplaceOperationsType]
+                       ) -> DataPack:
         pack = DataPack()
-        doc = codecs.open(file_path, "rb", encoding="utf8", errors='ignore')
-        text = doc.read()
+        with open(file_path, "r", encoding="utf8", errors='ignore') as file:
+            text = file.read()
 
         document = self._ontology.Document(0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(text)
+        pack.set_text(text, replace_operations)
         pack.meta.doc_id = file_path
-        doc.close()
         return pack
