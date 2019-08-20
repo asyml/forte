@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "MonoFileReader",
     "MonoFileMultiPackReader",
-    "PackReader",
-    "ReplaceOperationsType"
+    "PackReader"
 ]
 
 
@@ -73,9 +72,10 @@ class MonoFileReader(PackReader):
             )
         return datapacks
 
-    def _lazy_iter(self, dir_path: str,
-                               cache_file: Optional[Path],
-                               has_cache: bool):
+    def _lazy_iter(self,
+                   dir_path: str,
+                   cache_file: Optional[Path],
+                   has_cache: bool):
         if has_cache:
             logger.info("reading from cache file %s", cache_file)
             yield from self._instances_from_cache_file(  # type: ignore
