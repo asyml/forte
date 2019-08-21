@@ -2,7 +2,6 @@ import stanfordnlp
 import forte.data.ontology.stanfordnlp_ontology as ontology
 from forte.processors.base import PackProcessor
 from forte.data import DataPack
-from forte.common.resources import Resources
 
 __all__ = [
     "StandfordNLPProcessor",
