@@ -20,6 +20,9 @@ class StandfordNLPProcessor(PackProcessor):
         self.define_input_info()
         self.define_output_info()
 
+    def set_up(self):
+        stanfordnlp.download(self.lang, self.MODELS_DIR)
+
     def define_input_info(self):
         self.input_info = {
             self._ontology.Document: ["span"]
@@ -32,8 +35,11 @@ class StandfordNLPProcessor(PackProcessor):
         }
 
     def initialize(self, configs, resource: Resources):
-        self.processors = configs
-        self.nlp = stanfordnlp.Pipeline(self.processors)
+        self.processors = configs['processors']
+        self.MODELS_DIR = '.'
+        self.lang = configs['lang']
+        self.set_up()
+        self.nlp = stanfordnlp.Pipeline(**configs)
 
     def _process(self, input_pack: DataPack):
 
