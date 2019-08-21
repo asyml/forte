@@ -36,7 +36,7 @@ class StandfordNLPProcessor(PackProcessor):
             self._ontology.Sentence: ["span"]
         }
 
-    def initialize(self, configs, resource: Resources):
+    def initialize(self, configs):
         self.processors = configs['processors']
         self.lang = configs['lang']
         self.set_up()
