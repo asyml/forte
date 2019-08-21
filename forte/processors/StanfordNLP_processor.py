@@ -17,6 +17,8 @@ class StandfordNLPProcessor(PackProcessor):
         self._ontology = ontology
         self.processors = ""
         self.nlp = None
+        self.MODELS_DIR = '.'
+        self.lang = 'en'  # English is default
         self.define_input_info()
         self.define_output_info()
 
@@ -36,7 +38,6 @@ class StandfordNLPProcessor(PackProcessor):
 
     def initialize(self, configs, resource: Resources):
         self.processors = configs['processors']
-        self.MODELS_DIR = '.'
         self.lang = configs['lang']
         self.set_up()
         self.nlp = stanfordnlp.Pipeline(**configs)

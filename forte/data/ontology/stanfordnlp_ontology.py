@@ -31,6 +31,7 @@ class Sentence(ontology.Sentence):
         self.tokens = None
         self.words = None
 
+
 class Document(ontology.Document):
     def __init__(self):
         super().__init__()
