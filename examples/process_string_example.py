@@ -7,7 +7,7 @@ from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
-    CoNLLNERPredictor, SRLPredictor)
+    CoNLLNERPredictor, SRLPredictor, StandfordNLPProcessor)
 
 
 def main():
@@ -71,5 +71,30 @@ def main():
         input(colored("Press ENTER to continue...\n", 'green'))
 
 
+def StanfordNLPExample():
+    pl = Pipeline()
+    pl.set_reader(StringReader())
+    processors = "tokenize,pos,lemma,depparse"
+    pl.add_processor(processor=StandfordNLPProcessor(), config=processors)
+
+    pl.initialize_processors()
+
+    text = (
+        "The plain green Norway spruce is displayed in the gallery's foyer. "
+        "Wentworth worked as an assistant to sculptor Henry Moore in the "
+        "late 1960s. His reputation as a sculptor grew in the 1980s.")
+
+    pack = pl.process(text)
+
+    for sentence in pack.get(Sentence):
+        sent_text = sentence.text
+        print(colored("Sentence:", 'red'), sent_text, "\n")
+        # first method to get entry in a sentence
+        tokens = [(token.text, token.pos_tag) for token in
+                  pack.get(Token, sentence)]
+        print(colored("Tokens:", 'red'), tokens, "\n")
+
+
 if __name__ == '__main__':
-    main()
+    # main()
+    StanfordNLPExample()
