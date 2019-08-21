@@ -8,16 +8,16 @@ from pathlib import Path
 from typing import Iterator, List, Optional, Union
 
 from forte import config
-from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
+from forte.data.data_pack import DataPack, ReplaceOperationsType
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "MonoFileReader",
     "MonoFileMultiPackReader",
-    "PackReader",
+    "PackReader"
 ]
 
 
@@ -72,7 +72,8 @@ class MonoFileReader(PackReader):
             )
         return datapacks
 
-    def _lazy_iter(self, dir_path: str,
+    def _lazy_iter(self,
+                   dir_path: str,
                    cache_file: Optional[Path],
                    has_cache: bool):
         if has_cache:
@@ -100,6 +101,7 @@ class MonoFileReader(PackReader):
 
     def read(self,
              file_path: str,
+             replace_operations: Optional[ReplaceOperationsType] = None,
              cache_file: Optional[Path] = None,
              read_from_cache: bool = True,
              append_to_cache: bool = False) -> DataPack:
@@ -111,6 +113,10 @@ class MonoFileReader(PackReader):
 
         Args:
             file_path (str): The path to the original file to read.
+            replace_operations (ReplaceOperationsType, optional): A list of
+                operations, where each operation is in the form of a tuple with
+                the values - (1) span or a regex to be replaced (2) the
+                corresponding replacement string.
             cache_file (str, optional): The path of the caching file. If
                 :attr:`cache_file_path` is ``None`` and
                 :attr:`self._cache_directory` is not ``None``, use the result
@@ -142,7 +148,7 @@ class MonoFileReader(PackReader):
                 )
         else:
             logger.info("reading from original file %s", file_path)
-            datapack = self._read_document(file_path)
+            datapack = self._read_document(file_path, replace_operations)
             self._record_fields(datapack)
             if not isinstance(datapack, DataPack):
                 raise ValueError(
@@ -164,7 +170,8 @@ class MonoFileReader(PackReader):
         return datapack
 
     @abstractmethod
-    def _read_document(self, file_path: str):
+    def _read_document(self, file_path: str,
+                       replace_operations: Optional[ReplaceOperationsType]):
         """
         Process the original document. Should be Implemented according to the
         document formant.

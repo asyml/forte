@@ -1,13 +1,14 @@
 import copy
 import logging
-from typing import (Any, Dict, Iterable, Iterator, List, Optional, Set, Type,
-                    Union, Tuple)
+from typing import (
+    Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union, Any, Set)
 
 import numpy as np
 from sortedcontainers import SortedList
 
 from forte.data.base_pack import BaseIndex, BaseMeta, BasePack
-from forte.data.ontology import Annotation, Entry, EntryType, Group, Link
+from forte.data.ontology import (
+    Entry, EntryType, Annotation, Link, Group, Span)
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,10 @@ __all__ = [
     "Meta",
     "DataIndex",
     "DataPack",
+    "ReplaceOperationsType"
 ]
+
+ReplaceOperationsType = List[Tuple[Tuple[int, int], str]]
 
 
 class Meta(BaseMeta):
@@ -52,6 +56,8 @@ class DataPack(BasePack):
         self.links: List[Link] = []
         self.groups: List[Group] = []
 
+        self.inverse_replace_operations: ReplaceOperationsType = []
+
         self.index: DataIndex = DataIndex(self)
         self.meta: Meta = Meta(doc_id, name)
 
@@ -81,11 +87,52 @@ class DataPack(BasePack):
     def text(self):
         return self._text
 
-    def set_text(self, text: str):
+    def set_text(self, text: str,
+                 replace_operations: Optional[ReplaceOperationsType] = None):
+
         if not text.startswith(self._text):
             logger.warning("The new text is overwriting the original one, "
                            "which might cause unexpected behavior.")
-        self._text = text
+
+        span_ops = [] if replace_operations is None else replace_operations
+
+        # Sorting the spans such that the order of replacement strings
+        # is maintained - utilizing the stable sort property of python sort
+        span_ops.sort(key=lambda item: item[0])
+
+        span_ops = [(Span(op[0], op[1]), replacement)
+                    for op, replacement in span_ops]
+
+        # The spans should be mutually exclusive
+        inverse_operations = []
+        increment = 0
+        prev_span_end = 0
+        mod_text = text
+        for span, replacement in span_ops:
+            if span.begin < 0 or span.end < 0:
+                raise ValueError(
+                    "Negative indexing not supported")
+            if span.begin > len(text) or span.end > len(text):
+                raise ValueError(
+                    "One of the span indices are outside the string length")
+            if span.end < span.begin:
+                print(span.begin, span.end)
+                raise ValueError(
+                    "One of the end indices is lesser than start index")
+            if span.begin < prev_span_end:
+                raise ValueError(
+                    "The replacement spans should be mutually exclusive")
+            span_begin = span.begin + increment
+            span_end = span.end + increment
+            original_span_text = mod_text[span_begin: span_end]
+            mod_text = mod_text[:span_begin] + replacement + mod_text[span_end:]
+            increment += len(replacement) - (span.end - span.begin)
+            replacement_span = (span_begin, span_begin + len(replacement))
+            inverse_operations.append((replacement_span, original_span_text))
+            prev_span_end = span.end
+
+        self._text = mod_text
+        self.inverse_replace_operations = inverse_operations
 
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """

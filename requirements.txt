@@ -3,3 +3,4 @@ numpy
 jsonpickle
 torch
 pyyaml
+ddt
