@@ -1,12 +1,13 @@
 import stanfordnlp
 import forte.data.ontology.stanfordnlp_ontology as ontology
 from forte.processors.base import PackProcessor
-from forte.data import PackType
+from forte.data import DataPack
 from forte.common.resources import Resources
 
 __all__ = [
     "StandfordNLPProcessor",
 ]
+
 
 class StandfordNLPProcessor(PackProcessor):
 
@@ -15,6 +16,9 @@ class StandfordNLPProcessor(PackProcessor):
         self.sentence_component = None
         self._ontology = ontology
         self.processors = ""
+        self.nlp = None
+        self.define_input_info()
+        self.define_output_info()
 
     def define_input_info(self):
         self.input_info = {
@@ -31,7 +35,7 @@ class StandfordNLPProcessor(PackProcessor):
         self.processors = configs
         self.nlp = stanfordnlp.Pipeline(self.processors)
 
-    def _process(self, input_pack: PackType):
+    def _process(self, input_pack: DataPack):
 
         text = input_pack.text
         end_pos = 0
@@ -51,13 +55,14 @@ class StandfordNLPProcessor(PackProcessor):
                     offset = sentence_entry.span.begin
                     end_pos_word = 0
                     for word in sentence.words:
-                        begin_pos_word = sentence_entry.text.find(word.text, end_pos_word)
+                        begin_pos_word = sentence_entry.text.\
+                            find(word.text, end_pos_word)
                         end_pos_word = begin_pos_word + len(word.text)
                         token = self._ontology.Token(
                             begin_pos_word + offset, end_pos_word + offset
                         )
 
-                        token.__setattr__(text, word.text)
+                        token.text_ = word.text
 
                         if "pos" in self.processors:
                             token.pos_tag = word.pos
