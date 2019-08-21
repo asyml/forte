@@ -23,8 +23,8 @@ class Token(ontology.Token):
         self.words = None
 
 class Sentence(ontology.Sentence):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, begin: int, end: int):
+        super().__init__(begin, end)
         self.dependencies= None
         self.tokens = None  # type: List[Token]
         self.words = None  # type: List[Word]
