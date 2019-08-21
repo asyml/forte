@@ -71,18 +71,55 @@ def main():
         input(colored("Press ENTER to continue...\n", 'green'))
 
 
-def StanfordNLPExample():
+def StanfordNLPExample1():
     pl = Pipeline()
     pl.set_reader(StringReader())
-    processors = "tokenize,pos,lemma,depparse"
-    pl.add_processor(processor=StandfordNLPProcessor(), config=processors)
+    config = {
+        'processors': 'tokenize,pos,lemma,depparse',
+        'lang': 'fr',  # Language code for the language to build the Pipeline
+        'tokenize_model_path': './fr_gsd_models/fr_gsd_tokenizer.pt',
+        'mwt_model_path': './fr_gsd_models/fr_gsd_mwt_expander.pt',
+        'pos_model_path': './fr_gsd_models/fr_gsd_tagger.pt',
+        'pos_pretrain_path': './fr_gsd_models/fr_gsd.pretrain.pt',
+        'lemma_model_path': './fr_gsd_models/fr_gsd_lemmatizer.pt',
+        'depparse_model_path': './fr_gsd_models/fr_gsd_parser.pt',
+        'depparse_pretrain_path': './fr_gsd_models/fr_gsd.pretrain.pt',
+        'use_gpu': False
+    }
+    pl.add_processor(processor=StandfordNLPProcessor(), config=config)
+
+    pl.initialize_processors()
+
+    text = (
+        "Van Gogh grandit au sein d'une famille de l'ancienne bourgeoisie.")
+
+    pack = pl.process(text)
+
+    for sentence in pack.get(Sentence):
+        sent_text = sentence.text
+        print(colored("Sentence:", 'red'), sent_text, "\n")
+        # first method to get entry in a sentence
+        tokens = [(token.text, token.pos_tag) for token in
+                  pack.get(Token, sentence)]
+        print(colored("Tokens:", 'red'), tokens, "\n")
+
+
+def StanfordNLPExample2():
+    pl = Pipeline()
+    pl.set_reader(StringReader())
+    config = {
+        'processors': 'tokenize,pos,lemma,depparse',
+        'lang': 'en',  # Language code for the language to build the Pipeline
+        'use_gpu': False
+    }
+    pl.add_processor(processor=StandfordNLPProcessor(), config=config)
 
     pl.initialize_processors()
 
     text = (
         "The plain green Norway spruce is displayed in the gallery's foyer. "
-        "Wentworth worked as an assistant to sculptor Henry Moore in the "
-        "late 1960s. His reputation as a sculptor grew in the 1980s.")
+         "Wentworth worked as an assistant to sculptor Henry Moore in the "
+         "late 1960s. His reputation as a sculptor grew in the 1980s.")
 
     pack = pl.process(text)
 
@@ -96,5 +133,6 @@ def StanfordNLPExample():
 
 
 if __name__ == '__main__':
-    # main()
-    StanfordNLPExample()
+    main()
+    StanfordNLPExample1()
+    StanfordNLPExample2()
