@@ -41,8 +41,9 @@ class StandfordNLPProcessor(PackProcessor):
         for paragraph in paragraphs:
             sentences = self.nlp(paragraph).sentences
             for sentence in sentences:
-                begin_pos = text.find(sentence.words[0], end_pos)
-                end_pos = text.find(sentence.words[-1], begin_pos) + len(sentence.words[-1])
+                begin_pos = text.find(sentence.words[0].text, end_pos)
+                end_pos = text.find(sentence.words[-1].text, begin_pos) \
+                          + len(sentence.words[-1].text)
                 sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
                 input_pack.add_or_get_entry(sentence_entry)
 
@@ -50,12 +51,13 @@ class StandfordNLPProcessor(PackProcessor):
                     offset = sentence_entry.span.begin
                     end_pos_word = 0
                     for word in sentence.words:
-                        begin_pos_word = sentence.text.find(word.text, end_pos_word)
-                        end_pos_word = begin_pos + len(word.text)
+                        begin_pos_word = sentence_entry.text.find(word.text, end_pos_word)
+                        end_pos_word = begin_pos_word + len(word.text)
                         token = self._ontology.Token(
                             begin_pos_word + offset, end_pos_word + offset
                         )
-                        token.text = word.text
+
+                        token.__setattr__(text, word.text)
 
                         if "pos" in self.processors:
                             token.pos_tag = word.pos
@@ -69,11 +71,3 @@ class StandfordNLPProcessor(PackProcessor):
                             token.dependency_relation = word.dependency_relation
 
                         input_pack.add_or_get_entry(token)
-
-
-# processors = "tokenize,pos,lemma,depparse"
-# nlp = stanfordnlp.Pipeline(processors)
-# doc = nlp("This is a sentence")
-# sentences = doc.sentences
-# for token in sentences[0].tokens:
-
