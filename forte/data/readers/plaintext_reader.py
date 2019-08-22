@@ -30,7 +30,7 @@ class PlainTextReader(MonoFileReader):
         self.define_output_info()
 
     def _cache_key_function(self, collection):
-        return(str(collection))
+        return str(collection)
 
     @staticmethod
     def collect(dir_path: str) -> Iterator[Any]:  # type: ignore

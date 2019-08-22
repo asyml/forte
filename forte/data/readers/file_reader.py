@@ -2,12 +2,8 @@
 File readers.
 """
 import logging
-import os
-from abc import abstractmethod
-from pathlib import Path
-from typing import Iterator, List, Optional, Union, Any
+from typing import Iterator, Optional, Any
 
-from forte import config
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
@@ -67,11 +63,3 @@ class MonoFileMultiPackReader(MultiPackReader):
                 corresponding replacement string.
         """
         pass
-
-    @abstractmethod
-    def _read_document(self, file_path: str):
-        """
-        Process the original document. Should be Implemented according to the
-        document formant.
-        """
-        raise NotImplementedError

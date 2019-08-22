@@ -38,7 +38,10 @@ class StringReader(PackReader):
             self._ontology.Document: [],
         }
 
-    def collect(self, dataset: List[str]) -> Iterator[str]:  #type: ignore
+    def _cache_key_function(self, collection):
+        return str(collection)
+
+    def collect(self, dataset: List[str]) -> Iterator[str]:  # type: ignore
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.
