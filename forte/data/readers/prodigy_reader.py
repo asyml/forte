@@ -1,8 +1,7 @@
 """The reader that reads prodigy text data with annotations into Datapacks."""
 
 import json
-from typing import Optional
-
+from typing import Iterator, Any, Optional
 from forte.data.ontology.base_ontology import Token, \
     Document, EntityMention
 from forte.data.data_pack import DataPack, ReplaceOperationsType
@@ -34,40 +33,43 @@ class ProdigyReader(MonoFileReader):
             EntityMention: ["ner_type"]
         }
 
-    def _read_document(self, file_path: str,
-                       replace_operations: Optional[ReplaceOperationsType]
-                       ) -> DataPack:
+    @staticmethod
+    def collect(data_source: str) -> Iterator[Any]:  # type: ignore
         """
-        Extracts the contents of a Prodigy data output (in JSON format) into
-        a Datapack.
-        :param file_path: json dictionary
+        Extracts the contents of the dict (in str form) into a DataPack
+        :param single_doc: json dictionary
         :return: DataPack object
         """
+        with open(data_source) as f:
+            for line in f:
+                yield line
+
+    def parse_pack(self, data: str,
+                   replace_operations: Optional[ReplaceOperationsType]
+                   ) -> DataPack:
+        single_doc = json.loads(data)
         pack = DataPack()
+        text = single_doc['text']
+        tokens = single_doc['tokens']
+        spans = single_doc['spans']
 
-        with open(file_path) as data_file:
-            single_doc = json.load(data_file)
-            text = single_doc['text']
-            tokens = single_doc['tokens']
-            spans = single_doc['spans']
+        document = Document(0, len(text))
+        pack.set_text(text, replace_operations)
+        pack.add_or_get_entry(document)
 
-            document = Document(0, len(text))
-            pack.set_text(text)
-            pack.add_or_get_entry(document)
+        for token in tokens:
+            begin = token['start']
+            end = token['end']
+            token_entry = Token(begin, end)
+            pack.add_or_get_entry(token_entry)
 
-            for token in tokens:
-                begin = token['start']
-                end = token['end']
-                token_entry = Token(begin, end)
-                pack.add_or_get_entry(token_entry)
+        for span_items in spans:
+            begin = span_items['start']
+            end = span_items['end']
+            annotation_entry = EntityMention(begin, end)
+            annotation_entry.ner_type = span_items['label']
+            pack.add_or_get_entry(annotation_entry)
 
-            for span_items in spans:
-                begin = span_items['start']
-                end = span_items['end']
-                annotation_entry = EntityMention(begin, end)
-                annotation_entry.ner_type = span_items['label']
-                pack.add_or_get_entry(annotation_entry)
-
-            pack.meta.doc_id = ""
+        pack.meta.doc_id = ""
 
         return pack

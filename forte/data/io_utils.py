@@ -1,9 +1,11 @@
-from typing import Dict, List
+import os
+from typing import Dict, List, Iterator
 
 __all__ = [
     "batch_instances",
     "merge_batches",
     "slice_batch",
+    "dataset_path_iterator"
 ]
 
 
@@ -65,3 +67,17 @@ def slice_batch(batch, start, length):
             sliced_batch[entry] = fields[start: start + length]
 
     return sliced_batch
+
+
+def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
+    """
+    An iterator returning file_paths in a directory containing files
+    of the given format
+    """
+    for root, _, files in os.walk(dir_path):
+        for data_file in files:
+            if len(file_extension) > 0:
+                if data_file.endswith(file_extension):
+                    yield os.path.join(root, data_file)
+            else:
+                yield os.path.join(root, data_file)
