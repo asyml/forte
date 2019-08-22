@@ -4,4 +4,3 @@ jsonpickle
 torch
 pyyaml
 ddt
-stanfordnlp

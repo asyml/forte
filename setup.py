@@ -27,6 +27,7 @@ setuptools.setup(
         'ner': ['pyyaml', 'torch==1.1.0', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions'],
         'txtgen': ['regex'],
+        'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt']
     },
     package_data={
