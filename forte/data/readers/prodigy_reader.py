@@ -33,6 +33,9 @@ class ProdigyReader(MonoFileReader):
             EntityMention: ["ner_type"]
         }
 
+    def _cache_key_function(self, collection):
+        return(str(collection))
+
     @staticmethod
     def collect(data_source: str) -> Iterator[Any]:  # type: ignore
         """

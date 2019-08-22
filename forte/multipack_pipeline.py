@@ -98,23 +98,3 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
 
     def add_selector(self, selector: Selector):
         self._selectors.append(selector)
-
-    def process(self, data: str) -> MultiPack:
-        """
-        Process a string text or a single file.
-
-        Args:
-            data (str): the path to a file a string text. If :attr:`_reader` is
-                :class:`StringReader`, `data` should be a text in the form of
-                a string variable. If :attr:`_reader` is a file reader, `data`
-                should be the path to a file.
-        """
-        datapack = self._reader.read(data)
-
-        for processor, selector in zip(self.processors, self.selectors):
-            input_pack = selector.select(datapack)
-            if isinstance(processor, BaseBatchProcessor):
-                processor.process(input_pack, tail_instances=True)
-            else:
-                processor.process(input_pack)
-        return datapack

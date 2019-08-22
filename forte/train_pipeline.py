@@ -70,7 +70,7 @@ class TrainPipeline:
         validation_result = {"epoch": epoch}
 
         if self.predictor is not None and self.evaluator is not None:
-            for pack in self.dev_reader.iter(
+            for pack in self.dev_reader.iter(  #type: ignore
                     self.config_data.val_path
             ):
                 predicted_pack = pack.view()
@@ -78,7 +78,7 @@ class TrainPipeline:
                 self.evaluator.consume_next(pack, predicted_pack)
             validation_result["eval"] = self.evaluator.get_result()
 
-            for pack in self.dev_reader.iter(
+            for pack in self.dev_reader.iter(  #type: ignore
                     self.config_data.test_path
             ):
                 predicted_pack = pack.view()

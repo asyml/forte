@@ -35,6 +35,9 @@ class CoNLL03Reader(MonoFileReader):
             self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
         }
 
+    def _cache_key_function(self, collection):
+        return(str(collection))
+
     @staticmethod
     def collect(data_source: str) -> Iterator[Any]:  # type: ignore
         return dataset_path_iterator(data_source, "conll")
