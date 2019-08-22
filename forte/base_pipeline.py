@@ -101,7 +101,7 @@ class BasePipeline(Generic[PackType]):
             break
 
         if len(first_pack) == 1:
-            results = [p for p in self.process_dataset(first_pack)]
+            results = [p for p in self.process_dataset(data_source=first_pack)]
             return results[0]
         else:
             raise ValueError("Input data source contains no packs.")

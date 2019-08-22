@@ -20,7 +20,7 @@ input_dir = "data/en_vi/test/src/test.en"
 input_pack_name = "input_src"
 output_pack_name = "output_tgt"
 
-multipack = pl.process(input_dir)
+multipack = pl.process_one(input_dir)
 
 src_cnt = len(list(multipack.packs[input_pack_name].get(
     base_ontology.Sentence)))

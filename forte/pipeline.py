@@ -74,22 +74,3 @@ class Pipeline(BasePipeline[DataPack]):
         else:
             logger.warning("Ontology not specified in config, will use "
                            "base_ontology by default.")
-
-    def process(self, data: str) -> DataPack:
-        """
-        Process a string text or a single file.
-
-        Args:
-            data (str): the path to a file a string text. If :attr:`_reader` is
-                :class:`StringReader`, `data` should be a text in the form of
-                a string variable. If :attr:`_reader` is a file reader, `data`
-                should be the path to a file.
-        """
-        datapack = self._reader.read(data)
-
-        for processor in self.processors:
-            if isinstance(processor, BatchProcessor):
-                processor.process(datapack, tail_instances=True)
-            else:
-                processor.process(datapack)
-        return datapack

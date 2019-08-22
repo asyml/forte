@@ -53,6 +53,9 @@ class OntonotesReader(MonoFileReader):
             self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
 
+    def _cache_key_function(self, collection):
+        return(str(collection))
+
     @staticmethod
     def collect(data_source: str) -> Iterator[Any]:  # type: ignore
         return dataset_path_iterator(data_source, "gold_conll")

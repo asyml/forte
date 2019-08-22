@@ -38,7 +38,7 @@ win_medal_text = "British hurdler Sarah Claxton is confident she can win her fir
 # In[ ]:
 
 
-pack = pl.process(win_medal_text)
+pack = pl.process_one(win_medal_text)
 
 # # Now all the results are ready.
 # ## We have added the results as "entries" into our data.
