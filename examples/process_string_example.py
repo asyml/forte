@@ -86,7 +86,7 @@ def StanfordNLPExample1():
         'depparse_pretrain_path': './fr_gsd_models/fr_gsd.pretrain.pt',
         'use_gpu': False
     }
-    pl.add_processor(processor=StandfordNLPProcessor(), config=config)
+    pl.add_processor(processor=StandfordNLPProcessor(models_path='.'), config=config)
 
     pl.initialize_processors()
 
@@ -112,7 +112,7 @@ def StanfordNLPExample2():
         'lang': 'en',  # Language code for the language to build the Pipeline
         'use_gpu': False
     }
-    pl.add_processor(processor=StandfordNLPProcessor(), config=config)
+    pl.add_processor(processor=StandfordNLPProcessor(models_path='.'), config=config)
 
     pl.initialize_processors()
 
