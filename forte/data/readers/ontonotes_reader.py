@@ -53,7 +53,8 @@ class OntonotesReader(MonoFileReader):
             self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
 
-    def _cache_key_function(self, collection):
+    @staticmethod
+    def _cache_key_function(collection):
         return str(collection)
 
     @staticmethod

@@ -33,7 +33,8 @@ class ProdigyReader(MonoFileReader):
             EntityMention: ["ner_type"]
         }
 
-    def _cache_key_function(self, collection):
+    @staticmethod
+    def _cache_key_function(collection):
         return str(collection)
 
     @staticmethod

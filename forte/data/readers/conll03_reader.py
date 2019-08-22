@@ -35,7 +35,8 @@ class CoNLL03Reader(MonoFileReader):
             self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
         }
 
-    def _cache_key_function(self, collection):
+    @staticmethod
+    def _cache_key_function(collection):
         return str(collection)
 
     @staticmethod
