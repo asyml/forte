@@ -1,3 +1,4 @@
+import os
 import stanfordnlp
 import forte.data.ontology.stanfordnlp_ontology as ontology
 from forte.processors.base import PackProcessor
@@ -10,19 +11,21 @@ __all__ = [
 
 class StandfordNLPProcessor(PackProcessor):
 
-    def __init__(self):
+    def __init__(self, models_path: str = os.getcwd()):
         super().__init__()
-        self.sentence_component = None
         self._ontology = ontology
         self.processors = ""
         self.nlp = None
-        self.MODELS_DIR = '.'
+        self.MODELS_DIR = models_path
         self.lang = 'en'  # English is default
         self.define_input_info()
         self.define_output_info()
 
     def set_up(self):
-        stanfordnlp.download(self.lang, self.MODELS_DIR)
+        if os.path.exists(self.MODELS_DIR):
+            print("Using models at {}".format(self.MODELS_DIR))
+        else:
+            stanfordnlp.download(self.lang, self.MODELS_DIR)
 
     def define_input_info(self):
         self.input_info = {
