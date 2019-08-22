@@ -43,42 +43,42 @@ class StandfordNLPProcessor(PackProcessor):
 
     def _process(self, input_pack: DataPack):
 
-        text = input_pack.text
+        doc = input_pack.text
         end_pos = 0
 
         # sentence parsing
-        paragraphs = [p for p in text.split('\n') if p]
-        for paragraph in paragraphs:
-            sentences = self.nlp(paragraph).sentences
-            for sentence in sentences:
-                begin_pos = text.find(sentence.words[0].text, end_pos)
-                end_pos = text.find(sentence.words[-1].text, begin_pos) \
-                          + len(sentence.words[-1].text)
-                sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
-                input_pack.add_or_get_entry(sentence_entry)
+        sentences = self.nlp(doc).sentences
 
-                if "tokenize" in self.processors:
-                    offset = sentence_entry.span.begin
-                    end_pos_word = 0
-                    for word in sentence.words:
-                        begin_pos_word = sentence_entry.text.\
-                            find(word.text, end_pos_word)
-                        end_pos_word = begin_pos_word + len(word.text)
-                        token = self._ontology.Token(
-                            begin_pos_word + offset, end_pos_word + offset
-                        )
+        # Iterating through stanfordnlp sentence objects
+        for sentence in sentences:
+            begin_pos = doc.find(sentence.words[0].text, end_pos)
+            end_pos = doc.find(sentence.words[-1].text, begin_pos) \
+                      + len(sentence.words[-1].text)
+            sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
+            input_pack.add_or_get_entry(sentence_entry)
 
-                        token.text_ = word.text
+            if "tokenize" in self.processors:
+                offset = sentence_entry.span.begin
+                end_pos_word = 0
 
-                        if "pos" in self.processors:
-                            token.pos_tag = word.pos
-                            token.upos = word.upos
+                # Iterating through stanfordnlp word objects
+                for word in sentence.words:
+                    begin_pos_word = sentence_entry.text.\
+                        find(word.text, end_pos_word)
+                    end_pos_word = begin_pos_word + len(word.text)
+                    token = self._ontology.Token(
+                        begin_pos_word + offset, end_pos_word + offset
+                    )
 
-                        if "lemma" in self.processors:
-                            token.lemma = word.lemma
-                            token.xpos = word.xpos
+                    if "pos" in self.processors:
+                        token.pos_tag = word.pos
+                        token.upos = word.upos
 
-                        if "depparse" in self.processors:
-                            token.dependency_relation = word.dependency_relation
+                    if "lemma" in self.processors:
+                        token.lemma = word.lemma
+                        token.xpos = word.xpos
 
-                        input_pack.add_or_get_entry(token)
+                    if "depparse" in self.processors:
+                        token.dependency_relation = word.dependency_relation
+
+                    input_pack.add_or_get_entry(token)
