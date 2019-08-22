@@ -34,7 +34,8 @@ class StandfordNLPProcessor(PackProcessor):
 
     def define_output_info(self):
         self.output_info = {
-            self._ontology.Token: ["span"],
+            self._ontology.Token: ["span", "pos_tag", "upos", "lemma",
+                                   "xpos", "dependency_relation"],
             self._ontology.Sentence: ["span"]
         }
 
