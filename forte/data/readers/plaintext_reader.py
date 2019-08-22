@@ -29,7 +29,8 @@ class PlainTextReader(MonoFileReader):
         self._ontology = base_ontology
         self.define_output_info()
 
-    def _cache_key_function(self, collection):
+    @staticmethod
+    def _cache_key_function(collection):
         return str(collection)
 
     @staticmethod
