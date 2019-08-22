@@ -51,7 +51,7 @@ class StandfordNLPProcessor(PackProcessor):
         end_pos = 0
 
         # sentence parsing
-        sentences = self.nlp(doc).sentences
+        sentences = self.nlp(doc).sentences  # type: ignore
 
         # Iterating through stanfordnlp sentence objects
         for sentence in sentences:
