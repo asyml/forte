@@ -7,7 +7,6 @@ from texar.torch import HParams
 from forte.base_pipeline import BasePipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.selector import Selector
-from forte.processors.base import BaseBatchProcessor
 from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
