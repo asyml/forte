@@ -19,8 +19,8 @@ class DummyRelationExtractor(BatchProcessor):
     def __init__(self) -> None:
         super().__init__()
         self._ontology = relation_ontology
-        self.define_input_info()
-        self.define_output_info()
+        self.__define_input_info()
+        self.__define_output_info()
         self.define_context()
 
         self.batch_size = 4
@@ -29,7 +29,7 @@ class DummyRelationExtractor(BatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
-    def define_input_info(self):
+    def __define_input_info(self):
         self.input_info = {
             self._ontology.Token: [],
             self._ontology.EntityMention: {
@@ -37,7 +37,7 @@ class DummyRelationExtractor(BatchProcessor):
             }
         }
 
-    def define_output_info(self):
+    def __define_output_info(self):
         self.output_info = {
             self._ontology.RelationLink:
                 ["parent", "child", "rel_type"]

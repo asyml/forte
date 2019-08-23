@@ -10,7 +10,6 @@ __all__ = [
 
 
 class StandfordNLPProcessor(PackProcessor):
-
     def __init__(self, models_path: str):
         super().__init__()
         self._ontology = ontology
@@ -18,29 +17,28 @@ class StandfordNLPProcessor(PackProcessor):
         self.nlp = None
         self.MODELS_DIR = models_path
         self.lang = 'en'  # English is default
-        self.define_input_info()
-        self.define_output_info()
 
     def set_up(self):
         stanfordnlp.download(self.lang, self.MODELS_DIR)
-
-    def define_input_info(self):
-        self.input_info = {
-            self._ontology.Document: ["span"]
-        }
-
-    def define_output_info(self):
-        self.output_info = {
-            self._ontology.Token: ["span", "pos_tag", "upos", "lemma",
-                                   "xpos", "dependency_relation"],
-            self._ontology.Sentence: ["span"]
-        }
 
     def initialize(self, configs: dict, resource: Resources):
         self.processors = configs['processors']
         self.lang = configs['lang']
         self.set_up()
         self.nlp = stanfordnlp.Pipeline(**configs, models_dir=self.MODELS_DIR)
+
+    def __define_input_info(self):
+        self.input_info = {
+            self._ontology.Document: ["span"]
+        }
+
+    def __define_output_info(self):
+        #TODO output_info based on config.
+        self.output_info = {
+            self._ontology.Token: ["span", "pos_tag", "upos", "lemma",
+                                   "xpos", "dependency_relation"],
+            self._ontology.Sentence: ["span"]
+        }
 
     def _process(self, input_pack: DataPack):
 
@@ -64,7 +62,7 @@ class StandfordNLPProcessor(PackProcessor):
 
                 # Iterating through stanfordnlp word objects
                 for word in sentence.words:
-                    begin_pos_word = sentence_entry.text.\
+                    begin_pos_word = sentence_entry.text. \
                         find(word.text, end_pos_word)
                     end_pos_word = begin_pos_word + len(word.text)
                     token = self._ontology.Token(
