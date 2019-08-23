@@ -59,7 +59,7 @@ class BaseProcessor(Generic[PackType]):
     @abstractmethod
     def process(self, input_pack: PackType):
         """Process the input pack"""
-        pass
+        raise NotImplementedError
 
     def _record_fields(self, input_pack: PackType):
         """

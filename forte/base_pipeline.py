@@ -64,6 +64,8 @@ class BasePipeline(Generic[PackType]):
         for processor, config in zip(self.processors, self.processor_configs):
             processor.initialize(config, self.resource)
             processor.set_ontology(self._ontology)
+            processor.define_input_info()
+            processor.define_output_info()
 
     def set_reader(self, reader: BaseReader):
         reader.set_ontology(self._ontology)
