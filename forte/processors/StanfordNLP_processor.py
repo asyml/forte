@@ -3,6 +3,7 @@ import stanfordnlp
 import forte.data.ontology.stanfordnlp_ontology as ontology
 from forte.processors.base import PackProcessor
 from forte.data import DataPack
+from forte.common.resources import Resources
 
 __all__ = [
     "StandfordNLPProcessor",
@@ -11,7 +12,7 @@ __all__ = [
 
 class StandfordNLPProcessor(PackProcessor):
 
-    def __init__(self, models_path: str = os.getcwd()):
+    def __init__(self, models_path= "."):
         super().__init__()
         self._ontology = ontology
         self.processors = ""
@@ -22,10 +23,7 @@ class StandfordNLPProcessor(PackProcessor):
         self.define_output_info()
 
     def set_up(self):
-        if os.path.exists(self.MODELS_DIR):
-            print("Using models at {}".format(self.MODELS_DIR))
-        else:
-            stanfordnlp.download(self.lang, self.MODELS_DIR)
+        stanfordnlp.download(self.lang, self.MODELS_DIR)
 
     def define_input_info(self):
         self.input_info = {
@@ -39,11 +37,11 @@ class StandfordNLPProcessor(PackProcessor):
             self._ontology.Sentence: ["span"]
         }
 
-    def initialize(self, configs):
+    def initialize(self, configs, resource: Resources):
         self.processors = configs['processors']
         self.lang = configs['lang']
         self.set_up()
-        self.nlp = stanfordnlp.Pipeline(**configs)
+        self.nlp = stanfordnlp.Pipeline(**configs, models_dir=self.MODELS_DIR)
 
     def _process(self, input_pack: DataPack):
 
