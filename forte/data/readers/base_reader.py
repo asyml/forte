@@ -3,7 +3,8 @@ Base reader type to be inherited by all readers.
 """
 from abc import abstractmethod
 from pathlib import Path
-from typing import Iterator, Optional, Dict, Type, List, Union, Generic, Any
+from typing import (Iterator, Optional, Dict, Type, List, Union, Generic,
+                    Any, Callable)
 import os
 import logging
 import jsonpickle
@@ -28,6 +29,7 @@ class BaseReader(Generic[PackType]):
     """The basic data reader class.
     To be inherited by all data readers.
     """
+
     def __init__(self,
                  lazy: bool = True,
                  from_cache: bool = False,
@@ -90,7 +92,7 @@ class BaseReader(Generic[PackType]):
         return jsonpickle.decode(string)
 
     @abstractmethod
-    def collect(self, **kwargs) -> Iterator[Any]:
+    def __collect(self, **kwargs) -> Iterator[Any]:
         """
         Gives an iterator of data objects
         each individual object should contain sufficient information
@@ -103,15 +105,24 @@ class BaseReader(Generic[PackType]):
         raise NotImplementedError
 
     @abstractmethod
-    def parse_pack(self, collection: Any,
-                   replace_operations: Optional[ReplaceOperationsType]
-                   ) -> PackType:
+    def parse_pack(self, collection: Any) -> PackType:
         """
         Gives an iterator of Packs parsed from a collection
         :param collection: Object that can be parsed into a Pack
         :return Iterator[PackType]: Iterator of Packs
         """
         raise NotImplementedError
+
+    def text_replace_operation(self, text: str) -> ReplaceOperationsType:
+        """
+        Given the possibly noisy text, compute and return the
+        replacement operations in the form of a list of (span, str)
+        pairs, where the content in the span will be replaced by the
+        corresponding str.
+        :param text: The original data text to be cleaned.
+        :return List[Tuple[Tuple[int, int], str]]: the replacement operations
+        """
+        return []
 
     @abstractmethod
     def _cache_key_function(self, collection):
@@ -147,12 +158,13 @@ class BaseReader(Generic[PackType]):
         else:
             datapacks: List[PackType] = []
 
-            for collection in self.collect(**kwargs):
+            for collection in self.__collect(**kwargs):
                 if self.from_cache:
                     pack = self.read_from_cache(
                         self._get_cache_location(collection))
                 else:
-                    pack = self.parse_pack(collection, None)
+
+                    pack = self.parse_pack(collection)
 
                     # write to the cache if we need to.
                     if self.cache_file:
@@ -169,12 +181,12 @@ class BaseReader(Generic[PackType]):
             return datapacks
 
     def _lazy_iter(self, **kwargs):
-        for collection in self.collect(**kwargs):
+        for collection in self.__collect(**kwargs):
             if self.from_cache:
                 pack = self.read_from_cache(
                     self._get_cache_location(collection))
             else:
-                pack = self.parse_pack(collection, None)
+                pack = self.parse_pack(collection)
 
                 # write to the cache if we need to.
                 if self.cache_file:

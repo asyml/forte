@@ -41,5 +41,6 @@ class PipelineTest(unittest.TestCase):
                           pack.get_entries(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
 
+
 if __name__ == '__main__':
     unittest.main()

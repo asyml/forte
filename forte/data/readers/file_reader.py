@@ -2,12 +2,12 @@
 File readers.
 """
 import logging
-from typing import Iterator, Optional, Any
+from typing import Iterator, Any
 
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 
 logger = logging.getLogger(__name__)
 
@@ -23,21 +23,14 @@ class MonoFileReader(PackReader):
     To be inherited by all mono file data readers.
     """
 
-    @staticmethod
-    def collect(dir_path: str) -> Iterator[Any]:  # type: ignore
+    def __collect(self, dir_path: str) -> Iterator[Any]:
         return dataset_path_iterator(dir_path, "")
 
-    def parse_pack(self, collection: Any,
-                   replace_operations: Optional[ReplaceOperationsType]
-                   ) -> DataPack:
+    def parse_pack(self, collection: Any) -> DataPack:
         """
         Read a single datapack from a collection(file path in this case)
         Args:
             collection: The path to the file to read or information to parse.
-            replace_operations (ReplaceOperationsType, optional): A list of
-                operations, where each operation is in the form of a tuple with
-                the values - (1) span or a regex to be replaced (2) the
-                corresponding replacement string.
         """
         pass
 
@@ -46,20 +39,13 @@ class MonoFileMultiPackReader(MultiPackReader):
     """Data reader that reads one MultiPack from each single text files.
     """
 
-    @staticmethod
-    def collect(dir_path: str) -> Iterator[Any]:  # type: ignore
+    def __collect(self, dir_path: str) -> Iterator[Any]:
         return dataset_path_iterator(dir_path, "")
 
-    def parse_pack(self, collection: Any,
-                   replace_operations: Optional[ReplaceOperationsType]
-                   ) -> MultiPack:
+    def parse_pack(self, collection: Any) -> MultiPack:
         """
         Read a single datapack from a collection(file path in this case)
         Args:
             collection: The path to the file to read or information to parse.
-            replace_operations (ReplaceOperationsType, optional): A list of
-                operations, where each operation is in the form of a tuple with
-                the values - (1) span or a regex to be replaced (2) the
-                corresponding replacement string.
         """
         pass

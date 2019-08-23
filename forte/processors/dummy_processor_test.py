@@ -13,7 +13,7 @@ class DummyProcessorTest(unittest.TestCase):
     def setUp(self) -> None:
         self.reader = OntonotesReader()
         data_path = os.path.join("examples/abc_0059.gold_conll")
-        self.data_pack = self.reader.parse_pack(data_path, None)
+        self.data_pack = self.reader.parse_pack(data_path)
 
         self.processor = DummyRelationExtractor()
 

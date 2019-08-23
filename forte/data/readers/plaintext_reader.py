@@ -34,7 +34,7 @@ class PlainTextReader(MonoFileReader):
         return str(collection)
 
     @staticmethod
-    def collect(dir_path: str) -> Iterator[Any]:  # type: ignore
+    def __collect(dir_path: str) -> Iterator[Any]:
         return dataset_path_iterator(dir_path, ".txt")
 
     def define_output_info(self):
@@ -42,17 +42,19 @@ class PlainTextReader(MonoFileReader):
             self._ontology.Document: [],
         }
 
-    def parse_pack(self, file_path: str,
-                   replace_operations: Optional[ReplaceOperationsType]
-                   ) -> DataPack:
+    def text_replace_operation(self, text: str):
+        return []
 
+    def parse_pack(self, file_path: str) -> DataPack:
         pack = DataPack()
+
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:
             text = file.read()
 
-        document = self._ontology.Document(0, len(text))  # type: ignore
+        pack.set_text(text, replace_func=self.text_replace_operation)
+
+        document = self._ontology.Document(0, len(pack.text))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(text, replace_operations)
         pack.meta.doc_id = file_path
         return pack
