@@ -1,6 +1,6 @@
+import os
 from texar.torch import HParams
 from termcolor import colored
-import os
 import forte.data.ontology.base_ontology as base_ontology
 import forte.data.ontology.stanfordnlp_ontology as stanfordnlp_ontology
 from forte.pipeline import Pipeline
@@ -110,7 +110,7 @@ def StanfordNLPExample2():
     }
     models_path = os.getcwd()
     pl.add_processor(processor=StandfordNLPProcessor(models_path),
-  		     config=config)
+                     config=config)
     pl.set_ontology(stanfordnlp_ontology)
     pl.initialize_processors()
 
