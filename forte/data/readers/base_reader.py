@@ -92,13 +92,13 @@ class BaseReader(Generic[PackType]):
         return jsonpickle.decode(string)
 
     @abstractmethod
-    def __collect(self, **kwargs) -> Iterator[Any]:
+    def _collect(self, **kwargs) -> Iterator[Any]:
         """
         Gives an iterator of data objects
         each individual object should contain sufficient information
         needed to construct or locate a data pack in cache.
         For example: `data_source` can be a kwarg which is the path to a file
-                     that a reader can take to read and parse a file
+                     that a reader can take to read and parse a file.
         :param: One of more data sources
         :return Iterator[Any]: Implementation should yield a collection
         """
@@ -158,7 +158,7 @@ class BaseReader(Generic[PackType]):
         else:
             datapacks: List[PackType] = []
 
-            for collection in self.__collect(**kwargs):
+            for collection in self._collect(**kwargs):
                 if self.from_cache:
                     pack = self.read_from_cache(
                         self._get_cache_location(collection))
@@ -181,7 +181,7 @@ class BaseReader(Generic[PackType]):
             return datapacks
 
     def _lazy_iter(self, **kwargs):
-        for collection in self.__collect(**kwargs):
+        for collection in self._collect(**kwargs):
             if self.from_cache:
                 pack = self.read_from_cache(
                     self._get_cache_location(collection))

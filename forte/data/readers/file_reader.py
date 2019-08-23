@@ -23,7 +23,7 @@ class MonoFileReader(PackReader):
     To be inherited by all mono file data readers.
     """
 
-    def __collect(self, dir_path: str) -> Iterator[Any]:
+    def _collect(self, dir_path: str) -> Iterator[Any]:
         return dataset_path_iterator(dir_path, "")
 
     def parse_pack(self, collection: Any) -> DataPack:
@@ -39,7 +39,7 @@ class MonoFileMultiPackReader(MultiPackReader):
     """Data reader that reads one MultiPack from each single text files.
     """
 
-    def __collect(self, dir_path: str) -> Iterator[Any]:
+    def _collect(self, dir_path: str) -> Iterator[Any]:
         return dataset_path_iterator(dir_path, "")
 
     def parse_pack(self, collection: Any) -> MultiPack:
