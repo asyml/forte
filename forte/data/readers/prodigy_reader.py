@@ -40,9 +40,12 @@ class ProdigyReader(MonoFileReader):
     @staticmethod
     def collect(data_source: str) -> Iterator[Any]:  # type: ignore
         """
-        Extracts the contents of the dict (in str form) into a DataPack
-        :param single_doc: json dictionary
-        :return: DataPack object
+        Collects from Prodigy file path and returns an iterator
+        of Prodigy annotation data. The elements in the iterator
+        correspond to each line in the prodigy file.
+        One element is expected to be parsed as one DataPack.
+        :param data_source: a Prodigy file path
+        :yield: Iterator of each line in the prodigy file
         """
         with open(data_source) as f:
             for line in f:
