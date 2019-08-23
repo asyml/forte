@@ -15,15 +15,15 @@ class NLTKSentenceSegmenter(PackProcessor):
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-        self.define_input_info()
-        self.define_output_info()
+        self.__define_input_info()
+        self.__define_output_info()
 
-    def define_input_info(self):
+    def __define_input_info(self):
         self.input_info = {
             self._ontology.Document: ["span"]
         }
 
-    def define_output_info(self):
+    def __define_output_info(self):
         self.output_info = {
             self._ontology.Sentence: ["span"]
         }
@@ -49,15 +49,15 @@ class PeriodSentenceSegmenter(PackProcessor):
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-        self.define_input_info()
-        self.define_output_info()
+        self.__define_input_info()
+        self.__define_output_info()
 
-    def define_input_info(self):
+    def __define_input_info(self):
         self.input_info = {
             base_ontology.Document: ["span"]
         }
 
-    def define_output_info(self):
+    def __define_output_info(self):
         self.output_info = {
             self._ontology.Sentence: ["span"]
         }
