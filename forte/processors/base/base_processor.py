@@ -27,7 +27,7 @@ class BaseProcessor(Generic[PackType]):
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.selector = DummySelector()
 
-    def initialize(self, configs, resource: Resources):
+    def initialize(self, configs: dict, resource: Resources):
         """Initialize the processor with ``configs``, and register global
         resources into ``resource``.
         """
