@@ -74,6 +74,6 @@ class ProdigyReader(MonoFileReader):
             annotation_entry.ner_type = span_items['label']
             pack.add_or_get_entry(annotation_entry)
 
-        pack.meta.doc_id = ""
+        pack.meta.doc_id = single_doc['meta']['id']
 
         return pack

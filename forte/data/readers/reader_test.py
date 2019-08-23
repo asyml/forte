@@ -80,8 +80,7 @@ class ProdigyReaderTest(unittest.TestCase):
     def tearDown(self):
         os.system("rm {}".format(self.fp.name))
 
-    def create_sample_file(self) -> None:
-
+    def create_sample_file(self):
         prodigy_entry = {
             "text": "Lorem ipsum dolor sit amet",
             "tokens": [{"text": "Lorem", "start": 0, "end": 5, "id": 0},
@@ -115,6 +114,7 @@ class ProdigyReaderTest(unittest.TestCase):
                 doc_exists = True
                 self.token_check(doc, pack)
                 self.label_check(doc, pack)
+            self.assertEquals(pack.meta.doc_id, "doc_1")
         self.assertTrue(doc_exists)
 
     def token_check(self, doc, pack):
