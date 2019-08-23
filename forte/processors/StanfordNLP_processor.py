@@ -11,7 +11,7 @@ __all__ = [
 
 class StandfordNLPProcessor(PackProcessor):
 
-    def __init__(self, models_path= "."):
+    def __init__(self, models_path: str):
         super().__init__()
         self._ontology = ontology
         self.processors = ""
@@ -48,7 +48,7 @@ class StandfordNLPProcessor(PackProcessor):
         end_pos = 0
 
         # sentence parsing
-        sentences = self.nlp(doc).sentences  # type: ignore
+        sentences = self.nlp(doc).sentences
 
         # Iterating through stanfordnlp sentence objects
         for sentence in sentences:
