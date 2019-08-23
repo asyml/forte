@@ -44,7 +44,7 @@ class TrainPipeline:
             epoch += 1
             # we need to have directory ready here
             for pack in self.train_reader.iter(
-                    self.config_data.train_path
+                    data_source=self.config_data.train_path
             ):
                 # data_request is a string. How to transform it to the
                 # function parameters? Or we can change the interface of
@@ -53,7 +53,7 @@ class TrainPipeline:
                 # need to set this in the trainer.
                 for instance in pack.get_data(**self.trainer.data_request()):
                     if self.trainer.validation_requested():
-                        dev_res = self.eval_dev(epoch)
+                        dev_res = self.geval_dev(epoch)
                         self.trainer.validation_done()
                         self.trainer.post_validation_action(dev_res)
                     if self.trainer.stop_train():
@@ -70,16 +70,16 @@ class TrainPipeline:
         validation_result = {"epoch": epoch}
 
         if self.predictor is not None and self.evaluator is not None:
-            for pack in self.dev_reader.iter(  # type: ignore
-                    self.config_data.val_path
+            for pack in self.dev_reader.iter(
+                    data_source=self.config_data.val_path
             ):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
                 self.evaluator.consume_next(pack, predicted_pack)
             validation_result["eval"] = self.evaluator.get_result()
 
-            for pack in self.dev_reader.iter(  # type: ignore
-                    self.config_data.test_path
+            for pack in self.dev_reader.iter(
+                    data_source=self.config_data.test_path
             ):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
