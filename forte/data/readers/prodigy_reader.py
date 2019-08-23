@@ -33,12 +33,10 @@ class ProdigyReader(MonoFileReader):
             EntityMention: ["ner_type"]
         }
 
-    @staticmethod
-    def _cache_key_function(collection):
+    def _cache_key_function(self, collection):
         return str(collection)
 
-    @staticmethod
-    def collect(data_source: str) -> Iterator[Any]:  # type: ignore
+    def __collect(self, data_source: str) -> Iterator[Any]:
         """
         Collects from Prodigy file path and returns an iterator
         of Prodigy annotation data. The elements in the iterator
@@ -51,9 +49,7 @@ class ProdigyReader(MonoFileReader):
             for line in f:
                 yield line
 
-    def parse_pack(self, data: str,
-                   replace_operations: Optional[ReplaceOperationsType]
-                   ) -> DataPack:
+    def parse_pack(self, data: str) -> DataPack:
         single_doc = json.loads(data)
         pack = DataPack()
         text = single_doc['text']
@@ -61,7 +57,7 @@ class ProdigyReader(MonoFileReader):
         spans = single_doc['spans']
 
         document = Document(0, len(text))
-        pack.set_text(text, replace_operations)
+        pack.set_text(text)
         pack.add_or_get_entry(document)
 
         for token in tokens:

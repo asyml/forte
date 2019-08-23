@@ -43,7 +43,7 @@ class StringReader(PackReader):
         return str(collection)
 
     @staticmethod
-    def collect(dataset: List[str]) -> Iterator[str]:  # type: ignore
+    def __collect(dataset: List[str]) -> Iterator[str]:
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.
@@ -51,9 +51,7 @@ class StringReader(PackReader):
         for data in dataset:
             yield data
 
-    def parse_pack(self, collection: Any,
-                   replace_operations: Optional[ReplaceOperationsType]
-                   ) -> DataPack:
+    def parse_pack(self, collection: Any) -> DataPack:
         config.working_component = self.component_name
 
         pack = DataPack()
@@ -61,7 +59,7 @@ class StringReader(PackReader):
         document = self._ontology.Document(0, len(collection))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(collection, replace_operations)
+        pack.set_text(collection)
 
         config.working_component = None
         return pack

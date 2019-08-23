@@ -40,12 +40,10 @@ class CoNLL03Reader(MonoFileReader):
         return str(collection)
 
     @staticmethod
-    def collect(data_source: str) -> Iterator[Any]:  # type: ignore
+    def __collect(data_source: str) -> Iterator[Any]:
         return dataset_path_iterator(data_source, "conll")
 
-    def parse_pack(self, file_path: str,
-                   replace_operations: Optional[ReplaceOperationsType]
-                   ) -> DataPack:
+    def parse_pack(self, file_path: str) -> DataPack:
         pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
 
@@ -100,7 +98,7 @@ class CoNLL03Reader(MonoFileReader):
         document = self._ontology.Document(0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(text, replace_operations)
+        pack.set_text(text)
         pack.meta.doc_id = file_path
         doc.close()
         return pack

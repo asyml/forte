@@ -1,7 +1,9 @@
 import copy
 import logging
 from typing import (
-    Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union, Any, Set)
+    Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union,
+
+    Any, Set, Callable)
 
 import numpy as np
 from sortedcontainers import SortedList
@@ -26,6 +28,7 @@ class Meta(BaseMeta):
     """
     Meta information of a datapack.
     """
+
     def __init__(self, doc_id: Optional[str] = None,
                  name: Optional[str] = ""):
         super().__init__(doc_id)
@@ -50,7 +53,7 @@ class DataPack(BasePack):
     def __init__(self, doc_id: Optional[str] = None,
                  name: Optional[str] = None):
         super().__init__()
-        self._text = ""
+        self._text: str
 
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
@@ -87,14 +90,16 @@ class DataPack(BasePack):
     def text(self):
         return self._text
 
-    def set_text(self, text: str,
-                 replace_operations: Optional[ReplaceOperationsType] = None):
+    def set_text(self,
+                 text: str,
+                 replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None
+                 ):
 
-        if not text.startswith(self._text):
+        if self._text is not None:
             logger.warning("The new text is overwriting the original one, "
                            "which might cause unexpected behavior.")
 
-        span_ops = [] if replace_operations is None else replace_operations
+        span_ops = [] if replace_func is None else replace_func(text)
 
         # Sorting the spans such that the order of replacement strings
         # is maintained - utilizing the stable sort property of python sort
@@ -625,7 +630,7 @@ class DataPack(BasePack):
 
     def get_entries_by_compoent(self, component: str) -> Set[Entry]:
         return {self.get_entry_by_id(tid)
-                    for tid in self.get_ids_by_compoent(component)}
+                for tid in self.get_ids_by_compoent(component)}
 
     def get_ids_by_type(self, tp: Type[EntryType]) -> Set[str]:
         """
