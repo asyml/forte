@@ -1,4 +1,3 @@
-import os
 import stanfordnlp
 import forte.data.ontology.stanfordnlp_ontology as ontology
 from forte.processors.base import PackProcessor
@@ -37,7 +36,7 @@ class StandfordNLPProcessor(PackProcessor):
             self._ontology.Sentence: ["span"]
         }
 
-    def initialize(self, configs, resource: Resources):
+    def initialize(self, configs: dict, resource: Resources):
         self.processors = configs['processors']
         self.lang = configs['lang']
         self.set_up()
