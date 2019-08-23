@@ -36,7 +36,7 @@ class ProdigyReader(MonoFileReader):
     def _cache_key_function(self, collection):
         return str(collection)
 
-    def __collect(self, data_source: str) -> Iterator[Any]:
+    def _collect(self, data_source: str) -> Iterator[Any]:
         """
         Collects from Prodigy file path and returns an iterator
         of Prodigy annotation data. The elements in the iterator

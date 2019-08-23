@@ -43,7 +43,7 @@ class StringReader(PackReader):
         return str(collection)
 
     @staticmethod
-    def __collect(dataset: List[str]) -> Iterator[str]:
+    def _collect(dataset: List[str]) -> Iterator[str]:
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.

@@ -34,7 +34,7 @@ class PlainTextReader(MonoFileReader):
         return str(collection)
 
     @staticmethod
-    def __collect(dir_path: str) -> Iterator[Any]:
+    def _collect(dir_path: str) -> Iterator[Any]:
         return dataset_path_iterator(dir_path, ".txt")
 
     def define_output_info(self):
