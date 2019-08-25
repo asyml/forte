@@ -5,7 +5,7 @@ NLP pipeline project to facilitate the production usage of NLP techniques.
 '''
 
 setuptools.setup(
-    name="nlp",
+    name="forte",
     version="0.0.1",
     url="https://github.com/hunterhector/forte",
 
