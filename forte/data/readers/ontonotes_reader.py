@@ -56,6 +56,11 @@ class OntonotesReader(MonoFileReader):
         return str(collection)
 
     def _collect(self, **kwargs) -> Iterator[Any]:
+        """
+        Iterator over gold_conll files in the data_source
+        :param kwargs: param `data_source` is the path to the files
+        :return: Iterator over files with gold_conll path
+        """
         return dataset_path_iterator(kwargs['data_source'], "gold_conll")
 
     def parse_pack(self, file_path: str) -> DataPack:
