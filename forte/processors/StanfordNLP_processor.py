@@ -33,10 +33,18 @@ class StandfordNLPProcessor(PackProcessor):
         }
 
     def __define_output_info(self):
-        #TODO output_info based on config.
+        token_outputs = ['span']
+        if 'pos' in self.processors:
+            token_outputs.append('pos_tag')
+            token_outputs.append('upos')
+            token_outputs.append('xpos')
+        if 'lemma' in self.processors:
+            token_outputs.append('lemma')
+        if 'depparse' in self.processors:
+            token_outputs.append('dependency_relation')
+
         self.output_info = {
-            self._ontology.Token: ["span", "pos_tag", "upos", "lemma",
-                                   "xpos", "dependency_relation"],
+            self._ontology.Token: token_outputs,
             self._ontology.Sentence: ["span"]
         }
 
@@ -72,10 +80,10 @@ class StandfordNLPProcessor(PackProcessor):
                     if "pos" in self.processors:
                         token.pos_tag = word.pos
                         token.upos = word.upos
+                        token.xpos = word.xpos
 
                     if "lemma" in self.processors:
                         token.lemma = word.lemma
-                        token.xpos = word.xpos
 
                     if "depparse" in self.processors:
                         token.dependency_relation = word.dependency_relation
