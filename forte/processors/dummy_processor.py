@@ -19,8 +19,6 @@ class DummyRelationExtractor(BatchProcessor):
     def __init__(self) -> None:
         super().__init__()
         self._ontology = relation_ontology
-        self._define_input_info()
-        self._define_output_info()
         self.define_context()
 
         self.batch_size = 4
@@ -30,18 +28,20 @@ class DummyRelationExtractor(BatchProcessor):
         self.context_type = self._ontology.Sentence
 
     def _define_input_info(self):
-        self.input_info = {
+        input_info = {
             self._ontology.Token: [],
             self._ontology.EntityMention: {
-                "fields": ["ner_type", "tid"],
+                "fields": ["ner_type", "tid"]
             }
         }
+        return input_info
 
     def _define_output_info(self):
-        self.output_info = {
+        output_info = {
             self._ontology.RelationLink:
                 ["parent", "child", "rel_type"]
         }
+        return output_info
 
     def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
         entities_span = data_batch["EntityMention"]["span"]

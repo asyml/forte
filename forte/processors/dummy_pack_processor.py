@@ -16,8 +16,6 @@ class DummyPackProcessor(PackProcessor):
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-        self._define_input_info()
-        self._define_output_info()
 
     def _define_input_info(self):
         pass

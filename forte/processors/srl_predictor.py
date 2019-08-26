@@ -32,8 +32,6 @@ class SRLPredictor(BatchProcessor):
         super().__init__()
 
         self._ontology = ontonotes_ontology
-        self._define_input_info()
-        self._define_output_info()
         self.define_context()
 
         self.batch_size = 4
@@ -67,19 +65,20 @@ class SRLPredictor(BatchProcessor):
         self.context_type = self._ontology.Sentence
 
     def _define_input_info(self):
-        self.input_info = {
-            self._ontology.Token: [],
+        input_info = {
+            self._ontology.Token: []
         }
+        return input_info
 
     def _define_output_info(self):
-        self.output_info = {
+        output_info = {
             self._ontology.PredicateMention:
                 ["pred_type", "span"],
             self._ontology.PredicateArgument: ["span"],
             self._ontology.PredicateLink:
-                ["parent", "child", "arg_type"],
-
+                ["parent", "child", "arg_type"]
         }
+        return output_info
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
