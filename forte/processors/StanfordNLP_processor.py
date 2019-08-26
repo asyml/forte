@@ -17,6 +17,8 @@ class StandfordNLPProcessor(PackProcessor):
         self.nlp = None
         self.MODELS_DIR = models_path
         self.lang = 'en'  # English is default
+        self._define_input_info()
+        self._define_output_info()
 
     def set_up(self):
         stanfordnlp.download(self.lang, self.MODELS_DIR)
@@ -54,7 +56,7 @@ class StandfordNLPProcessor(PackProcessor):
         end_pos = 0
 
         # sentence parsing
-        sentences = self.nlp(doc).sentences
+        sentences = self.nlp(doc).sentences  # type: ignore
 
         # Iterating through stanfordnlp sentence objects
         for sentence in sentences:
