@@ -42,8 +42,7 @@ class StringReader(PackReader):
     def _cache_key_function(collection):
         return str(collection)
 
-    @staticmethod
-    def _collect(dataset: List[str]) -> Iterator[str]:
+    def _collect(self, dataset: List[str]) -> Iterator[str]:
         """
         An iterator over the entire dataset, yielding all documents processed.
         Should call :meth:`read` to read each document.
