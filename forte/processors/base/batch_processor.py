@@ -23,7 +23,7 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
     def __init__(self):
         super().__init__()
 
-        self.context_type:EntryType = self.define_context()
+        self.context_type: EntryType = self.define_context()
         self.batch_size = None
         self.batcher = None
         self.use_coverage_index = False

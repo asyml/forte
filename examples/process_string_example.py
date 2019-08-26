@@ -10,7 +10,7 @@ from forte.processors import (
     CoNLLNERPredictor, SRLPredictor, StandfordNLPProcessor)
 
 
-def main():
+def StringProcessorExample():
     pl = Pipeline()
     pl.set_reader(StringReader())
     pl.add_processor(NLTKSentenceSegmenter())
@@ -131,6 +131,6 @@ def StanfordNLPExample2():
 
 
 if __name__ == '__main__':
-    #main()
     StanfordNLPExample1()
     StanfordNLPExample2()
+    StringProcessorExample()

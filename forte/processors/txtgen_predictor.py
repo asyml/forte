@@ -39,7 +39,7 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         self._define_output_info()
         self.define_context()
 
-    def _define_input_info(self) -> None:
+    def _define_input_info(self):
         """
         Define the input info for each Data pack in the MultiPack
         for future query
@@ -48,7 +48,7 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
             self.ontology.Sentence: []
         }
 
-    def _define_output_info(self) -> None:
+    def _define_output_info(self):
         self.output_info = {
             self.ontology.Sentence: []
         }
