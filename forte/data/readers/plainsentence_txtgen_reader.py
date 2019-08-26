@@ -70,7 +70,7 @@ class PlainSentenceTxtgenReader(MonoFileMultiPackReader):
                 if sentence_cnt >= 20:
                     break
 
-            input_pack.set_text(text)
+            input_pack.set_text(text, replace_func=self.text_replace_operation)
             input_pack.meta.doc_id = file_path
 
         output_pack = DataPack(name=output_pack_name)

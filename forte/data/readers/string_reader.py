@@ -2,10 +2,10 @@
 The reader that reads plain text data into Datapacks.
 """
 import logging
-from typing import Iterator, no_type_check, List, Optional, Any
+from typing import Iterator, no_type_check
 
 from forte import config
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 from forte.data.ontology import base_ontology
 from forte.data.readers.file_reader import PackReader
 
@@ -44,20 +44,25 @@ class StringReader(PackReader):
     def _collect(self, **kwargs) -> Iterator[str]:
         """
         kwargs['data_source'] should be of type `List[str]`
-        which is the list of file paths to iterate over
+        which is the list of raw text strings to iterate over
         """
         for data in kwargs['data_source']:
             yield data
 
-    def parse_pack(self, collection: Any) -> DataPack:
+    def parse_pack(self, data_source: str) -> DataPack:
+        """
+        Takes a raw string and converts into a DataPack
+        :param data_source: str that contains text of a document
+        :return: DataPack containing Document
+        """
         config.working_component = self.component_name
 
         pack = DataPack()
 
-        document = self._ontology.Document(0, len(collection))  # type: ignore
+        document = self._ontology.Document(0, len(data_source))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(collection)
+        pack.set_text(data_source, replace_func=self.text_replace_operation)
 
         config.working_component = None
         return pack

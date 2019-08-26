@@ -5,7 +5,7 @@ import codecs
 from typing import Iterator, Any
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import conll03_ontology
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -96,7 +96,7 @@ class CoNLL03Reader(MonoFileReader):
         document = self._ontology.Document(0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(text, replace_func=self.text_replace_operation())
+        pack.set_text(text, replace_func=self.text_replace_operation)
         pack.meta.doc_id = file_path
         doc.close()
         return pack

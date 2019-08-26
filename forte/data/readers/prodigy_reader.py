@@ -1,10 +1,10 @@
 """The reader that reads prodigy text data with annotations into Datapacks."""
 
 import json
-from typing import Iterator, Any, Optional
+from typing import Iterator, Any
 from forte.data.ontology.base_ontology import Token, \
     Document, EntityMention
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -64,7 +64,7 @@ class ProdigyReader(MonoFileReader):
         spans = single_doc['spans']
 
         document = Document(0, len(text))
-        pack.set_text(text)
+        pack.set_text(text, replace_func=self.text_replace_operation)
         pack.add_or_get_entry(document)
 
         for token in tokens:
