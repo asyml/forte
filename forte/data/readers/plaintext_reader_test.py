@@ -30,7 +30,6 @@ class PlainTextReaderTest(unittest.TestCase):
     @data(
         # No replacement
         ([], '<title>The Original Title </title>'),
-        (None, '<title>The Original Title </title>'),
         # Insertion
         ([((11, 11), 'New ')], '<title>The New Original Title </title>'),
         # Single, sorted multiple and unsorted multiple replacements
@@ -42,10 +41,13 @@ class PlainTextReaderTest(unittest.TestCase):
         # Reading with replacements - replacing a span and changing it back
         span_ops, output = value
         reader = PlainTextReader()
+        reader.text_replace_operation = lambda _: span_ops
         pack = reader.parse_pack(self.file_path)
         self.assertEqual(pack.text, output)
+
         with open(self.mod_file_path, 'w') as mod_file:
             mod_file.write(pack.text)
+        reader.text_replace_operation = lambda _: pack.inverse_replace_operations
         inv_pack = reader.parse_pack(self.mod_file_path)
         self.assertEqual(self.orig_text, inv_pack.text)
 
@@ -60,7 +62,9 @@ class PlainTextReaderTest(unittest.TestCase):
         # Read with errors in span replacements
         span_ops, output = value
         reader = PlainTextReader()
+        reader.text_replace_operation = lambda _: span_ops
         try:
+
             reader.parse_pack(self.file_path)
         except ValueError:
             pass
