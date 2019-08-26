@@ -2,7 +2,7 @@
 The reader that reads CoNLL ner_data into our internal json data format.
 """
 import codecs
-from typing import Iterator, Any, Optional
+from typing import Iterator, Any
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import conll03_ontology
 from forte.data.data_pack import DataPack, ReplaceOperationsType
@@ -35,12 +35,11 @@ class CoNLL03Reader(MonoFileReader):
             self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
         }
 
-    @staticmethod
-    def _cache_key_function(collection):
+    def _cache_key_function(self, collection):
         return str(collection)
 
-    def _collect(self, data_source: str) -> Iterator[Any]:
-        return dataset_path_iterator(data_source, "conll")
+    def _collect(self, **kwargs) -> Iterator[Any]:
+        return dataset_path_iterator(kwargs['data_source'], "conll")
 
     def parse_pack(self, file_path: str) -> DataPack:
         pack = DataPack()
@@ -97,7 +96,7 @@ class CoNLL03Reader(MonoFileReader):
         document = self._ontology.Document(0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(text)
+        pack.set_text(text, replace_func=self.text_replace_operation())
         pack.meta.doc_id = file_path
         doc.close()
         return pack

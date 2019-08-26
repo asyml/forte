@@ -24,13 +24,18 @@ class MonoFileReader(PackReader):
     To be inherited by all mono file data readers.
     """
 
-    def _collect(self, dir_path: str) -> object:
-        return dataset_path_iterator(dir_path, "")
+    def _collect(self, **kwargs) -> Iterator[Any]:
+        """
+        May or maynot be reimplemented by a child reader class
+        :param kwargs: Expecting the data_source keyword as default
+        :return: Iterator[Any] collections to iterate over
+        """
+        return dataset_path_iterator(kwargs['data_source'], "")
 
     @abstractmethod
     def parse_pack(self, collection: Any) -> DataPack:
         """
-        Read a single datapack from a collection(file path in this case)
+        Read a single DataPack from a collection
         Args:
             collection: The path to the file to read or information to parse.
         """
@@ -41,13 +46,18 @@ class MonoFileMultiPackReader(MultiPackReader):
     """Data reader that reads one MultiPack from each single text files.
     """
 
-    def _collect(self, dir_path: str) -> Iterator[Any]:
-        return dataset_path_iterator(dir_path, "")
+    def _collect(self, **kwargs) -> Iterator[Any]:
+        """
+        May or maynot be reimplemented by a child reader class
+        :param kwargs: Expecting the data_source keyword as default
+        :return: Iterator[Any] collections to iterate over
+        """
+        return dataset_path_iterator(kwargs['data_source'], "")
 
     @abstractmethod
     def parse_pack(self, collection: Any) -> MultiPack:
         """
-        Read a single datapack from a collection(file path in this case)
+        Read a MultiPack from a collection
         Args:
             collection: The path to the file to read or information to parse.
         """

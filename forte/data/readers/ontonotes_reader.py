@@ -52,12 +52,11 @@ class OntonotesReader(MonoFileReader):
             self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
 
-    @staticmethod
-    def _cache_key_function(collection):
+    def _cache_key_function(self, collection):
         return str(collection)
 
-    def _collect(self, data_source: str) -> Iterator[Any]:
-        return dataset_path_iterator(data_source, "gold_conll")
+    def _collect(self, **kwargs) -> Iterator[Any]:
+        return dataset_path_iterator(kwargs['data_source'], "gold_conll")
 
     def parse_pack(self, file_path: str) -> DataPack:
 
@@ -214,7 +213,7 @@ class OntonotesReader(MonoFileReader):
 
             kwargs_i = {"doc_id": document_id}
             self.current_datapack.set_meta(**kwargs_i)
-            self.current_datapack.set_text(text)
+            self.current_datapack.set_text(text, replace_func=self.text_replace_operation())
 
         # doc.close()
         return self.current_datapack

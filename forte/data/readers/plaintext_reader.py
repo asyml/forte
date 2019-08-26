@@ -29,13 +29,11 @@ class PlainTextReader(MonoFileReader):
         self._ontology = base_ontology
         self.define_output_info()
 
-    @staticmethod
-    def _cache_key_function(collection):
+    def _cache_key_function(self, collection):
         return str(collection)
 
-    @staticmethod
-    def _collect(dir_path: str) -> Iterator[Any]:
-        return dataset_path_iterator(dir_path, ".txt")
+    def _collect(self, **kwargs) -> Iterator[Any]:
+        return dataset_path_iterator(kwargs['data_source'], ".txt")
 
     def define_output_info(self):
         self.output_info = {
