@@ -47,10 +47,17 @@ class ProdigyReader(MonoFileReader):
         """
         with open(data_source) as f:
             for line in f:
-                yield line
+                yield json.loads(line)
 
-    def parse_pack(self, data: str) -> DataPack:
-        single_doc = json.loads(data)
+    def parse_pack(self, data: dict) -> DataPack:
+        """
+        Extracts information from input `data` of one document
+        output from Prodigy Annotator including the text,
+        tokens and its annotations into a DataPack
+        :param data: a dict that contains information for one document
+        :return pack: DataPack containing information extracted from `data`
+        """
+        single_doc = data
         pack = DataPack()
         text = single_doc['text']
         tokens = single_doc['tokens']

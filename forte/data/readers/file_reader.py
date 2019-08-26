@@ -2,6 +2,7 @@
 File readers.
 """
 import logging
+from abc import abstractmethod
 from typing import Iterator, Any
 
 from forte.data.io_utils import dataset_path_iterator
@@ -26,13 +27,14 @@ class MonoFileReader(PackReader):
     def _collect(self, dir_path: str) -> Iterator[Any]:
         return dataset_path_iterator(dir_path, "")
 
+    @abstractmethod
     def parse_pack(self, collection: Any) -> DataPack:
         """
         Read a single datapack from a collection(file path in this case)
         Args:
             collection: The path to the file to read or information to parse.
         """
-        pass
+        raise NotImplementedError
 
 
 class MonoFileMultiPackReader(MultiPackReader):
@@ -42,10 +44,11 @@ class MonoFileMultiPackReader(MultiPackReader):
     def _collect(self, dir_path: str) -> Iterator[Any]:
         return dataset_path_iterator(dir_path, "")
 
+    @abstractmethod
     def parse_pack(self, collection: Any) -> MultiPack:
         """
         Read a single datapack from a collection(file path in this case)
         Args:
             collection: The path to the file to read or information to parse.
         """
-        pass
+        raise NotImplementedError
