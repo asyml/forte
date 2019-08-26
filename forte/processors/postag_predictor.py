@@ -15,10 +15,10 @@ class NLTKPOSTagger(PackProcessor):
         super().__init__()
         self.token_component = None
         self._ontology = base_ontology
-        self.__define_input_info()
-        self.__define_output_info()
+        self._define_input_info()
+        self._define_output_info()
 
-    def __define_input_info(self):
+    def _define_input_info(self):
         self.input_info = {
             self._ontology.Sentence: ["span"],
             self._ontology.Token: {
@@ -27,7 +27,7 @@ class NLTKPOSTagger(PackProcessor):
             }
         }
 
-    def __define_output_info(self):
+    def _define_output_info(self):
         self.output_info = {
             self._ontology.Token: {
                 "component": self.token_component,
