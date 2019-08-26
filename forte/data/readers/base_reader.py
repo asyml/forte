@@ -4,7 +4,7 @@ Base reader type to be inherited by all readers.
 from abc import abstractmethod
 from pathlib import Path
 from typing import (Iterator, Optional, Dict, Type, List, Union, Generic,
-                    Any, Callable)
+                    Any)
 import os
 import logging
 import jsonpickle
@@ -154,8 +154,13 @@ class BaseReader(Generic[PackType]):
 
     def iter(self, **kwargs) -> Union[Iterator[PackType], List[PackType]]:
         """
-        An iterator over the entire dataset, yielding all Packs processed.
+        An iterator over the entire dataset, giving all Packs processed
+         as list or Iterator depending on `lazy`
         If not reading from cache, should call collect()
+        :param kwargs: One or more input data sources
+        for example, most DataPack readers
+        accept `data_source` as file/folder path
+        :return: Either Iterator or List depending on setting of `lazy`
         """
         if self.lazy:
             return self._lazy_iter(**kwargs)

@@ -8,7 +8,7 @@ from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -213,7 +213,7 @@ class OntonotesReader(MonoFileReader):
 
             kwargs_i = {"doc_id": document_id}
             self.current_datapack.set_meta(**kwargs_i)
-            self.current_datapack.set_text(text, replace_func=self.text_replace_operation())
+            self.current_datapack.set_text(text, replace_func=self.text_replace_operation)
 
         # doc.close()
         return self.current_datapack
