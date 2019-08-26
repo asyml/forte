@@ -24,7 +24,7 @@ class MonoFileReader(PackReader):
     To be inherited by all mono file data readers.
     """
 
-    def _collect(self, dir_path: str) -> Iterator[Any]:
+    def _collect(self, dir_path: str) -> object:
         return dataset_path_iterator(dir_path, "")
 
     @abstractmethod

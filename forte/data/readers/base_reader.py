@@ -125,8 +125,13 @@ class BaseReader(Generic[PackType]):
         return []
 
     @abstractmethod
-    def _cache_key_function(self, collection):
-        # Computes the cache key based on the type of data
+    def _cache_key_function(self, collection: Any) -> str:
+        """
+        Computes the cache key based on the type of data
+        :param collection:  Any object that provides information
+         to identify the name and location of the cache file
+        :return: str that specifies the path to cache file
+        """
         raise NotImplementedError
 
     def _get_cache_location(self, collection: Any) -> Path:
@@ -216,12 +221,8 @@ class BaseReader(Generic[PackType]):
         self._cache_directory = cache_directory
         Path.mkdir(self._cache_directory, exist_ok=True)
         logger.info("Caching pack to %s", self.cache_file)
-        if self.append_to_cache:
-            with self.cache_file.open('a') as cache:  # type: ignore
-                cache.write(self.serialize_instance(pack) + "\n")
-        else:
-            with self.cache_file.open('w') as cache:  # type: ignore
-                cache.write(self.serialize_instance(pack) + "\n")
+        with self.cache_file.open('w') as cache:
+            cache.write(self.serialize_instance(pack) + "\n")
 
     def _record_fields(self, pack: PackType):
         """
