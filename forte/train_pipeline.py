@@ -53,7 +53,7 @@ class TrainPipeline:
                 # need to set this in the trainer.
                 for instance in pack.get_data(**self.trainer.data_request()):
                     if self.trainer.validation_requested():
-                        dev_res = self.geval_dev(epoch)
+                        dev_res = self.eval_dev(epoch)
                         self.trainer.validation_done()
                         self.trainer.post_validation_action(dev_res)
                     if self.trainer.stop_train():

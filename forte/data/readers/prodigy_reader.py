@@ -36,7 +36,7 @@ class ProdigyReader(MonoFileReader):
     def _cache_key_function(self, collection):
         return str(collection)
 
-    def _collect(self, data_source: str) -> Iterator[Any]:
+    def _collect(self, **kwargs) -> Iterator[Any]:
         """
         Collects from Prodigy file path and returns an iterator
         of Prodigy annotation data. The elements in the iterator
@@ -45,7 +45,7 @@ class ProdigyReader(MonoFileReader):
         :param data_source: str a Prodigy file path
         :yield: Iterator of each line in the prodigy file
         """
-        with open(data_source) as f:
+        with open(kwargs['data_source']) as f:
             for line in f:
                 yield json.loads(line)
 

@@ -38,16 +38,15 @@ class StringReader(PackReader):
             self._ontology.Document: [],
         }
 
-    @staticmethod
-    def _cache_key_function(collection):
+    def _cache_key_function(self, collection):
         return str(collection)
 
-    def _collect(self, dataset: List[str]) -> Iterator[str]:
+    def _collect(self, **kwargs) -> Iterator[str]:
         """
-        An iterator over the entire dataset, yielding all documents processed.
-        Should call :meth:`read` to read each document.
+        kwargs['data_source'] should be of type `List[str]`
+        which is the list of file paths to iterate over
         """
-        for data in dataset:
+        for data in kwargs['data_source']:
             yield data
 
     def parse_pack(self, collection: Any) -> DataPack:
