@@ -53,7 +53,7 @@ class DataPack(BasePack):
     def __init__(self, doc_id: Optional[str] = None,
                  name: Optional[str] = None):
         super().__init__()
-        self._text: str = ""
+        self._text = ""
 
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
@@ -95,7 +95,7 @@ class DataPack(BasePack):
                  replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None
                  ):
 
-        if self._text is not None:
+        if len(self._text) > 0:
             logger.warning("The new text is overwriting the original one, "
                            "which might cause unexpected behavior.")
 
