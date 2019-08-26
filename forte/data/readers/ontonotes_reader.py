@@ -83,7 +83,8 @@ class OntonotesReader(MonoFileReader):
             current_pred_arg: List[Optional[Tuple[int, str]]] = []
             verbal_pred_args: List[List[Tuple[PredicateArgument, str]]] = []
 
-            groups: DefaultDict[int, List[CoreferenceMention]] = defaultdict(list)
+            groups: DefaultDict[int, List[CoreferenceMention]] = \
+                defaultdict(list)
             coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
 
             for line in doc:
@@ -119,7 +120,8 @@ class OntonotesReader(MonoFileReader):
 
                     # add entity mentions
                     current_entity_mention = self._process_entity_annotations(
-                        entity_label, word_begin, word_end, current_entity_mention
+                        entity_label, word_begin, word_end,
+                        current_entity_mention
                     )
 
                     # add predicate mentions
@@ -218,7 +220,9 @@ class OntonotesReader(MonoFileReader):
 
             kwargs_i = {"doc_id": document_id}
             self.current_datapack.set_meta(**kwargs_i)
-            self.current_datapack.set_text(text, replace_func=self.text_replace_operation)
+            self.current_datapack.set_text(text,
+                                           replace_func=
+                                           self.text_replace_operation)
 
         # doc.close()
         return self.current_datapack

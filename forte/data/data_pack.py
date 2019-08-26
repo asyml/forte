@@ -92,7 +92,8 @@ class DataPack(BasePack):
 
     def set_text(self,
                  text: str,
-                 replace_func: Optional[Callable[[str], ReplaceOperationsType]] = None
+                 replace_func: Optional[Callable[[str],
+                                        ReplaceOperationsType]] = None
                  ):
 
         if len(self._text) > 0:
