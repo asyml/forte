@@ -155,8 +155,9 @@ class BaseReader(Generic[PackType]):
     def iter(self, **kwargs) -> Union[Iterator[PackType], List[PackType]]:
         """
         An iterator over the entire dataset, giving all Packs processed
-         as list or Iterator depending on `lazy`
-        If not reading from cache, should call collect()
+         as list or Iterator depending on `lazy`, giving all the Packs read
+         from the data source(s). If not reading from cache,
+         should call collect()
         :param kwargs: One or more input data sources
         for example, most DataPack readers
         accept `data_source` as file/folder path
