@@ -145,7 +145,7 @@ class BaseReader(Generic[PackType]):
 
     def read_from_cache(self, cache_location) -> PackType:
         """
-        Reads Pack from a cache_location
+        Reads one or more Packs from a cache_location
         :param cache_location: Path to the cache file
         :return: Pack
         """
@@ -221,8 +221,12 @@ class BaseReader(Generic[PackType]):
         self._cache_directory = cache_directory
         Path.mkdir(self._cache_directory, exist_ok=True)
         logger.info("Caching pack to %s", self.cache_file)
-        with self.cache_file.open('w') as cache:
-            cache.write(self.serialize_instance(pack) + "\n")
+        if self.append_to_cache:
+            with self.cache_file.open('a') as cache:  # type: ignore
+                cache.write(self.serialize_instance(pack) + "\n")
+        else:
+            with self.cache_file.open('w') as cache:  # type: ignore
+                cache.write(self.serialize_instance(pack) + "\n")
 
     def _record_fields(self, pack: PackType):
         """

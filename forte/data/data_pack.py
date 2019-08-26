@@ -53,7 +53,7 @@ class DataPack(BasePack):
     def __init__(self, doc_id: Optional[str] = None,
                  name: Optional[str] = None):
         super().__init__()
-        self._text: str = None
+        self._text: str = ""
 
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
