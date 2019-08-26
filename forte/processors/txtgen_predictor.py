@@ -35,11 +35,11 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         self.top_k = None
         self.top_p = None
         self.device = None
-        self.__define_input_info()
-        self.__define_output_info()
+        self._define_input_info()
+        self._define_output_info()
         self.define_context()
 
-    def __define_input_info(self) -> None:
+    def _define_input_info(self) -> None:
         """
         Define the input info for each Data pack in the MultiPack
         for future query
@@ -48,7 +48,7 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
             self.ontology.Sentence: []
         }
 
-    def __define_output_info(self) -> None:
+    def _define_output_info(self) -> None:
         self.output_info = {
             self.ontology.Sentence: []
         }
@@ -108,8 +108,8 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
             return helper
 
         self._get_helper = _get_helper
-        self.__define_input_info()
-        self.__define_output_info()
+        self._define_input_info()
+        self._define_output_info()
 
     def process(self, input_pack: MultiPack, tail_instances: bool = False):
         """

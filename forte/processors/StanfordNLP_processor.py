@@ -27,12 +27,12 @@ class StandfordNLPProcessor(PackProcessor):
         self.set_up()
         self.nlp = stanfordnlp.Pipeline(**configs, models_dir=self.MODELS_DIR)
 
-    def __define_input_info(self):
+    def _define_input_info(self):
         self.input_info = {
             self._ontology.Document: ["span"]
         }
 
-    def __define_output_info(self):
+    def _define_output_info(self):
         token_outputs = ['span']
         if 'pos' in self.processors:
             token_outputs.append('pos_tag')

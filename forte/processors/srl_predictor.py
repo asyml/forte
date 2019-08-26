@@ -32,8 +32,8 @@ class SRLPredictor(BatchProcessor):
         super().__init__()
 
         self._ontology = ontonotes_ontology
-        self.__define_input_info()
-        self.__define_output_info()
+        self._define_input_info()
+        self._define_output_info()
         self.define_context()
 
         self.batch_size = 4
@@ -66,12 +66,12 @@ class SRLPredictor(BatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
-    def __define_input_info(self):
+    def _define_input_info(self):
         self.input_info = {
             self._ontology.Token: [],
         }
 
-    def __define_output_info(self):
+    def _define_output_info(self):
         self.output_info = {
             self._ontology.PredicateMention:
                 ["pred_type", "span"],
