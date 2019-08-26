@@ -42,17 +42,23 @@ class BaseProcessor(Generic[PackType]):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def _define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
-        """
-        User should define the output_info here
-        """
-        raise NotImplementedError
+    def set_output_info(self):
+        self.output_info = self._define_output_info()
+
+    def set_input_info(self):
+        self.input_info = self._define_input_info()
 
     @abstractmethod
     def _define_input_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
         """
         User should define the input_info here
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
+        """
+        User should define the output_info here
         """
         raise NotImplementedError
 

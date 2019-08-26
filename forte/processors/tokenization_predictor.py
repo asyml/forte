@@ -15,18 +15,18 @@ class NLTKWordTokenizer(PackProcessor):
         super().__init__()
         self.sentence_component = None
         self._ontology = base_ontology
-        self._define_input_info()
-        self._define_output_info()
 
     def _define_input_info(self):
-        self.input_info = {
+        input_info = {
             self._ontology.Sentence: ["span"]
         }
+        return input_info
 
     def _define_output_info(self):
-        self.output_info = {
+        output_info = {
             self._ontology.Token: ["span"]
         }
+        return output_info
 
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(entry_type=self._ontology.Sentence,

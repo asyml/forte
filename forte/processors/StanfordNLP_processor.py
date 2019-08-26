@@ -17,8 +17,6 @@ class StandfordNLPProcessor(PackProcessor):
         self.nlp = None
         self.MODELS_DIR = models_path
         self.lang = 'en'  # English is default
-        self._define_input_info()
-        self._define_output_info()
 
     def set_up(self):
         stanfordnlp.download(self.lang, self.MODELS_DIR)
@@ -30,9 +28,10 @@ class StandfordNLPProcessor(PackProcessor):
         self.nlp = stanfordnlp.Pipeline(**configs, models_dir=self.MODELS_DIR)
 
     def _define_input_info(self):
-        self.input_info = {
+        input_info = {
             self._ontology.Document: ["span"]
         }
+        return input_info
 
     def _define_output_info(self):
         token_outputs = ['span']
@@ -45,10 +44,12 @@ class StandfordNLPProcessor(PackProcessor):
         if 'depparse' in self.processors:
             token_outputs.append('dependency_relation')
 
-        self.output_info = {
+        output_info = {
             self._ontology.Token: token_outputs,
             self._ontology.Sentence: ["span"]
         }
+
+        return output_info
 
     def _process(self, input_pack: DataPack):
 
