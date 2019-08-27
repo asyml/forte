@@ -2,7 +2,7 @@ from nltk import pos_tag
 
 from forte.data import DataPack
 from forte.data.ontology import base_ontology
-from forte.processors.base import PackProcessor
+from forte.processors.base import PackProcessor, ProcessInfo
 
 __all__ = [
     "NLTKPOSTagger"
@@ -16,8 +16,8 @@ class NLTKPOSTagger(PackProcessor):
         self.token_component = None
         self._ontology = base_ontology
 
-    def _define_input_info(self):
-        input_info = {
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
             self._ontology.Sentence: ["span"],
             self._ontology.Token: {
                 "fields": ["span"],
@@ -26,8 +26,8 @@ class NLTKPOSTagger(PackProcessor):
         }
         return input_info
 
-    def _define_output_info(self):
-        output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self._ontology.Token: {
                 "component": self.token_component,
                 "fields": ["pos_tag"]

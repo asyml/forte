@@ -1,6 +1,6 @@
 import stanfordnlp
 import forte.data.ontology.stanfordnlp_ontology as ontology
-from forte.processors.base import PackProcessor
+from forte.processors.base import PackProcessor, ProcessInfo
 from forte.data import DataPack
 from forte.common.resources import Resources
 
@@ -28,13 +28,13 @@ class StandfordNLPProcessor(PackProcessor):
         self.set_up()
         self.nlp = stanfordnlp.Pipeline(**configs, models_dir=self.MODELS_DIR)
 
-    def _define_input_info(self):
-        input_info = {
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
             self._ontology.Document: ["span"]
         }
         return input_info
 
-    def _define_output_info(self):
+    def _define_output_info(self) -> ProcessInfo:
         token_outputs = ['span']
         if 'pos' in self.processors:
             token_outputs.append('pos_tag')
@@ -45,7 +45,7 @@ class StandfordNLPProcessor(PackProcessor):
         if 'depparse' in self.processors:
             token_outputs.append('dependency_relation')
 
-        output_info = {
+        output_info: ProcessInfo = {
             self._ontology.Token: token_outputs,
             self._ontology.Sentence: ["span"]
         }
