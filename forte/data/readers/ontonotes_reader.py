@@ -221,8 +221,7 @@ class OntonotesReader(MonoFileReader):
             kwargs_i = {"doc_id": document_id}
             self.current_datapack.set_meta(**kwargs_i)
             self.current_datapack.set_text(text,
-                                           replace_func=
-                                           self.text_replace_operation)
+                replace_func=self.text_replace_operation)
 
         # doc.close()
         return self.current_datapack
