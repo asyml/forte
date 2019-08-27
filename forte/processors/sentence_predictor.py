@@ -52,7 +52,7 @@ class PeriodSentenceSegmenter(PackProcessor):
 
     def _define_input_info(self) -> ProcessInfo:
         input_info: ProcessInfo = {
-            base_ontology.Document: ["span"]
+            self._ontology.Document: ["span"]
         }
         return input_info
 
