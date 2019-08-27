@@ -33,10 +33,11 @@ class ProdigyReader(MonoFileReader):
             EntityMention: ["ner_type"]
         }
 
+    # pylint: disable=no-self-use
     def _cache_key_function(self, collection):
         return str(collection)
 
-    # pylint: disable=R0201
+    # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
         """
         Collects from Prodigy file path and returns an iterator

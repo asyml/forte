@@ -29,9 +29,11 @@ class PlainTextReader(MonoFileReader):
         self._ontology = base_ontology
         self.define_output_info()
 
+    # pylint: disable=no-self-use
     def _cache_key_function(self, collection):
         return str(collection)
 
+    # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
         """
         Should be called with param `data_source`
@@ -46,6 +48,7 @@ class PlainTextReader(MonoFileReader):
             self._ontology.Document: [],
         }
 
+    # pylint: disable=no-self-use,unused-argument
     def text_replace_operation(self, text: str):
         return []
 
