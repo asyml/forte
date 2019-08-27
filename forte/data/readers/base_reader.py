@@ -149,7 +149,9 @@ class BaseReader(Generic[PackType]):
 
     def read_from_cache(self, cache_location) -> PackType:
         """
-        Reads one or more Packs from a cache_location
+        Reads one or more Packs from a cache_location,
+        by returning each pack from the generator function
+        `_instances_from_cache_file`
         :param cache_location: Path to the cache file
         :return: Pack
         """

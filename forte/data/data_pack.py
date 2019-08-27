@@ -2,7 +2,6 @@ import copy
 import logging
 from typing import (
     Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union,
-
     Any, Set, Callable)
 
 import numpy as np
