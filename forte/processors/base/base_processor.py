@@ -12,7 +12,10 @@ from forte.utils import get_full_module_name
 
 __all__ = [
     "BaseProcessor",
+    "ProcessInfo",
 ]
+
+ProcessInfo = Dict[Type[Entry], Union[List, Dict]]
 
 
 class BaseProcessor(Generic[PackType]):

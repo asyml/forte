@@ -4,7 +4,7 @@ import numpy as np
 
 from forte.data import DataPack
 from forte.data.ontology import relation_ontology
-from forte.processors.base import BatchProcessor
+from forte.processors.base import BatchProcessor, ProcessInfo
 
 __all__ = [
     "DummyRelationExtractor",
@@ -27,8 +27,8 @@ class DummyRelationExtractor(BatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
-    def _define_input_info(self):
-        input_info = {
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
             self._ontology.Token: [],
             self._ontology.EntityMention: {
                 "fields": ["ner_type", "tid"]
@@ -36,8 +36,8 @@ class DummyRelationExtractor(BatchProcessor):
         }
         return input_info
 
-    def _define_output_info(self):
-        output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self._ontology.RelationLink:
                 ["parent", "child", "rel_type"]
         }

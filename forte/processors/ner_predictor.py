@@ -11,7 +11,7 @@ from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.format import conll_utils
 from forte.data.ontology import base_ontology, conll03_ontology
-from forte.processors.base import BatchProcessor
+from forte.processors.base import BatchProcessor, ProcessInfo
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +39,15 @@ class CoNLLNERPredictor(BatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
-    def _define_input_info(self):
-        input_info = {
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
             self._ontology.Token: [],
             self._ontology.Sentence: [],
         }
         return input_info
 
-    def _define_output_info(self):
-        output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self._ontology.EntityMention: ["ner_type", "span"],
         }
         return output_info
