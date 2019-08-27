@@ -35,9 +35,11 @@ class CoNLL03Reader(MonoFileReader):
             self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
         }
 
+    # pylint: disable=no-self-use
     def _cache_key_function(self, collection):
         return str(collection)
 
+    # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
         """
         Iterator over conll files in the data_source

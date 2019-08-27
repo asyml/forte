@@ -24,7 +24,7 @@ class MonoFileReader(PackReader):
     To be inherited by all mono file data readers.
     """
 
-    # pylint: disable=R0201
+    # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
         """
         May or maynot be reimplemented by a child reader class
@@ -47,7 +47,7 @@ class MonoFileMultiPackReader(MultiPackReader):
     """Data reader that reads one MultiPack from each single text files.
     """
 
-    # pylint: disable=R0201
+    # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
         """
         May or maynot be reimplemented by a child reader class
