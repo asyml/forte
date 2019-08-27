@@ -26,8 +26,8 @@ class BaseProcessor(Generic[PackType]):
     def __init__(self):
         self.component_name = get_full_module_name(self)
         self._ontology = base_ontology
-        self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
-        self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
+        self.input_info: ProcessInfo = {}
+        self.output_info: ProcessInfo = {}
         self.selector = DummySelector()
 
     def initialize(self, configs, resource: Resources):
@@ -52,14 +52,14 @@ class BaseProcessor(Generic[PackType]):
         self.input_info = self._define_input_info()
 
     @abstractmethod
-    def _define_input_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
+    def _define_input_info(self) -> ProcessInfo:
         """
         User should define the input_info here
         """
         raise NotImplementedError
 
     @abstractmethod
-    def _define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
+    def _define_output_info(self) -> ProcessInfo:
         """
         User should define the output_info here
         """

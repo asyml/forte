@@ -20,7 +20,7 @@ class DummyPackProcessor(PackProcessor):
     def _define_input_info(self) -> ProcessInfo:
         pass
 
-    def _define_output_info(self):
+    def _define_output_info(self) -> ProcessInfo:
         pass
 
     def _process(self, input_pack: DataPack):
