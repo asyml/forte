@@ -113,9 +113,7 @@ class BaseReader(Generic[PackType]):
         """
         raise NotImplementedError
 
-    # pylint: disable=R0201,W0613
-    # pylint says Unused argument 'text', and Method could be a function,
-    # but it is not necessary in this case
+    # pylint: disable=unused-argument,no-self-use
     def text_replace_operation(self,
                                text: str) -> ReplaceOperationsType:
         """
