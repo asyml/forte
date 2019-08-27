@@ -24,7 +24,7 @@ class MonoFileReader(PackReader):
     To be inherited by all mono file data readers.
     """
 
-    def _collect(self, **kwargs) -> Iterator[Any]:
+    def _collect(self, **kwargs) -> Iterator[Any]:  # pylint: ignore
         """
         May or maynot be reimplemented by a child reader class
         :param kwargs: Expecting the data_source keyword as default
@@ -46,7 +46,7 @@ class MonoFileMultiPackReader(MultiPackReader):
     """Data reader that reads one MultiPack from each single text files.
     """
 
-    def _collect(self, **kwargs) -> Iterator[Any]:
+    def _collect(self, **kwargs) -> Iterator[Any]:  # pylint: ignore
         """
         May or maynot be reimplemented by a child reader class
         :param kwargs: Expecting the data_source keyword as default
