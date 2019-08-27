@@ -16,6 +16,8 @@ class DummyProcessorTest(unittest.TestCase):
         self.data_pack = self.reader.read(data_path)
 
         self.processor = DummyRelationExtractor()
+        self.processor.set_input_info()
+        self.processor.set_output_info()
 
     def test_processor(self):
         # case 1: process ner_data
