@@ -4,7 +4,7 @@ import numpy as np
 
 from forte.data import DataPack
 from forte.data.ontology import relation_ontology
-from forte.processors.base import BatchProcessor
+from forte.processors.base import BatchProcessor, ProcessInfo
 
 __all__ = [
     "DummyRelationExtractor",
@@ -19,8 +19,6 @@ class DummyRelationExtractor(BatchProcessor):
     def __init__(self) -> None:
         super().__init__()
         self._ontology = relation_ontology
-        self.define_input_info()
-        self.define_output_info()
         self.define_context()
 
         self.batch_size = 4
@@ -29,19 +27,21 @@ class DummyRelationExtractor(BatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
-    def define_input_info(self):
-        self.input_info = {
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
             self._ontology.Token: [],
             self._ontology.EntityMention: {
-                "fields": ["ner_type", "tid"],
+                "fields": ["ner_type", "tid"]
             }
         }
+        return input_info
 
-    def define_output_info(self):
-        self.output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self._ontology.RelationLink:
                 ["parent", "child", "rel_type"]
         }
+        return output_info
 
     def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
         entities_span = data_batch["EntityMention"]["span"]

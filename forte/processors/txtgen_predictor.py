@@ -14,6 +14,7 @@ from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
 from forte.processors.base.batch_processor import \
     MultiPackTxtgenBatchProcessor
+from forte.processors.base import ProcessInfo
 
 logger = logging.getLogger(__name__)
 
@@ -35,23 +36,23 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         self.top_k = None
         self.top_p = None
         self.device = None
-        self.define_input_info()
-        self.define_output_info()
         self.define_context()
 
-    def define_input_info(self) -> None:
+    def _define_input_info(self) -> ProcessInfo:
         """
         Define the input info for each Data pack in the MultiPack
         for future query
         """
-        self.input_info = {
+        input_info: ProcessInfo = {
             self.ontology.Sentence: []
         }
+        return input_info
 
-    def define_output_info(self) -> None:
-        self.output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self.ontology.Sentence: []
         }
+        return output_info
 
     def define_context(self):
         self.context_type = self._ontology.Sentence
@@ -108,8 +109,8 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
             return helper
 
         self._get_helper = _get_helper
-        self.define_input_info()
-        self.define_output_info()
+        self._define_input_info()
+        self._define_output_info()
 
     def process(self, input_pack: MultiPack, tail_instances: bool = False):
         """

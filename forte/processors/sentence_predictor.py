@@ -1,6 +1,6 @@
 from nltk.tokenize import sent_tokenize
 
-from forte.processors.base import PackProcessor
+from forte.processors.base import PackProcessor, ProcessInfo
 from forte.data import DataPack
 from forte.data.ontology import base_ontology
 
@@ -15,18 +15,18 @@ class NLTKSentenceSegmenter(PackProcessor):
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-        self.define_input_info()
-        self.define_output_info()
 
-    def define_input_info(self):
-        self.input_info = {
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
             self._ontology.Document: ["span"]
         }
+        return input_info
 
-    def define_output_info(self):
-        self.output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self._ontology.Sentence: ["span"]
         }
+        return output_info
 
     def _process(self, input_pack: DataPack):
         text = input_pack.text
@@ -49,18 +49,18 @@ class PeriodSentenceSegmenter(PackProcessor):
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-        self.define_input_info()
-        self.define_output_info()
 
-    def define_input_info(self):
-        self.input_info = {
-            base_ontology.Document: ["span"]
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
+            self._ontology.Document: ["span"]
         }
+        return input_info
 
-    def define_output_info(self):
-        self.output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self._ontology.Sentence: ["span"]
         }
+        return output_info
 
     def _process(self, input_pack: DataPack):
         text = input_pack.text

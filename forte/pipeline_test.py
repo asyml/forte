@@ -21,6 +21,8 @@ class PipelineTest(unittest.TestCase):
         self.processor = DummyRelationExtractor()
         self.nlp.add_processor(self.processor)
 
+        self.nlp.initialize_processors()
+
     def test_process_next(self):
 
         # get processed pack from dataset

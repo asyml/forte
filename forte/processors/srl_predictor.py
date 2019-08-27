@@ -10,7 +10,7 @@ from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.ontology import ontonotes_ontology
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base import BatchProcessor
+from forte.processors.base import BatchProcessor, ProcessInfo
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +32,6 @@ class SRLPredictor(BatchProcessor):
         super().__init__()
 
         self._ontology = ontonotes_ontology
-        self.define_input_info()
-        self.define_output_info()
         self.define_context()
 
         self.batch_size = 4
@@ -66,20 +64,21 @@ class SRLPredictor(BatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
-    def define_input_info(self):
-        self.input_info = {
-            self._ontology.Token: [],
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
+            self._ontology.Token: []
         }
+        return input_info
 
-    def define_output_info(self):
-        self.output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self._ontology.PredicateMention:
                 ["pred_type", "span"],
             self._ontology.PredicateArgument: ["span"],
             self._ontology.PredicateLink:
-                ["parent", "child", "arg_type"],
-
+                ["parent", "child", "arg_type"]
         }
+        return output_info
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
