@@ -27,7 +27,6 @@ class Meta(BaseMeta):
     """
     Meta information of a datapack.
     """
-
     def __init__(self, doc_id: Optional[str] = None,
                  name: Optional[str] = ""):
         super().__init__(doc_id)
@@ -630,7 +629,7 @@ class DataPack(BasePack):
 
     def get_entries_by_compoent(self, component: str) -> Set[Entry]:
         return {self.get_entry_by_id(tid)
-                for tid in self.get_ids_by_compoent(component)}
+                    for tid in self.get_ids_by_compoent(component)}
 
     def get_ids_by_type(self, tp: Type[EntryType]) -> Set[str]:
         """
