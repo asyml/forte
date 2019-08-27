@@ -21,7 +21,7 @@ class StandfordNLPProcessor(PackProcessor):
     def set_up(self):
         stanfordnlp.download(self.lang, self.MODELS_DIR)
 
-    def initialize(self, configs: dict, resource: Resources):
+    def initialize(self, configs: dict, resource: Resources):  # type: ignore
         self.processors = configs['processors']
         self.lang = configs['lang']
         self.set_up()
