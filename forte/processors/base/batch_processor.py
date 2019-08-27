@@ -6,6 +6,7 @@ from forte.data import DataPack, MultiPack, PackType
 from forte.data.batchers import ProcessingBatcher, \
     TxtgenMultiPackProcessingBatcher
 from forte.data import slice_batch
+from forte.data.ontology.top import EntryType
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [
@@ -22,19 +23,16 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
     def __init__(self):
         super().__init__()
 
-        self.context_type = None
+        self.context_type: EntryType = self.define_context()
         self.batch_size = None
         self.batcher = None
         self.use_coverage_index = False
 
     def set_ontology(self, ontology):
         self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
-        self.define_input_info()
-        self.define_output_info()
-        self.define_context()
 
     @abstractmethod
-    def define_context(self):
+    def define_context(self) -> EntryType:
         """
         User should define the context type for batch processors here
         """

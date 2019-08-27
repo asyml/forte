@@ -13,7 +13,6 @@ from forte.common.resources import Resources
 
 logger = logging.getLogger(__name__)
 
-
 __all__ = [
     "BasePipeline"
 ]
@@ -64,6 +63,8 @@ class BasePipeline(Generic[PackType]):
         for processor, config in zip(self.processors, self.processor_configs):
             processor.initialize(config, self.resource)
             processor.set_ontology(self._ontology)
+            processor.set_input_info()
+            processor.set_output_info()
 
     def set_reader(self, reader: BaseReader):
         reader.set_ontology(self._ontology)
@@ -125,7 +126,7 @@ class BasePipeline(Generic[PackType]):
                         if can_process and not in_cache:
                             processor.process(c_pack)
                 for c_pack in list(self.current_packs):
-                    # must iterate through a copy of the originial list
+                    # must iterate through a copy of the original list
                     # because of the removing operation
                     if (c_pack.meta.process_state ==
                             self.processors[-1].component_name):

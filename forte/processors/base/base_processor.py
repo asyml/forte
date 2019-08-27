@@ -12,7 +12,10 @@ from forte.utils import get_full_module_name
 
 __all__ = [
     "BaseProcessor",
+    "ProcessInfo",
 ]
+
+ProcessInfo = Dict[Type[Entry], Union[List, Dict]]
 
 
 class BaseProcessor(Generic[PackType]):
@@ -23,8 +26,8 @@ class BaseProcessor(Generic[PackType]):
     def __init__(self):
         self.component_name = get_full_module_name(self)
         self._ontology = base_ontology
-        self.input_info: Dict[Type[Entry], Union[List, Dict]] = {}
-        self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
+        self.input_info: ProcessInfo = {}
+        self.output_info: ProcessInfo = {}
         self.selector = DummySelector()
 
     def initialize(self, configs, resource: Resources):
@@ -42,24 +45,30 @@ class BaseProcessor(Generic[PackType]):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def define_output_info(self):
-        """
-        User should define the output_info here
-        """
-        raise NotImplementedError
+    def set_output_info(self):
+        self.output_info = self._define_output_info()
+
+    def set_input_info(self):
+        self.input_info = self._define_input_info()
 
     @abstractmethod
-    def define_input_info(self):
+    def _define_input_info(self) -> ProcessInfo:
         """
         User should define the input_info here
         """
         raise NotImplementedError
 
     @abstractmethod
+    def _define_output_info(self) -> ProcessInfo:
+        """
+        User should define the output_info here
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def process(self, input_pack: PackType):
         """Process the input pack"""
-        pass
+        raise NotImplementedError
 
     def _record_fields(self, input_pack: PackType):
         """

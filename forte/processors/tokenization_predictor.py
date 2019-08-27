@@ -1,6 +1,6 @@
 from nltk.tokenize import word_tokenize
 
-from forte.processors.base import PackProcessor
+from forte.processors.base import PackProcessor, ProcessInfo
 from forte.data import DataPack
 from forte.data.ontology import base_ontology
 
@@ -15,18 +15,18 @@ class NLTKWordTokenizer(PackProcessor):
         super().__init__()
         self.sentence_component = None
         self._ontology = base_ontology
-        self.define_input_info()
-        self.define_output_info()
 
-    def define_input_info(self):
-        self.input_info = {
+    def _define_input_info(self) -> ProcessInfo:
+        input_info: ProcessInfo = {
             self._ontology.Sentence: ["span"]
         }
+        return input_info
 
-    def define_output_info(self):
-        self.output_info = {
+    def _define_output_info(self) -> ProcessInfo:
+        output_info: ProcessInfo = {
             self._ontology.Token: ["span"]
         }
+        return output_info
 
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(entry_type=self._ontology.Sentence,
