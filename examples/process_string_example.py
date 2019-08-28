@@ -137,7 +137,6 @@ def StanfordNLPExample2():
     for sentence in pack.get(stanfordnlp_ontology.Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
-        # first method to get entry in a sentence
         tokens = [(token.text, token.pos_tag, token.lemma) for token in
                   pack.get(stanfordnlp_ontology.Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")

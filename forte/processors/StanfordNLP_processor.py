@@ -68,9 +68,7 @@ class StandfordNLPProcessor(PackProcessor):
                       + len(sentence.words[-1].text)
             sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
             input_pack.add_or_get_entry(sentence_entry)
-
             tokens = []
-
             if "tokenize" in self.processors:
                 offset = sentence_entry.span.begin
                 end_pos_word = 0
