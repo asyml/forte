@@ -38,7 +38,7 @@ class StringReader(PackReader):
             self._ontology.Document: [],
         }
 
-    # pylint: disable=no-self-use
+    # pylint: disable=no-self-use,unused-argument
     def _cache_key_function(self, collection):
         return "cached_string_file"
 
