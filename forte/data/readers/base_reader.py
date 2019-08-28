@@ -204,7 +204,9 @@ class BaseReader(Generic[PackType]):
                     )
                 yield pack
 
-    def cache_data(self, cache_directory: Path, collection: Any, pack: PackType) -> None:
+    def cache_data(self, cache_directory: Path,
+                   collection: Any,
+                   pack: PackType):
         """Specify the path to the cache directory.
 
         After you call this method, the dataset reader will use this
