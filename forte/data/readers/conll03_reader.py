@@ -36,10 +36,6 @@ class CoNLL03Reader(MonoFileReader):
         }
 
     # pylint: disable=no-self-use
-    def _cache_key_function(self, collection):
-        return str(collection)
-
-    # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
         """
         Iterator over conll files in the data_source

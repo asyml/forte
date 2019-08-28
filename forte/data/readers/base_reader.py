@@ -9,7 +9,6 @@ import os
 import logging
 import jsonpickle
 
-from forte import config
 from forte.data.data_pack import DataPack, ReplaceOperationsType
 from forte.data.multi_pack import MultiPack
 from forte.data.base_pack import PackType
@@ -33,7 +32,7 @@ class BaseReader(Generic[PackType]):
     def __init__(self,
                  lazy: bool = True,
                  from_cache: bool = False,
-                 cache_file: Optional[Path] = None,
+                 cache_directory: Optional[Path] = None,
                  append_to_cache: bool = False):
         """
         Args:
@@ -58,11 +57,10 @@ class BaseReader(Generic[PackType]):
 
         self.lazy = lazy
         self.from_cache = from_cache
-        self._cache_directory: Optional[Path] = None
+        self._cache_directory = cache_directory
         self._ontology = base_ontology
         self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
-        self.cache_file = cache_file
         self.append_to_cache = append_to_cache
 
     @property
@@ -145,17 +143,6 @@ class BaseReader(Generic[PackType]):
         file_path = self._cache_key_function(collection)
         return Path(os.path.join(str(self._cache_directory), file_path))
 
-    def read_from_cache(self, cache_location) -> PackType:
-        """
-        Reads one or more Packs from a cache_location,
-        by returning each pack from the generator function
-        `_instances_from_cache_file`
-        :param cache_location: Path to the cache file
-        :return: Pack
-        """
-        logger.info("reading from cache file %s", cache_location)
-        return next(self._instances_from_cache_file(cache_location))
-
     def iter(self, **kwargs) -> Union[Iterator[PackType], List[PackType]]:
         """
         An iterator over the entire dataset, giving all Packs processed
@@ -175,48 +162,49 @@ class BaseReader(Generic[PackType]):
 
             for collection in self._collect(**kwargs):
                 if self.from_cache:
-                    pack = self.read_from_cache(
-                        self._get_cache_location(collection))
+                    # Read a list of packs from cache file
+                    for pack in self.read_from_cache(
+                            self._get_cache_location(collection)):
+                        datapacks.append(pack)
                 else:
-
+                    # Single pack from collection
                     pack = self.parse_pack(collection)
 
-                    # write to the cache if we need to.
-                    if self.cache_file:
-                        self.cache_data(self.cache_file, pack)
+                    # write to the cache if _cache_directory specified
+                    if self._cache_directory is not None:
+                        self.cache_data(self._cache_directory, collection, pack)
 
                     self._record_fields(pack)
-                    if not isinstance(pack, DataPack):
+                    if not isinstance(pack, self.pack_type):
                         raise ValueError(
                             f"No Pack object read from the given "
                             f"collection {collection}, returned {type(pack)}."
                         )
-                config.working_component = None
-                datapacks.append(pack)
+                    datapacks.append(pack)
             return datapacks
 
     def _lazy_iter(self, **kwargs):
         for collection in self._collect(**kwargs):
             if self.from_cache:
-                pack = self.read_from_cache(
-                    self._get_cache_location(collection))
+                for pack in self.read_from_cache(
+                    self._get_cache_location(collection)):
+                    yield pack
             else:
                 pack = self.parse_pack(collection)
 
-                # write to the cache if we need to.
-                if self.cache_file:
-                    self.cache_data(self.cache_file, pack)
+                # write to the cache if _cache_directory specified
+                if self._cache_directory is not None:
+                    self.cache_data(self._cache_directory, collection, pack)
 
                 self._record_fields(pack)
-                if not isinstance(pack, DataPack):
+                if not isinstance(pack, self.pack_type):
                     raise ValueError(
                         f"No Pack object read from the given "
                         f"collection {collection}, returned {type(pack)}."
                     )
-            yield pack
+                yield pack
 
-    def cache_data(self, cache_directory: Path,
-                   pack: PackType) -> None:
+    def cache_data(self, cache_directory: Path, collection: Any, pack: PackType) -> None:
         """Specify the path to the cache directory.
 
         After you call this method, the dataset reader will use this
@@ -228,14 +216,16 @@ class BaseReader(Generic[PackType]):
         exist, we will `create` it on our first pass through the data (using
         :func:`serialize_instance`).
         """
-        self._cache_directory = cache_directory
-        Path.mkdir(self._cache_directory, exist_ok=True)
-        logger.info("Caching pack to %s", self.cache_file)
+        Path.mkdir(cache_directory, exist_ok=True)
+        cache_filename = Path(os.path.join(cache_directory,
+                                      self._get_cache_location(collection)))
+
+        logger.info("Caching pack to %s", cache_filename)
         if self.append_to_cache:
-            with self.cache_file.open('a') as cache:  # type: ignore
+            with cache_filename.open('a') as cache:
                 cache.write(self.serialize_instance(pack) + "\n")
         else:
-            with self.cache_file.open('w') as cache:  # type: ignore
+            with cache_filename.open('w') as cache:
                 cache.write(self.serialize_instance(pack) + "\n")
 
     def _record_fields(self, pack: PackType):
@@ -253,8 +243,15 @@ class BaseReader(Generic[PackType]):
                     component = info["component"]
             pack.record_fields(fields, entry_type, component)
 
-    def _instances_from_cache_file(self,
-                                   cache_filename: Path) -> Iterator[PackType]:
+    def read_from_cache(self, cache_filename: Path) -> List[PackType]:
+        """
+        Reads one or more Packs from a cache_filename,
+        and yields Pack(s) from the cache file
+        :param cache_filename: Path to the cache file
+        :yield: Pack
+        """
+        datapacks = []
+        logger.info("reading from cache file %s", cache_filename)
         with cache_filename.open("r") as cache_file:
             for line in cache_file:
                 pack = self.deserialize_instance(line.strip())
@@ -262,7 +259,9 @@ class BaseReader(Generic[PackType]):
                     raise TypeError(f"Pack deserialized from {cache_filename} "
                                     f"is {type(pack)},"
                                     f"but expect {self.pack_type}")
-                yield pack
+                datapacks.append(pack)
+
+        return datapacks
 
 
 class PackReader(BaseReader[DataPack]):

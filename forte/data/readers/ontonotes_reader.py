@@ -53,10 +53,6 @@ class OntonotesReader(MonoFileReader):
         }
 
     # pylint: disable=no-self-use
-    def _cache_key_function(self, collection):
-        return str(collection)
-
-    # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
         """
         Iterator over gold_conll files in the data_source

@@ -28,8 +28,8 @@ class StringReader(PackReader):
     """
 
     @no_type_check
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._ontology = base_ontology
         self.define_output_info()
 
@@ -40,7 +40,7 @@ class StringReader(PackReader):
 
     # pylint: disable=no-self-use
     def _cache_key_function(self, collection):
-        return str(collection)
+        return "cached_string_file"
 
     # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[str]:

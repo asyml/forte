@@ -5,14 +5,16 @@ import os
 import unittest
 import json
 import tempfile
+from pathlib import Path
 from forte.pipeline import Pipeline
-from forte.data.readers import OntonotesReader, ProdigyReader, CoNLL03Reader
+from forte.data.readers import OntonotesReader, ProdigyReader, \
+    CoNLL03Reader, StringReader
 from forte.processors.dummy_pack_processor import DummyPackProcessor
 from forte.data.ontology import relation_ontology, base_ontology, conll03_ontology
 
 
 class OntonotesReaderPipelineTest(unittest.TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "examples/ontonotes_sample_dataset/00"
 
@@ -20,8 +22,6 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         self.nlp.set_ontology(relation_ontology)
 
         self.nlp.set_reader(OntonotesReader())
-        self.processor = DummyPackProcessor()
-        self.nlp.add_processor(self.processor)
 
     def test_process_next(self):
         doc_exists = False
@@ -39,7 +39,7 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
 
 
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "examples/"
 
@@ -73,8 +73,6 @@ class ProdigyReaderTest(unittest.TestCase):
         self.nlp = Pipeline()
         self.nlp.set_ontology(base_ontology)
         self.nlp.set_reader(ProdigyReader())
-        self.processor = DummyPackProcessor()
-        self.nlp.add_processor(self.processor)
         self.create_sample_file()
 
     def tearDown(self):
@@ -130,6 +128,50 @@ class ProdigyReaderTest(unittest.TestCase):
         labels = [label.ner_type for label in
                   pack.get_entries(base_ontology.EntityMention, doc)]
         self.assertEqual(labels, ["sample_latin", "sample_latin"])
+
+
+class StringReaderPipelineTest(unittest.TestCase):
+    def setUp(self):
+        # Define and config the Pipeline
+        self.dataset_path = "examples/"
+
+        self.pl1 = Pipeline()
+        self.pl1.set_ontology(base_ontology)
+        self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))
+        self.pl1.set_reader(StringReader(cache_directory=
+                                         self._cache_directory))
+
+        self.pl2 = Pipeline()
+        self.pl2.set_reader(StringReader(cache_directory=
+                                         self._cache_directory,
+                                         from_cache=True))
+
+        self.text = (
+            "The plain green Norway spruce is displayed in the gallery's foyer. "
+            "Wentworth worked as an assistant to sculptor Henry Moore in the "
+            "late 1960s. His reputation as a sculptor grew in the 1980s.")
+
+    def test_reader(self):
+        self._process()
+        self._read_caching()
+
+    def _process(self):
+        doc_exists = False
+        for pack in self.pl1.process_dataset(data_source=[self.text]):
+            doc_exists = True
+            self.assertEqual(self.text, pack.text)
+        self.assertTrue(doc_exists)
+
+    def _read_caching(self):
+        doc_exists = False
+        # get processed pack from dataset
+        for pack in self.pl2.process_dataset(data_source=[self.text]):
+            doc_exists = True
+            self.assertEqual(self.text, pack.text)
+        self.assertTrue(doc_exists)
+
+    def tearDown(self):
+        os.system("rm -r {}".format(self._cache_directory))
 
 
 if __name__ == '__main__':

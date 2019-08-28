@@ -25,6 +25,10 @@ class MonoFileReader(PackReader):
     """
 
     # pylint: disable=no-self-use
+    def _cache_key_function(self, collection):
+        return str(collection).split('/')[-1]
+
+    # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
         """
         May or maynot be reimplemented by a child reader class
@@ -46,6 +50,10 @@ class MonoFileReader(PackReader):
 class MonoFileMultiPackReader(MultiPackReader):
     """Data reader that reads one MultiPack from each single text files.
     """
+
+    # pylint: disable=no-self-use
+    def _cache_key_function(self, collection):
+        return str(collection).split('/')[-1]
 
     # pylint: disable=no-self-use
     def _collect(self, **kwargs) -> Iterator[Any]:
