@@ -47,7 +47,8 @@ class StandfordNLPProcessor(PackProcessor):
 
         output_info: ProcessInfo = {
             self._ontology.Token: token_outputs,
-            self._ontology.Sentence: ["span"]
+            self._ontology.Sentence: ["span"],
+            self._ontology.Relation: ["parent", "child", "rel_type"]
         }
 
         return output_info
@@ -67,6 +68,8 @@ class StandfordNLPProcessor(PackProcessor):
                       + len(sentence.words[-1].text)
             sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
             input_pack.add_or_get_entry(sentence_entry)
+
+            tokens = []
 
             if "tokenize" in self.processors:
                 offset = sentence_entry.span.begin
@@ -91,5 +94,17 @@ class StandfordNLPProcessor(PackProcessor):
 
                     if "depparse" in self.processors:
                         token.dependency_relation = word.dependency_relation
+                        token.governor = int(word.governor)
 
+                    tokens.append(token)
                     input_pack.add_or_get_entry(token)
+
+            # For each sentence, get the dependecy relations among tokens
+            if "depparse" in self.processors:
+                for token in tokens:
+                    child = token  # current token
+                    parent = tokens[token.governor - 1]  # Root token
+                    relation_entry = self._ontology.Relation(parent, child)
+                    relation_entry.rel_type = token.dependency_relation
+
+                    input_pack.add_or_get_entry(relation_entry)
