@@ -1,4 +1,3 @@
-from typing import Optional
 import forte.data.ontology.base_ontology as ontology
 from forte.data.ontology.top import Link
 
@@ -33,8 +32,6 @@ class Document(ontology.Document):
 
 
 class Dependency(Link):
-    def __init__(self,
-                 parent: Optional[Token] = None,
-                 child: Optional[Token] = None):
+    def __init__(self, parent: Token, child: Token):
         super().__init__(parent, child)
         self.rel_type = None
