@@ -99,6 +99,19 @@ def StanfordNLPExample1():
                   pack.get(stanfordnlp_ontology.Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
 
+        print(colored("Dependecy Relations:", 'red'))
+        for link in pack.get(
+                stanfordnlp_ontology.Dependency, sentence):
+            parent = link.get_parent()
+            child = link.get_child()
+            print(colored(child.text, 'cyan'),
+                  "has relation",
+                  colored(link.rel_type, 'green'),
+                  "of parent",
+                  colored(parent.text, 'cyan'))
+
+        print("\n----------------------\n")
+
 
 def StanfordNLPExample2():
     pl = Pipeline()
@@ -124,10 +137,22 @@ def StanfordNLPExample2():
     for sentence in pack.get(stanfordnlp_ontology.Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
-        # first method to get entry in a sentence
-        tokens = [(token.text, token.pos_tag) for token in
+        tokens = [(token.text, token.pos_tag, token.lemma) for token in
                   pack.get(stanfordnlp_ontology.Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
+
+        print(colored("Dependecy Relations:", 'red'))
+        for link in pack.get(
+                stanfordnlp_ontology.Dependency, sentence):
+            parent = link.get_parent()
+            child = link.get_child()
+            print(colored(child.text, 'cyan'),
+                  "has relation",
+                  colored(link.rel_type, 'green'),
+                  "of parent",
+                  colored(parent.text, 'cyan'))
+
+        print("\n----------------------\n")
 
 
 if __name__ == '__main__':

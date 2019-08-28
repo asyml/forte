@@ -35,20 +35,23 @@ class StandfordNLPProcessor(PackProcessor):
         return input_info
 
     def _define_output_info(self) -> ProcessInfo:
-        token_outputs = ['span']
-        if 'pos' in self.processors:
-            token_outputs.append('pos_tag')
-            token_outputs.append('upos')
-            token_outputs.append('xpos')
-        if 'lemma' in self.processors:
-            token_outputs.append('lemma')
-        if 'depparse' in self.processors:
-            token_outputs.append('dependency_relation')
 
-        output_info: ProcessInfo = {
-            self._ontology.Token: token_outputs,
-            self._ontology.Sentence: ["span"]
-        }
+        # Sentence parsing is default
+        output_info: ProcessInfo = {self._ontology.Sentence: ["span"]}
+
+        if "tokenize" in self.processors:
+            token_outputs = ['span']
+            if 'pos' in self.processors:
+                token_outputs.append('pos_tag')
+                token_outputs.append('upos')
+                token_outputs.append('xpos')
+            if 'lemma' in self.processors:
+                token_outputs.append('lemma')
+            output_info[self._ontology.Token] = token_outputs
+
+        if 'depparse' in self.processors:
+            output_info[self._ontology.Dependency] = \
+                ["parent", "child", "rel_type"]
 
         return output_info
 
@@ -67,7 +70,7 @@ class StandfordNLPProcessor(PackProcessor):
                       + len(sentence.words[-1].text)
             sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
             input_pack.add_or_get_entry(sentence_entry)
-
+            tokens = []
             if "tokenize" in self.processors:
                 offset = sentence_entry.span.begin
                 end_pos_word = 0
@@ -91,5 +94,19 @@ class StandfordNLPProcessor(PackProcessor):
 
                     if "depparse" in self.processors:
                         token.dependency_relation = word.dependency_relation
+                        token.governor = int(word.governor)
 
+                    tokens.append(token)
                     input_pack.add_or_get_entry(token)
+
+            # For each sentence, get the dependency relations among tokens
+            if "depparse" in self.processors:
+
+                # Iterating through token entries in current sentence
+                for token in tokens:
+                    child = token  # current token
+                    parent = tokens[token.governor - 1]  # Root token
+                    relation_entry = self._ontology.Dependency(parent, child)
+                    relation_entry.rel_type = token.dependency_relation
+
+                    input_pack.add_or_get_entry(relation_entry)
