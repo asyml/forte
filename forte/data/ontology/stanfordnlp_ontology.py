@@ -32,7 +32,7 @@ class Document(ontology.Document):
         self.text = None
 
 
-class Relation(Link):
+class Dependency(Link):
     def __init__(self,
                  parent: Optional[Token] = None,
                  child: Optional[Token] = None):

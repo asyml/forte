@@ -50,7 +50,7 @@ class StandfordNLPProcessor(PackProcessor):
             output_info[self._ontology.Token] = token_outputs
 
         if 'depparse' in self.processors:
-            output_info[self._ontology.Relation] = \
+            output_info[self._ontology.Dependency] = \
                 ["parent", "child", "rel_type"]
 
         return output_info
@@ -106,7 +106,7 @@ class StandfordNLPProcessor(PackProcessor):
                 for token in tokens:
                     child = token  # current token
                     parent = tokens[token.governor - 1]  # Root token
-                    relation_entry = self._ontology.Relation(parent, child)
+                    relation_entry = self._ontology.Dependency(parent, child)
                     relation_entry.rel_type = token.dependency_relation
 
                     input_pack.add_or_get_entry(relation_entry)

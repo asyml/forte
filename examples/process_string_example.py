@@ -101,7 +101,7 @@ def StanfordNLPExample1():
 
         print(colored("Dependecy Relations:", 'red'))
         for link in pack.get(
-                stanfordnlp_ontology.Relation, sentence):
+                stanfordnlp_ontology.Dependency, sentence):
             parent = link.get_parent()
             child = link.get_child()
             print(colored(child.text, 'cyan'),
@@ -143,7 +143,7 @@ def StanfordNLPExample2():
 
         print(colored("Dependecy Relations:", 'red'))
         for link in pack.get(
-                stanfordnlp_ontology.Relation, sentence):
+                stanfordnlp_ontology.Dependency, sentence):
             parent = link.get_parent()
             child = link.get_child()
             print(colored(child.text, 'cyan'),
