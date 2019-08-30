@@ -1,16 +1,14 @@
 """
 The reader that reads Ontonotes data into Datapacks.
 """
-import codecs
-import os
 from collections import defaultdict
-from typing import (DefaultDict, Iterator, List, Optional, Tuple,
-                    Dict, Any, no_type_check)
-
+from typing import (DefaultDict, List, Optional, Tuple,
+                    Dict, Any, no_type_check, Iterator)
+from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -54,177 +52,176 @@ class OntonotesReader(MonoFileReader):
             self._ontology.CoreferenceGroup: ["coref_type", "members"]
         }
 
-    @staticmethod
-    def dataset_path_iterator(dir_path: str) -> Iterator[str]:
+    # pylint: disable=no-self-use
+    def _collect(self, **kwargs) -> Iterator[Any]:
         """
-        An iterator returning file_paths in a directory containing
-        CoNLL-formatted files.
+        Iterator over gold_conll files in the data_source
+        :param kwargs: param `data_source` is the path to the files
+        :return: Iterator over files with gold_conll path
         """
-        for root, _, files in os.walk(dir_path):
-            for data_file in files:
-                if data_file.endswith("gold_conll"):
-                    yield os.path.join(root, data_file)
+        return dataset_path_iterator(kwargs['data_source'], "gold_conll")
 
-    def _read_document(self, file_path: str,
-                       replace_operations: Optional[ReplaceOperationsType]
-                       ) -> DataPack:
+    def parse_pack(self, file_path: str) -> DataPack:
 
         self.current_datapack = DataPack()
 
-        doc = codecs.open(file_path, "r", encoding="utf8")
+        # doc = codecs.open(file_path, "r", encoding="utf8")
+        with open(file_path, encoding="utf8") as doc:
+            text = ""
+            offset = 0
+            has_rows = False
 
-        text = ""
-        offset = 0
-        has_rows = False
+            speaker = part_id = document_id = None
+            sentence_begin = 0
 
-        speaker = part_id = document_id = None
-        sentence_begin = 0
+            # auxiliary structures
+            current_entity_mention: Optional[Tuple[int, str]] = None
+            verbal_predicates: List[PredicateMention] = []
 
-        # auxiliary structures
-        current_entity_mention: Optional[Tuple[int, str]] = None
-        verbal_predicates: List[PredicateMention] = []
+            current_pred_arg: List[Optional[Tuple[int, str]]] = []
+            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]] = []
 
-        current_pred_arg: List[Optional[Tuple[int, str]]] = []
-        verbal_pred_args: List[List[Tuple[PredicateArgument, str]]] = []
+            groups: DefaultDict[int, List[CoreferenceMention]] = \
+                defaultdict(list)
+            coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
 
-        groups: DefaultDict[int, List[CoreferenceMention]] = defaultdict(list)
-        coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
+            for line in doc:
+                line = line.strip()
 
-        for line in doc:
-            line = line.strip()
+                if line.startswith("#end document"):
+                    break
 
-            if line.startswith("#end document"):
-                break
+                if line != "" and not line.startswith("#"):
+                    conll_components = line.split()
+                    document_id = conll_components[0]
+                    part_id = int(conll_components[1])
+                    word = conll_components[3]
+                    pos_tag = conll_components[4]
+                    lemmatised_word = conll_components[6]
+                    framenet_id = conll_components[7]
+                    word_sense = conll_components[8]
+                    speaker = conll_components[9]
+                    entity_label = conll_components[10]
+                    pred_labels = conll_components[11:-1]
 
-            if line != "" and not line.startswith("#"):
-                conll_components = line.split()
-                document_id = conll_components[0]
-                part_id = int(conll_components[1])
-                word = conll_components[3]
-                pos_tag = conll_components[4]
-                lemmatised_word = conll_components[6]
-                framenet_id = conll_components[7]
-                word_sense = conll_components[8]
-                speaker = conll_components[9]
-                entity_label = conll_components[10]
-                pred_labels = conll_components[11:-1]
+                    word_begin = offset
+                    word_end = offset + len(word)
 
-                word_begin = offset
-                word_end = offset + len(word)
-
-                # add tokens
-                kwargs_i: Dict[str, Any] = {"pos_tag": pos_tag,
-                                            "sense": word_sense}
-                token = self._ontology.Token(  # type: ignore
-                    word_begin, word_end
-                )
-                token.set_fields(**kwargs_i)
-                self.current_datapack.add_or_get_entry(token)
-
-                # add entity mentions
-                current_entity_mention = self._process_entity_annotations(
-                    entity_label, word_begin, word_end, current_entity_mention
-                )
-
-                # add predicate mentions
-                if lemmatised_word != "-":
-                    word_is_verbal_predicate = any(
-                        ["(V" in x for x in pred_labels]
-                    )
-                    kwargs_i = {
-                        "framenet_id": framenet_id,
-                        "pred_lemma": lemmatised_word,
-                        "pred_type": "verb" if word_is_verbal_predicate
-                        else "other"
-                    }
-                    pred_mention = \
-                        self._ontology.PredicateMention(  # type: ignore
+                    # add tokens
+                    kwargs_i: Dict[str, Any] = {"pos_tag": pos_tag,
+                                                "sense": word_sense}
+                    token = self._ontology.Token(  # type: ignore
                         word_begin, word_end
                     )
-                    pred_mention.set_fields(**kwargs_i)
-                    pred_mention = self.current_datapack.add_or_get_entry(
-                        pred_mention
+                    token.set_fields(**kwargs_i)
+                    self.current_datapack.add_or_get_entry(token)
+
+                    # add entity mentions
+                    current_entity_mention = self._process_entity_annotations(
+                        entity_label, word_begin, word_end,
+                        current_entity_mention
                     )
 
-                    if word_is_verbal_predicate:
-                        verbal_predicates.append(pred_mention)
-
-                if not verbal_pred_args:
-                    current_pred_arg = [None for _ in pred_labels]
-                    verbal_pred_args = [[] for _ in pred_labels]
-
-                # add predicate arguments
-                self._process_pred_annotations(
-                    conll_components[11:-1],
-                    word_begin,
-                    word_end,
-                    current_pred_arg,
-                    verbal_pred_args,
-                )
-
-                # add coreference mentions
-                self._process_coref_annotations(
-                    conll_components[-1],
-                    word_begin,
-                    word_end,
-                    coref_stacks,
-                    groups,
-                )
-
-                text += word + " "
-                offset = word_end + 1
-                has_rows = True
-
-            else:
-                if not has_rows:
-                    continue
-
-                # add predicate links in the sentence
-                for predicate, pred_arg in zip(verbal_predicates,
-                                               verbal_pred_args):
-                    for arg in pred_arg:
-                        kwargs_i = {
-                            "arg_type": arg[1],
-                        }
-                        link = self._ontology.PredicateLink(  # type: ignore
-                            predicate, arg[0]
+                    # add predicate mentions
+                    if lemmatised_word != "-":
+                        word_is_verbal_predicate = any(
+                            ["(V" in x for x in pred_labels]
                         )
-                        link.set_fields(**kwargs_i)
-                        self.current_datapack.add_or_get_entry(link)
+                        kwargs_i = {
+                            "framenet_id": framenet_id,
+                            "pred_lemma": lemmatised_word,
+                            "pred_type": "verb" if word_is_verbal_predicate
+                            else "other"
+                        }
+                        pred_mention = \
+                            self._ontology.PredicateMention(  # type: ignore
+                            word_begin, word_end
+                        )
+                        pred_mention.set_fields(**kwargs_i)
+                        pred_mention = self.current_datapack.add_or_get_entry(
+                            pred_mention
+                        )
 
-                verbal_predicates = []
-                current_pred_arg = []
-                verbal_pred_args = []
+                        if word_is_verbal_predicate:
+                            verbal_predicates.append(pred_mention)
 
-                # add sentence
+                    if not verbal_pred_args:
+                        current_pred_arg = [None for _ in pred_labels]
+                        verbal_pred_args = [[] for _ in pred_labels]
 
-                kwargs_i = {"speaker": speaker, "part_id": part_id}
-                sent = self._ontology.Sentence(  # type: ignore
-                    sentence_begin, offset - 1
-                )
-                sent.set_fields(**kwargs_i)
-                self.current_datapack.add_or_get_entry(sent)
+                    # add predicate arguments
+                    self._process_pred_annotations(
+                        conll_components[11:-1],
+                        word_begin,
+                        word_end,
+                        current_pred_arg,
+                        verbal_pred_args,
+                    )
 
-                sentence_begin = offset
+                    # add coreference mentions
+                    self._process_coref_annotations(
+                        conll_components[-1],
+                        word_begin,
+                        word_end,
+                        coref_stacks,
+                        groups,
+                    )
 
-                has_rows = False
+                    text += word + " "
+                    offset = word_end + 1
+                    has_rows = True
 
-        # group the coreference mentions in the whole document
-        for group_id, mention_list in groups.items():
-            kwargs_i = {"coref_type": group_id}
-            group = self._ontology.CoreferenceGroup()  # type: ignore
-            group.set_fields(**kwargs_i)
-            group.add_members(mention_list)
-            self.current_datapack.add_or_get_entry(group)
+                else:
+                    if not has_rows:
+                        continue
 
-        document = self._ontology.Document(0, len(text))  # type: ignore
-        self.current_datapack.add_or_get_entry(document)
+                    # add predicate links in the sentence
+                    for predicate, pred_arg in zip(verbal_predicates,
+                                                   verbal_pred_args):
+                        for arg in pred_arg:
+                            kwargs_i = {
+                                "arg_type": arg[1],
+                            }
+                            link = self._ontology.PredicateLink(  # type: ignore
+                                predicate, arg[0]
+                            )
+                            link.set_fields(**kwargs_i)
+                            self.current_datapack.add_or_get_entry(link)
 
-        kwargs_i = {"doc_id": document_id}
-        self.current_datapack.set_meta(**kwargs_i)
-        self.current_datapack.set_text(text)
+                    verbal_predicates = []
+                    current_pred_arg = []
+                    verbal_pred_args = []
 
-        doc.close()
+                    # add sentence
+
+                    kwargs_i = {"speaker": speaker, "part_id": part_id}
+                    sent = self._ontology.Sentence(  # type: ignore
+                        sentence_begin, offset - 1
+                    )
+                    sent.set_fields(**kwargs_i)
+                    self.current_datapack.add_or_get_entry(sent)
+
+                    sentence_begin = offset
+
+                    has_rows = False
+
+            # group the coreference mentions in the whole document
+            for group_id, mention_list in groups.items():
+                kwargs_i = {"coref_type": group_id}
+                group = self._ontology.CoreferenceGroup()  # type: ignore
+                group.set_fields(**kwargs_i)
+                group.add_members(mention_list)
+                self.current_datapack.add_or_get_entry(group)
+
+            document = self._ontology.Document(0, len(text))  # type: ignore
+            self.current_datapack.add_or_get_entry(document)
+
+            kwargs_i = {"doc_id": document_id}
+            self.current_datapack.set_meta(**kwargs_i)
+            self.current_datapack.set_text(text,
+                replace_func=self.text_replace_operation)
+
+        # doc.close()
         return self.current_datapack
 
     def _process_entity_annotations(

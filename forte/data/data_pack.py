@@ -1,7 +1,8 @@
 import copy
 import logging
 from typing import (
-    Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union, Any, Set)
+    Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union,
+    Any, Set, Callable)
 
 import numpy as np
 from sortedcontainers import SortedList
@@ -87,14 +88,17 @@ class DataPack(BasePack):
     def text(self):
         return self._text
 
-    def set_text(self, text: str,
-                 replace_operations: Optional[ReplaceOperationsType] = None):
+    def set_text(self,
+                 text: str,
+                 replace_func: Optional[Callable[[str],
+                                        ReplaceOperationsType]] = None
+                 ):
 
-        if not text.startswith(self._text):
+        if len(self._text) > 0:
             logger.warning("The new text is overwriting the original one, "
                            "which might cause unexpected behavior.")
 
-        span_ops = [] if replace_operations is None else replace_operations
+        span_ops = [] if replace_func is None else replace_func(text)
 
         # Sorting the spans such that the order of replacement strings
         # is maintained - utilizing the stable sort property of python sort

@@ -44,7 +44,7 @@ class TrainPipeline:
             epoch += 1
             # we need to have directory ready here
             for pack in self.train_reader.iter(
-                    self.config_data.train_path
+                    data_source=self.config_data.train_path
             ):
                 # data_request is a string. How to transform it to the
                 # function parameters? Or we can change the interface of
@@ -71,7 +71,7 @@ class TrainPipeline:
 
         if self.predictor is not None and self.evaluator is not None:
             for pack in self.dev_reader.iter(
-                    self.config_data.val_path
+                    data_source=self.config_data.val_path
             ):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
@@ -79,7 +79,7 @@ class TrainPipeline:
             validation_result["eval"] = self.evaluator.get_result()
 
             for pack in self.dev_reader.iter(
-                    self.config_data.test_path
+                    data_source=self.config_data.test_path
             ):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)

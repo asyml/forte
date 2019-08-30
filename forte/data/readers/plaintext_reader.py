@@ -1,10 +1,10 @@
 """
 The reader that reads plain text data into Datapacks.
 """
-import os
-from typing import Iterator, Optional
 
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from typing import Iterator, Any
+from forte.data.io_utils import dataset_path_iterator
+from forte.data.data_pack import DataPack
 from forte.data.ontology import base_ontology
 from forte.data.readers.file_reader import MonoFileReader
 
@@ -29,33 +29,35 @@ class PlainTextReader(MonoFileReader):
         self._ontology = base_ontology
         self.define_output_info()
 
+    # pylint: disable=no-self-use
+    def _collect(self, **kwargs) -> Iterator[Any]:
+        """
+        Should be called with param `data_source`
+        which is a path to a folder containing txt files
+        :param kwargs: param data_source
+        :return: Iterator over paths to .txt files
+        """
+        return dataset_path_iterator(kwargs['data_source'], ".txt")
+
     def define_output_info(self):
         self.output_info = {
             self._ontology.Document: [],
         }
 
-    @staticmethod
-    def dataset_path_iterator(dir_path: str) -> Iterator[str]:
-        """
-        An iterator returning file_paths in a directory containing
-        .txt files.
-        """
-        for root, _, files in os.walk(dir_path):
-            files.sort()
-            for data_file in sorted(files):
-                if data_file.endswith(".txt"):
-                    yield os.path.join(root, data_file)
+    # pylint: disable=no-self-use,unused-argument
+    def text_replace_operation(self, text: str):
+        return []
 
-    def _read_document(self, file_path: str,
-                       replace_operations: Optional[ReplaceOperationsType]
-                       ) -> DataPack:
+    def parse_pack(self, file_path: str) -> DataPack:
         pack = DataPack()
+
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:
             text = file.read()
 
-        document = self._ontology.Document(0, len(text))  # type: ignore
+        pack.set_text(text, replace_func=self.text_replace_operation)
+
+        document = self._ontology.Document(0, len(pack.text))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(text, replace_operations)
         pack.meta.doc_id = file_path
         return pack

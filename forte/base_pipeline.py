@@ -1,7 +1,6 @@
 from abc import abstractmethod
-from typing import List, Dict, Iterator, Generic, Optional
+from typing import List, Dict, Iterator, Generic, Optional, Union
 import logging
-
 import yaml
 from texar.torch import HParams
 
@@ -87,8 +86,7 @@ class BasePipeline(Generic[PackType]):
         self.processors.append(processor)
         self.processor_configs.append(config)
 
-    @abstractmethod
-    def process(self, data: str) -> PackType:
+    def process_one(self, **kwargs) -> PackType:
         """
         Process a string text or a single file.
 
@@ -98,19 +96,33 @@ class BasePipeline(Generic[PackType]):
                 a string variable. If :attr:`_reader` is a file reader, `data`
                 should be the path to a file.
         """
-        raise NotImplementedError
+        first_pack = []
+        for p in self._reader.iter(**kwargs):
+            first_pack.append(p)
+            break
 
-    def process_dataset(self, dataset: str) -> Iterator[PackType]:
+        if len(first_pack) == 1:
+            results = [p for p in self.process_dataset(data_source=first_pack)]
+            return results[0]
+        else:
+            raise ValueError("Input data source contains no packs.")
+
+    def process_dataset(self, **kwargs) -> \
+            Union[Iterator[PackType], List[PackType]]:
         """
-        Process the documents in the dataset and return an iterator of DataPack.
+        Process the documents in the data source(s) and return an
+        iterator or list of DataPacks.
 
         Args:
-            dataset (str): the directory of the dataset to be processed.
-
+            **kwargs, which can be one or more data sources.
         """
+        data_iter = self._reader.iter(**kwargs)
+        return self.process_packs(data_iter)
 
-        data_iter = self._reader.iter(dataset)
-
+    def process_packs(self,
+                      data_iter:
+                      Union[Iterator[PackType],
+                            List[PackType]]) -> Iterator[PackType]:
         if len(self.processors) == 0:
             yield from data_iter
 

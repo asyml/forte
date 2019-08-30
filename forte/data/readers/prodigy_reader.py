@@ -1,11 +1,10 @@
 """The reader that reads prodigy text data with annotations into Datapacks."""
 
 import json
-from typing import Optional
-
+from typing import Iterator, Any
 from forte.data.ontology.base_ontology import Token, \
     Document, EntityMention
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -34,40 +33,51 @@ class ProdigyReader(MonoFileReader):
             EntityMention: ["ner_type"]
         }
 
-    def _read_document(self, file_path: str,
-                       replace_operations: Optional[ReplaceOperationsType]
-                       ) -> DataPack:
+    # pylint: disable=no-self-use
+    def _collect(self, **kwargs) -> Iterator[Any]:
         """
-        Extracts the contents of a Prodigy data output (in JSON format) into
-        a Datapack.
-        :param file_path: json dictionary
-        :return: DataPack object
+        Collects from Prodigy file path and returns an iterator
+        of Prodigy annotation data. The elements in the iterator
+        correspond to each line in the prodigy file.
+        One element is expected to be parsed as one DataPack.
+        :param data_source: str a Prodigy file path
+        :yield: Iterator of each line in the prodigy file
         """
+        with open(kwargs['data_source']) as f:
+            for line in f:
+                yield json.loads(line)
+
+    def parse_pack(self, data: dict) -> DataPack:
+        """
+        Extracts information from input `data` of one document
+        output from Prodigy Annotator including the text,
+        tokens and its annotations into a DataPack
+        :param data: a dict that contains information for one document
+        :return pack: DataPack containing information extracted from `data`
+        """
+        single_doc = data
         pack = DataPack()
+        text = single_doc['text']
+        tokens = single_doc['tokens']
+        spans = single_doc['spans']
 
-        with open(file_path) as data_file:
-            single_doc = json.load(data_file)
-            text = single_doc['text']
-            tokens = single_doc['tokens']
-            spans = single_doc['spans']
+        document = Document(0, len(text))
+        pack.set_text(text, replace_func=self.text_replace_operation)
+        pack.add_or_get_entry(document)
 
-            document = Document(0, len(text))
-            pack.set_text(text)
-            pack.add_or_get_entry(document)
+        for token in tokens:
+            begin = token['start']
+            end = token['end']
+            token_entry = Token(begin, end)
+            pack.add_or_get_entry(token_entry)
 
-            for token in tokens:
-                begin = token['start']
-                end = token['end']
-                token_entry = Token(begin, end)
-                pack.add_or_get_entry(token_entry)
+        for span_items in spans:
+            begin = span_items['start']
+            end = span_items['end']
+            annotation_entry = EntityMention(begin, end)
+            annotation_entry.ner_type = span_items['label']
+            pack.add_or_get_entry(annotation_entry)
 
-            for span_items in spans:
-                begin = span_items['start']
-                end = span_items['end']
-                annotation_entry = EntityMention(begin, end)
-                annotation_entry.ner_type = span_items['label']
-                pack.add_or_get_entry(annotation_entry)
-
-            pack.meta.doc_id = ""
+        pack.meta.doc_id = single_doc['meta']['id']
 
         return pack

@@ -42,7 +42,7 @@ def StringProcessorExample():
         "Wentworth worked as an assistant to sculptor Henry Moore in the "
         "late 1960s. His reputation as a sculptor grew in the 1980s.")
 
-    pack = pl.process(text)
+    pack = pl.process_one(text)
 
     for sentence in pack.get(base_ontology.Sentence):
         sent_text = sentence.text

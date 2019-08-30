@@ -2,11 +2,10 @@
 The reader that reads CoNLL ner_data into our internal json data format.
 """
 import codecs
-import os
-from typing import Iterator, Optional, no_type_check
-
+from typing import Iterator, Any
+from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import conll03_ontology
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 from forte.data.readers.file_reader import MonoFileReader
 
 __all__ = [
@@ -24,7 +23,6 @@ class CoNLL03Reader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``iter()`` returns a list.
     """
-    @no_type_check
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self._ontology = conll03_ontology
@@ -37,21 +35,16 @@ class CoNLL03Reader(MonoFileReader):
             self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
         }
 
-    @staticmethod
-    def dataset_path_iterator(dir_path: str) -> Iterator[str]:
+    # pylint: disable=no-self-use
+    def _collect(self, **kwargs) -> Iterator[Any]:
         """
-        An iterator returning file_paths in a directory containing
-        CONLL-formatted files.
+        Iterator over conll files in the data_source
+        :param kwargs: param `data_source` is the path to the files
+        :return: Iterator over files with conll path
         """
-        for root, _, files in os.walk(dir_path):
-            for data_file in files:
-                if data_file.endswith("conll"):
-                    yield os.path.join(root, data_file)
+        return dataset_path_iterator(kwargs['data_source'], "conll")
 
-    def _read_document(self, file_path: str,
-                       replace_operations: Optional[ReplaceOperationsType]
-                       ) -> DataPack:
-
+    def parse_pack(self, file_path: str) -> DataPack:
         pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
 
@@ -106,7 +99,7 @@ class CoNLL03Reader(MonoFileReader):
         document = self._ontology.Document(0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(text, replace_operations)
+        pack.set_text(text, replace_func=self.text_replace_operation)
         pack.meta.doc_id = file_path
         doc.close()
         return pack

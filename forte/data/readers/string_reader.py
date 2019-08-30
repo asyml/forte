@@ -2,8 +2,7 @@
 The reader that reads plain text data into Datapacks.
 """
 import logging
-from pathlib import Path
-from typing import Iterator, no_type_check, List, Optional
+from typing import Iterator, no_type_check
 
 from forte import config
 from forte.data.data_pack import DataPack
@@ -29,8 +28,8 @@ class StringReader(PackReader):
     """
 
     @no_type_check
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._ontology = base_ontology
         self.define_output_info()
 
@@ -39,39 +38,33 @@ class StringReader(PackReader):
             self._ontology.Document: [],
         }
 
-    def iter(self, dataset: List[str]) -> Iterator[DataPack]:
-        """
-        An iterator over the entire dataset, yielding all documents processed.
-        Should call :meth:`read` to read each document.
-        """
-        for data in dataset:
-            yield self.read(data)
+    # pylint: disable=no-self-use,unused-argument
+    def _cache_key_function(self, collection):
+        return "cached_string_file"
 
-    def read(self, data: str,
-             cache_file: Optional[Path] = None,
-             append_to_cache: bool = False) -> DataPack:
+    # pylint: disable=no-self-use
+    def _collect(self, **kwargs) -> Iterator[str]:
+        """
+        kwargs['data_source'] should be of type `List[str]`
+        which is the list of raw text strings to iterate over
+        """
+        for data in kwargs['data_source']:
+            yield data
+
+    def parse_pack(self, data_source: str) -> DataPack:
+        """
+        Takes a raw string and converts into a DataPack
+        :param data_source: str that contains text of a document
+        :return: DataPack containing Document
+        """
         config.working_component = self.component_name
 
         pack = DataPack()
-        self._record_fields(pack)
 
-        document = self._ontology.Document(0, len(data))  # type: ignore
+        document = self._ontology.Document(0, len(data_source))  # type: ignore
         pack.add_or_get_entry(document)
 
-        pack.set_text(data)
+        pack.set_text(data_source, replace_func=self.text_replace_operation)
 
-        if cache_file is None and self._cache_directory:
-            cache_file = self._cache_directory / "dataset.cache"
-        # write to the cache if we need to.
-        if cache_file:
-            logger.info("Caching datapack to %s", cache_file)
-            if append_to_cache:
-                with cache_file.open('a') as cache:
-                    cache.write(self.serialize_instance(pack)
-                                + "\n")
-            else:
-                with cache_file.open('w') as cache:
-                    cache.write(self.serialize_instance(pack)
-                                + "\n")
         config.working_component = None
         return pack

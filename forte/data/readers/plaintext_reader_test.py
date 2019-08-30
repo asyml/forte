@@ -24,13 +24,12 @@ class PlainTextReaderTest(unittest.TestCase):
 
     def test_reader_no_replace_test(self):
         # Read with no replacements
-        pack = PlainTextReader().read(self.file_path)
+        pack = PlainTextReader().parse_pack(self.file_path)
         self.assertEqual(pack.text, self.orig_text)
 
     @data(
         # No replacement
         ([], '<title>The Original Title </title>'),
-        (None, '<title>The Original Title </title>'),
         # Insertion
         ([((11, 11), 'New ')], '<title>The New Original Title </title>'),
         # Single, sorted multiple and unsorted multiple replacements
@@ -42,12 +41,14 @@ class PlainTextReaderTest(unittest.TestCase):
         # Reading with replacements - replacing a span and changing it back
         span_ops, output = value
         reader = PlainTextReader()
-        pack = reader.read(self.file_path, span_ops)
+        reader.text_replace_operation = lambda _: span_ops
+        pack = reader.parse_pack(self.file_path)
         self.assertEqual(pack.text, output)
+
         with open(self.mod_file_path, 'w') as mod_file:
             mod_file.write(pack.text)
-        inv_pack = reader.read(self.mod_file_path,
-                               pack.inverse_replace_operations)
+        reader.text_replace_operation = lambda _: pack.inverse_replace_operations
+        inv_pack = reader.parse_pack(self.mod_file_path)
         self.assertEqual(self.orig_text, inv_pack.text)
 
     @data(
@@ -61,8 +62,10 @@ class PlainTextReaderTest(unittest.TestCase):
         # Read with errors in span replacements
         span_ops, output = value
         reader = PlainTextReader()
+        reader.text_replace_operation = lambda _: span_ops
         try:
-            reader.read(self.file_path, span_ops)
+
+            reader.parse_pack(self.file_path)
         except ValueError:
             pass
         except Exception:
