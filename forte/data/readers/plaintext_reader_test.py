@@ -47,6 +47,9 @@ class PlainTextReaderTest(unittest.TestCase):
 
         with open(self.mod_file_path, 'w') as mod_file:
             mod_file.write(pack.text)
+        
+        #TODO: The reverting operation could possibly done more transparent 
+        # to the users.
         reader.text_replace_operation = lambda _: pack.inverse_replace_operations
         inv_pack = reader.parse_pack(self.mod_file_path)
         self.assertEqual(self.orig_text, inv_pack.text)
