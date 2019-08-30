@@ -1,7 +1,7 @@
 import logging
 from typing import Dict
 import yaml
-from texar.torch import HParams
+from texar.torch.hyperparams import HParams
 
 from forte.data import DataPack
 from forte.base_pipeline import BasePipeline
