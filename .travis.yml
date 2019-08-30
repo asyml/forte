@@ -14,7 +14,7 @@ install:
   # Install texar-pytorch.
   - git clone https://github.com/asyml/texar-pytorch.git
   - cd texar-pytorch
-  - pip install --progress-bar off .[extra]
+  - pip install --progress-bar off .[extras]
   - cd ..
   - rm -rf texar-pytorch
   # Install test tools.
