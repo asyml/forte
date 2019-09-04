@@ -13,7 +13,7 @@ from forte.processors import (
 from forte.processors.StanfordNLP_processor import StandfordNLPProcessor
 
 
-def string_processor_example():
+def string_processor_example(ner_model_dir: str, srl_model_dir: str):
     pl = Pipeline()
     pl.set_reader(StringReader())
     pl.add_processor(NLTKSentenceSegmenter())
@@ -22,7 +22,7 @@ def string_processor_example():
 
     ner_configs = HParams(
         {
-            'storage_path': './NER/resources.pkl',
+            'storage_path': os.path.join(ner_model_dir, 'resources.pkl')
         },
         CoNLLNERPredictor.default_hparams())
 
@@ -32,7 +32,7 @@ def string_processor_example():
 
     srl_configs = HParams(
         {
-            'storage_path': './SRL_model/',
+            'storage_path': srl_model_dir,
         },
         SRLPredictor.default_hparams()
     )
