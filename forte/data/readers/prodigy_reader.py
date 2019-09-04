@@ -32,6 +32,7 @@ class ProdigyReader(PackReader):
             EntityMention: ["ner_type"]
         }
 
+    # pylint: disable=no-self-use
     def _cache_key_function(self, data: dict) -> str:
         return data['meta']['id']
 

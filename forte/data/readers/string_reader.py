@@ -28,7 +28,7 @@ class StringReader(PackReader):
             ``iter()`` returns a list.
     """
 
-    # pylint: unused-argument
+    # pylint: disable=unused-argument
     def __init__(self,
                  lazy: bool = True,
                  from_cache: bool = False,

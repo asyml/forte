@@ -28,7 +28,8 @@ setuptools.setup(
         'srl': ['mypy-extensions'],
         'txtgen': ['regex'],
         'stanfordnlp': ['stanfordnlp'],
-        'test': ['ddt']
+        'test': ['ddt'],
+        'example': ['termcolor'],
     },
     package_data={
     },
