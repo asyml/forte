@@ -29,7 +29,7 @@ class MultiPackLink(Link):
         """
         pack_name = parent.data_pack.meta.name
         assert pack_name is not None, \
-            f"The name of the pack {parent.data_pack}"\
+            f"The name of the pack {parent.data_pack}" \
             f" including the entry {parent} should not be None"
         if not isinstance(parent, self.parent_type):
             raise TypeError(
@@ -45,7 +45,7 @@ class MultiPackLink(Link):
         """
         pack_name = child.data_pack.meta.name
         assert pack_name is not None, \
-            f"The name of the pack {child.data_pack}"\
+            f"The name of the pack {child.data_pack}" \
             f" including the entry {child} should not be None"
         if not isinstance(child, self.child_type):
             raise TypeError(
