@@ -26,6 +26,8 @@ class Sentence(ontology.Sentence):
 
 
 class Document(ontology.Document):
+    # TODO: code generation method will help reduce such problems.
+    # pylint: disable=useless-super-delegation
     def __init__(self, begin: int, end: int):
         super().__init__(begin, end)
 
