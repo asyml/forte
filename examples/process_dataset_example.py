@@ -1,8 +1,8 @@
 import os
 import sys
 
-from texar.torch import HParams
 from termcolor import colored
+from texar.torch import HParams
 
 from forte.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)

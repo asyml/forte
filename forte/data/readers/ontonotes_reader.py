@@ -3,7 +3,7 @@ The reader that reads Ontonotes data into Datapacks.
 """
 from collections import defaultdict
 from typing import (DefaultDict, List, Optional, Tuple,
-                    Dict, Any, no_type_check, Iterator)
+                    Dict, Any, Iterator)
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
@@ -62,10 +62,8 @@ class OntonotesReader(MonoFileReader):
         return dataset_path_iterator(conll_directory, "gold_conll")
 
     def parse_pack(self, file_path: str) -> DataPack:
-
         self.current_datapack = DataPack()
 
-        # doc = codecs.open(file_path, "r", encoding="utf8")
         with open(file_path, encoding="utf8") as doc:
             text = ""
             offset = 0
@@ -218,10 +216,9 @@ class OntonotesReader(MonoFileReader):
 
             kwargs_i = {"doc_id": document_id}
             self.current_datapack.set_meta(**kwargs_i)
-            self.current_datapack.set_text(text,
-                                           replace_func=self.text_replace_operation)
+            self.current_datapack.set_text(
+                text, replace_func=self.text_replace_operation)
 
-        # doc.close()
         return self.current_datapack
 
     def _process_entity_annotations(

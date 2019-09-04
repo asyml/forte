@@ -86,9 +86,13 @@ class BasePipeline(Generic[PackType]):
         self.processors.append(processor)
         self.processor_configs.append(config)
 
+    def process(self, *args, **kwargs) -> PackType:
+        return self.process_one(*args, **kwargs)
+
     def process_one(self, *args, **kwargs) -> PackType:
         """
-        Process a string text or a single file.
+        Process one single data pack. This is done by only reading and
+        processing the first pack in the reader.
 
         Args:
             kwargs: the information needed to load the data. For example, if
@@ -120,10 +124,17 @@ class BasePipeline(Generic[PackType]):
         data_iter = self._reader.iter(*args, **kwargs)
         return self.process_packs(data_iter)
 
-    def process_packs(self,
-                      data_iter:
-                      Union[Iterator[PackType],
-                            List[PackType]]) -> Iterator[PackType]:
+    def process_packs(
+            self, data_iter: Union[Iterator[PackType], List[PackType]]
+    ) -> Iterator[PackType]:
+        """
+        Process an iterator of data packs and return the  processed ones.
+        Args:
+            data_iter: An iterator of the data packs.
+
+        Returns: A list data packs.
+
+        """
         if len(self.processors) == 0:
             yield from data_iter
 

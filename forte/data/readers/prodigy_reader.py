@@ -1,11 +1,10 @@
 """The reader that reads prodigy text data with annotations into Datapacks."""
 
 import json
-from typing import Iterator, Any, Tuple
-from forte.data.ontology.base_ontology import Token, \
-    Document, EntityMention
+from typing import Iterator, Any
+from forte.data.ontology.base_ontology import Token, Document, EntityMention
 from forte.data.data_pack import DataPack
-from forte.data.readers import PackReader
+from forte.data.readers.base_reader import PackReader
 
 __all__ = [
     "ProdigyReader"
