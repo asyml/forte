@@ -1,5 +1,7 @@
+from texar.torch import HParams
 import stanfordnlp
 from texar.torch.hyperparams import HParams
+
 
 import forte.data.ontology.stanfordnlp_ontology as ontology
 from forte.processors.base import PackProcessor, ProcessInfo
