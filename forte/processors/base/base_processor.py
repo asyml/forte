@@ -99,10 +99,6 @@ class BaseProcessor(Generic[PackType]):
         :return:
         """
         return {
-            'processors': 'tokenize,pos,lemma,depparse',
-            'lang': 'en',
-            # Language code for the language to build the Pipeline
-            'use_gpu': False,
             'selector': {
                 'type': 'nlp.forte.data.selector.DummySelector',
                 'args': None,
