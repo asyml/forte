@@ -1,4 +1,6 @@
+from texar.torch import HParams
 import stanfordnlp
+
 import forte.data.ontology.stanfordnlp_ontology as ontology
 from forte.processors.base import PackProcessor, ProcessInfo
 from forte.data import DataPack
@@ -22,11 +24,12 @@ class StandfordNLPProcessor(PackProcessor):
         stanfordnlp.download(self.lang, self.MODELS_DIR)
 
     # pylint: disable=unused-argument
-    def initialize(self, configs: dict, resource: Resources):
-        self.processors = configs['processors']
-        self.lang = configs['lang']
+    def initialize(self, configs: HParams, resource: Resources):
+        self.processors = configs.processors
+        self.lang = configs.lang
         self.set_up()
-        self.nlp = stanfordnlp.Pipeline(**configs, models_dir=self.MODELS_DIR)
+        self.nlp = stanfordnlp.Pipeline(**configs.todict(),
+                                        models_dir=self.MODELS_DIR)
 
     def _define_input_info(self) -> ProcessInfo:
         input_info: ProcessInfo = {
@@ -58,6 +61,19 @@ class StandfordNLPProcessor(PackProcessor):
                 ["parent", "child", "rel_type"]
 
         return output_info
+
+    @staticmethod
+    def default_hparams():
+        """
+        This defines a basic Hparams structure for StanfordNLP.
+        :return:
+        """
+        return {
+            'processors': 'tokenize,pos,lemma,depparse',
+            'lang': 'en',
+            # Language code for the language to build the Pipeline
+            'use_gpu': False,
+        }
 
     def _process(self, input_pack: DataPack):
         doc = input_pack.text
