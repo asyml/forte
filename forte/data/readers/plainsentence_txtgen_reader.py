@@ -1,8 +1,6 @@
 """
 The reader that reads CoNLL ner_data into our internal json data format.
 """
-from typing import Iterator, Any
-from forte.data.io_utils import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.file_reader import MonoFileMultiPackReader

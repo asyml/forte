@@ -2,10 +2,9 @@ import json
 from typing import List, NamedTuple, Tuple
 
 import numpy as np
-import texar.torch as tx
-from mypy_extensions import TypedDict
-
 import torch
+from mypy_extensions import TypedDict
+import texar.torch as tx
 
 
 class SRLSpan(NamedTuple):
