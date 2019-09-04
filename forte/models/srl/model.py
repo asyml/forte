@@ -456,8 +456,8 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
                    enforce_constraint: bool = False) -> List[Span]:
         # Map positions to list of span indices for quick lookup during DP.
         spans_ending_at: Dict[int, List[int]] = defaultdict(list)
-        for idx in range(
-                len(end_ids)):  # pylint: disable=consider-using-enumerate
+        for idx in range(  # pylint: disable=consider-using-enumerate
+                len(end_ids)):
             if argmax_labels[idx] == 0:  # ignore null spans
                 continue
             if start_ids[idx] <= pred_idx <= end_ids[idx]:
