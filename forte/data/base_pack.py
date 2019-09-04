@@ -117,7 +117,7 @@ PackType = TypeVar('PackType', bound=BasePack)
 
 class BaseIndex(Generic[PackType]):
     """
-    A set of indexes used in a datapack: (1) :attr:`entry_index`,
+    A set of indices used in a datapack: (1) :attr:`entry_index`,
     the index from each tid to the corresponding entry;
     (2) :attr:`type_index`, the index from each type to the entries of that
     type; (3) :attr:`component_index`, the index from each component to the
