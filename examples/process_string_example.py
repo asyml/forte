@@ -118,8 +118,8 @@ def stanford_nlp_example1(lang: str, text: str):
 
 
 if __name__ == '__main__':
-    ner_dir, srl_dir = \
-        sys.argv[1:]  # pylint: disable=unbalanced-tuple-unpacking
+    ner_dir, srl_dir = sys.argv[  # pylint: disable=unbalanced-tuple-unpacking
+                       1:]
 
     eng_text = "The plain green Norway spruce is displayed in the gallery's " \
                "foyer. Wentworth worked as an assistant to sculptor Henry " \

@@ -67,6 +67,6 @@ def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
 
 
 if __name__ == '__main__':
-    data_dir, ner_dir, srl_dir = sys.argv[
-                                 1:]  # pylint: disable=unbalanced-tuple-unpacking
+    (data_dir, ner_dir,  # pylint: disable=unbalanced-tuple-unpacking
+     srl_dir) = sys.argv[1:]
     main(data_dir, ner_dir, srl_dir)

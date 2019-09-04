@@ -26,12 +26,11 @@ class Sentence(ontology.Sentence):
 
 
 class Document(ontology.Document):
-    def __init__(self):
-        super().__init__()
-        self.text = None
+    def __init__(self, begin: int, end: int):
+        super().__init__(begin, end)
 
 
 class Dependency(Link):
     def __init__(self, parent: Token, child: Token):
         super().__init__(parent, child)
-        self.rel_type = None
+        self.rel_type: str
