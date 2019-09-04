@@ -10,7 +10,8 @@ from forte.pipeline import Pipeline
 from forte.data.readers import OntonotesReader, ProdigyReader, \
     CoNLL03Reader, StringReader
 from forte.processors.dummy_pack_processor import DummyPackProcessor
-from forte.data.ontology import relation_ontology, base_ontology, conll03_ontology
+from forte.data.ontology import relation_ontology, base_ontology, \
+    conll03_ontology
 
 
 class OntonotesReaderPipelineTest(unittest.TestCase):
@@ -26,7 +27,7 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
     def test_process_next(self):
         doc_exists = False
         # get processed pack from dataset
-        for pack in self.nlp.process_dataset(data_source=self.dataset_path):
+        for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
             for sentence in pack.get_entries(relation_ontology.Sentence):
                 doc_exists = True
@@ -53,7 +54,7 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
     def test_process_next(self):
         doc_exists = False
         # get processed pack from dataset
-        for pack in self.nlp.process_dataset(data_source=self.dataset_path):
+        for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
             for sentence in pack.get_entries(conll03_ontology.Sentence):
                 doc_exists = True
@@ -69,7 +70,8 @@ class ProdigyReaderTest(unittest.TestCase):
 
     def setUp(self):
         # Define and config the Pipeline
-        self.fp = tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl', delete=False)
+        self.fp = tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl',
+                                              delete=False)
         self.nlp = Pipeline()
         self.nlp.set_ontology(base_ontology)
         self.nlp.set_reader(ProdigyReader())
@@ -106,7 +108,7 @@ class ProdigyReaderTest(unittest.TestCase):
     def test_packs(self):
         doc_exists = False
         # get processed pack from dataset
-        for pack in self.nlp.process_dataset(data_source=self.fp.name):
+        for pack in self.nlp.process_dataset(self.fp.name):
             # get documents from pack
             for doc in pack.get_entries(base_ontology.Document):
                 doc_exists = True
@@ -147,9 +149,10 @@ class StringReaderPipelineTest(unittest.TestCase):
             from_cache=True))
 
         self.text = (
-            "The plain green Norway spruce is displayed in the gallery's foyer. "
-            "Wentworth worked as an assistant to sculptor Henry Moore in the "
-            "late 1960s. His reputation as a sculptor grew in the 1980s.")
+            "The plain green Norway spruce is displayed in the gallery's "
+            "foyer. Wentworth worked as an assistant to sculptor Henry Moore "
+            "in the late 1960s. His reputation as a sculptor grew in the "
+            "1980s.")
 
     def test_reader(self):
         self._process()
@@ -157,7 +160,7 @@ class StringReaderPipelineTest(unittest.TestCase):
 
     def _process(self):
         doc_exists = False
-        for pack in self.pl1.process_dataset(data_source=[self.text]):
+        for pack in self.pl1.process_dataset([self.text]):
             doc_exists = True
             self.assertEqual(self.text, pack.text)
         self.assertTrue(doc_exists)
@@ -165,7 +168,7 @@ class StringReaderPipelineTest(unittest.TestCase):
     def _read_caching(self):
         doc_exists = False
         # get processed pack from dataset
-        for pack in self.pl2.process_dataset(data_source=[self.text]):
+        for pack in self.pl2.process_dataset([self.text]):
             doc_exists = True
             self.assertEqual(self.text, pack.text)
         self.assertTrue(doc_exists)

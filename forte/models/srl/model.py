@@ -2,17 +2,27 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple
 
-import texar.torch as tx
-from mypy_extensions import TypedDict
 import torch
 from torch import nn
 from torch.nn import functional as F
+from mypy_extensions import TypedDict
+import texar.torch as tx
 
 from forte.models.srl import model_utils as utils
 from forte.models.srl.data import SRLSpan, Span
 
 
 class LabeledSpanGraphNetwork(tx.ModuleBase):
+    @property
+    def output_size(self):
+        """
+        This module is supposed to be the last layer so we will not return
+        an informative output_size
+        Returns:
+
+        """
+        return 0
+
     __torch_device__: torch.device
 
     def __init__(self, word_vocab: tx.data.Vocab, char_vocab: tx.data.Vocab,
@@ -446,7 +456,8 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
                    enforce_constraint: bool = False) -> List[Span]:
         # Map positions to list of span indices for quick lookup during DP.
         spans_ending_at: Dict[int, List[int]] = defaultdict(list)
-        for idx in range(len(end_ids)):  # pylint: disable=consider-using-enumerate
+        for idx in range(  # pylint: disable=consider-using-enumerate
+                len(end_ids)):
             if argmax_labels[idx] == 0:  # ignore null spans
                 continue
             if start_ids[idx] <= pred_idx <= end_ids[idx]:

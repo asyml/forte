@@ -2,9 +2,9 @@ import os
 import logging
 from typing import Dict, List, Tuple
 
+import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
-import torch
 
 from forte.common.resources import Resources
 from forte.data import DataPack
@@ -40,7 +40,8 @@ class SRLPredictor(BatchProcessor):
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
-    def initialize(self, configs: HParams, resource: Resources):  # pylint: disable=unused-argument
+    def initialize(self, configs: HParams,
+                   resource: Resources):  # pylint: disable=unused-argument
 
         model_dir = configs.storage_path
         logger.info("restoring SRL model from %s", model_dir)

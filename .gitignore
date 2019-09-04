@@ -221,4 +221,5 @@ docs/_build
 .mypy_cache/
 
 ### Project ###
-
+en_ewt_models/
+fr_gsd_models/

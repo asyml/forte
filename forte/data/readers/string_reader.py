@@ -2,7 +2,8 @@
 The reader that reads plain text data into Datapacks.
 """
 import logging
-from typing import Iterator, no_type_check
+from typing import Iterator, Optional, List, Union
+from pathlib import Path
 
 from forte import config
 from forte.data.data_pack import DataPack
@@ -27,9 +28,13 @@ class StringReader(PackReader):
             ``iter()`` returns a list.
     """
 
-    @no_type_check
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    # pylint: disable=unused-argument
+    def __init__(self,
+                 lazy: bool = True,
+                 from_cache: bool = False,
+                 cache_directory: Optional[Path] = None,
+                 append_to_cache: bool = False):
+        super().__init__()
         self._ontology = base_ontology
         self.define_output_info()
 
@@ -43,12 +48,17 @@ class StringReader(PackReader):
         return "cached_string_file"
 
     # pylint: disable=no-self-use
-    def _collect(self, **kwargs) -> Iterator[str]:
+    def _collect(self,  # type: ignore
+                 string_data: Union[List[str], str]) -> Iterator[str]:
         """
-        kwargs['data_source'] should be of type `List[str]`
+        data_strings should be of type `List[str]`
         which is the list of raw text strings to iterate over
         """
-        for data in kwargs['data_source']:
+        # This allows the user to pass in either one single string or a list of
+        # strings.
+        data_strings = [string_data] if isinstance(
+            string_data, str) else string_data
+        for data in data_strings:
             yield data
 
     def parse_pack(self, data_source: str) -> DataPack:

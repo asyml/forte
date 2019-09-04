@@ -35,8 +35,12 @@ class StandfordNLPProcessor(PackProcessor):
         return input_info
 
     def _define_output_info(self) -> ProcessInfo:
+        """
+        Define the output_info of the processor. This depends on the user's
+        choice of processors for the StanfordNLP toolkit.
+        Returns:
 
-        # Sentence parsing is default
+        """
         output_info: ProcessInfo = {self._ontology.Sentence: ["span"]}
 
         if "tokenize" in self.processors:
@@ -56,7 +60,6 @@ class StandfordNLPProcessor(PackProcessor):
         return output_info
 
     def _process(self, input_pack: DataPack):
-
         doc = input_pack.text
         end_pos = 0
 
@@ -66,8 +69,8 @@ class StandfordNLPProcessor(PackProcessor):
         # Iterating through stanfordnlp sentence objects
         for sentence in sentences:
             begin_pos = doc.find(sentence.words[0].text, end_pos)
-            end_pos = doc.find(sentence.words[-1].text, begin_pos) \
-                      + len(sentence.words[-1].text)
+            end_pos = doc.find(sentence.words[-1].text, begin_pos) + len(
+                sentence.words[-1].text)
             sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
             input_pack.add_or_get_entry(sentence_entry)
             tokens = []

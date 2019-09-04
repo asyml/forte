@@ -1,8 +1,8 @@
 import os
 import sys
 
-from texar.torch import HParams
 from termcolor import colored
+from texar.torch import HParams
 
 from forte.data.ontology.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink)
@@ -13,8 +13,7 @@ from forte.processors import (
     CoNLLNERPredictor, SRLPredictor)
 
 
-def main(dataset_dir, ner_model_path, srl_model_path):
-
+def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
     pl = Pipeline()
     pl.set_reader(PlainTextReader())
     pl.add_processor(NLTKSentenceSegmenter())
@@ -68,5 +67,6 @@ def main(dataset_dir, ner_model_path, srl_model_path):
 
 
 if __name__ == '__main__':
-    data_dir, ner_dir, srl_dir = sys.argv[1:]  # pylint: disable=unbalanced-tuple-unpacking
+    (data_dir, ner_dir,  # pylint: disable=unbalanced-tuple-unpacking
+     srl_dir) = sys.argv[1:]
     main(data_dir, ner_dir, srl_dir)

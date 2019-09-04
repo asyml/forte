@@ -49,7 +49,7 @@ class BasePipeline(Generic[PackType]):
     @abstractmethod
     def init_from_config(self, configs: Dict):
         """
-        Inittialized the pipeline (ontology and processors) from given configs
+        Initialized the pipeline (ontology and processors) from given configs
         """
         raise NotImplementedError
 
@@ -86,28 +86,33 @@ class BasePipeline(Generic[PackType]):
         self.processors.append(processor)
         self.processor_configs.append(config)
 
-    def process_one(self, **kwargs) -> PackType:
+    def process(self, *args, **kwargs) -> PackType:
+        return self.process_one(*args, **kwargs)
+
+    def process_one(self, *args, **kwargs) -> PackType:
         """
-        Process a string text or a single file.
+        Process one single data pack. This is done by only reading and
+        processing the first pack in the reader.
 
         Args:
-            data (str): the path to a file a string text. If :attr:`_reader` is
-                :class:`StringReader`, `data` should be a text in the form of
-                a string variable. If :attr:`_reader` is a file reader, `data`
-                should be the path to a file.
+            kwargs: the information needed to load the data. For example, if
+                :attr:`_reader` is :class:`StringReader`, this should contain a
+                single piece of text in the form of a string variable. If
+                :attr:`_reader` is a file reader, this can point to the file
+                path.
         """
         first_pack = []
-        for p in self._reader.iter(**kwargs):
+        for p in self._reader.iter(*args, **kwargs):
             first_pack.append(p)
             break
 
         if len(first_pack) == 1:
-            results = [p for p in self.process_dataset(data_source=first_pack)]
+            results = [p for p in self.process_packs(first_pack)]
             return results[0]
         else:
             raise ValueError("Input data source contains no packs.")
 
-    def process_dataset(self, **kwargs) -> \
+    def process_dataset(self, *args, **kwargs) -> \
             Union[Iterator[PackType], List[PackType]]:
         """
         Process the documents in the data source(s) and return an
@@ -116,13 +121,20 @@ class BasePipeline(Generic[PackType]):
         Args:
             **kwargs, which can be one or more data sources.
         """
-        data_iter = self._reader.iter(**kwargs)
+        data_iter = self._reader.iter(*args, **kwargs)
         return self.process_packs(data_iter)
 
-    def process_packs(self,
-                      data_iter:
-                      Union[Iterator[PackType],
-                            List[PackType]]) -> Iterator[PackType]:
+    def process_packs(
+            self, data_iter: Union[Iterator[PackType], List[PackType]]
+    ) -> Iterator[PackType]:
+        """
+        Process an iterator of data packs and return the  processed ones.
+        Args:
+            data_iter: An iterator of the data packs.
+
+        Returns: A list data packs.
+
+        """
         if len(self.processors) == 0:
             yield from data_iter
 

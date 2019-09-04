@@ -1,16 +1,20 @@
 import os
-from texar.torch import HParams
+import sys
+
 from termcolor import colored
+from texar.torch import HParams
+
 import forte.data.ontology.base_ontology as base_ontology
 import forte.data.ontology.stanfordnlp_ontology as stanfordnlp_ontology
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
-    CoNLLNERPredictor, SRLPredictor, StandfordNLPProcessor)
+    CoNLLNERPredictor, SRLPredictor)
+from forte.processors.StanfordNLP_processor import StandfordNLPProcessor
 
 
-def StringProcessorExample():
+def string_processor_example(ner_model_dir: str, srl_model_dir: str):
     pl = Pipeline()
     pl.set_reader(StringReader())
     pl.add_processor(NLTKSentenceSegmenter())
@@ -19,7 +23,7 @@ def StringProcessorExample():
 
     ner_configs = HParams(
         {
-            'storage_path': './NER/resources.pkl',
+            'storage_path': os.path.join(ner_model_dir, 'resources.pkl')
         },
         CoNLLNERPredictor.default_hparams())
 
@@ -29,7 +33,7 @@ def StringProcessorExample():
 
     srl_configs = HParams(
         {
-            'storage_path': './SRL_model/',
+            'storage_path': srl_model_dir,
         },
         SRLPredictor.default_hparams()
     )
@@ -71,69 +75,27 @@ def StringProcessorExample():
         input(colored("Press ENTER to continue...\n", 'green'))
 
 
-def StanfordNLPExample1():
+def stanford_nlp_example1(lang: str, text: str):
     pl = Pipeline()
     pl.set_reader(StringReader())
 
     models_path = os.getcwd()
-    config = {
-        'processors': 'tokenize,pos,lemma,depparse',
-        'lang': 'fr',  # Language code for the language to build the Pipeline
-        'use_gpu': False
-    }
-    pl.add_processor(processor=StandfordNLPProcessor(models_path),
-                     config=config)
-    pl.set_ontology(stanfordnlp_ontology)
-
-    pl.initialize_processors()
-
-    text = (
-        "Van Gogh grandit au sein d'une famille de l'ancienne bourgeoisie."
+    config = HParams(
+        {
+            'processors': 'tokenize,pos,lemma,depparse',
+            'lang': lang,
+            # Language code for the language to build the Pipeline
+            'use_gpu': False
+        },
+        StandfordNLPProcessor.default_hparams()
     )
-
-    pack = pl.process(text)
-    for sentence in pack.get(stanfordnlp_ontology.Sentence):
-        sent_text = sentence.text
-        print(colored("Sentence:", 'red'), sent_text, "\n")
-        tokens = [(token.text, token.pos_tag, token.lemma) for token in
-                  pack.get(stanfordnlp_ontology.Token, sentence)]
-        print(colored("Tokens:", 'red'), tokens, "\n")
-
-        print(colored("Dependecy Relations:", 'red'))
-        for link in pack.get(
-                stanfordnlp_ontology.Dependency, sentence):
-            parent = link.get_parent()
-            child = link.get_child()
-            print(colored(child.text, 'cyan'),
-                  "has relation",
-                  colored(link.rel_type, 'green'),
-                  "of parent",
-                  colored(parent.text, 'cyan'))
-
-        print("\n----------------------\n")
-
-
-def StanfordNLPExample2():
-    pl = Pipeline()
-    pl.set_reader(StringReader())
-    config = {
-        'processors': 'tokenize,pos,lemma,depparse',
-        'lang': 'en',  # Language code for the language to build the Pipeline
-        'use_gpu': False
-    }
-    models_path = os.getcwd()
     pl.add_processor(processor=StandfordNLPProcessor(models_path),
                      config=config)
     pl.set_ontology(stanfordnlp_ontology)
+
     pl.initialize_processors()
 
-    text = (
-        "The plain green Norway spruce is displayed in the gallery's foyer. "
-         "Wentworth worked as an assistant to sculptor Henry Moore in the "
-         "late 1960s. His reputation as a sculptor grew in the 1980s.")
-
     pack = pl.process(text)
-
     for sentence in pack.get(stanfordnlp_ontology.Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
@@ -141,7 +103,7 @@ def StanfordNLPExample2():
                   pack.get(stanfordnlp_ontology.Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
 
-        print(colored("Dependecy Relations:", 'red'))
+        print(colored("Dependency Relations:", 'red'))
         for link in pack.get(
                 stanfordnlp_ontology.Dependency, sentence):
             parent = link.get_parent()
@@ -156,6 +118,18 @@ def StanfordNLPExample2():
 
 
 if __name__ == '__main__':
-    StanfordNLPExample1()
-    StanfordNLPExample2()
-    StringProcessorExample()
+    ner_dir, srl_dir = sys.argv[  # pylint: disable=unbalanced-tuple-unpacking
+                       1:]
+
+    eng_text = "The plain green Norway spruce is displayed in the gallery's " \
+               "foyer. Wentworth worked as an assistant to sculptor Henry " \
+               "Moore in the late 1960s. His reputation as a sculptor grew " \
+               "in the 1980s."
+
+    fr_text = "Van Gogh grandit au sein d'une famille de " \
+              "l'ancienne bourgeoisie."
+
+    stanford_nlp_example1('en', eng_text)
+    stanford_nlp_example1('fr', fr_text)
+
+    string_processor_example(ner_dir, srl_dir)

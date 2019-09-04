@@ -3,7 +3,7 @@ The reader that reads Ontonotes data into Datapacks.
 """
 from collections import defaultdict
 from typing import (DefaultDict, List, Optional, Tuple,
-                    Dict, Any, no_type_check, Iterator)
+                    Dict, Any, Iterator)
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
@@ -31,7 +31,7 @@ class OntonotesReader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``iter()`` returns a list.
     """
-    @no_type_check
+
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self._ontology = ontonotes_ontology
@@ -53,19 +53,17 @@ class OntonotesReader(MonoFileReader):
         }
 
     # pylint: disable=no-self-use
-    def _collect(self, **kwargs) -> Iterator[Any]:
+    def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
         """
-        Iterator over gold_conll files in the data_source
-        :param kwargs: param `data_source` is the path to the files
+        Iterator over *.gold_conll files in the data_source
+        :param conll_directory: path to the directory containing the files
         :return: Iterator over files with gold_conll path
         """
-        return dataset_path_iterator(kwargs['data_source'], "gold_conll")
+        return dataset_path_iterator(conll_directory, "gold_conll")
 
     def parse_pack(self, file_path: str) -> DataPack:
-
         self.current_datapack = DataPack()
 
-        # doc = codecs.open(file_path, "r", encoding="utf8")
         with open(file_path, encoding="utf8") as doc:
             text = ""
             offset = 0
@@ -135,8 +133,8 @@ class OntonotesReader(MonoFileReader):
                         }
                         pred_mention = \
                             self._ontology.PredicateMention(  # type: ignore
-                            word_begin, word_end
-                        )
+                                word_begin, word_end
+                            )
                         pred_mention.set_fields(**kwargs_i)
                         pred_mention = self.current_datapack.add_or_get_entry(
                             pred_mention
@@ -218,10 +216,9 @@ class OntonotesReader(MonoFileReader):
 
             kwargs_i = {"doc_id": document_id}
             self.current_datapack.set_meta(**kwargs_i)
-            self.current_datapack.set_text(text,
-                replace_func=self.text_replace_operation)
+            self.current_datapack.set_text(
+                text, replace_func=self.text_replace_operation)
 
-        # doc.close()
         return self.current_datapack
 
     def _process_entity_annotations(
@@ -309,7 +306,7 @@ class OntonotesReader(MonoFileReader):
                     coref_mention = \
                         self._ontology.CoreferenceMention(  # type: ignore
                             word_begin, word_end
-                    )
+                        )
                     coref_mention = self.current_datapack.add_or_get_entry(
                         coref_mention
                     )
@@ -326,7 +323,7 @@ class OntonotesReader(MonoFileReader):
                 coref_mention = \
                     self._ontology.CoreferenceMention(  # type: ignore
                         start, word_end
-                )
+                    )
                 coref_mention = self.current_datapack.add_or_get_entry(
                     coref_mention
                 )
