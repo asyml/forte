@@ -7,7 +7,8 @@ from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
-    CoNLLNERPredictor, SRLPredictor, StandfordNLPProcessor)
+    CoNLLNERPredictor, SRLPredictor)
+from forte.processors.StanfordNLP_processor import StandfordNLPProcessor
 
 
 def StringProcessorExample():

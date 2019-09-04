@@ -24,9 +24,8 @@ class PipelineTest(unittest.TestCase):
         self.nlp.initialize_processors()
 
     def test_process_next(self):
-
         # get processed pack from dataset
-        for pack in self.nlp.process_dataset(data_source=self.dataset_path):
+        for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
             for sentence in pack.get_entries(Sentence):
                 sent_text = sentence.text

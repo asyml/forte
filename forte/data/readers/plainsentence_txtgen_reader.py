@@ -35,9 +35,6 @@ class PlainSentenceTxtgenReader(MonoFileMultiPackReader):
             self._ontology.Sentence: [],
         }
 
-    def _collect(self, **kwargs) -> Iterator[Any]:
-        return dataset_path_iterator(kwargs['data_source'], "")
-
     def parse_pack(self, file_path: str) -> MultiPack:
 
         input_pack_name = "input_src"
