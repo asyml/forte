@@ -23,6 +23,7 @@ class CoNLL03Reader(MonoFileReader):
             method reloads the dataset each time it's called. Otherwise,
             ``iter()`` returns a list.
     """
+
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
         self._ontology = conll03_ontology
@@ -36,13 +37,13 @@ class CoNLL03Reader(MonoFileReader):
         }
 
     # pylint: disable=no-self-use
-    def _collect(self, **kwargs) -> Iterator[Any]:
+    def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
         """
         Iterator over conll files in the data_source
-        :param kwargs: param `data_source` is the path to the files
+        :param conll_directory: directory to the conll files.
         :return: Iterator over files with conll path
         """
-        return dataset_path_iterator(kwargs['data_source'], "conll")
+        return dataset_path_iterator(conll_directory, "conll")
 
     def parse_pack(self, file_path: str) -> DataPack:
         pack = DataPack()

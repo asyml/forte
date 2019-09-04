@@ -30,14 +30,14 @@ class PlainTextReader(MonoFileReader):
         self.define_output_info()
 
     # pylint: disable=no-self-use
-    def _collect(self, **kwargs) -> Iterator[Any]:
+    def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
         """
         Should be called with param `data_source`
         which is a path to a folder containing txt files
-        :param kwargs: param data_source
+        :param kwargs: text directory containing the files.
         :return: Iterator over paths to .txt files
         """
-        return dataset_path_iterator(kwargs['data_source'], ".txt")
+        return dataset_path_iterator(text_directory, ".txt")
 
     def define_output_info(self):
         self.output_info = {

@@ -1,7 +1,7 @@
 """
 Base reader type to be inherited by all readers.
 """
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import (Iterator, Optional, Dict, Type, List, Union, Generic,
                     Any)
@@ -24,7 +24,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class BaseReader(Generic[PackType]):
+class BaseReader(Generic[PackType], ABC):
     """The basic data reader class.
     To be inherited by all data readers.
     """
@@ -75,6 +75,7 @@ class BaseReader(Generic[PackType]):
     def define_output_info(self):
         pass
 
+    # TODO: This should not be in the reader class.
     @staticmethod
     def serialize_instance(instance: PackType) -> str:
         """
@@ -90,7 +91,7 @@ class BaseReader(Generic[PackType]):
         return jsonpickle.decode(string)
 
     @abstractmethod
-    def _collect(self, **kwargs) -> Iterator[Any]:
+    def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
         """
         Gives an iterator of data objects
         each individual object should contain sufficient information
@@ -111,6 +112,16 @@ class BaseReader(Generic[PackType]):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def _cache_key_function(self, collection: Any) -> str:
+        """
+        Computes the cache key based on the type of data
+        :param collection:  Any object that provides information
+         to identify the name and location of the cache file
+        :return: str that specifies the path to cache file
+        """
+        raise NotImplementedError
+
     # pylint: disable=unused-argument,no-self-use
     def text_replace_operation(self,
                                text: str) -> ReplaceOperationsType:
@@ -124,16 +135,6 @@ class BaseReader(Generic[PackType]):
         """
         return []
 
-    @abstractmethod
-    def _cache_key_function(self, collection: Any) -> str:
-        """
-        Computes the cache key based on the type of data
-        :param collection:  Any object that provides information
-         to identify the name and location of the cache file
-        :return: str that specifies the path to cache file
-        """
-        raise NotImplementedError
-
     def _get_cache_location(self, collection: Any) -> Path:
         """
         Gets the path to the cache file for a collection
@@ -143,51 +144,11 @@ class BaseReader(Generic[PackType]):
         file_path = self._cache_key_function(collection)
         return Path(os.path.join(str(self._cache_directory), file_path))
 
-    def iter(self, **kwargs) -> Union[Iterator[PackType], List[PackType]]:
-        """
-        An iterator over the entire dataset, giving all Packs processed
-         as list or Iterator depending on `lazy`, giving all the Packs read
-         from the data source(s). If not reading from cache,
-         should call collect()
-        :param kwargs: One or more input data sources
-        for example, most DataPack readers
-        accept `data_source` as file/folder path
-        :return: Either Iterator or List depending on setting of `lazy`
-        """
-        if self.lazy:
-            return self._lazy_iter(**kwargs)
-
-        else:
-            datapacks: List[PackType] = []
-
-            for collection in self._collect(**kwargs):
-                if self.from_cache:
-                    # Read a list of packs from cache file
-                    for pack in self.read_from_cache(
-                            self._get_cache_location(collection)):
-                        datapacks.append(pack)
-                else:
-                    # Single pack from collection
-                    pack = self.parse_pack(collection)
-
-                    # write to the cache if _cache_directory specified
-                    if self._cache_directory is not None:
-                        self.cache_data(self._cache_directory, collection, pack)
-
-                    self._record_fields(pack)
-                    if not isinstance(pack, self.pack_type):
-                        raise ValueError(
-                            f"No Pack object read from the given "
-                            f"collection {collection}, returned {type(pack)}."
-                        )
-                    datapacks.append(pack)
-            return datapacks
-
-    def _lazy_iter(self, **kwargs):
-        for collection in self._collect(**kwargs):
+    def _lazy_iter(self, *args, **kwargs):
+        for collection in self._collect(*args, **kwargs):
             if self.from_cache:
                 for pack in self.read_from_cache(
-                    self._get_cache_location(collection)):
+                        self._get_cache_location(collection)):
                     yield pack
             else:
                 pack = self.parse_pack(collection)
@@ -204,7 +165,28 @@ class BaseReader(Generic[PackType]):
                     )
                 yield pack
 
-    def cache_data(self, cache_directory: Path,
+    def iter(self, *args, **kwargs) -> Union[Iterator[
+                                                 PackType], List[PackType]]:
+        """
+        An iterator over the entire dataset, giving all Packs processed
+         as list or Iterator depending on `lazy`, giving all the Packs read
+         from the data source(s). If not reading from cache,
+         should call collect()
+        :param kwargs: One or more input data sources
+        for example, most DataPack readers
+        accept `data_source` as file/folder path
+        :return: Either Iterator or List depending on setting of `lazy`
+        """
+        if self.lazy:
+            return self._lazy_iter(*args, **kwargs)
+
+        else:
+            datapacks: List[PackType] = [p for p in
+                                         self._lazy_iter(*args, **kwargs)]
+            return datapacks
+
+    def cache_data(self,
+                   cache_directory: Path,
                    collection: Any,
                    pack: PackType):
         """Specify the path to the cache directory.
@@ -219,15 +201,15 @@ class BaseReader(Generic[PackType]):
         :func:`serialize_instance`).
         """
         Path.mkdir(cache_directory, exist_ok=True)
-        cache_filename = Path(os.path.join(cache_directory,
-                                      self._get_cache_location(collection)))
+        cache_filename = os.path.join(
+            cache_directory, self._get_cache_location(collection))
 
         logger.info("Caching pack to %s", cache_filename)
         if self.append_to_cache:
-            with cache_filename.open('a') as cache:
+            with open(cache_filename, 'a') as cache:
                 cache.write(self.serialize_instance(pack) + "\n")
         else:
-            with cache_filename.open('w') as cache:
+            with open(cache_filename, 'w') as cache:
                 cache.write(self.serialize_instance(pack) + "\n")
 
     def _record_fields(self, pack: PackType):
@@ -266,7 +248,7 @@ class BaseReader(Generic[PackType]):
         return datapacks
 
 
-class PackReader(BaseReader[DataPack]):
+class PackReader(BaseReader[DataPack], ABC):
     """The basic data reader class.
     To be inherited by all data readers.
     """
@@ -276,7 +258,7 @@ class PackReader(BaseReader[DataPack]):
         return DataPack
 
 
-class MultiPackReader(BaseReader[MultiPack]):
+class MultiPackReader(BaseReader[MultiPack], ABC):
     """The basic MultiPack data reader class.
     To be inherited by all data readers which return MultiPack.
     """
