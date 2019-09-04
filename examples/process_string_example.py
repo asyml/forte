@@ -1,4 +1,5 @@
 import os
+import sys
 
 from termcolor import colored
 from texar.torch import HParams
@@ -117,6 +118,9 @@ def stanford_nlp_example1(lang: str, text: str):
 
 
 if __name__ == '__main__':
+    ner_dir, srl_dir = \
+        sys.argv[1:]  # pylint: disable=unbalanced-tuple-unpacking
+
     eng_text = "The plain green Norway spruce is displayed in the gallery's " \
                "foyer. Wentworth worked as an assistant to sculptor Henry " \
                "Moore in the late 1960s. His reputation as a sculptor grew " \
@@ -128,4 +132,4 @@ if __name__ == '__main__':
     stanford_nlp_example1('en', eng_text)
     stanford_nlp_example1('fr', fr_text)
 
-    string_processor_example()
+    string_processor_example(ner_dir, srl_dir)

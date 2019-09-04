@@ -2,7 +2,7 @@
 The reader that reads plain text data into Datapacks.
 """
 import logging
-from typing import Iterator, Optional, List
+from typing import Iterator, Optional, List, Union
 from pathlib import Path
 
 from forte import config
@@ -49,11 +49,15 @@ class StringReader(PackReader):
 
     # pylint: disable=no-self-use
     def _collect(self,  # type: ignore
-                 data_strings: List[str]) -> Iterator[str]:
+                 string_data: Union[List[str], str]) -> Iterator[str]:
         """
         data_strings should be of type `List[str]`
         which is the list of raw text strings to iterate over
         """
+        # This allows the user to pass in either one single string or a list of
+        # strings.
+        data_strings = [string_data] if isinstance(
+            string_data, str) else string_data
         for data in data_strings:
             yield data
 
