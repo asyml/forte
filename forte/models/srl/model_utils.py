@@ -11,6 +11,7 @@ LSTMState = Tuple[torch.Tensor, torch.Tensor]
 
 
 class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
+    # pylint: disable=super-init-not-called
     def __init__(self, input_size: int, hidden_size: int, dropout: float = 0.0):
         # skip super class constructor
         nn.Module.__init__(self)  # pylint: disable=non-parent-init-called
