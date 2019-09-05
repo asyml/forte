@@ -3,12 +3,11 @@ The reader that reads CoNLL-U Standard Universal Dependency Format -
 https://universaldependencies.org/docs/format.html
 into data_pack format
 """
-import os
-from typing import Iterator, Optional, Dict, Tuple, Any
+from typing import Iterator, Dict, Tuple, Any
 
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import conllU_ontology
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.file_reader import MonoFileMultiPackReader
 
@@ -77,8 +76,11 @@ class ConllUReader(MonoFileMultiPackReader):
             doc_text: str
             doc_id: str
             sent_text: str
+            sent_tokens: Dict[str, Tuple[Dict[str, Any],
+                                         conllU_ontology.DependencyToken]] = {}
 
             lines = file.readlines()
+
             for i, line in enumerate(lines):
                 line = line.strip()
                 line_comps = line.split()
@@ -92,8 +94,6 @@ class ConllUReader(MonoFileMultiPackReader):
                     doc_id = line.split("=")[1].strip()
 
                 elif line.startswith("# sent"):
-                    sent_tokens: Dict[str, Tuple[Dict[str, Any],
-                                      conllU_ontology.DependencyToken]] = {}
                     sent_text = ''
 
                 elif len(line_comps) > 0 and line_comps[0].strip().isdigit():
@@ -111,8 +111,8 @@ class ConllUReader(MonoFileMultiPackReader):
                             else:
                                 feature_lst = [elem.split('=', 1)
                                                for elem in values]
-                                feature_dict = dict([(str(elem[0]), str(elem[1]))
-                                                    for elem in feature_lst])
+                                feature_dict = {elem[0]: elem[1]
+                                                for elem in feature_lst}
                                 token_comps[key] = feature_dict
 
                     word: str = token_comps["form"]
@@ -120,8 +120,8 @@ class ConllUReader(MonoFileMultiPackReader):
                     word_end = doc_offset + len(word)
 
                     token = self._ontology.DependencyToken(word_begin, word_end)
-                    kwargs = dict([(key, token_comps[key])
-                                   for key in token_entry_fields])
+                    kwargs = {key: token_comps[key]
+                              for key in token_entry_fields}
 
                     # add token
                     token.set_fields(**kwargs)
@@ -142,18 +142,18 @@ class ConllUReader(MonoFileMultiPackReader):
                     for token_id in sent_tokens:
                         token_comps, token = sent_tokens[token_id]
 
-                        def add_dependency(head_id_, label_, typ):
+                        def add_dependency(head_id_, label_, typ, token_=token):
                             """
                             Adds dependency from :param head to token with
                             dependency label as :param label and type as :param
                             typ
                             """
                             if label_ == "root":
-                                token.root = True
+                                token_.root = True
                             else:
                                 head = sent_tokens[head_id_][1]
                                 dependency = self._ontology.DependencyLink(
-                                    head, token)
+                                    head, token_)
                                 dependency.dep_label = label_
                                 dependency.type = typ
                                 data_pack.add_or_get_entry(dependency)
