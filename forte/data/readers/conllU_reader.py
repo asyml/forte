@@ -119,7 +119,8 @@ class ConllUReader(MonoFileMultiPackReader):
                     word_begin = doc_offset
                     word_end = doc_offset + len(word)
 
-                    token = self._ontology.DependencyToken(word_begin, word_end)
+                    token = self._ontology.DependencyToken(  # type: ignore
+                        word_begin, word_end)
                     kwargs = {key: token_comps[key]
                               for key in token_entry_fields}
 
@@ -168,8 +169,8 @@ class ConllUReader(MonoFileMultiPackReader):
                             add_dependency(head_id, label, "enhanced")
 
                     # add sentence
-                    sent = self._ontology.Sentence(doc_sent_begin,
-                                                   doc_offset - 1)
+                    sent = self._ontology.Sentence(  # type: ignore
+                        doc_sent_begin, doc_offset - 1)
                     data_pack.add_or_get_entry(sent)
 
                     doc_sent_begin = doc_offset
@@ -180,7 +181,8 @@ class ConllUReader(MonoFileMultiPackReader):
                         # doc ends
 
                         # add doc to data_pack
-                        document = self._ontology.Document(0, len(doc_text))
+                        document = self._ontology.Document(  # type: ignore
+                            0, len(doc_text))
                         data_pack.add_or_get_entry(document)
                         data_pack.set_text(doc_text.strip())
 
