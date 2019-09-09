@@ -25,9 +25,8 @@ class DependencyToken(Token):
         # self._tid defined as a part of Entry
         # self.text defined as a part of Annotation
         self.is_root: bool = False
-        self.universal_pos_tag: str = None
+        self.universal_pos_tag: Optional[str] = None
         self.features: Dict[str, List[str]] = {}
-        # optional fields
         self.lemma: Optional[str] = None
         self.language_pos_tag: Optional[str] = None
         self.misc: Optional[Dict[str, List[str]]] = None

@@ -4,8 +4,12 @@ Tests for conllU reader
 import os
 import unittest
 
-from forte.data.ontology import universal_dependency_ontology
+from typing import List
+
+from forte.data.ontology.universal_dependency_ontology import \
+    (Sentence, UniversalDependency)
 from forte.data.readers.conllu_ud_reader import ConllUReader
+from forte.data.data_pack import DataPack
 
 
 class ConllUReaderTest(unittest.TestCase):
@@ -14,8 +18,9 @@ class ConllUReaderTest(unittest.TestCase):
         Reading the data into data_pack object to be used in the tests
         """
         curr_dir = os.path.dirname(os.path.realpath(__file__))
-        self.file_path = os.path.join(curr_dir, 'sample.conllu')
-        self.multi_pack = ConllUReader().parse_pack(self.file_path).view()
+        reader = ConllUReader()
+        self.data_packs: List[DataPack] = \
+            [data_pack for data_pack in reader.iter(curr_dir)]
         self.doc_ids = ["weblog-blogspot.com_nominations_20041117172713_ENG_"
                         "20041117_172713",
                         "weblog-blogspot.com_nominations_20041117172713_ENG_"
@@ -35,11 +40,12 @@ class ConllUReaderTest(unittest.TestCase):
              "District of Columbia , replacing Steffen W. Graae ."]
         ]
 
-        data_packs = self.multi_pack.packs
-        self.assertEqual(len(data_packs), 2)
+        self.assertEqual(len(self.data_packs), 2)
 
-        for doc_index, doc_id in enumerate(self.doc_ids):
-            data_pack = data_packs[doc_id]
+        for doc_index, expected_doc_id in enumerate(self.doc_ids):
+            data_pack = self.data_packs[doc_index]
+            self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
+
             doc_entry = data_pack.get_entry_by_id(f"{doc_module}.{0}")
 
             expected_doc_text = expected_docs_text[doc_index]
@@ -51,10 +57,13 @@ class ConllUReaderTest(unittest.TestCase):
                 self.assertEqual(sent_entry.text, expected_sent_text)
 
     def test_reader_dependency_tree(self):
-        data_pack = self.multi_pack.packs[self.doc_ids[1]]
+        doc_index = 1
+        data_pack = self.data_packs[doc_index]
+        expected_doc_id = self.doc_ids[doc_index]
+        self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
         self.assertEqual(
-            len(data_pack.get_entries_by_type(universal_dependency_ontology.Sentence)), 1)
-        dependencies = data_pack.get_entries_by_type(universal_dependency_ontology.UniversalDependency)
+            len(data_pack.get_entries_by_type(Sentence)), 1)
+        dependencies = data_pack.get_entries_by_type(UniversalDependency)
         for link in dependencies:
             root_token = get_dependency_tree_root(link, data_pack)
             self.assertEqual(root_token.text, "nominated")
@@ -66,11 +75,11 @@ def get_dependency_tree_root(link, data_pack):
     intermediate :param link
     """
     token = data_pack.get_entry_by_id(link.parent)
-    if token.root:
+    if token.is_root:
         return token
     parent_link = list(data_pack.get_links_by_child(token))[0]
-    return token if token.root else get_dependency_tree_root(parent_link,
-                                                             data_pack)
+    return token if token.is_root else get_dependency_tree_root(parent_link,
+                                                                data_pack)
 
 
 if __name__ == "__main__":

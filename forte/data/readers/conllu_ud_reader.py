@@ -41,15 +41,18 @@ class ConllUReader(PackReader):
             UniversalDependency: ["type"]
         }
 
-    def _cache_key_function(self, data_pack: DataPack) -> str:
+    def _cache_key_function(self, data_pack: Any) -> str:
+        if data_pack.meta.doc_id is None:
+            raise ValueError("data_pack does not have a document id")
         return data_pack.meta.doc_id
 
-    def _collect(self, conll_directory) -> Iterator[Any]:
+    def _collect(self, *args, **kwargs) -> Iterator[Any]:
         """
         Iterator over conll files in the data_source
-        :param conll_directory: directory to the conll files.
-        :return: Iterator over files with conll path
+        :param args[0]: directory to the conllu files.
+        :return: data_packs obtained from each document from each conllu file.
         """
+        conll_dir_path = args[0]
         token_comp_fields = ["id", "form", "lemma", "universal_pos_tag",
                              "language_pos_tag", "features", "head", "label",
                              "enhanced_dependency_relations", "misc"]
@@ -62,7 +65,7 @@ class ConllUReader(PackReader):
         token_entry_fields = ["lemma", "universal_pos_tag", "language_pos_tag",
                               "features", "misc"]
 
-        file_paths = dataset_path_iterator(conll_directory, "conllu")
+        file_paths = dataset_path_iterator(conll_dir_path, "conllu")
         for file_path in file_paths:
             with open(file_path, "r", encoding="utf8") as file:
                 data_pack: DataPack
@@ -144,9 +147,11 @@ class ConllUReader(PackReader):
                             def add_dependency(head_id_, label_, dep_type,
                                                token_):
                                 """
-                                Adds dependency from :param head to token with
-                                dependency label as :param label and type as :param
-                                typ
+                                Adds dependency from head,
+                                :param head_id_ to token
+                                :param token_ with dependency label as
+                                :param label_ and dependency type as
+                                :param dep_type
                                 """
                                 if label_ == "root":
                                     token_.is_root = True
