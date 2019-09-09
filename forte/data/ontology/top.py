@@ -146,8 +146,8 @@ class Link(Entry):
     """Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
     """
-    parent_type: Type[Entry] = Entry  # type: ignore
-    child_type: Type[Entry] = Entry  # type: ignore
+    parent_type: Type[Entry]
+    child_type: Type[Entry]
 
     def __init__(self, parent: Optional[Entry] = None,
                  child: Optional[Entry] = None):

@@ -74,7 +74,7 @@ def get_dependency_tree_root(link, data_pack):
     Returns the root token of the dependency tree in :param data_pack given an
     intermediate :param link
     """
-    token = data_pack.get_entry_by_id(link.parent)
+    token = link.get_parent()
     if token.is_root:
         return token
     parent_link = list(data_pack.get_links_by_child(token))[0]
