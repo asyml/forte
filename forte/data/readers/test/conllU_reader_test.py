@@ -4,8 +4,8 @@ Tests for conllU reader
 import os
 import unittest
 
-from forte.data.ontology import conllU_ontology
-from forte.data.readers.conllU_reader import ConllUReader
+from forte.data.ontology import universal_dependency_ontology
+from forte.data.readers.conllu_ud_reader import ConllUReader
 
 
 class ConllUReaderTest(unittest.TestCase):
@@ -53,8 +53,8 @@ class ConllUReaderTest(unittest.TestCase):
     def test_reader_dependency_tree(self):
         data_pack = self.multi_pack.packs[self.doc_ids[1]]
         self.assertEqual(
-            len(data_pack.get_entries_by_type(conllU_ontology.Sentence)), 1)
-        dependencies = data_pack.get_entries_by_type(conllU_ontology.DependencyLink)
+            len(data_pack.get_entries_by_type(universal_dependency_ontology.Sentence)), 1)
+        dependencies = data_pack.get_entries_by_type(universal_dependency_ontology.UniversalDependency)
         for link in dependencies:
             root_token = get_dependency_tree_root(link, data_pack)
             self.assertEqual(root_token.text, "nominated")

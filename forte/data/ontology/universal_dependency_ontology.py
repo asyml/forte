@@ -11,7 +11,7 @@ __all__ = [
     "Sentence",
     "Document",
     "DependencyToken",
-    "DependencyLink"
+    "UniversalDependency"
 ]
 
 
@@ -24,23 +24,22 @@ class DependencyToken(Token):
         super().__init__(begin, end)
         # self._tid defined as a part of Entry
         # self.text defined as a part of Annotation
-        self.root = False
-        self.universal_pos_tag = None
-        self.features = None
+        self.is_root: bool = False
+        self.universal_pos_tag: str = None
+        self.features: Dict[str, List[str]] = {}
         # optional fields
         self.lemma: Optional[str] = None
         self.language_pos_tag: Optional[str] = None
         self.misc: Optional[Dict[str, List[str]]] = None
 
 
-class DependencyLink(Dependency):
+class UniversalDependency(Dependency):
     """
     Dependency Link type for dependency parsing containing
-    additional "type" (regular or enhanced) information than
-    base_ontology.Dependency
+    additional "dependency type" (regular or enhanced) information
     """
     def __init__(self,
                  parent: Optional[DependencyToken] = None,
                  child: Optional[DependencyToken] = None):
         super().__init__(parent, child)
-        self.type = None
+        self.dep_type = None
