@@ -1,5 +1,8 @@
 import os
-from typing import Dict, List, Iterator
+from typing import Dict, List, Iterator, Tuple
+
+from forte.data.ontology import Span
+from forte.data.data_pack import ReplaceOperationsType
 
 __all__ = [
     "batch_instances",
@@ -81,3 +84,52 @@ def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
                     yield os.path.join(root, data_file)
             else:
                 yield os.path.join(root, data_file)
+
+
+def modify_text_and_track_ops(text: str, span_ops: ReplaceOperationsType)\
+        -> (str, ReplaceOperationsType, Dict[Span, Span], int):
+    """
+    Modifies the :param text using :param span_ops
+    Assumes that span_ops are mutually exclusive
+    :return mod_text: Modified text
+            inverse_operations: ReplaceOperations to obtain original text back
+            inverse_original_spans: List of replacement and original span
+            orig_text_len: length of original text
+    """
+    orig_text_len: int = len(text)
+    mod_text: str = text
+    increment: int = 0
+    prev_span_end: int = 0
+    inverse_operations: List[Tuple[Span, str]] = []
+    inverse_original_spans: List[Tuple[Span, Span]] = []
+
+    # Sorting the spans such that the order of replacement strings
+    # is maintained -> utilizing the stable sort property of python sort
+    span_ops.sort(key=lambda item: item[0])
+
+    for span, replacement in span_ops:
+        if span.begin < 0 or span.end < 0:
+            raise ValueError(
+                "Negative indexing not supported")
+        if span.begin > len(text) or span.end > len(text):
+            raise ValueError(
+                "One of the span indices are outside the string length")
+        if span.end < span.begin:
+            print(span.begin, span.end)
+            raise ValueError(
+                "One of the end indices is lesser than start index")
+        if span.begin < prev_span_end:
+            raise ValueError(
+                "The replacement spans should be mutually exclusive")
+        span_begin = span.begin + increment
+        span_end = span.end + increment
+        original_span_text = mod_text[span_begin: span_end]
+        mod_text = mod_text[:span_begin] + replacement + mod_text[span_end:]
+        increment += len(replacement) - (span.end - span.begin)
+        replacement_span = Span(span_begin, span_begin + len(replacement))
+        inverse_operations.append((replacement_span, original_span_text))
+        inverse_original_spans.append((replacement_span, span))
+        prev_span_end = span.end
+
+        return mod_text, inverse_operations, sorted(inverse_original_spans), \
+            orig_text_len

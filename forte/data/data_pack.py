@@ -10,6 +10,7 @@ from sortedcontainers import SortedList
 from forte.data.base_pack import BaseIndex, BaseMeta, BasePack
 from forte.data.ontology import (
     Entry, EntryType, Annotation, Link, Group, Span)
+from forte.data import io_utils
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ __all__ = [
     "ReplaceOperationsType"
 ]
 
-ReplaceOperationsType = List[Tuple[Tuple[int, int], str]]
+ReplaceOperationsType = List[Tuple[Span, str]]
 
 
 class Meta(BaseMeta):
@@ -53,11 +54,13 @@ class DataPack(BasePack):
         super().__init__()
         self._text = ""
 
-        self.annotations: SortedList[Annotation] = SortedList()
+        self.annotations: SortedList[Annotation] = []
         self.links: List[Link] = []
         self.groups: List[Group] = []
 
         self.inverse_replace_operations: ReplaceOperationsType = []
+        self.inverse_original_spans: List[Tuple[Span, Span]] = []
+        self.orig_text_len: str = 0
 
         self.index: DataIndex = DataIndex(self)
         self.meta: Meta = Meta(doc_id, name)
@@ -100,43 +103,12 @@ class DataPack(BasePack):
 
         span_ops = [] if replace_func is None else replace_func(text)
 
-        # Sorting the spans such that the order of replacement strings
-        # is maintained - utilizing the stable sort property of python sort
-        span_ops.sort(key=lambda item: item[0])
-
-        span_ops = [(Span(op[0], op[1]), replacement)
-                    for op, replacement in span_ops]
-
         # The spans should be mutually exclusive
-        inverse_operations = []
-        increment = 0
-        prev_span_end = 0
-        mod_text = text
-        for span, replacement in span_ops:
-            if span.begin < 0 or span.end < 0:
-                raise ValueError(
-                    "Negative indexing not supported")
-            if span.begin > len(text) or span.end > len(text):
-                raise ValueError(
-                    "One of the span indices are outside the string length")
-            if span.end < span.begin:
-                print(span.begin, span.end)
-                raise ValueError(
-                    "One of the end indices is lesser than start index")
-            if span.begin < prev_span_end:
-                raise ValueError(
-                    "The replacement spans should be mutually exclusive")
-            span_begin = span.begin + increment
-            span_end = span.end + increment
-            original_span_text = mod_text[span_begin: span_end]
-            mod_text = mod_text[:span_begin] + replacement + mod_text[span_end:]
-            increment += len(replacement) - (span.end - span.begin)
-            replacement_span = (span_begin, span_begin + len(replacement))
-            inverse_operations.append((replacement_span, original_span_text))
-            prev_span_end = span.end
-
-        self._text = mod_text
-        self.inverse_replace_operations = inverse_operations
+        self._text, \
+            self.inverse_replace_operations, \
+            self.inverse_original_spans,\
+            self.orig_text_len = \
+            io_utils.modify_text_and_track_ops(text, span_ops)
 
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """
@@ -186,6 +158,32 @@ class DataPack(BasePack):
             return entry
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)]
+
+    def get_original_text(self):
+        """
+        :return: Returns original text by applying inverse_replace_operations
+        to the modified text
+        """
+        original_text, _, _, _ = io_utils.modify_text_and_track_ops(
+            self._text, self.inverse_replace_operations)
+        return original_text
+
+    def get_original_span(self, input_inverse_span: Span):
+        """
+        :param input_inverse_span: Inverse span for which the original span
+        is required
+        :return: Original span corresponding to the inverse span
+        """
+        req_begin = input_inverse_span.begin
+        req_end = input_inverse_span.end
+        orig_begin = 0
+        orig_end = self.orig_text_len - 1
+        for (inverse_span, original_span) in self.inverse_original_spans:
+            if inverse_span.begin <= req_begin <= inverse_span.end:
+                orig_begin = original_span.begin
+            if inverse_span.begin <= req_end <= inverse_span.end:
+                orig_end = original_span.end
+        return Span(orig_begin, orig_end)
 
     def add_entry(self, entry: EntryType) -> EntryType:
         """
