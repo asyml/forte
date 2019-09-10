@@ -54,13 +54,13 @@ class DataPack(BasePack):
         super().__init__()
         self._text = ""
 
-        self.annotations: SortedList[Annotation] = []
+        self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
 
         self.inverse_replace_operations: ReplaceOperationsType = []
         self.inverse_original_spans: List[Tuple[Span, Span]] = []
-        self.orig_text_len: str = 0
+        self.orig_text_len: int = 0
 
         self.index: DataIndex = DataIndex(self)
         self.meta: Meta = Meta(doc_id, name)
@@ -162,27 +162,58 @@ class DataPack(BasePack):
     def get_original_text(self):
         """
         :return: Returns original text by applying inverse_replace_operations
-        to the modified text
+        to the modified text as saving the original text might be costly
         """
         original_text, _, _, _ = io_utils.modify_text_and_track_ops(
             self._text, self.inverse_replace_operations)
         return original_text
 
-    def get_original_span(self, input_inverse_span: Span):
+    def get_original_span(self, input_inverse_span: Span,
+                          align_mode: str = "relaxed"):
         """
         :param input_inverse_span: Inverse span for which the original span
         is required
+        :align_mode defines the degree of strictness of the span alignment
         :return: Original span corresponding to the inverse span
         """
+        assert align_mode in ["relaxed", "strict", "backward", "forward"]
+
         req_begin = input_inverse_span.begin
         req_end = input_inverse_span.end
-        orig_begin = 0
-        orig_end = self.orig_text_len - 1
-        for (inverse_span, original_span) in self.inverse_original_spans:
-            if inverse_span.begin <= req_begin <= inverse_span.end:
-                orig_begin = original_span.begin
-            if inverse_span.begin <= req_end <= inverse_span.end:
-                orig_end = original_span.end
+
+        def get_orig_index(req_val: int, is_begin_index: bool, mode: str) \
+                -> int:
+            """
+            :param req_val: inverse span index
+            :param is_begin_index: whether inverse_span index is begin or end
+            :param mode: alignment mode
+            :return: corresponding original index value
+            """
+            orig_val = None
+            for (inverse_span, original_span) in self.inverse_original_spans:
+                if req_val < inverse_span.begin:
+                    increment = original_span.begin - inverse_span.begin
+                    orig_val = req_val + increment
+                elif req_val > inverse_span.end:
+                    increment = original_span.end - inverse_span.end
+                    orig_val = req_val + increment
+                elif inverse_span.begin <= req_val <= inverse_span.end:
+                    if inverse_span.begin == req_val or mode == "backward" or \
+                            (is_begin_index and mode == "relaxed"):
+                        orig_val = original_span.begin
+                    elif inverse_span.end == req_val or mode == "forward" or \
+                            ((not is_begin_index) and mode == "relaxed"):
+                        orig_val = original_span.end
+                if orig_val is not None:
+                    break
+            if orig_val is None:
+                raise ValueError(f"The inverse span do not adhere to the "
+                                 f"{align_mode} alignment mode")
+            return orig_val
+
+        orig_begin = get_orig_index(req_begin, True, align_mode)
+        orig_end = get_orig_index(req_end, False, align_mode)
+
         return Span(orig_begin, orig_end)
 
     def add_entry(self, entry: EntryType) -> EntryType:

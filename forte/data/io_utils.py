@@ -2,7 +2,6 @@ import os
 from typing import Dict, List, Iterator, Tuple
 
 from forte.data.ontology import Span
-from forte.data.data_pack import ReplaceOperationsType
 
 __all__ = [
     "batch_instances",
@@ -10,6 +9,8 @@ __all__ = [
     "slice_batch",
     "dataset_path_iterator"
 ]
+
+ReplaceOperationsType = List[Tuple[Span, str]]
 
 
 def batch_instances(instances: List[Dict]):
@@ -86,8 +87,8 @@ def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
                 yield os.path.join(root, data_file)
 
 
-def modify_text_and_track_ops(text: str, span_ops: ReplaceOperationsType)\
-        -> (str, ReplaceOperationsType, Dict[Span, Span], int):
+def modify_text_and_track_ops(text: str, span_ops: ReplaceOperationsType) \
+        -> Tuple[str, ReplaceOperationsType, List[Tuple[Span, Span]], int]:
     """
     Modifies the :param text using :param span_ops
     Assumes that span_ops are mutually exclusive
@@ -131,5 +132,5 @@ def modify_text_and_track_ops(text: str, span_ops: ReplaceOperationsType)\
         inverse_original_spans.append((replacement_span, span))
         prev_span_end = span.end
 
-        return mod_text, inverse_operations, sorted(inverse_original_spans), \
-            orig_text_len
+    return (mod_text, inverse_operations, sorted(inverse_original_spans),
+            orig_text_len)
