@@ -20,6 +20,7 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
     """
     The base class of processors that process data in batch.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -27,9 +28,6 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         self.batch_size = None
         self.batcher = None
         self.use_coverage_index = False
-
-    def set_ontology(self, ontology):
-        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
 
     @abstractmethod
     def define_context(self) -> EntryType:
@@ -164,4 +162,4 @@ class MultiPackTxtgenBatchProcessor(BaseBatchProcessor[MultiPack]):
             if input_pack.packs[self.input_pack_name].index.coverage_index(
                     self.context_type, entry_type) is None:
                 input_pack.packs[self.input_pack_name
-                    ].index.build_coverage_index(self.context_type, entry_type)
+                ].index.build_coverage_index(self.context_type, entry_type)

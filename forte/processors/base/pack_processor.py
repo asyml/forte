@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from forte import config
 from forte.data import DataPack, PackType, MultiPack
 from forte.processors.base.base_processor import BaseProcessor
@@ -13,9 +13,6 @@ class BasePackProcessor(BaseProcessor[PackType]):
     """
     The base class of processors that process one pack each time.
     """
-
-    def set_ontology(self, ontology):
-        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
 
     def process(self, input_pack: PackType):
         """
@@ -34,14 +31,14 @@ class BasePackProcessor(BaseProcessor[PackType]):
         pass
 
 
-class PackProcessor(BasePackProcessor[DataPack]):
+class PackProcessor(BasePackProcessor[DataPack], ABC):
     """
     The base class of processors that process one pack each time.
     """
     pass
 
 
-class MultiPackProcessor(BasePackProcessor[MultiPack]):
+class MultiPackProcessor(BasePackProcessor[MultiPack], ABC):
     """
     The base class of processors that process MultiPack each time
     """

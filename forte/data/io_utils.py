@@ -81,3 +81,17 @@ def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
                     yield os.path.join(root, data_file)
             else:
                 yield os.path.join(root, data_file)
+
+
+def ensure_dir(doc_path: str):
+    """
+    Ensure the directory for writing this file exists
+    Args:
+        doc_path: The doc path that is going to be written to.
+
+    Returns:
+
+    """
+    parent = os.path.dirname(doc_path)
+    if not os.path.exists(parent):
+        os.makedirs(parent)

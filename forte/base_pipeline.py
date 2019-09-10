@@ -87,7 +87,33 @@ class BasePipeline(Generic[PackType]):
         self.processor_configs.append(config)
 
     def process(self, *args, **kwargs) -> PackType:
+        """
+        Alias for process_one.
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
         return self.process_one(*args, **kwargs)
+
+    def run(self, *args, **kwargs):
+        """
+        Run the whole pipeline and ignore all returned DataPack. This is used
+        when the users are relying on the side effect of the processors (e.g.
+        a process that will write Packs to disk).
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
+        for _ in self.process_dataset(*args, **kwargs):
+            # Process the whole dataset ignoring the return values.
+            # This essentially expect the processors have side effects.
+            pass
 
     def process_one(self, *args, **kwargs) -> PackType:
         """

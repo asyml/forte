@@ -67,6 +67,9 @@ class BaseReader(Generic[PackType], ABC):
     def pack_type(self):
         raise NotImplementedError
 
+    def __reader_name(self):
+        return self.__class__.__name__
+
     def set_ontology(self, ontology):
         self._ontology = ontology
         self.define_output_info()
@@ -81,7 +84,7 @@ class BaseReader(Generic[PackType], ABC):
         """
         Serializes a pack to a string.
         """
-        return jsonpickle.encode(instance, unpicklable=True)
+        return instance.serialize()
 
     @staticmethod
     def deserialize_instance(string: str) -> PackType:
@@ -256,6 +259,21 @@ class PackReader(BaseReader[DataPack], ABC):
     @property
     def pack_type(self):
         return DataPack
+
+    def set_text(self, pack: DataPack, text: str):
+        """
+        Assign the text value to the DataPack. This function will pass the
+        text_replace_operation to the DataPack to conduct the pre-processing
+        step.
+
+        Args:
+            pack: The datapack to assign value for.
+            text: The original text to be recorded in this dataset
+
+        Returns:
+
+        """
+        pack.set_text(text, replace_func=self.text_replace_operation)
 
 
 class MultiPackReader(BaseReader[MultiPack], ABC):

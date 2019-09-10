@@ -5,6 +5,8 @@ from collections import defaultdict
 from typing import (DefaultDict, Dict, Generic, List, Optional, Set, Type,
                     TypeVar, Union)
 
+import jsonpickle
+
 from forte.data.ontology import (Annotation, Entry, EntryType, Group,
                                  Link, Span)
 
@@ -25,9 +27,9 @@ class BaseMeta:
     """
 
     def __init__(self, doc_id: Optional[str] = None):
-        self.doc_id = doc_id
-        self.process_state = ''
-        self.cache_state = ''
+        self.doc_id: str = doc_id
+        self.process_state: str = ''
+        self.cache_state: str = ''
 
 
 class InternalMeta:
@@ -107,6 +109,12 @@ class BasePack:
         components in the internal meta of ``entry_type``.
         """
         raise NotImplementedError
+
+    def serialize(self) -> str:
+        """
+        Serializes a pack to a string.
+        """
+        return jsonpickle.encode(self, unpicklable=True)
 
     def view(self):
         return copy.deepcopy(self)

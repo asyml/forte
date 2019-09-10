@@ -36,14 +36,11 @@ class BaseProcessor(Generic[PackType]):
         """
         pass
 
-    @abstractmethod
     def set_ontology(self, ontology):
         """
-        Set the ontology of this processor, and accordingly update
-        :attr:`input_info`, :attr:`output_info`, and :attr:`context_type` (for
-        :class:`~nlp.forte.processors.batch_processor.BatchProcessor`)
+        Set the ontology of this processor, will be called by the Pipeline.
         """
-        raise NotImplementedError
+        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
 
     def set_output_info(self):
         self.output_info = self._define_output_info()
