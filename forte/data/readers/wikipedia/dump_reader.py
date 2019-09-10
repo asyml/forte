@@ -21,7 +21,7 @@ from multiprocessing import Pool, Value, Lock, Queue, Manager
 
 from forte.data.readers.wikipedia import page_parser
 from forte.data import DataPack
-from forte.data.readers.base_reader import BaseReader
+from forte.data.readers.base_reader import PackReader
 from forte.data.ontology import wiki_ontology
 
 __all__ = [
@@ -30,7 +30,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class WikiDumpReader(BaseReader):
+class WikiDumpReader(PackReader):
     def __init__(self, links_to_ignore: Set[str] = None):
         super().__init__()
         self._ontology = wiki_ontology
@@ -64,6 +64,9 @@ class WikiDumpReader(BaseReader):
             wiki_dump_file: str,
             redirects: Dict[str, str] = None,
     ) -> Iterator[Tuple]:
+        if redirects is None:
+            redirects = {}
+
         dump = mwxml.Dump.from_file(mwtypes.files.reader(wiki_dump_file))
 
         for (wiki_id, title, redirect, revision_id, wiki_links,
@@ -82,17 +85,24 @@ class WikiDumpReader(BaseReader):
             yield element
 
     def parse_pack(self, collection: Tuple) -> DataPack:
-        pass
+        pack = DataPack()
+
+        wiki_id, title, redirect, revision_id, links, text = collection
+
+        self.set_text(pack, text)
+        pack.set_meta(doc_id=title)
+
+        return pack
 
     def process_page_content(self):
         pass
 
-    def process_links(self, wikilinks: Iterable[Tuple[Wikilink, Span]],
+    def process_links(self, wiki_links: Iterable[Tuple[Wikilink, Span]],
                       redirects):
         links = []
-        for link, span in wikilinks:
+        for link, span in wiki_links:
             if not self.is_ignore_link(link):
-                wiki_title = get_name_and_id(link.link, redirects)
+                wiki_title = get_wiki_title(link.link, redirects)
                 links.append((link.anchor, wiki_title, span))
         return links
 
@@ -105,7 +115,7 @@ class WikiDumpReader(BaseReader):
         return False
 
 
-def get_name_and_id(title, redirects):
+def get_wiki_title(title, redirects):
     wiki_title = format_wiki_title(title)
     if wiki_title in redirects:
         wiki_title = redirects[wiki_title]

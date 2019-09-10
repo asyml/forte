@@ -1,7 +1,7 @@
 """
 Parse and write  wikilinks from Wikipedia XML database dumps.
 
-Generates a anchor surface counting JSON objects and a wikipedia text with anchor repalced as the Freebase id.
+Generates a anchor surface counting JSON objects and a wiki_parser text with anchor repalced as the Freebase id.
 
 Usage:
     extract -h | --help
@@ -121,7 +121,6 @@ def parse(
 
     for mw_page in pages_generator:
         for revision in mw_page.revisions:
-
             if revision.user is None:
                 user_type = 'None'
                 user_username = 'None'
@@ -145,38 +144,14 @@ def parse(
             else:
                 revision_minor = 0
 
-            yield (mw_page.id,
-                   mw_page.title,
-                   mw_page.redirect,
-                   revision.id,
-                   list(revision.wikilinks),
-                   ## convert the generator to list for easy parallelization.
-                   revision.text,
-                   )
-
-            # for wikilink, span in revision.wikilinks:
-            #     # project,page.id,page.title,revision.id,revision.parent_id,
-            #     # revision.timestamp,contributor_if_exists(revision.user),
-            #     # revision.minor,wikilink.link,wikilink.anchor,
-            #     # wikilink.section_name,wikilink.section_level,
-            #     # wikilink.section_number
-            #     yield (mw_page.id,
-            #            mw_page.title,
-            #            revision.id,
-            #            revision.parent_id,
-            #            revision.timestamp,
-            #            user_type,
-            #            user_username,
-            #            user_id,
-            #            revision_minor,
-            #            wikilink.link,
-            #            wikilink.anchor,
-            #            wikilink.section_name,
-            #            wikilink.section_level,
-            #            wikilink.section_number,
-            #            span,
-            #            revision.text
-            #            )
+            yield (
+                mw_page.id,
+                mw_page.title,
+                mw_page.redirect,
+                revision.id,
+                list(revision.wikilinks),
+                revision.text,
+            )
 
 
 def run(dump_files):

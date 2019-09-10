@@ -30,10 +30,6 @@ setuptools.setup(
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt'],
         'example': ['termcolor'],
-        'wikipedia': [
-            'python-mwlinks@https://api.github.com/repos/mediawiki-utilities'
-            '/python-mwlinks/tarball/master'
-        ]
     },
     package_data={
     },
