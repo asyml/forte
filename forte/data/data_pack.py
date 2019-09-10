@@ -249,17 +249,15 @@ class DataPack(BasePack):
                 # spans
                 elif inverse_span.begin <= input_index < inverse_span.end:
                     # look backward - backward shift of input_index
-                    if is_begin_index and (
-                            mode == "backward" or mode == "relaxed"):
+                    if is_begin_index and mode in ["backward", "relaxed"]:
                         orig_index = original_span.begin
-                    if not is_begin_index and (mode == "backward"):
+                    if not is_begin_index and mode == "backward":
                         orig_index = original_span.begin - 1
 
                     # look forward - forward shift of input_index
                     if is_begin_index and mode == "forward":
                         orig_index = original_span.end
-                    if not is_begin_index and (
-                            mode == "forward" or mode == "relaxed"):
+                    if not is_begin_index and mode in ["forward", "relaxed"]:
                         orig_index = original_span.end - 1
 
                 # break if the original index is populated
