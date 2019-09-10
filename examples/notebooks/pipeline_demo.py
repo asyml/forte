@@ -6,8 +6,8 @@
 
 from termcolor import colored
 
-from nlp.pipeline.data.ontology import conll03_ontology as Ont
-from nlp.pipeline.pipeline import Pipeline
+from forte.data import conll03_ontology as Ont
+from nlp.forte.pipeline import Pipeline
 
 # # Creates the pipeline here
 
@@ -38,7 +38,7 @@ win_medal_text = "British hurdler Sarah Claxton is confident she can win her fir
 # In[ ]:
 
 
-pack = pl.process(win_medal_text)
+pack = pl.process_one(win_medal_text)
 
 # # Now all the results are ready.
 # ## We have added the results as "entries" into our data.

@@ -1,17 +1,20 @@
+import os
+import sys
+
 from termcolor import colored
 from texar.torch import HParams
 
-from nlp.pipeline.data.ontology.conll03_ontology import (
-    Token, Sentence, EntityMention, PredicateLink)
-from nlp.pipeline.pipeline import Pipeline
-from nlp.pipeline.data.readers import StringReader
-from nlp.pipeline.processors.impl import (
+import forte.data.ontology.base_ontology as base_ontology
+import forte.data.ontology.stanfordnlp_ontology as stanfordnlp_ontology
+from forte.pipeline import Pipeline
+from forte.data.readers import StringReader
+from forte.processors import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
+from forte.processors.StanfordNLP_processor import StandfordNLPProcessor
 
 
-def main():
-
+def string_processor_example(ner_model_dir: str, srl_model_dir: str):
     pl = Pipeline()
     pl.set_reader(StringReader())
     pl.add_processor(NLTKSentenceSegmenter())
@@ -20,7 +23,7 @@ def main():
 
     ner_configs = HParams(
         {
-            'storage_path': './NER/resources.pkl',
+            'storage_path': os.path.join(ner_model_dir, 'resources.pkl')
         },
         CoNLLNERPredictor.default_hparams())
 
@@ -30,7 +33,7 @@ def main():
 
     srl_configs = HParams(
         {
-            'storage_path': './SRL_model/',
+            'storage_path': srl_model_dir,
         },
         SRLPredictor.default_hparams()
     )
@@ -43,34 +46,90 @@ def main():
         "Wentworth worked as an assistant to sculptor Henry Moore in the "
         "late 1960s. His reputation as a sculptor grew in the 1980s.")
 
-    pack = pl.process(text)
+    pack = pl.process_one(text)
 
-    for sentence in pack.get(Sentence):
+    for sentence in pack.get(base_ontology.Sentence):
         sent_text = sentence.text
-        print(colored("Sentence:", 'red'), sent_text, "\n")
+        print(colored("base_ontology.Sentence:", 'red'), sent_text, "\n")
         # first method to get entry in a sentence
         tokens = [(token.text, token.pos_tag) for token in
-                  pack.get(Token, sentence)]
+                  pack.get(base_ontology.Token, sentence)]
         entities = [(entity.text, entity.ner_type) for entity in
-                    pack.get(EntityMention, sentence)]
+                    pack.get(base_ontology.EntityMention, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
         print(colored("EntityMentions:", 'red'), entities, "\n")
 
         # second method to get entry in a sentence
         print(colored("Semantic role labels:", 'red'))
         for link in pack.get(
-                PredicateLink, sentence):
+                base_ontology.PredicateLink, sentence):
             parent = link.get_parent()
             child = link.get_child()
             print(f"  - \"{child.text}\" is role {link.arg_type} of "
                   f"predicate \"{parent.text}\"")
             entities = [entity.text for entity
-                        in pack.get(EntityMention, child)]
+                        in pack.get(base_ontology.EntityMention, child)]
             print("      Entities in predicate argument:", entities, "\n")
         print()
 
         input(colored("Press ENTER to continue...\n", 'green'))
 
 
+def stanford_nlp_example1(lang: str, text: str):
+    pl = Pipeline()
+    pl.set_reader(StringReader())
+
+    models_path = os.getcwd()
+    config = HParams(
+        {
+            'processors': 'tokenize,pos,lemma,depparse',
+            'lang': lang,
+            # Language code for the language to build the Pipeline
+            'use_gpu': False
+        },
+        StandfordNLPProcessor.default_hparams()
+    )
+    pl.add_processor(processor=StandfordNLPProcessor(models_path),
+                     config=config)
+    pl.set_ontology(stanfordnlp_ontology)
+
+    pl.initialize_processors()
+
+    pack = pl.process(text)
+    for sentence in pack.get(stanfordnlp_ontology.Sentence):
+        sent_text = sentence.text
+        print(colored("Sentence:", 'red'), sent_text, "\n")
+        tokens = [(token.text, token.pos_tag, token.lemma) for token in
+                  pack.get(stanfordnlp_ontology.Token, sentence)]
+        print(colored("Tokens:", 'red'), tokens, "\n")
+
+        print(colored("Dependency Relations:", 'red'))
+        for link in pack.get(
+                stanfordnlp_ontology.Dependency, sentence):
+            parent = link.get_parent()
+            child = link.get_child()
+            print(colored(child.text, 'cyan'),
+                  "has relation",
+                  colored(link.rel_type, 'green'),
+                  "of parent",
+                  colored(parent.text, 'cyan'))
+
+        print("\n----------------------\n")
+
+
 if __name__ == '__main__':
-    main()
+    ner_dir, srl_dir = sys.argv[  # pylint: disable=unbalanced-tuple-unpacking
+                       1:]
+
+    eng_text = "The plain green Norway spruce is displayed in the gallery's " \
+               "foyer. Wentworth worked as an assistant to sculptor Henry " \
+               "Moore in the late 1960s. His reputation as a sculptor grew " \
+               "in the 1980s."
+
+    fr_text = "Van Gogh grandit au sein d'une famille de " \
+              "l'ancienne bourgeoisie."
+
+    stanford_nlp_example1('en', eng_text)
+    stanford_nlp_example1('fr', fr_text)
+
+    string_processor_example(ner_dir, srl_dir)

@@ -9,17 +9,17 @@ from torch.optim import SGD
 import yaml
 
 from examples.NER.model_factory import BiRecurrentConvCRF
-from nlp.pipeline.common.resources import Resources
-from nlp.pipeline.data.readers.conll03_reader import CoNLL03Reader
-from nlp.pipeline.models.NER.utils import load_glove_embedding, \
+from forte.common.resources import Resources
+from forte.data.readers.conll03_reader import CoNLL03Reader
+from forte.models.NER.utils import load_glove_embedding, \
     normalize_digit_word
-from nlp.pipeline.models.NER.utils import set_random_seed
-from nlp.pipeline.processors.impl.ner_predictor import (
+from forte.models.NER.utils import set_random_seed
+from forte.processors.ner_predictor import (
     CoNLLNEREvaluator, CoNLLNERPredictor)
-from nlp.pipeline.processors.impl.vocabulary_processor import (
+from forte.processors.vocabulary_processor import (
     Alphabet, CoNLL03VocabularyProcessor)
-from nlp.pipeline.train_pipeline import TrainPipeline
-from nlp.pipeline.trainer.impl.ner_trainer import CoNLLNERTrainer
+from forte.train_pipeline import TrainPipeline
+from forte.trainer.ner_trainer import CoNLLNERTrainer
 
 logging.basicConfig(level=logging.DEBUG)
 
