@@ -35,10 +35,10 @@ class DependencyToken(Token):
 class UniversalDependency(Dependency):
     """
     Dependency Link type for dependency parsing containing
-    additional "dependency type" (regular or enhanced) information
+    additional "dependency type" (primary or enhanced) information
     """
     def __init__(self,
                  parent: Optional[DependencyToken] = None,
                  child: Optional[DependencyToken] = None):
         super().__init__(parent, child)
-        self.dep_type = None
+        self.dep_type: Optional[str] = None

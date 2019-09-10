@@ -144,36 +144,41 @@ class ConllUReader(PackReader):
                         for token_id in sent_tokens:
                             token_comps, token = sent_tokens[token_id]
 
-                            def add_dependency(head_id_, label_, dep_type,
-                                               token_):
+                            def add_dependency(dep_parent, dep_child, dep_label,
+                                               dep_type, data_pack_):
+                                """Adds dependency to a data_pack
+                                Args:
+                                    dep_parent: dependency parent token
+                                    dep_child: dependency child token
+                                    dep_label: dependency label
+                                    dep_type: "primary" or "enhanced" dependency
+                                    data_pack_: data_pack to which the
+                                    dependency is to be added
                                 """
-                                Adds dependency from head,
-                                :param head_id_ to token
-                                :param token_ with dependency label as
-                                :param label_ and dependency type as
-                                :param dep_type
-                                """
-                                if label_ == "root":
-                                    token_.is_root = True
-                                else:
-                                    head = sent_tokens[head_id_][1]
-                                    dependency = UniversalDependency(head,
-                                                                     token_)
-                                    dependency.dep_label = label_
-                                    dependency.type = dep_type
-                                    data_pack.add_or_get_entry(dependency)
+                                dependency = UniversalDependency(dep_parent,
+                                                                 dep_child)
+                                dependency.dep_label = dep_label
+                                dependency.type = dep_type
+                                data_pack_.add_or_get_entry(dependency)
 
                             # add primary dependency
-                            add_dependency(token_comps["head"],
-                                           token_comps["label"], "primary",
-                                           token)
+                            label = token_comps["label"]
+                            if label == "root":
+                                token.is_root = True
+                            else:
+                                token.is_root = False
+                                head = sent_tokens[token_comps["head"]][1]
+                                add_dependency(head, token, label,
+                                               "primary", data_pack)
 
                             # add enhanced dependencies
                             for dep in token_comps[
                                             "enhanced_dependency_relations"]:
                                 head_id, label = dep.split(":", 1)
-                                add_dependency(head_id, label, "enhanced",
-                                               token)
+                                if label != "root":
+                                    head = sent_tokens[head_id][1]
+                                    add_dependency(head, token, label,
+                                                   "enhanced", data_pack)
 
                         # add sentence
                         sent = Sentence(doc_sent_begin, doc_offset - 1)
