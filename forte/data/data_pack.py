@@ -173,7 +173,7 @@ class DataPack(BasePack):
         """
         :param input_inverse_span: Inverse span for which the original span
         is required
-        :align_mode defines the degree of strictness of the span alignment
+        :param align_mode defines the degree of strictness of the span alignment
         :return: Original span corresponding to the inverse span
         """
         assert align_mode in ["relaxed", "strict", "backward", "forward"]
