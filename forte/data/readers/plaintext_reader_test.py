@@ -54,23 +54,31 @@ class PlainTextReaderTest(unittest.TestCase):
         (Span(1, 6), Span(1, 6), "relaxed"),
         (Span(1, 6), Span(1, 6), "strict"),
         # after span ends
-        (Span(15, 22), Span(20, 27), "relaxed"),
+        (Span(15, 22), Span(19, 21), "relaxed"),
         # span itself
         (Span(11, 14), Span(11, 19), "relaxed"),
         # complete string
-        (Span(0, 29), Span(0, 34), "strict"),
+        (Span(0, 40), Span(0, 34), "strict"),
         # cases ending to or starting from between the span
-        (Span(11, 29), Span(11, 34), "relaxed"),
-        (Span(14, 29), Span(11, 34), "relaxed"),
-        (Span(14, 29), Span(11, 34), "backward"),
-        (Span(14, 29), Span(19, 34), "forward"),
+        (Span(11, 40), Span(11, 34), "relaxed"),
+        (Span(13, 40), Span(11, 34), "relaxed"),
+        (Span(14, 40), Span(19, 34), "relaxed"),
+        (Span(13, 40), Span(11, 34), "backward"),
+        (Span(13, 40), Span(19, 34), "forward"),
         (Span(0, 12), Span(0, 19), "relaxed"),
-        (Span(0, 12), Span(0, 11), "backward"),
-        (Span(0, 12), Span(0, 19), "forward")
+        (Span(0, 13), Span(0, 11), "backward"),
+        (Span(0, 14), Span(0, 19), "forward"),
+        # same begin and end
+        (Span(38, 38), Span(32, 32), "relaxed"),
+        (Span(38, 38), Span(32, 32), "strict"),
+        (Span(38, 38), Span(32, 32), "backward"),
+        (Span(38, 38), Span(32, 32), "forward")
     )
     def test_reader_original_span_test(self, value):
-        span_ops, output = ([(Span(11, 19), 'New')],
-                            '<title>The New Title </title>')
+        span_ops, output = ([(Span(11, 19), 'New'),
+                             (Span(19, 20), ' Shiny '),
+                             (Span(25, 25), ' Ends')],
+                            '<title>The New Shiny Title Ends </title>')
         input_span, expected_span, mode = value
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
