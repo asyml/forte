@@ -58,6 +58,8 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         if self.use_coverage_index:
             self.prepare_coverage_index(input_pack)
         for batch in self.batcher.get_batch(input_pack,
+                                            self.context_type,
+                                            self.input_info,
                                             tail_instances=tail_instances):
             pred = self.predict(batch)
             self.pack_all(pred)

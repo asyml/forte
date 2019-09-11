@@ -203,7 +203,9 @@ class ProcessingBatcher(Batcher):
     def get_batch(  # type: ignore
             self,
             input_pack: Optional[DataPack],
-            tail_instances: bool = False) -> Iterator[Dict]:
+            context_type: Type[Annotation],
+            requests: Dict[Type[Entry], Union[Dict, List]] = None,
+            tail_instances: bool = False):
         """
         Returns an iterator of data batches.
         """
@@ -216,7 +218,7 @@ class ProcessingBatcher(Batcher):
         else:  # cache the new pack and generate batches
             self.data_pack_pool.append(input_pack)
             for (data_batch, instance_num) in self._get_data_batch_by_need(
-                    input_pack, self.context_type, self.requests):
+                    input_pack, context_type, requests):
 
                 self.current_batch = merge_batches(
                     [self.current_batch, data_batch])
@@ -244,7 +246,6 @@ class ProcessingBatcher(Batcher):
         Try to get batches of size ``batch_size``. If the tail instances cannot
         make up a full batch, will generate a small batch with the tail
         instances.
-
         Returns:
             An iterator of tuples ``(batch, cnt)``, ``batch`` is a dict
             containing the required annotations and context, and ``cnt`` is
