@@ -12,11 +12,11 @@ from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 
 __all__ = [
-    "ConllUReader"
+    "ConllUDReader"
 ]
 
 
-class ConllUReader(PackReader):
+class ConllUDReader(PackReader):
     """:class:`conllUReader` is designed to read in the Universal Dependencies
     2.4 dataset.
 
@@ -29,7 +29,6 @@ class ConllUReader(PackReader):
     """
     def __init__(self, lazy: bool = True):
         super().__init__(lazy)
-        self.define_output_info()
 
     def define_output_info(self):
         self.output_info = {
@@ -53,6 +52,22 @@ class ConllUReader(PackReader):
         :return: data_packs obtained from each document from each conllu file.
         """
         conll_dir_path = args[0]
+
+        file_paths = dataset_path_iterator(conll_dir_path, "conllu")
+        for file_path in file_paths:
+            with open(file_path, "r", encoding="utf8") as file:
+                lines = file.readlines()
+                doc_lines = []
+
+                for i, line in enumerate(lines):
+                    # previous document ends
+                    doc_lines.append(line)
+                    if i == len(lines) - 1 or \
+                            lines[i + 1].strip().startswith("# newdoc"):
+                        yield doc_lines
+                        doc_lines = []
+
+    def parse_pack(self, doc_lines) -> DataPack:
         token_comp_fields = ["id", "form", "lemma", "universal_pos_tag",
                              "language_pos_tag", "features", "head", "label",
                              "enhanced_dependency_relations", "misc"]
@@ -65,140 +80,120 @@ class ConllUReader(PackReader):
         token_entry_fields = ["lemma", "universal_pos_tag", "language_pos_tag",
                               "features", "misc"]
 
-        file_paths = dataset_path_iterator(conll_dir_path, "conllu")
-        for file_path in file_paths:
-            with open(file_path, "r", encoding="utf8") as file:
-                data_pack: DataPack
-                doc_sent_begin: int
-                doc_num_sent: int
-                doc_offset: int
-                doc_text: str
-                doc_id: str
-                sent_text: str
-                sent_tokens: Dict[str, Tuple[Dict[str, Any], DependencyToken]] \
-                    = {}
+        data_pack: DataPack = DataPack()
+        doc_sent_begin: int = 0
+        doc_num_sent: int = 0
+        doc_text: str = ''
+        doc_offset: int = 0
+        doc_id: str
 
-                lines = file.readlines()
+        sent_text: str
+        sent_tokens: Dict[str, Tuple[Dict[str, Any], DependencyToken]] = {}
 
-                for i, line in enumerate(lines):
-                    line = line.strip()
-                    line_comps = line.split()
+        for line in doc_lines:
+            line = line.strip()
+            line_comps = line.split()
 
-                    if line.startswith("# newdoc"):
-                        data_pack = DataPack()
-                        doc_sent_begin = 0
-                        doc_num_sent = 0
-                        doc_text = ''
-                        doc_offset = 0
-                        doc_id = line.split("=")[1].strip()
+            if line.startswith("# newdoc"):
+                doc_id = line.split("=")[1].strip()
 
-                    elif line.startswith("# sent"):
-                        sent_text = ''
+            elif line.startswith("# sent"):
+                sent_text = ''
 
-                    elif len(line_comps) > 0 and \
-                            line_comps[0].strip().isdigit():
-                        # token
-                        token_comps: Dict[str, Any] = {}
+            elif len(line_comps) > 0 and \
+                    line_comps[0].strip().isdigit():
+                # token
+                token_comps: Dict[str, Any] = {}
 
-                        for index, key in enumerate(token_comp_fields):
-                            token_comps[key] = str(line_comps[index])
+                for index, key in enumerate(token_comp_fields):
+                    token_comps[key] = str(line_comps[index])
 
-                            if key in token_multi_fields:
-                                values = str(token_comps[key]).split("|") \
-                                    if token_comps[key] != '_' else []
-                                if key not in token_feature_fields:
-                                    token_comps[key] = values
-                                else:
-                                    feature_lst = [elem.split('=', 1)
-                                                   for elem in values]
-                                    feature_dict = {elem[0]: elem[1]
-                                                    for elem in feature_lst}
-                                    token_comps[key] = feature_dict
+                    if key in token_multi_fields:
+                        values = str(token_comps[key]).split("|") \
+                            if token_comps[key] != '_' else []
+                        if key not in token_feature_fields:
+                            token_comps[key] = values
+                        else:
+                            feature_lst = [elem.split('=', 1)
+                                           for elem in values]
+                            feature_dict = {elem[0]: elem[1]
+                                            for elem in feature_lst}
+                            token_comps[key] = feature_dict
 
-                        word: str = token_comps["form"]
-                        word_begin = doc_offset
-                        word_end = doc_offset + len(word)
+                word: str = token_comps["form"]
+                word_begin = doc_offset
+                word_end = doc_offset + len(word)
 
-                        token: DependencyToken \
-                            = DependencyToken(word_begin, word_end)
-                        kwargs = {key: token_comps[key]
-                                  for key in token_entry_fields}
+                token: DependencyToken \
+                    = DependencyToken(word_begin, word_end)
+                kwargs = {key: token_comps[key]
+                          for key in token_entry_fields}
 
-                        # add token
-                        token.set_fields(**kwargs)
-                        data_pack.add_or_get_entry(token)
+                # add token
+                token.set_fields(**kwargs)
+                data_pack.add_or_get_entry(token)
 
-                        sent_tokens[str(token_comps["id"])] = (token_comps,
-                                                               token)
+                sent_tokens[str(token_comps["id"])] = (token_comps, token)
 
-                        sent_text += word + " "
-                        doc_offset = word_end + 1
+                sent_text += word + " "
+                doc_offset = word_end + 1
 
-                    elif line == "":
-                        # sentence ends
-                        sent_text = sent_text.strip()
-                        doc_text += ' ' + sent_text
+            elif line == "":
+                # sentence ends
+                sent_text = sent_text.strip()
+                doc_text += ' ' + sent_text
 
-                        # add dependencies for a sentence when all the tokens
-                        # have been added
-                        for token_id in sent_tokens:
-                            token_comps, token = sent_tokens[token_id]
+                # add dependencies for a sentence when all the tokens have been
+                # added
+                for token_id in sent_tokens:
+                    token_comps, token = sent_tokens[token_id]
 
-                            def add_dependency(dep_parent, dep_child, dep_label,
-                                               dep_type, data_pack_):
-                                """Adds dependency to a data_pack
-                                Args:
-                                    dep_parent: dependency parent token
-                                    dep_child: dependency child token
-                                    dep_label: dependency label
-                                    dep_type: "primary" or "enhanced" dependency
-                                    data_pack_: data_pack to which the
-                                    dependency is to be added
-                                """
-                                dependency = UniversalDependency(dep_parent,
-                                                                 dep_child)
-                                dependency.dep_label = dep_label
-                                dependency.type = dep_type
-                                data_pack_.add_or_get_entry(dependency)
+                    def add_dependency(dep_parent, dep_child, dep_label,
+                                       dep_type, data_pack_):
+                        """Adds dependency to a data_pack
+                        Args:
+                            dep_parent: dependency parent token
+                            dep_child: dependency child token
+                            dep_label: dependency label
+                            dep_type: "primary" or "enhanced" dependency
+                            data_pack_: data_pack to which the
+                            dependency is to be added
+                        """
+                        dependency = UniversalDependency(dep_parent,
+                                                         dep_child)
+                        dependency.dep_label = dep_label
+                        dependency.type = dep_type
+                        data_pack_.add_or_get_entry(dependency)
 
-                            # add primary dependency
-                            label = token_comps["label"]
-                            if label == "root":
-                                token.is_root = True
-                            else:
-                                token.is_root = False
-                                head = sent_tokens[token_comps["head"]][1]
-                                add_dependency(head, token, label,
-                                               "primary", data_pack)
-
-                            # add enhanced dependencies
-                            for dep in token_comps[
-                                            "enhanced_dependency_relations"]:
-                                head_id, label = dep.split(":", 1)
-                                if label != "root":
-                                    head = sent_tokens[head_id][1]
-                                    add_dependency(head, token, label,
-                                                   "enhanced", data_pack)
-
-                        # add sentence
-                        sent = Sentence(doc_sent_begin, doc_offset - 1)
-                        data_pack.add_or_get_entry(sent)
-
-                        doc_sent_begin = doc_offset
-                        doc_num_sent += 1
-
-                        if i == len(lines) - 1 or \
-                                lines[i + 1].startswith("# newdoc"):
-                            # doc ends
-                            # add doc to data_pack
-                            document = Document(0, len(doc_text))
-                            data_pack.add_or_get_entry(document)
-                            data_pack.meta.doc_id = doc_id
-                            data_pack.set_text(doc_text.strip())
-
-                            yield data_pack
+                    # add primary dependency
+                    label = token_comps["label"]
+                    if label == "root":
+                        token.is_root = True
                     else:
-                        continue
+                        token.is_root = False
+                        head = sent_tokens[token_comps["head"]][1]
+                        add_dependency(head, token, label,
+                                       "primary", data_pack)
 
-    def parse_pack(self, data_pack) -> DataPack:
+                    # add enhanced dependencies
+                    for dep in token_comps["enhanced_dependency_relations"]:
+                        head_id, label = dep.split(":", 1)
+                        if label != "root":
+                            head = sent_tokens[head_id][1]
+                            add_dependency(head, token, label, "enhanced",
+                                           data_pack)
+
+                # add sentence
+                sent = Sentence(doc_sent_begin, doc_offset - 1)
+                data_pack.add_or_get_entry(sent)
+
+                doc_sent_begin = doc_offset
+                doc_num_sent += 1
+
+        # add doc to data_pack
+        document = Document(0, len(doc_text))
+        data_pack.add_or_get_entry(document)
+        data_pack.meta.doc_id = doc_id
+        data_pack.set_text(doc_text.strip())
+
         return data_pack

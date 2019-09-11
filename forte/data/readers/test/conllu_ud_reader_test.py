@@ -8,17 +8,17 @@ from typing import List
 
 from forte.data.ontology.universal_dependency_ontology import \
     (Sentence, UniversalDependency)
-from forte.data.readers.conllu_ud_reader import ConllUReader
+from forte.data.readers.conllu_ud_reader import ConllUDReader
 from forte.data.data_pack import DataPack
 
 
-class ConllUReaderTest(unittest.TestCase):
+class ConllUDReaderTest(unittest.TestCase):
     def setUp(self):
         """
         Reading the data into data_pack object to be used in the tests
         """
         curr_dir = os.path.dirname(os.path.realpath(__file__))
-        reader = ConllUReader()
+        reader = ConllUDReader()
         self.data_packs: List[DataPack] = \
             [data_pack for data_pack in reader.iter(curr_dir)]
         self.doc_ids = ["weblog-blogspot.com_nominations_20041117172713_ENG_"
