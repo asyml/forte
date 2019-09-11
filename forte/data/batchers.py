@@ -143,7 +143,7 @@ class TexarBatcher(Batcher):
 class ProcessingBatcher(Batcher):
     """
     A Batcher used in
-    :class:`~nlp.pipeline.processors.batch_processor.BatchProcessor`.
+    :class:`~forte.processors.batch_processor.BatchProcessor`.
     This Batcher only batches data sequentially.
     The Batcher receives new packs
     dynamically and cache the current packs so that the processors can

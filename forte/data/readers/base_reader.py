@@ -172,9 +172,9 @@ class BaseReader(Generic[PackType], ABC):
          as list or Iterator depending on `lazy`, giving all the Packs read
          from the data source(s). If not reading from cache,
          should call collect()
-        :param kwargs: One or more input data sources
-        for example, most DataPack readers
-        accept `data_source` as file/folder path
+
+        :param kwargs: One or more input data sources. For example, most
+          DataPack readers accept `data_source` as file/folder path
         :return: Either Iterator or List depending on setting of `lazy`
         """
         if self.lazy:

@@ -4,7 +4,7 @@ from forte.data.ontology.base_ontology import *
 
 class Token(Token):  # type: ignore
     """
-    A subclass of :class:`~nlp.pipeline.data.ontology.base_ontology.Token`.
+    A subclass of :class:`~forte.data.ontology.base_ontology.Token`.
     Includes token fields that are specific to CoNLL03 dataset.
 
     Args:

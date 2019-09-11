@@ -42,9 +42,9 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
     def initialize_batcher(self, hard_batch: bool = True):
         """
         Single pack :class:`BatchProcessor` initialize the batcher to be a
-        :class:`~nlp.pipeline.data.batchers.ProcessingBatcher`.
+        :class:`~forte.data.batchers.ProcessingBatcher`.
         And :class:`MultiPackBatchProcessor` initialize the batcher to be a
-        :class:`~nlp.pipeline.data.batchers.MultiPackProcessingBatcher`.
+        :class:`~forte.data.batchers.MultiPackProcessingBatcher`.
         """
         raise NotImplementedError
 

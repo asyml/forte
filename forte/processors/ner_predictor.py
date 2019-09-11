@@ -26,7 +26,7 @@ class CoNLLNERPredictor(BatchProcessor):
 
     Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
     :class:`Pipeline` must be an ontology that includes
-    ``nlp.pipeline.data.ontology.conll03_ontology``.
+    ``forte.data.ontology.conll03_ontology``.
     """
     def __init__(self):
         super().__init__()

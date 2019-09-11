@@ -25,7 +25,7 @@ ReplaceOperationsType = List[Tuple[Tuple[int, int], str]]
 
 class Meta(BaseMeta):
     """
-    Meta information of :class:`~nlp.pipeline.data.data_pack.DataPack`.
+    Meta information of :class:`~forte.data.data_pack.DataPack`.
     """
     def __init__(self, doc_id: Optional[str] = None,
                  name: Optional[str] = ""):
@@ -140,17 +140,17 @@ class DataPack(BasePack):
 
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """
-        Try to add an :class:`~nlp.pipeline.data.ontology.top.Entry` object to
+        Try to add an :class:`~forte.data.ontology.top.Entry` object to
         the :class:`DataPack` object.
         If a same entry already exists, will return the existing entry
         instead of adding the new one. Note that we regard two entries as the
-        same if their :meth:`~nlp.pipeline.data.ontology.top.Entry.eq` have
+        same if their :meth:`~forte.data.ontology.top.Entry.eq` have
         the same return value, and users could
-        override :meth:`~nlp.pipeline.data.ontology.top.Entry.eq` in their
+        override :meth:`~forte.data.ontology.top.Entry.eq` in their
         custom entry classes.
 
         Args:
-            entry (Entry): An :class:`~nlp.pipeline.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -193,12 +193,12 @@ class DataPack(BasePack):
 
     def add_entry(self, entry: EntryType) -> EntryType:
         """
-        Force add an :class:`~nlp.pipeline.data.ontology.top.Entry` object to
+        Force add an :class:`~forte.data.ontology.top.Entry` object to
         the :class:`DataPack` object.
         Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~nlp.pipeline.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -237,11 +237,11 @@ class DataPack(BasePack):
 
     def delete_entry(self, entry: EntryType):
         """
-        Delete an :class:`~nlp.pipeline.data.ontology.top.Entry` object from
+        Delete an :class:`~forte.data.ontology.top.Entry` object from
         the :class:`DataPack`.
 
         Args:
-            entry (Entry): An :class:`~nlp.pipeline.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
                 object to be deleted from the pack.
 
         """

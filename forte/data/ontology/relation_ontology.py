@@ -14,8 +14,8 @@ from forte.data.ontology.top import Link
 
 class RelationLink(Link):
     """
-    A :class:`~nlp.pipeline.data.ontology.top.Link` type entry which take
-    :class:`~nlp.pipeline.data.ontology.base_ontology.EntityMention`
+    A :class:`~forte.data.ontology.top.Link` type entry which take
+    :class:`~forte.data.ontology.base_ontology.EntityMention`
     objects as parent and child.
 
     Args:

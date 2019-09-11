@@ -20,8 +20,8 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
-from nlp import __version__
-from nlp.version import VERSION_SHORT as __version_short__
+from forte import __version__
+from forte.version import VERSION_SHORT as __version_short__
 
 # -- General configuration ------------------------------------------------
 
@@ -40,7 +40,7 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.napoleon',
     'recommonmark',
-    'sphinxcontrib.spelling',
+    # 'sphinxcontrib.spelling',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

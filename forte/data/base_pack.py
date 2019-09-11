@@ -22,8 +22,8 @@ __all__ = [
 class BaseMeta:
     """
     Basic Meta information for both
-    :class:`~nlp.pipeline.data.data_pack.DataPack` and
-    :class:`~nlp.pipeline.data.multi_pack.MultiPack`.
+    :class:`~forte.data.data_pack.DataPack` and
+    :class:`~forte.data.multi_pack.MultiPack`.
     """
 
     def __init__(self, doc_id: Optional[str] = None):
@@ -53,8 +53,8 @@ class InternalMeta:
 
 class BasePack:
     """
-    The base class of :class:`~nlp.pipeline.data.data_pack.DataPack` and
-    :class:`~nlp.pipeline.data.multi_pack.MultiPack`.
+    The base class of :class:`~forte.data.data_pack.DataPack` and
+    :class:`~forte.data.multi_pack.MultiPack`.
 
     Args:
         doc_id (str, optional): a string identifier of the pack.
@@ -80,12 +80,12 @@ class BasePack:
     @abstractmethod
     def add_entry(self, entry: EntryType) -> EntryType:
         """
-        Force add an :class:`~nlp.pipeline.data.ontology.top.Entry` object to
+        Force add an :class:`~forte.data.ontology.top.Entry` object to
         the :class:`BasePack` object.
         Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~nlp.pipeline.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -96,17 +96,17 @@ class BasePack:
     @abstractmethod
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """
-        Try to add an :class:`~nlp.pipeline.data.ontology.top.Entry` object to
+        Try to add an :class:`~forte.data.ontology.top.Entry` object to
         the :class:`BasePack` object.
         If a same entry already exists, will return the existing entry
         instead of adding the new one. Note that we regard two entries as the
-        same if their :meth:`~nlp.pipeline.data.ontology.top.Entry.eq` have
+        same if their :meth:`~forte.data.ontology.top.Entry.eq` have
         the same return value, and users could
-        override :meth:`~nlp.pipeline.data.ontology.top.Entry.eq` in their
+        override :meth:`~forte.data.ontology.top.Entry.eq` in their
         custom entry classes.
 
         Args:
-            entry (Entry): An :class:`~nlp.pipeline.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -226,7 +226,7 @@ class BaseIndex(Generic[PackType]):
 
         Args:
             inner_entry (str or Entry): An
-                :class:`~nlp.pipeline.data.ontology.top.Entry` object to be
+                :class:`~forte.data.ontology.top.Entry` object to be
                 checked.
             span (Span): A :class:`Span` object to be checked.
         """

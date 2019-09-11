@@ -28,7 +28,7 @@ class StandfordNLPProcessor(PackProcessor):
         self.processors = configs.processors
         self.lang = configs.lang
         self.set_up()
-        self.nlp = stanfordnlp.Pipeline(**configs.todict(),
+        self.nlp = stanfordforte(**configs.todict(),
                                         models_dir=self.MODELS_DIR)
 
     def _define_input_info(self) -> ProcessInfo:

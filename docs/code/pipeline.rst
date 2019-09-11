@@ -9,12 +9,12 @@ Process Pipeline
 
 :hidden:`BasePipeline`
 ------------------------
-.. autoclass:: nlp.pipeline.base_pipeline.BasePipeline
+.. autoclass:: forte.base_pipeline.BasePipeline
     :members:
 
 :hidden:`Pipeline`
 ------------------------
-.. autoclass:: nlp.pipeline.pipeline.Pipeline
+.. autoclass:: forte.pipeline.Pipeline
     :members:
 
 Train Pipeline
@@ -22,5 +22,5 @@ Train Pipeline
 
 :hidden:`TrainPipeline`
 ------------------------
-.. autoclass:: nlp.pipeline.train_pipeline.TrainPipeline
+.. autoclass:: forte.train_pipeline.TrainPipeline
     :members:

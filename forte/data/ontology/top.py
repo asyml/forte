@@ -45,8 +45,7 @@ class Entry:
     """The base class inherited by all NLP entries.
     There will be some associated attributes for each entry.
     - component: specify the creator of the entry
-    - _data_pack: each entry can be attached to a pack with
-        ``attach`` function.
+    - _data_pack: each entry can be attached to a pack with ``attach`` function
     - _tid: a unique identifier of this entry in the data pack
     """
 

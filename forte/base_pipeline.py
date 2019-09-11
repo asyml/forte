@@ -20,7 +20,6 @@ __all__ = [
 class BasePipeline(Generic[PackType]):
     """
     The pipeline consists of a list of predictors.
-    TODO(Wei): check fields when concatenating processors
     """
 
     def __init__(self):

@@ -17,7 +17,7 @@ class DummyRelationExtractor(BatchProcessor):
 
     Note that to use :class:`DummyRelationExtractor`, the :attr:`ontology` of
     :class:`Pipeline` must be an ontology that includes
-    ``nlp.pipeline.data.ontology.relation_ontology``.
+    ``forte.data.ontology.relation_ontology``.
     """
 
     def __init__(self) -> None:
