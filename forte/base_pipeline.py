@@ -163,23 +163,30 @@ class BasePipeline(Generic[PackType]):
         """
         if len(self.processors) == 0:
             yield from data_iter
-
         else:
             for pack in data_iter:
+                print("base pipeline reads:  " + pack.meta.doc_id)
                 self.current_packs.append(pack)
+                print('now contains ', len(self.current_packs), 'packs')
+
                 for i, processor in enumerate(self.processors):
                     for c_pack in self.current_packs:
                         in_cache = (c_pack.meta.cache_state ==
                                     processor.component_name)
+
+                        # There is some finish bug here.
+                        print('Process state: ', pack.meta.process_state)
                         can_process = (i == 0 or c_pack.meta.process_state ==
                                        self.processors[i - 1].component_name)
                         if can_process and not in_cache:
                             processor.process(c_pack)
+
                 for c_pack in list(self.current_packs):
                     # must iterate through a copy of the original list
                     # because of the removing operation
                     if (c_pack.meta.process_state ==
                             self.processors[-1].component_name):
+                        print('yielding from current pack')
                         yield c_pack
                         self.current_packs.remove(c_pack)
 

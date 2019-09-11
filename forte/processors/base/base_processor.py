@@ -1,7 +1,7 @@
 """
 The base class of processors
 """
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Dict, List, Union, Type, Generic
 
 from forte.common.resources import Resources
@@ -18,7 +18,7 @@ __all__ = [
 ProcessInfo = Dict[Type[Entry], Union[List, Dict]]
 
 
-class BaseProcessor(Generic[PackType]):
+class BaseProcessor(Generic[PackType], ABC):
     """The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
     """
@@ -62,14 +62,37 @@ class BaseProcessor(Generic[PackType]):
         """
         raise NotImplementedError
 
+    def process_internal(self, input_pack: PackType):
+        #TODO finish up the refactors here.
+        self._process(input_pack)
+        self._record_fields(input_pack)
+        input_pack.meta.process_state = self.component_name
+
     @abstractmethod
-    def process(self, input_pack: PackType):
+    def _process(self, input_pack: PackType):
+        """
+        The main function of the processor should be implemented here. The
+        implementation of this function should process the ``input_pack``, and
+        conduct operations such as adding entries into the pack, or produce
+        some side-effect such as writing data into the disk.
+
+        Args:
+            input_pack:
+
+        Returns:
+
+        """
         """Process the input pack"""
         raise NotImplementedError
 
     def _record_fields(self, input_pack: PackType):
         """
         Record the fields and entries that this processor add to packs.
+
+        Args:
+            input_pack:
+
+        Returns:
         """
         for entry_type, info in self.output_info.items():
             component = self.component_name
@@ -82,12 +105,15 @@ class BaseProcessor(Generic[PackType]):
                     component = info["component"]
             input_pack.record_fields(fields, entry_type, component)
 
-    def finish(self, input_pack: PackType):
+    def finish(self):
         """
-        Do finishing work for one pack.
+        The user can implement this function to close and release resources
+        used by this processor.
+
+        Returns:
+
         """
-        self._record_fields(input_pack)
-        input_pack.meta.process_state = self.component_name
+        pass
 
     @staticmethod
     def default_hparams():

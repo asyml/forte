@@ -81,6 +81,8 @@ class WikiDumpReader(PackReader):
 
             links = self.process_links(wiki_links, redirects)
 
+            print('next reading: ', wiki_id, title, 'contains', len(wiki_links))
+
             element = (wiki_id, title, redirect, revision_id, links, text)
             yield element
 
