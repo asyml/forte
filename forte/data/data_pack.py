@@ -10,6 +10,7 @@ from sortedcontainers import SortedList
 from forte.data.base_pack import BaseIndex, BaseMeta, BasePack
 from forte.data.ontology import (
     Entry, EntryType, Annotation, Link, Group, Span)
+from forte.data import io_utils
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ __all__ = [
     "ReplaceOperationsType"
 ]
 
-ReplaceOperationsType = List[Tuple[Tuple[int, int], str]]
+ReplaceOperationsType = List[Tuple[Span, str]]
 
 
 class Meta(BaseMeta):
@@ -57,7 +58,9 @@ class DataPack(BasePack):
         self.links: List[Link] = []
         self.groups: List[Group] = []
 
-        self.inverse_replace_operations: ReplaceOperationsType = []
+        self.replace_back_operations: ReplaceOperationsType = []
+        self.processed_original_spans: List[Tuple[Span, Span]] = []
+        self.orig_text_len: int = 0
 
         self.index: DataIndex = DataIndex(self)
         self.meta: Meta = Meta(doc_id, name)
@@ -100,43 +103,12 @@ class DataPack(BasePack):
 
         span_ops = [] if replace_func is None else replace_func(text)
 
-        # Sorting the spans such that the order of replacement strings
-        # is maintained - utilizing the stable sort property of python sort
-        span_ops.sort(key=lambda item: item[0])
-
-        span_ops = [(Span(op[0], op[1]), replacement)
-                    for op, replacement in span_ops]
-
         # The spans should be mutually exclusive
-        inverse_operations = []
-        increment = 0
-        prev_span_end = 0
-        mod_text = text
-        for span, replacement in span_ops:
-            if span.begin < 0 or span.end < 0:
-                raise ValueError(
-                    "Negative indexing not supported")
-            if span.begin > len(text) or span.end > len(text):
-                raise ValueError(
-                    "One of the span indices are outside the string length")
-            if span.end < span.begin:
-                print(span.begin, span.end)
-                raise ValueError(
-                    "One of the end indices is lesser than start index")
-            if span.begin < prev_span_end:
-                raise ValueError(
-                    "The replacement spans should be mutually exclusive")
-            span_begin = span.begin + increment
-            span_end = span.end + increment
-            original_span_text = mod_text[span_begin: span_end]
-            mod_text = mod_text[:span_begin] + replacement + mod_text[span_end:]
-            increment += len(replacement) - (span.end - span.begin)
-            replacement_span = (span_begin, span_begin + len(replacement))
-            inverse_operations.append((replacement_span, original_span_text))
-            prev_span_end = span.end
-
-        self._text = mod_text
-        self.inverse_replace_operations = inverse_operations
+        self._text, \
+            self.replace_back_operations, \
+            self.processed_original_spans,\
+            self.orig_text_len = \
+            io_utils.modify_text_and_track_ops(text, span_ops)
 
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """
@@ -186,6 +158,132 @@ class DataPack(BasePack):
             return entry
         # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)]
+
+    def get_original_text(self):
+        """Get original unmodified text from the :class:`DataPack` object.
+        :return: Original text after applying the `replace_back_operations`
+        of :class:`DataPack` object to the modified text
+        """
+        original_text, _, _, _ = io_utils.modify_text_and_track_ops(
+            self._text, self.replace_back_operations)
+        return original_text
+
+    def get_original_span(self, input_processed_span: Span,
+                          align_mode: str = "relaxed"):
+        """Function to obtain span of the original text that aligns with the
+        given span of the processed text
+
+        Args:
+            input_processed_span: Span of the processed text for which the
+            corresponding span of the original text is desired
+            align_mode: The strictness criteria for alignment in the ambiguous
+            cases, that is, if a part of input_processed_span spans a part
+            of the inserted span, then align_mode controls whether to use the
+            span fully or ignore it completely according to the following
+            possible values -
+            - "strict" - do not allow ambiguous input, give ValueError
+            - "relaxed" - consider spans on both sides
+            - "forward" - align looking forward, that is, ignore the span
+            towards the left, but consider the span towards the right
+            - "backward" - align looking backwards, that is, ignore the span
+            towards the right, but consider the span towards the left
+
+        Returns:
+            Span of the original text that aligns with input_processed_span
+
+        Example:
+            * Let o-up1, o-up2, ... and m-up1, m-up2, ... denote the unprocessed
+            spans of the original and modified string respectively. Note that
+            each o-up would have a corresponding m-up of the same size.
+            * Let o-pr1, o-pr2, ... and m-pr1, m-pr2, ... denote the processed
+            spans of the original and modified string respectively. Note that
+            each o-p is modified to a corresponding m-pr that may be of a
+            different size than o-pr.
+            * Original string:
+            <--o-up1--> <-o-pr1-> <------o-up2------> <----o-pr2----> <-o-up3->
+            * Modified string:
+            <--m-up1--> <----m-pr1----> <------m-up2------> <-m-pr2-> <-m-up3->
+            * Note that `self.inverse_original_spans` that contains modified
+            processed spans and their corresponding original spans, would look
+            like - [(o-pr1, m-pr1), (o-pr2, m-pr2)]
+            >>> data_pack = DataPack()
+            >>> original_text = "He plays in the park"
+            >>> data_pack.set_text(original_text,\
+            >>>                    lambda _: [(Span(0, 2), "She"))]
+            >>> data_pack.text
+            "She plays in the park"
+            >>> input_processed_span = Span(0, len("She plays"))
+            >>> orig_span = data_pack.get_original_span(input_processed_span)
+            >>> data_pack.get_original_text()[orig_span.begin: orig_span.end]
+            "He plays"
+        """
+        assert align_mode in ["relaxed", "strict", "backward", "forward"]
+
+        req_begin = input_processed_span.begin
+        req_end = input_processed_span.end
+
+        def get_original_index(input_index: int, is_begin_index: bool,
+                               mode: str) -> int:
+            """
+            Args:
+                input_index: begin or end index of the input span
+                is_begin_index: if the index is the begin index of the input
+                span or the end index of the input span
+                mode: alignment mode
+            Returns:
+                Original index that aligns with input_index
+            """
+            if len(self.processed_original_spans) == 0:
+                return input_index
+
+            len_processed_text = len(self._text)
+            orig_index = None
+            prev_end = 0
+            for (inverse_span, original_span) in self.processed_original_spans:
+                # check if the input_index lies between one of the unprocessed
+                # spans
+                if prev_end <= input_index < inverse_span.begin:
+                    increment = original_span.begin - inverse_span.begin
+                    orig_index = input_index + increment
+                # check if the input_index lies between one of the processed
+                # spans
+                elif inverse_span.begin <= input_index < inverse_span.end:
+                    # look backward - backward shift of input_index
+                    if is_begin_index and mode in ["backward", "relaxed"]:
+                        orig_index = original_span.begin
+                    if not is_begin_index and mode == "backward":
+                        orig_index = original_span.begin - 1
+
+                    # look forward - forward shift of input_index
+                    if is_begin_index and mode == "forward":
+                        orig_index = original_span.end
+                    if not is_begin_index and mode in ["forward", "relaxed"]:
+                        orig_index = original_span.end - 1
+
+                # break if the original index is populated
+                if orig_index is not None:
+                    break
+                prev_end = inverse_span.end
+
+            if orig_index is None:
+                # check if the input_index lies between the last unprocessed
+                # span
+                inverse_span, original_span = self.processed_original_spans[-1]
+                if inverse_span.end <= input_index < len_processed_text:
+                    increment = original_span.end - inverse_span.end
+                    orig_index = input_index + increment
+                else:
+                    # check if there input_index is not valid given the
+                    # alignment mode or lies outside the processed string
+                    raise ValueError(f"The input span either does not adhere "
+                                     f"to the {align_mode} alignment mode or "
+                                     f"lies outside to the processed string.")
+            return orig_index
+
+        orig_begin = get_original_index(req_begin, True, align_mode)
+        orig_end = get_original_index(req_end - 1, False, align_mode) + 1
+
+        return Span(orig_begin, orig_end)
 
     def add_entry(self, entry: EntryType) -> EntryType:
         """
@@ -348,7 +446,7 @@ class DataPack(BasePack):
         if context_components:
             valid_component_id: Set[str] = set()
             for component in context_components:
-                valid_component_id |= self.get_ids_by_compoent(component)
+                valid_component_id |= self.get_ids_by_component(component)
             valid_context_ids &= valid_component_id
 
         skipped = 0
@@ -580,7 +678,7 @@ class DataPack(BasePack):
                 components = [components]
             valid_component_id: Set[str] = set()
             for component in components:
-                valid_component_id |= self.get_ids_by_compoent(component)
+                valid_component_id |= self.get_ids_by_component(component)
             valid_id &= valid_component_id
         # valid span
         if range_annotation is not None:
@@ -617,7 +715,7 @@ class DataPack(BasePack):
                 f"There is no entry with tid '{tid}'' in this datapack")
         return entry
 
-    def get_ids_by_compoent(self, component: str) -> Set[str]:
+    def get_ids_by_component(self, component: str) -> Set[str]:
         """
         Look up the component_index with key ``component``.
         """
@@ -627,9 +725,9 @@ class DataPack(BasePack):
                             "in this datapack", component)
         return entry_set
 
-    def get_entries_by_compoent(self, component: str) -> Set[Entry]:
+    def get_entries_by_component(self, component: str) -> Set[Entry]:
         return {self.get_entry_by_id(tid)
-                    for tid in self.get_ids_by_compoent(component)}
+                for tid in self.get_ids_by_component(component)}
 
     def get_ids_by_type(self, tp: Type[EntryType]) -> Set[str]:
         """
