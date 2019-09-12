@@ -13,7 +13,7 @@ setuptools.setup(
     long_description=long_description,
     license='Apache License Version 2.0',
 
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(include=['forte.*']),
     platforms='any',
 
     install_requires=[
@@ -40,5 +40,5 @@ setuptools.setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
-    ],
+    ]
 )
