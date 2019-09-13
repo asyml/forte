@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from ddt import ddt, data
 
+from forte.data.ontology.top import Span
 from forte.data.readers.plaintext_reader import PlainTextReader
 
 
@@ -12,7 +13,7 @@ class PlainTextReaderTest(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()
-        self.orig_text = get_sample_html_text()
+        self.orig_text = "<title>The Original Title </title>"
         self.file_path = os.path.join(self.test_dir, 'test.html')
         self.mod_file_path = os.path.join(self.test_dir, 'mod_test.html')
         with open(self.file_path, 'w') as f:
@@ -31,11 +32,11 @@ class PlainTextReaderTest(unittest.TestCase):
         # No replacement
         ([], '<title>The Original Title </title>'),
         # Insertion
-        ([((11, 11), 'New ')], '<title>The New Original Title </title>'),
+        ([(Span(11, 11), 'New ')], '<title>The New Original Title </title>'),
         # Single, sorted multiple and unsorted multiple replacements
-        ([((11, 19), 'New')], '<title>The New Title </title>'),
-        ([((0, 7), ''), ((26, 34), '')], 'The Original Title '),
-        ([((26, 34), ''), ((0, 7), '')], 'The Original Title '),
+        ([(Span(11, 19), 'New')], '<title>The New Title </title>'),
+        ([(Span(0, 7), ''), (Span(26, 34), '')], 'The Original Title '),
+        ([(Span(26, 34), ''), (Span(0, 7), '')], 'The Original Title '),
     )
     def test_reader_replace_back_test(self, value):
         # Reading with replacements - replacing a span and changing it back
@@ -45,21 +46,58 @@ class PlainTextReaderTest(unittest.TestCase):
         pack = reader.parse_pack(self.file_path)
         self.assertEqual(pack.text, output)
 
-        with open(self.mod_file_path, 'w') as mod_file:
-            mod_file.write(pack.text)
-
-        # TODO: The reverting operation could possibly done more transparent
-        # to the users.
-        reader.text_replace_operation = lambda _: pack.inverse_replace_operations
-        inv_pack = reader.parse_pack(self.mod_file_path)
-        self.assertEqual(self.orig_text, inv_pack.text)
+        orig_text_from_pack = pack.get_original_text()
+        self.assertEqual(self.orig_text, orig_text_from_pack)
 
     @data(
-        ([((5, 8), ''), ((6, 10), '')], None),  # overlap
-        ([((5, 8), ''), ((6, 1000), '')], None),  # outside limit
-        ([((-1, 8), '')], None),  # does not support negative indexing
-        ([((8, -1), '')], None),  # does not support negative indexing
-        ([((2, 1), '')], None)  # start should be lesser than end
+        # before span starts
+        (Span(1, 6), Span(1, 6), "relaxed"),
+        (Span(1, 6), Span(1, 6), "strict"),
+        # after span ends
+        (Span(15, 22), Span(19, 21), "relaxed"),
+        # span itself
+        (Span(11, 14), Span(11, 19), "relaxed"),
+        # complete string
+        (Span(0, 40), Span(0, 34), "strict"),
+        # cases ending to or starting from between the span
+        (Span(11, 40), Span(11, 34), "relaxed"),
+        (Span(13, 40), Span(11, 34), "relaxed"),
+        (Span(14, 40), Span(19, 34), "relaxed"),
+        (Span(13, 40), Span(11, 34), "backward"),
+        (Span(13, 40), Span(19, 34), "forward"),
+        (Span(0, 12), Span(0, 19), "relaxed"),
+        (Span(0, 13), Span(0, 11), "backward"),
+        (Span(0, 14), Span(0, 19), "forward"),
+        # same begin and end
+        (Span(38, 38), Span(32, 32), "relaxed"),
+        (Span(38, 38), Span(32, 32), "strict"),
+        (Span(38, 38), Span(32, 32), "backward"),
+        (Span(38, 38), Span(32, 32), "forward")
+    )
+    def test_reader_original_span_test(self, value):
+        span_ops, output = ([(Span(11, 19), 'New'),
+                             (Span(19, 20), ' Shiny '),
+                             (Span(25, 25), ' Ends')],
+                            '<title>The New Shiny Title Ends </title>')
+        input_span, expected_span, mode = value
+        reader = PlainTextReader()
+        reader.text_replace_operation = lambda _: span_ops
+        pack = reader.parse_pack(self.file_path)
+        self.assertEqual(pack.text, output)
+
+        output_span = pack.get_original_span(input_span, mode)
+        self.assertEqual(output_span, expected_span,
+                         f"Expected: ({expected_span.begin, expected_span.end}"
+                         f"), Found: ({output_span.begin, output_span.end})"
+                         f" when Input: ({input_span.begin, input_span.end})"
+                         f" and Mode: {mode}")
+
+    @data(
+        ([(Span(5, 8), ''), (Span(6, 10), '')], None),  # overlap
+        ([(Span(5, 8), ''), (Span(6, 1000), '')], None),  # outside limit
+        ([(Span(-1, 8), '')], None),  # does not support negative indexing
+        ([(Span(8, -1), '')], None),  # does not support negative indexing
+        ([(Span(2, 1), '')], None)  # start should be lesser than end
     )
     def test_reader_replace_error_test(self, value):
         # Read with errors in span replacements
@@ -67,7 +105,6 @@ class PlainTextReaderTest(unittest.TestCase):
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
         try:
-
             reader.parse_pack(self.file_path)
         except ValueError:
             pass
@@ -75,10 +112,6 @@ class PlainTextReaderTest(unittest.TestCase):
             self.fail('Unexpected exception raised:')
         else:
             self.fail('Expected Exception not raised')
-
-
-def get_sample_html_text():
-    return '<title>The Original Title </title>'
 
 
 if __name__ == "__main__":
