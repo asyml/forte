@@ -12,7 +12,7 @@ class OntologyGenerator:
     """
     Class to generate a python ontology file given ontology in json format
     Example:
-        >>> generated_file, _ = OntologyGenerator().generate_ontology(
+        >>> _, generated_file, _ = OntologyGenerator().generate_ontology(
         'test/example_ontology.json')
         >>> assert open(generated_file, 'r').read() == \
                    open('test/true_example_ontology.py', 'r').read()
