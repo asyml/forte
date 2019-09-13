@@ -11,8 +11,6 @@ __all__ = [
 class Token(ontology.Token):
     def __init__(self, begin: int, end: int):
         super().__init__(begin, end)
-        self.dependency_relation = None
-        self.governor = None
         self.lemma = None
         self.upos = None
         self.xpos = None

@@ -13,7 +13,7 @@ from forte.data.data_pack import DataPack, ReplaceOperationsType
 from forte.data.multi_pack import MultiPack
 from forte.data.base_pack import PackType
 from forte.data.ontology import Entry, base_ontology
-from forte.utils import get_full_module_name
+from forte.utils import get_full_module_name, record_fields
 
 __all__ = [
     "BaseReader",
@@ -160,7 +160,7 @@ class BaseReader(Generic[PackType], ABC):
                 if self._cache_directory is not None:
                     self.cache_data(self._cache_directory, collection, pack)
 
-                self._record_fields(pack)
+                record_fields(self.output_info, self.component_name, pack)
                 if not isinstance(pack, self.pack_type):
                     raise ValueError(
                         f"No Pack object read from the given "
@@ -214,21 +214,6 @@ class BaseReader(Generic[PackType], ABC):
         else:
             with open(cache_filename, 'w') as cache:
                 cache.write(self.serialize_instance(pack) + "\n")
-
-    def _record_fields(self, pack: PackType):
-        """
-        Record the fields and entries that this processor add to packs.
-        """
-        for entry_type, info in self.output_info.items():
-            component = self.component_name
-            fields: List[str] = []
-            if isinstance(info, list):
-                fields = info
-            elif isinstance(info, dict):
-                fields = info["fields"]
-                if "component" in info.keys():
-                    component = info["component"]
-            pack.record_fields(fields, entry_type, component)
 
     def read_from_cache(self, cache_filename: Path) -> List[PackType]:
         """

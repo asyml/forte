@@ -1,3 +1,5 @@
+from typing import List
+
 from texar.torch import HParams
 import stanfordnlp
 
@@ -89,7 +91,8 @@ class StandfordNLPProcessor(PackProcessor):
                 sentence.words[-1].text)
             sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
             input_pack.add_or_get_entry(sentence_entry)
-            tokens = []
+
+            tokens: List[ontology.Token] = []
             if "tokenize" in self.processors:
                 offset = sentence_entry.span.begin
                 end_pos_word = 0
@@ -104,28 +107,24 @@ class StandfordNLPProcessor(PackProcessor):
                     )
 
                     if "pos" in self.processors:
-                        token.pos_tag = word.pos
-                        token.upos = word.upos
-                        token.xpos = word.xpos
+                        token.set_fields(pos_tag=word.pos)
+                        token.set_fields(upos=word.upos)
+                        token.set_fields(xpos=word.xpos)
 
                     if "lemma" in self.processors:
-                        token.lemma = word.lemma
-
-                    if "depparse" in self.processors:
-                        token.dependency_relation = word.dependency_relation
-                        token.governor = int(word.governor)
+                        token.set_fields(lemma=word.lemma)
 
                     tokens.append(token)
                     input_pack.add_or_get_entry(token)
 
             # For each sentence, get the dependency relations among tokens
             if "depparse" in self.processors:
-
                 # Iterating through token entries in current sentence
-                for token in tokens:
+                for token, word in zip(tokens, sentence.words):
                     child = token  # current token
-                    parent = tokens[token.governor - 1]  # Root token
+                    parent = tokens[word.governor - 1]  # Root token
                     relation_entry = self._ontology.Dependency(parent, child)
-                    relation_entry.rel_type = token.dependency_relation
+                    relation_entry.set_fields(
+                        rel_type=word.dependency_relation)
 
                     input_pack.add_or_get_entry(relation_entry)

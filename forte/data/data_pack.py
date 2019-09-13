@@ -27,6 +27,7 @@ class Meta(BaseMeta):
     """
     Meta information of a datapack.
     """
+
     def __init__(self, doc_id: Optional[str] = None,
                  name: Optional[str] = ""):
         super().__init__(doc_id)
@@ -91,7 +92,7 @@ class DataPack(BasePack):
     def set_text(self,
                  text: str,
                  replace_func: Optional[Callable[[str],
-                                        ReplaceOperationsType]] = None
+                                                 ReplaceOperationsType]] = None
                  ):
 
         if len(self._text) > 0:
@@ -153,39 +154,7 @@ class DataPack(BasePack):
             If a same entry already exists, returns the existing
             entry. Otherwise, return the (input) entry just added.
         """
-        if isinstance(entry, Annotation):
-            target = self.annotations
-        elif isinstance(entry, Link):
-            target = self.links
-        elif isinstance(entry, Group):
-            target = self.groups
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
-
-        if entry not in target:
-            # add the entry to the target entry list
-            name = entry.__class__
-            entry.set_tid(str(self.internal_metas[name].id_counter))
-            entry.attach(self)
-            if isinstance(target, list):
-                target.append(entry)
-            else:
-                target.add(entry)
-            self.internal_metas[name].id_counter += 1
-
-            # update the data pack index if needed
-            self.index.update_basic_index([entry])
-            if self.index.link_index_switch and isinstance(entry, Link):
-                self.index.update_link_index([entry])
-            if self.index.group_index_switch and isinstance(entry, Group):
-                self.index.update_group_index([entry])
-            self.index.deactivate_coverage_index()
-            return entry
-        # logger.debug(f"Annotation already exist {annotation.tid}")
-        return target[target.index(entry)]
+        return self.__add_entry(entry, False)
 
     def add_entry(self, entry: EntryType) -> EntryType:
         """
@@ -194,6 +163,21 @@ class DataPack(BasePack):
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
+
+        Returns:
+            The input entry itself
+        """
+        return self.__add_entry(entry, True)
+
+    def __add_entry(self, entry: EntryType,
+                    allow_duplicate: bool = True) -> EntryType:
+        """
+        Internal method to add an :class:`Entry` object to the
+        :class:`DataPack` object.
+
+        Args:
+            entry (Entry): An :class:`Entry` object to be added to the datapack.
+            allow_duplicate (bool): Whether we allow duplicate in the datapack.
 
         Returns:
             The input entry itself
@@ -210,24 +194,30 @@ class DataPack(BasePack):
                 f"should be an instance of Annotation, Link, or Group."
             )
 
-        # add the entry to the target entry list
-        entry.set_tid(str(self.internal_metas[entry.__class__].id_counter))
-        entry.attach(self)
-        if isinstance(target, list):
-            target.append(entry)
+        add_new = allow_duplicate or (entry not in target)
+
+        if add_new:
+            # add the entry to the target entry list
+            entry.set_tid(str(self.internal_metas[entry.__class__].id_counter))
+            entry.attach(self)
+            entry.__set_working_component(self.__owner_component)
+
+            if isinstance(target, list):
+                target.append(entry)
+            else:
+                target.add(entry)
+            self.internal_metas[entry.__class__].id_counter += 1
+
+            # update the data pack index if needed
+            self.index.update_basic_index([entry])
+            if self.index.link_index_switch and isinstance(entry, Link):
+                self.index.update_link_index([entry])
+            if self.index.group_index_switch and isinstance(entry, Group):
+                self.index.update_group_index([entry])
+            self.index.deactivate_coverage_index()
+            return entry
         else:
-            target.add(entry)
-        self.internal_metas[entry.__class__].id_counter += 1
-
-        # update the data pack index if needed
-        self.index.update_basic_index([entry])
-        if self.index.link_index_switch and isinstance(entry, Link):
-            self.index.update_link_index([entry])
-        if self.index.group_index_switch and isinstance(entry, Group):
-            self.index.update_group_index([entry])
-        self.index.deactivate_coverage_index()
-
-        return entry
+            return target[target.index(entry)]
 
     def delete_entry(self, entry: EntryType):
         begin = 0
@@ -253,7 +243,7 @@ class DataPack(BasePack):
         # update basic index
         self.index.entry_index.pop(entry.tid)
         self.index.type_index[type(entry)].remove(entry.tid)
-        self.index.component_index[entry.component].remove(entry.tid)
+        self.index.component_index[entry.__component].remove(entry.tid)
         # set other index invalid
         self.index.turn_link_index_switch(on=False)
         self.index.turn_group_index_switch(on=False)
@@ -348,7 +338,7 @@ class DataPack(BasePack):
         if context_components:
             valid_component_id: Set[str] = set()
             for component in context_components:
-                valid_component_id |= self.get_ids_by_compoent(component)
+                valid_component_id |= self.get_ids_by_component(component)
             valid_context_ids &= valid_component_id
 
         skipped = 0
@@ -580,7 +570,7 @@ class DataPack(BasePack):
                 components = [components]
             valid_component_id: Set[str] = set()
             for component in components:
-                valid_component_id |= self.get_ids_by_compoent(component)
+                valid_component_id |= self.get_ids_by_component(component)
             valid_id &= valid_component_id
         # valid span
         if range_annotation is not None:
@@ -617,7 +607,7 @@ class DataPack(BasePack):
                 f"There is no entry with tid '{tid}'' in this datapack")
         return entry
 
-    def get_ids_by_compoent(self, component: str) -> Set[str]:
+    def get_ids_by_component(self, component: str) -> Set[str]:
         """
         Look up the component_index with key ``component``.
         """
@@ -627,9 +617,9 @@ class DataPack(BasePack):
                             "in this datapack", component)
         return entry_set
 
-    def get_entries_by_compoent(self, component: str) -> Set[Entry]:
+    def get_entries_by_component(self, component: str) -> Set[Entry]:
         return {self.get_entry_by_id(tid)
-                    for tid in self.get_ids_by_compoent(component)}
+                for tid in self.get_ids_by_component(component)}
 
     def get_ids_by_type(self, tp: Type[EntryType]) -> Set[str]:
         """

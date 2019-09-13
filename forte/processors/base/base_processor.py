@@ -8,7 +8,7 @@ from forte.common.resources import Resources
 from forte.data import PackType
 from forte.data.ontology import base_ontology, Entry
 from forte.data.selector import DummySelector
-from forte.utils import get_full_module_name
+from forte.utils import get_full_module_name, record_fields
 
 __all__ = [
     "BaseProcessor",
@@ -62,11 +62,16 @@ class BaseProcessor(Generic[PackType], ABC):
         """
         raise NotImplementedError
 
-    def process_internal(self, input_pack: PackType):
-        #TODO finish up the refactors here.
+    def process(self, input_pack: PackType):
+        # TODO finish up the refactors here.
+        # Obtain the control of the DataPack.
+        input_pack.enter_processing(self.component_name)
+        # Do the actual processing.
         self._process(input_pack)
-        self._record_fields(input_pack)
+        # Record all the fields
+        record_fields(self.output_info, self.component_name, input_pack)
         input_pack.meta.process_state = self.component_name
+        input_pack.exit_processing()
 
     @abstractmethod
     def _process(self, input_pack: PackType):
@@ -82,28 +87,7 @@ class BaseProcessor(Generic[PackType], ABC):
         Returns:
 
         """
-        """Process the input pack"""
         raise NotImplementedError
-
-    def _record_fields(self, input_pack: PackType):
-        """
-        Record the fields and entries that this processor add to packs.
-
-        Args:
-            input_pack:
-
-        Returns:
-        """
-        for entry_type, info in self.output_info.items():
-            component = self.component_name
-            fields: List[str] = []
-            if isinstance(info, list):
-                fields = info
-            elif isinstance(info, dict):
-                fields = info["fields"]
-                if "component" in info.keys():
-                    component = info["component"]
-            input_pack.record_fields(fields, entry_type, component)
 
     def finish(self):
         """

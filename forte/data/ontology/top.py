@@ -46,13 +46,26 @@ class Entry:
     """
 
     def __init__(self):
-        self.component = config.working_component
         self._data_pack = None
         self._tid: Optional[str] = None
+
+        self.__component = None
+        self.__modified_fields = set()
 
     @property
     def tid(self):
         return self._tid
+
+    def __set_working_component(self, component: str):
+        """
+        Set the component of the creator of this entry.
+        Args:
+            component: The component name of the creator (processor or reader).
+
+        Returns:
+
+        """
+        self.__component = component
 
     def set_tid(self, tid: str):
         """Set the entry id"""
@@ -75,6 +88,7 @@ class Entry:
                     f"has no attribute {field_name}"
                 )
             setattr(self, field_name, field_value)
+            self.__modified_fields.add(field_name)
 
     @abstractmethod
     def hash(self):
@@ -118,11 +132,11 @@ class Annotation(Entry):
 
     def hash(self):
         return hash(
-            (self.component, type(self), self.span.begin, self.span.end))
+            (type(self), self.span.begin, self.span.end))
 
     def eq(self, other):
-        return (type(self), self.component, self.span.begin, self.span.end) == \
-               (type(other), other.component, other.span.begin, other.span.end)
+        return (type(self), self.span.begin, self.span.end) == \
+               (type(other), other.span.begin, other.span.end)
 
     def __lt__(self, other):
         """Have to support total ordering and be consistent with
@@ -130,8 +144,6 @@ class Annotation(Entry):
         """
         if self.span != other.span:
             return self.span < other.span
-        if self.component != other.component:
-            return self.component < other.component
         return str(type(self)) < str(type(other))
 
     @property
@@ -160,11 +172,11 @@ class Link(Entry):
             self.set_child(child)
 
     def hash(self):
-        return hash((self.component, type(self), self.parent, self.child))
+        return hash((type(self), self.parent, self.child))
 
     def eq(self, other):
-        return (type(self), self.component, self.parent, self.child) == \
-               (type(other), other.component, other.parent, other.child)
+        return (type(self), self.parent, self.child) == \
+               (type(other), other.parent, other.child)
 
     @property
     def parent(self):
@@ -271,11 +283,11 @@ class Group(Entry):
         return self._members
 
     def hash(self):
-        return hash((type(self), self.component, tuple(self.members)))
+        return hash((type(self), tuple(self.members)))
 
     def eq(self, other):
-        return (type(self), self.component, self.members) == \
-               (type(other), other.component, other.members)
+        return (type(self), self.members) == \
+               (type(other), other.members)
 
     def get_members(self):
         """
