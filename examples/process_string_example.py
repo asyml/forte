@@ -1,5 +1,4 @@
 import os
-import sys
 
 from termcolor import colored
 from texar.torch import HParams
@@ -12,6 +11,7 @@ from forte.processors import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
 from forte.processors.StanfordNLP_processor import StandfordNLPProcessor
+from forte.processors.simple_writers import SimpleJsonPackWriter
 
 
 def string_processor_example(ner_model_dir: str, srl_model_dir: str):
@@ -75,7 +75,7 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
         input(colored("Press ENTER to continue...\n", 'green'))
 
 
-def stanford_nlp_example1(lang: str, text: str):
+def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
     pl = Pipeline()
     pl.set_reader(StringReader())
 
@@ -91,6 +91,8 @@ def stanford_nlp_example1(lang: str, text: str):
     )
     pl.add_processor(processor=StandfordNLPProcessor(models_path),
                      config=config)
+    pl.add_processor(processor=SimpleJsonPackWriter(),
+                     config=output_config)
     pl.set_ontology(stanfordnlp_ontology)
 
     pl.initialize_processors()
@@ -118,8 +120,15 @@ def stanford_nlp_example1(lang: str, text: str):
 
 
 if __name__ == '__main__':
-    ner_dir, srl_dir = sys.argv[  # pylint: disable=unbalanced-tuple-unpacking
-                       1:]
+    # ner_dir, srl_dir = sys.argv[  # pylint: disable=unbalanced-tuple-unpacking
+    #                    1:]
+
+    output_config = HParams(
+        {
+            'output_dir': '.'
+        },
+        SimpleJsonPackWriter.default_hparams(),
+    )
 
     eng_text = "The plain green Norway spruce is displayed in the gallery's " \
                "foyer. Wentworth worked as an assistant to sculptor Henry " \
@@ -129,7 +138,7 @@ if __name__ == '__main__':
     fr_text = "Van Gogh grandit au sein d'une famille de " \
               "l'ancienne bourgeoisie."
 
-    stanford_nlp_example1('en', eng_text)
-    stanford_nlp_example1('fr', fr_text)
+    stanford_nlp_example1('en', eng_text, output_config)
+    # stanford_nlp_example1('fr', fr_text, output_config)
 
-    string_processor_example(ner_dir, srl_dir)
+    # string_processor_example(ner_dir, srl_dir)

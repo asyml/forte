@@ -12,7 +12,7 @@ from texar.torch.hyperparams import HParams
 from forte.common.resources import Resources
 from forte.data import PackType
 from forte.pipeline import Pipeline
-from forte.processors.writers import JsonPackWriter
+from forte.processors.base.writers import JsonPackWriter
 from forte.data.readers.wikipedia.dump_reader import WikiDumpReader
 
 
@@ -35,7 +35,7 @@ class WikiArticleWriter(JsonPackWriter):
             os.path.join(self.root_output_dir, 'article.idx'), 'w')
         self.csv_writer = csv.writer(self.article_index, delimiter='\t')
 
-    def output_path(self, pack: PackType) -> str:
+    def sub_output_dir(self, pack: PackType) -> str:
         sub_dir = str(self.article_count % 2000).zfill(5)
         doc_id = str(pack.meta.doc_id)
         return os.path.join(sub_dir, doc_id)
@@ -57,7 +57,7 @@ class WikiArticleWriter(JsonPackWriter):
         super(WikiArticleWriter, self).process(input_pack)
         # TODO: found duplicate entries here.
         self.csv_writer.writerow(
-            [input_pack.meta.doc_id, self.output_path(input_pack)]
+            [input_pack.meta.doc_id, self.sub_output_dir(input_pack)]
         )
 
     def finish(self, input_pack: PackType):
