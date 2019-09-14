@@ -27,6 +27,7 @@ class ConllUDReader(PackReader):
             method reloads the dataset each time it's called. Otherwise,
             ``iter()`` returns a list.
     """
+    # pylint: disable=attribute-defined-outside-init
     def define_output_info(self):
         self.output_info = {
             Document: [],
@@ -43,8 +44,8 @@ class ConllUDReader(PackReader):
             raise ValueError("data_pack does not have a document id")
         return data_pack.meta.doc_id
 
-    # pylint: disable=no-self-use
-    def _collect(self, *args) -> Iterator[Any]:
+    # pylint: disable = no-self-use, unused-argument
+    def _collect(self, *args, **kwargs) -> Iterator[Any]:
         """
         Iterator over conll files in the data_source
         :param args[0]: directory to the conllu files.
