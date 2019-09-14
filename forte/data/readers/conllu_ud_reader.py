@@ -27,9 +27,6 @@ class ConllUDReader(PackReader):
             method reloads the dataset each time it's called. Otherwise,
             ``iter()`` returns a list.
     """
-    def __init__(self, lazy: bool = True):
-        super().__init__(lazy)
-
     def define_output_info(self):
         self.output_info = {
             Document: [],
@@ -40,12 +37,14 @@ class ConllUDReader(PackReader):
             UniversalDependency: ["type"]
         }
 
+    # pylint: disable=no-self-use
     def _cache_key_function(self, data_pack: Any) -> str:
         if data_pack.meta.doc_id is None:
             raise ValueError("data_pack does not have a document id")
         return data_pack.meta.doc_id
 
-    def _collect(self, *args, **kwargs) -> Iterator[Any]:
+    # pylint: disable=no-self-use
+    def _collect(self, *args) -> Iterator[Any]:
         """
         Iterator over conll files in the data_source
         :param args[0]: directory to the conllu files.
@@ -67,6 +66,7 @@ class ConllUDReader(PackReader):
                         yield doc_lines
                         doc_lines = []
 
+    # pylint: disable=no-self-use
     def parse_pack(self, doc_lines) -> DataPack:
         token_comp_fields = ["id", "form", "lemma", "universal_pos_tag",
                              "language_pos_tag", "features", "head", "label",
