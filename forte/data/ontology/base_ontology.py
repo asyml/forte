@@ -13,7 +13,8 @@ __all__ = [
     "PredicateLink",
     "PredicateArgument",
     "CoreferenceGroup",
-    "CoreferenceMention"
+    "CoreferenceMention",
+    "Dependency"
 ]
 
 
@@ -66,3 +67,17 @@ class CoreferenceGroup(Group):
     def __init__(self, members: Optional[Set[CoreferenceMention]] = None):
         super().__init__(members)  # type: ignore
         self.coref_type = None
+
+
+class Dependency(Link):
+    """
+    Link between head token to dependent token meant for Dependency Parsing
+    """
+    parent_type = Token
+    child_type = Token
+
+    def __init__(self,
+                 parent: Optional[Token] = None,
+                 child: Optional[Token] = None):
+        super().__init__(parent, child)
+        self.dep_label = None
