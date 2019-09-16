@@ -60,7 +60,7 @@ class WikiArticleWriter(JsonPackWriter):
             [input_pack.meta.doc_id, self.sub_output_dir(input_pack)]
         )
 
-    def finish(self, input_pack: PackType):
+    def finish(self):
         self.article_index.close()
 
 

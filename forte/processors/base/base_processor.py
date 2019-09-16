@@ -68,9 +68,11 @@ class BaseProcessor(Generic[PackType], ABC):
         input_pack.enter_processing(self.component_name)
         # Do the actual processing.
         self._process(input_pack)
-        # Record all the fields
+        # Record all the fields.
         record_fields(self.output_info, self.component_name, input_pack)
+        # Mark that the pack is processed by the processor.
         input_pack.meta.process_state = self.component_name
+        # Release the control of the DataPack.
         input_pack.exit_processing()
 
     @abstractmethod
@@ -91,8 +93,9 @@ class BaseProcessor(Generic[PackType], ABC):
 
     def finish(self):
         """
-        The user can implement this function to close and release resources
-        used by this processor.
+        The pipeline will calls this function to notify all the processors that
+        it is ending. The user can implement this function to close and release
+        resources used by this processor.
 
         Returns:
 

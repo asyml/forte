@@ -5,7 +5,7 @@ from forte.data import DataPack, MultiPack, PackType
 from forte.data.batchers import ProcessingBatcher, \
     TxtgenMultiPackProcessingBatcher
 from forte.data import slice_batch
-from forte.data.ontology.top import EntryType
+from forte.data.ontology.top import Annotation
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [
@@ -17,21 +17,28 @@ __all__ = [
 
 class BaseBatchProcessor(BaseProcessor[PackType]):
     """
-    The base class of processors that process data in batch.
+    The base class of processors that process data in batch. This processor
+    enables easy data batching via analyze the context and data objects. The
+    context defines the scope of analysis of a particular task. For example, in
+    dependency parsing, the context is normally a sentence, in entity
+    coreference, the context is normally a document. The processor will create
+    data batches relative to the context.
     """
 
     def __init__(self):
         super().__init__()
 
-        self.context_type: EntryType = self.define_context()
+        self.context_type: Annotation = self.define_context()
         self.batch_size = None
         self.batcher = None
         self.use_coverage_index = False
 
     @abstractmethod
-    def define_context(self) -> EntryType:
+    def define_context(self) -> Annotation:
         """
-        User should define the context type for batch processors here
+        User should define the context type for batch processors here. The
+        context must be of type :class:`Annotation`, since it will be used to
+        define the analysis scope using its begin and end.
         """
         raise NotImplementedError
 
@@ -41,10 +48,32 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         Single pack :class:`BatchProcessor` initialize the batcher to be a
         :class:`ProcessingBatcher`. And MultiPackBatchProcessor might need
         something like "MultiPackProcessingBatcher".
+
+        Args:
+            # TODO: what exactly is a hard batch? Do we really need to define
+            # this here?
+            hard_batch:
+
+        Returns:
+
         """
         raise NotImplementedError
 
     def process(self, input_pack: PackType, tail_instances: bool = False):
+        """
+        In batch processors, all data are processed in batches. So this function
+        is implemented to convert the input datapacks into batches according to
+        the batcher. Users do not need to implement this function but should
+        instead implement ``predict``, which computes results from batches, and
+        ``pack``, which convert the batch results back to datapacks.
+
+        Args:
+            input_pack:
+            tail_instances:
+
+        Returns:
+
+        """
         if input_pack.meta.cache_state == self.component_name:
             input_pack = None  # type: ignore
         else:
@@ -110,8 +139,6 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         """
         if end is None:
             end = len(self.batcher.data_pack_pool)
-        for pack in self.batcher.data_pack_pool[:end]:
-            self.finish(pack)
         self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]
         self.batcher.current_batch_sources = \
             self.batcher.current_batch_sources[end:]
