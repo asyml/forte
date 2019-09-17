@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List, Iterator
+from typing import Dict, List, Iterator, Any
 
 __all__ = [
     "batch_instances",
@@ -13,7 +13,7 @@ def batch_instances(instances: List[Dict]):
     """
     Merge a list of instances.
     """
-    batch: Dict = {}
+    batch: Dict[str, Any] = {}
     for instance in instances:
         for entry, fields in instance.items():
             if isinstance(fields, dict):

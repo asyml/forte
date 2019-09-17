@@ -93,9 +93,9 @@ class BaseProcessor(Generic[PackType], ABC):
 
     def finish(self):
         """
-        The pipeline will calls this function to notify all the processors that
-        it is ending. The user can implement this function to close and release
-        resources used by this processor.
+        The pipeline will calls this function at the end of the pipeline to
+        notify all the processors. The user can implement this function to
+        release resources used by this processor.
 
         Returns:
 

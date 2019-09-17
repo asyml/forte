@@ -17,10 +17,12 @@ __all__ = [
     "Meta",
     "DataIndex",
     "DataPack",
-    "ReplaceOperationsType"
+    "ReplaceOperationsType",
+    "DataRequest",
 ]
 
 ReplaceOperationsType = List[Tuple[Tuple[int, int], str]]
+DataRequest = Dict[Type[Entry], Union[Dict, List]]
 
 
 class Meta(BaseMeta):
@@ -28,15 +30,10 @@ class Meta(BaseMeta):
     Meta information of a datapack.
     """
 
-    def __init__(self, doc_id: Optional[str] = None,
-                 name: Optional[str] = ""):
+    def __init__(self, doc_id: Optional[str] = None):
         super().__init__(doc_id)
         self.language = 'english'
         self.span_unit = 'character'
-        self.name: Optional[str] = name
-
-    def set_name_in_multipack(self, name: str):
-        self.name = name
 
 
 class DataPack(BasePack):
@@ -49,7 +46,8 @@ class DataPack(BasePack):
         doc_id (str, optional): A universal id of this data pack.
     """
 
-    def __init__(self, doc_id: Optional[str] = None,
+    def __init__(self,
+                 doc_id: Optional[str] = None,
                  name: Optional[str] = None):
         super().__init__()
         self._text = ""
@@ -91,8 +89,8 @@ class DataPack(BasePack):
 
     def set_text(self,
                  text: str,
-                 replace_func: Optional[Callable[[str],
-                                                 ReplaceOperationsType]] = None
+                 replace_func: Optional[
+                     Callable[[str], ReplaceOperationsType]] = None
                  ):
 
         if len(self._text) > 0:
@@ -274,7 +272,7 @@ class DataPack(BasePack):
     def get_data(
             self,
             context_type: Type[Annotation],
-            requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
+            requests: Optional[DataRequest] = None,
             offset: int = 0
     ) -> Iterator[Dict[str, Any]]:
         """

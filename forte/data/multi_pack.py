@@ -4,7 +4,7 @@ from typing import (Dict, List, Optional, Type, Any)
 
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
-from forte.data.ontology import Entry, EntryType, Link, Group,\
+from forte.data.ontology import Entry, EntryType, Link, Group, \
     MultiPackGroup, MultiPackLink
 
 logger = logging.getLogger(__name__)
@@ -21,29 +21,26 @@ class MultiPackMeta(BaseMeta):
     """
     Meta information of a MultiPack.
     """
-    def __init__(self, doc_id: Optional[str] = None):
-        super().__init__(doc_id)
-        self.span_unit = 'character'
+
+    def __init__(self):
+        super().__init__()
 
 
 class MultiPack(BasePack):
     """
     A :class:`MultiPack' contains multiple DataPacks and a
     collection of cross-pack entries (annotations, links, and groups)
-
-    Args:
-        doc_id (str, optional): A universal id to denote this MultiPack.
     """
 
-    def __init__(self, doc_id: Optional[str] = None):
+    def __init__(self):
         super().__init__()
         self.packs: Dict[str, DataPack] = {}
         self.links: List[Link] = []
         self.groups: List[Group] = []
-        self.meta: MultiPackMeta = MultiPackMeta(doc_id)
+        self.meta: MultiPackMeta = MultiPackMeta()
 
-    def update_pack(self, **packs):
-        for key, pack in packs.items():
+    def update_pack(self, named_packs):
+        for key, pack in named_packs.items():
             if key in self.packs:
                 raise ValueError(f"{key} is in packs already")
             if not isinstance(key, str):

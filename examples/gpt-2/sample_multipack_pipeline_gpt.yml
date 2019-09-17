@@ -8,7 +8,7 @@ Reader:
   kwargs: null
 
 Processors:
-  - type: "nlp.forte.processors.impl.TxtgenPredictor"
+  - type: "forte.processors.TxtgenPredictor"
     kwargs:
     hparams:
       config_path:
@@ -19,14 +19,14 @@ Processors:
         pretrained_model_name: "117M"
         input_pack_name: "input_src"
         output_pack_name: "output_tgt"
-  - type: "nlp.forte.processors.impl.NLTKWordTokenizer"
+  - type: "forte.processors.impl.NLTKWordTokenizer"
     hparams:
       overwrite_configs:
         selector:
           type: "nlp.forte.data.selector.SinglePackSelector"
           kwargs:
             select_name: output_tgt
-  - type: "nlp.forte.processors.impl.NLTKPOSTagger"
+  - type: "forte.processors.impl.NLTKPOSTagger"
     hparams:
       overwrite_configs:
         selector:

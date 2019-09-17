@@ -3,7 +3,7 @@ from functools import total_ordering
 from typing import Iterable, Optional, Set, Union, Type, TypeVar, Any
 
 from forte.utils import get_class_name, get_full_module_name
-from forte import config
+from forte.data.base_pack import BasePack
 
 __all__ = [
     "Span",
@@ -46,10 +46,10 @@ class Entry:
     """
 
     def __init__(self):
-        self._data_pack = None
-        self._tid: Optional[str] = None
+        self._data_pack: BasePack
+        self._tid: str
 
-        self.__component = None
+        self.__component: str
         self.__modified_fields = set()
 
     @property
@@ -68,15 +68,23 @@ class Entry:
         self.__component = component
 
     def set_tid(self, tid: str):
-        """Set the entry id"""
+        """
+        Set the entry tid.
+        Args:
+            tid: The entry tid.
+
+        Returns:
+
+        """
         self._tid = f"{get_full_module_name(self)}.{tid}"
 
     @property
     def data_pack(self):
         return self._data_pack
 
-    def attach(self, data_pack):
+    def attach(self, data_pack: BasePack):
         """Attach the entry itself to a data_pack"""
+        # TODO This may create cycle reference.
         self._data_pack = data_pack
 
     def set_fields(self, **kwargs):
@@ -209,7 +217,7 @@ class Link(Entry):
     def set_child(self, child: Entry):
         if not isinstance(child, self.child_type):
             raise TypeError(
-                f"The parent of {type(self)} should be an "
+                f"The child of {type(self)} should be an "
                 f"instance of {self.child_type}, but get {type(child)}")
 
         self._child = child.tid

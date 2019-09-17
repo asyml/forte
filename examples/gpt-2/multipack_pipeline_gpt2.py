@@ -2,15 +2,11 @@ import argparse
 import json
 import torch
 import yaml
-from forte.data import base_ontology
+from forte.data.ontology import base_ontology
 
-from forte.data import PlainSentenceTxtgenReader
-from nlp.forte.multipack_pipeline import MultiPackPipeline
-
+from forte.multipack_pipeline import MultiPackPipeline
 
 pl = MultiPackPipeline()
-reader = PlainSentenceTxtgenReader(lazy=False)
-pl.set_reader(reader)
 
 pl.init_from_config_path("sample_multipack_pipeline_gpt.yml")
 
@@ -30,5 +26,5 @@ link_cnt = len(multipack.links)
 print(f'sentence_cnt: src{src_cnt}, tgt{tgt_cnt}, link_cnt{link_cnt}')
 
 with open("multipack_output.txt", "w+") as fout:
-    parsed = json.loads(reader.serialize_instance(multipack))
+    parsed = json.loads(multipack.serialize())
     fout.write(json.dumps(parsed, indent=4))

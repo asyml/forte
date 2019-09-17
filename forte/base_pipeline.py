@@ -24,11 +24,13 @@ class BasePipeline(Generic[PackType]):
     """
 
     def __init__(self):
-        self._reader: BaseReader = None
+        self._reader: BaseReader
         self._processors: List[BaseProcessor] = []
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
-        self.__working_component: str = None
+
+        # TODO: why do we need this __working_component
+        self.__working_component: str
 
         self._ontology = base_ontology
         self.topology = None
@@ -65,7 +67,6 @@ class BasePipeline(Generic[PackType]):
             processor.set_ontology(self._ontology)
             processor.set_input_info()
             processor.set_output_info()
-
         self.__working_component = None
 
     def set_reader(self, reader: BaseReader):

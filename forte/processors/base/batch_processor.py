@@ -1,5 +1,5 @@
-from abc import abstractmethod
-from typing import Dict, Optional
+from abc import abstractmethod, ABC
+from typing import Dict, Optional, Type
 
 from forte.data import DataPack, MultiPack, PackType
 from forte.data.batchers import ProcessingBatcher, \
@@ -28,13 +28,13 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
     def __init__(self):
         super().__init__()
 
-        self.context_type: Annotation = self.define_context()
+        self.context_type: Type[Annotation] = self.define_context()
         self.batch_size = None
         self.batcher = None
         self.use_coverage_index = False
 
     @abstractmethod
-    def define_context(self) -> Annotation:
+    def define_context(self) -> Type[Annotation]:
         """
         User should define the context type for batch processors here. The
         context must be of type :class:`Annotation`, since it will be used to
@@ -63,7 +63,7 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         """
         In batch processors, all data are processed in batches. So this function
         is implemented to convert the input datapacks into batches according to
-        the batcher. Users do not need to implement this function but should
+        the Batcher. Users do not need to implement this function but should
         instead implement ``predict``, which computes results from batches, and
         ``pack``, which convert the batch results back to datapacks.
 
@@ -164,10 +164,10 @@ class BatchProcessor(BaseBatchProcessor[DataPack]):
                                                       entry_type)
 
 
-class MultiPackTxtgenBatchProcessor(BaseBatchProcessor[MultiPack]):
+class MultiPackTxtgenBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
     """
     The batch processors that process MultiPack in Txtgen Tasks.
-    In this scenario, we don't need to build special bathers since we only need
+    In this scenario, we don't need to build special batcher since we only need
         to read sentences from one single DataPack
     """
 
