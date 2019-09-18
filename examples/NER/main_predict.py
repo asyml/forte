@@ -22,7 +22,7 @@ for pack in reader.iter(resources.resources[
 
     for pred_sentence in pack.get_data(
             context_type="sentence",
-            requests={
+            request={
                 base_ontology.Token: {
                     "fields": ["ner_tag"],
                 },

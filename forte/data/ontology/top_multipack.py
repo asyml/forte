@@ -4,28 +4,44 @@ from forte.data.ontology.top import Entry, Link, Group
 
 
 class MultiPackLink(Link):
-    """Link type entries, such as "SentencePairLink". Each link has a parent
+    """
+    Link type entries, such as "SentencePairLink". Each link has a parent
      node and a child node.
     """
     parent_type: Type[Entry] = Entry  # type: ignore
     child_type: Type[Entry] = Entry  # type: ignore
 
-    def __init__(self,
-                 parent: Optional[Entry],
-                 child: Optional[Entry],
-                 ):
-        super().__init__()
-        self._parent: Optional[Tuple] = None
-        self._child: Optional[Tuple] = None
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
+    def __init__(
+            self,
+            parent: Optional[Tuple[str, Entry]],
+            child: Optional[Tuple[str, Entry]],
+    ):
+        """
 
-    def set_parent(self, parent: Entry):
+        Args:
+            parent: The parent of the link, it should be a tuple of the name and
+            an entry.
+            child:
+        """
+        super().__init__()
+        self._parent: Optional[Tuple[str, str]] = None
+        self._child: Optional[Tuple[str, str]] = None
+
+        if parent is not None:
+            self.set_parent(parent[0], parent[1])
+        if child is not None:
+            self.set_child(child[0], parent[1])
+
+    def set_parent(self, pack_name: str, parent: Entry):
         """
         This will set the `parent` of the current instance with given Entry
         The parent is saved internally as a tuple: pack_name and entry.tid
+
+        Args:
+            parent:
+
+        Returns:
+
         """
         pack_name = parent.data_pack.meta.name
         assert pack_name is not None, \
@@ -35,7 +51,6 @@ class MultiPackLink(Link):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.parent_type}, but get {type(parent)}")
-
         self._parent = (pack_name, parent.tid)
 
     def set_child(self, child: Entry):
@@ -83,10 +98,17 @@ class MultiPackLink(Link):
             child_tid]
 
 
-class MultiPackGroup(Group):
-    """Group type entries, such as "coreference group". Each group has a set
+class MultiPackGroup(Entry):
+    """
+    Group type entries, such as "coreference group". Each group has a set
     of members.
     """
+
+    def hash(self):
+        pass
+
+    def eq(self, other):
+        pass
 
     member_type: Type[Entry] = Entry  # type: ignore
 

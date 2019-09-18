@@ -2,7 +2,7 @@ import copy
 import logging
 from typing import (
     Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union,
-    Any, Set, Callable)
+    Any, Set, Callable, NewType)
 
 import numpy as np
 from sortedcontainers import SortedList
@@ -30,10 +30,15 @@ class Meta(BaseMeta):
     Meta information of a datapack.
     """
 
-    def __init__(self, doc_id: Optional[str] = None):
+    def __init__(
+            self,
+            doc_id: Optional[str] = None,
+            language: str = 'eng',
+            span_unit: str = 'character'
+    ):
         super().__init__(doc_id)
-        self.language = 'english'
-        self.span_unit = 'character'
+        self.language = language
+        self.span_unit = span_unit
 
 
 class DataPack(BasePack):
@@ -46,9 +51,7 @@ class DataPack(BasePack):
         doc_id (str, optional): A universal id of this data pack.
     """
 
-    def __init__(self,
-                 doc_id: Optional[str] = None,
-                 name: Optional[str] = None):
+    def __init__(self, doc_id: Optional[str] = None):
         super().__init__()
         self._text = ""
 
@@ -59,7 +62,7 @@ class DataPack(BasePack):
         self.inverse_replace_operations: ReplaceOperationsType = []
 
         self.index: DataIndex = DataIndex(self)
-        self.meta: Meta = Meta(doc_id, name)
+        self.meta: Meta = Meta(doc_id)
 
     def __getstate__(self):
         """
@@ -272,8 +275,8 @@ class DataPack(BasePack):
     def get_data(
             self,
             context_type: Type[Annotation],
-            requests: Optional[DataRequest] = None,
-            offset: int = 0
+            request: Optional[DataRequest] = None,
+            skip_k: int = 0
     ) -> Iterator[Dict[str, Any]]:
         """
         Example:
@@ -295,21 +298,21 @@ class DataPack(BasePack):
 
         Args:
             context_type (str): The granularity of the data context, which
-                could be either `"sentence"` or `"document"`
-            requests (dict): The entry types and fields required.
+                could be any Annotation type.
+            request (dict): The entry types and fields required.
                 The keys of the dict are the required entry types and the
                 value should be either a list of field names or a dict.
                 If the value is a dict, accepted items includes "fields",
                 "component", and "unit". By setting "component" (a list), users
-                can specify the components by which the entires are generated.
+                can specify the components by which the entries are generated.
                 If "component" is not specified, will return entries generated
                 by all components. By setting "unit" (a string), users can
                 specify a unit by which the annotations are indexed.
                 Note that for all annotations, "text" and "span" fields are
                 given by default; for all links, "child" and "parent"
                 fields are given by default.
-            offset (int): Will skip the first `offset` instances and generate
-                ner_data from the `offset` + 1 instance.
+            skip_k (int): Will skip the first k instances and generate
+                data from the k + 1 instance.
         Returns:
             A data generator, which generates one piece of data (a dict
             containing the required annotations and context).
@@ -317,8 +320,8 @@ class DataPack(BasePack):
         annotation_types: Dict[Type[Annotation], Union[Dict, List]] = dict()
         link_types: Dict[Type[Link], Union[Dict, List]] = dict()
         group_types: Dict[Type[Group], Union[Dict, List]] = dict()
-        if requests is not None:
-            for key, value in requests.items():
+        if request is not None:
+            for key, value in request.items():
                 if issubclass(key, Annotation):
                     annotation_types[key] = value
                 elif issubclass(key, Link):
@@ -345,7 +348,7 @@ class DataPack(BasePack):
             if (context.tid not in valid_context_ids or
                     not isinstance(context, context_type)):
                 continue
-            if skipped < offset:
+            if skipped < skip_k:
                 skipped += 1
                 continue
 
@@ -499,7 +502,7 @@ class DataPack(BasePack):
         components, unit, fields = self._parse_request_args(a_type, a_args)
 
         if unit is not None:
-            raise ValueError(f"Link entires cannot be indexed by {unit}.")
+            raise ValueError(f"Link entries cannot be indexed by {unit}.")
 
         a_dict: Dict[str, Any] = dict()
         for field in fields:
@@ -741,3 +744,80 @@ class DataIndex(BaseIndex[DataPack]):
                                   inner_type)][range_annotation.tid] = entry_ids
 
         self.activate_coverage_index()
+
+    def have_overlap(self,
+                     entry1: Union[Annotation, str],
+                     entry2: Union[Annotation, str]) -> bool:
+        """Check whether the two annotations have overlap in span.
+
+        Args:
+            entry1 (str or Annotation): An :class:`Annotation` object to be
+                checked, or the tid of the Annotation.
+            entry2 (str or Annotation): Another :class:`Annotation` object to be
+                checked, or the tid of the Annotation.
+        """
+        if isinstance(entry1, str):
+            e = self.entry_index[entry1]
+            if not isinstance(e, Annotation):
+                raise TypeError(f"'entry1' should be an instance of Annotation,"
+                                f" but get {type(e)}")
+            entry1 = e
+
+        if not isinstance(entry1, Annotation):
+            raise TypeError(f"'entry1' should be an instance of Annotation,"
+                            f" but get {type(entry1)}")
+
+        if isinstance(entry2, str):
+            e = self.entry_index[entry2]
+            if not isinstance(e, Annotation):
+                raise TypeError(f"'entry2' should be an instance of Annotation,"
+                                f" but get {type(e)}")
+            entry2 = e
+
+        if not isinstance(entry2, Annotation):
+            raise TypeError(f"'entry2' should be an instance of Annotation,"
+                            f" but get {type(entry2)}")
+
+        return not (entry1.span.begin >= entry2.span.end or
+                    entry1.span.end <= entry2.span.begin)
+
+    def in_span(self,
+                inner_entry: Union[str, Entry],
+                span: Span) -> bool:
+        """Check whether the ``inner entry`` is within the given ``span``.
+        Link entries are considered in a span if both the
+        parent and the child are within the span. Group entries are
+        considered in a span if all the members are within the span.
+
+        Args:
+            inner_entry (str or Entry): An :class:`Entry` object to be checked.
+                We will check whether this entry is within ``span``.
+            span (Span): A :class:`Span` object to be checked. We will check
+                whether the ``inner_entry`` is within this span.
+        """
+
+        if isinstance(inner_entry, str):
+            inner_entry = self.entry_index[inner_entry]
+
+        if isinstance(inner_entry, Annotation):
+            inner_begin = inner_entry.span.begin
+            inner_end = inner_entry.span.end
+        elif isinstance(inner_entry, Link):
+            child = inner_entry.get_child()
+            parent = inner_entry.get_parent()
+            inner_begin = min(child.span.begin, parent.span.begin)
+            inner_end = max(child.span.end, parent.span.end)
+        elif isinstance(inner_entry, Group):
+            inner_begin = -1
+            inner_end = -1
+            for mem in inner_entry.get_members():
+                if inner_begin == -1:
+                    inner_begin = mem.span.begin
+                inner_begin = min(inner_begin, mem.span.begin)
+                inner_end = max(inner_end, mem.span.end)
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(inner_entry)}. A valid entry "
+                f"should be an instance of Annotation, Link, or Group."
+            )
+        return inner_begin >= span.begin and inner_end <= span.end

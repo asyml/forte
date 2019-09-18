@@ -6,8 +6,9 @@ from typing import Dict, List, Union, Type, Generic
 
 from forte.common.resources import Resources
 from forte.data import PackType
-from forte.data.ontology import base_ontology, Entry
+from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
+from forte.data.data_pack import DataRequest
 from forte.utils import get_full_module_name, record_fields
 
 __all__ = [
@@ -15,7 +16,7 @@ __all__ = [
     "ProcessInfo",
 ]
 
-ProcessInfo = Dict[Type[Entry], Union[List, Dict]]
+ProcessInfo = DataRequest
 
 
 class BaseProcessor(Generic[PackType], ABC):

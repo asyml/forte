@@ -3,12 +3,12 @@ import logging
 from abc import abstractmethod
 from collections import defaultdict
 from typing import (DefaultDict, Dict, Generic, List, Optional, Set, Type,
-                    TypeVar, Union, Tuple)
+                    TypeVar, Union, Tuple, Hashable)
 
 import jsonpickle
 
 from forte.data.ontology import (Annotation, Entry, EntryType, Group,
-                                 Link, Span)
+                                 Link, Span, BaseLink)
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,7 @@ class InternalMeta:
         ]
 
 
+
 class BasePack:
     """
     The base class of DataPack and MultiPack
@@ -95,7 +96,7 @@ class BasePack:
     @abstractmethod
     def add_entry(self, entry: EntryType) -> EntryType:
         """
-        Force add an :class:`Entry` object to the :class:`BasePack` object.
+        Add an :class:`Entry` object to the :class:`BasePack` object.
         Allow duplicate entries in a pack.
 
         Args:
@@ -176,7 +177,7 @@ class BaseIndex(Generic[PackType]):
         self.component_index: DefaultDict[str, Set[str]] = defaultdict(set)
         # other indexes (built when first looked up)
         self._group_index = defaultdict(set)
-        self._link_index: Dict[str, DefaultDict[str, set]] = dict()
+        self._link_index: Dict[str, DefaultDict[Hashable, set]] = dict()
         # indexing switches
         self._group_index_switch = False
         self._link_index_switch = False
@@ -222,83 +223,6 @@ class BaseIndex(Generic[PackType]):
             self.update_group_index(self.data_pack.groups)
         return self._group_index[tid]
 
-    def in_span(self,
-                inner_entry: Union[str, Entry],
-                span: Span) -> bool:
-        """Check whether the ``inner entry`` is within the given ``span``.
-        Link entries are considered in a span if both the
-        parent and the child are within the span. Group entries are
-        considered in a span if all the members are within the span.
-
-        Args:
-            inner_entry (str or Entry): An :class:`Entry` object to be checked.
-                We will check whether this entry is within ``span``.
-            span (Span): A :class:`Span` object to be checked. We will check
-                whether the ``inner_entry`` is within this span.
-        """
-
-        if isinstance(inner_entry, str):
-            inner_entry = self.entry_index[inner_entry]
-
-        if isinstance(inner_entry, Annotation):
-            inner_begin = inner_entry.span.begin
-            inner_end = inner_entry.span.end
-        elif isinstance(inner_entry, Link):
-            child = inner_entry.get_child()
-            parent = inner_entry.get_parent()
-            inner_begin = min(child.span.begin, parent.span.begin)
-            inner_end = max(child.span.end, parent.span.end)
-        elif isinstance(inner_entry, Group):
-            inner_begin = -1
-            inner_end = -1
-            for mem in inner_entry.get_members():
-                if inner_begin == -1:
-                    inner_begin = mem.span.begin
-                inner_begin = min(inner_begin, mem.span.begin)
-                inner_end = max(inner_end, mem.span.end)
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(inner_entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
-        return inner_begin >= span.begin and inner_end <= span.end
-
-    def have_overlap(self,
-                     entry1: Union[Annotation, str],
-                     entry2: Union[Annotation, str]) -> bool:
-        """Check whether the two annotations have overlap in span.
-
-        Args:
-            entry1 (str or Annotation): An :class:`Annotation` object to be
-                checked, or the tid of the Annotation.
-            entry2 (str or Annotation): Another :class:`Annotation` object to be
-                checked, or the tid of the Annotation.
-        """
-        if isinstance(entry1, str):
-            e = self.entry_index[entry1]
-            if not isinstance(e, Annotation):
-                raise TypeError(f"'entry1' should be an instance of Annotation,"
-                                f" but get {type(e)}")
-            entry1 = e
-
-        if not isinstance(entry1, Annotation):
-            raise TypeError(f"'entry1' should be an instance of Annotation,"
-                            f" but get {type(entry1)}")
-
-        if isinstance(entry2, str):
-            e = self.entry_index[entry2]
-            if not isinstance(e, Annotation):
-                raise TypeError(f"'entry2' should be an instance of Annotation,"
-                                f" but get {type(e)}")
-            entry2 = e
-
-        if not isinstance(entry2, Annotation):
-            raise TypeError(f"'entry2' should be an instance of Annotation,"
-                            f" but get {type(entry2)}")
-
-        return not (entry1.span.begin >= entry2.span.end or
-                    entry1.span.end <= entry2.span.begin)
-
     def update_basic_index(self, entries: List[Entry]):
         """Build or update the basic indexes, including
 
@@ -317,9 +241,9 @@ class BaseIndex(Generic[PackType]):
         for entry in entries:
             self.entry_index[entry.tid] = entry
             self.type_index[type(entry)].add(entry.tid)
-            self.component_index[entry.__component].add(entry.tid)
+            self.component_index[entry.component].add(entry.tid)
 
-    def update_link_index(self, links: List[Link]):
+    def update_link_index(self, links: List[BaseLink]):
         """Build or update :attr:`link_index`, the index from child and parent
         nodes to links. :attr:`link_index` consists of two sub-indexes:
         "child_index" is the index from child nodes to their corresponding
@@ -337,8 +261,12 @@ class BaseIndex(Generic[PackType]):
             links = self.data_pack.links
 
         for link in links:
-            self._link_index["child_index"][link.child].add(link.tid)
-            self._link_index["parent_index"][link.parent].add(link.tid)
+            self._link_index["child_index"][
+                link.child.index_key
+            ].add(link.tid)
+            self._link_index["parent_index"][
+                link.parent.index_key
+            ].add(link.tid)
 
     def update_group_index(self, groups: List[Group]):
         """Build or update :attr:`group_index`, the index from group members

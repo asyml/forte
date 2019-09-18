@@ -1,10 +1,11 @@
 import copy
 import logging
-from typing import (Dict, List, Optional, Type, Any)
+from typing import (Dict, List, Union, Iterator, Optional, Type, Any,
+                    NamedTuple, NewType)
 
 from forte.data.base_pack import BaseMeta, BasePack
-from forte.data.data_pack import DataPack
-from forte.data.ontology import Entry, EntryType, Link, Group, \
+from forte.data.data_pack import DataPack, DataRequest
+from forte.data.ontology import Entry, EntryType, Annotation, Link, Group, \
     MultiPackGroup, MultiPackLink
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,11 @@ __all__ = [
     "MultiPack",
     "MultiPackLink",
     "MultiPackGroup",
+]
+
+MdRequest = Dict[
+    Type[Union[MultiPackLink, MultiPackGroup]],
+    Union[Dict, List]
 ]
 
 
@@ -34,25 +40,127 @@ class MultiPack(BasePack):
 
     def __init__(self):
         super().__init__()
-        self.packs: Dict[str, DataPack] = {}
-        self.links: List[Link] = []
-        self.groups: List[Group] = []
+        self.packs: List[DataPack] = []
+        self.pack_names: List[str] = []
+        self.__name_index = {}
+
+        self.links: List[MultiPackLink] = []
+        self.groups: List[MultiPackGroup] = []
         self.meta: MultiPackMeta = MultiPackMeta()
 
-    def update_pack(self, named_packs):
-        for key, pack in named_packs.items():
-            if key in self.packs:
-                raise ValueError(f"{key} is in packs already")
-            if not isinstance(key, str):
-                raise ValueError(
-                    f"key of the pack should be str, but got " f"{type(key)}"
-                )
-            if not isinstance(pack, DataPack):
-                raise ValueError(
-                    f"value of the packs should be DataPack, but "
-                    f"got {type(pack)}"
-                )
-            self.packs[key] = pack
+        self.__default_pack_prefix = '_pack'
+
+    def add_pack(self, pack: DataPack, pack_name: Optional[str] = None):
+        if pack_name in self.__name_index:
+            raise ValueError(
+                f"The name {pack_name} has already been taken.")
+        if pack_name is not None and not isinstance(pack_name, str):
+            raise ValueError(
+                f"key of the pack should be str, but got "
+                f"" f"{type(pack_name)}"
+            )
+        if not isinstance(pack, DataPack):
+            raise ValueError(
+                f"value of the packs should be DataPack, but "
+                f"got {type(pack)}"
+            )
+
+        self.packs.append(pack)
+        pid = len(self.pack_names) - 1
+
+        if pack_name is None:
+            pack_name = f'{self.__default_pack_prefix}_{pid}'
+
+        self.pack_names.append(pack_name)
+        self.__name_index[pack_name] = pid
+
+    def update_pack(self, named_packs: Dict[str, DataPack]):
+        for pack_name, pack in named_packs.items():
+            self.add_pack(pack, pack_name)
+
+    def get_single_pack_data(
+            self,
+            pack_name: str,
+            context_type: Type[Annotation],
+            request: Optional[DataRequest] = None,
+            skip_k: int = 0
+    ) -> Iterator[Dict[str, Any]]:
+        """
+        Get pack data from one of the packs specified by the name. This is
+        equivalent to calling the :meth: `get_data` in :class: `DataPack`.
+
+        Args:
+            pack_name (str): The name to identify the single pack.
+            context_type (str): The granularity of the data context, which
+                could be any Annotation type.
+            request (dict): The entry types and fields required.
+                The keys of the dict are the required entry types and the
+                value should be either a list of field names or a dict.
+                If the value is a dict, accepted items includes "fields",
+                "component", and "unit". By setting "component" (a list), users
+                can specify the components by which the entries are generated.
+                If "component" is not specified, will return entries generated
+                by all components. By setting "unit" (a string), users can
+                specify a unit by which the annotations are indexed.
+                Note that for all annotations, "text" and "span" fields are
+                given by default; for all links, "child" and "parent"
+                fields are given by default.
+            skip_k:Will skip the first k instances and generate
+                data from the k + 1 instance.
+
+        Returns:
+            A data generator, which generates one piece of data (a dict
+            containing the required annotations and context).
+        """
+
+        yield from self.packs[pack_name].get_data(context_type, request, skip_k)
+
+    def get_cross_pack_data(
+            self,
+            request: MdRequest,
+    ):
+        """
+        Example:
+
+            .. code-block:: python
+
+                requests = {
+                    MultiPackLink:
+                        {
+                            "component": ["dummy"],
+                            "fields": ["speaker"],
+                        },
+                    base_ontology.Token: ["pos_tag", "sense""],
+                    base_ontology.EntityMention: {
+                        "unit": "Token",
+                    },
+                }
+                pack.get_cross_pack_data(requests)
+
+        Get data via the links and groups across data packs. The keys could be
+        Multipack entries (i.e. MultipackLink and MultipackGroup). The values
+        specifies the detailed entry information to be get. The value can be a
+        List of field names, then the return result will contains all specified
+        fields.
+
+        One can also call this method with more constraints by providing
+        a Dict, which can contain the following keys:
+          - "fields", this specifies the attribute field names to be obtained
+          - "unit", this specifies the unit used to index the annotation
+          - "component", this specifies a constraint to take only the entries
+          created by the specified component.
+
+        The data request logic is very similar to :meth: ``get_data`` function
+        in :class: ``Datapack``, only that this is constraint to the Multipack
+        entries.
+
+        Args:
+            request: A dict containing the data request. The key is the
+
+        Returns:
+
+        """
+        pass
 
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         """
@@ -81,12 +189,12 @@ class MultiPack(BasePack):
 
         if entry not in target:
             # add the entry to the target entry list
-            name = entry.__class__
-            entry.set_tid(str(self.internal_metas[name].id_counter))
+            entry_cls = entry.__class__
+            entry.set_tid(str(self.internal_metas[entry_cls].id_counter))
             entry.attach(self)
             target.append(entry)
 
-            self.internal_metas[name].id_counter += 1
+            self.internal_metas[entry_cls].id_counter += 1
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
@@ -98,7 +206,6 @@ class MultiPack(BasePack):
                 self.index.update_group_index([entry])
 
             return entry
-        # logger.debug(f"Annotation already exist {annotation.tid}")
         return target[target.index(entry)]
 
     def add_entry(self, entry: EntryType) -> EntryType:

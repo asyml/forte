@@ -172,8 +172,10 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
             text += output_sentence + "\n"
 
             input_sent = input_pack.get_entry_by_id(input_id)
-            cross_link = MultiPackLink(input_sent,
-                                       sent)
+            cross_link = MultiPackLink(
+                (self.input_pack_name, input_sent),
+                (self.output_pack_name, sent),
+            )
             data_pack.add_entry(cross_link)
             # We may also consider adding two link with opposite directions
             # Here the unidirectional link indicates the generation dependency
