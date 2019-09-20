@@ -215,7 +215,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         for data_pack in input_pack:
             for instance in data_pack.get_data(
                     context_type=base_ontology.Sentence,
-                    requests={
+                    request={
                         base_ontology.Token:
                             ["chunk_tag", "pos_tag", "ner_tag"],
                     },

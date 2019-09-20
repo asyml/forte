@@ -9,9 +9,11 @@ __all__ = [
 ]
 
 
-class BasePackProcessor(BaseProcessor[PackType]):
+class BasePackProcessor(BaseProcessor[PackType], ABC):
     """
-    The base class of processors that process one pack each time.
+    The base class of processors that process one pack sequentially. If you are
+    looking for batching (that might happen across packs, refer to
+    BaseBatchProcessor.
     """
 
     def process(self, input_pack: PackType):
@@ -21,7 +23,6 @@ class BasePackProcessor(BaseProcessor[PackType]):
         Args:
             input_pack (PackType): A datapack to be processed.
         """
-        config.working_component = self.component_name
         self._process(input_pack)
         config.working_component = None
 

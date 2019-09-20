@@ -1,8 +1,8 @@
-from abc import abstractmethod
-from typing import Dict, Optional
+from abc import abstractmethod, ABC
+from typing import Dict, Optional, Type
 
-from forte import config, Resources
 from forte.data import DataPack, MultiPack, PackType
+from forte import config, Resources
 from forte.data.batchers import ProcessingBatcher, \
     TxtgenMultiPackProcessingBatcher
 from forte.data import slice_batch
@@ -18,13 +18,18 @@ __all__ = [
 
 class BaseBatchProcessor(BaseProcessor[PackType]):
     """
-    The base class of processors that process data in batch.
+    The base class of processors that process data in batch. This processor
+    enables easy data batching via analyze the context and data objects. The
+    context defines the scope of analysis of a particular task. For example, in
+    dependency parsing, the context is normally a sentence, in entity
+    coreference, the context is normally a document. The processor will create
+    data batches relative to the context.
     """
 
     def __init__(self):
         super().__init__()
 
-        self.context_type: ContextType = self.define_context()
+        self.context_type: Type[Annotation] = self.define_context()
         self.batch_size = None
         self.batcher = None
         self.use_coverage_index = False
@@ -33,13 +38,11 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         super().initialize(configs, resource)
 
     @abstractmethod
-    def define_context(self) -> Annotation:
+    def define_context(self) -> Type[Annotation]:
         """
-        Users define the context to be used to create the batches here. The
-        context will be used to collect information in a package.
-
-        The "context" is the same concept as in the :meth: ``get_data`` in
-        :class: ``DataPack``.
+        User should define the context type for batch processors here. The
+        context must be of type :class:`Annotation`, since it will be used to
+        define the analysis scope using its begin and end.
         """
         raise NotImplementedError
 
@@ -49,11 +52,32 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         Single pack :class:`BatchProcessor` initialize the batcher to be a
         :class:`ProcessingBatcher`. And MultiPackBatchProcessor might need
         something like "MultiPackProcessingBatcher".
+
+        Args:
+            # TODO: what exactly is a hard batch? Do we really need to define
+            # this here?
+            hard_batch:
+
+        Returns:
+
         """
         raise NotImplementedError
 
     def process(self, input_pack: PackType, tail_instances: bool = False):
-        config.working_component = self.component_name
+        """
+        In batch processors, all data are processed in batches. So this function
+        is implemented to convert the input datapacks into batches according to
+        the Batcher. Users do not need to implement this function but should
+        instead implement ``predict``, which computes results from batches, and
+        ``pack``, which convert the batch results back to datapacks.
+
+        Args:
+            input_pack:
+            tail_instances:
+
+        Returns:
+
+        """
         if input_pack.meta.cache_state == self.component_name:
             input_pack = None  # type: ignore
         else:
@@ -70,7 +94,6 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
             self.finish_up_packs(-1)
         if len(self.batcher.current_batch_sources) == 0:
             self.finish_up_packs()
-        config.working_component = None
 
     @abstractmethod
     def predict(self, data_batch: Dict):
@@ -120,8 +143,6 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         """
         if end is None:
             end = len(self.batcher.data_pack_pool)
-        for pack in self.batcher.data_pack_pool[:end]:
-            self.finish(pack)
         self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]
         self.batcher.current_batch_sources = \
             self.batcher.current_batch_sources[end:]
@@ -147,10 +168,10 @@ class BatchProcessor(BaseBatchProcessor[DataPack]):
                                                       entry_type)
 
 
-class MultiPackTxtgenBatchProcessor(BaseBatchProcessor[MultiPack]):
+class MultiPackTxtgenBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
     """
     The batch processors that process MultiPack in Txtgen Tasks.
-    In this scenario, we don't need to build special bathers since we only need
+    In this scenario, we don't need to build special batcher since we only need
         to read sentences from one single DataPack
     """
 

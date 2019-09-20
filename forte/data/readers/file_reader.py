@@ -6,15 +6,15 @@ from abc import abstractmethod, ABC
 from typing import Iterator, Any
 
 from forte.data.io_utils import dataset_path_iterator
-from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
 from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
+from forte.data.base_pack import PackType
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "MonoFileReader",
-    "MonoFileMultiPackReader",
     "PackReader"
 ]
 
@@ -38,36 +38,10 @@ class MonoFileReader(PackReader, ABC):
         return dataset_path_iterator(file_directory, "")
 
     @abstractmethod
-    def parse_pack(self, files_path: str) -> DataPack:
+    def parse_pack(self, files_path: str) -> PackType:
         """
         Read a single DataPack from a file path.
         Args:
             files_path: The path to the file to read or information to parse.
-        """
-        raise NotImplementedError
-
-
-class MonoFileMultiPackReader(MultiPackReader, ABC):
-    """Data reader that reads one MultiPack from each single text files.
-    """
-
-    # pylint: disable=no-self-use
-    def _cache_key_function(self, collection: str):
-        return str(collection).split('/')[-1]
-
-    # pylint: disable=no-self-use
-    def _collect(self, data_path) -> Iterator[Any]:  # type: ignore
-        """
-        :param data_path: The datapath to the files.
-        :return: Iterator[Any] collections to iterate over
-        """
-        return dataset_path_iterator(data_path, "")
-
-    @abstractmethod
-    def parse_pack(self, collection: str) -> MultiPack:
-        """
-        Read a MultiPack from a collection
-        Args:
-            collection: The path to the file to read or information to parse.
         """
         raise NotImplementedError

@@ -8,16 +8,17 @@ from texar.torch import HParams
 
 from forte.common.resources import Resources
 from forte.data import PackType
-from forte.data.ontology import base_ontology, Entry
+from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
-from forte.utils import get_full_module_name
+from forte.data.data_pack import DataRequest
+from forte.utils import get_full_module_name, record_fields
 
 __all__ = [
     "BaseProcessor",
     "ProcessInfo",
 ]
 
-ProcessInfo = Dict[Type[Entry], Union[List, Dict]]
+ProcessInfo = DataRequest
 
 
 class BaseProcessor(Generic[PackType], ABC):
@@ -73,11 +74,18 @@ class BaseProcessor(Generic[PackType], ABC):
         raise NotImplementedError
 
     # TODO: understand tail_instances
-    def process_internal(self, input_pack: PackType):
+    def process(self, input_pack: PackType):
         # TODO finish up the refactors here.
+        # Obtain the control of the DataPack.
+        input_pack.enter_processing(self.component_name)
+        # Do the actual processing.
         self._process(input_pack)
-        self._record_fields(input_pack)
+        # Record all the fields.
+        record_fields(self.output_info, self.component_name, input_pack)
+        # Mark that the pack is processed by the processor.
         input_pack.meta.process_state = self.component_name
+        # Release the control of the DataPack.
+        input_pack.exit_processing()
 
     @abstractmethod
     def _process(self, input_pack: PackType):
@@ -93,33 +101,13 @@ class BaseProcessor(Generic[PackType], ABC):
         Returns:
 
         """
-        """Process the input pack"""
         raise NotImplementedError
-
-    def _record_fields(self, input_pack: PackType):
-        """
-        Record the fields and entries that this processor add to packs.
-
-        Args:
-            input_pack:
-
-        Returns:
-        """
-        for entry_type, info in self.output_info.items():
-            component = self.component_name
-            fields: List[str] = []
-            if isinstance(info, list):
-                fields = info
-            elif isinstance(info, dict):
-                fields = info["fields"]
-                if "component" in info.keys():
-                    component = info["component"]
-            input_pack.record_fields(fields, entry_type, component)
 
     def finish(self):
         """
-        The user can implement this function to close and release resources
-        used by this processor.
+        The pipeline will calls this function at the end of the pipeline to
+        notify all the processors. The user can implement this function to
+        release resources used by this processor.
 
         Returns:
 

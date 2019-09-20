@@ -30,7 +30,6 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         self.batch_size = 6
         self._get_helper = None
 
-        self.current_datapack: MultiPack = None
         self.max_decoding_length = None
         self.temperature = None
         self.top_k = None
@@ -112,31 +111,6 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         self._define_input_info()
         self._define_output_info()
 
-    def process(self, input_pack: MultiPack, tail_instances: bool = False):
-        """
-        :param input_pack: A MultiPack instance
-        :param tail_instances:
-        :return:
-        """
-        self.current_datapack = input_pack
-        config.working_component = self.component_name
-
-        # Read data from the "Input_pack" of the input
-        for batch in self.batcher.get_batch(
-                self.current_datapack,
-                self.context_type,
-                self.input_info,
-                tail_instances=tail_instances,
-        ):
-            print('current_batch_size:{}'.format(len(batch['context'])))
-            pred = self.predict(batch)
-            self.pack_all(pred)
-            self.finish_up_packs(-1)
-        if len(self.batcher.current_batch_sources) == 0:
-            self.finish_up_packs()
-
-        config.working_component = None
-
     @torch.no_grad()
     def predict(self, data_batch: Dict):
 
@@ -198,8 +172,10 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
             text += output_sentence + "\n"
 
             input_sent = input_pack.get_entry_by_id(input_id)
-            cross_link = MultiPackLink(input_sent,
-                                       sent)
+            cross_link = MultiPackLink(
+                (self.input_pack_name, input_sent),
+                (self.output_pack_name, sent),
+            )
             data_pack.add_entry(cross_link)
             # We may also consider adding two link with opposite directions
             # Here the unidirectional link indicates the generation dependency

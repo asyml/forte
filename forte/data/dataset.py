@@ -20,5 +20,5 @@ class Dataset:
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None
     ):
         for pack in self.dataset:
-            for data in pack.get_data(context_type, requests=requests):
+            for data in pack.get_data(context_type, request=requests):
                 yield data
