@@ -59,7 +59,6 @@ class InternalMeta:
         ]
 
 
-
 class BasePack:
     """
     The base class of DataPack and MultiPack
@@ -284,3 +283,12 @@ class BaseIndex(Generic[PackType]):
         for group in groups:
             for member in group.members:
                 self._group_index[member].add(group.tid)
+
+    def add_link_parent(self, parent: Entry, link: BaseLink):
+        self._link_index["parent_index"][parent.index_key].add(link.tid)
+
+    def add_link_child(self, child: Entry, link: BaseLink):
+        self._link_index["child_index"][child.index_key].add(link.tid)
+
+    def add_group_member(self, member: Entry, group: Group):
+        self._group_index[member.index_key].add(group.tid)

@@ -203,9 +203,9 @@ class BaseLink(Entry[PackType], ABC):
 
     def __init__(
             self,
-            parent: Optional[Entry] = None,
-            child: Optional[Entry] = None,
-            pack: Optional[DataPack] = None
+            parent: Optional[ParentType] = None,
+            child: Optional[ChildType] = None,
+            pack: Optional[PackType] = None
     ):
         super().__init__(pack)
         self._parent: Optional[str] = None
@@ -215,6 +215,11 @@ class BaseLink(Entry[PackType], ABC):
             self.set_parent(parent)
         if child is not None:
             self.set_child(child)
+
+    def update_link_index(self, new_):
+        if (self.data_pack is not None and
+                self.data_pack.index.link_index_switch):
+            self.data_pack.index.update_link_index(links=[self])
 
     def set_parent(self, parent: ParentType):
         """
@@ -235,7 +240,7 @@ class BaseLink(Entry[PackType], ABC):
 
         if (self.data_pack is not None and
                 self.data_pack.index.link_index_switch):
-            self.data_pack.index.update_link_index(links=[self])
+            self.data_pack.index.add_link_parent(parent, self)
 
     def set_child(self, child: ChildType):
         """
@@ -252,11 +257,11 @@ class BaseLink(Entry[PackType], ABC):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(child)}")
-        self._child = child.index_key()
+        self._child = child.index_key
 
         if (self.data_pack is not None and
                 self.data_pack.index.link_index_switch):
-            self.data_pack.index.update_link_index(links=[self])
+            self.data_pack.index.add_link_child(child, self)
 
     @abstractmethod
     def get_parent(self) -> EntryType:
@@ -353,20 +358,43 @@ class Link(BaseLink[DataPack]):
 
 
 class Group(Entry[DataPack]):
-    """Group type entries, such as "coreference group". Each group has a set
-    of members.
+    """
+    Group is an entry that represent a group of other entries. For example,
+    a "coreference group" is a group of coreferential entities. Each group will
+    store a set of members, no duplications allowed.
     """
     member_type: Type[Entry] = Entry  # type: ignore
 
     def __init__(self, members: Optional[Set[Entry]] = None,
                  pack: Optional[DataPack] = None):
         super().__init__(pack)
-        self._members: Set[Entry] = set()
+
+        # Store the group member's id.
+        self._members: Set[str] = set()
         if members is not None:
             self.add_members(members)
 
-    def add_members(self, members: Union[Iterable[Entry], Entry]):
-        """Add group members."""
+    def add_member(self, member: Entry):
+        """
+        Add one entry to the group.
+        Args:
+            member:
+
+        Returns:
+
+        """
+        self.add_members([member])
+
+    def add_members(self, members: Iterable[Entry]):
+        """
+        Add members to the group.
+
+        Args:
+            members: An iterator of members to be added to the group.
+
+        Returns:
+
+        """
         if not isinstance(members, Iterable):
             members = {members}
 
@@ -380,6 +408,7 @@ class Group(Entry[DataPack]):
 
         if (self.data_pack is not None and
                 self.data_pack.index.group_index_switch):
+            # TODO: NO way, don't do all update.
             self.data_pack.index.update_group_index([self])
 
     @property
@@ -420,10 +449,9 @@ class Group(Entry[DataPack]):
 
 class SubEntry(Entry[MultiPack], Indexable, ABC):
     """
-    This is used to identify a Sub-Entry in the Multipack. For example, the
-    sentence in one of the packs.
-
-    A pack_index and an entry is needed to identify this.
+    This is used to identify an Entry in one of the packs in the Multipack.
+    For example, the sentence in one of the packs. A pack_index and an entry
+    is needed to identify this.
 
     Args:
         pack_index: Indicate which pack this entry belongs. If this is less
@@ -466,8 +494,8 @@ class MultiPackLink(BaseLink[MultiPack]):
 
     def __init__(
             self,
-            parent: Optional[SubEntry],
-            child: Optional[SubEntry],
+            parent: Optional[ParentType],
+            child: Optional[ChildType],
             pack: MultiPack
     ):
         """
@@ -477,7 +505,7 @@ class MultiPackLink(BaseLink[MultiPack]):
             an entry.
             child:
         """
-        super().__init__(pack)
+        super().__init__(parent, child, pack)
 
         self._parent: Optional[Tuple[int, str]] = None
         self._child: Optional[Tuple[int, str]] = None
@@ -509,14 +537,13 @@ class MultiPackLink(BaseLink[MultiPack]):
         return (type(self), self.parent, self.child) == \
                (type(other), other.parent, other.child)
 
-    def set_parent(self, parent: SubEntry):
+    def set_parent(self, parent: ParentType):
         """
         This will set the `parent` of the current instance with given Entry
         The parent is saved internally as a tuple: pack_name and entry.tid
 
         Args:
-            pack_idx: The index of the parent pack in the Multipack.
-            parent: The
+            parent: The parent of the link. Multiple
 
         Returns:
 
@@ -525,7 +552,10 @@ class MultiPackLink(BaseLink[MultiPack]):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}")
-        self._parent = parent.index_key()
+        self._parent = parent.index_key
+
+    def get_parent(self) -> EntryType:
+        pass
 
     def get_child(self) -> SubEntry:
         """
@@ -611,3 +641,7 @@ class MultiPackGroup(Entry):
                 self.data_pack.packs[pack_name].index.entry_index[member]
             )
         return member_entries
+
+    @property
+    def index_key(self) -> Hashable:
+        return self.tid
