@@ -3,6 +3,7 @@ from typing import (
     Dict, List, Iterator, Iterable, Union, Any, Optional, Tuple, Type)
 
 import texar.torch as tx
+from texar.torch import HParams
 
 from forte.data.dataset import Dataset
 from forte.data import DataPack, MultiPack
@@ -11,12 +12,20 @@ from forte.data.ontology import Entry, Annotation
 
 
 class Batcher:
-
-    def __init__(self, batch_size: int):
-        self.batch_size = batch_size
+    @abstractmethod
+    def __init__(self, config: HParams):
+        raise NotImplementedError
 
     @abstractmethod
     def get_batch(self, *args):
+        raise NotImplementedError
+
+    @staticmethod
+    def default_hparams() -> Dict:
+        """
+        Defines the basic parameter and values of the batcher.
+        :return:
+        """
         raise NotImplementedError
 
 
@@ -46,7 +55,9 @@ class DictData(tx.data.DataBase[Dict, Dict]):
     def process(self, raw_example: Dict) -> Dict:  # pylint: disable=no-self-use
         return raw_example
 
-    def collate(self, examples: List[Dict]) -> tx.data.Batch:  # pylint: disable=no-self-use
+    def collate(  # pylint: disable=no-self-use
+            self,
+            examples: List[Dict]) -> tx.data.Batch:
         batch: Dict[str, Any] = {}
         for e in examples:
             for entry, fields in e.items():
@@ -82,9 +93,16 @@ class TexarBatcher(Batcher):
         super().__init__(data.batch_size)
         self.batch_iter = tx.data.DataIterator(data)
 
-    def get_batch(self) -> Iterator[tx.data.Batch]:   # type: ignore
+    def get_batch(self) -> Iterator[tx.data.Batch]:  # type: ignore
         for batch in self.batch_iter:
             yield batch
+
+    @staticmethod
+    def default_hparams() -> Dict:
+        return {
+            'context_type': 'forte.ontology.top.Document',
+            'batch_size': None
+        }
 
 
 class ProcessingBatcher(Batcher):

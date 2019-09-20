@@ -142,6 +142,7 @@ class Annotation(Entry):
         return self.data_pack.text[self.span.begin: self.span.end]
 
 
+
 class Link(Entry):
     """Link type entries, such as "predicate link". Each link has a parent node
     and a child node.

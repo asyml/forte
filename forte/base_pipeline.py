@@ -20,11 +20,10 @@ __all__ = [
 class BasePipeline(Generic[PackType]):
     """
     The pipeline consists of a list of predictors.
-    TODO(Wei): check fields when concatenating processors
     """
 
     def __init__(self):
-        self._reader: BaseReader = None
+        self._reader: BaseReader
         self._processors: List[BaseProcessor] = []
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
@@ -37,13 +36,14 @@ class BasePipeline(Generic[PackType]):
     def init_from_config_path(self, config_path):
         """
         Read the configs from the given path ``config_path``
-        and initialize the pipeline including processors
-        """
-        # TODO: Typically, we should also set the reader here
-        # This will be done after StringReader is merged
-        # We need to modify the read -> read_file_as_pack then.
-        configs = yaml.safe_load(open(config_path))
+        and build the pipeline with the config.
 
+        :param config_path: A string of the configuration path. The config_path
+        is a YAML file that specify the structure and parameters of the
+        processor.
+        :return:
+        """
+        configs = yaml.safe_load(open(config_path))
         self.init_from_config(configs)
 
     @abstractmethod
@@ -179,7 +179,7 @@ class BasePipeline(Generic[PackType]):
                         can_process = (i == 0 or c_pack.meta.process_state ==
                                        self.processors[i - 1].component_name)
                         if can_process and not in_cache:
-                            processor.process(c_pack)
+                            processor.process_internal(c_pack)
 
                 for c_pack in list(self.current_packs):
                     # must iterate through a copy of the original list
@@ -195,8 +195,8 @@ class BasePipeline(Generic[PackType]):
                 start = self._processors_index[c_pack.meta.process_state] + 1
                 for processor in self.processors[start:]:
                     if isinstance(processor, BaseBatchProcessor):
-                        processor.process(c_pack, tail_instances=True)
+                        processor.process_internal(c_pack, tail_instances=True)
                     else:
-                        processor.process(c_pack)
+                        processor.process_internal(c_pack)
                 yield c_pack
                 self.current_packs.remove(c_pack)

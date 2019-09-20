@@ -4,6 +4,8 @@ The base class of processors
 from abc import abstractmethod, ABC
 from typing import Dict, List, Union, Type, Generic
 
+from texar.torch import HParams
+
 from forte.common.resources import Resources
 from forte.data import PackType
 from forte.data.ontology import base_ontology, Entry
@@ -19,7 +21,8 @@ ProcessInfo = Dict[Type[Entry], Union[List, Dict]]
 
 
 class BaseProcessor(Generic[PackType], ABC):
-    """The basic processor class. To be inherited by all kinds of processors
+    """
+    The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
     """
 
@@ -30,9 +33,16 @@ class BaseProcessor(Generic[PackType], ABC):
         self.output_info: ProcessInfo = {}
         self.selector = DummySelector()
 
-    def initialize(self, configs, resource: Resources):
-        """Initialize the processor with ``configs``, and register global
-        resources into ``resource``.
+    def initialize(self, configs: HParams, resource: Resources):
+        """
+        The pipeline will call the initialize method at the start of a
+        processing. The processor will be initialized with ``configs``,
+        and register global resources into ``resource``.
+
+        :param configs: The configuration passed in to set up this processor.
+        :param resource: A global resource register. User can register
+        shareable resources here, for example, the vocabulary.
+        :return:
         """
         pass
 
@@ -62,8 +72,9 @@ class BaseProcessor(Generic[PackType], ABC):
         """
         raise NotImplementedError
 
+    # TODO: understand tail_instances
     def process_internal(self, input_pack: PackType):
-        #TODO finish up the refactors here.
+        # TODO finish up the refactors here.
         self._process(input_pack)
         self._record_fields(input_pack)
         input_pack.meta.process_state = self.component_name
@@ -123,7 +134,7 @@ class BaseProcessor(Generic[PackType], ABC):
         """
         return {
             'selector': {
-                'type': 'nlp.forte.data.selector.DummySelector',
+                'type': 'forte.data.selector.DummySelector',
                 'args': None,
                 'kwargs': {}
             }

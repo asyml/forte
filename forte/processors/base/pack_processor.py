@@ -23,7 +23,6 @@ class BasePackProcessor(BaseProcessor[PackType]):
         """
         config.working_component = self.component_name
         self._process(input_pack)
-        self.finish(input_pack)
         config.working_component = None
 
     @abstractmethod

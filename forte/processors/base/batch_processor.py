@@ -1,12 +1,12 @@
 from abc import abstractmethod
 from typing import Dict, Optional
 
-from forte import config
+from forte import config, Resources
 from forte.data import DataPack, MultiPack, PackType
 from forte.data.batchers import ProcessingBatcher, \
     TxtgenMultiPackProcessingBatcher
 from forte.data import slice_batch
-from forte.data.ontology.top import EntryType
+from forte.data.ontology.top import Annotation
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [
@@ -24,15 +24,22 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
     def __init__(self):
         super().__init__()
 
-        self.context_type: EntryType = self.define_context()
+        self.context_type: ContextType = self.define_context()
         self.batch_size = None
         self.batcher = None
         self.use_coverage_index = False
 
+    def initialize(self, configs, resource: Resources):
+        super().initialize(configs, resource)
+
     @abstractmethod
-    def define_context(self) -> EntryType:
+    def define_context(self) -> Annotation:
         """
-        User should define the context type for batch processors here
+        Users define the context to be used to create the batches here. The
+        context will be used to collect information in a package.
+
+        The "context" is the same concept as in the :meth: ``get_data`` in
+        :class: ``DataPack``.
         """
         raise NotImplementedError
 
