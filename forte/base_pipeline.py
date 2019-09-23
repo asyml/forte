@@ -32,7 +32,7 @@ class BasePipeline(Generic[PackType]):
 
         self._ontology = base_ontology
         self.topology = None
-        self.current_packs = []
+        # self.current_packs = []
         self.resource = Resources()
 
     def init_from_config_path(self, config_path):
@@ -166,17 +166,15 @@ class BasePipeline(Generic[PackType]):
         if len(self.processors) == 0:
             yield from data_iter
         else:
+            packs = []
             for pack in data_iter:
-                # print("base pipeline reads:  " + pack.meta.doc_id)
-                self.current_packs.append(pack)
-                # print('now contains ', len(self.current_packs), 'packs')
+                packs.append(pack)
 
                 for i, processor in enumerate(self.processors):
-                    for c_pack in self.current_packs:
+                    for c_pack in packs:
                         in_cache = (c_pack.meta.cache_state ==
                                     processor.component_name)
 
-                        # There is some finish bug here.
                         print('Process state: ', pack.meta.process_state)
                         can_process = (i == 0 or c_pack.meta.process_state ==
                                        self.processors[i - 1].component_name)
@@ -184,23 +182,23 @@ class BasePipeline(Generic[PackType]):
                             self.__working_component = processor.component_name
                             processor.process(c_pack)
 
-                for c_pack in list(self.current_packs):
+                for c_pack in list(packs):
                     # must iterate through a copy of the original list
                     # because of the removing operation
                     if (c_pack.meta.process_state ==
                             self.processors[-1].component_name):
-                        print('yielding from current pack')
                         yield c_pack
-                        self.current_packs.remove(c_pack)
+                        packs.remove(c_pack)
 
             # process tail instances in the whole dataset
-            for c_pack in list(self.current_packs):
+            for c_pack in list(packs):
                 start = self._processors_index[c_pack.meta.process_state] + 1
                 for processor in self.processors[start:]:
                     self.__working_component = processor.component_name
                     if isinstance(processor, BaseBatchProcessor):
+                        #TODO: how to pass the tail_instance naturally.
                         processor.process(c_pack, tail_instances=True)
                     else:
                         processor.process(c_pack)
                 yield c_pack
-                self.current_packs.remove(c_pack)
+                packs.remove(c_pack)

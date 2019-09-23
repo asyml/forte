@@ -25,8 +25,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaseReader(Generic[PackType], ABC):
-    """The basic data reader class.
-    To be inherited by all data readers.
+    """
+        The basic data reader class.
+        To be inherited by all data readers.
     """
 
     def __init__(self,
@@ -237,8 +238,8 @@ class BaseReader(Generic[PackType], ABC):
 
 
 class PackReader(BaseReader[DataPack], ABC):
-    """The basic data reader class.
-    To be inherited by all data readers.
+    """
+        A Pack Reader reads data into DataPacks.
     """
 
     @property

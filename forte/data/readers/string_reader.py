@@ -2,13 +2,12 @@
 The reader that reads plain text data into Datapacks.
 """
 import logging
-from typing import Iterator, Optional, List, Union
-from pathlib import Path
+from typing import Iterator, List, Union
 
 from forte import config
 from forte.data.data_pack import DataPack
 from forte.data.ontology import base_ontology
-from forte.data.readers.file_reader import PackReader
+from forte.data.readers.base_reader import PackReader
 
 logger = logging.getLogger(__name__)
 
@@ -18,22 +17,11 @@ __all__ = [
 
 
 class StringReader(PackReader):
-    """:class:`StringReader` is designed to read in a list of string variables.
-
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
+    """
+    :class:`StringReader` is designed to read in a list of string variables.
     """
 
-    # pylint: disable=unused-argument
-    def __init__(self,
-                 lazy: bool = True,
-                 from_cache: bool = False,
-                 cache_directory: Optional[Path] = None,
-                 append_to_cache: bool = False):
+    def __init__(self):
         super().__init__()
         self._ontology = base_ontology
         self.define_output_info()
@@ -44,7 +32,7 @@ class StringReader(PackReader):
         }
 
     # pylint: disable=no-self-use,unused-argument
-    def _cache_key_function(self, collection):
+    def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
 
     # pylint: disable=no-self-use
@@ -71,7 +59,8 @@ class StringReader(PackReader):
 
         pack = DataPack()
 
-        document = self._ontology.Document(0, len(data_source))  # type: ignore
+        document = self._ontology.Document(  # type: ignore
+            pack, 0, len(data_source))
         pack.add_or_get_entry(document)
 
         pack.set_text(data_source, replace_func=self.text_replace_operation)

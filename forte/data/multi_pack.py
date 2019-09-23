@@ -78,6 +78,28 @@ class MultiPack(BasePack):
         for pack_name, pack in named_packs.items():
             self.add_pack(pack, pack_name)
 
+    def rename_pack(self, old_name: str, new_name: str):
+        """
+        Rename the pack to a new name. If the new_name is already taken, a
+        ValueError will be raised. If the old_name is not found, then a KeyError
+        will be raised just as missing value from a dictionary.
+
+        Args:
+            old_name: The old name of the pack.
+            new_name: The new name to be assigned for the pack.
+
+        Returns:
+
+        """
+        if new_name in self.__name_index:
+            raise ValueError("The new name is already taken.")
+        pack_index = self.__name_index[old_name]
+        self.__name_index[new_name] = pack_index
+        self.pack_names[pack_index] = new_name
+
+    def get_pack(self, name: str):
+        return self.packs[self.__name_index[name]]
+
     def get_single_pack_data(
             self,
             pack_index: int,

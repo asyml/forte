@@ -173,6 +173,7 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
 
             input_sent = input_pack.get_entry_by_id(input_id)
             cross_link = MultiPackLink(
+                data_pack,
                 (self.input_pack_name, input_sent),
                 (self.output_pack_name, sent),
             )

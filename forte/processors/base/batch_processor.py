@@ -1,6 +1,8 @@
 from abc import abstractmethod, ABC
 from typing import Dict, Optional, Type
 
+from texar.torch import HParams
+
 from forte.data import DataPack, MultiPack, PackType
 from forte import config, Resources
 from forte.data.batchers import ProcessingBatcher, \
@@ -30,8 +32,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         super().__init__()
 
         self.context_type: Type[Annotation] = self.define_context()
-        self.batch_size = None
-        self.batcher = None
+        self.batcher: Optional[ProcessingBatcher] = None
         self.use_coverage_index = False
 
     def initialize(self, configs, resource: Resources):
@@ -47,23 +48,15 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def initialize_batcher(self, hard_batch: bool = True):
+    def initialize_batcher(self):
         """
         Single pack :class:`BatchProcessor` initialize the batcher to be a
         :class:`ProcessingBatcher`. And MultiPackBatchProcessor might need
         something like "MultiPackProcessingBatcher".
-
-        Args:
-            # TODO: what exactly is a hard batch? Do we really need to define
-            # this here?
-            hard_batch:
-
-        Returns:
-
         """
         raise NotImplementedError
 
-    def _process(self, input_pack: PackType, tail_instances: bool = False):
+    def _process(self, input_pack: PackType, flush_all: bool = False):
         """
         In batch processors, all data are processed in batches. So this function
         is implemented to convert the input datapacks into batches according to
@@ -72,8 +65,11 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         ``pack``, which convert the batch results back to datapacks.
 
         Args:
-            input_pack:
-            tail_instances:
+            input_pack: The next input pack to be fed in. The batcher will
+            collect enough data for a full batch to start processing unless
+            ``flush_all`` is true.
+            flush_all: If it is true, the processor will force request
+            a batch from the batcher
 
         Returns:
 
@@ -88,7 +84,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         for batch in self.batcher.get_batch(input_pack,
                                             self.context_type,
                                             self.input_info,
-                                            tail_instances=tail_instances):
+                                            force_flush=flush_all):
             pred = self.predict(batch)
             self.pack_all(pred)
             self.finish_up_packs(-1)
@@ -157,8 +153,15 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
     The batch processors that process DataPacks.
     """
 
-    def initialize_batcher(self, hard_batch: bool = True):
-        return ProcessingBatcher(self.batch_size, hard_batch)
+    def initialize_batcher(self):
+        # TODO: ProcessingBatcher is not a good one to initialize.
+        return ProcessingBatcher(
+            HParams({
+                'batch_size': self.batch_size
+            },
+                default_hparams=ProcessingBatcher.default_hparams()
+            )
+        )
 
     def prepare_coverage_index(self, input_pack: DataPack):
         for entry_type in self.input_info.keys():
@@ -181,9 +184,12 @@ class MultiPackTxtgenBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
         self.output_pack_name = None
 
     def initialize_batcher(self, hard_batch: bool = True):
-        return TxtgenMultiPackProcessingBatcher(self.input_pack_name,
-                                                self.batch_size,
-                                                hard_batch)
+        return TxtgenMultiPackProcessingBatcher(HParams(
+            {
+                'input_pack_name': self.input_pack_name,
+            },
+            TxtgenMultiPackProcessingBatcher.default_hparams()
+        ))
 
     def prepare_coverage_index(self, input_pack: MultiPack):
         for entry_type in self.input_info.keys():

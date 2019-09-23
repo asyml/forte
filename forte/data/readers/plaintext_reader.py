@@ -1,19 +1,20 @@
 """
 The reader that reads plain text data into Datapacks.
 """
-
+import os
 from typing import Iterator, Any
+
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.ontology import base_ontology
-from forte.data.readers.file_reader import MonoFileReader
+from forte.data.readers import PackReader
 
 __all__ = [
     "PlainTextReader",
 ]
 
 
-class PlainTextReader(MonoFileReader):
+class PlainTextReader(PackReader):
     """:class:`PlainTextReader` is designed to read in plain text dataset.
 
     Args:
@@ -34,10 +35,13 @@ class PlainTextReader(MonoFileReader):
         """
         Should be called with param `data_source`
         which is a path to a folder containing txt files
-        :param kwargs: text directory containing the files.
+        :param text_directory: text directory containing the files.
         :return: Iterator over paths to .txt files
         """
         return dataset_path_iterator(text_directory, ".txt")
+
+    def _cache_key_function(self, text_file: str) -> str:
+        return os.path.basename(text_file)
 
     def define_output_info(self):
         self.output_info = {
@@ -56,7 +60,8 @@ class PlainTextReader(MonoFileReader):
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
-        document = self._ontology.Document(0, len(pack.text))  # type: ignore
+        document = self._ontology.Document(pack,  # type: ignore
+                                           0, len(pack.text))
         pack.add_or_get_entry(document)
 
         pack.meta.doc_id = file_path

@@ -3,10 +3,11 @@ import logging
 from abc import abstractmethod
 from collections import defaultdict
 from typing import (DefaultDict, Dict, Generic, List, Optional, Set, Type,
-                    TypeVar, Union, Tuple, Hashable)
+                    TypeVar, Union, Tuple, Hashable, Iterator, Any)
 
 import jsonpickle
 
+from forte.common.exception import PackIndexError
 from forte.data.ontology import (Annotation, Entry, EntryType, Group, BaseGroup,
                                  Link, Span, BaseLink, LinkType, GroupType)
 
@@ -61,7 +62,8 @@ class InternalMeta:
 
 class BasePack:
     """
-    The base class of DataPack and MultiPack
+    The base class of data packages. Currently we support two types of data
+    packages, DataPack and MultiPack.
     """
 
     def __init__(self, doc_id: Optional[str] = None):
@@ -197,7 +199,9 @@ class BaseIndex(Generic[PackType]):
 
     def link_index(self, tid: str, as_parent: bool = True) -> Set[str]:
         """
-        Look up the link_index with key ``tid``.
+        Look up the link_index with key ``tid``. If the link index is not built,
+        this will trigger the building process and subsequent steps will be
+        more efficient.
 
         Args:
             tid (str): the tid of the entry being looked up.
@@ -208,7 +212,7 @@ class BaseIndex(Generic[PackType]):
                 whose child is `tid`.
         """
         if not self._link_index_switch:
-            self.update_link_index(self.data_pack.links)
+            self.build_link_index()
         if as_parent:
             return self._link_index["parent_index"][tid]
         else:
@@ -242,9 +246,27 @@ class BaseIndex(Generic[PackType]):
             self.type_index[type(entry)].add(entry.tid)
             self.component_index[entry.component].add(entry.tid)
 
+    def build_link_index(self):
+        """
+        Build the :attr:`link_index`, the index from child and parent
+        nodes to links. It will build the links with the links in the dataset.
+        :attr:`link_index` consists of two sub-indexes:
+        "child_index" is the index from child nodes to their corresponding
+        links, and "parent_index" is the index from parent nodes to their
+        corresponding links.
+        Returns:
+
+        """
+        logger.debug("Building link index.")
+        self.turn_group_index_switch(on=True)
+        self._link_index["child_index"] = defaultdict(set)
+        self._link_index["parent_index"] = defaultdict(set)
+        self.update_link_index(self.data_pack.links)
+
     def update_link_index(self, links: List[LinkType]):
-        """Build or update :attr:`link_index`, the index from child and parent
-        nodes to links. :attr:`link_index` consists of two sub-indexes:
+        """
+        Update :attr:`link_index` with the provided links, the index from child
+        and parent to links. :attr:`link_index` consists of two sub-indexes:
         "child_index" is the index from child nodes to their corresponding
         links, and "parent_index" is the index from parent nodes to their
         corresponding links.
@@ -252,20 +274,29 @@ class BaseIndex(Generic[PackType]):
         Args:
             links (list): a list of links to be added into the index.
         """
-        logger.debug("Updating link index")
-        if not self.link_index_switch:
-            self.turn_link_index_switch(on=True)
-            self._link_index["child_index"] = defaultdict(set)
-            self._link_index["parent_index"] = defaultdict(set)
-            links = self.data_pack.links
+        logger.debug("Updating link index.")
+
+        if not self._link_index:
+            raise PackIndexError("Link index has not been built.")
 
         for link in links:
             self._link_index["child_index"][
-                link.child.index_key
+                link.get_child().index_key
             ].add(link.tid)
             self._link_index["parent_index"][
-                link.parent.index_key
+                link.get_parent().index_key
             ].add(link.tid)
+
+    def build_group_index(self):
+        """
+        Build :attr:`group_index`, the index from group members to groups.
+        Returns:
+
+        """
+        logger.debug("Building group index.")
+        self.turn_group_index_switch(on=True)
+        self._group_index = defaultdict(set)
+        self.update_group_index(self.data_pack.groups)
 
     def update_group_index(self, groups: List[GroupType]):
         """Build or update :attr:`group_index`, the index from group members
@@ -275,10 +306,9 @@ class BaseIndex(Generic[PackType]):
             groups (list): a list of groups to be added into the index.
         """
         logger.debug("Updating group index")
-        if not self.group_index_switch:
-            self.turn_group_index_switch(on=True)
-            self._group_index = defaultdict(set)
-            groups = self.data_pack.groups
+
+        if not self._group_index:
+            raise PackIndexError("Group index has not been built.")
 
         for group in groups:
             for member in group.members:

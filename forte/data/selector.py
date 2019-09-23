@@ -12,7 +12,7 @@ class Selector(Generic[PackType]):
     def __init__(self, **kwargs):
         pass
 
-    def select(self, data_pack: PackType):
+    def select(self, pack: PackType):
         raise NotImplementedError
 
 
@@ -22,8 +22,8 @@ class DummySelector(Selector):
     or MultiPack
     """
 
-    def select(self, data_pack: PackType) -> PackType:
-        return data_pack
+    def select(self, pack: PackType) -> PackType:
+        return pack
 
 
 class SinglePackSelector(Selector[MultiPack]):
@@ -35,12 +35,13 @@ class SinglePackSelector(Selector[MultiPack]):
         super().__init__()
         self.select_name = select_name
 
-    def select(self, data_pack: MultiPack) -> DataPack:
-        if self.select_name not in data_pack.packs:
+    def select(self, pack: MultiPack) -> DataPack:
+        if self.select_name not in pack.packs:
             raise ValueError(f"pack name {self.select_name}"
                              f"not in the MultiPack")
         assert self.select_name is not None
-        return data_pack.packs[self.select_name]
+
+        return pack.get_pack(self.select_name)
 
 
 class MultiPackSelector(Selector[MultiPack]):
@@ -53,11 +54,11 @@ class MultiPackSelector(Selector[MultiPack]):
         super().__init__()
         self.select_names = select_names
 
-    def select(self, data_pack: MultiPack) -> MultiPack:
+    def select(self, pack: MultiPack) -> MultiPack:
         ret_pack: MultiPack = MultiPack()
         for name in self.select_names:
-            if name not in data_pack.packs:
+            if name not in pack.packs:
                 raise ValueError(f"pack name {name}"
                                  f"not in the MultiPack")
-            ret_pack.update_pack(**{name: data_pack.packs[name]})
+            ret_pack.update_pack(**{name: pack.get_pack(name)})
         return ret_pack

@@ -52,8 +52,6 @@ class WikiArticleWriter(JsonPackWriter):
 
         Returns:
         """
-        input('writing next pack: ' + input_pack.meta.doc_id)
-
         super(WikiArticleWriter, self).process(input_pack)
         # TODO: found duplicate entries here.
         self.csv_writer.writerow(

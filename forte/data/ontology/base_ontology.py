@@ -66,6 +66,8 @@ class CoreferenceMention(Annotation):
 class CoreferenceGroup(Group):
     member_type = CoreferenceMention
 
-    def __init__(self, members: Optional[Set[CoreferenceMention]] = None):
-        super().__init__(members)  # type: ignore
+    def __init__(self,
+                 pack: DataPack,
+                 members: Optional[Set[CoreferenceMention]] = None):
+        super().__init__(pack, members)  # type: ignore
         self.coref_type = None

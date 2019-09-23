@@ -3,8 +3,7 @@ from functools import total_ordering
 from typing import Iterable, Optional, Set, Union, Tuple, Type, TypeVar, Any, \
     Hashable, Generic
 
-import deprecation
-
+from forte.common.exception import IncompleteEntryError
 from forte.utils import get_class_name, get_full_module_name
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -57,7 +56,7 @@ class Indexable(ABC):
         raise NotImplementedError
 
 
-class Entry(Indexable, Generic[PackType]):
+class Entry(Hashable, Indexable, Generic[PackType]):
     """
     The base class inherited by all NLP entries.
     There will be some associated attributes for each entry.
@@ -119,23 +118,18 @@ class Entry(Indexable, Generic[PackType]):
             setattr(self, field_name, field_value)
             self.__modified_fields.add(field_name)
 
-    @abstractmethod
-    def hash(self):
-        """The hash function for :class:`Entry` objects.
-        To be implemented in each subclass."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def eq(self, other):
-        """The eq function for :class:`Entry` objects.
-        To be implemented in each subclass."""
-        raise NotImplementedError
-
-    def __hash__(self):
-        return self.hash()
-
     def __eq__(self, other):
-        return self.eq(other)
+        if other is None:
+            return False
+
+        return (type(self), self._tid) == (type(other), other.tid)
+
+    def __hash__(self) -> int:
+        return hash((type(self), self._tid))
+
+    @property
+    def index_key(self) -> Hashable:
+        return self._tid
 
 
 EntryType = TypeVar('EntryType', bound=Entry)
@@ -159,17 +153,21 @@ class Annotation(Entry[DataPack]):
     def set_span(self, begin: int, end: int):
         self._span = Span(begin, end)
 
-    def hash(self):
+    def __hash__(self):
         return hash(
-            (type(self), self.span.begin, self.span.end))
+            (type(self), self.data_pack, self.span.begin, self.span.end)
+        )
 
-    def eq(self, other):
+    def __eq__(self, other):
+        if other is None:
+            return False
         return (type(self), self.span.begin, self.span.end) == \
                (type(other), other.span.begin, other.span.end)
 
     def __lt__(self, other):
-        """Have to support total ordering and be consistent with
-        eq(self, other)
+        """
+        Have to support total ordering and be consistent with
+        __eq__(self, other)
         """
         if self.span != other.span:
             return self.span < other.span
@@ -188,34 +186,21 @@ class Annotation(Entry[DataPack]):
 
 
 class BaseLink(Entry, ABC):
-    # TOOD: Is this the best type var?
-    ParentType: Type[Entry] = Entry  # type: ignore
-    ChildType: Type[Entry] = Entry  # type: ignore
-
-    # ParentType = TypeVar("ParentType", bound=Entry)
-    # ChildType = TypeVar("ChildType", bound=Entry)
-
     def __init__(
             self,
-            pack: PackType = None,
-            parent: Optional[ParentType] = None,
-            child: Optional[ChildType] = None
+            pack: PackType,
+            parent: Optional[EntryType] = None,
+            child: Optional[EntryType] = None
     ):
         super().__init__(pack)
-        self._parent: Optional[str] = None
-        self._child: Optional[str] = None
 
         if parent is not None:
             self.set_parent(parent)
         if child is not None:
             self.set_child(child)
 
-    def update_link_index(self):
-        if (self.data_pack is not None and
-                self.data_pack.index.link_index_switch):
-            self.data_pack.index.update_link_index(links=[self])
-
-    def set_parent(self, parent: ParentType):
+    @abstractmethod
+    def set_parent(self, parent: EntryType):
         """
         This will set the `parent` of the current instance with given Entry
         The parent is saved internally by its pack specific index key.
@@ -226,36 +211,21 @@ class BaseLink(Entry, ABC):
         Returns:
 
         """
-        if not isinstance(parent, self.ParentType):
-            raise TypeError(
-                f"The parent of {type(self)} should be an "
-                f"instance of {self.ParentType}, but get {type(parent)}")
-        self._parent = parent.index_key
+        raise NotImplementedError
 
-        if (self.data_pack is not None and
-                self.data_pack.index.link_index_switch):
-            self.data_pack.index.add_link_parent(parent, self)
-
-    def set_child(self, child: ChildType):
+    @abstractmethod
+    def set_child(self, child: EntryType):
         """
-       This will set the `child` of the current instance with given Entry
-      The child is saved internally by its pack specific index key.
+        This will set the `child` of the current instance with given Entry
+        The child is saved internally by its pack specific index key.
 
-       Args:
-           child: The child entry
+        Args:
+            child: The child entry
 
-       Returns:
+        Returns:
 
-       """
-        if not isinstance(child, self.ChildType):
-            raise TypeError(
-                f"The parent of {type(self)} should be an "
-                f"instance of {self.ParentType}, but get {type(child)}")
-        self._child = child.index_key
-
-        if (self.data_pack is not None and
-                self.data_pack.index.link_index_switch):
-            self.data_pack.index.add_link_child(child, self)
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def get_parent(self) -> EntryType:
@@ -279,36 +249,86 @@ class BaseLink(Entry, ABC):
         """
         raise NotImplementedError
 
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return (type(self), self.get_parent(), self.get_child()) == \
+               (type(other), other.get_parent(), other.get_child())
 
-LinkType = TypeVar('LinkType', bound=BaseLink[EntryType[PackType]])
+    def __hash__(self):
+        return hash((type(self), self.get_parent(), self.get_child()))
+
+    @property
+    def index_key(self) -> str:
+        return self.tid
+
+
+LinkType = TypeVar('LinkType', bound=BaseLink)
 
 
 class Link(BaseLink):
     """
-    Link type entries, such as "predicate link". Each link has a parent node
-    and a child node.
+    The Link type entry connects two entries, such as "dependency link", which
+    connect two words and specifies its dependency label.  Each link has a
+    parent node and a child node.
     """
+    ParentType: Type[Entry] = Entry
+    ChildType: Type[Entry] = Entry
 
     def __init__(
             self,
-            pack: DataPack = None,
+            pack: DataPack,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
-        super().__init__(pack)
         self._parent: Optional[str] = None
         self._child: Optional[str] = None
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
+        super().__init__(pack, parent, child)
 
-    def hash(self):
-        return hash((type(self), self.parent, self.child))
+    def set_parent(self, parent: ParentType):
+        """
+        This will set the `parent` of the current instance with given Entry
+        The parent is saved internally by its pack specific index key.
 
-    def eq(self, other):
-        return (type(self), self.parent, self.child) == \
-               (type(other), other.parent, other.child)
+        Args:
+            parent: The parent entry.
+
+        Returns:
+
+        """
+        if not isinstance(parent, self.ParentType):
+            raise TypeError(
+                f"The parent of {type(self)} should be an "
+                f"instance of {self.ParentType}, but get {type(parent)}")
+        self._parent = parent.tid
+
+        if (self.data_pack is not None and
+                self.data_pack.index.link_index_switch):
+            self.data_pack.index.add_link_parent(parent, self)
+
+    def set_child(self, child: ChildType):
+        """
+       This will set the `child` of the current instance with given Entry
+       The child is saved internally by its pack specific index key.
+
+       Args:
+           child: The child entry
+
+        Args:
+            child:
+
+        Returns:
+
+        """
+        if not isinstance(child, self.ChildType):
+            raise TypeError(
+                f"The parent of {type(self)} should be an "
+                f"instance of {self.ParentType}, but get {type(child)}")
+        self._child = child.tid
+
+        if (self.data_pack is not None and
+                self.data_pack.index.link_index_switch):
+            self.data_pack.index.add_link_child(child, self)
 
     @property
     def parent(self):
@@ -326,7 +346,7 @@ class Link(BaseLink):
         """
         return self._child
 
-    def get_parent(self):
+    def get_parent(self) -> ParentType:
         """
         Get the parent entry of the link.
 
@@ -338,7 +358,7 @@ class Link(BaseLink):
                              f"attached to any data pack.")
         return self.data_pack.get_entry_by_id(self._parent)
 
-    def get_child(self):
+    def get_child(self) -> ChildType:
         """
         Get the child entry of the link.
 
@@ -349,9 +369,6 @@ class Link(BaseLink):
             raise ValueError(f"Cannot get child because link is not"
                              f" attached to any data pack.")
         return self.data_pack.get_entry_by_id(self._child)
-
-    def index_key(self) -> str:
-        return self.tid
 
 
 class BaseGroup(Entry):
@@ -367,8 +384,8 @@ class BaseGroup(Entry):
 
     def __init__(
             self,
-            pack: PackType = None,
-            members: Optional[Set[Entry]] = None,
+            pack: PackType,
+            members: Optional[Set[EntryType]] = None,
     ):
         super().__init__(pack)
 
@@ -398,9 +415,6 @@ class BaseGroup(Entry):
         Returns:
 
         """
-        if not isinstance(members, Iterable):
-            members = {members}
-
         for member in members:
             if not isinstance(member, self.member_type):
                 raise TypeError(
@@ -423,12 +437,13 @@ class BaseGroup(Entry):
         """
         return self._members
 
-    def hash(self):
+    def __hash__(self):
         return hash((type(self), tuple(self.members)))
 
-    def eq(self, other):
-        return (type(self), self.members) == \
-               (type(other), other.members)
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return (type(self), self.members) == (type(other), other.members)
 
     def get_members(self):
         """
@@ -446,11 +461,12 @@ class BaseGroup(Entry):
             member_entries.add(self.data_pack.get_entry_by_id(m))
         return member_entries
 
+    @property
     def index_key(self) -> str:
         return self.tid
 
 
-GroupType = TypeVar("GroupType", bound=BaseGroup[EntryType[PackType]])
+GroupType = TypeVar("GroupType", bound=BaseGroup)
 
 
 class Group(BaseGroup):
@@ -466,87 +482,10 @@ class Group(BaseGroup):
             pack: DataPack,
             members: Optional[Set[Entry]] = None,
     ):
-        super().__init__(pack)
-
-        # Store the group member's id.
-        self._members: Set[str] = set()
-        if members is not None:
-            self.add_members(members)
-
-    def add_member(self, member: Entry):
-        """
-        Add one entry to the group.
-        Args:
-            member:
-
-        Returns:
-
-        """
-        self.add_members([member])
-
-    def add_members(self, members: Iterable[Entry]):
-        """
-        Add members to the group.
-
-        Args:
-            members: An iterator of members to be added to the group.
-
-        Returns:
-
-        """
-        if not isinstance(members, Iterable):
-            members = {members}
-
-        for member in members:
-            if not isinstance(member, self.member_type):
-                raise TypeError(
-                    f"The members of {type(self)} should be "
-                    f"instances of {self.member_type}, but get {type(member)}")
-
-            self._members.add(member.tid)
-
-        if (self.data_pack is not None and
-                self.data_pack.index.group_index_switch):
-            # TODO: NO way, don't do all update.
-            self.data_pack.index.update_group_index([self])
-
-    @property
-    def members(self):
-        """
-        A list of member tids. To get the member objects, call
-        :meth:`get_members` instead.
-        :return:
-        """
-        return self._members
-
-    def hash(self):
-        return hash((type(self), tuple(self.members)))
-
-    def eq(self, other):
-        return (type(self), self.members) == \
-               (type(other), other.members)
-
-    def get_members(self):
-        """
-        Get the member entries in the group.
-
-        Returns:
-             An set of instances of :class:`Entry` that are the members of the
-             group.
-        """
-        if self.data_pack is None:
-            raise ValueError(f"Cannot get members because group is not "
-                             f"attached to any data pack.")
-        member_entries = set()
-        for m in self.members:
-            member_entries.add(self.data_pack.get_entry_by_id(m))
-        return member_entries
-
-    def index_key(self) -> str:
-        return self.tid
+        super().__init__(pack, members)
 
 
-class SubEntry(Entry[MultiPack], Indexable, ABC):
+class SubEntry(Entry[MultiPack]):
     """
     This is used to identify an Entry in one of the packs in the Multipack.
     For example, the sentence in one of the packs. A pack_index and an entry
@@ -577,19 +516,30 @@ class SubEntry(Entry[MultiPack], Indexable, ABC):
         return self._entry
 
     def __hash__(self):
-        return hash((type(self), self._pack_index, self._entry.hash()))
+        return hash((type(self), self._pack_index, self._entry))
 
+    def __eq__(self, other):
+        if other is None:
+            return False
+        return (type(self), self.pack_index, self.entry
+                ) == (type(other), other.pack_index, other.entry)
+
+    @property
     def index_key(self) -> Tuple[int, str]:
         return self._pack_index, self._entry.tid
 
 
-class MultiPackLink(BaseLink[MultiPack]):
+class MultiPackLink(BaseLink):
     """
-    Link type entries, such as "SentencePairLink". Each link has a parent
-     node and a child node.
+    The MultiPackLink are used to link entries in a MultiPack, which is designed
+    to support cross pack linking, this can support applications such as
+    sentence alignment and cross-document coreference. Each link should have
+    a parent node and a child node. Note that the nodes are SubEntry(s), thus
+    have one additional index on which pack it comes from.
     """
-    ParentType: Type[SubEntry] = SubEntry  # type: ignore
-    ChildType: Type[SubEntry] = SubEntry  # type: ignore
+
+    ParentType: Type[SubEntry] = SubEntry
+    ChildType: Type[SubEntry] = SubEntry
 
     def __init__(
             self,
@@ -617,24 +567,14 @@ class MultiPackLink(BaseLink[MultiPack]):
     @property
     def parent(self) -> Tuple[int, str]:
         if self._parent is None:
-            raise Exception("Parent is not set for this link.")
+            raise IncompleteEntryError("Parent is not set for this link.")
         return self._parent
 
     @property
     def child(self) -> Tuple[int, str]:
         if self._child is None:
-            raise Exception("Parent is not set for this link.")
+            raise IncompleteEntryError("Child is not set for this link.")
         return self._child
-
-    def hash(self):
-        return hash((type(self), self._parent, self._child))
-
-    def eq(self, other):
-        if not isinstance(other, MultiPackLink):
-            return False
-
-        return (type(self), self.parent, self.child) == \
-               (type(other), other.parent, other.child)
 
     def set_parent(self, parent: ParentType):
         """
@@ -653,27 +593,41 @@ class MultiPackLink(BaseLink[MultiPack]):
                 f"instance of {self.ParentType}, but get {type(parent)}")
         self._parent = parent.index_key
 
+    def set_child(self, child: ChildType):
+        if not isinstance(child, self.ChildType):
+            raise TypeError(
+                f"The parent of {type(self)} should be an "
+                f"instance of {self.ChildType}, but get {type(child)}")
+        self._child = child.index_key
+
     def get_parent(self) -> EntryType:
-        pass
+        """
+        Get the parent entry of the link.
+
+        Returns:
+             An instance of :class:`SubEntry` that is the parent of the link
+             from the given DataPack.
+        """
+        if self._parent is None:
+            raise IncompleteEntryError("The parent of this link is not set.")
+        pack_idx, parent_tid = self._parent
+
+        return SubEntry.from_id(self.data_pack, pack_idx, parent_tid)
 
     def get_child(self) -> SubEntry:
         """
         Get the child entry of the link.
 
         Returns:
-             An instance of :class:`Entry` that is the child of the link
-             from the given DataPack
+             An instance of :class:`SubEntry` that is the child of the link
+             from the given DataPack.
         """
+        if self._child is None:
+            raise IncompleteEntryError("The parent of this link is not set.")
+
         pack_idx, child_tid = self._child
 
-        if self.data_pack is None:
-            raise ValueError(f"Cannot get parent because link is not "
-                             f"attached to any data pack.")
-
         return SubEntry.from_id(self.data_pack, pack_idx, child_tid)
-
-    def index_key(self) -> str:
-        return self.tid
 
 
 class MultiPackGroup(BaseGroup):
@@ -685,62 +639,6 @@ class MultiPackGroup(BaseGroup):
     def __init__(
             self,
             pack: MultiPack,
-            members: Set[Tuple[str, Entry]],
+            members: Optional[Set[SubEntry]],
     ):
-        super().__init__(pack)
-        self._members: Set[Tuple[str, str]] = set()
-        if members is not None:
-            self.add_members(members)
-
-    def eq(self, other):
-        pass
-
-    def hash(self):
-        pass
-
-    member_type: Type[Entry] = Entry  # type: ignore
-
-    def add_members(self, members: Iterable[Tuple[str, Entry]]):
-        """
-        Add group members.
-        Args:
-            members:
-
-        Returns:
-
-        """
-        for pack_name, member in members:
-            if not isinstance(member, self.member_type):
-                raise TypeError(
-                    f"The members of {type(self)} should be "
-                    f"instances of {self.member_type}, but get {type(member)}")
-            self._members.add((pack_name, member.tid))
-
-    @property
-    def members(self):
-        """
-        A list of member tids. To get the member objects, call
-        :meth:`get_members` instead.
-        :return:
-        """
-        return self._members
-
-    def get_members(self):
-        """
-        Get the member entries in the group.
-
-        Returns:
-             An set of instances of :class:`Entry` that are the members of the
-             group.
-        """
-
-        member_entries = set()
-        for pack_name, member in self.members:
-            member_entries.add(
-                self.data_pack.packs[pack_name].index.entry_index[member]
-            )
-        return member_entries
-
-    @property
-    def index_key(self) -> Hashable:
-        return self.tid
+        super().__init__(pack, members)

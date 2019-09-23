@@ -783,6 +783,7 @@ class DataIndex(BaseIndex[DataPack]):
         return not (entry1.span.begin >= entry2.span.end or
                     entry1.span.end <= entry2.span.begin)
 
+    # TODO: How can inner_entry be a str?
     def in_span(self,
                 inner_entry: Union[str, Entry],
                 span: Span) -> bool:
@@ -807,16 +808,30 @@ class DataIndex(BaseIndex[DataPack]):
         elif isinstance(inner_entry, Link):
             child = inner_entry.get_child()
             parent = inner_entry.get_parent()
-            inner_begin = min(child.span.begin, parent.span.begin)
-            inner_end = max(child.span.end, parent.span.end)
+
+            if (not isinstance(child, Annotation)
+                    or not isinstance(parent, Annotation)):
+                # Cannot check in_span for non-annotations.
+                return False
+
+            child_: Annotation = child
+            parent_: Annotation = parent
+
+            inner_begin = min(child_.span.begin, parent_.span.begin)
+            inner_end = max(child_.span.end, parent_.span.end)
         elif isinstance(inner_entry, Group):
             inner_begin = -1
             inner_end = -1
             for mem in inner_entry.get_members():
+                if not isinstance(mem, Annotation):
+                    # Cannot check in_span for non-annotations.
+                    return False
+
+                mem_: Annotation = mem
                 if inner_begin == -1:
-                    inner_begin = mem.span.begin
-                inner_begin = min(inner_begin, mem.span.begin)
-                inner_end = max(inner_end, mem.span.end)
+                    inner_begin = mem_.span.begin
+                inner_begin = min(inner_begin, mem_.span.begin)
+                inner_end = max(inner_end, mem_.span.end)
         else:
             raise ValueError(
                 f"Invalid entry type {type(inner_entry)}. A valid entry "

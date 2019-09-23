@@ -1,17 +1,22 @@
 """
 The reader that reads CoNLL ner_data into our internal json data format.
 """
+import os
+from typing import Any, Iterator
+
+from forte.data import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.readers.file_reader import MonoFileReader
+from forte.data.readers import MultiPackReader
 
 __all__ = [
     "PlainSentenceTxtgenReader"
 ]
 
 
-class PlainSentenceTxtgenReader(MonoFileReader):
-    """:class:`PlainSentenceTxtgenReader` is designed to read a file where
+class PlainSentenceTxtgenReader(MultiPackReader):
+    """
+    :class:`PlainSentenceTxtgenReader` is designed to read a file where
     each line is a sentence, and wrap it with MultiPack for the following
     text generation processors.
 
@@ -31,6 +36,12 @@ class PlainSentenceTxtgenReader(MonoFileReader):
         self.output_info = {
             self._ontology.Sentence: [],
         }
+
+    def _collect(self, text_directory: str) -> Iterator[Any]:  # type: ignore
+        return dataset_path_iterator(text_directory, '')
+
+    def _cache_key_function(self, txt_path: str) -> str:
+        return os.path.basename(txt_path)
 
     def parse_pack(self, file_path: str) -> MultiPack:
         m_pack: MultiPack = MultiPack()
@@ -66,7 +77,7 @@ class PlainSentenceTxtgenReader(MonoFileReader):
 
             input_pack.set_text(text, replace_func=self.text_replace_operation)
 
-        output_pack = DataPack(name=output_pack_name)
+        output_pack = DataPack()
 
         m_pack.update_pack(
             {

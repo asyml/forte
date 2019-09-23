@@ -1,6 +1,6 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import (
-    Dict, List, Iterator, Iterable, Union, Any, Optional, Tuple, Type)
+    Dict, List, Iterator, Iterable, Union, Any, Optional, Tuple, Type, Generic)
 
 import texar.torch as tx
 from texar.torch import HParams
@@ -11,22 +11,22 @@ from forte.data.io_utils import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation
 
 
-class Batcher:
-    @abstractmethod
-    def __init__(self, config: HParams):
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_batch(self, *args):
-        raise NotImplementedError
-
-    @staticmethod
-    def default_hparams() -> Dict:
-        """
-        Defines the basic parameter and values of the batcher.
-        :return:
-        """
-        raise NotImplementedError
+# class Batcher(Generic[PackType]):
+#     @abstractmethod
+#     def __init__(self, config: HParams):
+#         raise NotImplementedError
+#
+#     @abstractmethod
+#     def get_batch(self, *args):
+#         raise NotImplementedError
+#
+#     @staticmethod
+#     def default_hparams() -> Dict:
+#         """
+#         Defines the basic parameter and values of the batcher.
+#         :return:
+#         """
+#         raise NotImplementedError
 
 
 class DictData(tx.data.DataBase[Dict, Dict]):
@@ -63,7 +63,7 @@ class DictData(tx.data.DataBase[Dict, Dict]):
         )
 
 
-class ProcessingBatcher(Batcher):
+class ProcessingBatcher(Generic[PackType]):
     """
     This defines the basis interface of the Batcher used in BatchProcessors.
     It will create Batches from the packs, and stores the relationship between
@@ -71,10 +71,9 @@ class ProcessingBatcher(Batcher):
     the packs.
     """
 
-    def __init__(self, batch_size: int, hard_batch: bool = False):
-        super().__init__()
-        self.batch_size = batch_size
-        self.hard_batch = hard_batch
+    def __init__(self, config: HParams):
+        super().__init__(config)
+        self.batch_size = config.batch_size
 
         self.current_batch: Dict = {}
         self.instance_num_in_current_batch = 0
@@ -87,8 +86,8 @@ class ProcessingBatcher(Batcher):
             input_pack: Optional[PackType],
             context_type: Type[Annotation],
             requests: DataRequest = None,
-            tail_instances: bool = False):
-
+            force_flush: bool = False
+    ):
         if input_pack is None:  # No more packs, return the tail instances
             if self.current_batch:
                 yield self.current_batch
@@ -106,7 +105,7 @@ class ProcessingBatcher(Batcher):
                 self.instance_num_in_current_batch += instance_num
                 self.current_batch_sources.append(instance_num)
 
-                if (tail_instances or not self.hard_batch or
+                if (force_flush or
                         self.instance_num_in_current_batch == self.batch_size):
                     yield self.current_batch
 
@@ -122,8 +121,15 @@ class ProcessingBatcher(Batcher):
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         pass
 
+    @staticmethod
+    def default_hparams() -> Dict:
+        return {
+            "batch_size": 1,
+            "hard_batch": False,
+        }
 
-class NumInstancesDataPackBatcher(ProcessingBatcher):
+
+class NumInstancesDataPackBatcher(ProcessingBatcher[DataPack]):
     def _get_data_batch_by_need(
             self,
             data_pack: DataPack,
@@ -153,19 +159,20 @@ class NumInstancesDataPackBatcher(ProcessingBatcher):
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
+    @staticmethod
+    def default_hparams() -> Dict:
+        return {}
+
 
 class TexarBatcher(Batcher):
     def __init__(self,
+                 hparams: HParams,
                  data_packs: Iterable[DataPack],
                  context_type: Type[Annotation],
-                 batch_size: Optional[int] = None,
-                 hparams=None):
-
-        if batch_size is not None:
-            hparams["batch_size"] = batch_size
+                 ):
         dataset = Dataset(data_packs)
         data = DictData(dataset.get_data(context_type), hparams=hparams)
-        super().__init__()
+        super().__init__(hparams)
         self.batch_iter = tx.data.DataIterator(data)
 
     def get_batch(self) -> Iterator[tx.data.Batch]:  # type: ignore
@@ -180,10 +187,10 @@ class TexarBatcher(Batcher):
         }
 
 
-class TxtgenMultiPackProcessingBatcher(NumInstancesDataPackBatcher):
+class TxtgenMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
     """
     A Batcher used in ``MultiPackBatchProcessors``.
-    The Batcher calles the ProcessingBatcher inherently on each specified
+    The Batcher calls the ProcessingBatcher inherently on each specified
     data pack in the MultiPack.
 
     It's flexible to query MultiPack so we delegate the task to the subclasses.
@@ -194,12 +201,11 @@ class TxtgenMultiPackProcessingBatcher(NumInstancesDataPackBatcher):
         to batching and slicing multiple data packs in the same time
     """
 
-    def __init__(self, input_pack_name: str, batch_size: int,
-                 hard_batch: bool = False):
-        super().__init__(batch_size)
-        super(batch_size, hard_batch)
-        self.input_pack_name = input_pack_name
+    def __init__(self, config: HParams):
+        super().__init__(config)
+        self.input_pack_name = config.input_pack_name
 
+    # TODO: Principled way of get data from multi pack?
     def _get_data_batch_by_need(
             self,
             data_pack: MultiPack,
@@ -216,11 +222,23 @@ class TxtgenMultiPackProcessingBatcher(NumInstancesDataPackBatcher):
             containing the required annotations and context, and ``cnt`` is
             the number of instances in the batch.
         """
-
         input_pack = data_pack.packs[self.input_pack_name]
-        yield from super()._get_data_batch_by_need(
-            input_pack, context_type, requests, offset)
+
+        instances: List[Dict] = []
+        for data in input_pack.get_data(context_type, requests, offset):
+            instances.append(data)
+            if (len(instances) ==
+                    self.batch_size - self.instance_num_in_current_batch):
+                batch = batch_instances(instances)
+                yield (batch, len(instances))
+                instances = []
+
+        if len(instances):
+            batch = batch_instances(instances)
+            yield (batch, len(instances))
 
     @staticmethod
     def default_hparams() -> Dict:
-        pass
+        return {
+            'input_pack_name': 'source',
+        }

@@ -11,7 +11,7 @@ the utilities from MediaWiki into your PYTHONPATH.
 
 import os
 import logging
-from typing import Any, Iterator, Dict, Iterable, Tuple, Set
+from typing import Any, Iterator, Dict, Iterable, Tuple, Set, Optional
 
 import mwxml
 import mwtypes
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class WikiDumpReader(PackReader):
-    def __init__(self, links_to_ignore: Set[str] = None):
+    def __init__(self, links_to_ignore: Optional[Set[str]] = None):
         super().__init__()
         self._ontology = wiki_ontology
 
@@ -60,10 +60,10 @@ class WikiDumpReader(PackReader):
             wiki_ontology.WikiCategories: ['categories'],
         }
 
-    def _collect(
+    def _collect(  # type: ignore
             self,
             wiki_dump_file: str,
-            redirects: Dict[str, str] = None,
+            redirects: Optional[Dict[str, str]] = None,
     ) -> Iterator[Tuple]:
         if redirects is None:
             redirects = {}

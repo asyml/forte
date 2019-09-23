@@ -73,7 +73,6 @@ class BaseProcessor(Generic[PackType], ABC):
         """
         raise NotImplementedError
 
-    # TODO: understand tail_instances
     def process(self, input_pack: PackType):
         # TODO finish up the refactors here.
         # Obtain the control of the DataPack.

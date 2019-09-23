@@ -2,18 +2,19 @@
 The reader that reads CoNLL ner_data into our internal json data format.
 """
 import codecs
+import os
 from typing import Iterator, Any
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import conll03_ontology
 from forte.data.data_pack import DataPack
-from forte.data.readers.file_reader import MonoFileReader
+from forte.data.readers import PackReader
 
 __all__ = [
     "CoNLL03Reader"
 ]
 
 
-class CoNLL03Reader(MonoFileReader):
+class CoNLL03Reader(PackReader):
     """:class:`CoNLL03Reader` is designed to read in the CoNLL03-NER dataset.
 
     Args:
@@ -45,6 +46,9 @@ class CoNLL03Reader(MonoFileReader):
         """
         return dataset_path_iterator(conll_directory, "conll")
 
+    def _cache_key_function(self, conll_file: str) -> str:
+        return os.path.basename(conll_file)
+
     def parse_pack(self, file_path: str) -> DataPack:
         pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
@@ -73,7 +77,7 @@ class CoNLL03Reader(MonoFileReader):
                 kwargs_i = {"pos_tag": pos_tag, "chunk_tag": chunk_id,
                             "ner_tag": ner_tag}
                 token = self._ontology.Token(  # type: ignore
-                    word_begin, word_end
+                    pack, word_begin, word_end
                 )
 
                 token.set_fields(**kwargs_i)
@@ -89,7 +93,7 @@ class CoNLL03Reader(MonoFileReader):
                     continue
                 # add sentence
                 sent = self._ontology.Sentence(  # type: ignore
-                    sentence_begin, offset - 1
+                    pack, sentence_begin, offset - 1
                 )
                 pack.add_or_get_entry(sent)
 
@@ -97,7 +101,7 @@ class CoNLL03Reader(MonoFileReader):
                 sentence_cnt += 1
                 has_rows = False
 
-        document = self._ontology.Document(0, len(text))  # type: ignore
+        document = self._ontology.Document(pack, 0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
 
         pack.set_text(text, replace_func=self.text_replace_operation)

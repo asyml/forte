@@ -63,8 +63,8 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
         print(colored("Semantic role labels:", 'red'))
         for link in pack.get(
                 base_ontology.PredicateLink, sentence):
-            parent = link.get_parent()
-            child = link.get_child()
+            parent: base_ontology.PredicateMention = link.get_parent()
+            child: base_ontology.PredicateArgument = link.get_child()
             print(f"  - \"{child.text}\" is role {link.arg_type} of "
                   f"predicate \"{parent.text}\"")
             entities = [entity.text for entity
@@ -119,9 +119,9 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
         print("\n----------------------\n")
 
 
-if __name__ == '__main__':
-    # ner_dir, srl_dir = sys.argv[  # pylint: disable=unbalanced-tuple-unpacking
-    #                    1:]
+def main():
+    import sys
+    ner_dir, srl_dir = sys.argv[1:2]
 
     output_config = HParams(
         {
@@ -139,6 +139,10 @@ if __name__ == '__main__':
               "l'ancienne bourgeoisie."
 
     stanford_nlp_example1('en', eng_text, output_config)
-    # stanford_nlp_example1('fr', fr_text, output_config)
+    stanford_nlp_example1('fr', fr_text, output_config)
 
-    # string_processor_example(ner_dir, srl_dir)
+    string_processor_example(ner_dir, srl_dir)
+
+
+if __name__ == '__main__':
+    main()
