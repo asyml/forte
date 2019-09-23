@@ -2,6 +2,8 @@
 This class defines the basic ontology supported by our system
 """
 from typing import Optional, Set
+
+from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation, Link, Group
 
 __all__ = [
@@ -18,8 +20,8 @@ __all__ = [
 
 
 class Token(Annotation):
-    def __init__(self, begin: int, end: int):
-        super().__init__(begin, end)
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
         self.pos_tag = None
 
 
@@ -32,8 +34,8 @@ class Document(Annotation):
 
 
 class EntityMention(Annotation):
-    def __init__(self, begin: int, end: int):
-        super().__init__(begin, end)
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
         self.ner_type = None
 
 
@@ -50,9 +52,10 @@ class PredicateLink(Link):
     child_type = PredicateArgument
 
     def __init__(self,
+                 pack: DataPack,
                  parent: Optional[PredicateMention] = None,
                  child: Optional[PredicateArgument] = None):
-        super().__init__(parent, child)
+        super().__init__(pack, parent, child)
         self.arg_type = None
 
 

@@ -13,7 +13,8 @@ import os
 import logging
 from typing import Any, Iterator, Dict, Iterable, Tuple, Set
 
-import mwxml, mwtypes
+import mwxml
+import mwtypes
 from mwlinks.libs.wikilink import Wikilink
 from mwlinks.libs.common import Span
 from mwlinks.libs.WikiExtractor import Extractor

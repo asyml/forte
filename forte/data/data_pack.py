@@ -200,8 +200,7 @@ class DataPack(BasePack):
         if add_new:
             # add the entry to the target entry list
             entry.set_tid(str(self.internal_metas[entry.__class__].id_counter))
-            entry.attach(self)
-            entry.__set_working_component(self.__owner_component)
+            entry.__set_component(self.__owner_component)
 
             if isinstance(target, list):
                 target.append(entry)
@@ -513,8 +512,8 @@ class DataPack(BasePack):
         links = self.get(a_type, cont, components)
 
         for link in links:
-            parent_type = link.parent_type.__name__
-            child_type = link.child_type.__name__
+            parent_type = link.ParentType.__name__
+            child_type = link.ChildType.__name__
 
             if parent_type not in data.keys():
                 raise KeyError(f"The Parent entry of {a_type} is not requested."
@@ -582,8 +581,11 @@ class DataPack(BasePack):
 
         if issubclass(entry_type, Annotation):
             begin_index = self.annotations.bisect(
-                Annotation(range_begin, -1))
-            end_index = self.annotations.bisect(Annotation(range_end, -1))
+                Annotation(self, range_begin, -1)
+            )
+            end_index = self.annotations.bisect(
+                Annotation(self, range_end, -1)
+            )
             for annotation in self.annotations[begin_index: end_index]:
                 if annotation.tid not in valid_id:
                     continue

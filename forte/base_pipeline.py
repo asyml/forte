@@ -28,7 +28,6 @@ class BasePipeline(Generic[PackType]):
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
 
-        # TODO: why do we need this __working_component
         self.__working_component: str
 
         self._ontology = base_ontology
@@ -67,7 +66,6 @@ class BasePipeline(Generic[PackType]):
             processor.set_ontology(self._ontology)
             processor.set_input_info()
             processor.set_output_info()
-        self.__working_component = None
 
     def set_reader(self, reader: BaseReader):
         reader.set_ontology(self._ontology)
@@ -185,7 +183,6 @@ class BasePipeline(Generic[PackType]):
                         if can_process and not in_cache:
                             self.__working_component = processor.component_name
                             processor.process(c_pack)
-                            processor.process_internal(c_pack)
 
                 for c_pack in list(self.current_packs):
                     # must iterate through a copy of the original list
@@ -202,8 +199,8 @@ class BasePipeline(Generic[PackType]):
                 for processor in self.processors[start:]:
                     self.__working_component = processor.component_name
                     if isinstance(processor, BaseBatchProcessor):
-                        processor.process_internal(c_pack, tail_instances=True)
+                        processor.process(c_pack, tail_instances=True)
                     else:
-                        processor.process_internal(c_pack)
+                        processor.process(c_pack)
                 yield c_pack
                 self.current_packs.remove(c_pack)

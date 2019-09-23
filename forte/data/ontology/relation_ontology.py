@@ -11,13 +11,17 @@ This is also an example of extending the parent ontology by add a new entry.
 from typing import Optional
 from forte.data.ontology.ontonotes_ontology import *
 from forte.data.ontology.top import Link
+from forte.data.data_pack import DataPack
 
 
 class RelationLink(Link):
     parent_type = EntityMention
     child_type = EntityMention
 
-    def __init__(self, parent: Optional[EntityMention] = None,
-                 child: Optional[EntityMention] = None):
-        super().__init__(parent, child)
+    def __init__(
+            self,
+            pack: DataPack,
+            parent: Optional[EntityMention] = None,
+            child: Optional[EntityMention] = None):
+        super().__init__(pack, parent, child)
         self.rel_type = None

@@ -63,7 +63,6 @@ class DictData(tx.data.DataBase[Dict, Dict]):
         )
 
 
-
 class ProcessingBatcher(Batcher):
     """
     This defines the basis interface of the Batcher used in BatchProcessors.
@@ -181,7 +180,6 @@ class TexarBatcher(Batcher):
         }
 
 
-
 class TxtgenMultiPackProcessingBatcher(NumInstancesDataPackBatcher):
     """
     A Batcher used in ``MultiPackBatchProcessors``.
@@ -222,3 +220,7 @@ class TxtgenMultiPackProcessingBatcher(NumInstancesDataPackBatcher):
         input_pack = data_pack.packs[self.input_pack_name]
         yield from super()._get_data_batch_by_need(
             input_pack, context_type, requests, offset)
+
+    @staticmethod
+    def default_hparams() -> Dict:
+        pass

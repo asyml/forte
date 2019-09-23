@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-class BaseBatchProcessor(BaseProcessor[PackType]):
+class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     """
     The base class of processors that process data in batch. This processor
     enables easy data batching via analyze the context and data objects. The
@@ -63,7 +63,7 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         """
         raise NotImplementedError
 
-    def process(self, input_pack: PackType, tail_instances: bool = False):
+    def _process(self, input_pack: PackType, tail_instances: bool = False):
         """
         In batch processors, all data are processed in batches. So this function
         is implemented to convert the input datapacks into batches according to
@@ -152,7 +152,7 @@ class BaseBatchProcessor(BaseProcessor[PackType]):
         pass
 
 
-class BatchProcessor(BaseBatchProcessor[DataPack]):
+class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
     """
     The batch processors that process DataPacks.
     """

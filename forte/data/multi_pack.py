@@ -80,7 +80,7 @@ class MultiPack(BasePack):
 
     def get_single_pack_data(
             self,
-            pack_name: str,
+            pack_index: int,
             context_type: Type[Annotation],
             request: Optional[DataRequest] = None,
             skip_k: int = 0
@@ -90,7 +90,7 @@ class MultiPack(BasePack):
         equivalent to calling the :meth: `get_data` in :class: `DataPack`.
 
         Args:
-            pack_name (str): The name to identify the single pack.
+            pack_index (str): The name to identify the single pack.
             context_type (str): The granularity of the data context, which
                 could be any Annotation type.
             request (dict): The entry types and fields required.
@@ -113,7 +113,8 @@ class MultiPack(BasePack):
             containing the required annotations and context).
         """
 
-        yield from self.packs[pack_name].get_data(context_type, request, skip_k)
+        yield from self.packs[
+            pack_index].get_data(context_type, request, skip_k)
 
     def get_cross_pack_data(
             self,
@@ -191,18 +192,17 @@ class MultiPack(BasePack):
             # add the entry to the target entry list
             entry_cls = entry.__class__
             entry.set_tid(str(self.internal_metas[entry_cls].id_counter))
-            entry.attach(self)
             target.append(entry)
 
             self.internal_metas[entry_cls].id_counter += 1
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
-            if self.index.link_index_switch and isinstance(entry,
-                                                           MultiPackLink):
+            if self.index.link_index_switch and isinstance(
+                    entry, MultiPackLink):
                 self.index.update_link_index([entry])
-            if self.index.group_index_switch and isinstance(entry,
-                                                            MultiPackGroup):
+            if self.index.group_index_switch and isinstance(
+                    entry, MultiPackGroup):
                 self.index.update_group_index([entry])
 
             return entry
@@ -232,7 +232,6 @@ class MultiPack(BasePack):
         # add the entry to the target entry list
         name = entry.__class__
         entry.set_tid(str(self.internal_metas[name].id_counter))
-        entry.attach(self)
         target.append(entry)
         self.internal_metas[name].id_counter += 1
         return entry
@@ -242,5 +241,5 @@ class MultiPack(BasePack):
 
     def record_fields(self, fields: List[str], entry_type: Type[Entry],
                       component: str):
-        for pack in self.packs.values():
+        for pack in self.packs:
             pack.record_fields(fields, entry_type, component)

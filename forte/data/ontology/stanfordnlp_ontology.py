@@ -1,3 +1,4 @@
+from forte.data.data_pack import DataPack
 import forte.data.ontology.base_ontology as ontology
 from forte.data.ontology.top import Link
 
@@ -9,8 +10,8 @@ __all__ = [
 
 
 class Token(ontology.Token):
-    def __init__(self, begin: int, end: int):
-        super().__init__(begin, end)
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
         self.lemma = None
         self.upos = None
         self.xpos = None
@@ -18,19 +19,19 @@ class Token(ontology.Token):
 
 
 class Sentence(ontology.Sentence):
-    def __init__(self, begin: int, end: int):
-        super().__init__(begin, end)
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
         self.tokens = None
 
 
 class Document(ontology.Document):
     # TODO: code generation method will help reduce such problems.
     # pylint: disable=useless-super-delegation
-    def __init__(self, begin: int, end: int):
-        super().__init__(begin, end)
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 class Dependency(Link):
-    def __init__(self, parent: Token, child: Token):
-        super().__init__(parent, child)
+    def __init__(self, pack: DataPack, parent: Token, child: Token):
+        super().__init__(pack, parent, child)
         self.rel_type: str

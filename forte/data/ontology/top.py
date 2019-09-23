@@ -3,6 +3,8 @@ from functools import total_ordering
 from typing import Iterable, Optional, Set, Union, Tuple, Type, TypeVar, Any, \
     Hashable, Generic
 
+import deprecation
+
 from forte.utils import get_class_name, get_full_module_name
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -13,9 +15,14 @@ __all__ = [
     "Entry",
     "EntryType",
     "Annotation",
-    "Link",
+    "GroupType",
+    "BaseGroup",
+    "MultiPackGroup",
     "Group",
+    "LinkType",
     "BaseLink",
+    "Link",
+    "MultiPackLink",
 ]
 
 
@@ -60,13 +67,12 @@ class Entry(Indexable, Generic[PackType]):
     - _tid: a unique identifier of this entry in the data pack
     """
 
-    # TODO: the pack in __init__ should not be optional
-    def __init__(self, pack: Optional[PackType] = None):
+    def __init__(self, pack: PackType):
         self._tid: str
 
         self.__component: str
-        self.__modified_fields = set()
-        self._data_pack: Optional[PackType] = pack
+        self.__modified_fields: Set[str] = set()
+        self._data_pack: PackType = pack
 
     @property
     def tid(self):
@@ -76,8 +82,7 @@ class Entry(Indexable, Generic[PackType]):
     def component(self):
         return self.__component
 
-    # TODO: working_component or creator_component? The semantics is messy.
-    def __set_working_component(self, component: str):
+    def __set_component(self, component: str):
         """
         Set the component of the creator of this entry.
         Args:
@@ -102,21 +107,6 @@ class Entry(Indexable, Generic[PackType]):
     @property
     def data_pack(self) -> PackType:
         return self._data_pack
-
-    def attach(self, data_pack: PackType):
-        """
-        Attach the entry itself to a data_pack
-        Args:
-            data_pack: Attach this entry to a data pack.
-
-        Returns:
-
-        """
-        if self._data_pack is not None:
-            self._data_pack = data_pack
-        else:
-            raise Exception(
-                "An entry cannot be assigned again to a different data pack")
 
     def set_fields(self, **kwargs):
         """Set other entry fields"""
@@ -158,7 +148,7 @@ class Annotation(Entry[DataPack]):
     in the text.
     """
 
-    def __init__(self, begin: int, end: int, pack: Optional[DataPack] = None):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack)
         self._span = Span(begin, end)
 
@@ -197,15 +187,19 @@ class Annotation(Entry[DataPack]):
         return self.tid
 
 
-class BaseLink(Entry[PackType], ABC):
+class BaseLink(Entry, ABC):
+    # TOOD: Is this the best type var?
     ParentType: Type[Entry] = Entry  # type: ignore
     ChildType: Type[Entry] = Entry  # type: ignore
 
+    # ParentType = TypeVar("ParentType", bound=Entry)
+    # ChildType = TypeVar("ChildType", bound=Entry)
+
     def __init__(
             self,
+            pack: PackType = None,
             parent: Optional[ParentType] = None,
-            child: Optional[ChildType] = None,
-            pack: Optional[PackType] = None
+            child: Optional[ChildType] = None
     ):
         super().__init__(pack)
         self._parent: Optional[str] = None
@@ -216,7 +210,7 @@ class BaseLink(Entry[PackType], ABC):
         if child is not None:
             self.set_child(child)
 
-    def update_link_index(self, new_):
+    def update_link_index(self):
         if (self.data_pack is not None and
                 self.data_pack.index.link_index_switch):
             self.data_pack.index.update_link_index(links=[self])
@@ -286,7 +280,10 @@ class BaseLink(Entry[PackType], ABC):
         raise NotImplementedError
 
 
-class Link(BaseLink[DataPack]):
+LinkType = TypeVar('LinkType', bound=BaseLink[EntryType[PackType]])
+
+
+class Link(BaseLink):
     """
     Link type entries, such as "predicate link". Each link has a parent node
     and a child node.
@@ -294,9 +291,9 @@ class Link(BaseLink[DataPack]):
 
     def __init__(
             self,
+            pack: DataPack = None,
             parent: Optional[Entry] = None,
-            child: Optional[Entry] = None,
-            pack: Optional[DataPack] = None
+            child: Optional[Entry] = None
     ):
         super().__init__(pack)
         self._parent: Optional[str] = None
@@ -357,7 +354,106 @@ class Link(BaseLink[DataPack]):
         return self.tid
 
 
-class Group(Entry[DataPack]):
+class BaseGroup(Entry):
+    """
+    Group is an entry that represent a group of other entries. For example,
+    a "coreference group" is a group of coreferential entities. Each group will
+    store a set of members, no duplications allowed.
+
+    This is the BaseGroup interface. Specific member constraints are defined
+    in the inherited classes.
+    """
+    member_type: Type[Entry] = Entry  # type: ignore
+
+    def __init__(
+            self,
+            pack: PackType = None,
+            members: Optional[Set[Entry]] = None,
+    ):
+        super().__init__(pack)
+
+        # Store the group member's id.
+        self._members: Set[str] = set()
+        if members is not None:
+            self.add_members(members)
+
+    def add_member(self, member: Entry):
+        """
+        Add one entry to the group.
+        Args:
+            member:
+
+        Returns:
+
+        """
+        self.add_members([member])
+
+    def add_members(self, members: Iterable[Entry]):
+        """
+        Add members to the group.
+
+        Args:
+            members: An iterator of members to be added to the group.
+
+        Returns:
+
+        """
+        if not isinstance(members, Iterable):
+            members = {members}
+
+        for member in members:
+            if not isinstance(member, self.member_type):
+                raise TypeError(
+                    f"The members of {type(self)} should be "
+                    f"instances of {self.member_type}, but get {type(member)}")
+
+            self._members.add(member.tid)
+
+        if (self.data_pack is not None and
+                self.data_pack.index.group_index_switch):
+            # TODO: NO way, don't do all update.
+            self.data_pack.index.update_group_index([self])
+
+    @property
+    def members(self):
+        """
+        A list of member tids. To get the member objects, call
+        :meth:`get_members` instead.
+        :return:
+        """
+        return self._members
+
+    def hash(self):
+        return hash((type(self), tuple(self.members)))
+
+    def eq(self, other):
+        return (type(self), self.members) == \
+               (type(other), other.members)
+
+    def get_members(self):
+        """
+        Get the member entries in the group.
+
+        Returns:
+             An set of instances of :class:`Entry` that are the members of the
+             group.
+        """
+        if self.data_pack is None:
+            raise ValueError(f"Cannot get members because group is not "
+                             f"attached to any data pack.")
+        member_entries = set()
+        for m in self.members:
+            member_entries.add(self.data_pack.get_entry_by_id(m))
+        return member_entries
+
+    def index_key(self) -> str:
+        return self.tid
+
+
+GroupType = TypeVar("GroupType", bound=BaseGroup[EntryType[PackType]])
+
+
+class Group(BaseGroup):
     """
     Group is an entry that represent a group of other entries. For example,
     a "coreference group" is a group of coreferential entities. Each group will
@@ -365,8 +461,11 @@ class Group(Entry[DataPack]):
     """
     member_type: Type[Entry] = Entry  # type: ignore
 
-    def __init__(self, members: Optional[Set[Entry]] = None,
-                 pack: Optional[DataPack] = None):
+    def __init__(
+            self,
+            pack: DataPack,
+            members: Optional[Set[Entry]] = None,
+    ):
         super().__init__(pack)
 
         # Store the group member's id.
@@ -494,9 +593,9 @@ class MultiPackLink(BaseLink[MultiPack]):
 
     def __init__(
             self,
+            pack: MultiPack,
             parent: Optional[ParentType],
             child: Optional[ChildType],
-            pack: MultiPack
     ):
         """
 
@@ -505,7 +604,7 @@ class MultiPackLink(BaseLink[MultiPack]):
             an entry.
             child:
         """
-        super().__init__(parent, child, pack)
+        super().__init__(pack, parent, child)
 
         self._parent: Optional[Tuple[int, str]] = None
         self._child: Optional[Tuple[int, str]] = None
@@ -577,7 +676,7 @@ class MultiPackLink(BaseLink[MultiPack]):
         return self.tid
 
 
-class MultiPackGroup(Entry):
+class MultiPackGroup(BaseGroup):
     """
     Group type entries, such as "coreference group". Each group has a set
     of members.
@@ -585,8 +684,8 @@ class MultiPackGroup(Entry):
 
     def __init__(
             self,
+            pack: MultiPack,
             members: Set[Tuple[str, Entry]],
-            pack: Optional[MultiPack] = None
     ):
         super().__init__(pack)
         self._members: Set[Tuple[str, str]] = set()

@@ -7,8 +7,8 @@ from typing import (DefaultDict, Dict, Generic, List, Optional, Set, Type,
 
 import jsonpickle
 
-from forte.data.ontology import (Annotation, Entry, EntryType, Group,
-                                 Link, Span, BaseLink)
+from forte.data.ontology import (Annotation, Entry, EntryType, Group, BaseGroup,
+                                 Link, Span, BaseLink, LinkType, GroupType)
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class BaseMeta:
     """
 
     def __init__(self, doc_id: Optional[str] = None):
-        self.doc_id: str = doc_id
+        self.doc_id: Optional[str] = doc_id
 
         # TODO: These two are definitely internal.
         self.process_state: str = ''
@@ -75,7 +75,7 @@ class BasePack:
 
         # This is used internally when a processor takes the ownership of this
         # DataPack.
-        self.__owner_component = None
+        self.__owner_component: str = '__default__'
 
     def enter_processing(self, component_name: str):
         self.__owner_component = component_name
@@ -84,7 +84,7 @@ class BasePack:
         return self.__owner_component
 
     def exit_processing(self):
-        self.__owner_component = None
+        self.__owner_component = '__default__'
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
@@ -242,7 +242,7 @@ class BaseIndex(Generic[PackType]):
             self.type_index[type(entry)].add(entry.tid)
             self.component_index[entry.component].add(entry.tid)
 
-    def update_link_index(self, links: List[BaseLink]):
+    def update_link_index(self, links: List[LinkType]):
         """Build or update :attr:`link_index`, the index from child and parent
         nodes to links. :attr:`link_index` consists of two sub-indexes:
         "child_index" is the index from child nodes to their corresponding
@@ -267,7 +267,7 @@ class BaseIndex(Generic[PackType]):
                 link.parent.index_key
             ].add(link.tid)
 
-    def update_group_index(self, groups: List[Group]):
+    def update_group_index(self, groups: List[GroupType]):
         """Build or update :attr:`group_index`, the index from group members
          to groups.
 
@@ -284,11 +284,11 @@ class BaseIndex(Generic[PackType]):
             for member in group.members:
                 self._group_index[member].add(group.tid)
 
-    def add_link_parent(self, parent: Entry, link: BaseLink):
+    def add_link_parent(self, parent: Entry, link: LinkType):
         self._link_index["parent_index"][parent.index_key].add(link.tid)
 
-    def add_link_child(self, child: Entry, link: BaseLink):
+    def add_link_child(self, child: Entry, link: LinkType):
         self._link_index["child_index"][child.index_key].add(link.tid)
 
-    def add_group_member(self, member: Entry, group: Group):
+    def add_group_member(self, member: Entry, group: BaseGroup):
         self._group_index[member.index_key].add(group.tid)
