@@ -1,7 +1,4 @@
-import argparse
 import json
-import torch
-import yaml
 from forte.data.ontology import base_ontology
 
 from forte.multipack_pipeline import MultiPackPipeline
@@ -18,9 +15,9 @@ output_pack_name = "output_tgt"
 
 multipack = pl.process_one(input_dir)
 
-src_cnt = len(list(multipack.packs[input_pack_name].get(
+src_cnt = len(list(multipack.get_pack(input_pack_name).get(
     base_ontology.Sentence)))
-tgt_cnt = len(list(multipack.packs[output_pack_name].get(
+tgt_cnt = len(list(multipack.get_pack(output_pack_name).get(
     base_ontology.Sentence)))
 link_cnt = len(multipack.links)
 print(f'sentence_cnt: src{src_cnt}, tgt{tgt_cnt}, link_cnt{link_cnt}')
