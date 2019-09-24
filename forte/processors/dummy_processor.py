@@ -3,6 +3,7 @@ from typing import Dict, Optional
 import numpy as np
 
 from forte.data import DataPack
+from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology import relation_ontology
 from forte.processors.base import BatchProcessor, ProcessInfo
 
@@ -15,14 +16,16 @@ class DummyRelationExtractor(BatchProcessor):
     """
     A dummy relation extractor
     """
-
     def __init__(self) -> None:
         super().__init__()
         self._ontology = relation_ontology
         self.define_context()
 
         self.batch_size = 4
-        self.batcher = self.initialize_batcher()
+        self.batcher = self.define_batcher()
+
+    def define_batcher(self) -> ProcessingBatcher:
+        return FixedSizeDataPackBatcher()
 
     def define_context(self):
         self.context_type = self._ontology.Sentence

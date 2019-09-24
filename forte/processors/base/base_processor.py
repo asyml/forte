@@ -26,7 +26,6 @@ class BaseProcessor(Generic[PackType], ABC):
     The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
     """
-
     def __init__(self):
         self.component_name = get_full_module_name(self)
         self._ontology = base_ontology
@@ -38,7 +37,8 @@ class BaseProcessor(Generic[PackType], ABC):
         """
         The pipeline will call the initialize method at the start of a
         processing. The processor will be initialized with ``configs``,
-        and register global resources into ``resource``.
+        and register global resources into ``resource``. The implementation
+        should set up the states of the processor.
 
         :param configs: The configuration passed in to set up this processor.
         :param resource: A global resource register. User can register

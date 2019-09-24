@@ -1,66 +1,13 @@
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from typing import (
-    Dict, List, Iterator, Iterable, Union, Any, Optional, Tuple, Type, Generic)
+    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic
+)
 
-import texar.torch as tx
 from texar.torch import HParams
 
-from forte.data.dataset import Dataset
 from forte.data import DataPack, MultiPack, PackType, DataRequest
 from forte.data.io_utils import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation
-
-
-# class Batcher(Generic[PackType]):
-#     @abstractmethod
-#     def __init__(self, config: HParams):
-#         raise NotImplementedError
-#
-#     @abstractmethod
-#     def get_batch(self, *args):
-#         raise NotImplementedError
-#
-#     @staticmethod
-#     def default_hparams() -> Dict:
-#         """
-#         Defines the basic parameter and values of the batcher.
-#         :return:
-#         """
-#         raise NotImplementedError
-
-
-class DictData(tx.data.DataBase[Dict, Dict]):
-    r"""A dataset that reads processed paired text from dumped NumPy files.
-
-    Args:
-        filename (str): The path to the dumped NumPy file.
-        hparams: A `dict` or instance of :class:`~texar.HParams` containing
-            hyperparameters. See :meth:`default_hparams` for the defaults.
-        device: The device of the produces batches. For GPU training, set to
-            current CUDA device.
-    """
-
-    def __init__(self, dataset: Iterator[Dict], hparams=None):
-        data: Iterator[Dict] = dataset
-        source = tx.data.IterDataSource(data)
-        super().__init__(source, hparams)
-
-    @staticmethod
-    def default_hparams():
-        return {
-            **tx.data.DataBase.default_hparams(),
-        }
-
-    def process(self, raw_example: Dict) -> Dict:  # pylint: disable=no-self-use
-        return raw_example
-
-    def collate(self,  # pylint: disable=no-self-use
-                examples: List[Dict]) -> tx.data.Batch:
-        batch = batch_instances(examples)
-        return tx.data.Batch(
-            len(examples),
-            **batch
-        )
 
 
 class ProcessingBatcher(Generic[PackType]):
@@ -71,75 +18,121 @@ class ProcessingBatcher(Generic[PackType]):
     the packs.
     """
 
-    def __init__(self, config: HParams):
-        super().__init__(config)
-        self.batch_size = config.batch_size
-
+    def __init__(self, cross_pack: bool = True):
         self.current_batch: Dict = {}
-        self.instance_num_in_current_batch = 0
-
         self.data_pack_pool: List[PackType] = []
         self.current_batch_sources: List[int] = []
 
-    def get_batch(  # type: ignore
+        self.cross_pack: bool = cross_pack
+
+    def initialize(self, config: HParams):
+        """
+        The implementation should initialize the batcher and setup the
+        internal states of this batcher.
+        This batcher will be called at the pipeline initialize stage.
+
+        Returns:
+
+        """
+        self.cross_pack = config.cross_pack
+
+        self.current_batch.clear()
+        self.data_pack_pool.clear()
+        self.current_batch_sources.clear()
+
+    @abstractmethod
+    def _should_yield(self) -> bool:
+        """
+        User should implement this based on the state of the batcher to indicate
+        whether the batch criteria is met and the batcher should yield the
+        current batch. For example, whether the number of instances reaches the
+        batch size.
+
+        Returns:
+
+        """
+        raise NotImplementedError
+
+    def get_batch(
             self,
-            input_pack: Optional[PackType],
+            input_pack: PackType,
             context_type: Type[Annotation],
-            requests: DataRequest = None,
-            force_flush: bool = False
+            requests: DataRequest,
     ):
-        if input_pack is None:  # No more packs, return the tail instances
+        if input_pack.is_poison():
+            # No more packs, flush the remaining instances.
             if self.current_batch:
                 yield self.current_batch
                 self.current_batch = {}
-                self.instance_num_in_current_batch = 0
                 self.current_batch_sources = []
-        else:  # cache the new pack and generate batches
+        else:
+            # cache the new pack and generate batches
             self.data_pack_pool.append(input_pack)
-            for (data_batch, instance_num) in self._get_data_batch_by_need(
+
+            for (data_batch, instance_num) in self._get_data_batch(
                     input_pack, context_type, requests):
-
                 self.current_batch = merge_batches(
-                    [self.current_batch, data_batch])
-
-                self.instance_num_in_current_batch += instance_num
+                    [self.current_batch, data_batch]
+                )
                 self.current_batch_sources.append(instance_num)
 
-                if (force_flush or
-                        self.instance_num_in_current_batch == self.batch_size):
+                # Yield a batch on two conditions.
+                # 1. If we do not want to have batches to cross_pack, we should
+                # yield since this pack is exhausted.
+                # 2. We could also yield when the batcher condition is met:
+                # i.e. ``_should_yield()`` is True.
+                if not self.cross_pack or self._should_yield():
                     yield self.current_batch
-
                     self.current_batch = {}
-                    self.instance_num_in_current_batch = 0
                     self.current_batch_sources = []
 
-    def _get_data_batch_by_need(
+    def _get_data_batch(
             self,
             data_pack: PackType,
             context_type: Type[Annotation],
             requests: Optional[DataRequest] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
-        pass
+        """
+        Get data batches based on the requests.
 
-    @staticmethod
-    def default_hparams() -> Dict:
-        return {
-            "batch_size": 1,
-            "hard_batch": False,
-        }
+        Args:
+            data_pack: The data pack to retrieve data from.
+            context_type: The context type of the data pack.
+            requests: The request detail.
+            offset: The offset for get_data.
+
+        Returns:
+
+        """
+        raise NotImplementedError
 
 
-class NumInstancesDataPackBatcher(ProcessingBatcher[DataPack]):
-    def _get_data_batch_by_need(
+class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
+    def __init__(self):
+        super().__init__()
+        self.instance_num_in_current_batch = 0
+        self.batch_is_full = False
+
+        default_config = HParams(None, self.default_hparams())
+        self.batch_size = default_config.batch_size
+
+    def initialize(self, config: HParams):
+        self.batch_size = config.batch_size
+        self.instance_num_in_current_batch = 0
+        self.batch_is_full = False
+
+    def _should_yield(self) -> bool:
+        return self.batch_is_full
+
+    def _get_data_batch(
             self,
             data_pack: DataPack,
             context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         """
-        Try to get batches of size ``batch_size``. If the tail instances cannot
-        make up a full batch, will generate a small batch with the tail
-        instances.
+        Try to yield batches from a dataset ``batch_size``, but will yield an
+        incomplete batch if the data_pack is exhausted.
 
         Returns:
             An iterator of tuples ``(batch, cnt)``, ``batch`` is a dict
@@ -152,42 +145,30 @@ class NumInstancesDataPackBatcher(ProcessingBatcher[DataPack]):
             if (len(instances) ==
                     self.batch_size - self.instance_num_in_current_batch):
                 batch = batch_instances(instances)
+                self.instance_num_in_current_batch += len(instances)
+                self.batch_is_full = True
                 yield (batch, len(instances))
                 instances = []
+                self.batch_is_full = False
 
-        if len(instances):
+        # Flush the remaining data.
+        if len(instances) > 0:
+            self.instance_num_in_current_batch += len(instances)
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
     @staticmethod
     def default_hparams() -> Dict:
-        return {}
+        params = ProcessingBatcher.default_hparams()
+        params.update(
+            {
+                'batch_size': 1,
+            }
+        )
+        return params
 
 
-class TexarBatcher(Batcher):
-    def __init__(self,
-                 hparams: HParams,
-                 data_packs: Iterable[DataPack],
-                 context_type: Type[Annotation],
-                 ):
-        dataset = Dataset(data_packs)
-        data = DictData(dataset.get_data(context_type), hparams=hparams)
-        super().__init__(hparams)
-        self.batch_iter = tx.data.DataIterator(data)
-
-    def get_batch(self) -> Iterator[tx.data.Batch]:  # type: ignore
-        for batch in self.batch_iter:
-            yield batch
-
-    @staticmethod
-    def default_hparams() -> Dict:
-        return {
-            'context_type': 'forte.ontology.top.Document',
-            'batch_size': None
-        }
-
-
-class TxtgenMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
+class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
     """
     A Batcher used in ``MultiPackBatchProcessors``.
     The Batcher calls the ProcessingBatcher inherently on each specified
@@ -201,12 +182,29 @@ class TxtgenMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
         to batching and slicing multiple data packs in the same time
     """
 
-    def __init__(self, config: HParams):
-        super().__init__(config)
+    def __init__(self):
+        super().__init__()
+        self.instance_num_in_current_batch = 0
+        self.batch_is_full = False
+
+        default_config = HParams(None, self.default_hparams())
+        self.input_pack_name = default_config.input_pack_name
+        self.batch_size = default_config.batch_size
+        self.initialize(default_config)
+
+    def initialize(self, config: HParams):
+        super().initialize(config)
         self.input_pack_name = config.input_pack_name
+        self.batch_size = config.batch_size
+
+        self.instance_num_in_current_batch = 0
+        self.batch_is_full = False
+
+    def _should_yield(self) -> bool:
+        return self.batch_is_full
 
     # TODO: Principled way of get data from multi pack?
-    def _get_data_batch_by_need(
+    def _get_data_batch(
             self,
             data_pack: MultiPack,
             context_type: Type[Annotation],
@@ -222,7 +220,7 @@ class TxtgenMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             containing the required annotations and context, and ``cnt`` is
             the number of instances in the batch.
         """
-        input_pack = data_pack.packs[self.input_pack_name]
+        input_pack = data_pack._packs[self.input_pack_name]
 
         instances: List[Dict] = []
         for data in input_pack.get_data(context_type, requests, offset):

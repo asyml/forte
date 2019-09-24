@@ -78,6 +78,7 @@ class BasePack:
         # This is used internally when a processor takes the ownership of this
         # DataPack.
         self.__owner_component: str = '__default__'
+        self.__poison: bool = False
 
     def enter_processing(self, component_name: str):
         self.__owner_component = component_name
@@ -93,6 +94,25 @@ class BasePack:
             if not hasattr(self.meta, k):
                 raise AttributeError(f"Meta has no attribute named {k}")
             setattr(self.meta, k, v)
+
+    @staticmethod
+    def get_poison():
+        """
+            A poison is an object that used denote the end of a data stream.
+            Internally, we use a special poison pack object to indicate there
+            is no more data to consume by downstream.
+        """
+        pack = BasePack('__poison__')
+        pack.__poison = True
+        return pack
+
+    def is_poison(self) -> bool:
+        """
+            See :meth:``get_poison``.
+        Returns:
+
+        """
+        return self.__poison
 
     @abstractmethod
     def add_entry(self, entry: EntryType) -> EntryType:

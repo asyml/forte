@@ -10,18 +10,23 @@ from forte import config
 from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
+from forte.data.batchers import ProcessingBatcher, \
+    FixedSizeMultiPackProcessingBatcher
 from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
 from forte.processors.base.batch_processor import \
-    MultiPackTxtgenBatchProcessor
+    MultiPackBatchProcessor
 from forte.processors.base import ProcessInfo
 
 logger = logging.getLogger(__name__)
 
 
-class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
+class TxtgenPredictor(MultiPackBatchProcessor):
+
     def __init__(self):
         super().__init__()
+        self.input_pack_name = None
+        self.output_pack_name = None
 
         self.word_processor = None
         self.model = None
@@ -56,6 +61,9 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
+    def define_batcher(self) -> ProcessingBatcher:
+        return FixedSizeMultiPackProcessingBatcher()
+
     def initialize(self, configs: HParams, resource: Resources):
         """
         :param configs:
@@ -68,13 +76,11 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
              be processed
         :return:
         """
+        super().initialize(configs, resource)
 
         self.input_pack_name = configs.input_pack_name
-
-        # pylint: disable=attribute-defined-outside-init
-        self.batcher = self.initialize_batcher()
-
         self.output_pack_name = configs.output_pack_name
+
         self.max_decoding_length = configs.max_decoding_length
         self.temperature = configs.temperature
         self.top_k = configs.top_k
@@ -158,16 +164,18 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         to the new tokens (usually use this configuration for evaluation.)
         """
         assert output_dict is not None
-        output_pack = data_pack.packs[self.output_pack_name]
+        output_pack = data_pack._packs[self.output_pack_name]
 
         input_sent_tids = output_dict["input_sents_tids"]
         output_sentences = output_dict["output_sents"]
 
         text = output_pack.text
-        input_pack = data_pack.packs[self.input_pack_name]
+        input_pack = data_pack._packs[self.input_pack_name]
         for input_id, output_sentence in zip(input_sent_tids, output_sentences):
             offset = len(output_pack.text)
-            sent = self.ontology.Sentence(offset, offset + len(output_sentence))
+            sent = self.ontology.Sentence(
+                output_pack, offset, offset + len(output_sentence)
+            )
             output_pack.add_entry(sent)
             text += output_sentence + "\n"
 

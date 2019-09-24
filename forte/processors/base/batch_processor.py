@@ -4,17 +4,19 @@ from typing import Dict, Optional, Type
 from texar.torch import HParams
 
 from forte.data import DataPack, MultiPack, PackType
-from forte import config, Resources
-from forte.data.batchers import ProcessingBatcher, \
-    TxtgenMultiPackProcessingBatcher
+from forte import Resources
+from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data import slice_batch
 from forte.data.ontology.top import Annotation
+from forte.processors import ProcessInfo
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [
     "BaseBatchProcessor",
     "BatchProcessor",
-    "MultiPackTxtgenBatchProcessor"
+    "MultiPackBatchProcessor",
+    "FixedSizeBatchProcessor",
+    "FixedSizeMultiPackBatchProcessor"
 ]
 
 
@@ -30,33 +32,37 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     def __init__(self):
         super().__init__()
-
         self.context_type: Type[Annotation] = self.define_context()
-        self.batcher: Optional[ProcessingBatcher] = None
+        self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
-    def initialize(self, configs, resource: Resources):
+    def initialize(self, configs: HParams, resource: Resources):
         super().initialize(configs, resource)
+        # Initialize the batcher.
+        self.batcher.initialize(configs.batcher)
 
     @abstractmethod
     def define_context(self) -> Type[Annotation]:
         """
         User should define the context type for batch processors here. The
-        context must be of type :class:`Annotation`, since it will be used to
-        define the analysis scope using its begin and end.
+        context must be of type :class:`Annotation`, the processor will create
+        data batches with in the span of each annotations. For example, if the
+        context type is ``Sentence``, and the task is POS tagging, then each
+        batch will contain the POS tags for all words in the sentence.
+
+        The "context" parameter here has the same meaning as the
+        :meth:``get_data()`` function in class :class:``DataPack``.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def initialize_batcher(self):
+    def define_batcher(self) -> ProcessingBatcher:
         """
-        Single pack :class:`BatchProcessor` initialize the batcher to be a
-        :class:`ProcessingBatcher`. And MultiPackBatchProcessor might need
-        something like "MultiPackProcessingBatcher".
+        Define a specific batcher for this processor.
         """
         raise NotImplementedError
 
-    def _process(self, input_pack: PackType, flush_all: bool = False):
+    def _process(self, input_pack: PackType):
         """
         In batch processors, all data are processed in batches. So this function
         is implemented to convert the input datapacks into batches according to
@@ -65,11 +71,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         ``pack``, which convert the batch results back to datapacks.
 
         Args:
-            input_pack: The next input pack to be fed in. The batcher will
-            collect enough data for a full batch to start processing unless
-            ``flush_all`` is true.
-            flush_all: If it is true, the processor will force request
-            a batch from the batcher
+            input_pack: The next input pack to be fed in.
 
         Returns:
 
@@ -81,10 +83,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         if self.use_coverage_index:
             self.prepare_coverage_index(input_pack)
-        for batch in self.batcher.get_batch(input_pack,
-                                            self.context_type,
-                                            self.input_info,
-                                            force_flush=flush_all):
+        for batch in self.batcher.get_batch(
+                input_pack, self.context_type, self.input_info):
             pred = self.predict(batch)
             self.pack_all(pred)
             self.finish_up_packs(-1)
@@ -153,16 +153,6 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
     The batch processors that process DataPacks.
     """
 
-    def initialize_batcher(self):
-        # TODO: ProcessingBatcher is not a good one to initialize.
-        return ProcessingBatcher(
-            HParams({
-                'batch_size': self.batch_size
-            },
-                default_hparams=ProcessingBatcher.default_hparams()
-            )
-        )
-
     def prepare_coverage_index(self, input_pack: DataPack):
         for entry_type in self.input_info.keys():
             if input_pack.index.coverage_index(self.context_type,
@@ -171,29 +161,29 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
                                                       entry_type)
 
 
-class MultiPackTxtgenBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
+class FixedSizeBatchProcessor(BatchProcessor, ABC):
+    def define_batcher(self) -> ProcessingBatcher:
+        return FixedSizeDataPackBatcher()
+
+
+class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
     """
-    The batch processors that process MultiPack in Txtgen Tasks.
-    In this scenario, we don't need to build special batcher since we only need
-        to read sentences from one single DataPack
+    This just defines the generic type to MultiPack.
+    The implemented batch processors will process MultiPacks.
     """
 
     def __init__(self):
         super().__init__()
         self.input_pack_name = None
-        self.output_pack_name = None
-
-    def initialize_batcher(self, hard_batch: bool = True):
-        return TxtgenMultiPackProcessingBatcher(HParams(
-            {
-                'input_pack_name': self.input_pack_name,
-            },
-            TxtgenMultiPackProcessingBatcher.default_hparams()
-        ))
 
     def prepare_coverage_index(self, input_pack: MultiPack):
         for entry_type in self.input_info.keys():
-            if input_pack.packs[self.input_pack_name].index.coverage_index(
+            if input_pack._packs[self.input_pack_name].index.coverage_index(
                     self.context_type, entry_type) is None:
-                input_pack.packs[self.input_pack_name
+                input_pack._packs[self.input_pack_name
                 ].index.build_coverage_index(self.context_type, entry_type)
+
+
+class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):
+    def define_batcher(self) -> ProcessingBatcher:
+        return FixedSizeDataPackBatcher()

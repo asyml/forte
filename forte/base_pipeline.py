@@ -4,9 +4,10 @@ import logging
 import yaml
 from texar.torch import HParams
 
-from forte.data.base_pack import PackType
+from forte.data.base_pack import PackType, BasePack
 from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
+from forte.data.selector import Selector, DummySelector
 from forte.processors.base import BaseProcessor, BaseBatchProcessor
 from forte.common.resources import Resources
 
@@ -25,6 +26,8 @@ class BasePipeline(Generic[PackType]):
     def __init__(self):
         self._reader: BaseReader
         self._processors: List[BaseProcessor] = []
+        self._selectors: List[Selector] = []
+
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
 
@@ -81,12 +84,17 @@ class BasePipeline(Generic[PackType]):
 
     def add_processor(self,
                       processor: BaseProcessor,
+                      selector: Optional[Selector] = None,
                       config: Optional[HParams] = None):
         if self._ontology:
             processor.set_ontology(self._ontology)
         self._processors_index[processor.component_name] = len(self.processors)
-        self.processors.append(processor)
+
+        self._processors.append(processor)
         self.processor_configs.append(config)
+
+        if selector is None:
+            self._selectors.append(DummySelector())
 
     def process(self, *args, **kwargs) -> PackType:
         """
@@ -166,39 +174,56 @@ class BasePipeline(Generic[PackType]):
         if len(self.processors) == 0:
             yield from data_iter
         else:
+            # Keep a list of packs and only release it when all processors
+            # are done with them.
             packs = []
             for pack in data_iter:
                 packs.append(pack)
 
-                for i, processor in enumerate(self.processors):
-                    for c_pack in packs:
-                        in_cache = (c_pack.meta.cache_state ==
-                                    processor.component_name)
+                for i, (processor, selector) in enumerate(
+                        zip(self._processors, self._selectors)):
+                    for p in packs:
+                        for c_pack in selector.select(p):
+                            in_cache = (c_pack.meta.cache_state ==
+                                        processor.component_name)
+                            # TODO: can_process needs double check.
+                            # We need to record a step here with a number instead
+                            # of a processor component
+                            can_process = (
+                                    i == 0 or c_pack.meta.process_state ==
+                                    self.processors[i - 1].component_name)
+                            if can_process and not in_cache:
+                                self.__working_component = \
+                                    processor.component_name
+                                processor.process(c_pack)
 
-                        print('Process state: ', pack.meta.process_state)
-                        can_process = (i == 0 or c_pack.meta.process_state ==
-                                       self.processors[i - 1].component_name)
-                        if can_process and not in_cache:
-                            self.__working_component = processor.component_name
-                            processor.process(c_pack)
-
-                for c_pack in list(packs):
+                for p in list(packs):
                     # must iterate through a copy of the original list
                     # because of the removing operation
-                    if (c_pack.meta.process_state ==
+                    # TODO we'd better add a special component_name instead of
+                    # using the previous processor. The can also cause some
+                    # indexing problem.
+                    if (p.meta.process_state ==
                             self.processors[-1].component_name):
-                        yield c_pack
-                        packs.remove(c_pack)
+                        yield p
+                        packs.remove(p)
 
-            # process tail instances in the whole dataset
-            for c_pack in list(packs):
+            # Now the data iteration is over. We may still have some packs
+            # that are not fully processed. Now we "flush" them.
+
+            # A special poison pack is added to the end of the data stream. It
+            # will not be processed by any of the processors, but it will tell
+            # the processors that the stream ends.
+            for c_pack in list(packs) + [BasePack.get_poison()]:
+                # TODO double check starts
                 start = self._processors_index[c_pack.meta.process_state] + 1
-                for processor in self.processors[start:]:
+                for processor, selector in zip(self._processors[start:],
+                                               self._selectors):
                     self.__working_component = processor.component_name
-                    if isinstance(processor, BaseBatchProcessor):
-                        #TODO: how to pass the tail_instance naturally.
-                        processor.process(c_pack, tail_instances=True)
-                    else:
-                        processor.process(c_pack)
-                yield c_pack
+                    for p in c_pack:
+                        processor.process(p)
+
+                # And we certainly won't return the poison pack.
+                if not c_pack.is_poison():
+                    yield c_pack
                 packs.remove(c_pack)

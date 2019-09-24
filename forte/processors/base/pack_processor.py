@@ -23,6 +23,9 @@ class BasePackProcessor(BaseProcessor[PackType], ABC):
         Args:
             input_pack (PackType): A datapack to be processed.
         """
+        if input_pack.is_poison():
+            return
+
         self._process(input_pack)
         config.working_component = None
 

@@ -11,12 +11,13 @@ from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.format import conll_utils
 from forte.data.ontology import base_ontology, conll03_ontology
-from forte.processors.base import BatchProcessor, ProcessInfo
+from forte.processors.base import ProcessInfo
+from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
 logger = logging.getLogger(__name__)
 
 
-class CoNLLNERPredictor(BatchProcessor):
+class CoNLLNERPredictor(FixedSizeBatchProcessor):
     def __init__(self):
         super().__init__()
         self.model = None
@@ -33,7 +34,7 @@ class CoNLLNERPredictor(BatchProcessor):
         self.define_context()
 
         self.batch_size = 3
-        self.batcher = self.initialize_batcher()
+        self.batcher = self.define_batcher()
 
     def define_context(self):
         self.context_type = self._ontology.Sentence
@@ -52,7 +53,7 @@ class CoNLLNERPredictor(BatchProcessor):
         return output_info
 
     def initialize(self, configs: HParams, resource: Resources):
-        self.initialize_batcher()
+        self.define_batcher()
 
         resource.load(configs.storage_path)
 
@@ -153,6 +154,7 @@ class CoNLLNERPredictor(BatchProcessor):
 
                     kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = self._ontology.EntityMention(
+                        data_pack,
                         current_entity_mention[0],
                         token.span.end,
                     )
@@ -165,6 +167,7 @@ class CoNLLNERPredictor(BatchProcessor):
                     )
                     kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = self._ontology.EntityMention(
+                        data_pack,
                         current_entity_mention[0],
                         token.span.end,
                     )

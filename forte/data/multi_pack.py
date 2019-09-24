@@ -1,7 +1,7 @@
 import copy
 import logging
 from typing import (Dict, List, Union, Iterator, Optional, Type, Any,
-                    NamedTuple, NewType)
+                    NamedTuple, NewType, Tuple)
 
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack, DataRequest
@@ -40,8 +40,8 @@ class MultiPack(BasePack):
 
     def __init__(self):
         super().__init__()
-        self.packs: List[DataPack] = []
-        self.pack_names: List[str] = []
+        self._packs: List[DataPack] = []
+        self._pack_names: List[str] = []
         self.__name_index = {}
 
         self.links: List[MultiPackLink] = []
@@ -65,18 +65,22 @@ class MultiPack(BasePack):
                 f"got {type(pack)}"
             )
 
-        self.packs.append(pack)
-        pid = len(self.pack_names) - 1
+        self._packs.append(pack)
+        pid = len(self._pack_names) - 1
 
         if pack_name is None:
             pack_name = f'{self.__default_pack_prefix}_{pid}'
 
-        self.pack_names.append(pack_name)
+        self._pack_names.append(pack_name)
         self.__name_index[pack_name] = pid
 
     def update_pack(self, named_packs: Dict[str, DataPack]):
         for pack_name, pack in named_packs.items():
             self.add_pack(pack, pack_name)
+
+    def iter_packs(self) -> Iterator[Tuple[str, DataPack]]:
+        for pack_name, pack in zip(self._pack_names, self._packs):
+            yield pack_name, pack
 
     def rename_pack(self, old_name: str, new_name: str):
         """
@@ -95,10 +99,10 @@ class MultiPack(BasePack):
             raise ValueError("The new name is already taken.")
         pack_index = self.__name_index[old_name]
         self.__name_index[new_name] = pack_index
-        self.pack_names[pack_index] = new_name
+        self._pack_names[pack_index] = new_name
 
     def get_pack(self, name: str):
-        return self.packs[self.__name_index[name]]
+        return self._packs[self.__name_index[name]]
 
     def get_single_pack_data(
             self,
@@ -135,7 +139,7 @@ class MultiPack(BasePack):
             containing the required annotations and context).
         """
 
-        yield from self.packs[
+        yield from self._packs[
             pack_index].get_data(context_type, request, skip_k)
 
     def get_cross_pack_data(
@@ -263,5 +267,5 @@ class MultiPack(BasePack):
 
     def record_fields(self, fields: List[str], entry_type: Type[Entry],
                       component: str):
-        for pack in self.packs:
+        for pack in self._packs:
             pack.record_fields(fields, entry_type, component)

@@ -10,7 +10,8 @@ from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.ontology import ontonotes_ontology
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base import BatchProcessor, ProcessInfo
+from forte.processors.base.batch_processor import FixedSizeBatchProcessor
+from forte.processors.base import ProcessInfo
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ Prediction = Dict[
     List[Tuple[ontonotes_ontology.PredicateArgument, str]]]
 
 
-class SRLPredictor(BatchProcessor):
+class SRLPredictor(FixedSizeBatchProcessor):
     word_vocab: tx.data.Vocab
     char_vocab: tx.data.Vocab
     model: LabeledSpanGraphNetwork
@@ -35,7 +36,7 @@ class SRLPredictor(BatchProcessor):
         self.define_context()
 
         self.batch_size = 4
-        self.batcher = self.initialize_batcher()
+        self.batcher = self.define_batcher()
 
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
@@ -102,13 +103,14 @@ class SRLPredictor(BatchProcessor):
             predictions: Prediction = {}
             for pred_idx, pred_args in srl_spans.items():
                 begin, end = word_spans[pred_idx]
+                # TODO cannot create annotation here.
                 pred_annotation = self._ontology.PredicateMention(begin, end)
                 arguments = []
                 for arg in pred_args:
                     begin = word_spans[arg.start][0]
                     end = word_spans[arg.end][1]
-                    arg_annotation = self._ontology.PredicateArgument(begin,
-                                                                      end)
+                    arg_annotation = self._ontology.PredicateArgument(
+                        begin, end)
                     arguments.append((arg_annotation, arg.label))
                 predictions[pred_annotation] = arguments
             batch_predictions.append(predictions)
@@ -122,7 +124,7 @@ class SRLPredictor(BatchProcessor):
                 pred = data_pack.add_or_get_entry(pred)
                 for arg, label in args:
                     arg = data_pack.add_or_get_entry(arg)
-                    link = self._ontology.PredicateLink(pred, arg)
+                    link = self._ontology.PredicateLink(data_pack, pred, arg)
                     link.set_fields(arg_type=label)
                     data_pack.add_or_get_entry(link)
 

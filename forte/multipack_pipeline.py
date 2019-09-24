@@ -58,13 +58,12 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
                     h_params=processor_configs.get("hparams", {}),
                 )
 
-                self.add_processor(p, processor_hparams)
-
                 selector_hparams = processor_hparams.selector
                 selector_class = get_class(selector_hparams['type'])
                 selector_kwargs = selector_hparams["kwargs"]
                 selector = selector_class(**selector_kwargs)
-                self.add_selector(selector)
+
+                self.add_processor(p, selector, processor_hparams)
 
             self.initialize_processors()
 
@@ -79,9 +78,6 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
         else:
             logger.warning("Ontology not specified in config, will use "
                            "base_ontology by default.")
-
-    def add_selector(self, selector: Selector):
-        self._selectors.append(selector)
 
 
 def create_class_with_kwargs(

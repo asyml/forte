@@ -2,7 +2,7 @@
 This defines some selector interface used as glue to combine
 DataPack/multiPack processors and Pipeline.
 """
-from typing import List, Generic
+from typing import List, Generic, Iterator
 from forte.data import PackType
 from forte.data import DataPack
 from forte.data import MultiPack
@@ -12,7 +12,7 @@ class Selector(Generic[PackType]):
     def __init__(self, **kwargs):
         pass
 
-    def select(self, pack: PackType):
+    def select(self, pack: PackType) -> Iterator[PackType]:
         raise NotImplementedError
 
 
@@ -22,26 +22,31 @@ class DummySelector(Selector):
     or MultiPack
     """
 
-    def select(self, pack: PackType) -> PackType:
-        return pack
+    def select(self, pack: PackType) -> Iterator[PackType]:
+        yield pack
 
 
-class SinglePackSelector(Selector[MultiPack]):
+class NameMatchSelector(Selector[MultiPack]):
     """
     Select a DataPack from a MultiPack with specified name
     """
 
     def __init__(self, select_name: str):
         super().__init__()
-        self.select_name = select_name
+        assert self.select_name is not None
+        self.select_name: str = select_name
 
-    def select(self, pack: MultiPack) -> DataPack:
-        if self.select_name not in pack.packs:
+    def select(self, m_pack: MultiPack) -> Iterator[PackType]:
+
+        matches = 0
+        for name, pack in m_pack.iter_packs():
+            if name == self.select_name:
+                matches += 1
+                yield pack
+
+        if matches == 0:
             raise ValueError(f"pack name {self.select_name}"
                              f"not in the MultiPack")
-        assert self.select_name is not None
-
-        return pack.get_pack(self.select_name)
 
 
 class MultiPackSelector(Selector[MultiPack]):
@@ -57,7 +62,7 @@ class MultiPackSelector(Selector[MultiPack]):
     def select(self, pack: MultiPack) -> MultiPack:
         ret_pack: MultiPack = MultiPack()
         for name in self.select_names:
-            if name not in pack.packs:
+            if name not in pack._packs:
                 raise ValueError(f"pack name {name}"
                                  f"not in the MultiPack")
             ret_pack.update_pack(**{name: pack.get_pack(name)})
