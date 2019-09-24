@@ -19,6 +19,11 @@ class ProcessingBatcher(Generic[PackType]):
     """
 
     def __init__(self, cross_pack: bool = True):
+        """
+
+        Args:
+            cross_pack: If True, the batches can go across pack boundaries.
+        """
         self.current_batch: Dict = {}
         self.data_pack_pool: List[PackType] = []
         self.current_batch_sources: List[int] = []
@@ -108,8 +113,8 @@ class ProcessingBatcher(Generic[PackType]):
 
 
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, cross_pack=True):
+        super().__init__(cross_pack)
         self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
@@ -159,13 +164,9 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
     @staticmethod
     def default_hparams() -> Dict:
-        params = ProcessingBatcher.default_hparams()
-        params.update(
-            {
-                'batch_size': 1,
-            }
-        )
-        return params
+        return {
+            'batch_size': 1,
+        }
 
 
 class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
@@ -182,8 +183,8 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
         to batching and slicing multiple data packs in the same time
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, cross_pack: bool = True):
+        super().__init__(cross_pack)
         self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 

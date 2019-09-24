@@ -2,31 +2,39 @@
 This defines some selector interface used as glue to combine
 DataPack/multiPack processors and Pipeline.
 """
-from typing import List, Generic, Iterator
-from forte.data import PackType
+from typing import Generic, Iterator, TypeVar
+from forte.data import BasePack
 from forte.data import DataPack
 from forte.data import MultiPack
 
+InputPackType = TypeVar('InputPackType', bound=BasePack)
+OutputPackType = TypeVar('OutputPackType', bound=BasePack)
 
-class Selector(Generic[PackType]):
+
+class Selector(Generic[InputPackType, OutputPackType]):
     def __init__(self, **kwargs):
         pass
 
-    def select(self, pack: PackType) -> Iterator[PackType]:
+    def select(self, pack: InputPackType) -> Iterator[OutputPackType]:
         raise NotImplementedError
 
 
-class DummySelector(Selector):
+class DummySelector(Selector[InputPackType, InputPackType]):
     """
     Do nothing, return the data pack itself, which can be either DataPack
     or MultiPack
     """
 
-    def select(self, pack: PackType) -> Iterator[PackType]:
+    def select(self, pack: InputPackType) -> Iterator[InputPackType]:
         yield pack
 
 
-class NameMatchSelector(Selector[MultiPack]):
+class SinglePackSelector(Selector[MultiPack, DataPack]):
+    def select(self, pack: MultiPack) -> Iterator[DataPack]:
+        raise NotImplementedError
+
+
+class NameMatchSelector(SinglePackSelector):
     """
     Select a DataPack from a MultiPack with specified name
     """
@@ -36,8 +44,7 @@ class NameMatchSelector(Selector[MultiPack]):
         assert self.select_name is not None
         self.select_name: str = select_name
 
-    def select(self, m_pack: MultiPack) -> Iterator[PackType]:
-
+    def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         matches = 0
         for name, pack in m_pack.iter_packs():
             if name == self.select_name:
@@ -47,23 +54,3 @@ class NameMatchSelector(Selector[MultiPack]):
         if matches == 0:
             raise ValueError(f"pack name {self.select_name}"
                              f"not in the MultiPack")
-
-
-class MultiPackSelector(Selector[MultiPack]):
-    """
-    Select multiple packs from the input MultiPack with specified names,
-    the select function returns a MultiPack
-    """
-
-    def __init__(self, select_names: List[str]):
-        super().__init__()
-        self.select_names = select_names
-
-    def select(self, pack: MultiPack) -> MultiPack:
-        ret_pack: MultiPack = MultiPack()
-        for name in self.select_names:
-            if name not in pack._packs:
-                raise ValueError(f"pack name {name}"
-                                 f"not in the MultiPack")
-            ret_pack.update_pack(**{name: pack.get_pack(name)})
-        return ret_pack

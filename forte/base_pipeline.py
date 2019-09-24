@@ -189,6 +189,10 @@ class BasePipeline(Generic[PackType]):
                             # TODO: can_process needs double check.
                             # We need to record a step here with a number instead
                             # of a processor component
+                            # And we need a clean way to record whether we are
+                            # done processing anything, the component_name
+                            # is not reliable, especially used together with
+                            # a selector.
                             can_process = (
                                     i == 0 or c_pack.meta.process_state ==
                                     self.processors[i - 1].component_name)

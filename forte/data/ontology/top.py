@@ -1,10 +1,10 @@
 from abc import abstractmethod, ABC
 from functools import total_ordering
-from typing import Iterable, Optional, Set, Union, Tuple, Type, TypeVar, Any, \
-    Hashable, Generic, Callable
+from typing import (
+    Iterable, Optional, Set, Tuple, Type, TypeVar, Hashable, Generic
+)
 
 from forte.common.exception import IncompleteEntryError
-from forte.common.types import VectorType
 from forte.utils import get_class_name, get_full_module_name
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -67,18 +67,12 @@ class Entry(Hashable, Indexable, Generic[PackType]):
     - _tid: a unique identifier of this entry in the data pack
     """
 
-    def __init__(self, pack: PackType, embeddable: bool = False):
+    def __init__(self, pack: PackType):
         self._tid: str
 
         self.__component: str
         self.__modified_fields: Set[str] = set()
         self._data_pack: PackType = pack
-
-        self.__embeddable = embeddable
-
-        self.__cached_embedding: Optional[VectorType] = None
-
-        self.__embed_func: Optional[Callable[['Entry'], VectorType]] = None
 
     @property
     def tid(self):
@@ -87,42 +81,6 @@ class Entry(Hashable, Indexable, Generic[PackType]):
     @property
     def component(self):
         return self.__component
-
-    def embed(self, recalculate: bool = False):
-        """
-        Get the embedding of this entry if it is embeddable.
-
-        The internal embed function. User should implement :meth:``__embed()``
-        instead.
-
-        Args:
-            recalculate: If True, recalculate the value and disregard the cached
-            embedding.
-
-        Returns:
-
-        """
-        if self.__embeddable:
-            if self.__cached_embedding is None or recalculate:
-                if self.__embed_func is None:
-                    raise NotImplementedError(
-                        'This embed function of the instance has not been '
-                        'register, please register through '
-                        ':meth:``register_embed_function``.')
-                self.__embed_func(self)
-            else:
-                return self.__cached_embedding
-        else:
-            raise NotImplementedError(
-                'You cannot call embed() for a non-embeddable entry.')
-
-    def register_embed_function(self, func: Callable[['Entry'], VectorType]):
-        """
-        Implement this function to get the embedding.
-        Returns:
-
-        """
-        self.__embed = func
 
     def __set_component(self, component: str):
         """
