@@ -6,6 +6,7 @@ import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
+from data.ontology.top import SubEntry
 from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
@@ -181,8 +182,8 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             input_sent = input_pack.get_entry_by_id(input_id)
             cross_link = MultiPackLink(
                 data_pack,
-                (self.input_pack_name, input_sent),
-                (self.output_pack_name, sent),
+                data_pack.subentry(self.input_pack_name, input_sent),
+                data_pack.subentry(self.output_pack_name, sent),
             )
             data_pack.add_entry(cross_link)
             # We may also consider adding two link with opposite directions

@@ -1,9 +1,8 @@
 from typing import List, Dict
 
 import forte.data.ontology.base_ontology as ontology
-from forte.data import MultiPack
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import Entry, Annotation, MultiPackLink
+from forte.data.ontology.top import Entry, Annotation, Link
 
 
 class WikiPage(ontology.Document):
@@ -29,8 +28,8 @@ class WikiAnchor(Annotation):
         super().__init__(pack, begin, end)
 
 
-class WikiAnchorLink(MultiPackLink):
-    def __init__(self, pack: MultiPack, anchor: WikiAnchor, page: WikiPage):
+class WikiAnchorLink(Link):
+    def __init__(self, pack: DataPack, anchor: WikiAnchor, page: WikiPage):
         super().__init__(pack, anchor, page)
 
 

@@ -187,8 +187,8 @@ class BaseLink(Entry, ABC):
     def __init__(
             self,
             pack: PackType,
-            parent: Optional[EntryType] = None,
-            child: Optional[EntryType] = None
+            parent: Optional[Entry] = None,
+            child: Optional[Entry] = None
     ):
         super().__init__(pack)
 
@@ -198,7 +198,7 @@ class BaseLink(Entry, ABC):
             self.set_child(child)
 
     @abstractmethod
-    def set_parent(self, parent: EntryType):
+    def set_parent(self, parent: Entry):
         """
         This will set the `parent` of the current instance with given Entry
         The parent is saved internally by its pack specific index key.
@@ -212,7 +212,7 @@ class BaseLink(Entry, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def set_child(self, child: EntryType):
+    def set_child(self, child: Entry):
         """
         This will set the `child` of the current instance with given Entry
         The child is saved internally by its pack specific index key.
@@ -226,7 +226,7 @@ class BaseLink(Entry, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_parent(self) -> EntryType:
+    def get_parent(self) -> Entry:
         """
         Get the parent entry of the link.
 
@@ -237,7 +237,7 @@ class BaseLink(Entry, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_child(self) -> EntryType:
+    def get_child(self) -> Entry:
         """
         Get the child entry of the link.
 
@@ -267,8 +267,8 @@ class Link(BaseLink):
     connect two words and specifies its dependency label.  Each link has a
     parent node and a child node.
     """
-    ParentType: Type[Entry] = Entry
-    ChildType: Type[Entry] = Entry
+    ParentType: Type[Entry]
+    ChildType: Type[Entry]
 
     def __init__(
             self,
@@ -280,7 +280,8 @@ class Link(BaseLink):
         self._child: Optional[str] = None
         super().__init__(pack, parent, child)
 
-    def set_parent(self, parent: ParentType):
+    # TODO: Can we get better type hint here?
+    def set_parent(self, parent: Entry):
         """
         This will set the `parent` of the current instance with given Entry
         The parent is saved internally by its pack specific index key.
@@ -301,7 +302,7 @@ class Link(BaseLink):
                 self.data_pack.index.link_index_switch):
             self.data_pack.index.add_link_parent(parent, self)
 
-    def set_child(self, child: ChildType):
+    def set_child(self, child: Entry):
         """
        This will set the `child` of the current instance with given Entry
        The child is saved internally by its pack specific index key.
@@ -341,7 +342,7 @@ class Link(BaseLink):
         """
         return self._child
 
-    def get_parent(self) -> ParentType:
+    def get_parent(self) -> Entry:
         """
         Get the parent entry of the link.
 
@@ -353,7 +354,7 @@ class Link(BaseLink):
                              f"attached to any data pack.")
         return self.data_pack.get_entry_by_id(self._parent)
 
-    def get_child(self) -> ChildType:
+    def get_child(self) -> Entry:
         """
         Get the child entry of the link.
 
@@ -375,7 +376,7 @@ class BaseGroup(Entry):
     This is the BaseGroup interface. Specific member constraints are defined
     in the inherited classes.
     """
-    member_type: Type[Entry] = Entry  # type: ignore
+    member_type: Type[Entry]
 
     def __init__(
             self,
@@ -467,7 +468,7 @@ class Group(BaseGroup):
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
-    member_type: Type[Entry] = Entry  # type: ignore
+    member_type: Type[Entry] = Entry
 
     def __init__(
             self,
@@ -530,14 +531,14 @@ class MultiPackLink(BaseLink):
     have one additional index on which pack it comes from.
     """
 
-    ParentType: Type[SubEntry] = SubEntry
-    ChildType: Type[SubEntry] = SubEntry
+    ParentType: Type[SubEntry]
+    ChildType: Type[SubEntry]
 
     def __init__(
             self,
             pack: MultiPack,
-            parent: Optional[ParentType],
-            child: Optional[ChildType],
+            parent: Optional[SubEntry],
+            child: Optional[SubEntry],
     ):
         """
 
@@ -568,13 +569,14 @@ class MultiPackLink(BaseLink):
             raise IncompleteEntryError("Child is not set for this link.")
         return self._child
 
-    def set_parent(self, parent: ParentType):
+    def set_parent(self, parent: SubEntry):  # type: ignore
         """
         This will set the `parent` of the current instance with given Entry
         The parent is saved internally as a tuple: pack_name and entry.tid
 
         Args:
-            parent: The parent of the link. Multiple
+            parent: The parent of the link, identified as a sub entry, which
+            has a value for the pack index and the tid in the pack.
 
         Returns:
 
@@ -585,14 +587,14 @@ class MultiPackLink(BaseLink):
                 f"instance of {self.ParentType}, but get {type(parent)}")
         self._parent = parent.index_key
 
-    def set_child(self, child: ChildType):
+    def set_child(self, child: SubEntry):  # type: ignore
         if not isinstance(child, self.ChildType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ChildType}, but get {type(child)}")
         self._child = child.index_key
 
-    def get_parent(self) -> EntryType:
+    def get_parent(self) -> SubEntry:
         """
         Get the parent entry of the link.
 

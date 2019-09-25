@@ -2,6 +2,7 @@ import copy
 import logging
 from typing import (Dict, List, Union, Iterator, Optional, Type, Any, Tuple)
 
+from data.ontology.top import SubEntry
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack, DataRequest
 from forte.data.ontology import Entry, Annotation, MultiPackGroup, MultiPackLink
@@ -48,6 +49,9 @@ class MultiPack(BasePack):
         self.meta: MultiPackMeta = MultiPackMeta()
 
         self.__default_pack_prefix = '_pack'
+
+    def subentry(self, pack_index: int, entry: Entry):
+        return SubEntry(self, pack_index, entry)
 
     def add_pack(self, pack: DataPack, pack_name: Optional[str] = None):
         if pack_name in self.__name_index:

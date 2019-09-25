@@ -63,8 +63,8 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
         print(colored("Semantic role labels:", 'red'))
         for link in pack.get(
                 base_ontology.PredicateLink, sentence):
-            parent: base_ontology.PredicateMention = link.get_parent()
-            child: base_ontology.PredicateArgument = link.get_child()
+            parent: base_ontology.PredicateMention = link.get_parent()  # type: ignore
+            child: base_ontology.PredicateArgument = link.get_child()  # type: ignore
             print(f"  - \"{child.text}\" is role {link.arg_type} of "
                   f"predicate \"{parent.text}\"")
             entities = [entity.text for entity
@@ -108,8 +108,8 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
         print(colored("Dependency Relations:", 'red'))
         for link in pack.get(
                 stanfordnlp_ontology.Dependency, sentence):
-            parent = link.get_parent()
-            child = link.get_child()
+            parent: stanfordnlp_ontology.Token = link.get_parent()  # type: ignore
+            child: stanfordnlp_ontology.Token = link.get_child()  # type: ignore
             print(colored(child.text, 'cyan'),
                   "has relation",
                   colored(link.rel_type, 'green'),
