@@ -1,6 +1,7 @@
 from abc import abstractmethod, ABC
 from forte import config
-from forte.data import DataPack, PackType, MultiPack
+from forte.data import DataPack, MultiPack
+from forte.common.types import PackType
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [

@@ -4,11 +4,12 @@ import logging
 import yaml
 from texar.torch import HParams
 
-from forte.data.base_pack import PackType, BasePack
+from forte.common.types import PackType
+from forte.data.base_pack import BasePack
 from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
 from forte.data.selector import Selector, DummySelector
-from forte.processors.base import BaseProcessor, BaseBatchProcessor
+from forte.processors.base import BaseProcessor
 from forte.common.resources import Resources
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class BasePipeline(Generic[PackType]):
     The pipeline consists of a list of predictors.
     """
 
-    def __init__(self):
+    def __init__(self, resource: Optional[Resources] = None):
         self._reader: BaseReader
         self._processors: List[BaseProcessor] = []
         self._selectors: List[Selector] = []
@@ -36,7 +37,11 @@ class BasePipeline(Generic[PackType]):
         self._ontology = base_ontology
         self.topology = None
         # self.current_packs = []
-        self.resource = Resources()
+
+        if resource is None:
+            self.resource = Resources()
+        else:
+            self.resource = resource
 
     def init_from_config_path(self, config_path):
         """
@@ -82,10 +87,11 @@ class BasePipeline(Generic[PackType]):
     def processor_configs(self):
         return self._configs
 
-    def add_processor(self,
-                      processor: BaseProcessor,
-                      selector: Optional[Selector] = None,
-                      config: Optional[HParams] = None):
+    def add_processor(
+            self, processor: BaseProcessor,
+            config: Optional[HParams] = None,
+            selector: Optional[Selector] = None,
+    ):
         if self._ontology:
             processor.set_ontology(self._ontology)
         self._processors_index[processor.component_name] = len(self.processors)
@@ -187,8 +193,8 @@ class BasePipeline(Generic[PackType]):
                             in_cache = (c_pack.meta.cache_state ==
                                         processor.component_name)
                             # TODO: can_process needs double check.
-                            # We need to record a step here with a number instead
-                            # of a processor component
+                            # We need to record a step here with a number
+                            # instead of a processor component
                             # And we need a clean way to record whether we are
                             # done processing anything, the component_name
                             # is not reliable, especially used together with

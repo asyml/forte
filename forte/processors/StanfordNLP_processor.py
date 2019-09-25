@@ -89,7 +89,9 @@ class StandfordNLPProcessor(PackProcessor):
             begin_pos = doc.find(sentence.words[0].text, end_pos)
             end_pos = doc.find(sentence.words[-1].text, begin_pos) + len(
                 sentence.words[-1].text)
-            sentence_entry = self._ontology.Sentence(begin_pos, end_pos)
+            sentence_entry = self._ontology.Sentence(
+                input_pack, begin_pos, end_pos
+            )
             input_pack.add_or_get_entry(sentence_entry)
 
             tokens: List[ontology.Token] = []
@@ -103,6 +105,7 @@ class StandfordNLPProcessor(PackProcessor):
                         find(word.text, end_pos_word)
                     end_pos_word = begin_pos_word + len(word.text)
                     token = self._ontology.Token(
+                        input_pack,
                         begin_pos_word + offset, end_pos_word + offset
                     )
 
@@ -123,7 +126,8 @@ class StandfordNLPProcessor(PackProcessor):
                 for token, word in zip(tokens, sentence.words):
                     child = token  # current token
                     parent = tokens[word.governor - 1]  # Root token
-                    relation_entry = self._ontology.Dependency(parent, child)
+                    relation_entry = self._ontology.Dependency(
+                        input_pack, parent, child)
                     relation_entry.set_fields(
                         rel_type=word.dependency_relation)
 

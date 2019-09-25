@@ -11,7 +11,7 @@ import gzip
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.data import PackType
+from forte.common.types import PackType
 from forte.processors import ProcessInfo
 from forte.processors.base.base_processor import BaseProcessor
 from forte.data.io_utils import ensure_dir

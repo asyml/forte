@@ -8,8 +8,8 @@ from typing import (DefaultDict, Dict, Generic, List, Optional, Set, Type,
 import jsonpickle
 
 from forte.common.exception import PackIndexError
-from forte.data.ontology import (Annotation, Entry, EntryType, Group, BaseGroup,
-                                 Link, Span, BaseLink, LinkType, GroupType)
+from forte.data.ontology import (Entry, Group, BaseGroup, Link)
+from forte.common.types import PackType, EntryType, LinkType, GroupType
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,6 @@ __all__ = [
     "BaseMeta",
     "InternalMeta",
     "BaseIndex",
-    "PackType"
 ]
 
 
@@ -165,9 +164,6 @@ class BasePack:
 
     def view(self):
         return copy.deepcopy(self)
-
-
-PackType = TypeVar('PackType', bound=BasePack)
 
 
 class BaseIndex(Generic[PackType]):

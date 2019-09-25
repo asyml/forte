@@ -2,14 +2,15 @@ import copy
 import logging
 from typing import (
     Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union,
-    Any, Set, Callable, NewType)
+    Any, Set, Callable)
 
 import numpy as np
 from sortedcontainers import SortedList
 
 from forte.data.base_pack import BaseIndex, BaseMeta, BasePack
 from forte.data.ontology import (
-    Entry, EntryType, Annotation, Link, Group, Span)
+    Entry, Annotation, Link, Group, Span)
+from forte.common.types import EntryType, ReplaceOperationsType
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +18,10 @@ __all__ = [
     "Meta",
     "DataIndex",
     "DataPack",
-    "ReplaceOperationsType",
     "DataRequest",
 ]
 
-ReplaceOperationsType = List[Tuple[Tuple[int, int], str]]
+# TODO: Move to types.py?
 DataRequest = Dict[Type[Entry], Union[Dict, List]]
 
 
@@ -729,9 +729,11 @@ class DataIndex(BaseIndex[DataPack]):
             return None
         return self._coverage_index.get((outter_type, inner_type))
 
-    def build_coverage_index(self,
-                             outter_type: Type[Annotation],
-                             inner_type: Type[EntryType]):
+    def build_coverage_index(
+            self,
+            outter_type: Type[Annotation],
+            inner_type: Type[EntryType]
+    ):
         if not self.coverage_index_is_valid:
             self._coverage_index = dict()
 

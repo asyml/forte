@@ -140,13 +140,10 @@ class StringReaderPipelineTest(unittest.TestCase):
         self.pl1 = Pipeline()
         self.pl1.set_ontology(base_ontology)
         self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))
-        self.pl1.set_reader(StringReader(
-            cache_directory=self._cache_directory))
+        self.pl1.set_reader(StringReader())
 
         self.pl2 = Pipeline()
-        self.pl2.set_reader(StringReader(
-            cache_directory=self._cache_directory,
-            from_cache=True))
+        self.pl2.set_reader(StringReader())
 
         self.text = (
             "The plain green Norway spruce is displayed in the gallery's "

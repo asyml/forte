@@ -12,6 +12,7 @@ class Resources:
     The objects defined as the ``Resources`` will be passed on to the
         processors in the pipeline for the initialization
     """
+
     def __init__(self, **kwargs):
         self.resources = {}
         self.update(**kwargs)
@@ -20,14 +21,15 @@ class Resources:
         with open(os.path.join(output_dir, "resources.pkl"), "wb") as output:
             pickle.dump(self.resources, output, pickle.HIGHEST_PROTOCOL)
 
+    def get(self, key: str):
+        return self.resources[key]
+
     def update(self, **kwargs):
         for key, value in kwargs.items():
-            try:
-                pickle.dumps(value)
-            # pylint: disable=broad-except
-            except Exception as e:
-                print(f'Value:{value} cannot be pickled. {e}')
             self.resources[key] = value
+
+    def remove(self, key: str):
+        del self.resources[key]
 
     def load(self, path):
         resources = pickle.load(open(path, 'rb'))

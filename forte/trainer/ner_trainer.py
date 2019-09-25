@@ -7,18 +7,22 @@ from typing import List, Tuple
 import numpy as np
 import torch
 import torchtext
+from texar.torch import HParams
+from torch.optim import SGD
 from tqdm import tqdm
 
+from examples.NER.model_factory import BiRecurrentConvCRF
 from forte.data.ontology import base_ontology
 from forte.common.resources import Resources
 from forte.trainer.base.base_trainer import BaseTrainer
+from models.NER.utils import normalize_digit_word, set_random_seed
 
 logger = logging.getLogger(__name__)
 
 
 class CoNLLNERTrainer(BaseTrainer):
-    def __init__(self, config=None):
-        super().__init__(config)
+    def __init__(self):
+        super().__init__()
 
         self.model = None
         self.word_alphabet = None
@@ -38,20 +42,45 @@ class CoNLLNERTrainer(BaseTrainer):
 
         self.__past_dev_result = None
 
-    def initialize(self, resource: Resources):
+    def initialize(self, config: HParams, resource: Resources):
 
         self.resource = resource
         # This reference is for saving the checkpoints
 
-        self.word_alphabet = resource.resources["word_alphabet"]
-        self.char_alphabet = resource.resources["char_alphabet"]
-        self.ner_alphabet = resource.resources["ner_alphabet"]
-        self.config_model = resource.resources["config_model"]
-        self.config_data = resource.resources["config_data"]
+        self.word_alphabet = resource.get("word_alphabet")
+        self.char_alphabet = resource.get("char_alphabet")
+        self.ner_alphabet = resource.get("ner_alphabet")
+
+        self.config_model = resource.get("config_model")
+        self.config_data = resource.get("config_data")
+
+        word_embedding_table = resource.get('word_embedding_table')
+
         self.model = resource.resources["model"]
         self.optim = resource.resources["optim"]
         self.device = resource.resources["device"]
-        self.normalize_func = resource.resources['normalize_func']
+        self.normalize_func = normalize_digit_word
+
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
+
+        set_random_seed(config.random_seed)
+
+        self.model = BiRecurrentConvCRF(
+            word_embedding_table,
+            self.char_alphabet.size(),
+            self.ner_alphabet.size(),
+            config
+        ).to(device=device)
+
+        self.optim = SGD(
+            self.model.parameters(),
+            lr=config.learning_rate,
+            momentum=config.momentum,
+            nesterov=True,
+        )
 
         self.trained_epochs = 0
 
@@ -304,6 +333,7 @@ class CoNLLNERTrainer(BaseTrainer):
 def batch_size_fn(new: Tuple, count: int, _: int):
     if count == 1:
         batch_size_fn.max_length = 0  # type: ignore
+
     batch_size_fn.max_length = max(  # type: ignore
         batch_size_fn.max_length, len(new[0]))  # type: ignore
     elements = count * batch_size_fn.max_length  # type: ignore

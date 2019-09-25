@@ -16,6 +16,7 @@ class DummyRelationExtractor(BatchProcessor):
     """
     A dummy relation extractor
     """
+
     def __init__(self) -> None:
         super().__init__()
         self._ontology = relation_ontology
@@ -85,7 +86,7 @@ class DummyRelationExtractor(BatchProcessor):
 
         for i in range(len(output_dict["RelationLink"]["parent.tid"])):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
-                link = self._ontology.RelationLink()
+                link = self._ontology.RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
                 parent = data_pack.get_entry_by_id(
                     output_dict["RelationLink"]["parent.tid"][i][j])

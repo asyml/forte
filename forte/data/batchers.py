@@ -5,7 +5,8 @@ from typing import (
 
 from texar.torch import HParams
 
-from forte.data import DataPack, MultiPack, PackType, DataRequest
+from forte.data import DataPack, MultiPack, DataRequest
+from forte.common.types import PackType
 from forte.data.io_utils import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation
 
@@ -221,7 +222,7 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             containing the required annotations and context, and ``cnt`` is
             the number of instances in the batch.
         """
-        input_pack = data_pack._packs[self.input_pack_name]
+        input_pack = data_pack.packs[self.input_pack_name]
 
         instances: List[Dict] = []
         for data in input_pack.get_data(context_type, requests, offset):

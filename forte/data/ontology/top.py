@@ -1,25 +1,22 @@
 from abc import abstractmethod, ABC
 from functools import total_ordering
 from typing import (
-    Iterable, Optional, Set, Tuple, Type, TypeVar, Hashable, Generic
+    Iterable, Optional, Set, Tuple, Type, Hashable, Generic
 )
+from forte.common.types import EntryType, PackType
 
 from forte.common.exception import IncompleteEntryError
 from forte.utils import get_class_name, get_full_module_name
-from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 
 __all__ = [
     "Span",
     "Entry",
-    "EntryType",
     "Annotation",
-    "GroupType",
     "BaseGroup",
     "MultiPackGroup",
     "Group",
-    "LinkType",
     "BaseLink",
     "Link",
     "MultiPackLink",
@@ -133,7 +130,7 @@ class Entry(Hashable, Indexable, Generic[PackType]):
         return self._tid
 
 
-EntryType = TypeVar('EntryType', bound=Entry)
+# EntryType = TypeVar('EntryType', bound=Entry)
 
 
 @total_ordering
@@ -262,9 +259,6 @@ class BaseLink(Entry, ABC):
     @property
     def index_key(self) -> str:
         return self.tid
-
-
-LinkType = TypeVar('LinkType', bound=BaseLink)
 
 
 class Link(BaseLink):
@@ -467,9 +461,6 @@ class BaseGroup(Entry):
         return self.tid
 
 
-GroupType = TypeVar("GroupType", bound=BaseGroup)
-
-
 class Group(BaseGroup):
     """
     Group is an entry that represent a group of other entries. For example,
@@ -505,7 +496,7 @@ class SubEntry(Entry[MultiPack]):
 
     @staticmethod
     def from_id(data_pack: MultiPack, pack_index: int, entry_id: str):
-        ent = data_pack._packs[pack_index].index.entry_index[entry_id]
+        ent = data_pack.packs[pack_index].index.entry_index[entry_id]
         return SubEntry(data_pack, pack_index, ent)
 
     @property

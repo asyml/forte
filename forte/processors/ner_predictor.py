@@ -236,13 +236,13 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
 
 class CoNLLNEREvaluator(Evaluator):
-    def __init__(self, config=None):
+    def __init__(self, config: Optional[HParams] = None):
         super().__init__(config)
         self._ontology = conll03_ontology
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
-        self.scores = {}
+        self.scores: Dict[str, float] = {}
 
     def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
         pred_getdata_args = {

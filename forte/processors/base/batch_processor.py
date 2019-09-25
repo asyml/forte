@@ -3,12 +3,12 @@ from typing import Dict, Optional, Type
 
 from texar.torch import HParams
 
-from forte.data import DataPack, MultiPack, PackType
+from forte.common.types import PackType
+from forte.data import DataPack, MultiPack
 from forte import Resources
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data import slice_batch
 from forte.data.ontology.top import Annotation
-from forte.processors import ProcessInfo
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [
@@ -178,10 +178,11 @@ class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
 
     def prepare_coverage_index(self, input_pack: MultiPack):
         for entry_type in self.input_info.keys():
-            if input_pack._packs[self.input_pack_name].index.coverage_index(
+            if input_pack.packs[self.input_pack_name].index.coverage_index(
                     self.context_type, entry_type) is None:
-                input_pack._packs[self.input_pack_name
-                ].index.build_coverage_index(self.context_type, entry_type)
+                input_pack.packs[
+                    self.input_pack_name].index.build_coverage_index(
+                    self.context_type, entry_type)
 
 
 class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):

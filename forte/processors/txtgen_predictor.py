@@ -6,7 +6,6 @@ import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
-from forte import config
 from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
@@ -164,13 +163,13 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         to the new tokens (usually use this configuration for evaluation.)
         """
         assert output_dict is not None
-        output_pack = data_pack._packs[self.output_pack_name]
+        output_pack = data_pack.packs[self.output_pack_name]
 
         input_sent_tids = output_dict["input_sents_tids"]
         output_sentences = output_dict["output_sents"]
 
         text = output_pack.text
-        input_pack = data_pack._packs[self.input_pack_name]
+        input_pack = data_pack.packs[self.input_pack_name]
         for input_id, output_sentence in zip(input_sent_tids, output_sentences):
             offset = len(output_pack.text)
             sent = self.ontology.Sentence(

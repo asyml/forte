@@ -5,7 +5,8 @@ __all__ = [
     "batch_instances",
     "merge_batches",
     "slice_batch",
-    "dataset_path_iterator"
+    "dataset_path_iterator",
+    "ensure_dir",
 ]
 
 

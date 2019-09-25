@@ -2,12 +2,12 @@
 The base class of processors
 """
 from abc import abstractmethod, ABC
-from typing import Dict, List, Union, Type, Generic
+from typing import Generic
 
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data import PackType
+from forte.common.types import PackType
 from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
 from forte.data.data_pack import DataRequest
@@ -26,6 +26,7 @@ class BaseProcessor(Generic[PackType], ABC):
     The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
     """
+
     def __init__(self):
         self.component_name = get_full_module_name(self)
         self._ontology = base_ontology
@@ -33,6 +34,8 @@ class BaseProcessor(Generic[PackType], ABC):
         self.output_info: ProcessInfo = {}
         self.selector = DummySelector()
 
+    # TODO: what if we have config-free processors? It might be cumbersome to
+    #  always require a config.
     def initialize(self, configs: HParams, resource: Resources):
         """
         The pipeline will call the initialize method at the start of a
@@ -74,7 +77,6 @@ class BaseProcessor(Generic[PackType], ABC):
         raise NotImplementedError
 
     def process(self, input_pack: PackType):
-        # TODO finish up the refactors here.
         # Obtain the control of the DataPack.
         input_pack.enter_processing(self.component_name)
         # Do the actual processing.
@@ -102,11 +104,13 @@ class BaseProcessor(Generic[PackType], ABC):
         """
         raise NotImplementedError
 
-    def finish(self):
+    def finish(self, resource: Resources):
         """
         The pipeline will calls this function at the end of the pipeline to
         notify all the processors. The user can implement this function to
         release resources used by this processor.
+
+        The annotator can also add objects to the resources.
 
         Returns:
 

@@ -9,9 +9,10 @@ import os
 import logging
 import jsonpickle
 
-from forte.data.data_pack import DataPack, ReplaceOperationsType
+from forte import Resources
+from forte.common.types import ReplaceOperationsType, PackType
+from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.base_pack import PackType
 from forte.data.ontology import Entry, base_ontology
 from forte.utils import get_full_module_name, record_fields
 
@@ -169,8 +170,9 @@ class BaseReader(Generic[PackType], ABC):
                     )
                 yield pack
 
-    def iter(self, *args, **kwargs) -> Union[Iterator[
-                                                 PackType], List[PackType]]:
+    def iter(self, *args, **kwargs) -> Union[
+        Iterator[PackType], List[PackType]
+    ]:
         """
         An iterator over the entire dataset, giving all Packs processed
          as list or Iterator depending on `lazy`, giving all the Packs read
@@ -206,7 +208,9 @@ class BaseReader(Generic[PackType], ABC):
         """
         Path.mkdir(cache_directory, exist_ok=True)
         cache_filename = os.path.join(
-            cache_directory, self._get_cache_location(collection))
+            cache_directory,
+            self._get_cache_location(collection)
+        )
 
         logger.info("Caching pack to %s", cache_filename)
         if self.append_to_cache:
@@ -235,6 +239,9 @@ class BaseReader(Generic[PackType], ABC):
                 datapacks.append(pack)
 
         return datapacks
+
+    def finish(self, resources: Resources):
+        pass
 
 
 class PackReader(BaseReader[DataPack], ABC):
