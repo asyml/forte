@@ -14,7 +14,7 @@ class GenerateOntologyTest(unittest.TestCase):
         # read json and generate code in a file
         generator = OntologyGenerator()
         curr_path = os.path.dirname(os.path.realpath(__file__))
-        json_file_path = os.path.join(curr_path, 'example_ontology.json')
+        json_file_path = os.path.join(curr_path, 'example_ontology_config.json')
         ontology_full_name, file_path, folder_path = \
             generator.generate_ontology(json_file_path)
 

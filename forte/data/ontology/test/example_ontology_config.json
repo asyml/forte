@@ -1,11 +1,11 @@
-{
+ {
     "ontology_name": "forte.data.ontology.example_ontology",
     "imports": [
        "forte.data.ontology.top"
     ],
     "entry_definitions": [
         {
-            "entry_name": "forte.data.example_ontology.Token",
+            "entry_name": "forte.data.ontology.example_ontology.Token",
             "parent_entry": "forte.data.ontology.top.Annotation",
             "attributes": [
                 {
@@ -19,7 +19,7 @@
             ]
         },
         {
-            "entry_name": "forte.data.example_ontology.EntityMention",
+            "entry_name": "forte.data.ontology.example_ontology.EntityMention",
             "parent_entry": "forte.data.ontology.top.Annotation",
             "attributes": [
                 {

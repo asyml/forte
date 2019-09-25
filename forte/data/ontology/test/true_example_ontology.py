@@ -3,7 +3,6 @@ Ontology file for forte.data.ontology.example_ontology
 Automatically generated file. Do not change by hand
 """
 import typing
-import forte.data.ontology
 import forte.data.ontology.top
 
 
