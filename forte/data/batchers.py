@@ -5,7 +5,7 @@ from typing import (
 
 from texar.torch import HParams
 
-from forte.common.types import PackType
+from forte.data.base_pack import PackType
 from forte.data import DataPack, MultiPack, DataRequest
 from forte.data.io_utils import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation

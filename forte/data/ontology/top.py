@@ -1,13 +1,11 @@
 from abc import abstractmethod, ABC
 from functools import total_ordering
 from typing import (
-    Iterable, Optional, Set, Tuple, Type, Hashable, Generic
+    Iterable, Optional, Set, Tuple, Type, Hashable
 )
 
 from forte.common.exception import IncompleteEntryError
-from forte.common.types import EntryType, PackType
-from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
+from forte.data.container import EntryContainer
 from forte.utils import get_class_name, get_full_module_name
 
 __all__ = [
@@ -20,6 +18,9 @@ __all__ = [
     "BaseLink",
     "Link",
     "MultiPackLink",
+    "SubEntry",
+    "SinglePackEntries",
+    "MultiPackEntries",
 ]
 
 
@@ -54,7 +55,7 @@ class Indexable(ABC):
         raise NotImplementedError
 
 
-class Entry(Hashable, Indexable, Generic[PackType]):
+class Entry(Indexable):
     """
     The base class inherited by all NLP entries.
     There will be some associated attributes for each entry.
@@ -64,12 +65,21 @@ class Entry(Hashable, Indexable, Generic[PackType]):
     - _tid: a unique identifier of this entry in the data pack
     """
 
-    def __init__(self, pack: PackType):
+    def __init__(self, pack: EntryContainer):
+        super(Entry, self).__init__()
+
         self._tid: str
 
         self.__component: str
         self.__modified_fields: Set[str] = set()
-        self._data_pack: PackType = pack
+
+        # The Entry should have a reference to the data pack, and the data pack
+        # need to store the entries. In order to resolve the cyclic references,
+        # we create a generic class EntryContainer to be the place holder of
+        # the actual. Whether this entry can be added to the pack is delegated
+        # to be checked by the pack.
+        self.__pack: EntryContainer = pack
+        pack.validate(self)
 
     @property
     def tid(self):
@@ -79,7 +89,7 @@ class Entry(Hashable, Indexable, Generic[PackType]):
     def component(self):
         return self.__component
 
-    def __set_component(self, component: str):
+    def set_component(self, component: str):
         """
         Set the component of the creator of this entry.
         Args:
@@ -102,8 +112,8 @@ class Entry(Hashable, Indexable, Generic[PackType]):
         self._tid = f"{get_full_module_name(self)}.{tid}"
 
     @property
-    def data_pack(self) -> PackType:
-        return self._data_pack
+    def pack(self) -> EntryContainer:
+        return self.__pack
 
     def set_fields(self, **kwargs):
         """Set other entry fields"""
@@ -134,13 +144,13 @@ class Entry(Hashable, Indexable, Generic[PackType]):
 
 
 @total_ordering
-class Annotation(Entry[DataPack]):
+class Annotation(Entry):
     """Annotation type entries, such as "token", "entity mention" and
     "sentence". Each annotation has a text span corresponding to its offset
     in the text.
     """
 
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    def __init__(self, pack: EntryContainer, begin: int, end: int):
         super().__init__(pack)
         self._span = Span(begin, end)
 
@@ -153,7 +163,7 @@ class Annotation(Entry[DataPack]):
 
     def __hash__(self):
         return hash(
-            (type(self), self.data_pack, self.span.begin, self.span.end)
+            (type(self), self.pack, self.span.begin, self.span.end)
         )
 
     def __eq__(self, other):
@@ -173,10 +183,10 @@ class Annotation(Entry[DataPack]):
 
     @property
     def text(self):
-        if self.data_pack is None:
+        if self.pack is None:
             raise ValueError(f"Cannot get text because annotation is not "
                              f"attached to any data pack.")
-        return self.data_pack.text[self.span.begin: self.span.end]
+        return self.pack.text[self.span.begin: self.span.end]
 
     @property
     def index_key(self) -> str:
@@ -186,7 +196,7 @@ class Annotation(Entry[DataPack]):
 class BaseLink(Entry, ABC):
     def __init__(
             self,
-            pack: PackType,
+            pack: EntryContainer,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
@@ -272,7 +282,7 @@ class Link(BaseLink):
 
     def __init__(
             self,
-            pack: DataPack,
+            pack: EntryContainer,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
@@ -298,10 +308,6 @@ class Link(BaseLink):
                 f"instance of {self.ParentType}, but get {type(parent)}")
         self._parent = parent.tid
 
-        if (self.data_pack is not None and
-                self.data_pack.index.link_index_switch):
-            self.data_pack.index.add_link_parent(parent, self)
-
     def set_child(self, child: Entry):
         """
        This will set the `child` of the current instance with given Entry
@@ -321,10 +327,6 @@ class Link(BaseLink):
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(child)}")
         self._child = child.tid
-
-        if (self.data_pack is not None and
-                self.data_pack.index.link_index_switch):
-            self.data_pack.index.add_link_child(child, self)
 
     @property
     def parent(self):
@@ -349,10 +351,10 @@ class Link(BaseLink):
         Returns:
              An instance of :class:`Entry` that is the parent of the link.
         """
-        if self.data_pack is None:
+        if self.pack is None:
             raise ValueError(f"Cannot get parent because link is not "
                              f"attached to any data pack.")
-        return self.data_pack.get_entry_by_id(self._parent)
+        return self.pack.get_entry(self._parent)
 
     def get_child(self) -> Entry:
         """
@@ -361,10 +363,10 @@ class Link(BaseLink):
         Returns:
              An instance of :class:`Entry` that is the child of the link.
         """
-        if self.data_pack is None:
+        if self.pack is None:
             raise ValueError(f"Cannot get child because link is not"
                              f" attached to any data pack.")
-        return self.data_pack.get_entry_by_id(self._child)
+        return self.pack.get_entry(self._child)
 
 
 class BaseGroup(Entry):
@@ -380,8 +382,8 @@ class BaseGroup(Entry):
 
     def __init__(
             self,
-            pack: PackType,
-            members: Optional[Set[EntryType]] = None,
+            pack: EntryContainer,
+            members: Optional[Set[Entry]] = None,
     ):
         super().__init__(pack)
 
@@ -419,11 +421,6 @@ class BaseGroup(Entry):
 
             self._members.add(member.tid)
 
-        if (self.data_pack is not None and
-                self.data_pack.index.group_index_switch):
-            # TODO: NO way, don't do all update.
-            self.data_pack.index.update_group_index([self])
-
     @property
     def members(self):
         """
@@ -449,12 +446,12 @@ class BaseGroup(Entry):
              An set of instances of :class:`Entry` that are the members of the
              group.
         """
-        if self.data_pack is None:
+        if self.pack is None:
             raise ValueError(f"Cannot get members because group is not "
                              f"attached to any data pack.")
         member_entries = set()
         for m in self.members:
-            member_entries.add(self.data_pack.get_entry_by_id(m))
+            member_entries.add(self.pack.get_entry(m))
         return member_entries
 
     @property
@@ -470,15 +467,8 @@ class Group(BaseGroup):
     """
     member_type: Type[Entry] = Entry
 
-    def __init__(
-            self,
-            pack: DataPack,
-            members: Optional[Set[Entry]] = None,
-    ):
-        super().__init__(pack, members)
 
-
-class SubEntry(Entry[MultiPack]):
+class SubEntry(Entry):
     """
     This is used to identify an Entry in one of the packs in the Multipack.
     For example, the sentence in one of the packs. A pack_index and an entry
@@ -487,39 +477,34 @@ class SubEntry(Entry[MultiPack]):
     Args:
         pack_index: Indicate which pack this entry belongs. If this is less
         than 0, then this is a cross pack entry.
-        entry: The entry itself.
+        entry_id: The tid of the entry in the sub pack.
     """
 
-    def __init__(self, pack: MultiPack, pack_index: int, entry: Entry):
+    def __init__(self, pack: EntryContainer, pack_index: int, entry_id: str):
         super().__init__(pack)
-        self._pack_index = pack_index
-        self._entry = entry
-
-    @staticmethod
-    def from_id(data_pack: MultiPack, pack_index: int, entry_id: str):
-        ent = data_pack.packs[pack_index].index.entry_index[entry_id]
-        return SubEntry(data_pack, pack_index, ent)
+        self._pack_index: int = pack_index
+        self._entry_id: str = entry_id
 
     @property
     def pack_index(self):
         return self._pack_index
 
     @property
-    def entry(self):
-        return self._entry
+    def entry_id(self):
+        return self._entry_id
 
     def __hash__(self):
-        return hash((type(self), self._pack_index, self._entry))
+        return hash((type(self), self._pack_index, self._entry_id))
 
     def __eq__(self, other):
         if other is None:
             return False
-        return (type(self), self.pack_index, self.entry
+        return (type(self), self.pack_index, self.entry_id
                 ) == (type(other), other.pack_index, other.entry)
 
     @property
     def index_key(self) -> Tuple[int, str]:
-        return self._pack_index, self._entry.tid
+        return self._pack_index, self._entry_id
 
 
 class MultiPackLink(BaseLink):
@@ -536,7 +521,7 @@ class MultiPackLink(BaseLink):
 
     def __init__(
             self,
-            pack: MultiPack,
+            pack: EntryContainer,
             parent: Optional[SubEntry],
             child: Optional[SubEntry],
     ):
@@ -606,7 +591,7 @@ class MultiPackLink(BaseLink):
             raise IncompleteEntryError("The parent of this link is not set.")
         pack_idx, parent_tid = self._parent
 
-        return SubEntry.from_id(self.data_pack, pack_idx, parent_tid)
+        return SubEntry(self.pack, pack_idx, parent_tid)
 
     def get_child(self) -> SubEntry:
         """
@@ -621,7 +606,7 @@ class MultiPackLink(BaseLink):
 
         pack_idx, child_tid = self._child
 
-        return SubEntry.from_id(self.data_pack, pack_idx, child_tid)
+        return SubEntry(self.pack, pack_idx, child_tid)
 
 
 class MultiPackGroup(BaseGroup):
@@ -632,7 +617,11 @@ class MultiPackGroup(BaseGroup):
 
     def __init__(
             self,
-            pack: MultiPack,
+            pack: EntryContainer,
             members: Optional[Set[SubEntry]],
     ):
         super().__init__(pack, members)
+
+
+SinglePackEntries = (Link, Group, Annotation)
+MultiPackEntries = (MultiPackLink, MultiPackGroup)

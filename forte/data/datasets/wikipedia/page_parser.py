@@ -1,7 +1,8 @@
 """
 Parse and write  wikilinks from Wikipedia XML database dumps.
 
-Generates a anchor surface counting JSON objects and a wiki_parser text with anchor repalced as the Freebase id.
+Generates a anchor surface counting JSON objects and a wiki_parser text
+with anchor repalced as the Freebase id.
 
 Usage:
     extract -h | --help
@@ -21,7 +22,6 @@ import jsonable
 import more_itertools
 import mwtypes
 import mwxml
-# from mwlinks.libs.wikilink_extractor import Page, Revision
 from mwlinks.libs import utils
 from mwlinks.libs import wikilink
 from mwlinks.libs.common import Span
@@ -91,7 +91,8 @@ def parse_page(dump: Iterable[mwxml.Page],
                only_last_revision: bool) -> Iterator[Page]:
     for mw_page in dump:
         # utils.log("Processing", mw_page.title)
-        logging.info("Processing %s" % mw_page.title)
+        msg = "Processing %s" % mw_page.title
+        logging.info(msg)
 
         # Skip non-articles
         if mw_page.namespace != 0:
@@ -120,28 +121,28 @@ def parse(
 
     for mw_page in pages_generator:
         for revision in mw_page.revisions:
-            if revision.user is None:
-                user_type = 'None'
-                user_username = 'None'
-                user_id = -2
-            else:
-                if revision.user.id is not None:
-                    user_type = 'registered'
-                    user_username = revision.user.text
-                    user_id = revision.user.id
-                else:
-                    user_type = 'ip'
-                    user_username = revision.user.text
-                    user_id = -1
-
-            revision_parent_id = revision.parent_id
-            if revision.parent_id is None:
-                revision_parent_id = -1
-
-            if revision.minor:
-                revision_minor = 1
-            else:
-                revision_minor = 0
+            # if revision.user is None:
+            #     user_type = 'None'
+            #     user_username = 'None'
+            #     user_id = -2
+            # else:
+            #     if revision.user.id is not None:
+            #         user_type = 'registered'
+            #         user_username = revision.user.text
+            #         user_id = revision.user.id
+            #     else:
+            #         user_type = 'ip'
+            #         user_username = revision.user.text
+            #         user_id = -1
+            #
+            # revision_parent_id = revision.parent_id
+            # if revision.parent_id is None:
+            #     revision_parent_id = -1
+            #
+            # if revision.minor:
+            #     revision_minor = 1
+            # else:
+            #     revision_minor = 0
 
             yield (
                 mw_page.id,

@@ -20,7 +20,7 @@ from mwlinks.libs.wikilink import Wikilink
 from forte.data import DataPack
 from forte.data.ontology import wiki_ontology
 from forte.data.readers.base_reader import PackReader
-from forte.data.readers.wikipedia import page_parser
+from forte.data.datasets.wikipedia import page_parser
 
 __all__ = [
     "WikiDumpReader",
@@ -76,6 +76,7 @@ class WikiDumpReader(PackReader):
             title_wiki_name = format_wiki_title(title)
             if title_wiki_name in redirects:
                 title_wiki_name = redirects[title_wiki_name]
+                print(title_wiki_name)
 
             links = self.process_links(wiki_links, redirects)
 
@@ -91,6 +92,8 @@ class WikiDumpReader(PackReader):
 
         self.set_text(pack, text)
         pack.set_meta(doc_id=title)
+
+        print(wiki_id, title, redirect, revision_id, links, text)
 
         return pack
 

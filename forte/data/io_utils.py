@@ -73,7 +73,7 @@ def slice_batch(batch, start, length):
 def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
     """
     An iterator returning file_paths in a directory containing files
-    of the given format
+    of the given datasets
     """
     for root, _, files in os.walk(dir_path):
         for data_file in files:

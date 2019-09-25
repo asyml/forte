@@ -31,7 +31,7 @@ class Document(ontology.Document):
         super().__init__(pack, begin, end)
 
 
-class Dependency(Link):
+class Dependency(Link):  # pylint: disable=too-many-ancestors
     def __init__(self, pack: DataPack, parent: Token, child: Token):
         super().__init__(pack, parent, child)
         self.rel_type: str

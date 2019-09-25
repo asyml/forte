@@ -11,7 +11,7 @@ from abc import abstractmethod, ABC
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.common.types import PackType
+from forte.data.base_pack import PackType
 from forte.data.io_utils import ensure_dir
 from forte.processors import ProcessInfo
 from forte.processors.base.base_processor import BaseProcessor
@@ -29,7 +29,7 @@ class JsonPackWriter(BaseProcessor, ABC):
         self.root_output_dir: str = ''
         self.zip_pack: bool = False
 
-    def initialize(self, configs: HParams, resource: Resources):
+    def initialize(self, resource: Resources, configs: HParams):
         self.root_output_dir = configs.output_dir
         self.zip_pack = configs.zip_pack
 

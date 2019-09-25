@@ -42,7 +42,7 @@ def construct_word_embedding_table(embed_dict, alphabet):
 
 class CoNLL03VocabularyProcessor(VocabularyProcessor):
     """
-    Vocabulary Processor for the format of CoNLL data
+    Vocabulary Processor for the datasets of CoNLL data
     Create the vocabulary for the word, character, pos tag, chunk id and ner
     tag
     """
@@ -58,7 +58,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         self.chunk_cnt: Counter = Counter()
         self.ner_cnt: Counter = Counter()
 
-    def initialize(self, configs: HParams, resource: Resources):
+    def initialize(self, resource: Resources, configs: HParams):
         self.min_frequency = configs.min_frequency
         self.normalize_digit = configs.normalize_digit
         self.embedding_path = configs.embedding_path

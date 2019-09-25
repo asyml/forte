@@ -19,13 +19,11 @@ class WikiBody(Annotation):
 
 
 class WikiSection(Annotation):
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
+    pass
 
 
 class WikiAnchor(Annotation):
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
+    pass
 
 
 class WikiAnchorLink(Link):

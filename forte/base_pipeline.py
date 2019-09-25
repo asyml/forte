@@ -6,7 +6,7 @@ import yaml
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.common.types import PackType
+from forte.data.base_pack import PackType
 from forte.data.base_pack import BasePack
 from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
@@ -71,7 +71,7 @@ class BasePipeline(Generic[PackType]):
 
     def initialize_processors(self):
         for processor, config in zip(self.processors, self.processor_configs):
-            processor.initialize(config, self.resource)
+            processor.initialize(self.resource, config)
             processor.set_ontology(self._ontology)
             processor.set_input_info()
             processor.set_output_info()

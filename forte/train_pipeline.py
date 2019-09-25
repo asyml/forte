@@ -27,21 +27,21 @@ class TrainPipeline:
         self.resource = Resources()
         self.configs = configs
 
-        trainer.initialize(configs, self.resource)
+        trainer.initialize(self.resource, configs)
+
+        train_reader.initialize(self.resource, configs.reader_config)
 
         if predictor is not None:
             logger.info(
                 "Training pipeline initialized with real eval setting."
             )
             predictor_config = configs.predictor
-            predictor.initialize(predictor_config, self.resource)
+            predictor.initialize(self.resource, predictor_config)
 
         if preprocessors is not None:
             for p in preprocessors:
-                p.initialize(
-                    configs=configs.preprocessor,
-                    resource=self.resource
-                )
+                p.initialize(resource=self.resource,
+                             configs=configs.preprocessor)
             self.preprocessors = preprocessors
         else:
             self.preprocessors = []

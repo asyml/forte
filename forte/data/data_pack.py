@@ -1,27 +1,27 @@
 import copy
 import logging
 from typing import (
-    Dict, Iterable, Iterator, List, Tuple, Optional, Type, Union,
+    Dict, Iterable, Iterator, List, Optional, Type, Union,
     Any, Set, Callable)
 
 import numpy as np
 from sortedcontainers import SortedList
 
 from forte.common.types import EntryType, ReplaceOperationsType
-from forte.data.base_pack import BaseIndex, BaseMeta, BasePack
-from forte.data.ontology import (
-    Entry, Annotation, Link, Group, Span)
+from forte.data.base_pack import BaseMeta, BasePack
+from forte.data.index import DataIndex
+from forte.data.ontology.top import (
+    Entry, Annotation, Link, Group, Span, SinglePackEntries
+)
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "Meta",
-    "DataIndex",
     "DataPack",
     "DataRequest",
 ]
 
-# TODO: Move to types.py?
 DataRequest = Dict[Type[Entry], Union[Dict, List]]
 
 
@@ -41,7 +41,7 @@ class Meta(BaseMeta):
         self.span_unit = span_unit
 
 
-class DataPack(BasePack):
+class DataPack(BasePack[Entry]):
     """
     A :class:`DataPack' contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural
@@ -61,7 +61,7 @@ class DataPack(BasePack):
 
         self.inverse_replace_operations: ReplaceOperationsType = []
 
-        self.index: DataIndex = DataIndex(self)
+        self.index: DataIndex = DataIndex()
         self.meta: Meta = Meta(doc_id)
 
     def __getstate__(self):
@@ -89,6 +89,9 @@ class DataPack(BasePack):
     @property
     def text(self):
         return self._text
+
+    def validate(self, entry: EntryType) -> bool:
+        return isinstance(entry, SinglePackEntries)
 
     def set_text(self,
                  text: str,
@@ -200,7 +203,7 @@ class DataPack(BasePack):
         if add_new:
             # add the entry to the target entry list
             entry.set_tid(str(self.internal_metas[entry.__class__].id_counter))
-            entry.__set_component(self.__owner_component)
+            entry.set_component(self.__owner_component)
 
             if isinstance(target, list):
                 target.append(entry)
@@ -243,7 +246,7 @@ class DataPack(BasePack):
         # update basic index
         self.index.entry_index.pop(entry.tid)
         self.index.type_index[type(entry)].remove(entry.tid)
-        self.index.component_index[entry.__component].remove(entry.tid)
+        self.index.component_index[entry.component].remove(entry.tid)
         # set other index invalid
         self.index.turn_link_index_switch(on=False)
         self.index.turn_group_index_switch(on=False)
@@ -595,12 +598,12 @@ class DataPack(BasePack):
 
         elif issubclass(entry_type, (Link, Group)):
             for entry_id in valid_id:
-                entry = self.get_entry_by_id(entry_id)
+                entry: Entry = self.get_entry(entry_id)
                 if (range_annotation is None or
                         self.index.in_span(entry, range_annotation.span)):
                     yield entry
 
-    def get_entry_by_id(self, tid: str):
+    def get_entry(self, tid: str) -> EntryType:
         """
         Look up the entry_index with key ``tid``.
         """
@@ -621,7 +624,7 @@ class DataPack(BasePack):
         return entry_set
 
     def get_entries_by_component(self, component: str) -> Set[Entry]:
-        return {self.get_entry_by_id(tid)
+        return {self.get_entry(tid)
                 for tid in self.get_ids_by_component(component)}
 
     def get_ids_by_type(self, tp: Type[EntryType]) -> Set[str]:
@@ -644,7 +647,7 @@ class DataPack(BasePack):
     def get_entries_by_type(self, tp: Type[EntryType]) -> Set[EntryType]:
         entries: Set = set()
         for tid in self.get_ids_by_type(tp):
-            entry = self.get_entry_by_id(tid)
+            entry = self.get_entry(tid)
             if isinstance(entry, tp):
                 entries.add(entry)
         return entries
@@ -659,7 +662,7 @@ class DataPack(BasePack):
         else:
             tid = parent
         for tid in self.index.link_index(tid, as_parent=True):
-            entry = self.get_entry_by_id(tid)
+            entry = self.get_entry(tid)
             if isinstance(entry, Link):
                 links.add(entry)
         return links
@@ -674,7 +677,7 @@ class DataPack(BasePack):
         else:
             tid = child
         for tid in self.index.link_index(tid, as_parent=False):
-            entry = self.get_entry_by_id(tid)
+            entry = self.get_entry(tid)
             if isinstance(entry, Link):
                 links.add(entry)
         return links
@@ -689,7 +692,7 @@ class DataPack(BasePack):
         else:
             tid = member
         for tid in self.index.group_index(tid):
-            entry = self.get_entry_by_id(tid)
+            entry = self.get_entry(tid)
             if isinstance(entry, Group):
                 groups.add(entry)
         return groups
@@ -704,139 +707,139 @@ class DataPack(BasePack):
         return copy.deepcopy(self)
 
 
-class DataIndex(BaseIndex[DataPack]):
-    def __init__(self, data_pack):
-        super().__init__(data_pack)
-        self._coverage_index: Dict[Tuple[Type[Annotation], Type[EntryType]],
-                                   Dict[str, Set[str]]] = dict()
-        self._coverage_index_valid = True
-
-    @property
-    def coverage_index_is_valid(self):
-        return self._coverage_index_valid
-
-    def activate_coverage_index(self):
-        self._coverage_index_valid = True
-
-    def deactivate_coverage_index(self):
-        self._coverage_index_valid = False
-
-    def coverage_index(
-            self,
-            outter_type: Type[Annotation],
-            inner_type: Type[EntryType]) -> Optional[Dict[str, Set[str]]]:
-        if not self.coverage_index_is_valid:
-            return None
-        return self._coverage_index.get((outter_type, inner_type))
-
-    def build_coverage_index(
-            self,
-            outter_type: Type[Annotation],
-            inner_type: Type[EntryType]
-    ):
-        if not self.coverage_index_is_valid:
-            self._coverage_index = dict()
-
-        # prevent the index from being used during construction
-        self.deactivate_coverage_index()
-
-        self._coverage_index[(outter_type, inner_type)] = dict()
-        for range_annotation in self.data_pack.get_entries_by_type(outter_type):
-            entries = self.data_pack.get_entries(inner_type, range_annotation)
-            entry_ids = {e.tid for e in entries}
-            self._coverage_index[(outter_type,
-                                  inner_type)][range_annotation.tid] = entry_ids
-
-        self.activate_coverage_index()
-
-    def have_overlap(self,
-                     entry1: Union[Annotation, str],
-                     entry2: Union[Annotation, str]) -> bool:
-        """Check whether the two annotations have overlap in span.
-
-        Args:
-            entry1 (str or Annotation): An :class:`Annotation` object to be
-                checked, or the tid of the Annotation.
-            entry2 (str or Annotation): Another :class:`Annotation` object to be
-                checked, or the tid of the Annotation.
-        """
-        if isinstance(entry1, str):
-            e = self.entry_index[entry1]
-            if not isinstance(e, Annotation):
-                raise TypeError(f"'entry1' should be an instance of Annotation,"
-                                f" but get {type(e)}")
-            entry1 = e
-
-        if not isinstance(entry1, Annotation):
-            raise TypeError(f"'entry1' should be an instance of Annotation,"
-                            f" but get {type(entry1)}")
-
-        if isinstance(entry2, str):
-            e = self.entry_index[entry2]
-            if not isinstance(e, Annotation):
-                raise TypeError(f"'entry2' should be an instance of Annotation,"
-                                f" but get {type(e)}")
-            entry2 = e
-
-        if not isinstance(entry2, Annotation):
-            raise TypeError(f"'entry2' should be an instance of Annotation,"
-                            f" but get {type(entry2)}")
-
-        return not (entry1.span.begin >= entry2.span.end or
-                    entry1.span.end <= entry2.span.begin)
-
-    # TODO: How can inner_entry be a str?
-    def in_span(self,
-                inner_entry: Union[str, Entry],
-                span: Span) -> bool:
-        """Check whether the ``inner entry`` is within the given ``span``.
-        Link entries are considered in a span if both the
-        parent and the child are within the span. Group entries are
-        considered in a span if all the members are within the span.
-
-        Args:
-            inner_entry (str or Entry): An :class:`Entry` object to be checked.
-                We will check whether this entry is within ``span``.
-            span (Span): A :class:`Span` object to be checked. We will check
-                whether the ``inner_entry`` is within this span.
-        """
-
-        if isinstance(inner_entry, str):
-            inner_entry = self.entry_index[inner_entry]
-
-        if isinstance(inner_entry, Annotation):
-            inner_begin = inner_entry.span.begin
-            inner_end = inner_entry.span.end
-        elif isinstance(inner_entry, Link):
-            child = inner_entry.get_child()
-            parent = inner_entry.get_parent()
-
-            if (not isinstance(child, Annotation)
-                    or not isinstance(parent, Annotation)):
-                # Cannot check in_span for non-annotations.
-                return False
-
-            child_: Annotation = child
-            parent_: Annotation = parent
-
-            inner_begin = min(child_.span.begin, parent_.span.begin)
-            inner_end = max(child_.span.end, parent_.span.end)
-        elif isinstance(inner_entry, Group):
-            inner_begin = -1
-            inner_end = -1
-            for mem in inner_entry.get_members():
-                if not isinstance(mem, Annotation):
-                    # Cannot check in_span for non-annotations.
-                    return False
-
-                mem_: Annotation = mem
-                if inner_begin == -1:
-                    inner_begin = mem_.span.begin
-                inner_begin = min(inner_begin, mem_.span.begin)
-                inner_end = max(inner_end, mem_.span.end)
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(inner_entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
-        return inner_begin >= span.begin and inner_end <= span.end
+# class DataIndex(BaseIndex[DataPack]):
+#     def __init__(self, data_pack):
+#         super().__init__(data_pack)
+#         self._coverage_index: Dict[Tuple[Type[Annotation], Type[EntryType]],
+#                                    Dict[str, Set[str]]] = dict()
+#         self._coverage_index_valid = True
+#
+#     @property
+#     def coverage_index_is_valid(self):
+#         return self._coverage_index_valid
+#
+#     def activate_coverage_index(self):
+#         self._coverage_index_valid = True
+#
+#     def deactivate_coverage_index(self):
+#         self._coverage_index_valid = False
+#
+#     def coverage_index(
+#             self,
+#             outter_type: Type[Annotation],
+#             inner_type: Type[EntryType]) -> Optional[Dict[str, Set[str]]]:
+#         if not self.coverage_index_is_valid:
+#             return None
+#         return self._coverage_index.get((outter_type, inner_type))
+#
+#     def build_coverage_index(
+#             self,
+#             outter_type: Type[Annotation],
+#             inner_type: Type[EntryType]
+#     ):
+#         if not self.coverage_index_is_valid:
+#             self._coverage_index = dict()
+#
+#         # prevent the index from being used during construction
+#         self.deactivate_coverage_index()
+#
+#         self._coverage_index[(outter_type, inner_type)] = dict()
+#         for range_annotation in self.data_pack.get_entries_by_type(outter_type):
+#             entries = self.data_pack.get_entries(inner_type, range_annotation)
+#             entry_ids = {e.tid for e in entries}
+#             self._coverage_index[(outter_type,
+#                                   inner_type)][range_annotation.tid] = entry_ids
+#
+#         self.activate_coverage_index()
+#
+#     def have_overlap(self,
+#                      entry1: Union[Annotation, str],
+#                      entry2: Union[Annotation, str]) -> bool:
+#         """Check whether the two annotations have overlap in span.
+#
+#         Args:
+#             entry1 (str or Annotation): An :class:`Annotation` object to be
+#                 checked, or the tid of the Annotation.
+#             entry2 (str or Annotation): Another :class:`Annotation` object to be
+#                 checked, or the tid of the Annotation.
+#         """
+#         if isinstance(entry1, str):
+#             e = self.entry_index[entry1]
+#             if not isinstance(e, Annotation):
+#                 raise TypeError(f"'entry1' should be an instance of Annotation,"
+#                                 f" but get {type(e)}")
+#             entry1 = e
+#
+#         if not isinstance(entry1, Annotation):
+#             raise TypeError(f"'entry1' should be an instance of Annotation,"
+#                             f" but get {type(entry1)}")
+#
+#         if isinstance(entry2, str):
+#             e = self.entry_index[entry2]
+#             if not isinstance(e, Annotation):
+#                 raise TypeError(f"'entry2' should be an instance of Annotation,"
+#                                 f" but get {type(e)}")
+#             entry2 = e
+#
+#         if not isinstance(entry2, Annotation):
+#             raise TypeError(f"'entry2' should be an instance of Annotation,"
+#                             f" but get {type(entry2)}")
+#
+#         return not (entry1.span.begin >= entry2.span.end or
+#                     entry1.span.end <= entry2.span.begin)
+#
+#     # TODO: How can inner_entry be a str?
+#     def in_span(self,
+#                 inner_entry: Union[str, Entry],
+#                 span: Span) -> bool:
+#         """Check whether the ``inner entry`` is within the given ``span``.
+#         Link entries are considered in a span if both the
+#         parent and the child are within the span. Group entries are
+#         considered in a span if all the members are within the span.
+#
+#         Args:
+#             inner_entry (str or Entry): An :class:`Entry` object to be checked.
+#                 We will check whether this entry is within ``span``.
+#             span (Span): A :class:`Span` object to be checked. We will check
+#                 whether the ``inner_entry`` is within this span.
+#         """
+#
+#         if isinstance(inner_entry, str):
+#             inner_entry = self.entry_index[inner_entry]
+#
+#         if isinstance(inner_entry, Annotation):
+#             inner_begin = inner_entry.span.begin
+#             inner_end = inner_entry.span.end
+#         elif isinstance(inner_entry, Link):
+#             child = inner_entry.get_child()
+#             parent = inner_entry.get_parent()
+#
+#             if (not isinstance(child, Annotation)
+#                     or not isinstance(parent, Annotation)):
+#                 # Cannot check in_span for non-annotations.
+#                 return False
+#
+#             child_: Annotation = child
+#             parent_: Annotation = parent
+#
+#             inner_begin = min(child_.span.begin, parent_.span.begin)
+#             inner_end = max(child_.span.end, parent_.span.end)
+#         elif isinstance(inner_entry, Group):
+#             inner_begin = -1
+#             inner_end = -1
+#             for mem in inner_entry.get_members():
+#                 if not isinstance(mem, Annotation):
+#                     # Cannot check in_span for non-annotations.
+#                     return False
+#
+#                 mem_: Annotation = mem
+#                 if inner_begin == -1:
+#                     inner_begin = mem_.span.begin
+#                 inner_begin = min(inner_begin, mem_.span.begin)
+#                 inner_end = max(inner_end, mem_.span.end)
+#         else:
+#             raise ValueError(
+#                 f"Invalid entry type {type(inner_entry)}. A valid entry "
+#                 f"should be an instance of Annotation, Link, or Group."
+#             )
+#         return inner_begin >= span.begin and inner_end <= span.end

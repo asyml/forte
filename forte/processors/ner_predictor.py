@@ -9,7 +9,7 @@ from texar.torch.hyperparams import HParams
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data import DataPack
-from forte.data.format import conll_utils
+from forte.data.datasets.conll import conll_utils
 from forte.data.ontology import base_ontology, conll03_ontology
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
@@ -52,7 +52,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         }
         return output_info
 
-    def initialize(self, configs: HParams, resource: Resources):
+    def initialize(self, resource: Resources, configs: HParams):
         self.define_batcher()
 
         resource.load(configs.storage_path)
@@ -133,7 +133,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             # an instance
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid = output_dict["Token"]["tid"][i][j]
-                orig_token = data_pack.get_entry_by_id(tid)
+                orig_token = data_pack.get_entry(tid)
                 ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
                 orig_token.ner_tag = ner_tag

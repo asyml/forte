@@ -2,8 +2,8 @@ import logging
 from typing import Dict, List
 
 import numpy as np
-import texar.torch as tx
 import torch
+import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
@@ -63,7 +63,7 @@ class TxtgenPredictor(MultiPackBatchProcessor):
     def define_batcher(self) -> ProcessingBatcher:
         return FixedSizeMultiPackProcessingBatcher()
 
-    def initialize(self, configs: HParams, resource: Resources):
+    def initialize(self, resource: Resources, configs: HParams):
         """
         :param configs:
 
@@ -75,7 +75,7 @@ class TxtgenPredictor(MultiPackBatchProcessor):
              be processed
         :return:
         """
-        super().initialize(configs, resource)
+        super().initialize(resource, configs)
 
         self.input_pack_name = configs.input_pack_name
         self.output_pack_name = configs.output_pack_name
@@ -178,7 +178,7 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             output_pack.add_entry(sent)
             text += output_sentence + "\n"
 
-            input_sent = input_pack.get_entry_by_id(input_id)
+            input_sent = input_pack.get_entry(input_id)
             cross_link = MultiPackLink(
                 data_pack,
                 data_pack.subentry(self.input_pack_name, input_sent),

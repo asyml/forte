@@ -26,7 +26,7 @@ class StandfordNLPProcessor(PackProcessor):
         stanfordnlp.download(self.lang, self.MODELS_DIR)
 
     # pylint: disable=unused-argument
-    def initialize(self, configs: HParams, resource: Resources):
+    def initialize(self, resource: Resources, configs: HParams):
         self.processors = configs.processors
         self.lang = configs.lang
         self.set_up()

@@ -1,5 +1,5 @@
 """
-The reader that reads CoNLL ner_data into our internal json data format.
+The reader that reads CoNLL ner_data into our internal json data datasets.
 """
 import codecs
 import os
@@ -8,7 +8,7 @@ from typing import Iterator, Any
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import conll03_ontology
-from forte.data.readers import PackReader
+from forte.data.readers.base_reader import PackReader
 
 __all__ = [
     "CoNLL03Reader"

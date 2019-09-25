@@ -10,10 +10,14 @@ from typing import TextIO, Any
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.common.types import PackType
+from forte.data.base_pack import PackType
 from forte.pipeline import Pipeline
 from forte.processors.base.writers import JsonPackWriter
-from forte.data.readers.wikipedia.dump_reader import WikiDumpReader
+from forte.data.datasets.wikipedia.dump_reader import WikiDumpReader
+
+__all__ = [
+    'WikiArticleWriter',
+]
 
 
 class WikiArticleWriter(JsonPackWriter):
@@ -28,8 +32,8 @@ class WikiArticleWriter(JsonPackWriter):
         super().__init__()
         self.article_count: int = 0
 
-    def initialize(self, configs: HParams, resources: Resources):
-        super(WikiArticleWriter, self).initialize(configs, resources)
+    def initialize(self, resource: Resources, configs: HParams):
+        super(WikiArticleWriter, self).initialize(resources, configs)
         self.article_count = 0
         self.article_index = open(
             os.path.join(self.root_output_dir, 'article.idx'), 'w')
@@ -74,7 +78,7 @@ def main(wiki_dump_path: str, output_path: str):
         WikiArticleWriter.default_hparams()
     )
 
-    pl.add_processor(WikiArticleWriter())
+    pl.add_processor(WikiArticleWriter(), config=config)
 
     pl.initialize_processors()
     pl.run(wiki_dump_path)

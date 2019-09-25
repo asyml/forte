@@ -4,7 +4,7 @@ from typing import Dict, Optional, Type
 from texar.torch import HParams
 
 from forte.common import Resources
-from forte.common.types import PackType
+from forte.data.base_pack import PackType
 from forte.data import DataPack, MultiPack
 from forte.data import slice_batch
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
@@ -36,8 +36,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
-    def initialize(self, configs: HParams, resource: Resources):
-        super().initialize(configs, resource)
+    def initialize(self, resource: Resources, configs: HParams):
+        super().initialize(resource, configs)
         # Initialize the batcher.
         self.batcher.initialize(configs.batcher)
 
@@ -97,10 +97,10 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         Make predictions for the input data_batch.
 
         Args:
-              data_batch (Dict): A batch of instances in our dict format.
+              data_batch (Dict): A batch of instances in our dict datasets.
 
         Returns:
-              The prediction results in dict format.
+              The prediction results in dict datasets.
         """
         pass
 

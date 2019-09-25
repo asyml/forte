@@ -6,15 +6,15 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
-import torchtext
-from texar.torch import HParams
 from torch.optim import SGD
+import torchtext
 from tqdm import tqdm
+from texar.torch import HParams
 
-from examples.NER.model_factory import BiRecurrentConvCRF
 from forte.common.resources import Resources
 from forte.data.ontology import base_ontology
 from forte.trainer.base.base_trainer import BaseTrainer
+from examples.NER.model_factory import BiRecurrentConvCRF
 from models.NER.utils import normalize_digit_word, set_random_seed
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class CoNLLNERTrainer(BaseTrainer):
 
         self.__past_dev_result = None
 
-    def initialize(self, config: HParams, resource: Resources):
+    def initialize(self, resource: Resources, configs: HParams):
 
         self.resource = resource
         # This reference is for saving the checkpoints

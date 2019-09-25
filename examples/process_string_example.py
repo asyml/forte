@@ -4,7 +4,9 @@ from termcolor import colored
 from texar.torch import HParams
 
 import forte.data.ontology.base_ontology as base_ontology
-import forte.data.ontology.stanfordnlp_ontology as stanfordnlp_ontology
+import forte.data.ontology.stanfordnlp_ontology as stanford
+from forte.data.ontology.ontonotes_ontology import (
+    PredicateMention, PredicateArgument)
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
@@ -63,8 +65,8 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
         print(colored("Semantic role labels:", 'red'))
         for link in pack.get(
                 base_ontology.PredicateLink, sentence):
-            parent: base_ontology.PredicateMention = link.get_parent()  # type: ignore
-            child: base_ontology.PredicateArgument = link.get_child()  # type: ignore
+            parent: PredicateMention = link.get_parent()  # type: ignore
+            child: PredicateArgument = link.get_child()  # type: ignore
             print(f"  - \"{child.text}\" is role {link.arg_type} of "
                   f"predicate \"{parent.text}\"")
             entities = [entity.text for entity
@@ -93,23 +95,23 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
                      config=config)
     pl.add_processor(processor=SimpleJsonPackWriter(),
                      config=output_config)
-    pl.set_ontology(stanfordnlp_ontology)
+    pl.set_ontology(stanford)
 
     pl.initialize_processors()
 
     pack = pl.process(text)
-    for sentence in pack.get(stanfordnlp_ontology.Sentence):
+    for sentence in pack.get(stanford.Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
         tokens = [(token.text, token.pos_tag, token.lemma) for token in
-                  pack.get(stanfordnlp_ontology.Token, sentence)]
+                  pack.get(stanford.Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
 
         print(colored("Dependency Relations:", 'red'))
         for link in pack.get(
-                stanfordnlp_ontology.Dependency, sentence):
-            parent: stanfordnlp_ontology.Token = link.get_parent()  # type: ignore
-            child: stanfordnlp_ontology.Token = link.get_child()  # type: ignore
+                stanford.Dependency, sentence):
+            parent: stanford.Token = link.get_parent()  # type: ignore
+            child: stanford.Token = link.get_child()  # type: ignore
             print(colored(child.text, 'cyan'),
                   "has relation",
                   colored(link.rel_type, 'green'),
@@ -121,7 +123,8 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
 
 def main():
     import sys
-    ner_dir, srl_dir = sys.argv[1:2]
+    ner_dir, srl_dir = sys.argv[  # pylint: disable=unbalanced-tuple-unpacking
+                       1:3]
 
     output_config = HParams(
         {

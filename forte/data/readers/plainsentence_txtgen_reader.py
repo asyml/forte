@@ -1,13 +1,13 @@
 """
-The reader that reads CoNLL ner_data into our internal json data format.
+The reader that reads CoNLL ner_data into our internal json data datasets.
 """
 import os
 from typing import Any, Iterator
 
-from forte.data import dataset_path_iterator
+from forte.data.io_utils import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.readers import MultiPackReader
+from forte.data.readers.base_reader import MultiPackReader
 
 __all__ = [
     "PlainSentenceTxtgenReader"

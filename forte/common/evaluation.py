@@ -6,7 +6,7 @@ from typing import Optional, Generic, Any
 
 from texar.torch import HParams
 
-from forte.common.types import PackType
+from forte.data.base_pack import PackType
 
 __all__ = [
     "Evaluator",

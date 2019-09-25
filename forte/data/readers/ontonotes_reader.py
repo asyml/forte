@@ -11,7 +11,7 @@ from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
-from forte.data.readers import PackReader
+from forte.data.readers.base_reader import PackReader
 
 __all__ = [
     "OntonotesReader",
@@ -20,7 +20,7 @@ __all__ = [
 
 class OntonotesReader(PackReader):
     """:class:`OntonotesReader` is designed to read in the English OntoNotes
-    v5.0 data in the format used by the CoNLL 2011/2012 shared tasks. To use
+    v5.0 data in the datasets used by the CoNLL 2011/2012 shared tasks. To use
     this Reader, you must follow the instructions provided `here (v12 release):
     <http://cemantix.org/data/ontonotes.html>`_:, which will allow you to
     download the CoNLL style annotations for the OntoNotes v5.0 release

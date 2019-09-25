@@ -2,11 +2,13 @@ import copy
 import logging
 from typing import (Dict, List, Union, Iterator, Optional, Type, Any, Tuple)
 
-from data.ontology.top import SubEntry
 from forte.common.types import EntryType
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack, DataRequest
-from forte.data.ontology import Entry, Annotation, MultiPackGroup, MultiPackLink
+from forte.data.ontology.top import (
+    Entry, Annotation, MultiPackGroup, MultiPackLink, SubEntry,
+    MultiPackEntries
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +53,10 @@ class MultiPack(BasePack):
         self.__default_pack_prefix = '_pack'
 
     def subentry(self, pack_index: int, entry: Entry):
-        return SubEntry(self, pack_index, entry)
+        return SubEntry(self, pack_index, entry.tid)
+
+    def validate(self, entry: EntryType) -> bool:
+        return isinstance(entry, MultiPackEntries)
 
     def add_pack(self, pack: DataPack, pack_name: Optional[str] = None):
         if pack_name in self.__name_index:

@@ -7,11 +7,13 @@ from typing import Generic
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.common.types import PackType
+from forte.data.base_pack import PackType
 from forte.data.data_pack import DataRequest
 from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
-from forte.utils import get_full_module_name, record_fields
+from forte.utils import get_full_module_name
+from forte.data.ontology.onto_utils import record_fields
+from forte.pipeline_component import PipeComponent
 
 __all__ = [
     "BaseProcessor",
@@ -21,7 +23,7 @@ __all__ = [
 ProcessInfo = DataRequest
 
 
-class BaseProcessor(Generic[PackType], ABC):
+class BaseProcessor(PipeComponent, Generic[PackType], ABC):
     """
     The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
@@ -36,7 +38,7 @@ class BaseProcessor(Generic[PackType], ABC):
 
     # TODO: what if we have config-free processors? It might be cumbersome to
     #  always require a config.
-    def initialize(self, configs: HParams, resource: Resources):
+    def initialize(self, resource: Resources, configs: HParams):
         """
         The pipeline will call the initialize method at the start of a
         processing. The processor will be initialized with ``configs``,
@@ -103,19 +105,6 @@ class BaseProcessor(Generic[PackType], ABC):
 
         """
         raise NotImplementedError
-
-    def finish(self, resource: Resources):
-        """
-        The pipeline will calls this function at the end of the pipeline to
-        notify all the processors. The user can implement this function to
-        release resources used by this processor.
-
-        The annotator can also add objects to the resources.
-
-        Returns:
-
-        """
-        pass
 
     @staticmethod
     def default_hparams():

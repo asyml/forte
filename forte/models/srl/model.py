@@ -2,11 +2,11 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple
 
-import texar.torch as tx
 import torch
-from mypy_extensions import TypedDict
 from torch import nn
 from torch.nn import functional as F
+from mypy_extensions import TypedDict
+import texar.torch as tx
 
 from forte.models.srl import model_utils as utils
 from forte.models.srl.data import SRLSpan, Span
@@ -134,14 +134,14 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             "context_embeddings": {
                 "path": "embeddings/glove.840B.300d.05.filtered",
                 "size": 300,
-                "format": 'txt',
+                "datasets": 'txt',
                 "lowercase": False,
             },
             "head_embeddings": {
                 "path": "embeddings/glove_50_300_2.filtered",
                 # "path": "embeddings/glove_50_300_2.txt",
                 "size": 300,
-                "format": 'txt',
+                "datasets": 'txt',
                 "lowercase": False,
             },
             "elmo": {
