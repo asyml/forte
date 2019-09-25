@@ -2,15 +2,14 @@ import copy
 import logging
 from abc import abstractmethod
 from collections import defaultdict
-from typing import (DefaultDict, Dict, Generic, List, Optional, Set, Type,
-                    Tuple, Hashable, TypeVar)
+from typing import (Dict, List, Optional, Set, Type, Tuple, TypeVar)
 
 import jsonpickle
 
-from forte.common.exception import PackIndexError
-from forte.common.types import EntryType, LinkType, GroupType
-from forte.data.ontology.top import (Entry, BaseGroup, BaseLink)
+from forte.common.types import EntryType
 from forte.data.container import EntryContainer
+from forte.data.index import BaseIndex
+from forte.data.ontology.top import (Entry, BaseGroup, BaseLink)
 
 logger = logging.getLogger(__name__)
 
@@ -185,6 +184,3 @@ class BasePack(EntryContainer):
 
 
 PackType = TypeVar('PackType', bound=BasePack)
-
-
-

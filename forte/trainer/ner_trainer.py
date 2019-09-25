@@ -14,8 +14,8 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.ontology import base_ontology
 from forte.trainer.base.base_trainer import BaseTrainer
+from forte.models.NER.utils import normalize_digit_word, set_random_seed
 from examples.NER.model_factory import BiRecurrentConvCRF
-from models.NER.utils import normalize_digit_word, set_random_seed
 
 logger = logging.getLogger(__name__)
 
@@ -66,19 +66,19 @@ class CoNLLNERTrainer(BaseTrainer):
         else:
             device = torch.device("cpu")
 
-        set_random_seed(config.random_seed)
+        set_random_seed(configs.random_seed)
 
         self.model = BiRecurrentConvCRF(
             word_embedding_table,
             self.char_alphabet.size(),
             self.ner_alphabet.size(),
-            config
+            configs
         ).to(device=device)
 
         self.optim = SGD(
             self.model.parameters(),
-            lr=config.learning_rate,
-            momentum=config.momentum,
+            lr=configs.learning_rate,
+            momentum=configs.momentum,
             nesterov=True,
         )
 
