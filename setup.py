@@ -26,7 +26,7 @@ setuptools.setup(
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
-        'srl': ['mypy-extensions'],
+        'srl': ['mypy-extensions', 'allennlp'],
         'txtgen': ['regex'],
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt'],
