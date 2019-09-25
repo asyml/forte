@@ -13,20 +13,19 @@ Options:
     -h --help               Prints this documentation
 """
 
-import docopt
-import mwxml
-import mwtypes
-from mwlinks.libs import wikilink_extractor
-from mwlinks.libs.utils import tsv_encode
-import jsonable
+import logging
 from typing import Iterable, Iterator, NamedTuple, Optional, Tuple
-from mwlinks.libs.common import CaptureResult, Span
-from mwlinks.libs.wikilink import Section
+
+import docopt
+import jsonable
+import more_itertools
+import mwtypes
+import mwxml
 # from mwlinks.libs.wikilink_extractor import Page, Revision
 from mwlinks.libs import utils
-import more_itertools
 from mwlinks.libs import wikilink
-import logging
+from mwlinks.libs.common import Span
+from mwlinks.libs.utils import tsv_encode
 
 Revision = NamedTuple('Revision', [
     ('id', int),

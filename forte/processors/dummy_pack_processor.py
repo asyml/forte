@@ -2,9 +2,9 @@
 This processor can be used with base_ontology as a blank processor
 """
 
-from forte.processors.base import PackProcessor, ProcessInfo
 from forte.data import DataPack
 from forte.data.ontology import base_ontology
+from forte.processors.base import PackProcessor, ProcessInfo
 
 __all__ = [
     "DummyPackProcessor",

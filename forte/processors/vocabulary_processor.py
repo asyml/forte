@@ -1,19 +1,11 @@
 import json
 import os
 from abc import ABC
-from collections import Counter
-from typing import Any, Counter as CounterType, Dict, Iterator, List, Optional
+from typing import Counter as CounterType, Dict, List, Optional
 
 import texar.torch as tx
-from texar.torch import HParams
 
-from common.types import PackType
-from forte import Resources
-from forte.data import DataPack
-from forte.data.ontology import base_ontology
 from forte.processors.base import BaseProcessor
-from forte.models.NER.utils import normalize_digit_word
-from processors import ProcessInfo
 
 __all__ = [
     "Alphabet",

@@ -1,16 +1,17 @@
+import logging
 from abc import abstractmethod
 from typing import List, Dict, Iterator, Generic, Optional, Union
-import logging
+
 import yaml
 from texar.torch import HParams
 
+from forte.common.resources import Resources
 from forte.common.types import PackType
 from forte.data.base_pack import BasePack
 from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
 from forte.data.selector import Selector, DummySelector
 from forte.processors.base import BaseProcessor
-from forte.common.resources import Resources
 
 logger = logging.getLogger(__name__)
 

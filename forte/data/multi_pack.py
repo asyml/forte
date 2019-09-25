@@ -3,10 +3,10 @@ import logging
 from typing import (Dict, List, Union, Iterator, Optional, Type, Any, Tuple)
 
 from data.ontology.top import SubEntry
+from forte.common.types import EntryType
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack, DataRequest
 from forte.data.ontology import Entry, Annotation, MultiPackGroup, MultiPackLink
-from forte.common.types import EntryType
 
 logger = logging.getLogger(__name__)
 

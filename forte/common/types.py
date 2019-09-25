@@ -1,6 +1,7 @@
 from typing import TypeVar, Tuple, List
-from forte.data.ontology.top import Entry, BaseGroup, BaseLink
+
 from forte.data.base_pack import BasePack
+from forte.data.ontology.top import Entry, BaseGroup, BaseLink
 
 __all__ = [
     "EntryType",

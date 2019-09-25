@@ -3,6 +3,7 @@ This defines some selector interface used as glue to combine
 DataPack/multiPack processors and Pipeline.
 """
 from typing import Generic, Iterator, TypeVar
+
 from forte.data import BasePack
 from forte.data import DataPack
 from forte.data import MultiPack

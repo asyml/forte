@@ -40,7 +40,7 @@ def main():
         predictor=ner_predictor,
         evaluator=ner_evaluator,
     )
-    train_pipe.train()
+    train_pipe.run()
 
 
 if __name__ == '__main__':

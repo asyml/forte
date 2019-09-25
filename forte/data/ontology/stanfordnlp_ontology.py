@@ -1,5 +1,5 @@
-from forte.data.data_pack import DataPack
 import forte.data.ontology.base_ontology as ontology
+from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Link
 
 __all__ = [

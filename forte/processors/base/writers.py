@@ -3,18 +3,18 @@ Writers are simply processors with the side-effect to write to the disk.
 This file provide some basic writer implementations.
 """
 
-import os
-import logging
-from abc import abstractmethod, ABC
 import gzip
+import logging
+import os
+from abc import abstractmethod, ABC
 
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.common.types import PackType
+from forte.data.io_utils import ensure_dir
 from forte.processors import ProcessInfo
 from forte.processors.base.base_processor import BaseProcessor
-from forte.data.io_utils import ensure_dir
 
 logger = logging.getLogger(__name__)
 

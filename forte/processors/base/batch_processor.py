@@ -3,11 +3,11 @@ from typing import Dict, Optional, Type
 
 from texar.torch import HParams
 
+from forte.common import Resources
 from forte.common.types import PackType
 from forte.data import DataPack, MultiPack
-from forte import Resources
-from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data import slice_batch
+from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology.top import Annotation
 from forte.processors.base.base_processor import BaseProcessor
 

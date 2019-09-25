@@ -12,8 +12,8 @@ from torch.optim import SGD
 from tqdm import tqdm
 
 from examples.NER.model_factory import BiRecurrentConvCRF
-from forte.data.ontology import base_ontology
 from forte.common.resources import Resources
+from forte.data.ontology import base_ontology
 from forte.trainer.base.base_trainer import BaseTrainer
 from models.NER.utils import normalize_digit_word, set_random_seed
 
@@ -143,7 +143,7 @@ class CoNLLNERTrainer(BaseTrainer):
         train_total = 0.0
 
         start_time = time.time()
-        self.model.train()
+        self.model.run()
 
         # Each time we will clear and reload the train_instances_cache
         instances = self.train_instances_cache

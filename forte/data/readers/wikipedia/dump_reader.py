@@ -9,21 +9,18 @@ the utilities from MediaWiki into your PYTHONPATH.
 [1] https://github.com/mediawiki-utilities/python-mwlinks
 """
 
-import os
 import logging
 from typing import Any, Iterator, Dict, Iterable, Tuple, Set, Optional
 
-import mwxml
 import mwtypes
-from mwlinks.libs.wikilink import Wikilink
+import mwxml
 from mwlinks.libs.common import Span
-from mwlinks.libs.WikiExtractor import Extractor
-from multiprocessing import Pool, Value, Lock, Queue, Manager
+from mwlinks.libs.wikilink import Wikilink
 
-from forte.data.readers.wikipedia import page_parser
 from forte.data import DataPack
-from forte.data.readers.base_reader import PackReader
 from forte.data.ontology import wiki_ontology
+from forte.data.readers.base_reader import PackReader
+from forte.data.readers.wikipedia import page_parser
 
 __all__ = [
     "WikiDumpReader",

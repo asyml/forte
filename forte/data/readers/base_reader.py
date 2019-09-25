@@ -1,15 +1,16 @@
 """
 Base reader type to be inherited by all readers.
 """
+import logging
+import os
 from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import (Iterator, Optional, Dict, Type, List, Union, Generic,
                     Any)
-import os
-import logging
+
 import jsonpickle
 
-from forte import Resources
+from forte.common import Resources
 from forte.common.types import ReplaceOperationsType, PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack

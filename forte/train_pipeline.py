@@ -3,6 +3,7 @@ from typing import Optional, List
 
 from texar.torch import HParams
 
+from forte.pipeline import Pipeline
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data.readers import BaseReader
@@ -41,17 +42,29 @@ class TrainPipeline:
                     configs=configs.preprocessor,
                     resource=self.resource
                 )
+            self.preprocessors = preprocessors
+        else:
+            self.preprocessors = []
 
-        self.preprocessors = preprocessors
         self.train_reader = train_reader
         self.trainer = trainer
         self.predictor = predictor
         self.evaluator = evaluator
         self.dev_reader = dev_reader
 
-    def prepare(self, preprocessors):
-        for p in preprocessors:
-            pass
+    def run(self):
+        logging.info("The pipeline is running preparation.")
+        self.prepare()
+        logging.info("The pipeline is training")
+        self.train()
+
+    def prepare(self, *args, **kwargs):
+        prepare_pl = Pipeline()
+        prepare_pl.set_reader(self.train_reader)
+        for p in self.preprocessors:
+            prepare_pl.add_processor(p)
+
+        yield from prepare_pl.process_dataset(args, kwargs)
 
     def train(self):
         pack_count = 0
@@ -59,7 +72,7 @@ class TrainPipeline:
         while True:
             epoch += 1
             # we need to have directory ready here
-            for pack in self.train_reader.iter(
+            for pack in self.prepare(
                     data_source=self.configs.train_path
             ):
                 for instance in pack.get_data(**self.trainer.data_request()):

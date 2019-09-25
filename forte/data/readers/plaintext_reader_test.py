@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import unittest
+
 from ddt import ddt, data
 
 from forte.data.readers.plaintext_reader import PlainTextReader

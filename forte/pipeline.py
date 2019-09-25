@@ -1,10 +1,11 @@
 import logging
 from typing import Dict
+
 import yaml
 from texar.torch.hyperparams import HParams
 
-from forte.data import DataPack
 from forte.base_pipeline import BasePipeline
+from forte.data import DataPack
 from forte.utils import get_class
 
 logger = logging.getLogger(__name__)

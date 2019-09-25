@@ -8,9 +8,9 @@ from texar.torch import HParams
 
 from forte.common.resources import Resources
 from forte.common.types import PackType
+from forte.data.data_pack import DataRequest
 from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
-from forte.data.data_pack import DataRequest
 from forte.utils import get_full_module_name, record_fields
 
 __all__ = [

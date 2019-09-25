@@ -2,11 +2,12 @@
 Unit tests for Pipeline.
 """
 import unittest
-from forte.pipeline import Pipeline
-from forte.data.readers import OntonotesReader
-from forte.processors.dummy_processor import *
+
 from forte.data.ontology import relation_ontology
 from forte.data.ontology.relation_ontology import *
+from forte.data.readers import OntonotesReader
+from forte.pipeline import Pipeline
+from forte.processors.dummy_processor import *
 
 
 class PipelineTest(unittest.TestCase):

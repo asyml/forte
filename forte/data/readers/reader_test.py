@@ -1,17 +1,18 @@
 """
 Unit tests for Pipeline.
 """
-import os
-import unittest
 import json
+import os
 import tempfile
+import unittest
 from pathlib import Path
-from forte.pipeline import Pipeline
-from forte.data.readers import OntonotesReader, ProdigyReader, \
-    CoNLL03Reader, StringReader
-from forte.processors.dummy_pack_processor import DummyPackProcessor
+
 from forte.data.ontology import relation_ontology, base_ontology, \
     conll03_ontology
+from forte.data.readers import OntonotesReader, ProdigyReader, \
+    CoNLL03Reader, StringReader
+from forte.pipeline import Pipeline
+from forte.processors.dummy_pack_processor import DummyPackProcessor
 
 
 class OntonotesReaderPipelineTest(unittest.TestCase):

@@ -1,12 +1,12 @@
 from typing import List
 
-from texar.torch import HParams
 import stanfordnlp
+from texar.torch import HParams
 
 import forte.data.ontology.stanfordnlp_ontology as ontology
-from forte.processors.base import PackProcessor, ProcessInfo
-from forte.data import DataPack
 from forte.common.resources import Resources
+from forte.data import DataPack
+from forte.processors.base import PackProcessor, ProcessInfo
 
 __all__ = [
     "StandfordNLPProcessor",

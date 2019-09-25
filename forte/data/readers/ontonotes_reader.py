@@ -6,11 +6,11 @@ from collections import defaultdict
 from typing import (DefaultDict, List, Optional, Tuple,
                     Dict, Any, Iterator)
 
+from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
-from forte.data.data_pack import DataPack
 from forte.data.readers import PackReader
 
 __all__ = [

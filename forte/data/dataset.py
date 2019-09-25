@@ -2,6 +2,7 @@
 level meta.
 """
 from typing import Dict, Union, Iterable, Optional, List, Type
+
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Entry, Annotation
 

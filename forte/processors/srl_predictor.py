@@ -1,17 +1,17 @@
-import os
 import logging
+import os
 from typing import Dict, List, Tuple
 
-import torch
 import texar.torch as tx
+import torch
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.ontology import ontonotes_ontology
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 from forte.processors.base import ProcessInfo
+from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
 logger = logging.getLogger(__name__)
 

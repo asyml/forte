@@ -59,7 +59,7 @@ class StringReader(PackReader):
 
         pack = DataPack()
 
-        document = self._ontology.Document(
+        document = base_ontology.Document(
             pack, 0, len(data_source))
         pack.add_or_get_entry(document)
 

@@ -1,14 +1,14 @@
 """
 Unit tests for ner_data pack related operations.
 """
+import logging
 import os
 import unittest
-import logging
 
 import forte
+from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.ontonotes_ontology import Sentence, Document
 from forte.data.readers import OntonotesReader
-from forte.data.ontology import ontonotes_ontology
 
 logging.basicConfig(level=logging.DEBUG)
 

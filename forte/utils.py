@@ -4,8 +4,8 @@ Util functions
 from pydoc import locate
 from typing import List, Dict, Union, Type
 
-from forte.data.ontology.top import Entry
 from forte.common.types import PackType
+from forte.data.ontology.top import Entry
 
 __all__ = [
     "get_full_module_name",

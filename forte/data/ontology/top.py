@@ -3,12 +3,12 @@ from functools import total_ordering
 from typing import (
     Iterable, Optional, Set, Tuple, Type, Hashable, Generic
 )
-from forte.common.types import EntryType, PackType
 
 from forte.common.exception import IncompleteEntryError
-from forte.utils import get_class_name, get_full_module_name
+from forte.common.types import EntryType, PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.utils import get_class_name, get_full_module_name
 
 __all__ = [
     "Span",

@@ -3,13 +3,13 @@ import logging
 from abc import abstractmethod
 from collections import defaultdict
 from typing import (DefaultDict, Dict, Generic, List, Optional, Set, Type,
-                    TypeVar, Union, Tuple, Hashable, Iterator, Any)
+                    Tuple, Hashable)
 
 import jsonpickle
 
 from forte.common.exception import PackIndexError
-from forte.data.ontology import (Entry, Group, BaseGroup, Link)
 from forte.common.types import PackType, EntryType, LinkType, GroupType
+from forte.data.ontology import (Entry, Group, BaseGroup, Link)
 
 logger = logging.getLogger(__name__)
 

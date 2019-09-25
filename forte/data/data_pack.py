@@ -7,10 +7,10 @@ from typing import (
 import numpy as np
 from sortedcontainers import SortedList
 
+from forte.common.types import EntryType, ReplaceOperationsType
 from forte.data.base_pack import BaseIndex, BaseMeta, BasePack
 from forte.data.ontology import (
     Entry, Annotation, Link, Group, Span)
-from forte.common.types import EntryType, ReplaceOperationsType
 
 logger = logging.getLogger(__name__)
 

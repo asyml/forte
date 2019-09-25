@@ -4,8 +4,8 @@ The reader that reads plain text data into Datapacks.
 import os
 from typing import Iterator, Any
 
-from forte.data.io_utils import dataset_path_iterator
 from forte.data.data_pack import DataPack
+from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import base_ontology
 from forte.data.readers import PackReader
 

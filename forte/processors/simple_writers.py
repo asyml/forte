@@ -1,6 +1,6 @@
 from texar.torch import HParams
 
-from forte import Resources
+from forte.common import Resources
 from forte.common.types import PackType
 from forte.processors.base.writers import JsonPackWriter
 

@@ -2,11 +2,10 @@ import logging
 from typing import Dict, List
 
 import numpy as np
-import torch
 import texar.torch as tx
+import torch
 from texar.torch.hyperparams import HParams
 
-from data.ontology.top import SubEntry
 from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
@@ -14,9 +13,9 @@ from forte.data.batchers import ProcessingBatcher, \
     FixedSizeMultiPackProcessingBatcher
 from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
+from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import \
     MultiPackBatchProcessor
-from forte.processors.base import ProcessInfo
 
 logger = logging.getLogger(__name__)
 
