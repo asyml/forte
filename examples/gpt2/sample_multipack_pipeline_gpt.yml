@@ -1,7 +1,4 @@
-# This provides a configuration for interence only
-
-# TODO: since we use pipeline.init_from_config(Hparams), we cannot set the PipelineType in the config
-# Unless we have an external code parsing this configuratoin and create the Pipeline itself.
+# This provides a configuration for inference only
 
 Reader:
   type: PlainSentenceTxtgenReader

@@ -6,8 +6,8 @@
 
 from termcolor import colored
 
-from forte.data import conll03_ontology as Ont
-from nlp.forte.pipeline import Pipeline
+from forte.data.ontology import conll03_ontology as Ont
+from forte.pipeline import Pipeline
 
 # # Creates the pipeline here
 

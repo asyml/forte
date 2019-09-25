@@ -2,6 +2,8 @@ train_path: "ner_data/conll03_english/train/"
 val_path: "ner_data/conll03_english/dev/"
 test_path: "ner_data/conll03_english/test"
 
+model_out_directory: "ner_models/"
+
 alphabet_directory: "alphabets/"
 num_epochs: 200
 batch_size_tokens: 512
