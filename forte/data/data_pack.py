@@ -11,7 +11,7 @@ from forte.common.types import EntryType, ReplaceOperationsType
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import DataIndex
 from forte.data.ontology.top import (
-    Entry, Annotation, Link, Group, Span, SinglePackEntries
+    Entry, Annotation, Link, Group, Span, SinglePackEntries, Query
 )
 
 logger = logging.getLogger(__name__)
@@ -58,6 +58,7 @@ class DataPack(BasePack[Entry]):
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
+        self.query: Query = None
 
         self.inverse_replace_operations: ReplaceOperationsType = []
 

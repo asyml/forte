@@ -1,8 +1,9 @@
 from abc import abstractmethod, ABC
 from functools import total_ordering
 from typing import (
-    Iterable, Optional, Set, Tuple, Type, Hashable
+    Iterable, Optional, Set, Tuple, Type, Hashable, Union
 )
+import numpy as np
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
@@ -21,6 +22,8 @@ __all__ = [
     "SubEntry",
     "SinglePackEntries",
     "MultiPackEntries",
+    "Group",
+    "Query"
 ]
 
 
@@ -625,3 +628,27 @@ class MultiPackGroup(BaseGroup):
 
 SinglePackEntries = (Link, Group, Annotation)
 MultiPackEntries = (MultiPackLink, MultiPackGroup)
+
+
+class Query(Entry):
+    def __init__(self, query: Union[np.ndarray, str]):
+        super().__init__()
+        self.query: Union[np.ndarray, str] = query
+
+    def hash(self):
+        if isinstance(self.query, np.ndarray):
+            return hash(self.query.tobytes())
+        else:
+            return hash(self.query)
+
+    def eq(self, other: 'Query') -> bool:
+        if isinstance(self.query, str):
+            if not isinstance(self.query, str):
+                return False
+            else:
+                return self.query == other.query
+        else:
+            if not isinstance(self.query, np.ndarray):
+                return False
+            else:
+                return np.all(self.query == other.query)

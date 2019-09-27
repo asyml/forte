@@ -34,3 +34,9 @@ class Resources:
     def load(self, path):
         resources = pickle.load(open(path, 'rb'))
         self.update(**resources)
+
+    def register_embedder(self, embed):
+        r"""
+        Register the embedder `embed` to the entry
+        :return:
+        """

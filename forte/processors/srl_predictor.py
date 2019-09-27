@@ -10,7 +10,7 @@ from data.ontology import Span
 from data.ontology.ontonotes_ontology import PredicateMention, PredicateArgument
 from forte.common.resources import Resources
 from forte.data import DataPack
-from forte.data.ontology import ontonotes_ontology
+from forte.data.ontology import ontonotes_ontology, base_ontology
 from forte.models.srl.model import LabeledSpanGraphNetwork
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
@@ -49,8 +49,8 @@ class SRLPredictor(FixedSizeBatchProcessor):
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
     def initialize(self, resource: Resources, configs: HParams):  # pylint: disable=unused-argument
-
         model_dir = configs.storage_path
+
         logger.info("restoring SRL model from %s", model_dir)
 
         self.word_vocab = tx.data.Vocab(
@@ -70,11 +70,11 @@ class SRLPredictor(FixedSizeBatchProcessor):
         self.model.eval()
 
     def define_context(self):
-        self.context_type = self._ontology.Sentence
+        self.context_type = base_ontology.Sentence
 
     def _define_input_info(self) -> ProcessInfo:
         input_info: ProcessInfo = {
-            self._ontology.Token: []
+            base_ontology.Token: []
         }
         return input_info
 
@@ -99,7 +99,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
         batch_size = len(text)
         batch = tx.data.Batch(batch_size, text=text, text_ids=text_ids,
                               length=length, srl=[[]] * batch_size)
-        self.model = self.model.cuda()
+        self.model = self.model.to(self.device)
         batch_srl_spans = self.model.decode(batch)
 
         # Convert predictions into annotations.
