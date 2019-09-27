@@ -11,8 +11,9 @@ from forte.common.types import EntryType, ReplaceOperationsType
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import DataIndex
 from forte.data.ontology.top import (
-    Entry, Annotation, Link, Group, Span, SinglePackEntries
+    Entry, Annotation, Link, Group, SinglePackEntries
 )
+from forte.data.ontology.core import Span
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +67,9 @@ class DataPack(BasePack[Entry]):
 
     def __getstate__(self):
         """
-        In serialization, 1) will serialize the annotation sorted list as a
-        normal list; 2) will not serialize the indexes
+        In serialization,
+        1) will serialize the annotation sorted list as a normal list;
+        2) will not serialize the indexes
         """
         state = self.__dict__.copy()
         state['annotations'] = list(state['annotations'])
@@ -76,8 +78,9 @@ class DataPack(BasePack[Entry]):
 
     def __setstate__(self, state):
         """
-        In deserialization, we 1) transform the annotation list back to a
-        sorted list; 2) initialize the indexes.
+        In deserialization, we
+        1) transform the annotation list back to a sorted list;
+        2) initialize the indexes.
         """
         self.__dict__.update(state)
         self.annotations = SortedList(self.annotations)

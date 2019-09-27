@@ -9,7 +9,7 @@ import jsonpickle
 from forte.common.types import EntryType
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.top import (Entry, BaseGroup, BaseLink)
+from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 
 logger = logging.getLogger(__name__)
 

@@ -25,14 +25,18 @@ class CoNLLNERTrainer(BaseTrainer):
         super().__init__()
 
         self.model = None
+
         self.word_alphabet = None
         self.char_alphabet = None
         self.ner_alphabet = None
+
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
+
         self.device = None
         self.optim, self.trained_epochs = None, None
+
         self.ontology = base_ontology
         self.resource: Optional[Resources] = None
 
@@ -44,17 +48,17 @@ class CoNLLNERTrainer(BaseTrainer):
 
     def initialize(self, resource: Resources, configs: HParams):
 
-        self.resource = resource
+        # self.resource = resource
         # This reference is for saving the checkpoints
 
         self.word_alphabet = resource.get("word_alphabet")
         self.char_alphabet = resource.get("char_alphabet")
         self.ner_alphabet = resource.get("ner_alphabet")
 
-        self.config_model = resource.get("config_model")
-        self.config_data = resource.get("config_data")
-
         word_embedding_table = resource.get('word_embedding_table')
+
+        self.config_model = configs.config_model
+        self.config_data = configs.config_data
 
         self.model = resource.resources["model"]
         self.optim = resource.resources["optim"]
@@ -225,7 +229,6 @@ class CoNLLNERTrainer(BaseTrainer):
         ):
             self.__past_dev_result = eval_result
             logger.info("validation f1 increased, saving model")
-            self.save_resources()
             # self.save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
@@ -253,12 +256,9 @@ class CoNLLNERTrainer(BaseTrainer):
             acc, prec, rec, f1, best_epoch,
         )
 
-    def finish(self):
-        self.save_resources()
-        # self.save_model_checkpoint()
-
-    def save_resources(self):
-        self.resource.save()
+    def finish(self, resources):
+        # resources.save
+        self.save_model_checkpoint()
 
     def save_model_checkpoint(self):
         states = {

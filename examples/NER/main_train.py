@@ -16,11 +16,9 @@ def main():
     config_data = yaml.safe_load(open("config_data.yml", "r"))
     config_model = yaml.safe_load(open("config_model.yml", "r"))
 
-    all_config = {}
-    all_config.update(config_data)
-    all_config.update(config_model)
-
-    config = HParams(all_config, default_hparams=None)
+    config = HParams({}, default_hparams=None)
+    config.add_hparam('config_data', config_data)
+    config.add_hparam('config_model', config_model)
 
     reader = CoNLL03Reader(lazy=False)
 
