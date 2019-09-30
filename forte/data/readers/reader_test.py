@@ -18,12 +18,15 @@ from forte.processors.dummy_pack_processor import DummyPackProcessor
 class OntonotesReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "examples/ontonotes_sample_dataset/00"
+        self.dataset_path = "examples/data_samples/ontonotes/00"
 
         self.nlp = Pipeline()
         self.nlp.set_ontology(relation_ontology)
 
         self.nlp.set_reader(OntonotesReader())
+        self.nlp.add_processor(DummyPackProcessor())
+
+        self.nlp.initialize()
 
     def test_process_next(self):
         doc_exists = False
@@ -43,14 +46,16 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "examples/"
+        self.dataset_path = "examples/data_samples/conll03"
 
         self.nlp = Pipeline()
         self.nlp.set_ontology(conll03_ontology)
 
         self.nlp.set_reader(CoNLL03Reader())
-        self.processor = DummyPackProcessor()
-        self.nlp.add_processor(self.processor)
+        self.nlp.add_processor(DummyPackProcessor())
+        self.nlp.add_processor(DummyPackProcessor())
+
+        self.nlp.initialize()
 
     def test_process_next(self):
         doc_exists = False

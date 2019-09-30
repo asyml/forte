@@ -22,8 +22,8 @@ class ProdigyReader(PackReader):
             ``iter()`` returns a list.
     """
 
-    def __init__(self, lazy: bool = False):
-        super().__init__(lazy)
+    def __init__(self):
+        super().__init__()
         self.define_output_info()
 
     def define_output_info(self):

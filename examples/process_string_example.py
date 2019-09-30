@@ -41,7 +41,7 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
     )
     pl.add_processor(SRLPredictor(), srl_configs)
 
-    pl.initialize_processors()
+    pl.initialize()
 
     text = (
         "The plain green Norway spruce is displayed in the gallery's foyer. "
@@ -97,7 +97,7 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
                      config=output_config)
     pl.set_ontology(stanford)
 
-    pl.initialize_processors()
+    pl.initialize()
 
     pack = pl.process(text)
     for sentence in pack.get(stanford.Sentence):

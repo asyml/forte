@@ -2,7 +2,7 @@
 The base class of processors
 """
 from abc import abstractmethod, ABC
-from typing import Generic
+from typing import Optional
 
 from texar.torch import HParams
 
@@ -23,7 +23,7 @@ __all__ = [
 ProcessInfo = DataRequest
 
 
-class BaseProcessor(PipeComponent, Generic[PackType], ABC):
+class BaseProcessor(PipeComponent[PackType], ABC):
     """
     The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
@@ -35,10 +35,11 @@ class BaseProcessor(PipeComponent, Generic[PackType], ABC):
         self.input_info: ProcessInfo = {}
         self.output_info: ProcessInfo = {}
         self.selector = DummySelector()
+        self.__is_last_step = False
 
     # TODO: what if we have config-free processors? It might be cumbersome to
     #  always require a config.
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
         """
         The pipeline will call the initialize method at the start of a
         processing. The processor will be initialized with ``configs``,
@@ -78,13 +79,18 @@ class BaseProcessor(PipeComponent, Generic[PackType], ABC):
         """
         raise NotImplementedError
 
+    def set_as_last(self):
+        self.__is_last_step = True
+
     def process(self, input_pack: PackType):
         # Obtain the control of the DataPack.
         input_pack.enter_processing(self.component_name)
         # Do the actual processing.
         self._process(input_pack)
-        # Record all the fields.
-        record_fields(self.output_info, self.component_name, input_pack)
+
+        if not input_pack.is_poison():
+            record_fields(self.output_info, self.component_name, input_pack)
+
         # Mark that the pack is processed by the processor.
         input_pack.meta.process_state = self.component_name
         # Release the control of the DataPack.

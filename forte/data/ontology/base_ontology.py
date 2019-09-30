@@ -48,8 +48,8 @@ class PredicateMention(Annotation):
 
 
 class PredicateLink(Link):
-    parent_type = PredicateMention
-    child_type = PredicateArgument
+    ParentType = PredicateMention
+    ChildType = PredicateArgument
 
     def __init__(self,
                  pack: DataPack,
@@ -64,7 +64,7 @@ class CoreferenceMention(Annotation):
 
 
 class CoreferenceGroup(Group):
-    member_type = CoreferenceMention
+    MemberType = CoreferenceMention
 
     def __init__(self,
                  pack: DataPack,

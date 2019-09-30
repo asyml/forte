@@ -10,7 +10,7 @@ from typing import (
 
 from forte.data.base import Indexable
 from forte.data.container import EntryContainer
-from forte.utils import get_class_name, get_full_module_name
+from forte.utils import get_full_module_name
 from forte.common.const import default_component
 
 
@@ -75,13 +75,25 @@ class Entry(Indexable):
         return self.__pack
 
     def set_fields(self, **kwargs):
-        """Set other entry fields"""
+        """
+        Set the entry fields from the kwargs.
+        Args:
+            **kwargs: A set of key word arguments used to set the value. A key
+            must be correspond to a field name of this entry, and a value must
+            match the field's type.
+
+        Returns:
+
+        """
         for field_name, field_value in kwargs.items():
-            if not hasattr(self, field_name):
-                raise AttributeError(
-                    f"class {get_class_name(self)} "
-                    f"has no attribute {field_name}"
-                )
+            # TODO: This is wrong, absense of attribute is treated the same as
+            #  the attribute being None. We need to really identify
+            #  whether the field exists to disallow users adding unknown fields.
+            # if not hasattr(self, field_name):
+            #     raise AttributeError(
+            #         f"class {get_full_module_name(self)} "
+            #         f"has no attribute {field_name}"
+            #     )
             setattr(self, field_name, field_value)
             self.__modified_fields.add(field_name)
 
@@ -192,7 +204,7 @@ class BaseGroup(Entry, Generic[EntryType]):
     This is the BaseGroup interface. Specific member constraints are defined
     in the inherited classes.
     """
-    member_type: Type[EntryType]
+    MemberType: Type[EntryType]
 
     def __init__(
             self,
@@ -228,10 +240,10 @@ class BaseGroup(Entry, Generic[EntryType]):
 
         """
         for member in members:
-            if not isinstance(member, self.member_type):
+            if not isinstance(member, self.MemberType):
                 raise TypeError(
                     f"The members of {type(self)} should be "
-                    f"instances of {self.member_type}, but get {type(member)}")
+                    f"instances of {self.MemberType}, but get {type(member)}")
 
             self._members.add(member.tid)
 

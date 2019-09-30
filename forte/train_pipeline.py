@@ -1,8 +1,9 @@
 import logging
-from typing import Optional, List
+from typing import Optional, List, Iterator
 
 from texar.torch import HParams
 
+from forte.data import PackType
 from forte.pipeline import Pipeline
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
@@ -58,13 +59,13 @@ class TrainPipeline:
         logging.info("The pipeline is training")
         self.train()
 
-    def prepare(self, *args, **kwargs):
+    def prepare(self, *args, **kwargs) -> Iterator[PackType]:
         prepare_pl = Pipeline()
         prepare_pl.set_reader(self.train_reader)
         for p in self.preprocessors:
             prepare_pl.add_processor(p)
 
-        yield from prepare_pl.process_dataset(args, kwargs)
+        yield from prepare_pl.process_dataset(args, kwargs)  # type: ignore
 
     def train(self):
         pack_count = 0

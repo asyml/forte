@@ -80,7 +80,7 @@ def main(wiki_dump_path: str, output_path: str):
 
     pl.add_processor(WikiArticleWriter(), config=config)
 
-    pl.initialize_processors()
+    pl.initialize()
     pl.run(wiki_dump_path)
 
 

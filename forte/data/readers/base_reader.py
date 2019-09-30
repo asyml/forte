@@ -5,8 +5,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import (Iterator, Optional, Dict, Type, List, Union, Generic,
-                    Any)
+from typing import (Iterator, Optional, Dict, Type, List, Union, Any)
 
 import jsonpickle
 
@@ -30,21 +29,18 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class BaseReader(PipeComponent, Generic[PackType], ABC):
+class BaseReader(PipeComponent[PackType], ABC):
     """
         The basic data reader class.
         To be inherited by all data readers.
     """
 
     def __init__(self,
-                 lazy: bool = True,
                  from_cache: bool = False,
                  cache_directory: Optional[Path] = None,
                  append_to_cache: bool = False):
         """
         Args:
-        lazy (bool): If lazy is true, will use a Iterator to iterate
-            collections. If False, the reader will use a list of collections
         from_cache (bool, optional): Decide whether to read from cache
             if cache file exists. By default (``True``), the reader will
             try to read an datapack from the first line of the caching file.
@@ -62,7 +58,6 @@ class BaseReader(PipeComponent, Generic[PackType], ABC):
             cache the datapack append to end of the caching file.
     """
 
-        self.lazy = lazy
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self._ontology = base_ontology
@@ -175,9 +170,7 @@ class BaseReader(PipeComponent, Generic[PackType], ABC):
                     )
                 yield pack
 
-    def iter(self, *args, **kwargs) -> Union[
-        Iterator[PackType], List[PackType]
-    ]:
+    def iter(self, *args, **kwargs) -> Iterator[PackType]:
         """
         An iterator over the entire dataset, giving all Packs processed
          as list or Iterator depending on `lazy`, giving all the Packs read
@@ -186,15 +179,9 @@ class BaseReader(PipeComponent, Generic[PackType], ABC):
         :param kwargs: One or more input data sources
         for example, most DataPack readers
         accept `data_source` as file/folder path
-        :return: Either Iterator or List depending on setting of `lazy`
+        :return: Iterator of DataPacks.
         """
-        if self.lazy:
-            return self._lazy_iter(*args, **kwargs)
-
-        else:
-            datapacks: List[PackType] = [p for p in
-                                         self._lazy_iter(*args, **kwargs)]
-            return datapacks
+        yield from self._lazy_iter(*args, **kwargs)
 
     def cache_data(self,
                    cache_directory: Path,

@@ -176,7 +176,7 @@ class Group(BaseGroup[Entry]):
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
-    member_type: Type[Entry] = Entry
+    MemberType: Type[Entry] = Entry
 
 
 class SubEntry(Entry):

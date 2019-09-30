@@ -1,11 +1,10 @@
 from collections import Counter
-from typing import Any, Counter as CounterType, Dict, Iterator, List, Optional
 
 import numpy as np
 import torch
 from texar.torch import HParams
 
-from forte import Resources
+from forte.common import Resources
 from forte.data import DataPack
 from forte.data.ontology import base_ontology
 from forte.processors import ProcessInfo, Alphabet
@@ -77,7 +76,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
 
     def _process(self, data_pack: DataPack):
         """
-        :param input_pack: The ner data to create vocabulary with
+        :param data_pack: The ner data to create vocabulary with
         :return:
             A list of five counters for different ner_data features, for words,
             characters, POS tags, chunk IDs and Name Entity Recognition

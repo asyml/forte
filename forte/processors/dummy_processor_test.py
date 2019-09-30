@@ -5,25 +5,33 @@ import os
 import unittest
 
 from forte.data.readers.ontonotes_reader import OntonotesReader
-from forte.processors.dummy_processor import DummyRelationExtractor
+from forte.pipeline import Pipeline
+from forte.processors.dummy_batch_processor import DummyRelationExtractor
+from forte.data.ontology import relation_ontology
 
 
 class DummyProcessorTest(unittest.TestCase):
 
     def setUp(self) -> None:
+        self.nlp = Pipeline()
+        self.nlp.set_ontology(relation_ontology)
         self.reader = OntonotesReader()
-        data_path = os.path.join("examples/abc_0059.gold_conll")
-        self.data_pack = self.reader.parse_pack(data_path)
 
-        self.processor = DummyRelationExtractor()
-        self.processor.set_input_info()
-        self.processor.set_output_info()
+        self.data_path = "examples/data_samples/ontonotes/00/"
+
+        self.nlp.set_reader(OntonotesReader())
+        self.nlp.add_processor(DummyRelationExtractor())
+        self.nlp.initialize()
 
     def test_processor(self):
-        # case 1: process ner_data
-        link_num = len(self.data_pack.links)
-        self.processor.process(self.data_pack)
-        self.assertEqual(link_num + 11, len(self.data_pack.links))
+        pack = self.nlp.process(self.data_path)
+
+        relations = list(pack.get_entries(relation_ontology.RelationLink))
+
+        assert (len(relations) > 0)
+
+        for relation in relations:
+            assert (relation.get_field("rel_type") == "dummy_relation")
 
 
 if __name__ == '__main__':

@@ -31,7 +31,8 @@ class ProcessingBatcher(Generic[PackType]):
 
         self.cross_pack: bool = cross_pack
 
-    def initialize(self, config: HParams):
+    def initialize(  # pylint: disable=unused-argument
+            self, config: Optional[HParams]):
         """
         The implementation should initialize the batcher and setup the
         internal states of this batcher.
@@ -40,8 +41,6 @@ class ProcessingBatcher(Generic[PackType]):
         Returns:
 
         """
-        self.cross_pack = config.cross_pack
-
         self.current_batch.clear()
         self.data_pack_pool.clear()
         self.current_batch_sources.clear()
@@ -123,7 +122,9 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         self.batch_size = default_config.batch_size
 
     def initialize(self, config: HParams):
-        self.batch_size = config.batch_size
+        config_ = HParams(config, self.default_hparams())
+        self.batch_size = config_.batch_size
+
         self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
@@ -166,7 +167,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     @staticmethod
     def default_hparams() -> Dict:
         return {
-            'batch_size': 1,
+            'batch_size': 5,
         }
 
 

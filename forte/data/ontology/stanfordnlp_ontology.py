@@ -32,6 +32,9 @@ class Document(ontology.Document):
 
 
 class Dependency(Link):  # pylint: disable=too-many-ancestors
+    ParentType = Token
+    ChildType = Token
+
     def __init__(self, pack: DataPack, parent: Token, child: Token):
         super().__init__(pack, parent, child)
         self.rel_type: str

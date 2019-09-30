@@ -298,7 +298,7 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
     def view(self):
         return copy.deepcopy(self)
 
-    def record_fields(self, fields: List[str], entry_type: Type[Entry],
+    def record_fields(self, fields: List[str], entry_type: Type[EntryType],
                       component: str):
         for pack in self._packs:
             pack.record_fields(fields, entry_type, component)

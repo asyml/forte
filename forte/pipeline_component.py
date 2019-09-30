@@ -1,9 +1,12 @@
+from typing import Generic
+
 from texar.torch import HParams
 
 from forte.common import Resources
+from forte.data.base_pack import PackType
 
 
-class PipeComponent:
+class PipeComponent(Generic[PackType]):
     def initialize(self, resource: Resources, configs: HParams):
         """
         The pipeline will call the initialize method at the start of a
@@ -16,8 +19,7 @@ class PipeComponent:
         shareable resources here, for example, the vocabulary.
         :return:
         """
-
-        raise NotImplementedError("This component has not been implemented")
+        pass
 
     def finish(self, resource: Resources):
         """

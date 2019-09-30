@@ -36,10 +36,10 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
         super().initialize(resource, configs)
         # Initialize the batcher.
-        self.batcher.initialize(configs.batcher)
+        self.batcher.initialize(configs)
 
     @abstractmethod
     def define_context(self) -> Type[Annotation]:

@@ -1,9 +1,9 @@
 """
-This processor can be used with base_ontology as a blank processor
+This file contains examples of PackProcessor implementations, the processors
+here are useful as placeholders and test cases.
 """
 
 from forte.data import DataPack
-from forte.data.ontology import base_ontology
 from forte.processors.base import PackProcessor, ProcessInfo
 
 __all__ = [
@@ -12,10 +12,8 @@ __all__ = [
 
 
 class DummyPackProcessor(PackProcessor):
-
-    def __init__(self):
+    def __init__(self):  # pylint: disable=useless-super-delegation
         super().__init__()
-        self._ontology = base_ontology
 
     def _define_input_info(self) -> ProcessInfo:
         pass

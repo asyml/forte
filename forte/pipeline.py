@@ -64,7 +64,7 @@ class Pipeline(BasePipeline[DataPack]):
                                             default_processor_hparams)
                 self.add_processor(p, processor_hparams)
 
-            self.initialize_processors()
+            self.initialize()
 
         if "Ontology" in configs.keys() and configs["Ontology"] is not None:
             module_path = ["__main__",

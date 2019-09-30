@@ -1,3 +1,9 @@
+"""
+This file contains examples of batch processor implementations, which basically
+create entries arbitrarily. The processors here are useful as placeholders and
+test cases.
+
+"""
 from typing import Dict, Optional
 
 import numpy as np
@@ -62,21 +68,21 @@ class DummyRelationExtractor(BatchProcessor):
         for tid, entity in zip(entities_tid, entities_span):
             parent = []
             child = []
-            ner_type = []
+            rel_type = []
 
             entity_num = len(entity)
             for i in range(entity_num):
                 for j in range(i + 1, entity_num):
                     parent.append(tid[i])
                     child.append(tid[j])
-                    ner_type.append("dummy_relation")
+                    rel_type.append("dummy_relation")
 
             pred["RelationLink"]["parent.tid"].append(
                 np.array(parent))
             pred["RelationLink"]["child.tid"].append(
                 np.array(child))
             pred["RelationLink"]["rel_type"].append(
-                np.array(ner_type))
+                np.array(rel_type))
 
         return pred
 

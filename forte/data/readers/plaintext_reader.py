@@ -15,18 +15,12 @@ __all__ = [
 
 
 class PlainTextReader(PackReader):
-    """:class:`PlainTextReader` is designed to read in plain text dataset.
-
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
+    """
+    :class:`PlainTextReader` is designed to read in plain text dataset.
     """
 
-    def __init__(self, lazy: bool = True):
-        super().__init__(lazy)
+    def __init__(self):
+        super().__init__()
         self._ontology = base_ontology
         self.define_output_info()
 
