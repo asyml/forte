@@ -9,7 +9,7 @@ import jsonpickle
 from forte.common.types import EntryType
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry, BaseLink, BaseGroup
+from forte.data.ontology.core import Entry, LinkType, GroupType
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class InternalMeta:
         ]
 
 
-class BasePack(EntryContainer):
+class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     """
     The base class of data packages. Currently we support two types of data
     packages, DataPack and MultiPack.
@@ -68,8 +68,8 @@ class BasePack(EntryContainer):
     def __init__(self, doc_id: Optional[str] = None):
         super().__init__()
 
-        self.links: List[BaseLink] = []
-        self.groups: List[BaseGroup] = []
+        self.links: List[LinkType] = []
+        self.groups: List[GroupType] = []
 
         self.meta: BaseMeta = BaseMeta(doc_id)
         self.index: BaseIndex = BaseIndex()

@@ -256,7 +256,7 @@ class CoNLLNERTrainer(BaseTrainer):
             acc, prec, rec, f1, best_epoch,
         )
 
-    def finish(self, resources):
+    def finish(self, resources):  # pylint: disable=unused-argument
         # resources.save
         self.save_model_checkpoint()
 

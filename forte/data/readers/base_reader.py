@@ -15,7 +15,8 @@ from forte.common.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology import Entry, base_ontology
+from forte.data.ontology import base_ontology
+from forte.data.ontology.core import Entry
 from forte.data.ontology.onto_utils import record_fields
 from forte.pipeline_component import PipeComponent
 from forte.utils import get_full_module_name

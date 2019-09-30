@@ -4,44 +4,14 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
-from functools import total_ordering
 from typing import (
-    Iterable, Optional, Set, Type, Hashable
-)
+    Iterable, Optional, Set, Type, Hashable,
+    TypeVar, Generic)
 
+from forte.data.base import Indexable
 from forte.data.container import EntryContainer
 from forte.utils import get_class_name, get_full_module_name
-
-
-@total_ordering
-class Span:
-    """
-    A class recording the span of annotations. :class:`Span` objects could
-    be totally ordered according to their :attr:`begin` as the first sort key
-    and :attr:`end` as the second sort key.
-    """
-
-    def __init__(self, begin: int, end: int):
-        self.begin = begin
-        self.end = end
-
-    def __lt__(self, other):
-        if self.begin == other.begin:
-            return self.end < other.end
-        return self.begin < other.begin
-
-    def __eq__(self, other):
-        return (self.begin, self.end) == (other.begin, other.end)
-
-
-class Indexable(ABC):
-    """
-    A class that implement this would be indexable within the pack it lives in.
-    """
-
-    @property
-    def index_key(self) -> Hashable:
-        raise NotImplementedError
+from forte.common.const import default_component
 
 
 class Entry(Indexable):
@@ -59,7 +29,7 @@ class Entry(Indexable):
 
         self._tid: str
 
-        self.__component: str
+        self.__component: str = default_component
         self.__modified_fields: Set[str] = set()
 
         # The Entry should have a reference to the data pack, and the data pack
@@ -115,6 +85,9 @@ class Entry(Indexable):
             setattr(self, field_name, field_value)
             self.__modified_fields.add(field_name)
 
+    def get_field(self, field_name):
+        return getattr(self, field_name)
+
     def __eq__(self, other):
         if other is None:
             return False
@@ -127,6 +100,9 @@ class Entry(Indexable):
     @property
     def index_key(self) -> Hashable:
         return self._tid
+
+
+EntryType = TypeVar("EntryType", bound=Entry)
 
 
 class BaseLink(Entry, ABC):
@@ -207,7 +183,7 @@ class BaseLink(Entry, ABC):
         return self.tid
 
 
-class BaseGroup(Entry):
+class BaseGroup(Entry, Generic[EntryType]):
     """
     Group is an entry that represent a group of other entries. For example,
     a "coreference group" is a group of coreferential entities. Each group will
@@ -216,12 +192,12 @@ class BaseGroup(Entry):
     This is the BaseGroup interface. Specific member constraints are defined
     in the inherited classes.
     """
-    member_type: Type[Entry]
+    member_type: Type[EntryType]
 
     def __init__(
             self,
             pack: EntryContainer,
-            members: Optional[Set[Entry]] = None,
+            members: Optional[Set[EntryType]] = None,
     ):
         super().__init__(pack)
 
@@ -230,7 +206,7 @@ class BaseGroup(Entry):
         if members is not None:
             self.add_members(members)
 
-    def add_member(self, member: Entry):
+    def add_member(self, member: EntryType):
         """
         Add one entry to the group.
         Args:
@@ -241,7 +217,7 @@ class BaseGroup(Entry):
         """
         self.add_members([member])
 
-    def add_members(self, members: Iterable[Entry]):
+    def add_members(self, members: Iterable[EntryType]):
         """
         Add members to the group.
 
@@ -295,3 +271,7 @@ class BaseGroup(Entry):
     @property
     def index_key(self) -> str:
         return self.tid
+
+
+GroupType = TypeVar("GroupType", bound=BaseGroup)
+LinkType = TypeVar('LinkType', bound=BaseLink)

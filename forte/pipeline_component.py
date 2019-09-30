@@ -33,4 +33,4 @@ class PipeComponent:
         Returns:
 
         """
-        raise NotImplementedError("This component has not been implemented")
+        pass

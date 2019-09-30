@@ -5,6 +5,7 @@ import numpy as np
 from forte.data import DataPack
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology import relation_ontology
+from forte.data.ontology.relation_ontology import EntityMention
 from forte.processors.base import BatchProcessor, ProcessInfo
 
 __all__ = [
@@ -88,10 +89,10 @@ class DummyRelationExtractor(BatchProcessor):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
                 link = self._ontology.RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
-                parent = data_pack.get_entry(
+                parent: EntityMention = data_pack.get_entry(
                     output_dict["RelationLink"]["parent.tid"][i][j])
                 link.set_parent(parent)
-                child = data_pack.get_entry(
+                child: EntityMention = data_pack.get_entry(
                     output_dict["RelationLink"]["child.tid"][i][j])
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)

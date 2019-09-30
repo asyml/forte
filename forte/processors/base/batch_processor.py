@@ -157,8 +157,11 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
         for entry_type in self.input_info.keys():
             if input_pack.index.coverage_index(self.context_type,
                                                entry_type) is None:
-                input_pack.index.build_coverage_index(self.context_type,
-                                                      entry_type)
+                input_pack.index.build_coverage_index(
+                    input_pack,
+                    self.context_type,
+                    entry_type
+                )
 
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):

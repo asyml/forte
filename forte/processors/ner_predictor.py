@@ -10,7 +10,7 @@ from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.datasets.conll import conll_utils
-from forte.data.ontology import base_ontology, conll03_ontology
+from forte.data.ontology import conll03_ontology as conll
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
@@ -30,7 +30,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         self.train_instances_cache = []
 
-        self._ontology = conll03_ontology
+        self._ontology = conll
         self.define_context()
 
         self.batch_size = 3
@@ -133,23 +133,26 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             # an instance
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid = output_dict["Token"]["tid"][i][j]
-                orig_token = data_pack.get_entry(tid)
-                ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
-                orig_token.ner_tag = ner_tag
+                orig_token: conll.Token = data_pack.get_entry(tid)
+                ner_tag: str = output_dict["Token"]["ner_tag"][i][j]
+
+                orig_token.set_fields(ner_tag=ner_tag)
+
                 token = orig_token
-                if token.ner_tag[0] == "B":
+                token_ner = token.get_field("ner_tag")
+                if token_ner[0] == "B":
                     current_entity_mention = (
                         token.span.begin,
-                        token.ner_tag[2:],
+                        token_ner[2:],
                     )
-                elif token.ner_tag[0] == "I":
+                elif token_ner[0] == "I":
                     continue
-                elif token.ner_tag[0] == "O":
+                elif token_ner[0] == "O":
                     continue
 
-                elif token.ner_tag[0] == "E":
-                    if token.ner_tag[2:] != current_entity_mention[1]:
+                elif token_ner[0] == "E":
+                    if token_ner[2:] != current_entity_mention[1]:
                         continue
 
                     kwargs_i = {"ner_type": current_entity_mention[1]}
@@ -160,10 +163,10 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                     )
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
-                elif token.ner_tag[0] == "S":
+                elif token_ner[0] == "S":
                     current_entity_mention = (
                         token.span.begin,
-                        token.ner_tag[2:],
+                        token_ner[2:],
                     )
                     kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = self._ontology.EntityMention(
@@ -238,7 +241,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config: Optional[HParams] = None):
         super().__init__(config)
-        self._ontology = conll03_ontology
+        self._ontology = conll
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
@@ -248,19 +251,19 @@ class CoNLLNEREvaluator(Evaluator):
         pred_getdata_args = {
             "context_type": "sentence",
             "requests": {
-                base_ontology.Token: {
+                conll.Token: {
                     "fields": ["ner_tag"],
                 },
-                base_ontology.Sentence: [],  # span by default
+                conll.Sentence: [],  # span by default
             },
         }
 
         refer_getdata_args = {
             "context_type": "sentence",
             "requests": {
-                base_ontology.Token: {
+                conll.Token: {
                     "fields": ["chunk_tag", "pos_tag", "ner_tag"]},
-                base_ontology.Sentence: [],  # span by default
+                conll.Sentence: [],  # span by default
             }
         }
 

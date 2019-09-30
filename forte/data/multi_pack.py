@@ -11,6 +11,7 @@ from forte.data.ontology.top import (
     MultiPackEntries
 )
 from forte.data.ontology.core import Entry
+from forte.data.base import Span
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class MultiPackMeta(BaseMeta):
         super().__init__()
 
 
-class MultiPack(BasePack):
+class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
     """
     A :class:`MultiPack' contains multiple DataPacks and a
     collection of cross-pack entries (annotations, links, and groups)
@@ -62,6 +63,11 @@ class MultiPack(BasePack):
 
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
+
+    def get_span_text(self, span: Span):  # pylint: disable=no-self-use
+        raise ValueError(
+            "MultiPack objects do not contain text, please refer to a "
+            "specific data pack to get text.")
 
     def add_pack(self, pack: DataPack, pack_name: Optional[str] = None):
         if pack_name in self.__name_index:

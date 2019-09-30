@@ -3,7 +3,8 @@ from typing import (Optional, Set, Tuple, Type)
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
-from forte.data.ontology.core import Entry, Span, BaseLink, BaseGroup
+from forte.data.ontology.core import Entry, BaseLink, BaseGroup
+from forte.data.base import Span
 
 __all__ = [
     "Annotation",
@@ -60,7 +61,7 @@ class Annotation(Entry):
         if self.pack is None:
             raise ValueError(f"Cannot get text because annotation is not "
                              f"attached to any data pack.")
-        return self.pack.text[self.span.begin: self.span.end]
+        return self.pack.get_span_text(self.span)
 
     @property
     def index_key(self) -> str:
@@ -150,6 +151,8 @@ class Link(BaseLink):
         if self.pack is None:
             raise ValueError(f"Cannot get parent because link is not "
                              f"attached to any data pack.")
+        if self._parent is None:
+            raise ValueError(f"The child of this entry is not set.")
         return self.pack.get_entry(self._parent)
 
     def get_child(self) -> Entry:
@@ -162,10 +165,12 @@ class Link(BaseLink):
         if self.pack is None:
             raise ValueError(f"Cannot get child because link is not"
                              f" attached to any data pack.")
+        if self._child is None:
+            raise ValueError(f"The child of this entry is not set.")
         return self.pack.get_entry(self._child)
 
 
-class Group(BaseGroup):
+class Group(BaseGroup[Entry]):
     """
     Group is an entry that represent a group of other entries. For example,
     a "coreference group" is a group of coreferential entities. Each group will
@@ -315,7 +320,7 @@ class MultiPackLink(BaseLink):
         return SubEntry(self.pack, pack_idx, child_tid)
 
 
-class MultiPackGroup(BaseGroup):
+class MultiPackGroup(BaseGroup[SubEntry]):
     """
     Group type entries, such as "coreference group". Each group has a set
     of members.
@@ -325,7 +330,7 @@ class MultiPackGroup(BaseGroup):
             self,
             pack: EntryContainer,
             members: Optional[Set[SubEntry]],
-    ):
+    ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)
 
 
