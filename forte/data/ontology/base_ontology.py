@@ -78,8 +78,8 @@ class Dependency(Link):
     """
     Link between head token to dependent token meant for Dependency Parsing
     """
-    parent_type = Token
-    child_type = Token
+    ParentType = Token
+    ChildType = Token
 
     def __init__(self,
                  pack: DataPack,
