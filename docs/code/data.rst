@@ -134,11 +134,6 @@ Readers
 .. autoclass:: forte.data.readers.string_reader.StringReader
     :members:
 
-:hidden:`MonoFileReader`
-------------------------
-.. autoclass:: forte.data.readers.file_reader.MonoFileReader
-    :members:
-
 :hidden:`PlainTextReader`
 --------------------------
 .. autoclass:: forte.data.readers.plaintext_reader.PlainTextReader
@@ -157,21 +152,10 @@ Readers
 Batchers
 ==========
 
-:hidden:`Batcher`
-------------------------
-.. autoclass:: forte.data.batchers.Batcher
-    :members:
-
 :hidden:`ProcessingBatcher`
 ------------------------------
 .. autoclass:: forte.data.batchers.ProcessingBatcher
     :members:
-
-:hidden:`TexarBatcher`
-------------------------
-.. autoclass:: forte.data.batchers.TexarBatcher
-    :members:
-
 
 io_utils
 ==========

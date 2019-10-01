@@ -114,7 +114,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def is_poison(self) -> bool:
         """
-            See :meth:``get_poison``.
+        Indicate that this is a poison (a placeholder element that indicate
+        the end of the flow).
         Returns:
 
         """

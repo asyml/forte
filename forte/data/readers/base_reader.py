@@ -41,21 +41,21 @@ class BaseReader(PipeComponent[PackType], ABC):
                  append_to_cache: bool = False):
         """
         Args:
-        from_cache (bool, optional): Decide whether to read from cache
-            if cache file exists. By default (``True``), the reader will
-            try to read an datapack from the first line of the caching file.
-            If ``False``, the reader will only read from the original file
-            and use the cache file path only for output.
-        cache_file (str, optional): The path of the caching file. If
-            :attr:`cache_file_path` is ``None`` and
-            :attr:`self._cache_directory` is not ``None``, use the result
-            of :meth:`_get_cache_location_for_file_path`. If both
-            :attr:`cache_file_path` and :attr:`self._cache_directory`
-            are ``None``, will not read from or write to a caching file.
-        append_to_cache (bool, optional): Decide whether to append write
-            if cache file already exists.  By default (``False``), we
-            will overwrite the existing caching file. If ``True``, we will
-            cache the datapack append to end of the caching file.
+            from_cache (bool, optional): Decide whether to read from cache
+                if cache file exists. By default (``True``), the reader will
+                try to read an datapack from the first line of the caching file.
+                If ``False``, the reader will only read from the original file
+                and use the cache file path only for output.
+            cache_directory (str, optional): The path of the caching file. If
+                :attr:`cache_file_path` is ``None`` and
+                :attr:`self._cache_directory` is not ``None``, use the result
+                of :meth:`_get_cache_location_for_file_path`. If both
+                :attr:`cache_file_path` and :attr:`self._cache_directory`
+                are ``None``, will not read from or write to a caching file.
+            append_to_cache (bool, optional): Decide whether to append write
+                if cache file already exists.  By default (``False``), we
+                will overwrite the existing caching file. If ``True``, we will
+                cache the datapack append to end of the caching file.
     """
 
         self.from_cache = from_cache
@@ -174,13 +174,18 @@ class BaseReader(PipeComponent[PackType], ABC):
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:
         """
-        An iterator over the entire dataset, giving all Packs processed
+         An iterator over the entire dataset, giving all Packs processed
          as list or Iterator depending on `lazy`, giving all the Packs read
          from the data source(s). If not reading from cache,
          should call collect()
-        :param kwargs: One or more input data sources, for example, most
+
+        Args:
+            args: One or more input data sources, for example, most
         DataPack readers accept `data_source` as file/folder path
-        :return: Iterator of DataPacks.
+            kwargs: Iterator of DataPacks.
+
+        Returns:
+
         """
         yield from self._lazy_iter(*args, **kwargs)
 
@@ -188,7 +193,8 @@ class BaseReader(PipeComponent[PackType], ABC):
                    cache_directory: Path,
                    collection: Any,
                    pack: PackType):
-        """Specify the path to the cache directory.
+        """
+        Specify the path to the cache directory.
 
         After you call this method, the dataset reader will use this
         :attr:`cache_directory` to store a cache of :class:`BasePack` read
@@ -198,6 +204,15 @@ class BaseReader(PipeComponent[PackType], ABC):
         (using :func:`deserialize_instance`).  If the cache file does not
         exist, we will `create` it on our first pass through the data (using
         :func:`serialize_instance`).
+
+        Args:
+            cache_directory: The directory used to cache the data.
+            collection: The collection to be read as a DataPack, this collection
+            can be used here to create the cache key.
+            pack: The data pack to be cached.
+
+        Returns:
+
         """
         Path.mkdir(cache_directory, exist_ok=True)
         cache_filename = os.path.join(
