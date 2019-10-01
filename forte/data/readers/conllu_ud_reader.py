@@ -22,8 +22,8 @@ class ConllUDReader(PackReader):
     2.4 dataset.
     """
 
-    # pylint: disable=attribute-defined-outside-init
     def define_output_info(self):
+        # pylint: disable=no-self-use
         return {
             Document: [],
             Sentence: [],
@@ -33,14 +33,14 @@ class ConllUDReader(PackReader):
             UniversalDependency: ["type"]
         }
 
-    # pylint: disable=no-self-use
     def _cache_key_function(self, data_pack: Any) -> str:
+        # pylint: disable=no-self-use
         if data_pack.meta.doc_id is None:
             raise ValueError("data_pack does not have a document id")
         return data_pack.meta.doc_id
 
-    # pylint: disable = no-self-use, unused-argument
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
+        # pylint: disable = no-self-use, unused-argument
         """
         Iterator over conll files in the data_source
         :param args[0]: directory to the conllu files.
@@ -62,8 +62,8 @@ class ConllUDReader(PackReader):
                         yield doc_lines
                         doc_lines = []
 
-    # pylint: disable=no-self-use
     def parse_pack(self, doc_lines) -> DataPack:
+        # pylint: disable=no-self-use
         token_comp_fields = ["id", "form", "lemma", "universal_pos_tag",
                              "language_pos_tag", "features", "head", "label",
                              "enhanced_dependency_relations", "misc"]
