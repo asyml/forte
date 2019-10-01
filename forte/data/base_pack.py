@@ -96,17 +96,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 raise AttributeError(f"Meta has no attribute named {k}")
             setattr(self.meta, k, v)
 
-    @staticmethod
-    def get_poison():
-        """
-            A poison is an object that used denote the end of a data stream.
-            Internally, we use a special poison pack object to indicate there
-            is no more data to consume by downstream.
-        """
-        pack = BasePack('__poison__')
-        pack.set_as_poison()
-        return pack
-
     def set_as_poison(self):
         self.__poison = True
 

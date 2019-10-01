@@ -101,6 +101,17 @@ class DataPack(BasePack[Entry, Link, Group]):
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)
 
+    @staticmethod
+    def make_poison():
+        """
+            A poison is an object that used denote the end of a data stream.
+            Internally, we use a special poison pack object to indicate there
+            is no more data to consume by downstream.
+        """
+        pack = DataPack('__poison__')
+        pack.set_as_poison()
+        return pack
+
     def set_text(self,
                  text: str,
                  replace_func: Optional[

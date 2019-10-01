@@ -2,9 +2,9 @@ import logging
 import os
 from typing import Dict, List, Tuple
 
+import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
-import torch
 
 from forte.data.base import Span
 from forte.data.ontology.ontonotes_ontology import PredicateMention, \

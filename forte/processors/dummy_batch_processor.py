@@ -33,6 +33,7 @@ class DummyRelationExtractor(BatchProcessor):
         self.batcher = self.define_batcher()
 
     def define_batcher(self) -> ProcessingBatcher:
+        # pylint: disable=no-self-use
         return FixedSizeDataPackBatcher()
 
     def define_context(self):
