@@ -241,6 +241,9 @@ class PackReader(BaseReader[DataPack], ABC):
         A Pack Reader reads data into DataPacks.
     """
 
+    def __init__(self):
+        super().__init__()
+
     @property
     def pack_type(self):
         return DataPack

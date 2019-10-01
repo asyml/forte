@@ -63,6 +63,7 @@ class WikiArticleWriter(JsonPackWriter):
         )
 
     def finish(self, resource: Resources):
+        # pylint: disable=unused-argument
         self.article_index.close()
 
 
