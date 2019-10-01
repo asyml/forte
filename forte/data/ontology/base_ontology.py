@@ -82,7 +82,8 @@ class Dependency(Link):
     child_type = Token
 
     def __init__(self,
+                 pack: DataPack,
                  parent: Optional[Token] = None,
                  child: Optional[Token] = None):
-        super().__init__(parent, child)
+        super().__init__(pack, parent, child)
         self.dep_label = None

@@ -17,16 +17,11 @@ __all__ = [
 
 
 class ConllUDReader(PackReader):
-    """:class:`conllUReader` is designed to read in the Universal Dependencies
-    2.4 dataset.
-
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
     """
+    :class:`conllUReader` is designed to read in the Universal Dependencies
+    2.4 dataset.
+    """
+
     # pylint: disable=attribute-defined-outside-init
     def define_output_info(self):
         self.output_info = {
@@ -126,7 +121,7 @@ class ConllUDReader(PackReader):
                 word_end = doc_offset + len(word)
 
                 token: DependencyToken \
-                    = DependencyToken(word_begin, word_end)
+                    = DependencyToken(data_pack, word_begin, word_end)
                 kwargs = {key: token_comps[key]
                           for key in token_entry_fields}
 
@@ -160,8 +155,8 @@ class ConllUDReader(PackReader):
                             data_pack_: data_pack to which the
                             dependency is to be added
                         """
-                        dependency = UniversalDependency(dep_parent,
-                                                         dep_child)
+                        dependency = UniversalDependency(
+                            data_pack, dep_parent, dep_child)
                         dependency.dep_label = dep_label
                         dependency.type = dep_type
                         data_pack_.add_or_get_entry(dependency)
@@ -185,14 +180,14 @@ class ConllUDReader(PackReader):
                                            data_pack)
 
                 # add sentence
-                sent = Sentence(doc_sent_begin, doc_offset - 1)
+                sent = Sentence(data_pack, doc_sent_begin, doc_offset - 1)
                 data_pack.add_or_get_entry(sent)
 
                 doc_sent_begin = doc_offset
                 doc_num_sent += 1
 
         # add doc to data_pack
-        document = Document(0, len(doc_text))
+        document = Document(data_pack, 0, len(doc_text))
         data_pack.add_or_get_entry(document)
         data_pack.meta.doc_id = doc_id
         data_pack.set_text(doc_text.strip())
