@@ -27,7 +27,7 @@ class StringReader(PackReader):
         self.define_output_info()
 
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Document: [],
         }
 

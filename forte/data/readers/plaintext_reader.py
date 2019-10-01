@@ -22,7 +22,6 @@ class PlainTextReader(PackReader):
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-        self.define_output_info()
 
     # pylint: disable=no-self-use
     def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
@@ -38,7 +37,7 @@ class PlainTextReader(PackReader):
         return os.path.basename(text_file)
 
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Document: [],
         }
 

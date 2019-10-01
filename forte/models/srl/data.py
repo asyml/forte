@@ -2,9 +2,9 @@ import json
 from typing import List, NamedTuple, Tuple
 
 import numpy as np
-import texar.torch as tx
 import torch
 from mypy_extensions import TypedDict
+import texar.torch as tx
 
 
 class SRLSpan(NamedTuple):
@@ -36,7 +36,7 @@ class Example(TypedDict):
     srl: List[SRLSpan]
 
 
-class SRLSpanData(tx.data.DataBase[str, Example]):
+class SRLSpanData(tx.data.DatasetBase[str, Example]):
     def __init__(self, path: str, vocab: tx.data.Vocab, hparams):
         source = tx.data.TextLineDataSource(path)
         self._vocab = vocab

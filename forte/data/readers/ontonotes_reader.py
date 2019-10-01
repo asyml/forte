@@ -34,7 +34,7 @@ class OntonotesReader(PackReader):
         self.define_output_info()
 
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Document: [],
             self._ontology.Sentence: ["speaker", "part_id"],
             self._ontology.Token: ["sense", "pos_tag"],

@@ -23,10 +23,9 @@ class CoNLL03Reader(PackReader):
     def __init__(self):
         super().__init__()
         self._ontology = conll03_ontology
-        self.define_output_info()
 
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Document: [],
             self._ontology.Sentence: [],
             self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]

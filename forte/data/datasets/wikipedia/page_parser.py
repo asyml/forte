@@ -17,9 +17,9 @@ Options:
 import logging
 from typing import Iterable, Iterator, NamedTuple, Optional, Tuple
 
+import more_itertools
 import docopt
 import jsonable
-import more_itertools
 import mwtypes
 import mwxml
 from mwlinks.libs import utils

@@ -47,7 +47,8 @@ class WikiDumpReader(PackReader):
         pass
 
     def define_output_info(self):
-        self.output_info = {
+        # pylint: disable=no-self-use
+        return {
             wiki_ontology.WikiPage: ["body"],
             wiki_ontology.WikiBody: ["introduction", "sections"],
             wiki_ontology.WikiSection: [],

@@ -61,6 +61,7 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
     def subentry(self, pack_index: int, entry: Entry):
         return SubEntry(self, pack_index, entry.tid)
 
+    # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 

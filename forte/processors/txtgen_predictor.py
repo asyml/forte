@@ -58,9 +58,11 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         return output_info
 
     def define_context(self):
+        # pylint: disable=no-self-use
         self.context_type = self._ontology.Sentence
 
     def define_batcher(self) -> ProcessingBatcher:
+        # pylint: disable=no-self-use
         return FixedSizeMultiPackProcessingBatcher()
 
     def initialize(self, resource: Resources, configs: HParams):

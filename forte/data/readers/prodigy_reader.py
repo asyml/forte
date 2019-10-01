@@ -21,13 +21,9 @@ class ProdigyReader(PackReader):
             method reloads the dataset each time it's called. Otherwise,
             ``iter()`` returns a list.
     """
-
-    def __init__(self):
-        super().__init__()
-        self.define_output_info()
-
     def define_output_info(self):
-        self.output_info = {
+        # pylint: disable=no-self-use
+        return {
             Document: [],
             Token: [],
             EntityMention: ["ner_type"]

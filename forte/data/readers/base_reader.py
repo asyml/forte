@@ -61,9 +61,11 @@ class BaseReader(PipeComponent[PackType], ABC):
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self._ontology = base_ontology
-        self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
+
+        self.output_info: Dict[
+            Type[Entry], Union[List, Dict]] = self.define_output_info()
 
     @property
     def pack_type(self):
@@ -77,8 +79,8 @@ class BaseReader(PipeComponent[PackType], ABC):
         self.define_output_info()
 
     @abstractmethod
-    def define_output_info(self):
-        pass
+    def define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
+        return {}
 
     # TODO: This should not be in the reader class.
     @staticmethod
@@ -240,7 +242,6 @@ class PackReader(BaseReader[DataPack], ABC):
     """
         A Pack Reader reads data into DataPacks.
     """
-
     @property
     def pack_type(self):
         return DataPack
