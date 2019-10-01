@@ -122,7 +122,7 @@ class Alphabet:
 
     def save(self, output_directory, name=None):
         """
-        Save both alhpabet records to the given directory.
+        Save both alphabet records to the given directory.
 
         Args:
             output_directory: Directory to save model and weights.

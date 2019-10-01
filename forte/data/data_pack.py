@@ -777,7 +777,7 @@ class DataIndex(BaseIndex):
        (:attr:`link_index["child_index"]`)and parent
        (:attr:`link_index["parent_index"]`) nodes to links
     #. :attr:`group_index`, the index from group members to groups.
-    #. :attr:`_coverage_index`, the index that maps from an annotataion to
+    #. :attr:`_coverage_index`, the index that maps from an annotation to
        the entries it covers. :attr:`_coverage_index` is a dict of dict, where
        the key is a tuple of the outer entry type and the inner entry type.
        The outer entry type should be an annotation type. The value is a dict,
@@ -807,7 +807,7 @@ class DataIndex(BaseIndex):
             outer_type: Type[Annotation],
             inner_type: Type[EntryType]) -> Optional[Dict[str, Set[str]]]:
         """
-        Get the covrage index from ``outer_type`` to ``inner_type``.
+        Get the coverage index from ``outer_type`` to ``inner_type``.
 
         Args:
             outer_type (type): an annotation type.

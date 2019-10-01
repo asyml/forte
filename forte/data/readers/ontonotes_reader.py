@@ -51,8 +51,12 @@ class OntonotesReader(PackReader):
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
         """
         Iterator over *.gold_conll files in the data_source
-        :param conll_directory: path to the directory containing the files
-        :return: Iterator over files with gold_conll path
+
+        Args:
+            conll_directory:  path to the directory containing the files.
+
+        Returns: Iterator over files with gold_conll path.
+
         """
         return dataset_path_iterator(conll_directory, "gold_conll")
 

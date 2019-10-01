@@ -277,10 +277,13 @@ class CoNLLNERTrainer(BaseTrainer):
     def get_batch_tensor(self, data: List, device=None):
         """
 
-        :param data: A list of quintuple
-            (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids
-        :param device:
-        :return:
+        Args:
+            data: A list of tuple
+              (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
+            device: The device the tensor should be reside on.
+
+        Returns:
+
         """
         batch_size = len(data)
         batch_length = max([len(d[0]) for d in data])

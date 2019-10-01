@@ -131,7 +131,10 @@ def format_wiki_title(link):
     Normalize the link name of the link, such as replacing space, and first
     letter capitalization. See: https://en.wikipedia.org/wiki/Wikipedia:
     Naming_conventions_(capitalization)#Software_characteristics
-    :param link:
-    :return:
+    Args:
+        link: The wiki link to be normalized.
+
+    Returns:
+
     """
     return link.replace(" ", "_").capitalize()

@@ -85,13 +85,16 @@ class BiRecurrentConvCRF(nn.Module):
 
     def forward(self, input_word, input_char, target=None, mask=None, hx=None):
         """
-        :param input_word:
-        :param input_char:
-        :param target:
-        :param mask:
-        :param hx:
-        :return:
-            Return the loss value
+
+        Args:
+            input_word:
+            input_char:
+            target:
+            mask:
+            hx:
+
+        Returns: the loss value
+
         """
         output, _, mask, _ = self.encode(input_word, input_char, mask, hx)
 
@@ -103,14 +106,15 @@ class BiRecurrentConvCRF(nn.Module):
 
     def decode(self, input_word, input_char, mask=None, hx=None):
         """
+        Args:
+            input_word:
+            input_char:
+            mask:
+            hx:
 
-        :param input_word:
-        :param input_char:
-        :param mask:
-        :param hx:
-        :return:
+        Returns:
+
         """
-
         output, _, mask, _ = self.encode(
             input_word, input_char, mask=mask, hx=hx
         )
@@ -251,10 +255,14 @@ def recover_rnn_seq(seq, rev_order, hx=None, batch_first=False):
 
 def evaluate(output_file: str) -> Tuple[float, float, float, float]:
     """
-    :param output_file: The file to be evaluated
-    :return:
-        return the metrics evaluated by the conll03_eval.v2 script
+    Implements the Conll03 evaluation metric.
+
+    Args:
+        output_file: The file to be evaluated
+
+    Returns: the metrics evaluated by the conll03_eval.v2 script
         (accuracy, precision, recall, F1)
+
     """
     score_file = f"{output_file}.score"
     os.system("./conll03eval.v2 < %s > %s" % (output_file, score_file))
@@ -284,7 +292,8 @@ def get_logger(
     return logger
 
 
-def batch_size_fn(new: Tuple, count: int, size_so_far: int):  # pylint: disable=unused-argument
+def batch_size_fn(new: Tuple, count: int,
+                  size_so_far: int):  # pylint: disable=unused-argument
     if count == 1:
         batch_size_fn.max_length = 0
     batch_size_fn.max_length = max(batch_size_fn.max_length, len(new[0]))

@@ -220,7 +220,8 @@ class Group(BaseGroup[Entry]):
 
 class SubEntry(Entry):
     """
-    This is used to identify an Entry in one of the packs in the Multipack.
+    This is used to identify an Entry in one of the packs in the
+    :class:`Multipack`.
     For example, the sentence in one of the packs. A pack_index and an entry
     is needed to identify this.
 
@@ -259,9 +260,9 @@ class SubEntry(Entry):
 
 class MultiPackLink(BaseLink):
     """
-    The MultiPackLink are used to link entries in a MultiPack, which is designed
-    to support cross pack linking, this can support applications such as
-    sentence alignment and cross-document coreference. Each link should have
+    This is used to link entries in a :class:`MultiPack`, which is
+    designed to support cross pack linking, this can support applications such
+    as sentence alignment and cross-document coreference. Each link should have
     a parent node and a child node. Note that the nodes are SubEntry(s), thus
     have one additional index on which pack it comes from.
     """

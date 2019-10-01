@@ -7,14 +7,24 @@ Data
 Ontology
 ==========
 
+core
+----------
+.. autoclass:: forte.data.ontology.core.Entry
+    :members:
+
+.. autoclass:: forte.data.ontology.core.BaseLink
+    :members:
+
+.. autoclass:: forte.data.ontology.core.BaseGroup
+    :members:
+
+base
+----------
+.. autoclass:: forte.data.base.Span
+    :members:
+
 top
 ----------
-.. autoclass:: forte.data.ontology.top.Span
-    :members:
-
-.. autoclass:: forte.data.ontology.top.Entry
-    :members:
-
 .. autoclass:: forte.data.ontology.top.Annotation
     :members:
 
@@ -23,6 +33,16 @@ top
 
 .. autoclass:: forte.data.ontology.top.Group
     :members:
+
+.. autoclass:: forte.data.ontology.top.MultiPackGroup
+    :members:
+
+.. autoclass:: forte.data.ontology.top.MultiPackLink
+    :members:
+
+.. autoclass:: forte.data.ontology.top.SubEntry
+    :members:
+
 
 base_ontology
 ---------------

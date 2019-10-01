@@ -86,14 +86,14 @@ class BaseReader(PipeComponent[PackType], ABC):
     @staticmethod
     def serialize_instance(instance: PackType) -> str:
         """
-        Serializes a pack to a string.
+        Serialize a pack to a string.
         """
         return instance.serialize()
 
     @staticmethod
     def deserialize_instance(string: str) -> PackType:
         """
-        Deserializes an pack from a string.
+        Deserialize an pack from a string.
         """
         return jsonpickle.decode(string)
 
@@ -105,8 +105,13 @@ class BaseReader(PipeComponent[PackType], ABC):
         needed to construct or locate a data pack in cache.
         For example: `data_source` can be a kwarg which is the path to a file
                      that a reader can take to read and parse a file.
-        :param: One of more data sources
-        :return Iterator[Any]: Implementation should yield a collection
+
+        Args:
+            args: Specify the data source.
+            kwargs: Specify the data source.
+
+        Returns: Iterator of collections that are sufficient to create one pack.
+
         """
         raise NotImplementedError
 
@@ -114,18 +119,25 @@ class BaseReader(PipeComponent[PackType], ABC):
     def parse_pack(self, collection: Any) -> PackType:
         """
         Gives an iterator of Packs parsed from a collection
-        :param collection: Object that can be parsed into a Pack
-        :return Iterator[PackType]: Iterator of Packs
+
+        Args:
+            collection: Object that can be parsed into a Pack
+
+        Returns: Iterator[PackType]: Iterator of Packs
+
         """
         raise NotImplementedError
 
     @abstractmethod
     def _cache_key_function(self, collection: Any) -> str:
         """
-        Computes the cache key based on the type of data
-        :param collection:  Any object that provides information
+        Computes the cache key based on the type of data.
+
+        Args:
+            collection: Any object that provides information
          to identify the name and location of the cache file
-        :return: str that specifies the path to cache file
+
+        Returns:
         """
         raise NotImplementedError
 
@@ -137,16 +149,24 @@ class BaseReader(PipeComponent[PackType], ABC):
         replacement operations in the form of a list of (span, str)
         pairs, where the content in the span will be replaced by the
         corresponding str.
-        :param text: The original data text to be cleaned.
-        :return List[Tuple[Tuple[int, int], str]]: the replacement operations
+
+        Args:
+            text: The original data text to be cleaned.
+
+        Returns: List[Tuple[Tuple[int, int], str]]: the replacement operations
+
         """
         return []
 
     def _get_cache_location(self, collection: Any) -> Path:
         """
         Gets the path to the cache file for a collection
-        :param collection: information to compute cache key
-        :return Path: file path to the cache file for a Pack
+
+        Args:
+            collection: information to compute cache key
+
+        Returns: Path: file path to the cache file for a Pack
+
         """
         file_path = self._cache_key_function(collection)
         return Path(os.path.join(str(self._cache_directory), file_path))
@@ -231,9 +251,13 @@ class BaseReader(PipeComponent[PackType], ABC):
     def read_from_cache(self, cache_filename: Path) -> List[PackType]:
         """
         Reads one or more Packs from a cache_filename,
-        and yields Pack(s) from the cache file
-        :param cache_filename: Path to the cache file
-        :yield: Pack
+        and yields Pack(s) from the cache file.
+
+        Args:
+            cache_filename: Path to the cache file
+
+        Returns: List of cached data packs.
+
         """
         datapacks = []
         logger.info("reading from cache file %s", cache_filename)
@@ -278,7 +302,8 @@ class PackReader(BaseReader[DataPack], ABC):
 
 
 class MultiPackReader(BaseReader[MultiPack], ABC):
-    """The basic MultiPack data reader class.
+    """
+    The basic MultiPack data reader class.
     To be inherited by all data readers which return MultiPack.
     """
 
