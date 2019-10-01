@@ -6,22 +6,26 @@ import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
-from forte import config
 from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
+from forte.data.batchers import ProcessingBatcher, \
+    FixedSizeMultiPackProcessingBatcher
 from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
-from forte.processors.base.batch_processor import \
-    MultiPackTxtgenBatchProcessor
 from forte.processors.base import ProcessInfo
+from forte.processors.base.batch_processor import \
+    MultiPackBatchProcessor
 
 logger = logging.getLogger(__name__)
 
 
-class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
+class TxtgenPredictor(MultiPackBatchProcessor):
+
     def __init__(self):
         super().__init__()
+        self.input_pack_name = None
+        self.output_pack_name = None
 
         self.word_processor = None
         self.model = None
@@ -30,7 +34,6 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         self.batch_size = 6
         self._get_helper = None
 
-        self.current_datapack: MultiPack = None
         self.max_decoding_length = None
         self.temperature = None
         self.top_k = None
@@ -55,9 +58,14 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         return output_info
 
     def define_context(self):
+        # pylint: disable=no-self-use
         self.context_type = self._ontology.Sentence
 
-    def initialize(self, configs: HParams, resource: Resources):
+    def define_batcher(self) -> ProcessingBatcher:
+        # pylint: disable=no-self-use
+        return FixedSizeMultiPackProcessingBatcher()
+
+    def initialize(self, resource: Resources, configs: HParams):
         """
         :param configs:
 
@@ -69,13 +77,11 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
              be processed
         :return:
         """
+        super().initialize(resource, configs)
 
         self.input_pack_name = configs.input_pack_name
-
-        # pylint: disable=attribute-defined-outside-init
-        self.batcher = self.initialize_batcher()
-
         self.output_pack_name = configs.output_pack_name
+
         self.max_decoding_length = configs.max_decoding_length
         self.temperature = configs.temperature
         self.top_k = configs.top_k
@@ -111,31 +117,6 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         self._get_helper = _get_helper
         self._define_input_info()
         self._define_output_info()
-
-    def process(self, input_pack: MultiPack, tail_instances: bool = False):
-        """
-        :param input_pack: A MultiPack instance
-        :param tail_instances:
-        :return:
-        """
-        self.current_datapack = input_pack
-        config.working_component = self.component_name
-
-        # Read data from the "Input_pack" of the input
-        for batch in self.batcher.get_batch(
-                self.current_datapack,
-                self.context_type,
-                self.input_info,
-                tail_instances=tail_instances,
-        ):
-            print('current_batch_size:{}'.format(len(batch['context'])))
-            pred = self.predict(batch)
-            self.pack_all(pred)
-            self.finish_up_packs(-1)
-        if len(self.batcher.current_batch_sources) == 0:
-            self.finish_up_packs()
-
-        config.working_component = None
 
     @torch.no_grad()
     def predict(self, data_batch: Dict):
@@ -193,13 +174,18 @@ class TxtgenPredictor(MultiPackTxtgenBatchProcessor):
         input_pack = data_pack.packs[self.input_pack_name]
         for input_id, output_sentence in zip(input_sent_tids, output_sentences):
             offset = len(output_pack.text)
-            sent = self.ontology.Sentence(offset, offset + len(output_sentence))
+            sent = self.ontology.Sentence(
+                output_pack, offset, offset + len(output_sentence)
+            )
             output_pack.add_entry(sent)
             text += output_sentence + "\n"
 
-            input_sent = input_pack.get_entry_by_id(input_id)
-            cross_link = MultiPackLink(input_sent,
-                                       sent)
+            input_sent = input_pack.get_entry(input_id)
+            cross_link = MultiPackLink(
+                data_pack,
+                data_pack.subentry(self.input_pack_name, input_sent),
+                data_pack.subentry(self.output_pack_name, sent),
+            )
             data_pack.add_entry(cross_link)
             # We may also consider adding two link with opposite directions
             # Here the unidirectional link indicates the generation dependency

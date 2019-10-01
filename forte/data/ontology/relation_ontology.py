@@ -8,6 +8,7 @@ This is also an example of extending the parent ontology by add a new entry.
 """
 # pylint: disable=unused-wildcard-import, wildcard-import, function-redefined
 from typing import Optional
+
 from forte.data.ontology.ontonotes_ontology import *
 from forte.data.ontology.top import Link
 
@@ -19,15 +20,19 @@ class RelationLink(Link):
     objects as parent and child.
 
     Args:
+        pack (DataPack): the containing pack of this link.
         parent (Entry, optional): the parent entry of the link.
         child (Entry, optional): the child entry of the link.
     """
-    parent_type = EntityMention
+    ParentType = EntityMention
     """The entry type of the parent node of :class:`RelationLink`."""
-    child_type = EntityMention
+    ChildType = EntityMention
     """The entry type of the child node of :class:`RelationLink`."""
 
-    def __init__(self, parent: Optional[EntityMention] = None,
-                 child: Optional[EntityMention] = None):
-        super().__init__(parent, child)
+    def __init__(
+            self,
+            pack: DataPack,
+            parent: Optional[EntityMention] = None,
+            child: Optional[EntityMention] = None):
+        super().__init__(pack, parent, child)
         self.rel_type = None

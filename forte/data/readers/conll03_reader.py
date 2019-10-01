@@ -1,36 +1,31 @@
 """
-The reader that reads CoNLL ner_data into our internal json data format.
+The reader that reads CoNLL ner_data into our internal json data datasets.
 """
 import codecs
+import os
 from typing import Iterator, Any
-from forte.data.io_utils import dataset_path_iterator
-from forte.data.ontology import conll03_ontology
+
 from forte.data.data_pack import DataPack
-from forte.data.readers.file_reader import MonoFileReader
+from forte.data.io_utils import dataset_path_iterator
+from forte.data.readers.base_reader import PackReader
+from forte.data.ontology import conll03_ontology
 
 __all__ = [
     "CoNLL03Reader"
 ]
 
 
-class CoNLL03Reader(MonoFileReader):
-    """:class:`CoNLL03Reader` is designed to read in the CoNLL03-NER dataset.
-
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
+class CoNLL03Reader(PackReader):
+    """
+    :class:`CoNLL03Reader` is designed to read in the CoNLL03-NER dataset.
     """
 
-    def __init__(self, lazy: bool = True):
-        super().__init__(lazy)
+    def __init__(self):
+        super().__init__()
         self._ontology = conll03_ontology
-        self.define_output_info()
 
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Document: [],
             self._ontology.Sentence: [],
             self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
@@ -44,6 +39,9 @@ class CoNLL03Reader(MonoFileReader):
         :return: Iterator over files with conll path
         """
         return dataset_path_iterator(conll_directory, "conll")
+
+    def _cache_key_function(self, conll_file: str) -> str:
+        return os.path.basename(conll_file)
 
     def parse_pack(self, file_path: str) -> DataPack:
         pack = DataPack()
@@ -61,6 +59,7 @@ class CoNLL03Reader(MonoFileReader):
 
             if line != "" and not line.startswith("#"):
                 conll_components = line.split()
+
                 word = conll_components[1]
                 pos_tag = conll_components[2]
                 chunk_id = conll_components[3]
@@ -69,11 +68,12 @@ class CoNLL03Reader(MonoFileReader):
                 word_begin = offset
                 word_end = offset + len(word)
 
-                # add tokens
-                kwargs_i = {"pos_tag": pos_tag, "chunk_tag": chunk_id,
+                # Add tokens.
+                kwargs_i = {"pos_tag": pos_tag,
+                            "chunk_tag": chunk_id,
                             "ner_tag": ner_tag}
                 token = self._ontology.Token(  # type: ignore
-                    word_begin, word_end
+                    pack, word_begin, word_end
                 )
 
                 token.set_fields(**kwargs_i)
@@ -82,14 +82,13 @@ class CoNLL03Reader(MonoFileReader):
                 text += word + " "
                 offset = word_end + 1
                 has_rows = True
-
             else:
                 if not has_rows:
-                    # skip consecutive empty lines
+                    # Skip consecutive empty lines.
                     continue
                 # add sentence
                 sent = self._ontology.Sentence(  # type: ignore
-                    sentence_begin, offset - 1
+                    pack, sentence_begin, offset - 1
                 )
                 pack.add_or_get_entry(sent)
 
@@ -97,10 +96,21 @@ class CoNLL03Reader(MonoFileReader):
                 sentence_cnt += 1
                 has_rows = False
 
-        document = self._ontology.Document(0, len(text))  # type: ignore
+        if has_rows:
+            # Add the last sentence if exists.
+            sent = self._ontology.Sentence(  # type: ignore
+                pack, sentence_begin, offset - 1
+            )
+            sentence_cnt += 1
+            pack.add_or_get_entry(sent)
+
+        document = self._ontology.Document(pack, 0, len(text))  # type: ignore
         pack.add_or_get_entry(document)
 
         pack.set_text(text, replace_func=self.text_replace_operation)
         pack.meta.doc_id = file_path
         doc.close()
+
+        print(pack.text)
+
         return pack

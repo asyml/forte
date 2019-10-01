@@ -2,25 +2,44 @@
 Defines the Evaluator interface and related functions.
 """
 from abc import abstractmethod
+from typing import Optional, Generic, Any
 
-from forte.data import DataPack
+from texar.torch import HParams
+
+from forte.data.base_pack import PackType
 
 __all__ = [
     "Evaluator",
 ]
 
 
-class Evaluator:
-    def __init__(self, config=None):
-        pass
+class Evaluator(Generic[PackType]):
+    def __init__(self, config: Optional[HParams] = None):
+        self.config: Optional[HParams] = config
 
     @abstractmethod
-    def consume_next(self, pred_pack: DataPack, ref_pack: DataPack):
-        # TODO: We may want to adjust this function signature.
-        # I had used (self, *args, **kwargs)
-        # But in the NEREvaluator we have to override the function signature
+    def consume_next(self, pred_pack: PackType, ref_pack: PackType):
+        """
+        Consume the prediction pack and the reference pack to compute evaluation
+        results.
+
+        Args:
+            pred_pack: The prediction datapack, which should contain the system
+            predicted results.
+            ref_pack: The reference datapack, which should contain the reference
+            to score on.
+
+        Returns:
+
+        """
+
         raise NotImplementedError
 
     @abstractmethod
-    def get_result(self):
+    def get_result(self) -> Any:
+        """
+        The Evaluator gather the results and the score can be obtained here.
+        Returns:
+
+        """
         raise NotImplementedError

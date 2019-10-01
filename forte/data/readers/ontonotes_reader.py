@@ -1,45 +1,40 @@
 """
 The reader that reads Ontonotes data into Datapacks.
 """
+import os
 from collections import defaultdict
 from typing import (DefaultDict, List, Optional, Tuple,
                     Dict, Any, Iterator)
+
+from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
-from forte.data.data_pack import DataPack
-from forte.data.readers.file_reader import MonoFileReader
+from forte.data.readers.base_reader import PackReader
 
 __all__ = [
     "OntonotesReader",
 ]
 
 
-class OntonotesReader(MonoFileReader):
+class OntonotesReader(PackReader):
     """:class:`OntonotesReader` is designed to read in the English OntoNotes
-    v5.0 data in the format used by the CoNLL 2011/2012 shared tasks. To use
+    v5.0 data in the datasets used by the CoNLL 2011/2012 shared tasks. To use
     this Reader, you must follow the instructions provided `here (v12 release):
     <http://cemantix.org/data/ontonotes.html>`_:, which will allow you to
     download the CoNLL style annotations for the OntoNotes v5.0 release
     – LDC2013T19.tgz obtained from LDC.
 
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
     """
 
-    def __init__(self, lazy: bool = True):
-        super().__init__(lazy)
+    def __init__(self):
+        super().__init__()
         self._ontology = ontonotes_ontology
         self.define_output_info()
-        self.current_datapack: DataPack = DataPack()
 
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Document: [],
             self._ontology.Sentence: ["speaker", "part_id"],
             self._ontology.Token: ["sense", "pos_tag"],
@@ -61,8 +56,12 @@ class OntonotesReader(MonoFileReader):
         """
         return dataset_path_iterator(conll_directory, "gold_conll")
 
+    # pylint: disable=no-self-use
+    def _cache_key_function(self, conll_file: str) -> str:
+        return os.path.basename(conll_file)
+
     def parse_pack(self, file_path: str) -> DataPack:
-        self.current_datapack = DataPack()
+        pack = DataPack()
 
         with open(file_path, encoding="utf8") as doc:
             text = ""
@@ -109,14 +108,14 @@ class OntonotesReader(MonoFileReader):
                     kwargs_i: Dict[str, Any] = {"pos_tag": pos_tag,
                                                 "sense": word_sense}
                     token = self._ontology.Token(  # type: ignore
-                        word_begin, word_end
+                        pack, word_begin, word_end
                     )
                     token.set_fields(**kwargs_i)
-                    self.current_datapack.add_or_get_entry(token)
+                    pack.add_or_get_entry(token)
 
                     # add entity mentions
                     current_entity_mention = self._process_entity_annotations(
-                        entity_label, word_begin, word_end,
+                        pack, entity_label, word_begin, word_end,
                         current_entity_mention
                     )
 
@@ -133,10 +132,10 @@ class OntonotesReader(MonoFileReader):
                         }
                         pred_mention = \
                             self._ontology.PredicateMention(  # type: ignore
-                                word_begin, word_end
+                                pack, word_begin, word_end
                             )
                         pred_mention.set_fields(**kwargs_i)
-                        pred_mention = self.current_datapack.add_or_get_entry(
+                        pred_mention = pack.add_or_get_entry(
                             pred_mention
                         )
 
@@ -149,6 +148,7 @@ class OntonotesReader(MonoFileReader):
 
                     # add predicate arguments
                     self._process_pred_annotations(
+                        pack,
                         conll_components[11:-1],
                         word_begin,
                         word_end,
@@ -158,6 +158,7 @@ class OntonotesReader(MonoFileReader):
 
                     # add coreference mentions
                     self._process_coref_annotations(
+                        pack,
                         conll_components[-1],
                         word_begin,
                         word_end,
@@ -181,10 +182,10 @@ class OntonotesReader(MonoFileReader):
                                 "arg_type": arg[1],
                             }
                             link = self._ontology.PredicateLink(  # type: ignore
-                                predicate, arg[0]
+                                pack, predicate, arg[0]
                             )
                             link.set_fields(**kwargs_i)
-                            self.current_datapack.add_or_get_entry(link)
+                            pack.add_or_get_entry(link)
 
                     verbal_predicates = []
                     current_pred_arg = []
@@ -194,10 +195,10 @@ class OntonotesReader(MonoFileReader):
 
                     kwargs_i = {"speaker": speaker, "part_id": part_id}
                     sent = self._ontology.Sentence(  # type: ignore
-                        sentence_begin, offset - 1
+                        pack, sentence_begin, offset - 1
                     )
                     sent.set_fields(**kwargs_i)
-                    self.current_datapack.add_or_get_entry(sent)
+                    pack.add_or_get_entry(sent)
 
                     sentence_begin = offset
 
@@ -206,23 +207,25 @@ class OntonotesReader(MonoFileReader):
             # group the coreference mentions in the whole document
             for group_id, mention_list in groups.items():
                 kwargs_i = {"coref_type": group_id}
-                group = self._ontology.CoreferenceGroup()  # type: ignore
+                group = self._ontology.CoreferenceGroup(  # type: ignore
+                    pack)
                 group.set_fields(**kwargs_i)
                 group.add_members(mention_list)
-                self.current_datapack.add_or_get_entry(group)
+                pack.add_or_get_entry(group)
 
-            document = self._ontology.Document(0, len(text))  # type: ignore
-            self.current_datapack.add_or_get_entry(document)
+            document = self._ontology.Document(  # type: ignore
+                pack, 0, len(text))
+            pack.add_or_get_entry(document)
 
             kwargs_i = {"doc_id": document_id}
-            self.current_datapack.set_meta(**kwargs_i)
-            self.current_datapack.set_text(
-                text, replace_func=self.text_replace_operation)
+            pack.set_meta(**kwargs_i)
+            pack.set_text(text, replace_func=self.text_replace_operation)
 
-        return self.current_datapack
+        return pack
 
     def _process_entity_annotations(
             self,
+            pack: DataPack,
             label: str,
             word_begin: int,
             word_end: int,
@@ -241,10 +244,10 @@ class OntonotesReader(MonoFileReader):
             # Exiting a span, add and then reset the current span.
             kwargs_i = {"ner_type": current_entity_mention[1]}
             entity = self._ontology.EntityMention(  # type: ignore
-                current_entity_mention[0], word_end
+                pack, current_entity_mention[0], word_end
             )
             entity.set_fields(**kwargs_i)
-            self.current_datapack.add_or_get_entry(entity)
+            pack.add_or_get_entry(entity)
 
             current_entity_mention = None
 
@@ -252,6 +255,7 @@ class OntonotesReader(MonoFileReader):
 
     def _process_pred_annotations(
             self,
+            pack: DataPack,
             labels: List[str],
             word_begin: int,
             word_end: int,
@@ -278,15 +282,16 @@ class OntonotesReader(MonoFileReader):
                 arg_type = current_pred_arg[label_index][1]  # type: ignore
 
                 pred_arg = self._ontology.PredicateArgument(  # type: ignore
-                    arg_begin, word_end
+                    pack, arg_begin, word_end
                 )
-                pred_arg = self.current_datapack.add_or_get_entry(pred_arg)
+                pred_arg = pack.add_or_get_entry(pred_arg)
 
                 verbal_pred_args[label_index].append((pred_arg, arg_type))
                 current_pred_arg[label_index] = None
 
     def _process_coref_annotations(
             self,
+            pack: DataPack,
             label: str,
             word_begin: int,
             word_end: int,
@@ -305,9 +310,9 @@ class OntonotesReader(MonoFileReader):
 
                     coref_mention = \
                         self._ontology.CoreferenceMention(  # type: ignore
-                            word_begin, word_end
+                            pack, word_begin, word_end
                         )
-                    coref_mention = self.current_datapack.add_or_get_entry(
+                    coref_mention = pack.add_or_get_entry(
                         coref_mention
                     )
 
@@ -322,9 +327,9 @@ class OntonotesReader(MonoFileReader):
                 start = coref_stacks[group_id].pop()
                 coref_mention = \
                     self._ontology.CoreferenceMention(  # type: ignore
-                        start, word_end
+                        pack, start, word_end
                     )
-                coref_mention = self.current_datapack.add_or_get_entry(
+                coref_mention = pack.add_or_get_entry(
                     coref_mention
                 )
 

@@ -19,7 +19,7 @@ install:
   - rm -rf texar-pytorch
   # Install test tools.
   - pip install pylint==2.3.1 flake8==3.7.7
-  - pip install mypy==0.720
+  - pip install mypy>=0.730
   - pip install pytest
 
 script:

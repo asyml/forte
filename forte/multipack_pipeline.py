@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import yaml
 from texar.torch import HParams
@@ -22,6 +22,7 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
     """
     The pipeline consists of a list of predictors.
     """
+
     def __init__(self):
         super().__init__()
         self._selectors: List[Selector] = []
@@ -36,52 +37,35 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
             into a list of [processor, config]
         Initialize the pipeline with the configurations
         """
+        if "Reader" not in configs or configs["Reader"] is None:
+            raise KeyError('No reader in the configuration')
+
+        reader_config = configs["Reader"]
+
+        reader, _ = create_class_with_kwargs(
+            class_name=reader_config["type"],
+            class_args=reader_config.get("kwargs", {}),
+        )
+
+        self.set_reader(reader)
 
         # HParams cannot create HParams from the inner dict of list
-
         if "Processors" in configs and configs["Processors"] is not None:
-
             for processor_configs in configs["Processors"]:
-
-                p_class = get_class(processor_configs["type"])
-                if processor_configs.get("kwargs"):
-                    processor_kwargs = processor_configs["kwargs"]
-                else:
-                    processor_kwargs = {}
-                p = p_class(**processor_kwargs)
-
-                hparams: Dict = {}
-
-                if processor_configs.get("hparams"):
-                    # Extract the hparams section and build hparams
-                    processor_hparams = processor_configs["hparams"]
-
-                    if processor_hparams.get("config_path"):
-                        filebased_hparams = yaml.safe_load(
-                            open(processor_hparams["config_path"]))
-                    else:
-                        filebased_hparams = {}
-                    hparams.update(filebased_hparams)
-
-                    if processor_hparams.get("overwrite_configs"):
-                        overwrite_hparams = processor_hparams[
-                            "overwrite_configs"]
-                    else:
-                        overwrite_hparams = {}
-                    hparams.update(overwrite_hparams)
-                default_processor_hparams = p_class.default_hparams()
-
-                processor_hparams = HParams(hparams,
-                                            default_processor_hparams)
-                self.add_processor(p, processor_hparams)
+                p, processor_hparams = create_class_with_kwargs(
+                    class_name=processor_configs["type"],
+                    class_args=processor_configs.get("kwargs", {}),
+                    h_params=processor_configs.get("hparams", {}),
+                )
 
                 selector_hparams = processor_hparams.selector
                 selector_class = get_class(selector_hparams['type'])
                 selector_kwargs = selector_hparams["kwargs"]
                 selector = selector_class(**selector_kwargs)
-                self.add_selector(selector)
 
-            self.initialize_processors()
+                self.add_processor(p, selector, processor_hparams)
+
+            self.initialize()
 
         if "Ontology" in configs.keys() and configs["Ontology"] is not None:
             module_path = ["__main__",
@@ -95,5 +79,29 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
             logger.warning("Ontology not specified in config, will use "
                            "base_ontology by default.")
 
-    def add_selector(self, selector: Selector):
-        self._selectors.append(selector)
+
+def create_class_with_kwargs(
+        class_name: str, class_args: Dict, h_params: Optional[HParams] = None):
+    cls = get_class(class_name)
+    if not class_args:
+        class_args = {}
+    obj = cls(**class_args)
+
+    if h_params is None:
+        h_params = {}
+
+    p_params: Dict = {}
+
+    if "config_path" in h_params:
+        filebased_hparams = yaml.safe_load(open(h_params["config_path"]))
+    else:
+        filebased_hparams = {}
+    p_params.update(filebased_hparams)
+
+    p_params.update(h_params.get("overwrite_configs", {}))
+    default_processor_hparams = cls.default_hparams()
+
+    processor_hparams = HParams(p_params,
+                                default_processor_hparams)
+
+    return obj, processor_hparams
