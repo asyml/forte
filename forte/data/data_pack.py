@@ -735,10 +735,10 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         if issubclass(entry_type, Annotation):
             begin_index = self.annotations.bisect(
-                Annotation(self, range_begin, -1)
+                Annotation(self, range_begin, range_begin)
             )
             end_index = self.annotations.bisect(
-                Annotation(self, range_end, -1)
+                Annotation(self, range_end, range_end)
             )
             for annotation in self.annotations[begin_index: end_index]:
                 if annotation.tid not in valid_id:

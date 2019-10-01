@@ -32,6 +32,7 @@ class Token(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.pos_tag: str
 
 
 class Sentence(Annotation):
@@ -70,6 +71,7 @@ class EntityMention(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.ner_type: str
 
 
 class PredicateArgument(Annotation):

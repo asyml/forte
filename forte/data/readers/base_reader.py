@@ -9,7 +9,7 @@ from typing import (Iterator, Optional, Dict, Type, List, Union, Any)
 
 import jsonpickle
 
-from forte.common import Resources
+from forte.common.resources import Resources
 from forte.common.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -241,6 +241,7 @@ class PackReader(BaseReader[DataPack], ABC):
     """
         A Pack Reader reads data into DataPacks.
     """
+
     @property
     def pack_type(self):
         return DataPack
