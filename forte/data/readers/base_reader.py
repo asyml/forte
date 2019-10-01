@@ -9,7 +9,7 @@ from typing import (Iterator, Optional, Dict, Type, List, Union, Any)
 
 import jsonpickle
 
-from forte.common import Resources
+from forte.common.resources import Resources
 from forte.common.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -178,9 +178,8 @@ class BaseReader(PipeComponent[PackType], ABC):
          as list or Iterator depending on `lazy`, giving all the Packs read
          from the data source(s). If not reading from cache,
          should call collect()
-        :param kwargs: One or more input data sources
-        for example, most DataPack readers
-        accept `data_source` as file/folder path
+        :param kwargs: One or more input data sources, for example, most
+        DataPack readers accept `data_source` as file/folder path
         :return: Iterator of DataPacks.
         """
         yield from self._lazy_iter(*args, **kwargs)
@@ -242,6 +241,7 @@ class PackReader(BaseReader[DataPack], ABC):
     """
         A Pack Reader reads data into DataPacks.
     """
+
     @property
     def pack_type(self):
         return DataPack

@@ -12,15 +12,15 @@ Reader:
   kwargs: null
 
 Processors:
-  - type: "nlp.forte.processors.impl.NLTKSentenceSegmenter"
-  - type: "nlp.forte.processors.impl.NLTKWordTokenizer"
-  - type: "nlp.forte.processors.impl.NLTKPOSTagger"
-  - type: "nlp.forte.processors.impl.CoNLLNERPredictor"
+  - type: "nlp.forte.processors.NLTKSentenceSegmenter"
+  - type: "nlp.forte.processors.NLTKWordTokenizer"
+  - type: "nlp.forte.processors.NLTKPOSTagger"
+  - type: "nlp.forte.processors.CoNLLNERPredictor"
     hparams:
       config_path: # Load config from the specified file if any
       overwrite_configs: # You can still define other configurations here
         storage_path: "/home/shr/forte/examples/NER/resources.pkl"
-  - type: "nlp.forte.processors.impl.SRLPredictor"
+  - type: "nlp.forte.processors.SRLPredictor"
     hparams:
       overwrite_configs:
         storage_path: "/home/hector/models/SRL_model/"

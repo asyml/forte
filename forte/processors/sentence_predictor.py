@@ -11,7 +11,9 @@ __all__ = [
 
 
 class NLTKSentenceSegmenter(PackProcessor):
-
+    """
+    A wrapper of NLTK sentence tokenizer.
+    """
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology

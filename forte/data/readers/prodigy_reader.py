@@ -21,6 +21,7 @@ class ProdigyReader(PackReader):
             method reloads the dataset each time it's called. Otherwise,
             ``iter()`` returns a list.
     """
+
     def define_output_info(self):
         # pylint: disable=no-self-use
         return {
@@ -75,7 +76,7 @@ class ProdigyReader(PackReader):
             begin = span_items['start']
             end = span_items['end']
             annotation_entry = EntityMention(pack, begin, end)
-            annotation_entry.ner_type = span_items['label']
+            annotation_entry.set_fields(ner_type=span_items['label'])
             pack.add_or_get_entry(annotation_entry)
 
         pack.meta.doc_id = data['meta']['id']

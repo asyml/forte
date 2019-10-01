@@ -116,7 +116,6 @@ class BaseProcessor(PipeComponent[PackType], ABC):
     def default_hparams():
         """
         This defines a basic Hparams structure
-        :return:
         """
         return {
             'selector': {

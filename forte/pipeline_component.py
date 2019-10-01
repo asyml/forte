@@ -2,7 +2,7 @@ from typing import Generic
 
 from texar.torch import HParams
 
-from forte.common import Resources
+from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 
 
