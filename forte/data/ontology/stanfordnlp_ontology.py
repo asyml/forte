@@ -12,16 +12,15 @@ __all__ = [
 class Token(ontology.Token):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.lemma = None
-        self.upos = None
-        self.xpos = None
-        self.pos_tag = None
+        self.lemma: str
+        self.upos: str
+        self.xpos: str
+        self.pos_tag: str
 
 
 class Sentence(ontology.Sentence):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.tokens = None
 
 
 class Document(ontology.Document):

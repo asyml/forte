@@ -10,21 +10,26 @@ from forte.data import DataPack, MultiPack, DataRequest
 from forte.data.io_utils import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation
 
+__all__ = [
+    "ProcessingBatcher",
+]
+
 
 class ProcessingBatcher(Generic[PackType]):
     """
-    This defines the basis interface of the Batcher used in BatchProcessors.
-    It will create Batches from the packs, and stores the relationship between
-    the packs and the Batches, so that we can add the processed result back to
-    the packs.
+    This defines the basis interface of the Batcher used in
+    :class:`~forte.processors.batch_processor.BatchProcessor`.
+    This Batcher only batches data sequentially.
+    The Batcher receives new packs
+    dynamically and cache the current packs so that the processors can
+    pack prediction results into the data packs.
+
+    Args:
+        cross_pack (bool, optional): whether to allow batches go across
+        data packs when there is no enough data at the end.
     """
 
     def __init__(self, cross_pack: bool = True):
-        """
-
-        Args:
-            cross_pack: If True, the batches can go across pack boundaries.
-        """
         self.current_batch: Dict = {}
         self.data_pack_pool: List[PackType] = []
         self.current_batch_sources: List[int] = []
@@ -64,6 +69,9 @@ class ProcessingBatcher(Generic[PackType]):
             context_type: Type[Annotation],
             requests: DataRequest,
     ):
+        """
+        Returns an iterator of data batches.
+        """
         if input_pack.is_poison():
             # No more packs, flush the remaining instances.
             if self.current_batch:
@@ -138,8 +146,8 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         """
-        Try to yield batches from a dataset ``batch_size``, but will yield an
-        incomplete batch if the data_pack is exhausted.
+        Try to get batches from a dataset  with ``batch_size``, but will
+        yield an incomplete batch if the data_pack is exhausted.
 
         Returns:
             An iterator of tuples ``(batch, cnt)``, ``batch`` is a dict

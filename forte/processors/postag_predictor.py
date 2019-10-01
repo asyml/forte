@@ -10,7 +10,9 @@ __all__ = [
 
 
 class NLTKPOSTagger(PackProcessor):
-
+    """
+    A wrapper of NLTK pos tagger.
+    """
     def __init__(self):
         super().__init__()
         self.token_component = None

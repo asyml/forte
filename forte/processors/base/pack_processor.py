@@ -20,10 +20,10 @@ class BasePackProcessor(BaseProcessor[PackType], ABC):
 
     def process(self, input_pack: PackType):
         """
-        Process one datapack at a time.
+        Process one `input_pack` at a time.
 
         Args:
-            input_pack (PackType): A datapack to be processed.
+            input_pack (PackType): A pack to be processed.
         """
         if input_pack.is_poison():
             return
@@ -33,12 +33,18 @@ class BasePackProcessor(BaseProcessor[PackType], ABC):
 
     @abstractmethod
     def _process(self, input_pack: PackType):
+        """
+        The function that task processors should implement.
+
+        In this function, the processor process ``input_pack`` and add new
+        entries and fields to the ``input_pack``.
+        """
         pass
 
 
 class PackProcessor(BasePackProcessor[DataPack], ABC):
     """
-    The base class of processors that process one pack each time.
+    The base class of processors that process one :class:`DataPack` each time.
     """
     pass
 
