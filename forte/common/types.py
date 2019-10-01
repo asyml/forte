@@ -1,6 +1,7 @@
 from typing import Tuple, List
 
 from forte.data.ontology.core import EntryType, GroupType, LinkType
+from forte.data.base import Span
 
 __all__ = [
     "EntryType",
@@ -9,4 +10,4 @@ __all__ = [
     "ReplaceOperationsType",
 ]
 
-ReplaceOperationsType = List[Tuple[Tuple[int, int], str]]
+ReplaceOperationsType = List[Tuple[Span, str]]
