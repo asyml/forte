@@ -2,6 +2,8 @@
 This class defines the basic ontology supported by our system
 """
 from typing import Optional, Set
+
+from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation, Link, Group
 
 __all__ = [
@@ -19,8 +21,8 @@ __all__ = [
 
 
 class Token(Annotation):
-    def __init__(self, begin: int, end: int):
-        super().__init__(begin, end)
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
         self.pos_tag = None
 
 
@@ -33,8 +35,8 @@ class Document(Annotation):
 
 
 class EntityMention(Annotation):
-    def __init__(self, begin: int, end: int):
-        super().__init__(begin, end)
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
         self.ner_type = None
 
 
@@ -47,13 +49,14 @@ class PredicateMention(Annotation):
 
 
 class PredicateLink(Link):
-    parent_type = PredicateMention
-    child_type = PredicateArgument
+    ParentType = PredicateMention
+    ChildType = PredicateArgument
 
     def __init__(self,
+                 pack: DataPack,
                  parent: Optional[PredicateMention] = None,
                  child: Optional[PredicateArgument] = None):
-        super().__init__(parent, child)
+        super().__init__(pack, parent, child)
         self.arg_type = None
 
 
@@ -62,10 +65,12 @@ class CoreferenceMention(Annotation):
 
 
 class CoreferenceGroup(Group):
-    member_type = CoreferenceMention
+    MemberType = CoreferenceMention
 
-    def __init__(self, members: Optional[Set[CoreferenceMention]] = None):
-        super().__init__(members)  # type: ignore
+    def __init__(self,
+                 pack: DataPack,
+                 members: Optional[Set[CoreferenceMention]] = None):
+        super().__init__(pack, members)  # type: ignore
         self.coref_type = None
 
 
@@ -73,11 +78,12 @@ class Dependency(Link):
     """
     Link between head token to dependent token meant for Dependency Parsing
     """
-    parent_type = Token
-    child_type = Token
+    ParentType = Token
+    ChildType = Token
 
     def __init__(self,
+                 pack: DataPack,
                  parent: Optional[Token] = None,
                  child: Optional[Token] = None):
-        super().__init__(parent, child)
+        super().__init__(pack, parent, child)
         self.dep_label = None

@@ -1,6 +1,6 @@
 """
-Here we define some utility functions for CoNLL evaluation format change.
-We can add other format conversion function for CoNLL here in the future.
+Here we define some utility functions for CoNLL evaluation datasets change.
+We can add other datasets conversion function for CoNLL here in the future.
 """
 
 

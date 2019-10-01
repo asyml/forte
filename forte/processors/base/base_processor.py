@@ -1,25 +1,31 @@
 """
 The base class of processors
 """
-from abc import abstractmethod
-from typing import Dict, List, Union, Type, Generic
+from abc import abstractmethod, ABC
+from typing import Optional
+
+from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data import PackType
-from forte.data.ontology import base_ontology, Entry
+from forte.data.base_pack import PackType
+from forte.data.data_pack import DataRequest
+from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
 from forte.utils import get_full_module_name
+from forte.data.ontology.onto_utils import record_fields
+from forte.pipeline_component import PipeComponent
 
 __all__ = [
     "BaseProcessor",
     "ProcessInfo",
 ]
 
-ProcessInfo = Dict[Type[Entry], Union[List, Dict]]
+ProcessInfo = DataRequest
 
 
-class BaseProcessor(Generic[PackType]):
-    """The basic processor class. To be inherited by all kinds of processors
+class BaseProcessor(PipeComponent[PackType], ABC):
+    """
+    The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
     """
 
@@ -29,21 +35,29 @@ class BaseProcessor(Generic[PackType]):
         self.input_info: ProcessInfo = {}
         self.output_info: ProcessInfo = {}
         self.selector = DummySelector()
+        self.__is_last_step = False
 
-    def initialize(self, configs, resource: Resources):
-        """Initialize the processor with ``configs``, and register global
-        resources into ``resource``.
+    # TODO: what if we have config-free processors? It might be cumbersome to
+    #  always require a config.
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
+        """
+        The pipeline will call the initialize method at the start of a
+        processing. The processor will be initialized with ``configs``,
+        and register global resources into ``resource``. The implementation
+        should set up the states of the processor.
+
+        :param configs: The configuration passed in to set up this processor.
+        :param resource: A global resource register. User can register
+        shareable resources here, for example, the vocabulary.
+        :return:
         """
         pass
 
-    @abstractmethod
     def set_ontology(self, ontology):
         """
-        Set the ontology of this processor, and accordingly update
-        :attr:`input_info`, :attr:`output_info`, and :attr:`context_type` (for
-        :class:`~nlp.forte.processors.batch_processor.BatchProcessor`)
+        Set the ontology of this processor, will be called by the Pipeline.
         """
-        raise NotImplementedError
+        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
 
     def set_output_info(self):
         self.output_info = self._define_output_info()
@@ -65,32 +79,38 @@ class BaseProcessor(Generic[PackType]):
         """
         raise NotImplementedError
 
-    @abstractmethod
+    def set_as_last(self):
+        self.__is_last_step = True
+
     def process(self, input_pack: PackType):
-        """Process the input pack"""
-        raise NotImplementedError
+        # Obtain the control of the DataPack.
+        input_pack.enter_processing(self.component_name)
+        # Do the actual processing.
+        self._process(input_pack)
 
-    def _record_fields(self, input_pack: PackType):
-        """
-        Record the fields and entries that this processor add to packs.
-        """
-        for entry_type, info in self.output_info.items():
-            component = self.component_name
-            fields: List[str] = []
-            if isinstance(info, list):
-                fields = info
-            elif isinstance(info, dict):
-                fields = info["fields"]
-                if "component" in info.keys():
-                    component = info["component"]
-            input_pack.record_fields(fields, entry_type, component)
+        if not input_pack.is_poison():
+            record_fields(self.output_info, self.component_name, input_pack)
 
-    def finish(self, input_pack: PackType):
-        """
-        Do finishing work for one pack.
-        """
-        self._record_fields(input_pack)
+        # Mark that the pack is processed by the processor.
         input_pack.meta.process_state = self.component_name
+        # Release the control of the DataPack.
+        input_pack.exit_processing()
+
+    @abstractmethod
+    def _process(self, input_pack: PackType):
+        """
+        The main function of the processor should be implemented here. The
+        implementation of this function should process the ``input_pack``, and
+        conduct operations such as adding entries into the pack, or produce
+        some side-effect such as writing data into the disk.
+
+        Args:
+            input_pack:
+
+        Returns:
+
+        """
+        raise NotImplementedError
 
     @staticmethod
     def default_hparams():
@@ -100,7 +120,7 @@ class BaseProcessor(Generic[PackType]):
         """
         return {
             'selector': {
-                'type': 'nlp.forte.data.selector.DummySelector',
+                'type': 'forte.data.selector.DummySelector',
                 'args': None,
                 'kwargs': {}
             }

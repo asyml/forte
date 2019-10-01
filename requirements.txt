@@ -1,5 +1,7 @@
+deprecation
 sortedcontainers
 numpy
 jsonpickle
 torch
 pyyaml
+texar_pytorch

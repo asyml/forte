@@ -1,18 +1,23 @@
 """
 Base reader type to be inherited by all readers.
 """
+import logging
+import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import (Iterator, Optional, Dict, Type, List, Union, Generic,
-                    Any)
-import os
-import logging
+from typing import (Iterator, Optional, Dict, Type, List, Union, Any)
+
 import jsonpickle
 
-from forte.data.data_pack import DataPack, ReplaceOperationsType
-from forte.data.multi_pack import MultiPack
+from forte.common import Resources
+from forte.common.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
-from forte.data.ontology import Entry, base_ontology
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
+from forte.data.ontology import base_ontology
+from forte.data.ontology.core import Entry
+from forte.data.ontology.onto_utils import record_fields
+from forte.pipeline_component import PipeComponent
 from forte.utils import get_full_module_name
 
 __all__ = [
@@ -24,20 +29,18 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class BaseReader(Generic[PackType], ABC):
-    """The basic data reader class.
-    To be inherited by all data readers.
+class BaseReader(PipeComponent[PackType], ABC):
+    """
+        The basic data reader class.
+        To be inherited by all data readers.
     """
 
     def __init__(self,
-                 lazy: bool = True,
                  from_cache: bool = False,
                  cache_directory: Optional[Path] = None,
                  append_to_cache: bool = False):
         """
         Args:
-        lazy (bool): If lazy is true, will use a Iterator to iterate
-            collections. If False, the reader will use a list of collections
         from_cache (bool, optional): Decide whether to read from cache
             if cache file exists. By default (``True``), the reader will
             try to read an datapack from the first line of the caching file.
@@ -55,25 +58,29 @@ class BaseReader(Generic[PackType], ABC):
             cache the datapack append to end of the caching file.
     """
 
-        self.lazy = lazy
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self._ontology = base_ontology
-        self.output_info: Dict[Type[Entry], Union[List, Dict]] = {}
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
+
+        self.output_info: Dict[
+            Type[Entry], Union[List, Dict]] = self.define_output_info()
 
     @property
     def pack_type(self):
         raise NotImplementedError
+
+    def __reader_name(self):
+        return self.__class__.__name__
 
     def set_ontology(self, ontology):
         self._ontology = ontology
         self.define_output_info()
 
     @abstractmethod
-    def define_output_info(self):
-        pass
+    def define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
+        return {}
 
     # TODO: This should not be in the reader class.
     @staticmethod
@@ -81,7 +88,7 @@ class BaseReader(Generic[PackType], ABC):
         """
         Serializes a pack to a string.
         """
-        return jsonpickle.encode(instance, unpicklable=True)
+        return instance.serialize()
 
     @staticmethod
     def deserialize_instance(string: str) -> PackType:
@@ -157,7 +164,7 @@ class BaseReader(Generic[PackType], ABC):
                 if self._cache_directory is not None:
                     self.cache_data(self._cache_directory, collection, pack)
 
-                self._record_fields(pack)
+                record_fields(self.output_info, self.component_name, pack)
                 if not isinstance(pack, self.pack_type):
                     raise ValueError(
                         f"No Pack object read from the given "
@@ -165,8 +172,7 @@ class BaseReader(Generic[PackType], ABC):
                     )
                 yield pack
 
-    def iter(self, *args, **kwargs) -> Union[Iterator[
-                                                 PackType], List[PackType]]:
+    def iter(self, *args, **kwargs) -> Iterator[PackType]:
         """
         An iterator over the entire dataset, giving all Packs processed
          as list or Iterator depending on `lazy`, giving all the Packs read
@@ -175,15 +181,9 @@ class BaseReader(Generic[PackType], ABC):
         :param kwargs: One or more input data sources
         for example, most DataPack readers
         accept `data_source` as file/folder path
-        :return: Either Iterator or List depending on setting of `lazy`
+        :return: Iterator of DataPacks.
         """
-        if self.lazy:
-            return self._lazy_iter(*args, **kwargs)
-
-        else:
-            datapacks: List[PackType] = [p for p in
-                                         self._lazy_iter(*args, **kwargs)]
-            return datapacks
+        yield from self._lazy_iter(*args, **kwargs)
 
     def cache_data(self,
                    cache_directory: Path,
@@ -202,7 +202,9 @@ class BaseReader(Generic[PackType], ABC):
         """
         Path.mkdir(cache_directory, exist_ok=True)
         cache_filename = os.path.join(
-            cache_directory, self._get_cache_location(collection))
+            cache_directory,
+            self._get_cache_location(collection)
+        )
 
         logger.info("Caching pack to %s", cache_filename)
         if self.append_to_cache:
@@ -211,21 +213,6 @@ class BaseReader(Generic[PackType], ABC):
         else:
             with open(cache_filename, 'w') as cache:
                 cache.write(self.serialize_instance(pack) + "\n")
-
-    def _record_fields(self, pack: PackType):
-        """
-        Record the fields and entries that this processor add to packs.
-        """
-        for entry_type, info in self.output_info.items():
-            component = self.component_name
-            fields: List[str] = []
-            if isinstance(info, list):
-                fields = info
-            elif isinstance(info, dict):
-                fields = info["fields"]
-                if "component" in info.keys():
-                    component = info["component"]
-            pack.record_fields(fields, entry_type, component)
 
     def read_from_cache(self, cache_filename: Path) -> List[PackType]:
         """
@@ -247,15 +234,32 @@ class BaseReader(Generic[PackType], ABC):
 
         return datapacks
 
+    def finish(self, resources: Resources):
+        pass
+
 
 class PackReader(BaseReader[DataPack], ABC):
-    """The basic data reader class.
-    To be inherited by all data readers.
     """
-
+        A Pack Reader reads data into DataPacks.
+    """
     @property
     def pack_type(self):
         return DataPack
+
+    def set_text(self, pack: DataPack, text: str):
+        """
+        Assign the text value to the DataPack. This function will pass the
+        text_replace_operation to the DataPack to conduct the pre-processing
+        step.
+
+        Args:
+            pack: The datapack to assign value for.
+            text: The original text to be recorded in this dataset
+
+        Returns:
+
+        """
+        pack.set_text(text, replace_func=self.text_replace_operation)
 
 
 class MultiPackReader(BaseReader[MultiPack], ABC):

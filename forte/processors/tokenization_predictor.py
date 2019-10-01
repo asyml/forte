@@ -1,8 +1,8 @@
 from nltk.tokenize import word_tokenize
 
-from forte.processors.base import PackProcessor, ProcessInfo
 from forte.data import DataPack
 from forte.data.ontology import base_ontology
+from forte.processors.base import PackProcessor, ProcessInfo
 
 __all__ = [
     "NLTKWordTokenizer",
@@ -37,6 +37,7 @@ class NLTKWordTokenizer(PackProcessor):
                 begin_pos = sentence.text.find(word, end_pos)
                 end_pos = begin_pos + len(word)
                 token = self._ontology.Token(
+                    input_pack,
                     begin_pos + offset, end_pos + offset
                 )
                 input_pack.add_or_get_entry(token)

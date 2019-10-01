@@ -1,16 +1,20 @@
-import os
 import logging
+import os
 from typing import Dict, List, Tuple
 
 import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
+from forte.data.base import Span
+from forte.data.ontology.ontonotes_ontology import PredicateMention, \
+    PredicateArgument
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.ontology import ontonotes_ontology
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base import BatchProcessor, ProcessInfo
+from forte.processors.base import ProcessInfo
+from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +22,17 @@ __all__ = [
     "SRLPredictor",
 ]
 
-Prediction = Dict[
-    ontonotes_ontology.PredicateMention,
-    List[Tuple[ontonotes_ontology.PredicateArgument, str]]]
+# Prediction = Dict[
+#     ontonotes_ontology.PredicateMention,
+#     List[Tuple[ontonotes_ontology.PredicateArgument, str]]
+# ]
+
+Prediction = List[
+    Tuple[Span, List[Tuple[Span, str]]]
+]
 
 
-class SRLPredictor(BatchProcessor):
+class SRLPredictor(FixedSizeBatchProcessor):
     word_vocab: tx.data.Vocab
     char_vocab: tx.data.Vocab
     model: LabeledSpanGraphNetwork
@@ -35,13 +44,14 @@ class SRLPredictor(BatchProcessor):
         self.define_context()
 
         self.batch_size = 4
-        self.batcher = self.initialize_batcher()
+        self.batcher = self.define_batcher()
 
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
-    def initialize(self, configs: HParams,
-                   resource: Resources):  # pylint: disable=unused-argument
+    def initialize(self,
+                   resource: Resources,  # pylint: disable=unused-argument
+                   configs: HParams):
 
         model_dir = configs.storage_path
         logger.info("restoring SRL model from %s", model_dir)
@@ -99,18 +109,18 @@ class SRLPredictor(BatchProcessor):
         batch_predictions: List[Prediction] = []
         for idx, srl_spans in enumerate(batch_srl_spans):
             word_spans = data_batch["Token"]["span"][idx]
-            predictions: Prediction = {}
+            predictions: Prediction = []
             for pred_idx, pred_args in srl_spans.items():
                 begin, end = word_spans[pred_idx]
-                pred_annotation = self._ontology.PredicateMention(begin, end)
+                # TODO cannot create annotation here.
+                pred_span = Span(begin, end)
                 arguments = []
                 for arg in pred_args:
                     begin = word_spans[arg.start][0]
                     end = word_spans[arg.end][1]
-                    arg_annotation = self._ontology.PredicateArgument(begin,
-                                                                      end)
+                    arg_annotation = Span(begin, end)
                     arguments.append((arg_annotation, arg.label))
-                predictions[pred_annotation] = arguments
+                predictions.append((pred_span, arguments))
             batch_predictions.append(predictions)
         return {"predictions": batch_predictions}
 
@@ -118,11 +128,19 @@ class SRLPredictor(BatchProcessor):
              inputs: Dict[str, List[Prediction]]) -> None:
         batch_predictions = inputs["predictions"]
         for predictions in batch_predictions:
-            for pred, args in predictions.items():
-                pred = data_pack.add_or_get_entry(pred)
-                for arg, label in args:
-                    arg = data_pack.add_or_get_entry(arg)
-                    link = self._ontology.PredicateLink(pred, arg)
+            for pred_span, arg_result in predictions:
+
+                pred = data_pack.add_entry(
+                    PredicateMention(data_pack, pred_span.begin, pred_span.end)
+                )
+
+                for arg_span, label in arg_result:
+                    arg = data_pack.add_or_get_entry(
+                        PredicateArgument(
+                            data_pack, arg_span.begin, arg_span.end
+                        )
+                    )
+                    link = self._ontology.PredicateLink(data_pack, pred, arg)
                     link.set_fields(arg_type=label)
                     data_pack.add_or_get_entry(link)
 

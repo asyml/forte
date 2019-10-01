@@ -1,23 +1,23 @@
 import os
-from typing import Dict, List, Iterator, Tuple
+from typing import Dict, List, Iterator, Any, Tuple
 
-from forte.data.ontology import Span
+from forte.common.types import ReplaceOperationsType
+from forte.data.base import Span
 
 __all__ = [
     "batch_instances",
     "merge_batches",
     "slice_batch",
-    "dataset_path_iterator"
+    "dataset_path_iterator",
+    "ensure_dir",
 ]
-
-ReplaceOperationsType = List[Tuple[Span, str]]
 
 
 def batch_instances(instances: List[Dict]):
     """
     Merge a list of instances.
     """
-    batch: Dict = {}
+    batch: Dict[str, Any] = {}
     for instance in instances:
         for entry, fields in instance.items():
             if isinstance(fields, dict):
@@ -76,7 +76,7 @@ def slice_batch(batch, start, length):
 def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
     """
     An iterator returning file_paths in a directory containing files
-    of the given format
+    of the given datasets
     """
     for root, _, files in os.walk(dir_path):
         for data_file in files:
@@ -144,3 +144,17 @@ def modify_text_and_track_ops(original_text: str,
 
     return (mod_text, replace_back_operations, sorted(processed_original_spans),
             orig_text_len)
+
+
+def ensure_dir(doc_path: str):
+    """
+    Ensure the directory for writing this file exists
+    Args:
+        doc_path: The doc path that is going to be written to.
+
+    Returns:
+
+    """
+    parent = os.path.dirname(doc_path)
+    if not os.path.exists(parent):
+        os.makedirs(parent)

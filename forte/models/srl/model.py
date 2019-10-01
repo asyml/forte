@@ -134,14 +134,14 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             "context_embeddings": {
                 "path": "embeddings/glove.840B.300d.05.filtered",
                 "size": 300,
-                "format": 'txt',
+                "datasets": 'txt',
                 "lowercase": False,
             },
             "head_embeddings": {
                 "path": "embeddings/glove_50_300_2.filtered",
                 # "path": "embeddings/glove_50_300_2.txt",
                 "size": 300,
-                "format": 'txt',
+                "datasets": 'txt',
                 "lowercase": False,
             },
             "elmo": {

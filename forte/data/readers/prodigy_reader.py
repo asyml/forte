@@ -2,8 +2,9 @@
 
 import json
 from typing import Iterator, Any
-from forte.data.ontology.base_ontology import Token, Document, EntityMention
+
 from forte.data.data_pack import DataPack
+from forte.data.ontology.base_ontology import Token, Document, EntityMention
 from forte.data.readers.base_reader import PackReader
 
 __all__ = [
@@ -20,13 +21,9 @@ class ProdigyReader(PackReader):
             method reloads the dataset each time it's called. Otherwise,
             ``iter()`` returns a list.
     """
-
-    def __init__(self, lazy: bool = False):
-        super().__init__(lazy)
-        self.define_output_info()
-
     def define_output_info(self):
-        self.output_info = {
+        # pylint: disable=no-self-use
+        return {
             Document: [],
             Token: [],
             EntityMention: ["ner_type"]
@@ -64,20 +61,20 @@ class ProdigyReader(PackReader):
         tokens = data['tokens']
         spans = data['spans']
 
-        document = Document(0, len(text))
+        document = Document(pack, 0, len(text))
         pack.set_text(text, replace_func=self.text_replace_operation)
         pack.add_or_get_entry(document)
 
         for token in tokens:
             begin = token['start']
             end = token['end']
-            token_entry = Token(begin, end)
+            token_entry = Token(pack, begin, end)
             pack.add_or_get_entry(token_entry)
 
         for span_items in spans:
             begin = span_items['start']
             end = span_items['end']
-            annotation_entry = EntityMention(begin, end)
+            annotation_entry = EntityMention(pack, begin, end)
             annotation_entry.ner_type = span_items['label']
             pack.add_or_get_entry(annotation_entry)
 

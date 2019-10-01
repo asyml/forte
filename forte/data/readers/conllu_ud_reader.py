@@ -17,19 +17,14 @@ __all__ = [
 
 
 class ConllUDReader(PackReader):
-    """:class:`conllUReader` is designed to read in the Universal Dependencies
-    2.4 dataset.
-
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
     """
-    # pylint: disable=attribute-defined-outside-init
+    :class:`conllUReader` is designed to read in the Universal Dependencies
+    2.4 dataset.
+    """
+
     def define_output_info(self):
-        self.output_info = {
+        # pylint: disable=no-self-use
+        return {
             Document: [],
             Sentence: [],
             DependencyToken: ["universal_pos_tag", "features", "lemma",
@@ -38,14 +33,14 @@ class ConllUDReader(PackReader):
             UniversalDependency: ["type"]
         }
 
-    # pylint: disable=no-self-use
     def _cache_key_function(self, data_pack: Any) -> str:
+        # pylint: disable=no-self-use
         if data_pack.meta.doc_id is None:
             raise ValueError("data_pack does not have a document id")
         return data_pack.meta.doc_id
 
-    # pylint: disable = no-self-use, unused-argument
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
+        # pylint: disable = no-self-use, unused-argument
         """
         Iterator over conll files in the data_source
         :param args[0]: directory to the conllu files.
@@ -67,8 +62,8 @@ class ConllUDReader(PackReader):
                         yield doc_lines
                         doc_lines = []
 
-    # pylint: disable=no-self-use
     def parse_pack(self, doc_lines) -> DataPack:
+        # pylint: disable=no-self-use
         token_comp_fields = ["id", "form", "lemma", "universal_pos_tag",
                              "language_pos_tag", "features", "head", "label",
                              "enhanced_dependency_relations", "misc"]
@@ -126,7 +121,7 @@ class ConllUDReader(PackReader):
                 word_end = doc_offset + len(word)
 
                 token: DependencyToken \
-                    = DependencyToken(word_begin, word_end)
+                    = DependencyToken(data_pack, word_begin, word_end)
                 kwargs = {key: token_comps[key]
                           for key in token_entry_fields}
 
@@ -160,8 +155,8 @@ class ConllUDReader(PackReader):
                             data_pack_: data_pack to which the
                             dependency is to be added
                         """
-                        dependency = UniversalDependency(dep_parent,
-                                                         dep_child)
+                        dependency = UniversalDependency(
+                            data_pack, dep_parent, dep_child)
                         dependency.dep_label = dep_label
                         dependency.type = dep_type
                         data_pack_.add_or_get_entry(dependency)
@@ -185,14 +180,14 @@ class ConllUDReader(PackReader):
                                            data_pack)
 
                 # add sentence
-                sent = Sentence(doc_sent_begin, doc_offset - 1)
+                sent = Sentence(data_pack, doc_sent_begin, doc_offset - 1)
                 data_pack.add_or_get_entry(sent)
 
                 doc_sent_begin = doc_offset
                 doc_num_sent += 1
 
         # add doc to data_pack
-        document = Document(0, len(doc_text))
+        document = Document(data_pack, 0, len(doc_text))
         data_pack.add_or_get_entry(document)
         data_pack.meta.doc_id = doc_id
         data_pack.set_text(doc_text.strip())

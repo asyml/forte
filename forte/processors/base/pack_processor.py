@@ -1,6 +1,8 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
+
 from forte import config
-from forte.data import DataPack, PackType, MultiPack
+from forte.data.base_pack import PackType
+from forte.data import DataPack, MultiPack
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [
@@ -9,13 +11,12 @@ __all__ = [
 ]
 
 
-class BasePackProcessor(BaseProcessor[PackType]):
+class BasePackProcessor(BaseProcessor[PackType], ABC):
     """
-    The base class of processors that process one pack each time.
+    The base class of processors that process one pack sequentially. If you are
+    looking for batching (that might happen across packs, refer to
+    BaseBatchProcessor.
     """
-
-    def set_ontology(self, ontology):
-        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
 
     def process(self, input_pack: PackType):
         """
@@ -24,9 +25,10 @@ class BasePackProcessor(BaseProcessor[PackType]):
         Args:
             input_pack (PackType): A datapack to be processed.
         """
-        config.working_component = self.component_name
+        if input_pack.is_poison():
+            return
+
         self._process(input_pack)
-        self.finish(input_pack)
         config.working_component = None
 
     @abstractmethod
@@ -34,14 +36,14 @@ class BasePackProcessor(BaseProcessor[PackType]):
         pass
 
 
-class PackProcessor(BasePackProcessor[DataPack]):
+class PackProcessor(BasePackProcessor[DataPack], ABC):
     """
     The base class of processors that process one pack each time.
     """
     pass
 
 
-class MultiPackProcessor(BasePackProcessor[MultiPack]):
+class MultiPackProcessor(BasePackProcessor[MultiPack], ABC):
     """
     The base class of processors that process MultiPack each time
     """

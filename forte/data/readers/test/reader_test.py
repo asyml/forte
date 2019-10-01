@@ -1,28 +1,32 @@
 """
 Unit tests for Pipeline.
 """
-import os
-import unittest
 import json
+import os
 import tempfile
+import unittest
 from pathlib import Path
-from forte.pipeline import Pipeline
-from forte.data.readers import OntonotesReader, ProdigyReader, \
-    CoNLL03Reader, StringReader
-from forte.processors.dummy_pack_processor import DummyPackProcessor
+
 from forte.data.ontology import relation_ontology, base_ontology, \
     conll03_ontology
+from forte.data.readers import OntonotesReader, ProdigyReader, \
+    CoNLL03Reader, StringReader
+from forte.pipeline import Pipeline
+from forte.processors.dummy_pack_processor import DummyPackProcessor
 
 
 class OntonotesReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "examples/ontonotes_sample_dataset/00"
+        self.dataset_path = "examples/data_samples/ontonotes/00"
 
         self.nlp = Pipeline()
         self.nlp.set_ontology(relation_ontology)
 
         self.nlp.set_reader(OntonotesReader())
+        self.nlp.add_processor(DummyPackProcessor())
+
+        self.nlp.initialize()
 
     def test_process_next(self):
         doc_exists = False
@@ -42,14 +46,16 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "examples/"
+        self.dataset_path = "examples/data_samples/conll03"
 
         self.nlp = Pipeline()
         self.nlp.set_ontology(conll03_ontology)
 
         self.nlp.set_reader(CoNLL03Reader())
-        self.processor = DummyPackProcessor()
-        self.nlp.add_processor(self.processor)
+        self.nlp.add_processor(DummyPackProcessor())
+        self.nlp.add_processor(DummyPackProcessor())
+
+        self.nlp.initialize()
 
     def test_process_next(self):
         doc_exists = False
@@ -140,13 +146,10 @@ class StringReaderPipelineTest(unittest.TestCase):
         self.pl1 = Pipeline()
         self.pl1.set_ontology(base_ontology)
         self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))
-        self.pl1.set_reader(StringReader(
-            cache_directory=self._cache_directory))
+        self.pl1.set_reader(StringReader())
 
         self.pl2 = Pipeline()
-        self.pl2.set_reader(StringReader(
-            cache_directory=self._cache_directory,
-            from_cache=True))
+        self.pl2.set_reader(StringReader())
 
         self.text = (
             "The plain green Norway spruce is displayed in the gallery's "

@@ -46,13 +46,13 @@ class ConllUDReaderTest(unittest.TestCase):
             data_pack = self.data_packs[doc_index]
             self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
 
-            doc_entry = data_pack.get_entry_by_id(f"{doc_module}.{0}")
+            doc_entry = data_pack.get_entry(f"{doc_module}.{0}")
 
             expected_doc_text = expected_docs_text[doc_index]
             self.assertEqual(doc_entry.text, ' '.join(expected_doc_text))
 
             for sent_index, expected_sent_text in enumerate(expected_doc_text):
-                sent_entry = data_pack.get_entry_by_id(
+                sent_entry = data_pack.get_entry(
                     f"{sent_module}.{sent_index}")
                 self.assertEqual(sent_entry.text, expected_sent_text)
 

@@ -1,17 +1,19 @@
 import os
-import sys
 
 from termcolor import colored
 from texar.torch import HParams
 
 import forte.data.ontology.base_ontology as base_ontology
-import forte.data.ontology.stanfordnlp_ontology as stanfordnlp_ontology
+import forte.data.ontology.stanfordnlp_ontology as stanford
+from forte.data.ontology.ontonotes_ontology import (
+    PredicateMention, PredicateArgument)
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
     NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
 from forte.processors.StanfordNLP_processor import StandfordNLPProcessor
+from forte.processors.simple_writers import SimpleJsonPackWriter
 
 
 def string_processor_example(ner_model_dir: str, srl_model_dir: str):
@@ -39,7 +41,7 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
     )
     pl.add_processor(SRLPredictor(), srl_configs)
 
-    pl.initialize_processors()
+    pl.initialize()
 
     text = (
         "The plain green Norway spruce is displayed in the gallery's foyer. "
@@ -63,8 +65,8 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
         print(colored("Semantic role labels:", 'red'))
         for link in pack.get(
                 base_ontology.PredicateLink, sentence):
-            parent = link.get_parent()
-            child = link.get_child()
+            parent: PredicateMention = link.get_parent()  # type: ignore
+            child: PredicateArgument = link.get_child()  # type: ignore
             print(f"  - \"{child.text}\" is role {link.arg_type} of "
                   f"predicate \"{parent.text}\"")
             entities = [entity.text for entity
@@ -75,7 +77,7 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
         input(colored("Press ENTER to continue...\n", 'green'))
 
 
-def stanford_nlp_example1(lang: str, text: str):
+def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
     pl = Pipeline()
     pl.set_reader(StringReader())
 
@@ -91,23 +93,25 @@ def stanford_nlp_example1(lang: str, text: str):
     )
     pl.add_processor(processor=StandfordNLPProcessor(models_path),
                      config=config)
-    pl.set_ontology(stanfordnlp_ontology)
+    pl.add_processor(processor=SimpleJsonPackWriter(),
+                     config=output_config)
+    pl.set_ontology(stanford)
 
-    pl.initialize_processors()
+    pl.initialize()
 
     pack = pl.process(text)
-    for sentence in pack.get(stanfordnlp_ontology.Sentence):
+    for sentence in pack.get(stanford.Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
         tokens = [(token.text, token.pos_tag, token.lemma) for token in
-                  pack.get(stanfordnlp_ontology.Token, sentence)]
+                  pack.get(stanford.Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
 
         print(colored("Dependency Relations:", 'red'))
         for link in pack.get(
-                stanfordnlp_ontology.Dependency, sentence):
-            parent = link.get_parent()
-            child = link.get_child()
+                stanford.Dependency, sentence):
+            parent: stanford.Token = link.get_parent()  # type: ignore
+            child: stanford.Token = link.get_child()  # type: ignore
             print(colored(child.text, 'cyan'),
                   "has relation",
                   colored(link.rel_type, 'green'),
@@ -117,9 +121,17 @@ def stanford_nlp_example1(lang: str, text: str):
         print("\n----------------------\n")
 
 
-if __name__ == '__main__':
+def main():
+    import sys
     ner_dir, srl_dir = sys.argv[  # pylint: disable=unbalanced-tuple-unpacking
-                       1:]
+                       1:3]
+
+    output_config = HParams(
+        {
+            'output_dir': '.'
+        },
+        SimpleJsonPackWriter.default_hparams(),
+    )
 
     eng_text = "The plain green Norway spruce is displayed in the gallery's " \
                "foyer. Wentworth worked as an assistant to sculptor Henry " \
@@ -129,7 +141,11 @@ if __name__ == '__main__':
     fr_text = "Van Gogh grandit au sein d'une famille de " \
               "l'ancienne bourgeoisie."
 
-    stanford_nlp_example1('en', eng_text)
-    stanford_nlp_example1('fr', fr_text)
+    stanford_nlp_example1('en', eng_text, output_config)
+    stanford_nlp_example1('fr', fr_text, output_config)
 
     string_processor_example(ner_dir, srl_dir)
+
+
+if __name__ == '__main__':
+    main()

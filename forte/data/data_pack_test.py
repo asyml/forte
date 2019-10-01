@@ -1,14 +1,14 @@
 """
 Unit tests for ner_data pack related operations.
 """
+import logging
 import os
 import unittest
-import logging
 
 import forte
+from forte.data.ontology import ontonotes_ontology
 from forte.data.ontology.ontonotes_ontology import Sentence, Document
 from forte.data.readers import OntonotesReader
-from forte.data.ontology import ontonotes_ontology
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -18,7 +18,9 @@ class DataPackTest(unittest.TestCase):
     def setUp(self) -> None:
         self.reader = OntonotesReader()
         data_path = os.path.join(os.path.dirname(
-            os.path.dirname(forte.__file__)), "examples/abc_0059.gold_conll")
+            os.path.dirname(forte.__file__)),
+            "examples/data_samples/ontonotes/00/abc_0059.gold_conll"
+        )
         self.data_pack = self.reader.parse_pack(data_path)
 
     def test_get_data(self):
@@ -44,23 +46,23 @@ class DataPackTest(unittest.TestCase):
                          len(instances[0]["context"]) + 1)
 
         # case 2: get sentence context from the second instance
-        instances = list(self.data_pack.get_data(Sentence, offset=1))
+        instances = list(self.data_pack.get_data(Sentence, skip_k=1))
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0]["offset"], 165)
 
         # case 3: get document context
-        instances = list(self.data_pack.get_data(Document, offset=0))
+        instances = list(self.data_pack.get_data(Document, skip_k=0))
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0]["offset"], 0)
 
         # case 4: test offset out of index
-        instances = list(self.data_pack.get_data(Sentence, offset=10))
+        instances = list(self.data_pack.get_data(Sentence, skip_k=10))
         self.assertEqual(len(instances), 0)
 
         # case 5: get entries
         instances = list(self.data_pack.get_data(Sentence,
-                                                 requests=requests,
-                                                 offset=1))
+                                                 request=requests,
+                                                 skip_k=1))
         self.assertEqual(len(instances[0].keys()), 9)
         self.assertEqual(len(instances[0]["PredicateLink"]), 4)
         self.assertEqual(len(instances[0]["Token"]), 5)
