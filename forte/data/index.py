@@ -87,7 +87,7 @@ class BaseIndex(Generic[EntryType]):
 
         """
         logger.debug("Building link index.")
-        self.turn_group_index_switch(on=True)
+        self.turn_link_index_switch(on=True)
         self._link_index["child_index"] = defaultdict(set)
         self._link_index["parent_index"] = defaultdict(set)
         self.update_link_index(links)
