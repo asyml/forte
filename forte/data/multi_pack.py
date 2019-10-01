@@ -247,10 +247,10 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
-            if self.index.link_index_switch and isinstance(
+            if self.index.link_index_on and isinstance(
                     entry, MultiPackLink):
                 self.index.update_link_index([entry])
-            if self.index.group_index_switch and isinstance(
+            if self.index.group_index_on and isinstance(
                     entry, MultiPackGroup):
                 self.index.update_group_index([entry])
 
@@ -294,6 +294,14 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             raise KeyError(
                 f"There is no entry with tid '{tid}'' in this datapack")
         return entry
+
+    @classmethod
+    def validate_link(cls, entry: EntryType) -> bool:
+        return isinstance(entry, MultiPackLink)
+
+    @classmethod
+    def validate_group(cls, entry: EntryType) -> bool:
+        return isinstance(entry, MultiPackGroup)
 
     def view(self):
         return copy.deepcopy(self)

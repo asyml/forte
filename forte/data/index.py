@@ -62,14 +62,14 @@ class BaseIndex(Generic[EntryType]):
             self.component_index[entry.component].add(entry.tid)
 
     @property
-    def link_index_switch(self):
+    def link_index_on(self):
         return self._link_index_switch
 
     def turn_link_index_switch(self, on: bool):
         self._link_index_switch = on
 
     @property
-    def group_index_switch(self):
+    def group_index_on(self):
         return self._group_index_switch
 
     def turn_group_index_switch(self, on: bool):

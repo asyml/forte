@@ -95,10 +95,10 @@ class DummyRelationExtractor(BatchProcessor):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
                 link = self._ontology.RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
-                parent: EntityMention = data_pack.get_entry(
+                parent: EntityMention = data_pack.get_entry(  # type: ignore
                     output_dict["RelationLink"]["parent.tid"][i][j])
                 link.set_parent(parent)
-                child: EntityMention = data_pack.get_entry(
+                child: EntityMention = data_pack.get_entry(  # type: ignore
                     output_dict["RelationLink"]["child.tid"][i][j])
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)

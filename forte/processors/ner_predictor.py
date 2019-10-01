@@ -134,7 +134,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid = output_dict["Token"]["tid"][i][j]
 
-                orig_token: conll.Token = data_pack.get_entry(tid)
+                orig_token: conll.Token = data_pack.get_entry(  # type: ignore
+                    tid)
                 ner_tag: str = output_dict["Token"]["ner_tag"][i][j]
 
                 orig_token.set_fields(ner_tag=ner_tag)
