@@ -44,6 +44,7 @@ class Meta(BaseMeta):
 
 
 class DataPack(BasePack[Entry, Link, Group]):
+    # pylint: disable=too-many-public-methods
     """
     A :class:`DataPack' contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural

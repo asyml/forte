@@ -22,6 +22,7 @@ class ProdigyReader(PackReader):
             ``iter()`` returns a list.
     """
     def define_output_info(self):
+        # pylint: disable=no-self-use
         return {
             Document: [],
             Token: [],

@@ -20,10 +20,6 @@ class PlainSentenceTxtgenReader(MultiPackReader):
     each line is a sentence, and wrap it with MultiPack for the following
     text generation processors.
     """
-
-    def __init__(self):
-        super().__init__()
-
     def define_output_info(self):
         return {
             self._ontology.Sentence: [],
