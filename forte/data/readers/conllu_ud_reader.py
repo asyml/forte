@@ -24,7 +24,7 @@ class ConllUDReader(PackReader):
 
     # pylint: disable=attribute-defined-outside-init
     def define_output_info(self):
-        self.output_info = {
+        return {
             Document: [],
             Sentence: [],
             DependencyToken: ["universal_pos_tag", "features", "lemma",
