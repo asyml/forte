@@ -6,17 +6,29 @@ import numpy as np
 import torch
 from texar.torch.hyperparams import HParams
 
+from examples.NER.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data import DataPack
-from forte.data.format import conll_utils
-from forte.data.ontology import base_ontology, conll03_ontology
-from forte.processors.base import BatchProcessor, ProcessInfo
+from forte.data.datasets.conll import conll_utils
+from forte.data.ontology import conll03_ontology as conll
+from forte.models.NER.utils import normalize_digit_word, set_random_seed
+from forte.processors.base import ProcessInfo
+from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
 logger = logging.getLogger(__name__)
 
 
-class CoNLLNERPredictor(BatchProcessor):
+class CoNLLNERPredictor(FixedSizeBatchProcessor):
+    """
+       An Named Entity Recognizer trained according to `Ma, Xuezhe, and Eduard
+       Hovy. "End-to-end sequence labeling via bi-directional lstm-cnns-crf."
+       <https://arxiv.org/abs/1603.01354>`_.
+
+       Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
+       :class:`Pipeline` must be an ontology that includes
+       ``forte.data.ontology.conll03_ontology``.
+       """
 
     def __init__(self):
         super().__init__()
@@ -30,11 +42,11 @@ class CoNLLNERPredictor(BatchProcessor):
 
         self.train_instances_cache = []
 
-        self._ontology = conll03_ontology
+        self._ontology = conll
         self.define_context()
 
         self.batch_size = 3
-        self.batcher = self.initialize_batcher()
+        self.batcher = self.define_batcher()
 
     def define_context(self):
         self.context_type = self._ontology.Sentence
@@ -52,16 +64,34 @@ class CoNLLNERPredictor(BatchProcessor):
         }
         return output_info
 
-    def initialize(self, configs: HParams, resource: Resources):
-        self.initialize_batcher()
+    def initialize(self, resource: Resources, configs: HParams):
+        self.define_batcher()
 
-        resource.load(configs.storage_path)
+        self.config_model = configs.config_model
+        self.config_data = configs.config_data
 
-        self.word_alphabet = resource.resources["word_alphabet"]
-        self.char_alphabet = resource.resources["char_alphabet"]
-        self.ner_alphabet = resource.resources["ner_alphabet"]
-        self.config_model = resource.resources["config_model"]
-        self.config_data = resource.resources["config_data"]
+        # TODO: populate the resources based on the config.
+        self.word_alphabet = resource.get("word_alphabet")
+        self.char_alphabet = resource.get("char_alphabet")
+        self.ner_alphabet = resource.get("ner_alphabet")
+        word_embedding_table = resource.get('word_embedding_table')
+
+        self.normalize_func = normalize_digit_word
+
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
+
+        set_random_seed(self.config_model.random_seed)
+
+        self.model = BiRecurrentConvCRF(
+            word_embedding_table,
+            self.char_alphabet.size(),
+            self.ner_alphabet.size(),
+            self.config_model
+        ).to(device=device)
+
         self.model = resource.resources["model"]
         self.device = resource.resources["device"]
         self.normalize_func = resource.resources['normalize_func']
@@ -133,39 +163,45 @@ class CoNLLNERPredictor(BatchProcessor):
             # an instance
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid = output_dict["Token"]["tid"][i][j]
-                orig_token = data_pack.get_entry_by_id(tid)
-                ner_tag = output_dict["Token"]["ner_tag"][i][j]
 
-                orig_token.ner_tag = ner_tag
+                orig_token: conll.Token = data_pack.get_entry(  # type: ignore
+                    tid)
+                ner_tag: str = output_dict["Token"]["ner_tag"][i][j]
+
+                orig_token.set_fields(ner_tag=ner_tag)
+
                 token = orig_token
-                if token.ner_tag[0] == "B":
+                token_ner = token.get_field("ner_tag")
+                if token_ner[0] == "B":
                     current_entity_mention = (
                         token.span.begin,
-                        token.ner_tag[2:],
+                        token_ner[2:],
                     )
-                elif token.ner_tag[0] == "I":
+                elif token_ner[0] == "I":
                     continue
-                elif token.ner_tag[0] == "O":
+                elif token_ner[0] == "O":
                     continue
 
-                elif token.ner_tag[0] == "E":
-                    if token.ner_tag[2:] != current_entity_mention[1]:
+                elif token_ner[0] == "E":
+                    if token_ner[2:] != current_entity_mention[1]:
                         continue
 
                     kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = self._ontology.EntityMention(
+                        data_pack,
                         current_entity_mention[0],
                         token.span.end,
                     )
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
-                elif token.ner_tag[0] == "S":
+                elif token_ner[0] == "S":
                     current_entity_mention = (
                         token.span.begin,
-                        token.ner_tag[2:],
+                        token_ner[2:],
                     )
                     kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = self._ontology.EntityMention(
+                        data_pack,
                         current_entity_mention[0],
                         token.span.end,
                     )
@@ -175,10 +211,13 @@ class CoNLLNERPredictor(BatchProcessor):
     def get_batch_tensor(self, data: List, device=None):
         """
 
-        :param data: A list of quintuple
-            (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids
-        :param device:
-        :return:
+        Args:
+            data: A list of tuple (word_ids, char_id_sequences, pos_ids,
+              chunk_ids, ner_ids)
+            device: The device for the tensors.
+
+        Returns:
+
         """
         batch_size = len(data)
         batch_length = max([len(d[0]) for d in data])
@@ -234,31 +273,31 @@ class CoNLLNERPredictor(BatchProcessor):
 
 
 class CoNLLNEREvaluator(Evaluator):
-    def __init__(self, config=None):
+    def __init__(self, config: Optional[HParams] = None):
         super().__init__(config)
-        self._ontology = conll03_ontology
+        self._ontology = conll
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
-        self.scores = {}
+        self.scores: Dict[str, float] = {}
 
     def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
         pred_getdata_args = {
             "context_type": "sentence",
             "requests": {
-                base_ontology.Token: {
+                conll.Token: {
                     "fields": ["ner_tag"],
                 },
-                base_ontology.Sentence: [],  # span by default
+                conll.Sentence: [],  # span by default
             },
         }
 
         refer_getdata_args = {
             "context_type": "sentence",
             "requests": {
-                base_ontology.Token: {
+                conll.Token: {
                     "fields": ["chunk_tag", "pos_tag", "ner_tag"]},
-                base_ontology.Sentence: [],  # span by default
+                conll.Sentence: [],  # span by default
             }
         }
 

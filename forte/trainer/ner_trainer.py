@@ -6,29 +6,37 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
+from torch.optim import SGD
 import torchtext
 from tqdm import tqdm
+from texar.torch import HParams
 
-from forte.data.ontology import base_ontology
 from forte.common.resources import Resources
+from forte.data.ontology import base_ontology
 from forte.trainer.base.base_trainer import BaseTrainer
+from forte.models.NER.utils import normalize_digit_word, set_random_seed
+from examples.NER.model_factory import BiRecurrentConvCRF
 
 logger = logging.getLogger(__name__)
 
 
 class CoNLLNERTrainer(BaseTrainer):
-    def __init__(self, config=None):
-        super().__init__(config)
+    def __init__(self):
+        super().__init__()
 
         self.model = None
+
         self.word_alphabet = None
         self.char_alphabet = None
         self.ner_alphabet = None
+
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
+
         self.device = None
         self.optim, self.trained_epochs = None, None
+
         self.ontology = base_ontology
         self.resource: Optional[Resources] = None
 
@@ -38,20 +46,42 @@ class CoNLLNERTrainer(BaseTrainer):
 
         self.__past_dev_result = None
 
-    def initialize(self, resource: Resources):
+    def initialize(self, resource: Resources, configs: HParams):
 
-        self.resource = resource
+        # self.resource = resource
         # This reference is for saving the checkpoints
 
-        self.word_alphabet = resource.resources["word_alphabet"]
-        self.char_alphabet = resource.resources["char_alphabet"]
-        self.ner_alphabet = resource.resources["ner_alphabet"]
-        self.config_model = resource.resources["config_model"]
-        self.config_data = resource.resources["config_data"]
-        self.model = resource.resources["model"]
-        self.optim = resource.resources["optim"]
-        self.device = resource.resources["device"]
-        self.normalize_func = resource.resources['normalize_func']
+        self.word_alphabet = resource.get("word_alphabet")
+        self.char_alphabet = resource.get("char_alphabet")
+        self.ner_alphabet = resource.get("ner_alphabet")
+
+        word_embedding_table = resource.get('word_embedding_table')
+
+        self.config_model = configs.config_model
+        self.config_data = configs.config_data
+
+        self.normalize_func = normalize_digit_word
+
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
+
+        set_random_seed(self.config_model.random_seed)
+
+        self.model = BiRecurrentConvCRF(
+            word_embedding_table,
+            self.char_alphabet.size(),
+            self.ner_alphabet.size(),
+            self.config_model
+        ).to(device=device)
+
+        self.optim = SGD(
+            self.model.parameters(),
+            lr=configs.learning_rate,
+            momentum=configs.momentum,
+            nesterov=True,
+        )
 
         self.trained_epochs = 0
 
@@ -114,7 +144,7 @@ class CoNLLNERTrainer(BaseTrainer):
         train_total = 0.0
 
         start_time = time.time()
-        self.model.train()
+        self.model.run()
 
         # Each time we will clear and reload the train_instances_cache
         instances = self.train_instances_cache
@@ -196,7 +226,6 @@ class CoNLLNERTrainer(BaseTrainer):
         ):
             self.__past_dev_result = eval_result
             logger.info("validation f1 increased, saving model")
-            self.save_resources()
             # self.save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
@@ -224,12 +253,11 @@ class CoNLLNERTrainer(BaseTrainer):
             acc, prec, rec, f1, best_epoch,
         )
 
-    def finish(self):
-        self.save_resources()
-        # self.save_model_checkpoint()
-
-    def save_resources(self):
-        self.resource.save()
+    def finish(self, resources: Resources):  # pylint: disable=unused-argument
+        # TODO: save only the resources related to the NER trainer to a path
+        #  specified by the config, so that they can be reload back in the
+        #  predictor.
+        self.save_model_checkpoint()
 
     def save_model_checkpoint(self):
         states = {
@@ -248,10 +276,13 @@ class CoNLLNERTrainer(BaseTrainer):
     def get_batch_tensor(self, data: List, device=None):
         """
 
-        :param data: A list of quintuple
-            (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids
-        :param device:
-        :return:
+        Args:
+            data: A list of tuple
+              (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
+            device: The device the tensor should be reside on.
+
+        Returns:
+
         """
         batch_size = len(data)
         batch_length = max([len(d[0]) for d in data])
@@ -304,6 +335,7 @@ class CoNLLNERTrainer(BaseTrainer):
 def batch_size_fn(new: Tuple, count: int, _: int):
     if count == 1:
         batch_size_fn.max_length = 0  # type: ignore
+
     batch_size_fn.max_length = max(  # type: ignore
         batch_size_fn.max_length, len(new[0]))  # type: ignore
     elements = count * batch_size_fn.max_length  # type: ignore

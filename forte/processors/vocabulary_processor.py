@@ -1,23 +1,28 @@
 import json
 import os
-from collections import Counter
-from typing import Any, Counter as CounterType, Dict, Iterator, List, Optional
+from abc import ABC
+from typing import Counter as CounterType, Dict, List, Optional
 
 import texar.torch as tx
 
-from forte.data import DataPack
-from forte.data.ontology import base_ontology
 from forte.processors.base import BaseProcessor
-from forte.models.NER.utils import normalize_digit_word
 
 __all__ = [
     "Alphabet",
     "VocabularyProcessor",
-    "CoNLL03VocabularyProcessor",
 ]
 
 
 class Alphabet:
+    """
+    Args:
+        name:
+        keep_growing:
+        ignore_case_in_query:
+            If it's True, Alphabet will try to query the lowercased input from
+            it's vocabulary if it cannot find the input in its keys.
+    """
+
     def __init__(
             self,
             name,
@@ -26,14 +31,6 @@ class Alphabet:
             ignore_case_in_query: bool = True,
             other_embeddings: Optional[Dict] = None,
     ):
-        """
-
-        :param name:
-        :param keep_growing:
-        :param ignore_case_in_query:
-            If it's True, Alphabet will try to query the lowercased input from
-            it's vocabulary if it cannot find the input in its keys.
-        """
         self.__name = name
         self.reserved_tokens = tx.data.SpecialTokens
 
@@ -71,8 +68,11 @@ class Alphabet:
 
     def get_index(self, instance):
         """
-        :param instance: the input token
-        :return: the index of the queried token in the dictionary
+        Args:
+            instance: the input token
+
+        Returns:
+            the index of the queried token in the dictionary
         """
         if instance is None:
             return self.instance2index[self.reserved_tokens.PAD]
@@ -122,10 +122,11 @@ class Alphabet:
 
     def save(self, output_directory, name=None):
         """
-        Save both alhpabet records to the given directory.
-        :param output_directory: Directory to save model and weights.
-        :param name: The alphabet saving name, optional.
-        :return:
+        Save both alphabet records to the given directory.
+
+        Args:
+            output_directory: Directory to save model and weights.
+            name: The alphabet saving name, optional.
         """
         saving_name = name if name else self.__name
 
@@ -139,11 +140,6 @@ class Alphabet:
         )
 
     def load(self, input_directory, name=None):
-        """
-        :param input_directory:
-        :param name:
-        :return:
-        """
         loading_name = name if name else self.__name
         self.__from_json(
             json.load(
@@ -153,91 +149,12 @@ class Alphabet:
         self.keep_growing = False
 
 
-class VocabularyProcessor(BaseProcessor):
+class VocabularyProcessor(BaseProcessor, ABC):
     """
-    Build vocabulary from the input DataPack,
-    Write the result to either:
-        1. Another file
-        2. write into the DataPack directly? Then if we want to build a joint
-         vocabulary multiple Datapacks, we need to extract these vocabulary from
-         datapacks, and then where to write this?
-    Format: token, count
+    Build vocabulary from the input DataPack, write the result into the
+    shared resources.
     """
 
-    def __init__(self, min_frequency) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.min_frequency = min_frequency
-
-    def process(self, input_pack: Iterator[DataPack]) -> Dict[str, Any]:
-        """
-        :param input_pack:
-        :return:
-        """
-        pass
-
-
-class CoNLL03VocabularyProcessor(VocabularyProcessor):
-    """
-    Vocabulary Processor for the format of CoNLL data
-    Create the vocabulary for the word, character, pos tag, chunk id and ner
-    tag
-    """
-
-    def __init__(
-            self,
-            min_frequency: int = -1,
-            normalize_digit: bool = True,
-    ) -> None:
-        super().__init__(min_frequency)
-        self.normalize_digit = normalize_digit
-
-    def normalize_func(self, x):
-        if self.normalize_digit:
-            return normalize_digit_word(x)
-        else:
-            return x
-
-    def process(  # type: ignore
-            self,
-            input_pack: Iterator[DataPack]) -> List[CounterType[str]]:
-        """
-        :param input_pack: The ner_data packs to create vocabulary with
-        :return:
-            A list of five counters for different ner_data features, for words,
-            characters, POS tags, chunk IDs and Name Entity Recognition
-        """
-        word_cnt: Counter = Counter()
-        char_cnt: Counter = Counter()
-        pos_cnt: Counter = Counter()
-        chunk_cnt: Counter = Counter()
-        ner_cnt: Counter = Counter()
-
-        for data_pack in input_pack:
-            for instance in data_pack.get_data(
-                    context_type=base_ontology.Sentence,
-                    requests={
-                        base_ontology.Token:
-                            ["chunk_tag", "pos_tag", "ner_tag"],
-                    },
-            ):
-                for token in instance["Token"]["text"]:
-                    for char in token:
-                        char_cnt[char] += 1
-                    word = self.normalize_func(token)
-                    word_cnt[word] += 1
-
-                for pos in instance["Token"]["pos_tag"]:
-                    pos_cnt[pos] += 1
-                for chunk in instance["Token"]["chunk_tag"]:
-                    chunk_cnt[chunk] += 1
-                for ner in instance["Token"]["ner_tag"]:
-                    ner_cnt[ner] += 1
-
-                # if a singleton is in pre-trained embedding dict,
-                # set the count to min_occur + c
-
-        for word in word_cnt:
-            if word_cnt[word] < self.min_frequency:
-                del word_cnt[word]
-
-        return [word_cnt, char_cnt, pos_cnt, chunk_cnt, ner_cnt]
+        self.min_frequency = 0

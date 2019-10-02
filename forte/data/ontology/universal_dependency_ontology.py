@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 
 from forte.data.ontology.base_ontology import (Token, Sentence, Document,
                                                Dependency)
+from forte.data.data_pack import DataPack
 
 __all__ = [
     "Sentence",
@@ -20,8 +21,8 @@ class DependencyToken(Token):
         Token type for dependency parsing containing additional information
         than base_ontology.Token
     """
-    def __init__(self, begin: int, end: int):
-        super().__init__(begin, end)
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
         # self._tid defined as a part of Entry
         # self.text defined as a part of Annotation
         self.is_root: bool = False
@@ -38,7 +39,8 @@ class UniversalDependency(Dependency):
     additional "dependency type" (primary or enhanced) information
     """
     def __init__(self,
+                 pack: DataPack,
                  parent: Optional[DependencyToken] = None,
                  child: Optional[DependencyToken] = None):
-        super().__init__(parent, child)
+        super().__init__(pack, parent, child)
         self.dep_type: Optional[str] = None

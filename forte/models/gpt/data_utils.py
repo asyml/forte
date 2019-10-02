@@ -15,9 +15,8 @@
 Utils of data preprocessing for GPT2 training.
 """
 
-from typing import Any, Dict, List, Optional
-
 import os
+from typing import Any, Dict, List, Optional
 
 import texar.torch as tx
 

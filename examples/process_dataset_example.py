@@ -5,12 +5,14 @@ from termcolor import colored
 from texar.torch import HParams
 
 from forte.data.ontology.base_ontology import (
-    Token, Sentence, EntityMention, PredicateLink)
+    Token, Sentence, EntityMention, PredicateLink, PredicateArgument,
+    PredicateMention)
 from forte.pipeline import Pipeline
 from forte.data.readers import PlainTextReader
 from forte.processors import (
-    NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
+from examples.processors.NLTK_processors import NLTKWordTokenizer, \
+    NLTKPOSTagger, NLTKSentenceSegmenter
 
 
 def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
@@ -35,7 +37,7 @@ def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
         SRLPredictor.default_hparams()
     )
     pl.add_processor(SRLPredictor(), srl_configs)
-    pl.initialize_processors()
+    pl.initialize()
 
     for pack in pl.process_dataset(dataset_dir):
         print(colored("Document", 'red'), pack.meta.doc_id)
@@ -54,8 +56,8 @@ def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
             print(colored("Semantic role labels:", 'red'))
             for link in pack.get(
                     PredicateLink, sentence):
-                parent = link.get_parent()
-                child = link.get_child()
+                parent: PredicateMention = link.get_parent()  # type: ignore
+                child: PredicateArgument = link.get_child()  # type: ignore
                 print(f"  - \"{child.text}\" is role {link.arg_type} of "
                       f"predicate \"{parent.text}\"")
                 entities = [entity.text for entity

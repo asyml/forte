@@ -1,10 +1,11 @@
 import logging
 from typing import Dict
+
 import yaml
 from texar.torch.hyperparams import HParams
 
-from forte.data import DataPack
 from forte.base_pipeline import BasePipeline
+from forte.data import DataPack
 from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
@@ -16,19 +17,22 @@ __all__ = [
 
 class Pipeline(BasePipeline[DataPack]):
     """
-    The pipeline consists of a list of predictors.
+        The main pipeline class for processing DataPack.
     """
+
     def init_from_config(self, configs: Dict):
         """
-        Parse the configuration sections from the input config,
-            into a list of [processor, config]
         Initialize the pipeline with the configurations
-        """
 
+        Args:
+            configs: The configurations used to create the pipeline.
+
+        Returns:
+
+        """
         # HParams cannot create HParams from the inner dict of list
 
         if "Processors" in configs and configs["Processors"] is not None:
-
             for processor_configs in configs["Processors"]:
 
                 p_class = get_class(processor_configs["type"])
@@ -63,7 +67,7 @@ class Pipeline(BasePipeline[DataPack]):
                                             default_processor_hparams)
                 self.add_processor(p, processor_hparams)
 
-            self.initialize_processors()
+            self.initialize()
 
         if "Ontology" in configs.keys() and configs["Ontology"] is not None:
             module_path = ["__main__",

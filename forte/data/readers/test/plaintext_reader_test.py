@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from ddt import ddt, data
 
-from forte.data.ontology.top import Span
+from forte.data.base import Span
 from forte.data.readers.plaintext_reader import PlainTextReader
 
 

@@ -46,13 +46,13 @@ class ConllUDReaderTest(unittest.TestCase):
             data_pack = self.data_packs[doc_index]
             self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
 
-            doc_entry = data_pack.get_entry_by_id(f"{doc_module}.{0}")
+            doc_entry = data_pack.get_entry(f"{doc_module}.{0}")
 
             expected_doc_text = expected_docs_text[doc_index]
             self.assertEqual(doc_entry.text, ' '.join(expected_doc_text))
 
             for sent_index, expected_sent_text in enumerate(expected_doc_text):
-                sent_entry = data_pack.get_entry_by_id(
+                sent_entry = data_pack.get_entry(
                     f"{sent_module}.{sent_index}")
                 self.assertEqual(sent_entry.text, expected_sent_text)
 
@@ -71,10 +71,16 @@ class ConllUDReaderTest(unittest.TestCase):
 
 def get_dependency_tree_root(link, data_pack):
     """
-    Returns the root token of the dependency tree in :param data_pack given an
-    intermediate :param link
-    TODO: make it robust enough to handle cycles for enhanced dependencies
+    Returns the root token of the dependency tree.
+
+    Args:
+        link: The intermediate dependency link.
+        data_pack: The data pack to be worked on.
+
+    Returns:
+
     """
+    #    TODO: make it robust enough to handle cycles for enhanced dependencies
     token = link.get_parent()
     if token.is_root:
         return token
