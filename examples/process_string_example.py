@@ -11,10 +11,10 @@ from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
     CoNLLNERPredictor, SRLPredictor)
+from forte.processors.simple_writers import SimpleJsonPackWriter
 from examples.processors.NLTK_processors import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
 from examples.processors.StanfordNLP_processor import StandfordNLPProcessor
-from forte.processors.simple_writers import SimpleJsonPackWriter
 
 
 def string_processor_example(ner_model_dir: str, srl_model_dir: str):
