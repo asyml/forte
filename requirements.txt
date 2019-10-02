@@ -4,3 +4,4 @@ numpy
 jsonpickle
 torch
 pyyaml
+allennlp
