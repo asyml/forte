@@ -37,21 +37,6 @@ Base Processors
 Task Processors
 ===================
 
-:hidden:`NLTKSentenceSegmenter`
-----------------------------------
-.. autoclass:: forte.processors.sentence_predictor.NLTKSentenceSegmenter
-    :members:
-
-:hidden:`NLTKWordTokenizer`
-----------------------------------
-.. autoclass:: forte.processors.tokenization_predictor.NLTKWordTokenizer
-    :members:
-
-:hidden:`NLTKPOSTagger`
-----------------------------------
-.. autoclass:: forte.processors.postag_predictor.NLTKPOSTagger
-    :members:
-
 :hidden:`CoNLLNERPredictor`
 ----------------------------------
 .. autoclass:: forte.processors.ner_predictor.CoNLLNERPredictor
