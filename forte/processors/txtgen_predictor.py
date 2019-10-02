@@ -9,8 +9,10 @@ from texar.torch.hyperparams import HParams
 from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
-from forte.data.batchers import ProcessingBatcher, \
+from forte.data.batchers import (
+    ProcessingBatcher,
     FixedSizeMultiPackProcessingBatcher
+)
 from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
 from forte.processors.base import ProcessInfo

@@ -10,9 +10,10 @@ from forte.data.ontology.ontonotes_ontology import (
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
-    NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
-from forte.processors.StanfordNLP_processor import StandfordNLPProcessor
+from examples.processors.NLTK_processors import NLTKWordTokenizer, \
+    NLTKPOSTagger, NLTKSentenceSegmenter
+from examples.processors.StanfordNLP_processor import StandfordNLPProcessor
 from forte.processors.simple_writers import SimpleJsonPackWriter
 
 
