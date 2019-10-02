@@ -15,7 +15,7 @@ from forte.common.resources import Resources
 from forte.data.ontology import base_ontology
 from forte.trainer.base.base_trainer import BaseTrainer
 from forte.models.NER.utils import normalize_digit_word, set_random_seed
-from examples.NER.model_factory import BiRecurrentConvCRF
+from forte.models.NER.model_factory import BiRecurrentConvCRF
 
 logger = logging.getLogger(__name__)
 

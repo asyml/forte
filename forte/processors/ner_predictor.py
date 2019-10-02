@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from texar.torch.hyperparams import HParams
 
-from examples.NER.model_factory import BiRecurrentConvCRF
+from forte.models.NER.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data import DataPack

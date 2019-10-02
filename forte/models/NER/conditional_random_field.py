@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Conditional random field.
 Adapted from AllenNLP but removed the feature of external restriction
@@ -200,7 +201,7 @@ class ConditionalRandomField(torch.nn.Module):
     def __init__(
         self,
         num_tags: int,
-        constraints: List[Tuple[int, int]] = None,
+        constraints: Optional[List[Tuple[int, int]]] = None,
         include_start_end_transitions: bool = True,
     ) -> None:
         super().__init__()

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import logging
 import os
 from typing import Tuple
@@ -10,7 +11,7 @@ import texar.torch as texar
 from texar.torch.hyperparams import HParams
 from texar.torch.modules.embedders import WordEmbedder
 
-from examples.NER.conditional_random_field import ConditionalRandomField
+from forte.models.NER.conditional_random_field import ConditionalRandomField
 
 
 class BiRecurrentConvCRF(nn.Module):
@@ -251,45 +252,6 @@ def recover_rnn_seq(seq, rev_order, hx=None, batch_first=False):
             else:
                 hx = hx.index_select(1, rev_order)
     return output, hx
-
-
-def evaluate(output_file: str) -> Tuple[float, float, float, float]:
-    """
-    Implements the Conll03 evaluation metric.
-
-    Args:
-        output_file: The file to be evaluated
-
-    Returns: the metrics evaluated by the conll03_eval.v2 script
-        (accuracy, precision, recall, F1)
-
-    """
-    score_file = f"{output_file}.score"
-    os.system("./conll03eval.v2 < %s > %s" % (output_file, score_file))
-    with open(score_file, "r") as fin:
-        fin.readline()
-        line = fin.readline()
-        fields = line.split(";")
-        acc = float(fields[0].split(":")[1].strip()[:-1])
-        precision = float(fields[1].split(":")[1].strip()[:-1])
-        recall = float(fields[2].split(":")[1].strip()[:-1])
-        f1 = float(fields[3].split(":")[1].strip())
-    return acc, precision, recall, f1
-
-
-def get_logger(
-        name,
-        level=logging.INFO,
-        formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-):
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    fh = logging.FileHandler(name + ".log")
-    fh.setLevel(level)
-    fh.setFormatter(logging.Formatter(formatter))
-    logger.addHandler(fh)
-
-    return logger
 
 
 def batch_size_fn(new: Tuple, count: int,
