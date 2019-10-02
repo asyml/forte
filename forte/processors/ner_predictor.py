@@ -92,7 +92,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             self.config_model
         ).to(device=device)
 
-
         self.model = resource.resources["model"]
         self.device = resource.resources["device"]
         self.normalize_func = resource.resources['normalize_func']
