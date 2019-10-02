@@ -51,7 +51,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         batch will contain the POS tags for all words in the sentence.
 
         The "context" parameter here has the same meaning as the
-        :meth:``get_data()`` function in class :class:``DataPack``.
+        :meth:`get_data()` function in class :class:`DataPack`.
         """
         raise NotImplementedError
 

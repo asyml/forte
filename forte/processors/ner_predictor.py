@@ -6,11 +6,13 @@ import numpy as np
 import torch
 from texar.torch.hyperparams import HParams
 
+from examples.NER.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.datasets.conll import conll_utils
 from forte.data.ontology import conll03_ontology as conll
+from forte.models.NER.utils import normalize_digit_word, set_random_seed
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
@@ -65,13 +67,31 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
     def initialize(self, resource: Resources, configs: HParams):
         self.define_batcher()
 
-        resource.load(configs.storage_path)
+        self.config_model = configs.config_model
+        self.config_data = configs.config_data
 
-        self.word_alphabet = resource.resources["word_alphabet"]
-        self.char_alphabet = resource.resources["char_alphabet"]
-        self.ner_alphabet = resource.resources["ner_alphabet"]
-        self.config_model = resource.resources["config_model"]
-        self.config_data = resource.resources["config_data"]
+        # TODO: populate the resources based on the config.
+        self.word_alphabet = resource.get("word_alphabet")
+        self.char_alphabet = resource.get("char_alphabet")
+        self.ner_alphabet = resource.get("ner_alphabet")
+        word_embedding_table = resource.get('word_embedding_table')
+
+        self.normalize_func = normalize_digit_word
+
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
+
+        set_random_seed(self.config_model.random_seed)
+
+        self.model = BiRecurrentConvCRF(
+            word_embedding_table,
+            self.char_alphabet.size(),
+            self.ner_alphabet.size(),
+            self.config_model
+        ).to(device=device)
+
         self.model = resource.resources["model"]
         self.device = resource.resources["device"]
         self.normalize_func = resource.resources['normalize_func']
@@ -191,10 +211,13 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
     def get_batch_tensor(self, data: List, device=None):
         """
 
-        :param data: A list of quintuple
-            (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids
-        :param device:
-        :return:
+        Args:
+            data: A list of tuple (word_ids, char_id_sequences, pos_ids,
+              chunk_ids, ner_ids)
+            device: The device for the tensors.
+
+        Returns:
+
         """
         batch_size = len(data)
         batch_length = max([len(d[0]) for d in data])

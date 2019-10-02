@@ -85,7 +85,10 @@ class ProcessBuffer:
 
 class BasePipeline(Generic[PackType]):
     """
-    The pipeline consists of a list of predictors.
+        This controls the main inference flow of the system. A pipeline is
+        consisted of a set of Components (readers and processors). The data
+        flows in the pipeline as data packs, and each component will use or
+        add information to the data packs.
     """
 
     def __init__(self, resource: Optional[Resources] = None):
@@ -110,10 +113,13 @@ class BasePipeline(Generic[PackType]):
         Read the configs from the given path ``config_path``
         and build the pipeline with the config.
 
-        :param config_path: A string of the configuration path. The config_path
-        is a YAML file that specify the structure and parameters of the
-        processor.
-        :return:
+        Args:
+            config_path: A string of the configuration path, which is
+            is a YAML file that specify the structure and parameters of the
+            pipeline.
+
+        Returns:
+
         """
         configs = yaml.safe_load(open(config_path))
         self.init_from_config(configs)
@@ -122,6 +128,12 @@ class BasePipeline(Generic[PackType]):
     def init_from_config(self, configs: Dict):
         """
         Initialized the pipeline (ontology and processors) from given configs
+
+        Args:
+            configs: The configs used to initialize the pipeline.
+
+        Returns:
+
         """
         raise NotImplementedError
 
@@ -172,9 +184,10 @@ class BasePipeline(Generic[PackType]):
     def process(self, *args, **kwargs) -> PackType:
         """
         Alias for process_one.
+
         Args:
-            *args:
-            **kwargs:
+            args: The positional arguments used to get the initial data.
+            kwargs: The keyword arguments used to get the initial data.
 
         Returns:
 
@@ -186,9 +199,10 @@ class BasePipeline(Generic[PackType]):
         Run the whole pipeline and ignore all returned DataPack. This is used
         when the users are relying on the side effect of the processors (e.g.
         a process that will write Packs to disk).
+
         Args:
-            *args:
-            **kwargs:
+            args: The positional arguments used to get the initial data.
+            kwargs: The keyword arguments used to get the initial data.
 
         Returns:
 
@@ -237,6 +251,7 @@ class BasePipeline(Generic[PackType]):
     ) -> Iterator[PackType]:
         """
         Process an iterator of data packs and return the  processed ones.
+
         Args:
             data_iter: An iterator of the data packs.
 

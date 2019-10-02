@@ -43,8 +43,12 @@ class ConllUDReader(PackReader):
         # pylint: disable = no-self-use, unused-argument
         """
         Iterator over conll files in the data_source
-        :param args[0]: directory to the conllu files.
-        :return: data_packs obtained from each document from each conllu file.
+
+        Args:
+            args: args[0] is the directory to the conllu files.
+            kwargs:
+
+        Returns: data packs obtained from each document from each conllu file.
         """
         conll_dir_path = args[0]
 

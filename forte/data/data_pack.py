@@ -166,8 +166,9 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def get_original_span(self, input_processed_span: Span,
                           align_mode: str = "relaxed"):
-        """Function to obtain span of the original text that aligns with the
-        given span of the processed text
+        """
+        Function to obtain span of the original text that aligns with the
+        given span of the processed text.
 
         Args:
             input_processed_span: Span of the processed text for which the
@@ -176,7 +177,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             cases, that is, if a part of input_processed_span spans a part
             of the inserted span, then align_mode controls whether to use the
             span fully or ignore it completely according to the following
-            possible values -
+            possible values
+
             - "strict" - do not allow ambiguous input, give ValueError
             - "relaxed" - consider spans on both sides
             - "forward" - align looking forward, that is, ignore the span
@@ -189,19 +191,20 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         Example:
             * Let o-up1, o-up2, ... and m-up1, m-up2, ... denote the unprocessed
-            spans of the original and modified string respectively. Note that
-            each o-up would have a corresponding m-up of the same size.
+              spans of the original and modified string respectively. Note that
+              each o-up would have a corresponding m-up of the same size.
             * Let o-pr1, o-pr2, ... and m-pr1, m-pr2, ... denote the processed
-            spans of the original and modified string respectively. Note that
-            each o-p is modified to a corresponding m-pr that may be of a
-            different size than o-pr.
+              spans of the original and modified string respectively. Note that
+              each o-p is modified to a corresponding m-pr that may be of a
+              different size than o-pr.
             * Original string:
-            <--o-up1--> <-o-pr1-> <------o-up2------> <----o-pr2----> <-o-up3->
+              <--o-up1--> <-o-pr1-> <----o-up2----> <----o-pr2----> <-o-up3->
             * Modified string:
-            <--m-up1--> <----m-pr1----> <------m-up2------> <-m-pr2-> <-m-up3->
+              <--m-up1--> <----m-pr1----> <----m-up2----> <-m-pr2-> <-m-up3->
             * Note that `self.inverse_original_spans` that contains modified
-            processed spans and their corresponding original spans, would look
-            like - [(o-pr1, m-pr1), (o-pr2, m-pr2)]
+              processed spans and their corresponding original spans, would look
+              like - [(o-pr1, m-pr1), (o-pr2, m-pr2)]
+
             >> data_pack = DataPack()
             >> original_text = "He plays in the park"
             >> data_pack.set_text(original_text,\
@@ -774,7 +777,7 @@ class DataIndex(BaseIndex):
        (:attr:`link_index["child_index"]`)and parent
        (:attr:`link_index["parent_index"]`) nodes to links
     #. :attr:`group_index`, the index from group members to groups.
-    #. :attr:`_coverage_index`, the index that maps from an annotataion to
+    #. :attr:`_coverage_index`, the index that maps from an annotation to
        the entries it covers. :attr:`_coverage_index` is a dict of dict, where
        the key is a tuple of the outer entry type and the inner entry type.
        The outer entry type should be an annotation type. The value is a dict,
@@ -804,7 +807,7 @@ class DataIndex(BaseIndex):
             outer_type: Type[Annotation],
             inner_type: Type[EntryType]) -> Optional[Dict[str, Set[str]]]:
         """
-        Get the covrage index from ``outer_type`` to ``inner_type``.
+        Get the coverage index from ``outer_type`` to ``inner_type``.
 
         Args:
             outer_type (type): an annotation type.

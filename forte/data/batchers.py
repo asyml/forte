@@ -12,6 +12,8 @@ from forte.data.ontology import Entry, Annotation
 
 __all__ = [
     "ProcessingBatcher",
+    "FixedSizeDataPackBatcher",
+    "FixedSizeMultiPackProcessingBatcher",
 ]
 
 

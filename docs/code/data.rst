@@ -7,14 +7,24 @@ Data
 Ontology
 ==========
 
+core
+----------
+.. autoclass:: forte.data.ontology.core.Entry
+    :members:
+
+.. autoclass:: forte.data.ontology.core.BaseLink
+    :members:
+
+.. autoclass:: forte.data.ontology.core.BaseGroup
+    :members:
+
+base
+----------
+.. autoclass:: forte.data.base.Span
+    :members:
+
 top
 ----------
-.. autoclass:: forte.data.ontology.top.Span
-    :members:
-
-.. autoclass:: forte.data.ontology.top.Entry
-    :members:
-
 .. autoclass:: forte.data.ontology.top.Annotation
     :members:
 
@@ -23,6 +33,16 @@ top
 
 .. autoclass:: forte.data.ontology.top.Group
     :members:
+
+.. autoclass:: forte.data.ontology.top.MultiPackGroup
+    :members:
+
+.. autoclass:: forte.data.ontology.top.MultiPackLink
+    :members:
+
+.. autoclass:: forte.data.ontology.top.SubEntry
+    :members:
+
 
 base_ontology
 ---------------
@@ -134,11 +154,6 @@ Readers
 .. autoclass:: forte.data.readers.string_reader.StringReader
     :members:
 
-:hidden:`MonoFileReader`
-------------------------
-.. autoclass:: forte.data.readers.file_reader.MonoFileReader
-    :members:
-
 :hidden:`PlainTextReader`
 --------------------------
 .. autoclass:: forte.data.readers.plaintext_reader.PlainTextReader
@@ -157,21 +172,10 @@ Readers
 Batchers
 ==========
 
-:hidden:`Batcher`
-------------------------
-.. autoclass:: forte.data.batchers.Batcher
-    :members:
-
 :hidden:`ProcessingBatcher`
 ------------------------------
 .. autoclass:: forte.data.batchers.ProcessingBatcher
     :members:
-
-:hidden:`TexarBatcher`
-------------------------
-.. autoclass:: forte.data.batchers.TexarBatcher
-    :members:
-
 
 io_utils
 ==========

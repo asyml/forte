@@ -26,10 +26,13 @@ class PlainTextReader(PackReader):
     # pylint: disable=no-self-use
     def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
         """
-        Should be called with param `data_source`
-        which is a path to a folder containing txt files
-        :param text_directory: text directory containing the files.
-        :return: Iterator over paths to .txt files
+        Should be called with param `text_directory` which is a path to a folder
+        containing txt files.
+        Args:
+            text_directory: text directory containing the files.
+
+        Returns: Iterator over paths to .txt files
+
         """
         return dataset_path_iterator(text_directory, ".txt")
 

@@ -60,9 +60,6 @@ class CoNLLNERTrainer(BaseTrainer):
         self.config_model = configs.config_model
         self.config_data = configs.config_data
 
-        self.model = resource.resources["model"]
-        self.optim = resource.resources["optim"]
-        self.device = resource.resources["device"]
         self.normalize_func = normalize_digit_word
 
         if torch.cuda.is_available():
@@ -70,13 +67,13 @@ class CoNLLNERTrainer(BaseTrainer):
         else:
             device = torch.device("cpu")
 
-        set_random_seed(configs.random_seed)
+        set_random_seed(self.config_model.random_seed)
 
         self.model = BiRecurrentConvCRF(
             word_embedding_table,
             self.char_alphabet.size(),
             self.ner_alphabet.size(),
-            configs
+            self.config_model
         ).to(device=device)
 
         self.optim = SGD(
@@ -256,8 +253,10 @@ class CoNLLNERTrainer(BaseTrainer):
             acc, prec, rec, f1, best_epoch,
         )
 
-    def finish(self, resources):  # pylint: disable=unused-argument
-        # resources.save
+    def finish(self, resources: Resources):  # pylint: disable=unused-argument
+        # TODO: save only the resources related to the NER trainer to a path
+        #  specified by the config, so that they can be reload back in the
+        #  predictor.
         self.save_model_checkpoint()
 
     def save_model_checkpoint(self):
@@ -277,10 +276,13 @@ class CoNLLNERTrainer(BaseTrainer):
     def get_batch_tensor(self, data: List, device=None):
         """
 
-        :param data: A list of quintuple
-            (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids
-        :param device:
-        :return:
+        Args:
+            data: A list of tuple
+              (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
+            device: The device the tensor should be reside on.
+
+        Returns:
+
         """
         batch_size = len(data)
         batch_length = max([len(d[0]) for d in data])

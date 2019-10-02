@@ -35,8 +35,11 @@ class CoNLL03Reader(PackReader):
     def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
         """
         Iterator over conll files in the data_source
-        :param conll_directory: directory to the conll files.
-        :return: Iterator over files with conll path
+
+        Args:
+            conll_directory:  directory to the conll files.
+
+        Returns: Iterator over files in the path with conll extensions.
         """
         return dataset_path_iterator(conll_directory, "conll")
 

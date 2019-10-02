@@ -42,8 +42,12 @@ class ProdigyReader(PackReader):
         of Prodigy annotation data. The elements in the iterator
         correspond to each line in the prodigy file.
         One element is expected to be parsed as one DataPack.
-        :param prodigy_annotation_file: a Prodigy file path
-        :yield: Iterator of each line in the prodigy file
+
+        Args:
+            prodigy_annotation_file:  a Prodigy file path.
+
+        Returns: Iterator of each line in the prodigy file.
+
         """
         with open(prodigy_annotation_file) as f:
             for line in f:
@@ -54,8 +58,12 @@ class ProdigyReader(PackReader):
         Extracts information from input `data` of one document
         output from Prodigy Annotator including the text,
         tokens and its annotations into a DataPack.
-        :param data: a dict that contains information for one document.
-        :return pack: DataPack containing information extracted from `data`.
+
+        Args:
+            data: a dict that contains information for one document.
+
+        Returns: DataPack containing information extracted from `data`.
+
         """
         pack = DataPack()
         text = data['text']

@@ -114,7 +114,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def is_poison(self) -> bool:
         """
-            See :meth:``get_poison``.
+        Indicate that this is a poison (a placeholder element that indicate
+        the end of the flow).
         Returns:
 
         """
@@ -124,6 +125,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def validate(self, entry: EntryType) -> bool:
         """
         Validate whether this type can be added.
+
         Args:
             entry:
 
@@ -216,21 +218,22 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return {self.get_entry(tid)
                 for tid in self.get_ids_by_component(component)}
 
-    def get_ids_by_type(self, tp: Type[EntryType]) -> Set[str]:
+    def get_ids_by_type(self, entry_type: Type[EntryType]) -> Set[str]:
         """
-        Look up the type_index with key ``tp``.
+        Look up the type_index with key ``entry_type``.
 
         Returns:
-             A set of entry tids. The entries are instances of tp (and also
-             includes instances of the subclasses of tp).
+             A set of entry tids. The entries are instances of entry_type (
+             and also includes instances of the subclasses of entry_type).
         """
         subclass_index = set()
         for index_key, index_val in self.index.type_index.items():
-            if issubclass(index_key, tp):
+            if issubclass(index_key, entry_type):
                 subclass_index.update(index_val)
 
         if len(subclass_index) == 0:
-            logging.warning("There is no %s type entry in this datapack", tp)
+            logging.warning(
+                "There is no %s type entry in this datapack", entry_type)
         return subclass_index
 
     def get_entries_by_type(self, tp: Type[EntryType]) -> Set[EntryType]:

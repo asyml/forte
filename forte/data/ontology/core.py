@@ -13,15 +13,30 @@ from forte.data.container import EntryContainer
 from forte.utils import get_full_module_name
 from forte.common.const import default_component
 
+__all__ = [
+    "Entry",
+    "BaseLink",
+    "BaseGroup",
+]
+
 
 class Entry(Indexable):
     """
-    The base class inherited by all NLP entries.
-    There will be some associated attributes for each entry.
-    - component: specify the creator of the entry
-    - _data_pack: each entry can be attached to a pack with
-        ``attach`` function.
-    - _tid: a unique identifier of this entry in the data pack
+        The base class inherited by all NLP entries. This is the main data type
+        for all in-text NLP analysis results. The main sub-types are
+        ``Annotation``, ``Link`` and ``Group``.
+        An :class:`forte.data.ontology.top.Annotation` object represents a
+        span in text.
+        A :class:`forte.data.ontology.top.Link` object represents a binary
+        link relation between two entries.
+        A :class:`forte.data.ontology.top.Group` object represents a
+        collection of multiple entries.
+
+        There will be some associated attributes for each entry, which can be
+        set via :meth:`set_fields` and retrieved via :meth:`get_field`.
+
+        Args:
+            pack: Each entry should be associated with one pack upon creation.
     """
 
     def __init__(self, pack: EntryContainer):
@@ -51,6 +66,7 @@ class Entry(Indexable):
     def set_component(self, component: str):
         """
         Set the component of the creator of this entry.
+
         Args:
             component: The component name of the creator (processor or reader).
 
@@ -77,6 +93,7 @@ class Entry(Indexable):
     def set_fields(self, **kwargs):
         """
         Set the entry fields from the kwargs.
+
         Args:
             **kwargs: A set of key word arguments used to set the value. A key
             must be correspond to a field name of this entry, and a value must
@@ -229,6 +246,7 @@ class BaseGroup(Entry, Generic[EntryType]):
     def add_member(self, member: EntryType):
         """
         Add one entry to the group.
+
         Args:
             member:
 

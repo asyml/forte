@@ -10,8 +10,9 @@ from forte.data.ontology.base_ontology import (
 from forte.pipeline import Pipeline
 from forte.data.readers import PlainTextReader
 from forte.processors import (
-    NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
+from examples.processors.NLTK_processors import NLTKWordTokenizer, \
+    NLTKPOSTagger, NLTKSentenceSegmenter
 
 
 def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):

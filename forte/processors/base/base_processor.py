@@ -46,10 +46,13 @@ class BaseProcessor(PipeComponent[PackType], ABC):
         and register global resources into ``resource``. The implementation
         should set up the states of the processor.
 
-        :param configs: The configuration passed in to set up this processor.
-        :param resource: A global resource register. User can register
+        Args:
+            resource: A global resource register. User can register
         shareable resources here, for example, the vocabulary.
-        :return:
+            configs:  The configuration passed in to set up this processor.
+
+        Returns:
+
         """
         pass
 

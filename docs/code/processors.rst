@@ -25,7 +25,7 @@ Base Processors
 
 :hidden:`BasePackProcessor`
 ----------------------------
-.. autoclass:: forte.processors.base,pack_processor.BasePackProcessor
+.. autoclass:: forte.processors.base.pack_processor.BasePackProcessor
     :members:
     :private-members: _process
 
@@ -36,21 +36,6 @@ Base Processors
 
 Task Processors
 ===================
-
-:hidden:`NLTKSentenceSegmenter`
-----------------------------------
-.. autoclass:: forte.processors.sentence_predictor.NLTKSentenceSegmenter
-    :members:
-
-:hidden:`NLTKWordTokenizer`
-----------------------------------
-.. autoclass:: forte.processors.tokenization_predictor.NLTKWordTokenizer
-    :members:
-
-:hidden:`NLTKPOSTagger`
-----------------------------------
-.. autoclass:: forte.processors.postag_predictor.NLTKPOSTagger
-    :members:
 
 :hidden:`CoNLLNERPredictor`
 ----------------------------------
@@ -70,9 +55,4 @@ Task Processors
 :hidden:`VocabularyProcessor`
 ----------------------------------
 .. autoclass:: forte.processors.vocabulary_processor.VocabularyProcessor
-    :members:
-
-:hidden:`CoNLL03VocabularyProcessor`
---------------------------------------
-.. autoclass:: forte.processors.vocabulary_processor.CoNLL03VocabularyProcessor
     :members:
