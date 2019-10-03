@@ -20,13 +20,13 @@ Processors:
     hparams:
       overwrite_configs:
         selector:
-          type: "nlp.forte.data.selector.NameMatchSelector"
+          type: "forte.data.selector.NameMatchSelector"
           kwargs:
             select_name: output_tgt
   - type: "forte.processors.impl.NLTKPOSTagger"
     hparams:
       overwrite_configs:
         selector:
-          type: "nlp.forte.data.selector.NameMatchSelector"
+          type: "forte.data.selector.NameMatchSelector"
           kwargs:
             select_name: output_tgt

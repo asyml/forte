@@ -21,10 +21,14 @@ def normalize_digit_word(word):
 
 def load_glove_embedding(embedding_path, normalize_digits=True):
     """
-    load word embeddings from file
-    :param embedding_path: the file to load embedding from
-    :param normalize_digits: whether to normalize the digits characters in token
-    :return: embedding dict, embedding dimention, caseless
+    Load glove embeddings from file.
+
+    Args:
+        embedding_path:  the file to load embedding from.
+        normalize_digits: whether to normalize the digits characters in token.
+
+    Returns: embedding dict, embedding dimension, caseless
+
     """
 
     embedd_dim = -1
@@ -132,10 +136,14 @@ def recover_rnn_seq(seq, rev_order, hx=None, batch_first=False):
 
 def evaluate(output_file: str) -> Tuple[float, float, float, float]:
     """
-    :param output_file: The file to be evaluated
-    :return:
-        return the metrics evaluated by the conll03_eval.v2 script
+    Evaluate using the conll03 script.
+
+    Args:
+        output_file: The file to be evaluated
+
+    Returns: return the metrics evaluated by the conll03_eval.v2 script
         (accuracy, precision, recall, F1)
+
     """
     score_file = f"{output_file}.score"
     os.system(
@@ -153,9 +161,9 @@ def evaluate(output_file: str) -> Tuple[float, float, float, float]:
 
 
 def get_logger(
-    name,
-    level=logging.INFO,
-    formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        name,
+        level=logging.INFO,
+        formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 ):
     logger = logging.getLogger(name)
     logger.setLevel(level)

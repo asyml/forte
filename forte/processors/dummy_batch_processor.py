@@ -21,7 +21,11 @@ __all__ = [
 
 class DummyRelationExtractor(BatchProcessor):
     """
-    A dummy relation extractor
+    A dummy relation extractor.
+
+    Note that to use :class:`DummyRelationExtractor`, the :attr:`ontology` of
+    :class:`Pipeline` must be an ontology that includes
+    ``forte.data.ontology.relation_ontology``.
     """
 
     def __init__(self) -> None:

@@ -2,7 +2,7 @@ from typing import Generic
 
 from texar.torch import HParams
 
-from forte.common import Resources
+from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 
 
@@ -14,10 +14,13 @@ class PipeComponent(Generic[PackType]):
         and register global resources into ``resource``. The implementation
         should set up the states of the component.
 
-        :param configs: The configuration passed in to set up this component.
-        :param resource: A global resource register. User can register
-        shareable resources here, for example, the vocabulary.
-        :return:
+
+        Args:
+            resource: A global resource register. User can register
+              shareable resources here, for example, the vocabulary.
+            configs: The configuration passed in to set up this component.
+
+        Returns:
         """
         pass
 

@@ -76,12 +76,14 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
 
     def _process(self, data_pack: DataPack):
         """
-        :param data_pack: The ner data to create vocabulary with
-        :return:
-            A list of five counters for different ner_data features, for words,
-            characters, POS tags, chunk IDs and Name Entity Recognition
-        """
+        Process the data pack to collect vocabulary information.
 
+        Args:
+            data_pack: The ner data to create vocabulary with.
+
+        Returns:
+
+        """
         # for data_pack in input_pack:
         for instance in data_pack.get_data(
                 context_type=base_ontology.Sentence,

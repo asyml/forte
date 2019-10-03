@@ -22,17 +22,22 @@ __all__ = [
     "SRLPredictor",
 ]
 
-# Prediction = Dict[
-#     ontonotes_ontology.PredicateMention,
-#     List[Tuple[ontonotes_ontology.PredicateArgument, str]]
-# ]
-
 Prediction = List[
     Tuple[Span, List[Tuple[Span, str]]]
 ]
 
 
 class SRLPredictor(FixedSizeBatchProcessor):
+    """
+    An Semantic Role labeler trained according to `He, Luheng, et al.
+    "Jointly predicting predicates and arguments in neural semantic role
+    labeling." <https://aclweb.org/anthology/P18-2058>`_.
+
+    Note that to use :class:`SRLPredictor`, the :attr:`ontology` of
+    :class:`Pipeline` must be an ontology that includes
+    ``forte.data.ontology.ontonotes_ontology``.
+    """
+
     word_vocab: tx.data.Vocab
     char_vocab: tx.data.Vocab
     model: LabeledSpanGraphNetwork

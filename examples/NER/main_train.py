@@ -20,7 +20,7 @@ def main():
     config.add_hparam('config_data', config_data)
     config.add_hparam('config_model', config_model)
 
-    reader = CoNLL03Reader(lazy=False)
+    reader = CoNLL03Reader()
 
     # Keep the vocabulary processor as a simple counter
     vocab_processor = CoNLL03VocabularyProcessor()

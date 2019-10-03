@@ -338,19 +338,22 @@ class ConcatInputMLP(tx.ModuleBase):
                                          List[Tuple[torch.Tensor,
                                                     torch.Tensor]]]]) \
             -> torch.Tensor:
-        r"""
-        :param inputs: List of 2D or 3D Tensors (or list of `(index, float)`
-            tuples), representing indices for each concat'd part of the input
-            tensor. First dimension is the batch dimension.
+        """
 
-            - If an element of the list is another list, each inner list element
-              must be a tuple of `(index, coef)`, where `index` is used for
-              indexing, and all indexed tensors will be summed up, weighted by
-              the tensor `coef`.
-            - If the tensor is 2D, it must be a LongTensor.
-            - If the tensor is 3D, it must be a FloatTensor representing the
-              soft-IDs (weights for weighted average).
-        :return:
+        Args:
+            inputs: List of 2D or 3D Tensors (or list of `(index, float)`
+                tuples), representing indices for each concat'd part of the
+                input tensor. First dimension is the batch dimension.
+
+                - If an element of the list is another list, each inner list
+                  element must be a tuple of `(index, coef)`, where `index` is
+                  used for indexing, and all indexed tensors will be summed up,
+                  weighted by the tensor `coef`.
+                - If the tensor is 2D, it must be a LongTensor.
+                - If the tensor is 3D, it must be a FloatTensor representing the
+                  soft-IDs (weights for weighted average).
+
+        Returns:
         """
         parts = []
         for index, cache in zip(inputs, self._cached_inputs):

@@ -6,9 +6,14 @@ from typing import Hashable
 @total_ordering
 class Span:
     """
-    A class recording the span of annotations. :class:`Span` objects could
+    A class recording the span of annotations. :class:`Span` objects can
     be totally ordered according to their :attr:`begin` as the first sort key
     and :attr:`end` as the second sort key.
+
+    Args:
+        begin (int): The offset of the first character in the span.
+        end (int): The offset of the last character in the span + 1. So the
+            span is a left-closed and right-open interval ``[begin, end)``.
     """
 
     def __init__(self, begin: int, end: int):
