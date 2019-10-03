@@ -3,16 +3,15 @@
 """
 import os
 import unittest
-import shutil
 
-from forte.data.ontology.ontology_generator import OntologyGenerator
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 
 
 class GenerateOntologyTest(unittest.TestCase):
 
     def test_generated_code(self):
         # read json and generate code in a file
-        generator = OntologyGenerator()
+        generator = OntologyCodeGenerator()
         curr_path = os.path.dirname(os.path.realpath(__file__))
         json_file_path = os.path.join(curr_path, 'example_ontology_config.json')
         ontology_full_name, file_path, folder_path = \

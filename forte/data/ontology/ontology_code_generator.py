@@ -11,11 +11,11 @@ from typing import Dict, Tuple, List, Set
 from forte.data.ontology import utils
 
 
-class OntologyGenerator:
+class OntologyCodeGenerator:
     """
     Class to generate a python ontology file given ontology in json format
     Example:
-        >>> _, generated_file, _ = OntologyGenerator().generate_ontology(
+        >>> _, generated_file, _ = OntologyCodeGenerator().generate_ontology(
         'test/example_ontology_config.json')
         >>> assert open(generated_file, 'r').read() == \
                    open('test/true_example_ontology.py', 'r').read()
@@ -30,23 +30,32 @@ class OntologyGenerator:
     _ATTRIBUTES: str = "attributes"
     _ATTRIBUTE_NAME: str = "attribute_name"
     _ATTRIBUTE_TYPE: str = "attribute_type"
+    _ELEMENT_TYPE: str = "element_type"
     _ATTRIBUTE_DEFAULT_VALUE: str = "attribute_default_value"
     _INDENT: str = ' ' * 4
 
     # allowed parent entries and init arguments
     _INIT_ARGUMENTS: Dict[str, str] = {
         "forte.data.ontology.top.Annotation":
-            "begin: int, end: int",
+            "pack:forte.data.data_pack.DataPack, "
+            "begin: int, "
+            "end: int",
         "forte.data.ontology.top.Link":
-            "parent: Optional[Entry] = None, child: Optional[Entry] = None",
+            "pack:data_pack.DataPack, "
+            "parent: Optional[Entry] = None, "
+            "child: Optional[Entry] = None",
         "forte.data.ontology.top.Group":
+            "pack:data_pack.DataPack, "
             "members: Optional[Set[Entry]] = None"
          }
+
+    _PRIMARY_TYPES = ["bool", "int", "float", "str"]
+    _COMPOSITE_TYPES = ["List"]
 
     def __init__(self):
         # imports to be added to the ontology other than the ones defined in the
         # json
-        self.additional_imports: List[str] = ['typing']
+        self.additional_imports: List[str] = ['typing', 'forte.data.data_pack']
         # mapping from ontology full name to corresponding generated file and
         # folder path
         self._generated_ontology_record: Dict[str, Tuple[str, str]] = {}
@@ -62,13 +71,9 @@ class OntologyGenerator:
         """
             Initialize self._validation_tree with primary python data types
         """
-        self._validation_tree = {
-            "bool": set(),
-            "int": set(),
-            "float": set(),
-            "str": set(),
-            "list": set()
-        }
+        self._validation_tree = dict()
+        for allowed_type in self._PRIMARY_TYPES + self._COMPOSITE_TYPES:
+            self._validation_tree[allowed_type] = set()
 
     def generate_ontology(self, json_file_path: str):
         """
@@ -82,7 +87,6 @@ class OntologyGenerator:
             - Top level path of nested packages created
         """
         with open(json_file_path, 'r') as f:
-
             # reading ontology
             json_string: str = f.read()
             ontology: Dict = json.loads(json_string)
@@ -108,7 +112,8 @@ class OntologyGenerator:
             ontology_folder, ontology_file_name \
                 = self._get_ontology_info(ontology_full_name)
 
-            ontology_file_docstring: str = f'"""\nOntology file for ' \
+            ontology_file_docstring: str = f'# mypy: ignore-errors\n' \
+                                           f'"""\nOntology file for ' \
                                            f'{ontology_full_name}\n' \
                                            f'Automatically generated file. ' \
                                            f'Do not change by hand\n"""'
@@ -236,7 +241,7 @@ class OntologyGenerator:
                                                        parent_entry)
         init_arguments: str = self._INIT_ARGUMENTS[base_entry]
         super_arguments: str = ', '.join(
-            [item.split(':')[0].strip()for item in init_arguments.split(',')])
+            [item.split(':')[0].strip() for item in init_arguments.split(',')])
 
         # generate code inside init function
         class_line: str = f"class {entry_name}({parent_entry}):"
@@ -246,22 +251,8 @@ class OntologyGenerator:
         entry_code: str = f"\n\n{class_line}\n{self._INDENT}{init_line}\n"\
             f"{self._INDENT}{self._INDENT}{super_line}"
 
-        # extracting attributes
-        attributes: List[Dict] = entry_definition[self._ATTRIBUTES] \
-            if self._ATTRIBUTES in entry_definition else []
-
-        for attribute in attributes:
-            attribute_init_code: str = self._get_attribute_init_code(
-                attribute, entry_full_name)
-            entry_code += f"{attribute_init_code}"
-
-        # generate getter and setter functions
-        for attribute in attributes:
-            entry_code += '\n'
-            attribute_getter_setter_code: str = \
-                self._get_attribute_getter_setter_code(attribute)
-            entry_code += f"{attribute_getter_setter_code}"
-
+        entry_code += self._get_attribute_code(entry_definition,
+                                               entry_full_name)
         return entry_code
 
     def _get_and_set_base_entry(self, entry_name: str, parent_entry: str):
@@ -290,6 +281,25 @@ class OntologyGenerator:
         self._base_entry_map_seen[entry_name] = base_entry
         return base_entry
 
+    def _get_attribute_code(self, entry_definition, entry_full_name):
+        attribute_code = ''
+        # extracting attributes
+        attributes: List[Dict] = entry_definition[self._ATTRIBUTES] \
+            if self._ATTRIBUTES in entry_definition else []
+
+        for attribute in attributes:
+            attribute_init_code: str = self._get_attribute_init_code(
+                attribute, entry_full_name)
+            attribute_code += f"{attribute_init_code}"
+
+        # generate getter and setter functions
+        for attribute in attributes:
+            attribute_code += '\n'
+            attribute_getter_setter_code: str = \
+                self._get_attribute_getter_setter_code(attribute)
+            attribute_code += f"{attribute_getter_setter_code}"
+        return attribute_code
+
     def _get_attribute_init_code(self, attribute: Dict, entry_full_name: str):
         """
         Args:
@@ -301,17 +311,34 @@ class OntologyGenerator:
         """
         attribute_name: str = attribute[self._ATTRIBUTE_NAME]
         attribute_type: str = attribute[self._ATTRIBUTE_TYPE]
+        if attribute_type in self._COMPOSITE_TYPES:
+            if self._ELEMENT_TYPE not in attribute:
+                raise ValueError(f"Element type of the composite "
+                                 f"{attribute_type} should be indicated with "
+                                 f"the key `element_type`")
+            element_type = attribute[self._ELEMENT_TYPE]
+        else:
+            element_type = None
 
+        # attribute type should be present in the validation tree
         if attribute_type not in self._validation_tree:
             raise ValueError(f"Attribute type for the entry {entry_full_name}"
-                             f"and the attribute {attribute_name} not present"
+                             f"and the attribute {attribute_name} not declared"
                              f"in the ontology")
 
+        # element type should be present in the validation tree
+        if attribute_type in self._COMPOSITE_TYPES:
+            if element_type not in self._validation_tree:
+                raise ValueError(f"Element type for the entry {entry_full_name}"
+                                 f"and the attribute {attribute_name} not "
+                                 f"declared in the ontology")
+            attribute_type = f"typing.{attribute_type}"
+
+        # adding attribute to the entry
         if attribute_name in self._validation_tree[entry_full_name]:
             raise Warning(f"Attribute type for the entry {entry_full_name} and "
                           f"the attribute {attribute_name} already present in "
                           f"the ontology, will be overridden")
-
         self._validation_tree[entry_full_name].add(attribute_name)
 
         if self._ATTRIBUTE_DEFAULT_VALUE in attribute and \
@@ -322,9 +349,12 @@ class OntologyGenerator:
         else:
             attribute_default = "None"
 
+        composite_code: str = f"[{element_type}]" \
+            if element_type is not None else ''
+
         code_string: str = f"{self._INDENT}{self._INDENT}" \
-            f"self._{attribute_name}: typing.Optional[{attribute_type}] " \
-            f"= {attribute_default}\n"
+            f"self._{attribute_name}: typing.Optional[{attribute_type}" \
+            f"{composite_code}] = {attribute_default}\n"
 
         return code_string
 

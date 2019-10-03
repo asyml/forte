@@ -15,6 +15,16 @@
                 {
                     "attribute_name": "lemma",
                     "attribute_type": "str"
+                },
+                {
+                    "attribute_name": "related_tokens",
+                    "attribute_type": "List",
+                    "element_type": "forte.data.ontology.example_ontology.Token"
+                },
+                {
+                    "attribute_name": "string_features",
+                    "attribute_type": "List",
+                    "element_type": "str"
                 }
             ]
         },
