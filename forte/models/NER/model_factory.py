@@ -1,13 +1,13 @@
 # mypy: ignore-errors
 from typing import Tuple
 
-import texar.torch as texar
 import torch
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
+from torch import nn
+import texar.torch as texar
 from texar.torch.hyperparams import HParams
 from texar.torch.modules.embedders import WordEmbedder
-from torch import nn
 
 from forte.models.NER.conditional_random_field import ConditionalRandomField
 
