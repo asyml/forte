@@ -15,29 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 class TrainPipeline:
-    def __init__(
-            self,
-            train_reader: BaseReader,
-            trainer: BaseTrainer,
-            dev_reader: BaseReader,
-            configs: HParams,
-            preprocessors: Optional[List[BaseProcessor]] = None,
-            evaluator: Optional[Evaluator] = None,
-            predictor: Optional[BaseProcessor] = None,
-    ):
+    def __init__(self, train_reader: BaseReader, trainer: BaseTrainer,
+                 dev_reader: BaseReader, configs: HParams,
+                 preprocessors: Optional[List[BaseProcessor]] = None,
+                 evaluator: Optional[Evaluator] = None,
+                 predictor: Optional[BaseProcessor] = None):
         self.resource = Resources()
         self.configs = configs
 
-        trainer.initialize(self.resource, configs)
-
-        train_reader.initialize(self.resource, configs.reader_config)
-
-        if predictor is not None:
-            logger.info(
-                "Training pipeline initialized with real eval setting."
-            )
-            predictor_config = configs.predictor
-            predictor.initialize(self.resource, predictor_config)
+        train_reader.initialize(self.resource, self.configs)
 
         if preprocessors is not None:
             for p in preprocessors:
@@ -46,6 +32,15 @@ class TrainPipeline:
             self.preprocessors = preprocessors
         else:
             self.preprocessors = []
+
+        """trainer.initialize(self.resource, configs)
+
+        if predictor is not None:
+            logger.info(
+                "Training pipeline initialized with real eval setting."
+            )
+            predictor_config = configs.predictor
+            predictor.initialize(self.resource, predictor_config)"""
 
         self.train_reader = train_reader
         self.trainer = trainer
@@ -56,8 +51,15 @@ class TrainPipeline:
     def run(self):
         logging.info("The pipeline is running preparation.")
         self.prepare()
+        self.trainer.initialize(self.resource, self.configs)
+        if self.predictor is not None:
+            logger.info("Training pipeline initialized with real eval setting.")
+            # predictor_config = self.configs.predictor
+            self.predictor.initialize(self.resource, self.configs)
+
         logging.info("The pipeline is training")
         self.train()
+        # self.eval_dev(epoch=0)
 
     def prepare(self, *args, **kwargs) -> Iterator[PackType]:
         prepare_pl = Pipeline()
@@ -65,7 +67,10 @@ class TrainPipeline:
         for p in self.preprocessors:
             prepare_pl.add_processor(p)
 
-        yield from prepare_pl.process_dataset(args, kwargs)  # type: ignore
+        prepare_pl.run(conll_directory=self.configs.config_data.val_path)
+
+        for p in self.preprocessors:
+            p.finish(resource=self.resource)
 
     def train(self):
         pack_count = 0
@@ -73,9 +78,8 @@ class TrainPipeline:
         while True:
             epoch += 1
             # we need to have directory ready here
-            for pack in self.prepare(
-                    data_source=self.configs.train_path
-            ):
+            # for pack in self.prepare(data_source=self.configs.train_path):
+            for pack in self.train_reader.iter(conll_directory=self.configs.config_data.train_path):
                 for instance in pack.get_data(**self.trainer.data_request()):
                     if self.trainer.validation_requested():
                         dev_res = self.eval_dev(epoch)
@@ -95,20 +99,18 @@ class TrainPipeline:
 
         if self.predictor is not None and self.evaluator is not None:
             for pack in self.dev_reader.iter(
-                    data_source=self.configs.val_path
-            ):
+                    conll_directory=self.configs.config_data.val_path):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
                 self.evaluator.consume_next(pack, predicted_pack)
             validation_result["eval"] = self.evaluator.get_result()
 
-            for pack in self.dev_reader.iter(
-                    data_source=self.configs.test_path
-            ):
+            """for pack in self.dev_reader.iter(
+                    conll_directory=self.configs.config_data.test_path):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
                 self.evaluator.consume_next(pack, predicted_pack)
-            validation_result["test"] = self.evaluator.get_result()
+            validation_result["test"] = self.evaluator.get_result()"""
 
         return validation_result
 

@@ -12,7 +12,8 @@ from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.datasets.conll import conll_utils
 from forte.data.ontology import conll03_ontology as conll
-from forte.models.NER.utils import normalize_digit_word, set_random_seed
+from forte.data.ontology import base_ontology
+from forte.models.NER import utils
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
@@ -49,12 +50,13 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.batcher = self.define_batcher()
 
     def define_context(self):
-        self.context_type = self._ontology.Sentence
+        # self.context_type = self._ontology.Sentence
+        self.context_type = conll.Sentence
 
     def _define_input_info(self) -> ProcessInfo:
         input_info: ProcessInfo = {
-            self._ontology.Token: [],
-            self._ontology.Sentence: [],
+            conll.Token: [],
+            conll.Sentence: [],
         }
         return input_info
 
@@ -65,6 +67,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         return output_info
 
     def initialize(self, resource: Resources, configs: HParams):
+
         self.define_batcher()
 
         self.config_model = configs.config_model
@@ -74,28 +77,28 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.word_alphabet = resource.get("word_alphabet")
         self.char_alphabet = resource.get("char_alphabet")
         self.ner_alphabet = resource.get("ner_alphabet")
-        word_embedding_table = resource.get('word_embedding_table')
+        word_embedding_table = resource.get("word_embedding_table")
 
-        self.normalize_func = normalize_digit_word
+        self.normalize_func = utils.normalize_digit_word
 
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
+        if resource.get("device"):
+            self.device = resource.get("device")
         else:
-            device = torch.device("cpu")
+            self.device = torch.device('cuda') if torch.cuda.is_available() \
+                else torch.device('cpu')
 
-        set_random_seed(self.config_model.random_seed)
+        utils.set_random_seed(self.config_model.random_seed)
 
         self.model = BiRecurrentConvCRF(
             word_embedding_table,
             self.char_alphabet.size(),
             self.ner_alphabet.size(),
-            self.config_model
-        ).to(device=device)
+            self.config_model).to(device=self.device)
 
 
-        self.model = resource.resources["model"]
-        self.device = resource.resources["device"]
-        self.normalize_func = resource.resources['normalize_func']
+        # self.model = resource.resources["model"]
+        # self.normalize_func = resource.get('normalize_func')
+        self.input_info = self._define_input_info()
         self.model.eval()
 
     @torch.no_grad()
@@ -118,9 +121,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 word = self.normalize_func(word)
                 word_ids.append(self.word_alphabet.get_index(word))
 
-            instances.append(
-                (word_ids, char_id_seqs)
-            )
+            instances.append((word_ids, char_id_seqs))
 
         self.model.eval()
         batch_data = self.get_batch_tensor(instances, device=self.device)
@@ -284,8 +285,8 @@ class CoNLLNEREvaluator(Evaluator):
 
     def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
         pred_getdata_args = {
-            "context_type": "sentence",
-            "requests": {
+            "context_type": conll.Sentence,
+            "request": {
                 conll.Token: {
                     "fields": ["ner_tag"],
                 },
@@ -294,8 +295,8 @@ class CoNLLNEREvaluator(Evaluator):
         }
 
         refer_getdata_args = {
-            "context_type": "sentence",
-            "requests": {
+            "context_type": conll.Sentence,
+            "request": {
                 conll.Token: {
                     "fields": ["chunk_tag", "pos_tag", "ner_tag"]},
                 conll.Sentence: [],  # span by default

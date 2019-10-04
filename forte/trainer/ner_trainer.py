@@ -12,9 +12,10 @@ from tqdm import tqdm
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.ontology import base_ontology
+# from forte.data.ontology import base_ontology
+from forte.data.ontology import conll03_ontology as conll
 from forte.trainer.base.base_trainer import BaseTrainer
-from forte.models.NER.utils import normalize_digit_word, set_random_seed
+from forte.models.NER import utils
 from examples.NER.model_factory import BiRecurrentConvCRF
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class CoNLLNERTrainer(BaseTrainer):
         self.device = None
         self.optim, self.trained_epochs = None, None
 
-        self.ontology = base_ontology
+        self.ontology = conll
         self.resource: Optional[Resources] = None
 
         self.train_instances_cache = []
@@ -60,35 +61,31 @@ class CoNLLNERTrainer(BaseTrainer):
         self.config_model = configs.config_model
         self.config_data = configs.config_data
 
-        self.normalize_func = normalize_digit_word
+        self.normalize_func = utils.normalize_digit_word
 
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
-        else:
-            device = torch.device("cpu")
+        self.device = torch.device("cuda") if torch.cuda.is_available() \
+            else torch.device("cpu")
 
-        set_random_seed(self.config_model.random_seed)
+        utils.set_random_seed(self.config_model.random_seed)
 
         self.model = BiRecurrentConvCRF(
             word_embedding_table,
             self.char_alphabet.size(),
             self.ner_alphabet.size(),
-            self.config_model
-        ).to(device=device)
+            self.config_model).to(device=self.device)
 
         self.optim = SGD(
             self.model.parameters(),
-            lr=configs.learning_rate,
-            momentum=configs.momentum,
-            nesterov=True,
-        )
+            lr=self.config_model.learning_rate,
+            momentum=self.config_model.momentum,
+            nesterov=True)
 
         self.trained_epochs = 0
 
     def data_request(self):
         request_string = {
-            "context_type": "sentence",
-            "requests": {
+            "context_type": conll.Sentence,
+            "request": {
                 self.ontology.Token: ["ner_tag"],
                 self.ontology.Sentence: [],  # span by default
             },
@@ -118,12 +115,9 @@ class CoNLLNERTrainer(BaseTrainer):
         max_len = max([len(char_seq) for char_seq in char_id_seqs])
         self.max_char_length = max(self.max_char_length, max_len)
 
-        self.train_instances_cache.append(
-            (word_ids, char_id_seqs, ner_ids)
-        )
+        self.train_instances_cache.append((word_ids, char_id_seqs, ner_ids))
 
     def pack_finish_action(self, pack_count):
-
         pass
 
     def epoch_finish_action(self, epoch):
@@ -144,7 +138,7 @@ class CoNLLNERTrainer(BaseTrainer):
         train_total = 0.0
 
         start_time = time.time()
-        self.model.run()
+        # self.model.run()
 
         # Each time we will clear and reload the train_instances_cache
         instances = self.train_instances_cache
@@ -206,8 +200,7 @@ class CoNLLNERTrainer(BaseTrainer):
         losses = 0
         val_data = list(instances)
         for i in tqdm(
-                range(0, len(val_data), self.config_data.test_batch_size)
-        ):
+                range(0, len(val_data), self.config_data.test_batch_size)):
             b_data = val_data[i: i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
 
@@ -219,39 +212,26 @@ class CoNLLNERTrainer(BaseTrainer):
         return mean_loss
 
     def post_validation_action(self, eval_result):
-        if (
-                not self.__past_dev_result
-                or eval_result["eval"]["f1"] > self.__past_dev_result["eval"][
-            "f1"]
-        ):
+        import pdb
+        pdb.set_trace()
+        if not self.__past_dev_result or \
+                eval_result["eval"]["f1"] > self.__past_dev_result["eval"]["f1"]:
             self.__past_dev_result = eval_result
             logger.info("validation f1 increased, saving model")
             # self.save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
-        acc, prec, rec, f1 = (
-            self.__past_dev_result["eval"]["accuracy"],
-            self.__past_dev_result["eval"]["precision"],
-            self.__past_dev_result["eval"]["recall"],
-            self.__past_dev_result["eval"]["f1"],
-        )
-        logger.info(
-            "best val acc: %f, precision: %f, recall: %f, "
-            "F1: %f %% (epoch: %d)",
-            acc, prec, rec, f1, best_epoch,
-        )
+        acc, prec, rec, f1 = (self.__past_dev_result["eval"]["accuracy"],
+                              self.__past_dev_result["eval"]["precision"],
+                              self.__past_dev_result["eval"]["recall"],
+                              self.__past_dev_result["eval"]["f1"])
+        logger.info("Best val acc: %f, precision: %f, recall: %f, F1: %f %% (epoch: %d)", acc, prec, rec, f1, best_epoch)
 
-        acc, prec, rec, f1 = (
-            self.__past_dev_result["test"]["accuracy"],
-            self.__past_dev_result["test"]["precision"],
-            self.__past_dev_result["test"]["recall"],
-            self.__past_dev_result["test"]["f1"],
-        )
-        logger.info(
-            "best test acc: %f, precision: %f, recall: %f, "
-            "F1: %f %% (epoch: %d)",
-            acc, prec, rec, f1, best_epoch,
-        )
+        acc, prec, rec, f1 = (self.__past_dev_result["test"]["accuracy"],
+                              self.__past_dev_result["test"]["precision"],
+                              self.__past_dev_result["test"]["recall"],
+                              self.__past_dev_result["test"]["f1"])
+        logger.info("Best test acc: %f, precision: %f, recall: %f, F1: %f %% (epoch: %d)", acc, prec, rec, f1, best_epoch)
 
     def finish(self, resources: Resources):  # pylint: disable=unused-argument
         # TODO: save only the resources related to the NER trainer to a path

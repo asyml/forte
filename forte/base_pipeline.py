@@ -156,7 +156,7 @@ class BasePipeline(Generic[PackType]):
         self.processors[-1].set_as_last()
 
     def set_reader(self, reader: BaseReader):
-        reader.set_ontology(self._ontology)
+        # reader.set_ontology(self._ontology)
         self._reader = reader
 
     @property

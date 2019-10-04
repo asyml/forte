@@ -22,7 +22,7 @@ class Resources:
             pickle.dump(self.resources, output, pickle.HIGHEST_PROTOCOL)
 
     def get(self, key: str):
-        return self.resources[key]
+        return self.resources.get(key)
 
     def update(self, **kwargs):
         for key, value in kwargs.items():

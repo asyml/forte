@@ -6,7 +6,8 @@ from texar.torch import HParams
 
 from forte.common import Resources
 from forte.data import DataPack
-from forte.data.ontology import base_ontology
+# from forte.data.ontology import base_ontology
+from forte.data.ontology import conll03_ontology as conll
 from forte.processors import ProcessInfo, Alphabet
 from forte.processors import VocabularyProcessor
 from forte.models.NER.utils import load_glove_embedding, \
@@ -86,12 +87,10 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         """
         # for data_pack in input_pack:
         for instance in data_pack.get_data(
-                context_type=base_ontology.Sentence,
+                context_type=conll.Sentence,
                 request={
-                    base_ontology.Token:
-                        ["chunk_tag", "pos_tag", "ner_tag"],
-                },
-        ):
+                    conll.Token: ["chunk_tag", "pos_tag", "ner_tag"]
+                }):
             for token in instance["Token"]["text"]:
                 for char in token:
                     self.char_cnt[char] += 1
