@@ -6,5 +6,5 @@ class SimpleJsonPackWriter(JsonPackWriter):
     def _process(self, input_pack: PackType):
         pass
 
-    def sub_output_dir(self, pack: PackType) -> str:
-        return ''
+    def sub_output_path(self, pack: PackType) -> str:
+        return pack.meta.doc_id

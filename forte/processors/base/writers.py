@@ -50,9 +50,10 @@ class JsonPackWriter(BaseProcessor, ABC):
         return {}
 
     @abstractmethod
-    def sub_output_dir(self, pack: PackType) -> str:
+    def sub_output_path(self, pack: PackType) -> str:
         """
-        Allow defining output path using the information of the pack.
+        The implementation of this defines relative output path based on the
+        information of the pack. For example, it can be the pack's doc id.
         Args:
             pack:
 
@@ -73,7 +74,7 @@ class JsonPackWriter(BaseProcessor, ABC):
         }
 
     def _process(self, input_pack: PackType):
-        p = os.path.join(self.root_output_dir, self.sub_output_dir(input_pack))
+        p = os.path.join(self.root_output_dir, self.sub_output_path(input_pack))
         ensure_dir(p)
 
         if self.zip_pack:
