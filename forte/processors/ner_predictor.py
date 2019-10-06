@@ -12,7 +12,6 @@ from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.datasets.conll import conll_utils
 from forte.data.ontology import conll03_ontology as conll
-from forte.data.ontology import base_ontology
 from forte.models.NER import utils
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
@@ -70,10 +69,10 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         self.define_batcher()
 
+        self.resource = resource
         self.config_model = configs.config_model
         self.config_data = configs.config_data
 
-        # TODO: populate the resources based on the config.
         self.word_alphabet = resource.get("word_alphabet")
         self.char_alphabet = resource.get("char_alphabet")
         self.ner_alphabet = resource.get("ner_alphabet")
@@ -95,9 +94,10 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             self.ner_alphabet.size(),
             self.config_model).to(device=self.device)
 
+        if resource.get("model"):
+            state_dict = resource.get("model")
+            self.model.load_state_dict(state_dict)
 
-        # self.model = resource.resources["model"]
-        # self.normalize_func = resource.get('normalize_func')
         self.input_info = self._define_input_info()
         self.model.eval()
 
@@ -105,6 +105,11 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
     def predict(self, data_batch: Dict):
 
         tokens = data_batch["Token"]
+
+        # TODO: move the model update to a separate function
+        if self.resource.get("model"):
+            state_dict = self.resource.get("model")
+            self.model.load_state_dict(state_dict)
 
         instances = []
         for words in tokens["text"]:
@@ -144,9 +149,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
     def load_model_checkpoint(self, model_path=None):
         p = model_path if model_path is not None \
             else self.config_model.model_path
-        ckpt = torch.load(p)
-        logger.info(
-            "restoring NER model from %s", self.config_model.model_path)
+        ckpt = torch.load(p, map_location=self.device)
+        logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
     def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):

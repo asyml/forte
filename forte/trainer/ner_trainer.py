@@ -1,8 +1,7 @@
 import logging
 import random
 import time
-from typing import Iterator, Optional
-from typing import List, Tuple
+from typing import List, Tuple, Iterator, Optional
 
 import numpy as np
 import torch
@@ -12,7 +11,6 @@ from tqdm import tqdm
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-# from forte.data.ontology import base_ontology
 from forte.data.ontology import conll03_ontology as conll
 from forte.trainer.base.base_trainer import BaseTrainer
 from forte.models.NER import utils
@@ -88,7 +86,7 @@ class CoNLLNERTrainer(BaseTrainer):
             "request": {
                 self.ontology.Token: ["ner_tag"],
                 self.ontology.Sentence: [],  # span by default
-            },
+            }
         }
         return request_string
 
@@ -127,33 +125,31 @@ class CoNLLNERTrainer(BaseTrainer):
         :return:
         """
         counter = len(self.train_instances_cache)
-        logger.info("Total number of ner_data: %d", counter)
+        logger.info(f"Total number of ner_data: {counter}")
 
-        lengths = sum(
-            [len(instance[0]) for instance in self.train_instances_cache]
-        )
-        logger.info("average sentence length: %f", (lengths / counter))
+        lengths = \
+            sum([len(instance[0]) for instance in self.train_instances_cache])
+
+        logger.info(f"Average sentence length: {lengths / counter}")
 
         train_err = 0.0
         train_total = 0.0
 
         start_time = time.time()
-        # self.model.run()
 
         # Each time we will clear and reload the train_instances_cache
         instances = self.train_instances_cache
         random.shuffle(self.train_instances_cache)
         data_iterator = torchtext.data.iterator.pool(
-            instances,
-            self.config_data.batch_size_tokens,
+            instances, self.config_data.batch_size_tokens,
             key=lambda x: x.length(),  # length of word_ids
             batch_size_fn=batch_size_fn,
-            random_shuffler=torchtext.data.iterator.RandomShuffler(),
-        )
-        bid = 0
+            random_shuffler=torchtext.data.iterator.RandomShuffler())
+
+        step = 0
 
         for batch in data_iterator:
-            bid += 1
+            step += 1
             batch_data = self.get_batch_tensor(batch, device=self.device)
             word, char, labels, masks, lengths = batch_data
 
@@ -167,33 +163,30 @@ class CoNLLNERTrainer(BaseTrainer):
             train_total += num_inst
 
             # update log
-            if bid % 200 == 0:
-                log_info = "train: %d loss: %.4f" % (
-                    bid,
-                    train_err / train_total,
-                )
-                logger.info(log_info)
+            if step % 200 == 0:
+                logger.info(f"Train: {step}, loss: {train_err / train_total}")
 
-        logger.info(
-            "Epoch: %d train: %d loss: %.4f, time: %.2fs",
-            epoch, bid, train_err / train_total, time.time() - start_time,
-        )
+        logger.info(f"Epoch: {epoch}, steps: {step}, "
+                    f"loss: {train_err / train_total}, "
+                    f"time: {time.time() - start_time}s")
 
         self.trained_epochs = epoch
 
         if epoch % self.config_model.decay_interval == 0:
-            lr = self.config_model.learning_rate / (
-                    1.0 + self.trained_epochs * self.config_model.decay_rate
-            )
+            lr = self.config_model.learning_rate / \
+                 (1.0 + self.trained_epochs * self.config_model.decay_rate)
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
-            logger.info("update learning rate to %f", lr)
+            logger.info(f"Update learning rate to {lr}")
 
         self.request_eval()
         self.train_instances_cache.clear()
 
         if epoch >= self.config_data.num_epochs:
             self.request_stop_train()
+
+    def update_resource(self):
+        self.resource.update(model=self.model.state_dict())
 
     @torch.no_grad()
     def get_loss(self, instances: Iterator) -> float:
@@ -212,8 +205,6 @@ class CoNLLNERTrainer(BaseTrainer):
         return mean_loss
 
     def post_validation_action(self, eval_result):
-        import pdb
-        pdb.set_trace()
         if not self.__past_dev_result or \
                 eval_result["eval"]["f1"] > self.__past_dev_result["eval"]["f1"]:
             self.__past_dev_result = eval_result
@@ -225,13 +216,15 @@ class CoNLLNERTrainer(BaseTrainer):
                               self.__past_dev_result["eval"]["precision"],
                               self.__past_dev_result["eval"]["recall"],
                               self.__past_dev_result["eval"]["f1"])
-        logger.info("Best val acc: %f, precision: %f, recall: %f, F1: %f %% (epoch: %d)", acc, prec, rec, f1, best_epoch)
+        logger.info("Best val acc: %f, precision: %f, recall: %f, "
+                    "F1: %f %% (epoch: %d)", acc, prec, rec, f1, best_epoch)
 
         acc, prec, rec, f1 = (self.__past_dev_result["test"]["accuracy"],
                               self.__past_dev_result["test"]["precision"],
                               self.__past_dev_result["test"]["recall"],
                               self.__past_dev_result["test"]["f1"])
-        logger.info("Best test acc: %f, precision: %f, recall: %f, F1: %f %% (epoch: %d)", acc, prec, rec, f1, best_epoch)
+        logger.info("Best test acc: %f, precision: %f, recall: %f, "
+                    "F1: %f %% (epoch: %d)", acc, prec, rec, f1, best_epoch)
 
     def finish(self, resources: Resources):  # pylint: disable=unused-argument
         # TODO: save only the resources related to the NER trainer to a path

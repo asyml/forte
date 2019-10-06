@@ -117,14 +117,14 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
 
         embedding_dict = load_glove_embedding(self.embedding_path)
 
+        for word in embedding_dict:
+            if word not in word_alphabet.instance2index:
+                word_alphabet.add(word)
+
         word_embedding_table = construct_word_embedding_table(embedding_dict,
                                                               word_alphabet)
 
         print(f'word embedding table size:{word_embedding_table.size()}')
-
-        for word in embedding_dict:
-            if word not in word_alphabet.instance2index:
-                word_alphabet.add(word)
 
         # Adding vocabulary information to resource.
         resource.update(
