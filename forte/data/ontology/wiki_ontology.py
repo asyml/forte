@@ -2,7 +2,8 @@ from typing import List, Dict
 
 import forte.data.ontology.base_ontology as ontology
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import Entry, Annotation, Link
+from forte.data.ontology.top import Annotation, Link
+from forte.data.ontology.core import Entry
 
 
 class WikiPage(ontology.Document):
@@ -37,8 +38,8 @@ class WikiAnchorLink(Link):
 class WikiInfoBox(Entry):
     def __init__(self, pack: DataPack):
         super().__init__(pack)
-        self.text_entries: Dict[str, str] = {}
-        self.entity_entries: Dict[str, WikiPage] = {}
+        self.literal_entries: Dict[str, str] = {}
+        self.object_entries: Dict[str, str] = {}
 
 
 class WikiCategories(Entry):

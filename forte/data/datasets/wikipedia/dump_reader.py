@@ -9,9 +9,11 @@ import sys
 from typing import NamedTuple
 from io import StringIO
 from typing import Any, Iterator, Dict, Iterable, Tuple, Set, Optional, List
+import re
 
 import mwtypes
 import mwxml
+from mwrefs.extract import extract as ref_extract
 from forte.data.datasets.wikipedia.libs.common import Span
 from forte.data.datasets.wikipedia.libs.wikilink import Wikilink
 
@@ -26,6 +28,18 @@ __all__ = [
     "WikiDumpReader",
 ]
 logger = logging.getLogger(__name__)
+
+
+def header_level(match):
+    equals = 0
+    if match is not None:
+        for character in match.group(0).strip("\n"):
+            if character == "=":
+                equals += 1
+            else:
+                break
+
+    return equals
 
 
 class PendingAnnotation:
@@ -45,6 +59,10 @@ class PendingAnnotation:
 
 
 class WikiDumpReader(PackReader):
+    """
+        A reader that reads the full Wikipedia page content based on the full text
+        extraction results and content structures from DBpedia.
+    """
 
     def __init__(self, links_to_ignore: Optional[Set[str]] = None):
         super().__init__()
@@ -127,8 +145,10 @@ class WikiDumpReader(PackReader):
 
         out = StringIO()
         Extractor(id, rev_id, title, text.split("\n")).extract(out)
-
         cleaned_text = out.getvalue()
+
+        print(cleaned_text)
+        input('check extractor text.')
 
         for anchor, link, span in links:
             annotations.append(PendingAnnotation(
@@ -202,15 +222,18 @@ def get_wiki_title(title, redirects):
     return wiki_title
 
 
-def format_wiki_title(link_target):
+def format_wiki_title(title):
     """
     Normalize the link name of the link, such as replacing space, and first
     letter capitalization. See: https://en.wikipedia.org/wiki/Wikipedia:
     Naming_conventions_(capitalization)#Software_characteristics
     Args:
-        link_target: The wiki link to be normalized.
+        title: The wiki link to be normalized.
 
     Returns:
 
     """
-    return link_target.replace(" ", "_").capitalize()
+    title = title.strip(' _')
+    title = re.sub(r'[\s_]+', ' ', title)
+    # TODO: In WikiExtractor there are a set of complicated rules for this
+    return title.replace(" ", "_").capitalize()
