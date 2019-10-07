@@ -2,16 +2,15 @@ import copy
 import logging
 from abc import abstractmethod
 from collections import defaultdict
-from typing import (Dict, List, Optional, Set, Type, Tuple, TypeVar, Union)
+from typing import Dict, List, Optional, Set, Type, Tuple, TypeVar, Union
 
 import jsonpickle
 
-from forte.common.types import EntryType
+from forte.common.types import EntryType, LinkType, GroupType
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import LinkType, GroupType, Entry
+from forte.data.ontology.base.core import Entry
 
-logger = logging.getLogger(__name__)
 
 __all__ = [
     "BasePack",

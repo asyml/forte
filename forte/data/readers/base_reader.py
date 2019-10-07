@@ -14,10 +14,10 @@ from forte.common.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology import base_ontology
-from forte.data.ontology.core import Entry
-from forte.data.ontology.onto_utils import record_fields
-from forte.pipeline_component import PipeComponent
+from forte.pipeline_component import PipelineComponent
+from forte.data.ontology.base import base_ontology
+from forte.data.ontology.base.core import Entry
+from forte.data.ontology.utils import record_fields
 from forte.utils import get_full_module_name
 
 __all__ = [
@@ -29,7 +29,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class BaseReader(PipeComponent[PackType], ABC):
+class BaseReader(PipelineComponent[PackType], ABC):
     """
         The basic data reader class.
         To be inherited by all data readers.

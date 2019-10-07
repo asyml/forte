@@ -1,7 +1,7 @@
 from nltk import word_tokenize, pos_tag, sent_tokenize
 
 from forte.data import DataPack
-from forte.data.ontology import base_ontology
+from forte.data.ontology.base import base_ontology
 from forte.processors import ProcessInfo
 from forte.processors.base import PackProcessor
 

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
@@ -13,7 +13,7 @@ from forte.data.batchers import (
     ProcessingBatcher,
     FixedSizeMultiPackProcessingBatcher
 )
-from forte.data.ontology import base_ontology
+from forte.data.ontology.base import base_ontology
 from forte.models.gpt import processor
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import \
@@ -67,7 +67,7 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         # pylint: disable=no-self-use
         return FixedSizeMultiPackProcessingBatcher()
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
         """
         Args:
             resource:
@@ -85,14 +85,16 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         """
         super().initialize(resource, configs)
 
-        self.input_pack_name = configs.input_pack_name
-        self.output_pack_name = configs.output_pack_name
+        if configs is not None:
+            self.input_pack_name = configs.input_pack_name
+            self.output_pack_name = configs.output_pack_name
 
-        self.max_decoding_length = configs.max_decoding_length
-        self.temperature = configs.temperature
-        self.top_k = configs.top_k
-        self.top_p = configs.top_p
-        self.model = tx.modules.GPT2Decoder(configs.pretrained_model_name)
+            self.max_decoding_length = configs.max_decoding_length
+            self.temperature = configs.temperature
+            self.top_k = configs.top_k
+            self.top_p = configs.top_p
+            self.model = tx.modules.GPT2Decoder(configs.pretrained_model_name)
+
         self.device = torch.device("cuda" if torch.cuda.is_available()
                                    else "cpu")
         self.model.to(device=self.device)

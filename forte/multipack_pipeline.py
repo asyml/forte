@@ -87,18 +87,16 @@ def create_class_with_kwargs(
         class_args = {}
     obj = cls(**class_args)
 
-    if h_params is None:
-        h_params = {}
-
     p_params: Dict = {}
 
-    if "config_path" in h_params:
+    if h_params is not None and "config_path" in h_params:
         filebased_hparams = yaml.safe_load(open(h_params["config_path"]))
     else:
         filebased_hparams = {}
     p_params.update(filebased_hparams)
 
-    p_params.update(h_params.get("overwrite_configs", {}))
+    if h_params is not None:
+        p_params.update(h_params.get("overwrite_configs", {}))
     default_processor_hparams = cls.default_hparams()
 
     processor_hparams = HParams(p_params,

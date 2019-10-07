@@ -6,7 +6,7 @@ from typing import Iterator, Any
 
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
-from forte.data.ontology import base_ontology
+from forte.data.ontology.base import base_ontology
 from forte.data.readers.base_reader import PackReader
 
 __all__ = [

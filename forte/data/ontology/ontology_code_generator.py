@@ -5,10 +5,14 @@
 import json
 import os
 import shutil
+import typed_ast.ast3 as ast
+import typed_astunparse as ast_unparse
+from types import ModuleType
 
 from typing import Dict, Tuple, List, Set
 
 from forte.data.ontology import utils
+from forte.data.ontology.base import top
 
 
 class OntologyCodeGenerator:
@@ -34,33 +38,24 @@ class OntologyCodeGenerator:
     _ATTRIBUTE_DEFAULT_VALUE: str = "attribute_default_value"
     _INDENT: str = ' ' * 4
 
-    # allowed parent entries and init arguments
-    _INIT_ARGUMENTS: Dict[str, str] = {
-        "forte.data.ontology.top.Annotation":
-            "pack:forte.data.data_pack.DataPack, "
-            "begin: int, "
-            "end: int",
-        "forte.data.ontology.top.Link":
-            "pack:data_pack.DataPack, "
-            "parent: Optional[Entry] = None, "
-            "child: Optional[Entry] = None",
-        "forte.data.ontology.top.Group":
-            "pack:data_pack.DataPack, "
-            "members: Optional[Set[Entry]] = None"
-         }
-
     _PRIMARY_TYPES = ["bool", "int", "float", "str"]
     _COMPOSITE_TYPES = ["List"]
 
-    def __init__(self):
+    def __init__(self, ontology_base_module: ModuleType = top):
+        self.ontology_base_module = ontology_base_module
         # imports to be added to the ontology other than the ones defined in the
         # json
-        self.additional_imports: List[str] = ['typing', 'forte.data.data_pack']
+        self.additional_imports: List[str] = ['typing',
+                                              'forte.data.data_pack',
+                                              ontology_base_module.__name__]
         # mapping from ontology full name to corresponding generated file and
         # folder path
         self._generated_ontology_record: Dict[str, Tuple[str, str]] = {}
+        # entries corresponding to top.py
+        self._top_entries: Dict[str, str] = {}
+        self._initialize_top_entries()
         # mapping from entries seen till now with their "base parents" which
-        # should be one of the keys of self._INIT_ARGUMENTS
+        # should be one of the keys of self._base_entries
         self._base_entry_map_seen: Dict[str, str] = {}
         # declare a tree to store the entries and their attributes in order to
         # validate the class dependency structure
@@ -71,9 +66,60 @@ class OntologyCodeGenerator:
         """
             Initialize self._validation_tree with primary python data types
         """
-        self._validation_tree = dict()
         for allowed_type in self._PRIMARY_TYPES + self._COMPOSITE_TYPES:
             self._validation_tree[allowed_type] = set()
+
+    def _initialize_top_entries(self):
+        """
+        Parses the file corresponding to `self.ontology_base_module` and
+        extracts the class definitions and the corresponding __init__ arguments
+        Returns: Dictionary mapping class definitions with `__init__` arguments
+        """
+        tree = ast.parse(open(self.ontology_base_module.__file__).read())
+        imports = {}
+        base_entries = {}
+
+        # adding all the imports
+        for elem in tree.body:
+            if type(elem) == ast.Import:
+                for import_ in elem.names:
+                    import_name = import_.name.split('.')[-1]
+                    imports[import_name] = import_.name
+
+            if type(elem) == ast.ImportFrom:
+                for import_ in elem.names:
+                    imports[import_.name] = f"{elem.module}.{import_.name}"
+
+            # adding all the module objects defined in __all__ to imports
+            if type(elem) == ast.Assign and len(elem.targets) > 0:
+                if elem.targets[0].id == '__all__':
+                    imports.update(
+                        [(name.s,
+                          f"{self.ontology_base_module.__name__}.{name.s}")
+                         for name in elem.value.elts])
+
+            # adding init arguments for each class
+            if type(elem) == ast.ClassDef:
+                for func in elem.body:
+                    if type(func) == ast.FunctionDef and \
+                            func.name == '__init__':
+                        for i, arg in enumerate(func.args.args):
+                            if arg.annotation is not None:
+                                arg_ann = arg.annotation
+                                while type(arg_ann) == ast.Subscript:
+                                    module = arg_ann.value.id
+                                    if module is not None and module in imports:
+                                        arg_ann.value.id = imports[module]
+                                    arg_ann = arg_ann.slice.value
+                                module = arg_ann.id
+                                if module is not None and module in imports:
+                                    arg_ann.id = imports[module]
+                            func.args.args[i] = arg
+                        args = ast_unparse.unparse(func.args).split(',', 1)
+                        args_str = args[1].strip().replace('\n', '')
+                        args_str = args_str.replace('  ', '')
+                        base_entries[imports[elem.name]] = args_str
+        self._top_entries = base_entries
 
     def generate_ontology(self, json_file_path: str):
         """
@@ -92,19 +138,23 @@ class OntologyCodeGenerator:
             ontology: Dict = json.loads(json_string)
             ontology_full_name: str = ontology[self._ONTOLOGY_NAME]
             custom_imports: List[str] = ontology[self._IMPORTS]
+
             entry_definitions: List[Dict] = ontology[self._ENTRY_DEFINITIONS]
 
+            self.additional_imports = [value
+                                       for value in self.additional_imports
+                                       if value not in custom_imports]
             all_imports = self.additional_imports + custom_imports
 
             # validation of imported classes
-            package_imports = all_imports[:]
+            package_imports = list(all_imports)
             for import_module in custom_imports:
                 for class_str in utils.get_classes_from_module(import_module):
                     package_imports.append(f"{import_module}.{class_str}")
 
             for import_module in package_imports:
                 if import_module in self._validation_tree:
-                    raise Warning(f"The module {import_module} is already"
+                    raise Warning(f"The module {import_module} is already "
                                   f"added in the ontology, will be overridden")
                 self._validation_tree[import_module] = set()
 
@@ -122,11 +172,17 @@ class OntologyCodeGenerator:
             for import_module in all_imports:
                 import_code += f"import {import_module}\n"
 
-            ontology_code: str = f"{ontology_file_docstring}\n" \
-                                 f"{import_code}"
-
+            entries_code = ''
+            entry_name_list_code = ''
             for entry_definition in entry_definitions:
-                ontology_code += self._get_entry_code(entry_definition)
+                entry_code, entry_name = self._get_entry_code(entry_definition)
+                entries_code += entry_code
+                entry_name_list_code += f'{self._INDENT}"{entry_name}",\n'
+            globals_code = f'__all__ = [\n{entry_name_list_code}]'
+
+            # combining code snippets to form ontology code
+            ontology_code: str = f"{ontology_file_docstring}\n{import_code}\n" \
+                f"{globals_code}\n{entries_code}"
 
             # creating ontology package directories in the current directory if
             # required
@@ -239,7 +295,7 @@ class OntologyCodeGenerator:
         # or Group
         base_entry: str = self._get_and_set_base_entry(entry_full_name,
                                                        parent_entry)
-        init_arguments: str = self._INIT_ARGUMENTS[base_entry]
+        init_arguments: str = self._top_entries[base_entry]
         super_arguments: str = ', '.join(
             [item.split(':')[0].strip() for item in init_arguments.split(',')])
 
@@ -253,7 +309,7 @@ class OntologyCodeGenerator:
 
         entry_code += self._get_attribute_code(entry_definition,
                                                entry_full_name)
-        return entry_code
+        return entry_code, entry_name
 
     def _get_and_set_base_entry(self, entry_name: str, parent_entry: str):
         """
@@ -274,7 +330,7 @@ class OntologyCodeGenerator:
             The base_entry for both `DependencyToken` and `Token` should be
             `Annotation`
         """
-        if parent_entry in self._INIT_ARGUMENTS:
+        if parent_entry in self._top_entries:
             return parent_entry
         else:
             base_entry: str = self._base_entry_map_seen[parent_entry]
@@ -330,7 +386,7 @@ class OntologyCodeGenerator:
         if attribute_type in self._COMPOSITE_TYPES:
             if element_type not in self._validation_tree:
                 raise ValueError(f"Element type for the entry {entry_full_name}"
-                                 f"and the attribute {attribute_name} not "
+                                 f" and the attribute {attribute_name} not "
                                  f"declared in the ontology")
             attribute_type = f"typing.{attribute_type}"
 
@@ -370,6 +426,8 @@ class OntologyCodeGenerator:
         """
         attribute_name: str = attribute[self._ATTRIBUTE_NAME]
         attribute_type: str = attribute[self._ATTRIBUTE_TYPE]
+        if attribute_type in self._COMPOSITE_TYPES:
+            attribute_type = f'typing.{attribute_type}'
 
         return f"{self._INDENT}@property\n" \
             f"{self._INDENT}def {attribute_name}(self):\n" \

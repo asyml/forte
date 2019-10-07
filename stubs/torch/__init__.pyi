@@ -187,7 +187,7 @@ class Tensor(TensorBase):
 
     def __truediv__(self, other) -> Tensor: ...
 
-    def __rtruediv__(self, other) -> Tensor: ...  # type: ignore
+    def __rtruediv__(self, other) -> Tensor: ...
 
     def __itruediv__(self, other) -> Tensor: ...
 
@@ -463,10 +463,10 @@ class Tensor(TensorBase):
 
     def bmm(self, mat2: Tensor) -> Tensor: ...
 
-    def btrifact(self, info: Optional[IntTensor] = None,  # type: ignore
+    def btrifact(self, info: Optional[IntTensor] = None,
                  pivot: bool = True) -> Tuple[Tensor, IntTensor]: ...
 
-    def btrifact_with_info(self, *, pivot: bool = True) -> Tuple[Tensor, IntTensor, IntTensor]: ...  # type: ignore
+    def btrifact_with_info(self, *, pivot: bool = True) -> Tuple[Tensor, IntTensor, IntTensor]: ...
 
     def btrisolve(self, LU_data: Tensor, LU_pivots: Tensor) -> Tensor: ...
 
@@ -898,7 +898,7 @@ class Tensor(TensorBase):
 
     def nonzero(self) -> Tensor: ...
 
-    def norm(self, p: Union[builtins.float, str, None] = 'fro', dim: Optional[builtins.int] = None,  # type: ignore
+    def norm(self, p: Union[builtins.float, str, None] = 'fro', dim: Optional[builtins.int] = None,
              keepdim: bool = False) -> Tensor: ...
 
     def normal_(self, mean: builtins.float = 0, std: builtins.float = 1, *,

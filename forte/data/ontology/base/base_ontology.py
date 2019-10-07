@@ -4,7 +4,7 @@ This class defines the basic ontology supported by our system
 from typing import Optional, Set
 
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import Annotation, Link, Group
+from forte.data.ontology.base.top import Annotation, Link, Group
 
 __all__ = [
     "Token",

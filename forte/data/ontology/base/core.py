@@ -17,6 +17,9 @@ __all__ = [
     "Entry",
     "BaseLink",
     "BaseGroup",
+    "EntryType",
+    "LinkType",
+    "GroupType"
 ]
 
 

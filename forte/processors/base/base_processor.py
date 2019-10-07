@@ -9,11 +9,11 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataRequest
-from forte.data.ontology import base_ontology
+from forte.data.ontology.base import base_ontology
 from forte.data.selector import DummySelector
 from forte.utils import get_full_module_name
-from forte.data.ontology.onto_utils import record_fields
-from forte.pipeline_component import PipeComponent
+from forte.pipeline_component import PipelineComponent
+from forte.data.ontology.utils import record_fields
 
 __all__ = [
     "BaseProcessor",
@@ -23,7 +23,7 @@ __all__ = [
 ProcessInfo = DataRequest
 
 
-class BaseProcessor(PipeComponent[PackType], ABC):
+class BaseProcessor(PipelineComponent[PackType], ABC):
     """
     The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.

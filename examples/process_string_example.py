@@ -3,7 +3,7 @@ import os
 from termcolor import colored
 from texar.torch import HParams
 
-import forte.data.ontology.base_ontology as base_ontology
+import forte.data.ontology.base.base_ontology as base_ontology
 import forte.data.ontology.stanfordnlp_ontology as stanford
 from forte.data.ontology.ontonotes_ontology import (
     PredicateMention, PredicateArgument)

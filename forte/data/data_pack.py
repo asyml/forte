@@ -9,9 +9,9 @@ from sortedcontainers import SortedList
 from forte.common.types import EntryType, ReplaceOperationsType
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry
+from forte.data.ontology.base.core import Entry
 from forte.data.base import Span
-from forte.data.ontology.top import (
+from forte.data.ontology.base.top import (
     Annotation, Link, Group, SinglePackEntries
 )
 from forte.data import io_utils

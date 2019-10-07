@@ -1,14 +1,14 @@
 import logging
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
 from forte.data.base import Span
-from forte.data.ontology.ontonotes_ontology import PredicateMention, \
-    PredicateArgument
+from forte.data.ontology.ontonotes_ontology import \
+    PredicateMention, PredicateArgument
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.ontology import ontonotes_ontology
@@ -55,10 +55,10 @@ class SRLPredictor(FixedSizeBatchProcessor):
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
     def initialize(self,
-                   resource: Resources,  # pylint: disable=unused-argument
-                   configs: HParams):
+                   _: Resources,
+                   configs: Optional[HParams]):
 
-        model_dir = configs.storage_path
+        model_dir = configs.storage_path if configs is not None else None
         logger.info("restoring SRL model from %s", model_dir)
 
         self.word_vocab = tx.data.Vocab(

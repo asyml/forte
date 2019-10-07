@@ -6,8 +6,8 @@ import unittest
 
 from typing import List
 
-from forte.data.ontology.universal_dependency_ontology import \
-    (Sentence, UniversalDependency)
+from forte.data.ontology.universal_dependency_ontology import (
+    Sentence, UniversalDependency)
 from forte.data.readers.conllu_ud_reader import ConllUDReader
 from forte.data.data_pack import DataPack
 
@@ -27,8 +27,8 @@ class ConllUDReaderTest(unittest.TestCase):
                         "20041117_172714"]
 
     def test_reader_text(self):
-        doc_module = 'forte.data.ontology.base_ontology.Document'
-        sent_module = 'forte.data.ontology.base_ontology.Sentence'
+        doc_module = 'forte.data.ontology.base.base_ontology.Document'
+        sent_module = 'forte.data.ontology.base.base_ontology.Sentence'
 
         expected_docs_text = [
             ["From the AP comes this story :",

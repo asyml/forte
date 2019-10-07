@@ -1,6 +1,6 @@
-import forte.data.ontology.base_ontology as ontology
+import forte.data.ontology.base.base_ontology as ontology
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import Link
+from forte.data.ontology.base.top import Link
 
 __all__ = [
     "Token",

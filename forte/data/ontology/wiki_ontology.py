@@ -1,11 +1,11 @@
 from typing import List, Dict
 
-import forte.data.ontology.base_ontology as ontology
+import forte.data.ontology.base.base_ontology as base_ontology
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import Entry, Annotation, Link
+from forte.data.ontology.base.top import Entry, Annotation, Link
 
 
-class WikiPage(ontology.Document):
+class WikiPage(base_ontology.Document):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.body: WikiBody

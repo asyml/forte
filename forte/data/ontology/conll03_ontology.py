@@ -1,6 +1,6 @@
 # pylint: disable=unused-wildcard-import, wildcard-import, function-redefined
 from forte.data.data_pack import DataPack
-from forte.data.ontology.base_ontology import (
+from forte.data.ontology.base.base_ontology import (
     Document, Sentence, Token, EntityMention)
 
 __all__ = [

@@ -4,7 +4,7 @@ import sys
 from termcolor import colored
 from texar.torch import HParams
 
-from forte.data.ontology.base_ontology import (
+from forte.data.ontology.base.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink, PredicateArgument,
     PredicateMention)
 from forte.pipeline import Pipeline

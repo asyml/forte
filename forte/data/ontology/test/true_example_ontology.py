@@ -5,11 +5,16 @@ Automatically generated file. Do not change by hand
 """
 import typing
 import forte.data.data_pack
-import forte.data.ontology.top
+import forte.data.ontology.base.top
+
+__all__ = [
+    "Token",
+    "EntityMention",
+]
 
 
-class Token(forte.data.ontology.top.Annotation):
-    def __init__(self, pack:forte.data.data_pack.DataPack, begin: int, end: int):
+class Token(forte.data.ontology.base.top.Annotation):
+    def __init__(self, pack: forte.data.container.EntryContainer, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._pos_tag: typing.Optional[str] = None
         self._lemma: typing.Optional[str] = None
@@ -34,19 +39,19 @@ class Token(forte.data.ontology.top.Annotation):
     def related_tokens(self):
         return self._related_tokens
 
-    def set_related_tokens(self, related_tokens: List):
+    def set_related_tokens(self, related_tokens: typing.List):
         self.set_fields(_related_tokens=related_tokens)
 
     @property
     def string_features(self):
         return self._string_features
 
-    def set_string_features(self, string_features: List):
+    def set_string_features(self, string_features: typing.List):
         self.set_fields(_string_features=string_features)
 
 
-class EntityMention(forte.data.ontology.top.Annotation):
-    def __init__(self, pack:forte.data.data_pack.DataPack, begin: int, end: int):
+class EntityMention(forte.data.ontology.base.top.Annotation):
+    def __init__(self, pack: forte.data.container.EntryContainer, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._entity_type: typing.Optional[str] = None
 

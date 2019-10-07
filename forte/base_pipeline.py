@@ -8,7 +8,7 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.base_pack import PackType
-from forte.data.ontology import base_ontology
+from forte.data.ontology.base import base_ontology
 from forte.data.readers import BaseReader
 from forte.data.selector import Selector, DummySelector
 from forte.processors.base import BaseProcessor

@@ -7,6 +7,7 @@ import gzip
 import logging
 import os
 from abc import abstractmethod, ABC
+from typing import Optional
 
 from texar.torch.hyperparams import HParams
 
@@ -29,9 +30,10 @@ class JsonPackWriter(BaseProcessor, ABC):
         self.root_output_dir: str = ''
         self.zip_pack: bool = False
 
-    def initialize(self, resource: Resources, configs: HParams):
-        self.root_output_dir = configs.output_dir
-        self.zip_pack = configs.zip_pack
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
+        if configs is not None:
+            self.root_output_dir = configs.output_dir
+            self.zip_pack = configs.zip_pack
 
         if not self.root_output_dir:
             raise NotADirectoryError('Root output directory is not defined '

@@ -64,11 +64,12 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         }
         return output_info
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
         self.define_batcher()
 
-        self.config_model = configs.config_model
-        self.config_data = configs.config_data
+        if configs is not None:
+            self.config_model = configs.config_model
+            self.config_data = configs.config_data
 
         # TODO: populate the resources based on the config.
         self.word_alphabet = resource.get("word_alphabet")

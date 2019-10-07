@@ -6,7 +6,7 @@ from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 
 
-class PipeComponent(Generic[PackType]):
+class PipelineComponent(Generic[PackType]):
     def initialize(self, resource: Resources, configs: HParams):
         """
         The pipeline will call the initialize method at the start of a

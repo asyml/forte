@@ -6,11 +6,11 @@ from forte.common.types import EntryType
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack, DataRequest
 from forte.data.index import BaseIndex
-from forte.data.ontology.top import (
+from forte.data.ontology.base.top import (
     Annotation, MultiPackGroup, MultiPackLink, SubEntry,
     MultiPackEntries
 )
-from forte.data.ontology.core import Entry
+from forte.data.ontology.base.core import Entry
 from forte.data.base import Span
 
 logger = logging.getLogger(__name__)

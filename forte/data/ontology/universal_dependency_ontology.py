@@ -4,8 +4,8 @@ https://universaldependencies.org/docs/format.html
 """
 from typing import Dict, List, Optional
 
-from forte.data.ontology.base_ontology import (Token, Sentence, Document,
-                                               Dependency)
+from forte.data.ontology.base.base_ontology import (Token, Sentence,
+                                                    Document, Dependency)
 from forte.data.data_pack import DataPack
 
 __all__ = [

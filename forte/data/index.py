@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import DefaultDict, Dict, List, Set, Type, Hashable, Generic
 
 from forte.common.exception import PackIndexError
-from forte.data.ontology.core import GroupType, LinkType, EntryType
+from forte.data.ontology.base.core import GroupType, LinkType, EntryType
 
 logger = logging.getLogger(__name__)
 
