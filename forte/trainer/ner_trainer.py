@@ -211,7 +211,7 @@ class CoNLLNERTrainer(BaseTrainer):
                  self.__past_dev_result["eval"]["f1"]):
             self.__past_dev_result = eval_result
             logger.info("Validation f1 increased, saving model")
-            # self.save_model_checkpoint()
+            self.save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
         acc, prec, rec, f1 = (self.__past_dev_result["eval"]["accuracy"],

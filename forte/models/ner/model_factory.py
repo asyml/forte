@@ -36,7 +36,8 @@ class BiRecurrentConvCRF(nn.Module):
             bidirectional=True)
 
         self.dense = nn.Linear(
-            config_model.bilstm_sentence_encoder.rnn_cell_fw.kwargs.num_units * 2,
+            config_model.bilstm_sentence_encoder.rnn_cell_fw.kwargs.num_units
+            * 2,
             config_model.output_hidden_size)
 
         self.tag_projection_layer = nn.Linear(
@@ -228,12 +229,3 @@ def recover_rnn_seq(seq, rev_order, hx=None, batch_first=False):
             else:
                 hx = hx.index_select(1, rev_order)
     return output, hx
-
-
-"""def batch_size_fn(new: Tuple, count: int,
-                  size_so_far: int):  # pylint: disable=unused-argument
-    if count == 1:
-        batch_size_fn.max_length = 0
-    batch_size_fn.max_length = max(batch_size_fn.max_length, len(new[0]))
-    elements = count * batch_size_fn.max_length
-    return elements"""
