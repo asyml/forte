@@ -34,10 +34,14 @@ class TrainPipeline:
             self.preprocessors = []
 
         self.train_reader = train_reader
-        self.trainer = trainer
-        self.predictor = predictor
-        self.evaluator = evaluator
         self.dev_reader = dev_reader
+        self.trainer = trainer
+
+        if predictor is not None:
+            self.predictor = predictor
+
+        if evaluator is not None:
+            self.evaluator = evaluator
 
     def run(self):
         logging.info("Preparing the pipeline")

@@ -10,7 +10,7 @@ from forte.models.ner.conditional_random_field import ConditionalRandomField
 
 
 class BiRecurrentConvCRF(nn.Module):
-    def __init__(self, word_embedding_table: torch.tensor, char_vocab_size: int,
+    def __init__(self, word_embedding_table: torch.Tensor, char_vocab_size: int,
                  tag_vocab_size: int, config_model: HParams):
         super().__init__()
 

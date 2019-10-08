@@ -50,7 +50,6 @@ class CoNLLNERTrainer(BaseTrainer):
     def initialize(self, resource: Resources, configs: HParams):
 
         self.resource = resource
-        # This reference is for saving the checkpoints
 
         self.word_alphabet = resource.get("word_alphabet")
         self.char_alphabet = resource.get("char_alphabet")
@@ -232,7 +231,10 @@ class CoNLLNERTrainer(BaseTrainer):
                         f"epoch={best_epoch}")
 
     def finish(self, resources: Resources):  # pylint: disable=unused-argument
-        self.resource.save(output_dir=self.config_model.resource_dir)
+
+        if self.resource:
+            self.resource.save(output_dir=self.config_model.resource_dir)
+
         self.save_model_checkpoint()
 
     def save_model_checkpoint(self):
