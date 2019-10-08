@@ -13,8 +13,8 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.ontology import conll03_ontology as conll
 from forte.trainer.base.base_trainer import BaseTrainer
-from forte.models.NER import utils
-from examples.NER.model_factory import BiRecurrentConvCRF
+from forte.models.ner import utils
+from forte.models.ner.model_factory import BiRecurrentConvCRF
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ class CoNLLNERTrainer(BaseTrainer):
         self.resource: Optional[Resources] = None
 
         self.train_instances_cache = []
+
         # Just for recording
         self.max_char_length = 0
 
@@ -47,7 +48,7 @@ class CoNLLNERTrainer(BaseTrainer):
 
     def initialize(self, resource: Resources, configs: HParams):
 
-        # self.resource = resource
+        self.resource = resource
         # This reference is for saving the checkpoints
 
         self.word_alphabet = resource.get("word_alphabet")
@@ -79,6 +80,8 @@ class CoNLLNERTrainer(BaseTrainer):
             nesterov=True)
 
         self.trained_epochs = 0
+
+        self.resource.update(model=self.model)
 
     def data_request(self):
         request_string = {
@@ -136,6 +139,7 @@ class CoNLLNERTrainer(BaseTrainer):
         train_total = 0.0
 
         start_time = time.time()
+        self.model.train()
 
         # Each time we will clear and reload the train_instances_cache
         instances = self.train_instances_cache
@@ -185,9 +189,6 @@ class CoNLLNERTrainer(BaseTrainer):
         if epoch >= self.config_data.num_epochs:
             self.request_stop_train()
 
-    def update_resource(self):
-        self.resource.update(model=self.model.state_dict())
-
     @torch.no_grad()
     def get_loss(self, instances: Iterator) -> float:
         losses = 0
@@ -205,10 +206,11 @@ class CoNLLNERTrainer(BaseTrainer):
         return mean_loss
 
     def post_validation_action(self, eval_result):
-        if not self.__past_dev_result or \
-                eval_result["eval"]["f1"] > self.__past_dev_result["eval"]["f1"]:
+        if self.__past_dev_result is None or \
+                (eval_result["eval"]["f1"] >
+                 self.__past_dev_result["eval"]["f1"]):
             self.__past_dev_result = eval_result
-            logger.info("validation f1 increased, saving model")
+            logger.info("Validation f1 increased, saving model")
             # self.save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
@@ -216,20 +218,20 @@ class CoNLLNERTrainer(BaseTrainer):
                               self.__past_dev_result["eval"]["precision"],
                               self.__past_dev_result["eval"]["recall"],
                               self.__past_dev_result["eval"]["f1"])
-        logger.info("Best val acc: %f, precision: %f, recall: %f, "
-                    "F1: %f %% (epoch: %d)", acc, prec, rec, f1, best_epoch)
+        logger.info(f"Best val acc: {acc: 0.3f}, precision: {prec:0.3f}, "
+                    f"recall: {rec:0.3f}, F1: {f1:0.3f}, epoch={best_epoch}")
 
-        acc, prec, rec, f1 = (self.__past_dev_result["test"]["accuracy"],
-                              self.__past_dev_result["test"]["precision"],
-                              self.__past_dev_result["test"]["recall"],
-                              self.__past_dev_result["test"]["f1"])
-        logger.info("Best test acc: %f, precision: %f, recall: %f, "
-                    "F1: %f %% (epoch: %d)", acc, prec, rec, f1, best_epoch)
+        if "test" in self.__past_dev_result:
+            acc, prec, rec, f1 = (self.__past_dev_result["test"]["accuracy"],
+                                  self.__past_dev_result["test"]["precision"],
+                                  self.__past_dev_result["test"]["recall"],
+                                  self.__past_dev_result["test"]["f1"])
+            logger.info(f"Best test acc: {acc: 0.3f}, precision: {prec: 0.3f}, "
+                        f"recall: {rec: 0.3f}, F1: {f1: 0.3f}, "
+                        f"epoch={best_epoch}")
 
     def finish(self, resources: Resources):  # pylint: disable=unused-argument
-        # TODO: save only the resources related to the NER trainer to a path
-        #  specified by the config, so that they can be reload back in the
-        #  predictor.
+        self.resource.save(output_dir=self.config_model.resource_dir)
         self.save_model_checkpoint()
 
     def save_model_checkpoint(self):

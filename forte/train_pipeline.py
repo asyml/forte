@@ -53,7 +53,6 @@ class TrainPipeline:
 
         logging.info("The pipeline is training")
         self.train()
-        # self._validate(epoch=0)
         self.finish()
 
     def prepare(self, *args, **kwargs) -> Iterator[PackType]:
@@ -62,13 +61,12 @@ class TrainPipeline:
         for p in self.preprocessors:
             prepare_pl.add_processor(p)
 
-        prepare_pl.run(conll_directory=self.configs.config_data.train_path)
+        prepare_pl.run(conll_directory=self.configs.config_data.val_path)
 
         for p in self.preprocessors:
             p.finish(resource=self.resource)
 
     def train(self):
-        pack_count = 0
         epoch = 0
         while True:
             epoch += 1
@@ -76,37 +74,36 @@ class TrainPipeline:
             for pack in self.train_reader.iter(
                     conll_directory=self.configs.config_data.train_path):
                 for instance in pack.get_data(**self.trainer.data_request()):
-                    if self.trainer.validation_requested():
-                        dev_res = self._validate(epoch)
-                        self.trainer.validation_done()
-                        self.trainer.post_validation_action(dev_res)
-                    if self.trainer.stop_train():
-                        return
-
                     self.trainer.consume(instance)
-                self.trainer.pack_finish_action(pack_count)
+
             self.trainer.epoch_finish_action(epoch)
-            self.trainer.update_resource()
+
+            if self.trainer.validation_requested():
+                dev_res = self._validate(epoch)
+                self.trainer.validation_done()
+                self.trainer.post_validation_action(dev_res)
+            if self.trainer.stop_train():
+                return
+
             logging.info(f"End of epoch {epoch}")
-            # Cannot call the `trainer.finish` function explicitly here since
-            # there is a return
 
     def _validate(self, epoch: int):
         validation_result = {"epoch": epoch}
 
-        if self.predictor is not None and self.evaluator is not None:
+        if self.predictor is not None:
             for pack in self.dev_reader.iter(
                     conll_directory=self.configs.config_data.val_path):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
-                self.evaluator.consume_next(pack, predicted_pack)
+                self.evaluator.consume_next(predicted_pack, pack)
             validation_result["eval"] = self.evaluator.get_result()
 
+        if self.evaluator is not None:
             for pack in self.dev_reader.iter(
                     conll_directory=self.configs.config_data.test_path):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
-                self.evaluator.consume_next(pack, predicted_pack)
+                self.evaluator.consume_next(predicted_pack, pack)
             validation_result["test"] = self.evaluator.get_result()
 
         return validation_result
@@ -114,6 +111,5 @@ class TrainPipeline:
     def finish(self):
         self.train_reader.finish(self.resource)
         self.dev_reader.finish(self.resource)
-        for p in self.preprocessors:
-            p.finish(self.resource)
+        self.trainer.finish(self.resource)
         self.predictor.finish(self.resource)

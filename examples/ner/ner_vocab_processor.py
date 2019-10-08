@@ -6,12 +6,10 @@ from texar.torch import HParams
 
 from forte.common import Resources
 from forte.data import DataPack
-# from forte.data.ontology import base_ontology
 from forte.data.ontology import conll03_ontology as conll
 from forte.processors import ProcessInfo, Alphabet
 from forte.processors import VocabularyProcessor
-from forte.models.NER.utils import load_glove_embedding, \
-    normalize_digit_word
+from forte.models.ner.utils import load_glove_embedding, normalize_digit_word
 
 __all__ = [
     "CoNLL03VocabularyProcessor",

@@ -6,13 +6,13 @@ import numpy as np
 import torch
 from texar.torch.hyperparams import HParams
 
-from examples.NER.model_factory import BiRecurrentConvCRF
+from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.datasets.conll import conll_utils
 from forte.data.ontology import conll03_ontology as conll
-from forte.models.NER import utils
+from forte.models.ner import utils
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
@@ -35,6 +35,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.model = None
         self.word_alphabet, self.char_alphabet, self.ner_alphabet = (
             None, None, None)
+        self.resource = None
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
@@ -88,28 +89,23 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         utils.set_random_seed(self.config_model.random_seed)
 
-        self.model = BiRecurrentConvCRF(
-            word_embedding_table,
-            self.char_alphabet.size(),
-            self.ner_alphabet.size(),
-            self.config_model).to(device=self.device)
-
         if resource.get("model"):
-            state_dict = resource.get("model")
-            self.model.load_state_dict(state_dict)
+            self.model = resource.get("model")
+
+        else:
+            self.model = BiRecurrentConvCRF(
+                word_embedding_table,
+                self.char_alphabet.size(),
+                self.ner_alphabet.size(),
+                self.config_model).to(device=self.device)
 
         self.input_info = self._define_input_info()
         self.model.eval()
 
     @torch.no_grad()
-    def predict(self, data_batch: Dict):
+    def predict(self, data_batch: Dict) -> Dict:
 
         tokens = data_batch["Token"]
-
-        # TODO: move the model update to a separate function
-        if self.resource.get("model"):
-            state_dict = self.resource.get("model")
-            self.model.load_state_dict(state_dict)
 
         instances = []
         for words in tokens["text"]:
@@ -158,10 +154,9 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         Write the prediction results back to datapack. by writing the predicted
         ner_tag to the original tokens.
         """
+
         if output_dict is None:
             return
-
-        # Overwrite the tokens in the data_pack
 
         current_entity_mention: Tuple[int, str] = (-1, "None")
 
@@ -179,10 +174,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 token = orig_token
                 token_ner = token.get_field("ner_tag")
                 if token_ner[0] == "B":
-                    current_entity_mention = (
-                        token.span.begin,
-                        token_ner[2:],
-                    )
+                    current_entity_mention = (token.span.begin, token_ner[2:])
                 elif token_ner[0] == "I":
                     continue
                 elif token_ner[0] == "O":
@@ -194,23 +186,14 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
                     kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = self._ontology.EntityMention(
-                        data_pack,
-                        current_entity_mention[0],
-                        token.span.end,
-                    )
+                        data_pack, current_entity_mention[0], token.span.end)
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
                 elif token_ner[0] == "S":
-                    current_entity_mention = (
-                        token.span.begin,
-                        token_ner[2:],
-                    )
+                    current_entity_mention = (token.span.begin, token_ner[2:])
                     kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = self._ontology.EntityMention(
-                        data_pack,
-                        current_entity_mention[0],
-                        token.span.end,
-                    )
+                        data_pack, current_entity_mention[0], token.span.end)
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
 
@@ -312,9 +295,7 @@ class CoNLLNEREvaluator(Evaluator):
                                          refer_pack=refer_pack,
                                          refer_request=refer_getdata_args,
                                          output_filename=self.output_file)
-        os.system(
-            "./conll03eval.v2 < %s > %s" % (self.output_file, self.score_file)
-        )
+        os.system(f"./conll03eval.v2 < {self.output_file} > {self.score_file}")
         with open(self.score_file, "r") as fin:
             fin.readline()
             line = fin.readline()

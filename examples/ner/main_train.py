@@ -7,7 +7,7 @@ from forte.processors.ner_predictor import (
     CoNLLNEREvaluator, CoNLLNERPredictor)
 from forte.train_pipeline import TrainPipeline
 from forte.trainer.ner_trainer import CoNLLNERTrainer
-from examples.NER.ner_vocab_processor import CoNLL03VocabularyProcessor
+from examples.ner.ner_vocab_processor import CoNLL03VocabularyProcessor
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -22,7 +22,8 @@ def main():
     config.add_hparam('config_model', config_model)
     config.add_hparam('preprocessor', config_preprocess)
 
-    reader = CoNLL03Reader()
+    train_reader = CoNLL03Reader()
+    dev_reader = CoNLL03Reader()
 
     # Keep the vocabulary processor as a simple counter
     vocab_processor = CoNLL03VocabularyProcessor()
@@ -31,8 +32,8 @@ def main():
     ner_predictor = CoNLLNERPredictor()
     ner_evaluator = CoNLLNEREvaluator()
 
-    train_pipe = TrainPipeline(train_reader=reader, trainer=ner_trainer,
-                               dev_reader=reader, configs=config,
+    train_pipe = TrainPipeline(train_reader=train_reader, trainer=ner_trainer,
+                               dev_reader=dev_reader, configs=config,
                                preprocessors=[vocab_processor],
                                predictor=ner_predictor, evaluator=ner_evaluator)
     train_pipe.run()
