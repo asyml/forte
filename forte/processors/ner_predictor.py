@@ -1,3 +1,4 @@
+# pylint: disable=logging-fstring-interpolation
 import logging
 import os
 from typing import Dict, List, Optional, Tuple
@@ -44,19 +45,19 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.train_instances_cache = []
 
         self._ontology = conll
+        self.input_info = self._define_input_info()
         self.define_context()
 
         self.batch_size = 3
         self.batcher = self.define_batcher()
 
     def define_context(self):
-        # self.context_type = self._ontology.Sentence
-        self.context_type = conll.Sentence
+        self.context_type = self._ontology.Sentence
 
     def _define_input_info(self) -> ProcessInfo:
         input_info: ProcessInfo = {
-            conll.Token: [],
-            conll.Sentence: [],
+            self._ontology.Token: [],
+            self._ontology.Sentence: [],
         }
         return input_info
 
@@ -99,7 +100,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 self.ner_alphabet.size(),
                 self.config_model).to(device=self.device)
 
-        self.input_info = self._define_input_info()
         self.model.eval()
 
     @torch.no_grad()

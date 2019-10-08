@@ -89,7 +89,6 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self.prepare_coverage_index(input_pack)
         for batch in self.batcher.get_batch(
                 input_pack, self.context_type, self.input_info):
-            #print(f"Running prediction on the next batch")
             pred = self.predict(batch)
             self.pack_all(pred)
             self.finish_up_packs(-1)

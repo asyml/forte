@@ -1,9 +1,9 @@
+# pylint: disable=logging-fstring-interpolation
 import logging
-from typing import Optional, List, Iterator
+from typing import Optional, List
 
 from texar.torch import HParams
 
-from forte.data import PackType
 from forte.pipeline import Pipeline
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
@@ -55,7 +55,7 @@ class TrainPipeline:
         self.train()
         self.finish()
 
-    def prepare(self, *args, **kwargs) -> Iterator[PackType]:
+    def prepare(self):
         prepare_pl = Pipeline()
         prepare_pl.set_reader(self.train_reader)
         for p in self.preprocessors:

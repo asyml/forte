@@ -2,7 +2,7 @@
 Conditional random field.
 Adapted from AllenNLP but removed the feature of external restriction
 """
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Union
 import logging
 
 import torch
@@ -36,7 +36,7 @@ def allowed_transitions(constraint_type: str,
     start_tag = num_labels
     end_tag = num_labels + 1
     labels_with_boundaries = list(labels.items()) + \
-                             [(start_tag, "START"),(end_tag, "END")]
+                             [(start_tag, "START"), (end_tag, "END")]
 
     allowed = []
     for from_label_index, from_label in labels_with_boundaries:
@@ -189,7 +189,8 @@ class ConditionalRandomField(torch.nn.Module):
         Whether to include the start and end transition parameters.
     """
 
-    def __init__(self, num_tags: int, constraints: List[Tuple[int, int]] = None,
+    def __init__(self, num_tags: int,
+                 constraints: Optional[List[Tuple[int, int]]] = None,
                  include_start_end_transitions: bool = True) -> None:
         super().__init__()
         self.num_tags = num_tags
@@ -301,6 +302,8 @@ class ConditionalRandomField(torch.nn.Module):
 
         # Start with the transition scores from start_tag to the first tag in
         # each input
+        score: Union[float, torch.Tensor]
+
         if self.include_start_end_transitions:
             score = self.start_transitions.index_select(0, tags[0])
         else:
@@ -337,6 +340,8 @@ class ConditionalRandomField(torch.nn.Module):
         )
 
         # Compute score of transitioning to `stop_tag` from each "last tag".
+        last_transition_score: Union[float, torch.Tensor]
+
         if self.include_start_end_transitions:
             last_transition_score = self.end_transitions.index_select(
                 0, last_tags
@@ -355,8 +360,9 @@ class ConditionalRandomField(torch.nn.Module):
 
         return score
 
-    def forward(self, inputs: torch.Tensor, tags: torch.Tensor,
-                mask: torch.ByteTensor = None) -> torch.Tensor:
+    def forward(self,  # type: ignore
+                inputs: torch.Tensor, tags: torch.Tensor,
+                mask: Optional[torch.ByteTensor] = None) -> torch.Tensor:
         """
         Computes the log likelihood.
         """
