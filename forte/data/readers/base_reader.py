@@ -184,7 +184,8 @@ class BaseReader(PipeComponent[PackType], ABC):
                 if self._cache_directory is not None:
                     self.cache_data(self._cache_directory, collection, pack)
 
-                record_fields(self.output_info, self.component_name, pack)
+                if self.output_info:
+                    record_fields(self.output_info, self.component_name, pack)
                 if not isinstance(pack, self.pack_type):
                     raise ValueError(
                         f"No Pack object read from the given "

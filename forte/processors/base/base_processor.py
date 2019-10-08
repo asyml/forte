@@ -91,7 +91,7 @@ class BaseProcessor(PipeComponent[PackType], ABC):
         # Do the actual processing.
         self._process(input_pack)
 
-        if not input_pack.is_poison():
+        if not input_pack.is_poison() and self.output_info:
             record_fields(self.output_info, self.component_name, input_pack)
 
         # Mark that the pack is processed by the processor.
