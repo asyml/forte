@@ -132,5 +132,4 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
             word_alphabet=word_alphabet,
             char_alphabet=char_alphabet,
             ner_alphabet=ner_alphabet,
-            word_embedding_table=word_embedding_table,
-        )
+            word_embedding_table=word_embedding_table)
