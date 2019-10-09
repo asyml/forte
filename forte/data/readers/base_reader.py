@@ -142,8 +142,7 @@ class BaseReader(PipeComponent[PackType], ABC):
         raise NotImplementedError
 
     # pylint: disable=unused-argument,no-self-use
-    def text_replace_operation(self,
-                               text: str) -> ReplaceOperationsType:
+    def text_replace_operation(self, text: str) -> ReplaceOperationsType:
         """
         Given the possibly noisy text, compute and return the
         replacement operations in the form of a list of (span, str)

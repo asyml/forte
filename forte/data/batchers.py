@@ -125,7 +125,7 @@ class ProcessingBatcher(Generic[PackType]):
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def __init__(self, cross_pack=True):
         super().__init__(cross_pack)
-        self.instance_num_in_current_batch = 0
+        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
         default_config = HParams(None, self.default_hparams())
@@ -135,7 +135,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         config_ = HParams(config, self.default_hparams())
         self.batch_size = config_.batch_size
 
-        self.instance_num_in_current_batch = 0
+        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
@@ -159,10 +159,9 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         instances: List[Dict] = []
         for data in data_pack.get_data(context_type, requests, offset):
             instances.append(data)
-            if (len(instances) ==
-                    self.batch_size - self.instance_num_in_current_batch):
+            if len(instances) == self.batch_size:
                 batch = batch_instances(instances)
-                self.instance_num_in_current_batch += len(instances)
+                # self.instance_num_in_current_batch += len(instances)
                 self.batch_is_full = True
                 yield (batch, len(instances))
                 instances = []
@@ -170,14 +169,14 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
         # Flush the remaining data.
         if len(instances) > 0:
-            self.instance_num_in_current_batch += len(instances)
+            # self.instance_num_in_current_batch += len(instances)
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
     @staticmethod
     def default_hparams() -> Dict:
         return {
-            'batch_size': 5,
+            'batch_size': 10,
         }
 
 

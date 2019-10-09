@@ -417,12 +417,9 @@ class DataPack(BasePack[Entry, Link, Group]):
     def validate_group(cls, entry: EntryType) -> bool:
         return isinstance(entry, Group)
 
-    def get_data(
-            self,
-            context_type: Type[Annotation],
-            request: Optional[DataRequest] = None,
-            skip_k: int = 0
-    ) -> Iterator[Dict[str, Any]]:
+    def get_data(self, context_type: Type[Annotation],
+                 request: Optional[DataRequest] = None,
+                 skip_k: int = 0) -> Iterator[Dict[str, Any]]:
         """
         Example:
 
@@ -488,8 +485,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         context_args = annotation_types.get(context_type)
 
         context_components, _, context_fields = self._parse_request_args(
-            context_type, context_args
-        )
+            context_type, context_args)
 
         valid_context_ids = self.get_ids_by_type(context_type)
         if context_components:

@@ -31,11 +31,7 @@ class ProcessJob:
 
 class ProcessBuffer:
 
-    def __init__(
-            self,
-            data_iter: Iterator[PackType],
-            total_step: int
-    ):
+    def __init__(self, data_iter: Iterator[PackType], total_step: int):
         self.__data_iter: Iterator[PackType] = data_iter
         self.__buffer: List[ProcessJob] = []
         self.__data_exhausted = False
@@ -156,7 +152,7 @@ class BasePipeline(Generic[PackType]):
         self.processors[-1].set_as_last()
 
     def set_reader(self, reader: BaseReader):
-        reader.set_ontology(self._ontology)
+        # reader.set_ontology(self._ontology)
         self._reader = reader
 
     @property
@@ -247,8 +243,7 @@ class BasePipeline(Generic[PackType]):
         return self.process_packs(data_iter)
 
     def process_packs(
-            self, data_iter: Iterator[PackType]
-    ) -> Iterator[PackType]:
+            self, data_iter: Iterator[PackType]) -> Iterator[PackType]:
         """
         Process an iterator of data packs and return the  processed ones.
 

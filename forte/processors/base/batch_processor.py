@@ -96,7 +96,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self.finish_up_packs()
 
     @abstractmethod
-    def predict(self, data_batch: Dict):
+    def predict(self, data_batch: Dict) -> Dict:
         """
         The function that task processors should implement.
 

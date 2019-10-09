@@ -114,6 +114,4 @@ class CoNLL03Reader(PackReader):
         pack.meta.doc_id = file_path
         doc.close()
 
-        print(pack.text)
-
         return pack

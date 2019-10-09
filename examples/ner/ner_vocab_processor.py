@@ -1,20 +1,22 @@
 from collections import Counter
-
+import logging
 import numpy as np
-import torch
-from texar.torch import HParams
 
+import torch
+
+from texar.torch import HParams
 from forte.common import Resources
 from forte.data import DataPack
-from forte.data.ontology import base_ontology
+from forte.data.ontology import conll03_ontology as conll
 from forte.processors import ProcessInfo, Alphabet
 from forte.processors import VocabularyProcessor
-from forte.models.NER.utils import load_glove_embedding, \
-    normalize_digit_word
+from forte.models.ner.utils import load_glove_embedding, normalize_digit_word
 
 __all__ = [
     "CoNLL03VocabularyProcessor",
 ]
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def construct_word_embedding_table(embed_dict, alphabet):
@@ -86,12 +88,10 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         """
         # for data_pack in input_pack:
         for instance in data_pack.get_data(
-                context_type=base_ontology.Sentence,
+                context_type=conll.Sentence,
                 request={
-                    base_ontology.Token:
-                        ["chunk_tag", "pos_tag", "ner_tag"],
-                },
-        ):
+                    conll.Token: ["chunk_tag", "pos_tag", "ner_tag"]
+                }):
             for token in instance["Token"]["text"]:
                 for char in token:
                     self.char_cnt[char] += 1
@@ -118,19 +118,18 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
 
         embedding_dict = load_glove_embedding(self.embedding_path)
 
-        word_embedding_table = construct_word_embedding_table(embedding_dict,
-                                                              word_alphabet)
-
-        print(f'word embedding table size:{word_embedding_table.size()}')
-
         for word in embedding_dict:
             if word not in word_alphabet.instance2index:
                 word_alphabet.add(word)
+
+        word_embedding_table = construct_word_embedding_table(embedding_dict,
+                                                              word_alphabet)
+
+        logging.info(f'word embedding table size:{word_embedding_table.size()}')
 
         # Adding vocabulary information to resource.
         resource.update(
             word_alphabet=word_alphabet,
             char_alphabet=char_alphabet,
             ner_alphabet=ner_alphabet,
-            word_embedding_table=word_embedding_table,
-        )
+            word_embedding_table=word_embedding_table)
