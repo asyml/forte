@@ -255,7 +255,8 @@ class CoNLLNERTrainer(BaseTrainer):
     def get_batch_tensor(
             self, data: List[Tuple[List[int], List[List[int]], List[int]]],
             device: Optional[torch.device] = None) -> \
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
+                  torch.Tensor]:
         """Get the tensors to be fed into the model.
 
         Args:
