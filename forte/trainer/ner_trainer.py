@@ -133,7 +133,7 @@ class CoNLLNERTrainer(BaseTrainer):
         lengths = \
             sum([len(instance[0]) for instance in self.train_instances_cache])
 
-        logger.info(f"Average sentence length: {lengths / counter}")
+        logger.info(f"Average sentence length: {(lengths / counter):0.3f}")
 
         train_err = 0.0
         train_total = 0.0
@@ -168,11 +168,12 @@ class CoNLLNERTrainer(BaseTrainer):
 
             # update log
             if step % 200 == 0:
-                logger.info(f"Train: {step}, loss: {train_err / train_total}")
+                logger.info(f"Train: {step}, "
+                            f"loss: {(train_err / train_total):0.3f}")
 
         logger.info(f"Epoch: {epoch}, steps: {step}, "
-                    f"loss: {train_err / train_total}, "
-                    f"time: {time.time() - start_time}s")
+                    f"loss: {(train_err / train_total):0.3f}, "
+                    f"time: {(time.time() - start_time):0.3f}s")
 
         self.trained_epochs = epoch
 
@@ -181,7 +182,7 @@ class CoNLLNERTrainer(BaseTrainer):
                  (1.0 + self.trained_epochs * self.config_model.decay_rate)
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
-            logger.info(f"Update learning rate to {lr}")
+            logger.info(f"Update learning rate to {lr:0.3f}")
 
         self.request_eval()
         self.train_instances_cache.clear()
@@ -251,16 +252,31 @@ class CoNLLNERTrainer(BaseTrainer):
         self.model.load_state_dict(ckpt["model"])
         self.optim.load_state_dict(ckpt["optimizer"])
 
-    def get_batch_tensor(self, data: List, device=None):
-        """
+    def get_batch_tensor(
+            self, data: List[Tuple[List[int], List[List[int]], List[int]]],
+            device: Optional[torch.device] = None) -> \
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Get the tensors to be fed into the model.
 
         Args:
-            data: A list of tuple
-              (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids)
-            device: The device the tensor should be reside on.
+            data: A list of tuple (word_ids, char_id_sequences, ner_ids)
+            device: The device for the tensors.
 
         Returns:
+            A tuple where
 
+            - ``words``: A tensor of shape `[batch_size, batch_length]`
+              representing the word ids in the batch
+            - ``chars``: A tensor of shape
+              `[batch_size, batch_length, char_length]` representing the char
+              ids for each word in the batch
+            - ``ners``: A tensor of shape `[batch_size, batch_length]`
+              representing the NER ids for each word in the batch
+            - ``masks``: A tensor of shape `[batch_size, batch_length]`
+              representing the indices to be masked in the batch. 1 indicates
+              no masking.
+            - ``lengths``: A tensor of shape `[batch_size]` representing the
+              length of each sentences in the batch
         """
         batch_size = len(data)
         batch_length = max([len(d[0]) for d in data])

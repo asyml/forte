@@ -29,7 +29,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
        Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
        :class:`Pipeline` must be an ontology that includes
        ``forte.data.ontology.conll03_ontology``.
-       """
+    """
 
     def __init__(self):
         super().__init__()
@@ -103,8 +103,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.model.eval()
 
     @torch.no_grad()
-    def predict(self, data_batch: Dict) -> Dict:
-
+    def predict(self, data_batch: Dict[str, Dict[str, List[str]]]) \
+            -> Dict[str, Dict[str, List[np.array]]]:
         tokens = data_batch["Token"]
 
         instances = []
@@ -149,7 +149,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
-    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
+    def pack(self, data_pack: DataPack,
+             output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
         """
         Write the prediction results back to datapack. by writing the predicted
         ner_tag to the original tokens.
@@ -197,16 +198,29 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
 
-    def get_batch_tensor(self, data: List, device=None):
-        """
+    def get_batch_tensor(
+            self, data: List[Tuple[List[int], List[List[int]]]],
+            device: Optional[torch.device] = None) -> \
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Get the tensors to be fed into the model.
 
         Args:
-            data: A list of tuple (word_ids, char_id_sequences, pos_ids,
-              chunk_ids, ner_ids)
+            data: A list of tuple (word_ids, char_id_sequences)
             device: The device for the tensors.
 
         Returns:
+            A tuple where
 
+            - ``words``: A tensor of shape `[batch_size, batch_length]`
+              representing the word ids in the batch
+            - ``chars``: A tensor of shape
+              `[batch_size, batch_length, char_length]` representing the char
+              ids for each word in the batch
+            - ``masks``: A tensor of shape `[batch_size, batch_length]`
+              representing the indices to be masked in the batch. 1 indicates
+              no masking.
+            - ``lengths``: A tensor of shape `[batch_size]` representing the
+              length of each sentences in the batch
         """
         batch_size = len(data)
         batch_length = max([len(d[0]) for d in data])

@@ -59,13 +59,13 @@ class TrainPipeline:
         self.train()
         self.finish()
 
-    def prepare(self):
+    def prepare(self, *args, **kwargs):  # pylint: disable=unused-argument
         prepare_pl = Pipeline()
         prepare_pl.set_reader(self.train_reader)
         for p in self.preprocessors:
             prepare_pl.add_processor(p)
 
-        prepare_pl.run(conll_directory=self.configs.config_data.val_path)
+        prepare_pl.run(self.configs.config_data.val_path)
 
         for p in self.preprocessors:
             p.finish(resource=self.resource)
@@ -74,9 +74,8 @@ class TrainPipeline:
         epoch = 0
         while True:
             epoch += 1
-            # we need to have directory ready here
             for pack in self.train_reader.iter(
-                    conll_directory=self.configs.config_data.train_path):
+                    self.configs.config_data.train_path):
                 for instance in pack.get_data(**self.trainer.data_request()):
                     self.trainer.consume(instance)
 
@@ -96,7 +95,7 @@ class TrainPipeline:
 
         if self.predictor is not None:
             for pack in self.dev_reader.iter(
-                    conll_directory=self.configs.config_data.val_path):
+                    self.configs.config_data.val_path):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
                 self.evaluator.consume_next(predicted_pack, pack)
@@ -104,7 +103,7 @@ class TrainPipeline:
 
         if self.evaluator is not None:
             for pack in self.dev_reader.iter(
-                    conll_directory=self.configs.config_data.test_path):
+                    self.configs.config_data.test_path):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
                 self.evaluator.consume_next(predicted_pack, pack)
