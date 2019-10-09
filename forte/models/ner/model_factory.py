@@ -141,6 +141,7 @@ class BiRecurrentConvCRF(nn.Module):
         # prepare packed_sequence
         seq_input, hx, rev_order, mask = prepare_rnn_seq(
             input, length, hx=hx, masks=mask, batch_first=True)
+        self.rnn.flatten_parameters()
         seq_output, hn = self.rnn(seq_input, hx=hx)
         output, hn = recover_rnn_seq(
             seq_output, rev_order, hx=hn, batch_first=True)
