@@ -32,8 +32,6 @@ def get_full_module_name(o, lower=False):
 def get_class_name(o, lower=False):
     """
     Returns the class name of an object o.
-    For example, for :class:`OntonotesOntology.Token`, returns
-    'Token'.
     """
     if not isinstance(o, type):
         o = o.__class__
@@ -44,7 +42,7 @@ def get_class_name(o, lower=False):
 
 
 def get_class(class_name, module_paths=None):
-    """Returns the class based on class name. (brought from Texar)
+    """Returns the class based on class name.
 
     Args:
         class_name (str): Name or full path to the class.
@@ -76,9 +74,7 @@ def get_class(class_name, module_paths=None):
 
 def get_qual_name(o, lower=False):
     """
-    Returns the class name of an object o.
-    For example, for :class:`OntonotesOntology.Token`, returns
-    'OntonotesOntology.Token'.
+    Returns the qualified name of an object o.
     """
     if not isinstance(o, type):
         o = o.__class__

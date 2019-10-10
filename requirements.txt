@@ -4,4 +4,4 @@ numpy
 jsonpickle
 torch
 pyyaml
-texar_pytorch
+allennlp

@@ -31,7 +31,7 @@ setuptools.setup(
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt'],
         'example': ['termcolor'],
-        'wikipedia': ['mwxml,mwtypes']
+        'wikipedia': ['mwxml', 'mwtypes']
     },
     package_data={
     },

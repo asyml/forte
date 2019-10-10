@@ -18,7 +18,9 @@ class DataPackTest(unittest.TestCase):
     def setUp(self) -> None:
         self.reader = OntonotesReader()
         data_path = os.path.join(os.path.dirname(
-            os.path.dirname(forte.__file__)), "examples/abc_0059.gold_conll")
+            os.path.dirname(forte.__file__)),
+            "examples/data_samples/ontonotes/00/abc_0059.gold_conll"
+        )
         self.data_pack = self.reader.parse_pack(data_path)
 
     def test_get_data(self):

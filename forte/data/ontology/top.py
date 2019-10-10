@@ -1,160 +1,42 @@
-from abc import abstractmethod, ABC
 from functools import total_ordering
-from typing import (
-    Iterable, Optional, Set, Tuple, Type, Hashable, Union
-)
-import numpy as np
+from typing import (Optional, Set, Tuple, Type)
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
-from forte.utils import get_class_name, get_full_module_name
+from forte.data.ontology.core import Entry, BaseLink, BaseGroup
+from forte.data.base import Span
 
 __all__ = [
-    "Span",
-    "Entry",
     "Annotation",
-    "BaseGroup",
-    "MultiPackGroup",
     "Group",
-    "BaseLink",
     "Link",
+    "MultiPackGroup",
     "MultiPackLink",
     "SubEntry",
     "SinglePackEntries",
     "MultiPackEntries",
-    "Group",
-    "Query"
 ]
 
 
 @total_ordering
-class Span:
-    """
-    A class recording the span of annotations. :class:`Span` objects could
-    be totally ordered according to their :attr:`begin` as the first sort key
-    and :attr:`end` as the second sort key.
-    """
-
-    def __init__(self, begin: int, end: int):
-        self.begin = begin
-        self.end = end
-
-    def __lt__(self, other):
-        if self.begin == other.begin:
-            return self.end < other.end
-        return self.begin < other.begin
-
-    def __eq__(self, other):
-        return (self.begin, self.end) == (other.begin, other.end)
-
-
-class Indexable(ABC):
-    """
-    A class that implement this would be indexable within the pack it lives in.
-    """
-
-    @property
-    def index_key(self) -> Hashable:
-        raise NotImplementedError
-
-
-class Entry(Indexable):
-    """
-    The base class inherited by all NLP entries.
-    There will be some associated attributes for each entry.
-    - component: specify the creator of the entry
-    - _data_pack: each entry can be attached to a pack with
-        ``attach`` function.
-    - _tid: a unique identifier of this entry in the data pack
-    """
-
-    def __init__(self, pack: EntryContainer):
-        super(Entry, self).__init__()
-
-        self._tid: str
-
-        self.__component: str
-        self.__modified_fields: Set[str] = set()
-
-        # The Entry should have a reference to the data pack, and the data pack
-        # need to store the entries. In order to resolve the cyclic references,
-        # we create a generic class EntryContainer to be the place holder of
-        # the actual. Whether this entry can be added to the pack is delegated
-        # to be checked by the pack.
-        self.__pack: EntryContainer = pack
-        pack.validate(self)
-
-    @property
-    def tid(self):
-        return self._tid
-
-    @property
-    def component(self):
-        return self.__component
-
-    def set_component(self, component: str):
-        """
-        Set the component of the creator of this entry.
-        Args:
-            component: The component name of the creator (processor or reader).
-
-        Returns:
-
-        """
-        self.__component = component
-
-    def set_tid(self, tid: str):
-        """
-        Set the entry tid.
-        Args:
-            tid: The entry tid.
-
-        Returns:
-
-        """
-        self._tid = f"{get_full_module_name(self)}.{tid}"
-
-    @property
-    def pack(self) -> EntryContainer:
-        return self.__pack
-
-    def set_fields(self, **kwargs):
-        """Set other entry fields"""
-        for field_name, field_value in kwargs.items():
-            if not hasattr(self, field_name):
-                raise AttributeError(
-                    f"class {get_class_name(self)} "
-                    f"has no attribute {field_name}"
-                )
-            setattr(self, field_name, field_value)
-            self.__modified_fields.add(field_name)
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-
-        return (type(self), self._tid) == (type(other), other.tid)
-
-    def __hash__(self) -> int:
-        return hash((type(self), self._tid))
-
-    @property
-    def index_key(self) -> Hashable:
-        return self._tid
-
-
-# EntryType = TypeVar('EntryType', bound=Entry)
-
-
-@total_ordering
 class Annotation(Entry):
-    """Annotation type entries, such as "token", "entity mention" and
-    "sentence". Each annotation has a text span corresponding to its offset
+    """
+    Annotation type entries, such as "token", "entity mention" and
+    "sentence". Each annotation has a :class:`Span` corresponding to its offset
     in the text.
+
+    Args:
+        pack (EntryContainer): The container that this annotation
+         will be added to.
+        begin (int): The offset of the first character in the annotation.
+        end (int): The offset of the last character in the annotation + 1.
     """
 
     def __init__(self, pack: EntryContainer, begin: int, end: int):
         super().__init__(pack)
+        if begin > end:
+            raise ValueError(
+                f"The begin {begin} of span is greater than the end {end}")
         self._span = Span(begin, end)
 
     @property
@@ -162,14 +44,34 @@ class Annotation(Entry):
         return self._span
 
     def set_span(self, begin: int, end: int):
+        """
+        Set the span of the annotation.
+        """
+        if begin > end:
+            raise ValueError(
+                f"The begin {begin} of span is greater than the end {end}")
         self._span = Span(begin, end)
 
     def __hash__(self):
+        """
+        The hash function of :class:`Annotation`.
+
+        Users can define their own hash function by themselves but this must
+        be consistent to :meth:`eq`.
+        """
         return hash(
             (type(self), self.pack, self.span.begin, self.span.end)
         )
 
     def __eq__(self, other):
+        """
+        The eq function of :class:`Annotation`.
+        By default, :class:`Annotation` objects are regarded as the same if
+        they have the same type, span, and are generated by the same component.
+
+        Users can define their own eq function by themselves but this must
+        be consistent to :meth:`hash`.
+        """
         if other is None:
             return False
         return (type(self), self.span.begin, self.span.end) == \
@@ -177,8 +79,11 @@ class Annotation(Entry):
 
     def __lt__(self, other):
         """
-        Have to support total ordering and be consistent with
-        __eq__(self, other)
+        To support total_ordering, :class:`Annotations` must provide
+        :meth:`__lt__`.
+
+        Users can define their own lt function by themselves but this must
+        be consistent to :meth:`__eq__`.
         """
         if self.span != other.span:
             return self.span < other.span
@@ -189,85 +94,7 @@ class Annotation(Entry):
         if self.pack is None:
             raise ValueError(f"Cannot get text because annotation is not "
                              f"attached to any data pack.")
-        return self.pack.text[self.span.begin: self.span.end]
-
-    @property
-    def index_key(self) -> str:
-        return self.tid
-
-
-class BaseLink(Entry, ABC):
-    def __init__(
-            self,
-            pack: EntryContainer,
-            parent: Optional[Entry] = None,
-            child: Optional[Entry] = None
-    ):
-        super().__init__(pack)
-
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
-
-    @abstractmethod
-    def set_parent(self, parent: Entry):
-        """
-        This will set the `parent` of the current instance with given Entry
-        The parent is saved internally by its pack specific index key.
-
-        Args:
-            parent: The parent entry.
-
-        Returns:
-
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def set_child(self, child: Entry):
-        """
-        This will set the `child` of the current instance with given Entry
-        The child is saved internally by its pack specific index key.
-
-        Args:
-            child: The child entry
-
-        Returns:
-
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_parent(self) -> Entry:
-        """
-        Get the parent entry of the link.
-
-        Returns:
-             An instance of :class:`Entry` that is the child of the link
-             from the given DataPack
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_child(self) -> Entry:
-        """
-        Get the child entry of the link.
-
-        Returns:
-             An instance of :class:`Entry` that is the child of the link
-             from the given DataPack
-        """
-        raise NotImplementedError
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return (type(self), self.get_parent(), self.get_child()) == \
-               (type(other), other.get_parent(), other.get_child())
-
-    def __hash__(self):
-        return hash((type(self), self.get_parent(), self.get_child()))
+        return self.pack.get_span_text(self.span)
 
     @property
     def index_key(self) -> str:
@@ -276,9 +103,15 @@ class BaseLink(Entry, ABC):
 
 class Link(BaseLink):
     """
-    The Link type entry connects two entries, such as "dependency link", which
-    connect two words and specifies its dependency label.  Each link has a
-    parent node and a child node.
+    Link type entries, such as "predicate link". Each link has a parent node
+    and a child node.
+
+    Args:
+         pack (EntryContainer): The container that this annotation
+         will be added to.
+
+        parent (Entry, optional): the parent entry of the link.
+        child (Entry, optional): the child entry of the link.
     """
     ParentType: Type[Entry]
     ChildType: Type[Entry]
@@ -334,16 +167,16 @@ class Link(BaseLink):
     @property
     def parent(self):
         """
-        tid of the parent node. To get the object of the parent node, call
-        :meth:`get_parent`.
+        Get ``tid`` of the parent node. To get the object of the parent node,
+        call :meth:`get_parent`.
         """
         return self._parent
 
     @property
     def child(self):
         """
-        tid of the child node. To get the object of the child node, call
-        :meth:`get_child`.
+        Get ``tid`` of the child node. To get the object of the child node,
+        call :meth:`get_child`.
         """
         return self._child
 
@@ -357,6 +190,8 @@ class Link(BaseLink):
         if self.pack is None:
             raise ValueError(f"Cannot get parent because link is not "
                              f"attached to any data pack.")
+        if self._parent is None:
+            raise ValueError(f"The child of this entry is not set.")
         return self.pack.get_entry(self._parent)
 
     def get_child(self) -> Entry:
@@ -369,111 +204,24 @@ class Link(BaseLink):
         if self.pack is None:
             raise ValueError(f"Cannot get child because link is not"
                              f" attached to any data pack.")
+        if self._child is None:
+            raise ValueError(f"The child of this entry is not set.")
         return self.pack.get_entry(self._child)
 
 
-class BaseGroup(Entry):
-    """
-    Group is an entry that represent a group of other entries. For example,
-    a "coreference group" is a group of coreferential entities. Each group will
-    store a set of members, no duplications allowed.
-
-    This is the BaseGroup interface. Specific member constraints are defined
-    in the inherited classes.
-    """
-    member_type: Type[Entry]
-
-    def __init__(
-            self,
-            pack: EntryContainer,
-            members: Optional[Set[Entry]] = None,
-    ):
-        super().__init__(pack)
-
-        # Store the group member's id.
-        self._members: Set[str] = set()
-        if members is not None:
-            self.add_members(members)
-
-    def add_member(self, member: Entry):
-        """
-        Add one entry to the group.
-        Args:
-            member:
-
-        Returns:
-
-        """
-        self.add_members([member])
-
-    def add_members(self, members: Iterable[Entry]):
-        """
-        Add members to the group.
-
-        Args:
-            members: An iterator of members to be added to the group.
-
-        Returns:
-
-        """
-        for member in members:
-            if not isinstance(member, self.member_type):
-                raise TypeError(
-                    f"The members of {type(self)} should be "
-                    f"instances of {self.member_type}, but get {type(member)}")
-
-            self._members.add(member.tid)
-
-    @property
-    def members(self):
-        """
-        A list of member tids. To get the member objects, call
-        :meth:`get_members` instead.
-        :return:
-        """
-        return self._members
-
-    def __hash__(self):
-        return hash((type(self), tuple(self.members)))
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return (type(self), self.members) == (type(other), other.members)
-
-    def get_members(self):
-        """
-        Get the member entries in the group.
-
-        Returns:
-             An set of instances of :class:`Entry` that are the members of the
-             group.
-        """
-        if self.pack is None:
-            raise ValueError(f"Cannot get members because group is not "
-                             f"attached to any data pack.")
-        member_entries = set()
-        for m in self.members:
-            member_entries.add(self.pack.get_entry(m))
-        return member_entries
-
-    @property
-    def index_key(self) -> str:
-        return self.tid
-
-
-class Group(BaseGroup):
+class Group(BaseGroup[Entry]):
     """
     Group is an entry that represent a group of other entries. For example,
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
-    member_type: Type[Entry] = Entry
+    MemberType: Type[Entry] = Entry
 
 
 class SubEntry(Entry):
     """
-    This is used to identify an Entry in one of the packs in the Multipack.
+    This is used to identify an Entry in one of the packs in the
+    :class:`Multipack`.
     For example, the sentence in one of the packs. A pack_index and an entry
     is needed to identify this.
 
@@ -512,15 +260,17 @@ class SubEntry(Entry):
 
 class MultiPackLink(BaseLink):
     """
-    The MultiPackLink are used to link entries in a MultiPack, which is designed
-    to support cross pack linking, this can support applications such as
-    sentence alignment and cross-document coreference. Each link should have
+    This is used to link entries in a :class:`MultiPack`, which is
+    designed to support cross pack linking, this can support applications such
+    as sentence alignment and cross-document coreference. Each link should have
     a parent node and a child node. Note that the nodes are SubEntry(s), thus
     have one additional index on which pack it comes from.
     """
 
     ParentType: Type[SubEntry]
+    """The parent type of this link."""
     ChildType: Type[SubEntry]
+    """The Child type of this link."""
 
     def __init__(
             self,
@@ -612,7 +362,7 @@ class MultiPackLink(BaseLink):
         return SubEntry(self.pack, pack_idx, child_tid)
 
 
-class MultiPackGroup(BaseGroup):
+class MultiPackGroup(BaseGroup[SubEntry]):
     """
     Group type entries, such as "coreference group". Each group has a set
     of members.
@@ -622,33 +372,9 @@ class MultiPackGroup(BaseGroup):
             self,
             pack: EntryContainer,
             members: Optional[Set[SubEntry]],
-    ):
+    ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)
 
 
 SinglePackEntries = (Link, Group, Annotation)
 MultiPackEntries = (MultiPackLink, MultiPackGroup)
-
-
-class Query(Entry):
-    def __init__(self, query: Union[np.ndarray, str]):
-        super().__init__()
-        self.query: Union[np.ndarray, str] = query
-
-    def hash(self):
-        if isinstance(self.query, np.ndarray):
-            return hash(self.query.tobytes())
-        else:
-            return hash(self.query)
-
-    def eq(self, other: 'Query') -> bool:
-        if isinstance(self.query, str):
-            if not isinstance(self.query, str):
-                return False
-            else:
-                return self.query == other.query
-        else:
-            if not isinstance(self.query, np.ndarray):
-                return False
-            else:
-                return np.all(self.query == other.query)

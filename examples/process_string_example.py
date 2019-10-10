@@ -10,10 +10,11 @@ from forte.data.ontology.ontonotes_ontology import (
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
-    NLTKPOSTagger, NLTKSentenceSegmenter, NLTKWordTokenizer,
     CoNLLNERPredictor, SRLPredictor)
-from forte.processors.StanfordNLP_processor import StandfordNLPProcessor
 from forte.processors.simple_writers import SimpleJsonPackWriter
+from examples.processors.NLTK_processors import NLTKWordTokenizer, \
+    NLTKPOSTagger, NLTKSentenceSegmenter
+from examples.processors.StanfordNLP_processor import StandfordNLPProcessor
 
 
 def string_processor_example(ner_model_dir: str, srl_model_dir: str):
@@ -41,7 +42,7 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
     )
     pl.add_processor(SRLPredictor(), srl_configs)
 
-    pl.initialize_processors()
+    pl.initialize()
 
     text = ["The plain green Norway spruce is displayed in the gallery's foyer. "
         "Wentworth worked as an assistant to sculptor Henry Moore in the "
@@ -96,7 +97,7 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
                      config=output_config)
     pl.set_ontology(stanford)
 
-    pl.initialize_processors()
+    pl.initialize()
 
     pack = pl.process(text)
     for sentence in pack.get(stanford.Sentence):

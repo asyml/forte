@@ -1,7 +1,3 @@
-import logging
-import os
-from typing import Tuple
-
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -10,27 +6,20 @@ import texar.torch as texar
 from texar.torch.hyperparams import HParams
 from texar.torch.modules.embedders import WordEmbedder
 
-from examples.NER.conditional_random_field import ConditionalRandomField
+from forte.models.ner.conditional_random_field import ConditionalRandomField
 
 
 class BiRecurrentConvCRF(nn.Module):
-    def __init__(
-            self,
-            word_embedding_table: torch.tensor,
-            char_vocab_size: int,
-            tag_vocab_size: int,
-            config_model: HParams,
-    ):
+    def __init__(self, word_embedding_table: torch.Tensor, char_vocab_size: int,
+                 tag_vocab_size: int, config_model: HParams):
         super().__init__()
 
-        # TODO(haoransh): Fix this. init_value doesn't need to be tensor but
+        # TODO: Fix this. init_value doesn't need to be tensor but
         #  we have to set it for type check
-        self.word_embedder = WordEmbedder(
-            init_value=word_embedding_table)
+        self.word_embedder = WordEmbedder(init_value=word_embedding_table)
 
         self.char_embedder = WordEmbedder(
-            vocab_size=char_vocab_size, hparams=config_model.char_emb
-        )
+            vocab_size=char_vocab_size, hparams=config_model.char_emb)
 
         self.char_cnn = torch.nn.Conv1d(**config_model.char_cnn_conv)
 
@@ -44,24 +33,19 @@ class BiRecurrentConvCRF(nn.Module):
             config_model.bilstm_sentence_encoder.rnn_cell_fw.kwargs.num_units,
             num_layers=1,
             batch_first=True,
-            bidirectional=True,
-        )
+            bidirectional=True)
 
         self.dense = nn.Linear(
             config_model.bilstm_sentence_encoder.rnn_cell_fw.kwargs.num_units
             * 2,
-            config_model.output_hidden_size
-        )
+            config_model.output_hidden_size)
 
         self.tag_projection_layer = nn.Linear(
-            config_model.output_hidden_size, tag_vocab_size
-        )
+            config_model.output_hidden_size, tag_vocab_size)
 
         self.crf = ConditionalRandomField(
-            tag_vocab_size,
-            constraints=None,
-            include_start_end_transitions=True,
-        )
+            tag_vocab_size, constraints=None,
+            include_start_end_transitions=True)
 
         if config_model.initializer is None or callable(
                 config_model.initializer):
@@ -85,43 +69,44 @@ class BiRecurrentConvCRF(nn.Module):
 
     def forward(self, input_word, input_char, target=None, mask=None, hx=None):
         """
-        :param input_word:
-        :param input_char:
-        :param target:
-        :param mask:
-        :param hx:
-        :return:
-            Return the loss value
+
+        Args:
+            input_word:
+            input_char:
+            target:
+            mask:
+            hx:
+
+        Returns: the loss value
+
         """
         output, _, mask, _ = self.encode(input_word, input_char, mask, hx)
 
         logits = self.tag_projection_layer(output)
-        log_likelihood = (
-                self.crf.forward(logits, target, mask) / target.size()[0]
-        )
+        log_likelihood = \
+            self.crf.forward(logits, target, mask) / target.size()[0]
         return -log_likelihood
 
     def decode(self, input_word, input_char, mask=None, hx=None):
         """
+        Args:
+            input_word:
+            input_char:
+            mask:
+            hx:
 
-        :param input_word:
-        :param input_char:
-        :param mask:
-        :param hx:
-        :return:
+        Returns:
+
         """
-
         output, _, mask, _ = self.encode(
-            input_word, input_char, mask=mask, hx=hx
-        )
+            input_word, input_char, mask=mask, hx=hx)
 
         logits = self.tag_projection_layer(output)
         best_paths = self.crf.viterbi_tags(logits, mask.long())
         predicted_tags = [x for x, y in best_paths]
         predicted_tags = [torch.tensor(x).unsqueeze(0) for x in predicted_tags]
         predicted_tags = texar.utils.pad_and_concat(
-            predicted_tags, axis=0, pad_constant_values=0
-        )
+            predicted_tags, axis=0, pad_constant_values=0)
 
         return predicted_tags
 
@@ -138,9 +123,8 @@ class BiRecurrentConvCRF(nn.Module):
         char_size = char.size()
         # first transform to [batch * length, char_length, char_dim]
         # then transpose to [batch * length, char_dim, char_length]
-        char = char.view(
-            char_size[0] * char_size[1], char_size[2], char_size[3]
-        ).transpose(1, 2)
+        char = char.view(char_size[0] * char_size[1],
+                         char_size[2], char_size[3]).transpose(1, 2)
         # put into cnn [batch*length, char_filters, char_length]
         # then put into maxpooling [batch * length, char_filters]
         char, _ = self.char_cnn(char).max(dim=2)
@@ -156,12 +140,11 @@ class BiRecurrentConvCRF(nn.Module):
 
         # prepare packed_sequence
         seq_input, hx, rev_order, mask = prepare_rnn_seq(
-            input, length, hx=hx, masks=mask, batch_first=True
-        )
+            input, length, hx=hx, masks=mask, batch_first=True)
+        self.rnn.flatten_parameters()
         seq_output, hn = self.rnn(seq_input, hx=hx)
         output, hn = recover_rnn_seq(
-            seq_output, rev_order, hx=hn, batch_first=True
-        )
+            seq_output, rev_order, hx=hn, batch_first=True)
 
         # apply dropout for the output of rnn
         output = self.dropout_out(output)
@@ -221,8 +204,8 @@ def prepare_rnn_seq(rnn_input, lengths, hx=None, masks=None, batch_first=False):
 
     lens = lens.tolist()
     seq = rnn_utils.pack_padded_sequence(
-        rnn_input, lens, batch_first=batch_first
-    )
+        rnn_input, lens, batch_first=batch_first)
+
     if masks is not None:
         if batch_first:
             masks = masks[:, : lens[0]]
@@ -247,46 +230,3 @@ def recover_rnn_seq(seq, rev_order, hx=None, batch_first=False):
             else:
                 hx = hx.index_select(1, rev_order)
     return output, hx
-
-
-def evaluate(output_file: str) -> Tuple[float, float, float, float]:
-    """
-    :param output_file: The file to be evaluated
-    :return:
-        return the metrics evaluated by the conll03_eval.v2 script
-        (accuracy, precision, recall, F1)
-    """
-    score_file = f"{output_file}.score"
-    os.system("./conll03eval.v2 < %s > %s" % (output_file, score_file))
-    with open(score_file, "r") as fin:
-        fin.readline()
-        line = fin.readline()
-        fields = line.split(";")
-        acc = float(fields[0].split(":")[1].strip()[:-1])
-        precision = float(fields[1].split(":")[1].strip()[:-1])
-        recall = float(fields[2].split(":")[1].strip()[:-1])
-        f1 = float(fields[3].split(":")[1].strip())
-    return acc, precision, recall, f1
-
-
-def get_logger(
-        name,
-        level=logging.INFO,
-        formatter="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-):
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    fh = logging.FileHandler(name + ".log")
-    fh.setLevel(level)
-    fh.setFormatter(logging.Formatter(formatter))
-    logger.addHandler(fh)
-
-    return logger
-
-
-def batch_size_fn(new: Tuple, count: int, size_so_far: int):  # pylint: disable=unused-argument
-    if count == 1:
-        batch_size_fn.max_length = 0
-    batch_size_fn.max_length = max(batch_size_fn.max_length, len(new[0]))
-    elements = count * batch_size_fn.max_length
-    return elements

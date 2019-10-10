@@ -2,7 +2,7 @@
 Conditional random field.
 Adapted from AllenNLP but removed the feature of external restriction
 """
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Union
 import logging
 
 import torch
@@ -11,9 +11,8 @@ import torch
 logger = logging.getLogger(__name__)
 
 
-def allowed_transitions(
-    constraint_type: str, labels: Dict[int, str]
-) -> List[Tuple[int, int]]:
+def allowed_transitions(constraint_type: str,
+                        labels: Dict[int, str]) -> List[Tuple[int, int]]:
     """
     Given labels and a constraint type, returns the allowed transitions. It will
     additionally include transitions for the start and end states, which are
@@ -36,10 +35,8 @@ def allowed_transitions(
     num_labels = len(labels)
     start_tag = num_labels
     end_tag = num_labels + 1
-    labels_with_boundaries = list(labels.items()) + [
-        (start_tag, "START"),
-        (end_tag, "END"),
-    ]
+    labels_with_boundaries = list(labels.items()) + \
+                             [(start_tag, "START"), (end_tag, "END")]
 
     allowed = []
     for from_label_index, from_label in labels_with_boundaries:
@@ -63,13 +60,8 @@ def allowed_transitions(
     return allowed
 
 
-def is_transition_allowed(
-    constraint_type: str,
-    from_tag: str,
-    from_entity: str,
-    to_tag: str,
-    to_entity: str,
-):
+def is_transition_allowed(constraint_type: str, from_tag: str, from_entity: str,
+                          to_tag: str, to_entity: str):
     """
     Given a constraint type and strings ``from_tag`` and ``to_tag`` that
     represent the origin and destination of the transition, return whether
@@ -197,12 +189,9 @@ class ConditionalRandomField(torch.nn.Module):
         Whether to include the start and end transition parameters.
     """
 
-    def __init__(
-        self,
-        num_tags: int,
-        constraints: List[Tuple[int, int]] = None,
-        include_start_end_transitions: bool = True,
-    ) -> None:
+    def __init__(self, num_tags: int,
+                 constraints: Optional[List[Tuple[int, int]]] = None,
+                 include_start_end_transitions: bool = True) -> None:
         super().__init__()
         self.num_tags = num_tags
 
@@ -216,13 +205,11 @@ class ConditionalRandomField(torch.nn.Module):
         # tags (num_tags + 2)
         if constraints is None:
             # All transitions are valid.
-            constraint_mask = torch.Tensor(num_tags + 2, num_tags + 2).fill_(
-                1.0
-            )
+            constraint_mask = \
+                torch.Tensor(num_tags + 2, num_tags + 2).fill_(1.0)
         else:
-            constraint_mask = torch.Tensor(num_tags + 2, num_tags + 2).fill_(
-                0.0
-            )
+            constraint_mask = \
+                torch.Tensor(num_tags + 2, num_tags + 2).fill_(0.0)
             for i, j in constraints:
                 constraint_mask[i, j] = 1.0
 
@@ -245,9 +232,8 @@ class ConditionalRandomField(torch.nn.Module):
             torch.nn.init.normal_(self.start_transitions)
             torch.nn.init.normal_(self.end_transitions)
 
-    def _input_likelihood(
-        self, logits: torch.Tensor, mask: torch.Tensor
-    ) -> torch.Tensor:
+    def _input_likelihood(self, logits: torch.Tensor,
+                          mask: torch.Tensor) -> torch.Tensor:
         """
         Computes the (batch_size,) denominator term for the log-likelihood,
         which is the um of the likelihoods across all possible state sequences.
@@ -301,9 +287,8 @@ class ConditionalRandomField(torch.nn.Module):
         # Finally we log_sum_exp along the num_tags dim, result is (batch_size,)
         return torch.logsumexp(stops, -1)
 
-    def _joint_likelihood(
-        self, logits: torch.Tensor, tags: torch.Tensor, mask: torch.LongTensor
-    ) -> torch.Tensor:
+    def _joint_likelihood(self, logits: torch.Tensor, tags: torch.Tensor,
+                          mask: torch.LongTensor) -> torch.Tensor:
         """
         Computes the numerator term for the log-likelihood, which is just
         score(inputs, tags)
@@ -317,6 +302,8 @@ class ConditionalRandomField(torch.nn.Module):
 
         # Start with the transition scores from start_tag to the first tag in
         # each input
+        score: Union[float, torch.Tensor]
+
         if self.include_start_end_transitions:
             score = self.start_transitions.index_select(0, tags[0])
         else:
@@ -353,6 +340,8 @@ class ConditionalRandomField(torch.nn.Module):
         )
 
         # Compute score of transitioning to `stop_tag` from each "last tag".
+        last_transition_score: Union[float, torch.Tensor]
+
         if self.include_start_end_transitions:
             last_transition_score = self.end_transitions.index_select(
                 0, last_tags
@@ -371,12 +360,9 @@ class ConditionalRandomField(torch.nn.Module):
 
         return score
 
-    def forward(
-        self,
-        inputs: torch.Tensor,
-        tags: torch.Tensor,
-        mask: torch.ByteTensor = None,
-    ) -> torch.Tensor:
+    def forward(self,  # type: ignore
+                inputs: torch.Tensor, tags: torch.Tensor,
+                mask: Optional[torch.ByteTensor] = None) -> torch.Tensor:
         """
         Computes the log likelihood.
         """
@@ -389,9 +375,8 @@ class ConditionalRandomField(torch.nn.Module):
 
         return torch.sum(log_numerator - log_denominator)
 
-    def viterbi_tags(
-        self, logits: torch.Tensor, mask: torch.Tensor
-    ) -> List[Tuple[List[int], float]]:
+    def viterbi_tags(self, logits: torch.Tensor,
+                     mask: torch.Tensor) -> List[Tuple[List[int], float]]:
         """
         Uses viterbi algorithm to find most likely tags for the given inputs.
         If constraints are applied, disallows all other transitions.
@@ -465,11 +450,8 @@ class ConditionalRandomField(torch.nn.Module):
         return best_paths
 
 
-def viterbi_decode(
-    tag_sequence: torch.Tensor,
-    transition_matrix: torch.Tensor,
-    tag_observations: Optional[List[int]] = None,
-):
+def viterbi_decode(tag_sequence: torch.Tensor, transition_matrix: torch.Tensor,
+                   tag_observations: Optional[List[int]] = None):
     """
     Perform Viterbi decoding in log space over a sequence given a transition
     matrix specifying pairwise (transition) potentials between tags and a

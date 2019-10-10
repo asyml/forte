@@ -1,17 +1,18 @@
 from abc import abstractmethod
 from typing import TypeVar, Generic
-from forte.data.index import BaseIndex
+from forte.data.base import Span
 
-T = TypeVar('T')
-IndexType = TypeVar('IndexType', bound=BaseIndex)
+E = TypeVar('E')
+L = TypeVar('L')
+G = TypeVar('G')
 
 
-class EntryContainer(Generic[T]):
+class EntryContainer(Generic[E, L, G]):
     def __init__(self):
-        self.index: IndexType
+        pass
 
     @abstractmethod
-    def validate(self, item: T) -> bool:
+    def validate(self, item: E) -> bool:
         """
         Validate whether this type can be added.
         Args:
@@ -23,4 +24,7 @@ class EntryContainer(Generic[T]):
         raise NotImplementedError
 
     def get_entry(self, tid: str):
+        raise NotImplementedError
+
+    def get_span_text(self, span: Span):
         raise NotImplementedError

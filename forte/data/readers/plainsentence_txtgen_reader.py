@@ -19,27 +19,17 @@ class PlainSentenceTxtgenReader(MultiPackReader):
     :class:`PlainSentenceTxtgenReader` is designed to read a file where
     each line is a sentence, and wrap it with MultiPack for the following
     text generation processors.
-
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``dataset_iterator()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``dataset_iterator()`` returns a list.
     """
-
-    def __init__(self, lazy: bool = True):
-        super().__init__(lazy)
-        self.define_output_info()
-
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Sentence: [],
         }
 
+    # pylint: disable=no-self-use
     def _collect(self, text_directory: str) -> Iterator[Any]:  # type: ignore
         return dataset_path_iterator(text_directory, '')
 
+    # pylint: disable=no-self-use
     def _cache_key_function(self, txt_path: str) -> str:
         return os.path.basename(txt_path)
 

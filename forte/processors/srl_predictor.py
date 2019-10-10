@@ -6,8 +6,9 @@ import texar.torch as tx
 from texar.torch.hyperparams import HParams
 import torch
 
-from data.ontology import Span
-from data.ontology.ontonotes_ontology import PredicateMention, PredicateArgument
+from forte.data.base import Span
+from forte.data.ontology.ontonotes_ontology import PredicateMention, \
+    PredicateArgument
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.ontology import ontonotes_ontology, base_ontology
@@ -21,17 +22,22 @@ __all__ = [
     "SRLPredictor",
 ]
 
-# Prediction = Dict[
-#     ontonotes_ontology.PredicateMention,
-#     List[Tuple[ontonotes_ontology.PredicateArgument, str]]
-# ]
-
 Prediction = List[
     Tuple[Span, List[Tuple[Span, str]]]
 ]
 
 
 class SRLPredictor(FixedSizeBatchProcessor):
+    """
+    An Semantic Role labeler trained according to `He, Luheng, et al.
+    "Jointly predicting predicates and arguments in neural semantic role
+    labeling." <https://aclweb.org/anthology/P18-2058>`_.
+
+    Note that to use :class:`SRLPredictor`, the :attr:`ontology` of
+    :class:`Pipeline` must be an ontology that includes
+    ``forte.data.ontology.ontonotes_ontology``.
+    """
+
     word_vocab: tx.data.Vocab
     char_vocab: tx.data.Vocab
     model: LabeledSpanGraphNetwork
@@ -48,7 +54,10 @@ class SRLPredictor(FixedSizeBatchProcessor):
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
-    def initialize(self, resource: Resources, configs: HParams):  # pylint: disable=unused-argument
+    def initialize(self,
+                   resource: Resources,  # pylint: disable=unused-argument
+                   configs: HParams):
+
         model_dir = configs.storage_path
 
         logger.info("restoring SRL model from %s", model_dir)

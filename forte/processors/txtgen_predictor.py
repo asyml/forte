@@ -9,8 +9,10 @@ from texar.torch.hyperparams import HParams
 from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
-from forte.data.batchers import ProcessingBatcher, \
+from forte.data.batchers import (
+    ProcessingBatcher,
     FixedSizeMultiPackProcessingBatcher
+)
 from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
 from forte.processors.base import ProcessInfo
@@ -58,22 +60,28 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         return output_info
 
     def define_context(self):
+        # pylint: disable=no-self-use
         self.context_type = self._ontology.Sentence
 
     def define_batcher(self) -> ProcessingBatcher:
+        # pylint: disable=no-self-use
         return FixedSizeMultiPackProcessingBatcher()
 
     def initialize(self, resource: Resources, configs: HParams):
         """
-        :param configs:
+        Args:
+            resource:
+            configs: A config with the following keys:
+                * input_pack_name: specify the input pack name of the MultiPack
+                  to be processed
+                * output_pack_name: specify the output pack name of the
+                  MultiPack to be processed
+                * max_decoding_length: the maximum decoding length.
+                * top_k
+                * top_p
+                * temperature
 
-        :param resource:
-            word_processor: encode the plain sentence with customized tokenizer
-            input_pack_name: specify the input pack name of the MultiPack to be
-             processed
-            output_pack_name: specify the output pack name of the MultiPack to
-             be processed
-        :return:
+        Returns:
         """
         super().initialize(resource, configs)
 
@@ -196,9 +204,13 @@ class TxtgenPredictor(MultiPackBatchProcessor):
 
     def get_batch_tensor(self, data: List, device):
         """
-        :param data: A list of strings(sentences)
-        :param device:
-        :return:
+
+        Args:
+            data: A list of strings(sentences)
+            device:
+
+        Returns:
+
         """
         batch_size = len(data)
         batch_tokens = [self.word_processor.encode(sent) for sent in data]

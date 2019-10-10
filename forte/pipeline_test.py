@@ -7,7 +7,7 @@ from forte.data.ontology import relation_ontology
 from forte.data.ontology.relation_ontology import *
 from forte.data.readers import OntonotesReader
 from forte.pipeline import Pipeline
-from forte.processors.dummy_processor import *
+from forte.processors.dummy_batch_processor import *
 
 
 class PipelineTest(unittest.TestCase):
@@ -22,7 +22,7 @@ class PipelineTest(unittest.TestCase):
         self.processor = DummyRelationExtractor()
         self.nlp.add_processor(self.processor)
 
-        self.nlp.initialize_processors()
+        self.nlp.initialize()
 
     def test_process_next(self):
         # get processed pack from dataset

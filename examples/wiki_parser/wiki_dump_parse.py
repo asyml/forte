@@ -33,7 +33,7 @@ class WikiArticleWriter(JsonPackWriter):
         self.article_count: int = 0
 
     def initialize(self, resource: Resources, configs: HParams):
-        super(WikiArticleWriter, self).initialize(resources, configs)
+        super(WikiArticleWriter, self).initialize(resource, configs)
         self.article_count = 0
         self.article_index = open(
             os.path.join(self.root_output_dir, 'article.idx'), 'w')
@@ -63,6 +63,7 @@ class WikiArticleWriter(JsonPackWriter):
         )
 
     def finish(self, resource: Resources):
+        # pylint: disable=unused-argument
         self.article_index.close()
 
 
@@ -80,7 +81,7 @@ def main(wiki_dump_path: str, output_path: str):
 
     pl.add_processor(WikiArticleWriter(), config=config)
 
-    pl.initialize_processors()
+    pl.initialize()
     pl.run(wiki_dump_path)
 
 

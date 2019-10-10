@@ -27,7 +27,7 @@ class StringReader(PackReader):
         self.define_output_info()
 
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Document: [],
         }
 
@@ -52,8 +52,11 @@ class StringReader(PackReader):
     def parse_pack(self, data_source: str) -> DataPack:
         """
         Takes a raw string and converts into a DataPack
-        :param data_source: str that contains text of a document
-        :return: DataPack containing Document
+
+        Args:
+            data_source: str that contains text of a document
+
+        Returns: DataPack containing Document.
         """
         config.working_component = self.component_name
 

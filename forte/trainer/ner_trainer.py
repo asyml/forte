@@ -1,8 +1,9 @@
+# pylint: disable=logging-fstring-interpolation
 import logging
 import random
 import time
-from typing import Iterator, Optional
-from typing import List, Tuple
+import pickle
+from typing import List, Tuple, Iterator, Optional
 
 import numpy as np
 import torch
@@ -12,10 +13,10 @@ from tqdm import tqdm
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.ontology import base_ontology
+from forte.data.ontology import conll03_ontology as conll
 from forte.trainer.base.base_trainer import BaseTrainer
-from examples.NER.model_factory import BiRecurrentConvCRF
-from models.NER.utils import normalize_digit_word, set_random_seed
+from forte.models.ner import utils
+from forte.models.ner.model_factory import BiRecurrentConvCRF
 
 logger = logging.getLogger(__name__)
 
@@ -25,18 +26,23 @@ class CoNLLNERTrainer(BaseTrainer):
         super().__init__()
 
         self.model = None
+
         self.word_alphabet = None
         self.char_alphabet = None
         self.ner_alphabet = None
+
         self.config_model = None
         self.config_data = None
         self.normalize_func = None
+
         self.device = None
         self.optim, self.trained_epochs = None, None
-        self.ontology = base_ontology
+
+        self.ontology = conll
         self.resource: Optional[Resources] = None
 
         self.train_instances_cache = []
+
         # Just for recording
         self.max_char_length = 0
 
@@ -45,52 +51,42 @@ class CoNLLNERTrainer(BaseTrainer):
     def initialize(self, resource: Resources, configs: HParams):
 
         self.resource = resource
-        # This reference is for saving the checkpoints
 
         self.word_alphabet = resource.get("word_alphabet")
         self.char_alphabet = resource.get("char_alphabet")
         self.ner_alphabet = resource.get("ner_alphabet")
 
-        self.config_model = resource.get("config_model")
-        self.config_data = resource.get("config_data")
-
         word_embedding_table = resource.get('word_embedding_table')
 
-        self.model = resource.resources["model"]
-        self.optim = resource.resources["optim"]
-        self.device = resource.resources["device"]
-        self.normalize_func = normalize_digit_word
+        self.config_model = configs.config_model
+        self.config_data = configs.config_data
 
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
-        else:
-            device = torch.device("cpu")
+        self.normalize_func = utils.normalize_digit_word
 
-        set_random_seed(config.random_seed)
+        self.device = torch.device("cuda") if torch.cuda.is_available() \
+            else torch.device("cpu")
+
+        utils.set_random_seed(self.config_model.random_seed)
 
         self.model = BiRecurrentConvCRF(
-            word_embedding_table,
-            self.char_alphabet.size(),
-            self.ner_alphabet.size(),
-            config
-        ).to(device=device)
+            word_embedding_table, self.char_alphabet.size(),
+            self.ner_alphabet.size(), self.config_model).to(device=self.device)
 
         self.optim = SGD(
-            self.model.parameters(),
-            lr=config.learning_rate,
-            momentum=config.momentum,
-            nesterov=True,
-        )
+            self.model.parameters(), lr=self.config_model.learning_rate,
+            momentum=self.config_model.momentum, nesterov=True)
 
         self.trained_epochs = 0
 
+        self.resource.update(model=self.model)
+
     def data_request(self):
         request_string = {
-            "context_type": "sentence",
-            "requests": {
+            "context_type": conll.Sentence,
+            "request": {
                 self.ontology.Token: ["ner_tag"],
                 self.ontology.Sentence: [],  # span by default
-            },
+            }
         }
         return request_string
 
@@ -117,12 +113,9 @@ class CoNLLNERTrainer(BaseTrainer):
         max_len = max([len(char_seq) for char_seq in char_id_seqs])
         self.max_char_length = max(self.max_char_length, max_len)
 
-        self.train_instances_cache.append(
-            (word_ids, char_id_seqs, ner_ids)
-        )
+        self.train_instances_cache.append((word_ids, char_id_seqs, ner_ids))
 
     def pack_finish_action(self, pack_count):
-
         pass
 
     def epoch_finish_action(self, epoch):
@@ -132,12 +125,12 @@ class CoNLLNERTrainer(BaseTrainer):
         :return:
         """
         counter = len(self.train_instances_cache)
-        logger.info("Total number of ner_data: %d", counter)
+        logger.info(f"Total number of ner_data: {counter}")
 
-        lengths = sum(
-            [len(instance[0]) for instance in self.train_instances_cache]
-        )
-        logger.info("average sentence length: %f", (lengths / counter))
+        lengths = \
+            sum([len(instance[0]) for instance in self.train_instances_cache])
+
+        logger.info(f"Average sentence length: {(lengths / counter):0.3f}")
 
         train_err = 0.0
         train_total = 0.0
@@ -149,16 +142,15 @@ class CoNLLNERTrainer(BaseTrainer):
         instances = self.train_instances_cache
         random.shuffle(self.train_instances_cache)
         data_iterator = torchtext.data.iterator.pool(
-            instances,
-            self.config_data.batch_size_tokens,
+            instances, self.config_data.batch_size_tokens,
             key=lambda x: x.length(),  # length of word_ids
             batch_size_fn=batch_size_fn,
-            random_shuffler=torchtext.data.iterator.RandomShuffler(),
-        )
-        bid = 0
+            random_shuffler=torchtext.data.iterator.RandomShuffler())
+
+        step = 0
 
         for batch in data_iterator:
-            bid += 1
+            step += 1
             batch_data = self.get_batch_tensor(batch, device=self.device)
             word, char, labels, masks, lengths = batch_data
 
@@ -172,27 +164,22 @@ class CoNLLNERTrainer(BaseTrainer):
             train_total += num_inst
 
             # update log
-            if bid % 200 == 0:
-                log_info = "train: %d loss: %.4f" % (
-                    bid,
-                    train_err / train_total,
-                )
-                logger.info(log_info)
+            if step % 200 == 0:
+                logger.info(f"Train: {step}, "
+                            f"loss: {(train_err / train_total):0.3f}")
 
-        logger.info(
-            "Epoch: %d train: %d loss: %.4f, time: %.2fs",
-            epoch, bid, train_err / train_total, time.time() - start_time,
-        )
+        logger.info(f"Epoch: {epoch}, steps: {step}, "
+                    f"loss: {(train_err / train_total):0.3f}, "
+                    f"time: {(time.time() - start_time):0.3f}s")
 
         self.trained_epochs = epoch
 
         if epoch % self.config_model.decay_interval == 0:
-            lr = self.config_model.learning_rate / (
-                    1.0 + self.trained_epochs * self.config_model.decay_rate
-            )
+            lr = self.config_model.learning_rate / \
+                 (1.0 + self.trained_epochs * self.config_model.decay_rate)
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
-            logger.info("update learning rate to %f", lr)
+            logger.info(f"Update learning rate to {lr:0.3f}")
 
         self.request_eval()
         self.train_instances_cache.clear()
@@ -205,8 +192,7 @@ class CoNLLNERTrainer(BaseTrainer):
         losses = 0
         val_data = list(instances)
         for i in tqdm(
-                range(0, len(val_data), self.config_data.test_batch_size)
-        ):
+                range(0, len(val_data), self.config_data.test_batch_size)):
             b_data = val_data[i: i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
 
@@ -218,47 +204,44 @@ class CoNLLNERTrainer(BaseTrainer):
         return mean_loss
 
     def post_validation_action(self, eval_result):
-        if (
-                not self.__past_dev_result
-                or eval_result["eval"]["f1"] > self.__past_dev_result["eval"][
-            "f1"]
-        ):
+        if self.__past_dev_result is None or \
+                (eval_result["eval"]["f1"] >
+                 self.__past_dev_result["eval"]["f1"]):
             self.__past_dev_result = eval_result
-            logger.info("validation f1 increased, saving model")
-            self.save_resources()
-            # self.save_model_checkpoint()
+            logger.info("Validation f1 increased, saving model")
+            self.save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
-        acc, prec, rec, f1 = (
-            self.__past_dev_result["eval"]["accuracy"],
-            self.__past_dev_result["eval"]["precision"],
-            self.__past_dev_result["eval"]["recall"],
-            self.__past_dev_result["eval"]["f1"],
-        )
-        logger.info(
-            "best val acc: %f, precision: %f, recall: %f, "
-            "F1: %f %% (epoch: %d)",
-            acc, prec, rec, f1, best_epoch,
-        )
+        acc, prec, rec, f1 = (self.__past_dev_result["eval"]["accuracy"],
+                              self.__past_dev_result["eval"]["precision"],
+                              self.__past_dev_result["eval"]["recall"],
+                              self.__past_dev_result["eval"]["f1"])
+        logger.info(f"Best val acc: {acc: 0.3f}, precision: {prec:0.3f}, "
+                    f"recall: {rec:0.3f}, F1: {f1:0.3f}, epoch={best_epoch}")
 
-        acc, prec, rec, f1 = (
-            self.__past_dev_result["test"]["accuracy"],
-            self.__past_dev_result["test"]["precision"],
-            self.__past_dev_result["test"]["recall"],
-            self.__past_dev_result["test"]["f1"],
-        )
-        logger.info(
-            "best test acc: %f, precision: %f, recall: %f, "
-            "F1: %f %% (epoch: %d)",
-            acc, prec, rec, f1, best_epoch,
-        )
+        if "test" in self.__past_dev_result:
+            acc, prec, rec, f1 = (self.__past_dev_result["test"]["accuracy"],
+                                  self.__past_dev_result["test"]["precision"],
+                                  self.__past_dev_result["test"]["recall"],
+                                  self.__past_dev_result["test"]["f1"])
+            logger.info(f"Best test acc: {acc: 0.3f}, precision: {prec: 0.3f}, "
+                        f"recall: {rec: 0.3f}, F1: {f1: 0.3f}, "
+                        f"epoch={best_epoch}")
 
-    def finish(self):
-        self.save_resources()
-        # self.save_model_checkpoint()
+    def finish(self, resources: Resources):  # pylint: disable=unused-argument
+        if self.resource:
+            keys_to_serializers = {}
+            for key in resources.keys():
+                if key == "model":
+                    keys_to_serializers[key] = \
+                        lambda x, y: pickle.dump(x.state_dict(), open(y, "wb"))
+                else:
+                    keys_to_serializers[key] = \
+                        lambda x, y: pickle.dump(x, open(y, "wb"))
 
-    def save_resources(self):
-        self.resource.save()
+            self.resource.save(keys_to_serializers)
+
+        self.save_model_checkpoint()
 
     def save_model_checkpoint(self):
         states = {
@@ -274,13 +257,32 @@ class CoNLLNERTrainer(BaseTrainer):
         self.model.load_state_dict(ckpt["model"])
         self.optim.load_state_dict(ckpt["optimizer"])
 
-    def get_batch_tensor(self, data: List, device=None):
-        """
+    def get_batch_tensor(
+            self, data: List[Tuple[List[int], List[List[int]], List[int]]],
+            device: Optional[torch.device] = None) -> \
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
+                  torch.Tensor]:
+        """Get the tensors to be fed into the model.
 
-        :param data: A list of quintuple
-            (word_ids, char_id_seqs, pos_ids, chunk_ids, ner_ids
-        :param device:
-        :return:
+        Args:
+            data: A list of tuple (word_ids, char_id_sequences, ner_ids)
+            device: The device for the tensors.
+
+        Returns:
+            A tuple where
+
+            - ``words``: A tensor of shape `[batch_size, batch_length]`
+              representing the word ids in the batch
+            - ``chars``: A tensor of shape
+              `[batch_size, batch_length, char_length]` representing the char
+              ids for each word in the batch
+            - ``ners``: A tensor of shape `[batch_size, batch_length]`
+              representing the NER ids for each word in the batch
+            - ``masks``: A tensor of shape `[batch_size, batch_length]`
+              representing the indices to be masked in the batch. 1 indicates
+              no masking.
+            - ``lengths``: A tensor of shape `[batch_size]` representing the
+              length of each sentences in the batch
         """
         batch_size = len(data)
         batch_length = max([len(d[0]) for d in data])

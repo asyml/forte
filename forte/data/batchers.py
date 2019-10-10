@@ -10,28 +10,36 @@ from forte.data import DataPack, MultiPack, DataRequest
 from forte.data.io_utils import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation
 
+__all__ = [
+    "ProcessingBatcher",
+    "FixedSizeDataPackBatcher",
+    "FixedSizeMultiPackProcessingBatcher",
+]
+
 
 class ProcessingBatcher(Generic[PackType]):
     """
-    This defines the basis interface of the Batcher used in BatchProcessors.
-    It will create Batches from the packs, and stores the relationship between
-    the packs and the Batches, so that we can add the processed result back to
-    the packs.
+    This defines the basis interface of the Batcher used in
+    :class:`~forte.processors.batch_processor.BatchProcessor`.
+    This Batcher only batches data sequentially.
+    The Batcher receives new packs
+    dynamically and cache the current packs so that the processors can
+    pack prediction results into the data packs.
+
+    Args:
+        cross_pack (bool, optional): whether to allow batches go across
+        data packs when there is no enough data at the end.
     """
 
     def __init__(self, cross_pack: bool = True):
-        """
-
-        Args:
-            cross_pack: If True, the batches can go across pack boundaries.
-        """
         self.current_batch: Dict = {}
         self.data_pack_pool: List[PackType] = []
         self.current_batch_sources: List[int] = []
 
         self.cross_pack: bool = cross_pack
 
-    def initialize(self, config: HParams):
+    def initialize(  # pylint: disable=unused-argument
+            self, config: Optional[HParams]):
         """
         The implementation should initialize the batcher and setup the
         internal states of this batcher.
@@ -40,8 +48,6 @@ class ProcessingBatcher(Generic[PackType]):
         Returns:
 
         """
-        self.cross_pack = config.cross_pack
-
         self.current_batch.clear()
         self.data_pack_pool.clear()
         self.current_batch_sources.clear()
@@ -65,6 +71,9 @@ class ProcessingBatcher(Generic[PackType]):
             context_type: Type[Annotation],
             requests: DataRequest,
     ):
+        """
+        Returns an iterator of data batches.
+        """
         if input_pack.is_poison():
             # No more packs, flush the remaining instances.
             if self.current_batch:
@@ -116,15 +125,17 @@ class ProcessingBatcher(Generic[PackType]):
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def __init__(self, cross_pack=True):
         super().__init__(cross_pack)
-        self.instance_num_in_current_batch = 0
+        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
         default_config = HParams(None, self.default_hparams())
         self.batch_size = default_config.batch_size
 
     def initialize(self, config: HParams):
-        self.batch_size = config.batch_size
-        self.instance_num_in_current_batch = 0
+        config_ = HParams(config, self.default_hparams())
+        self.batch_size = config_.batch_size
+
+        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
@@ -137,8 +148,8 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         """
-        Try to yield batches from a dataset ``batch_size``, but will yield an
-        incomplete batch if the data_pack is exhausted.
+        Try to get batches from a dataset  with ``batch_size``, but will
+        yield an incomplete batch if the data_pack is exhausted.
 
         Returns:
             An iterator of tuples ``(batch, cnt)``, ``batch`` is a dict
@@ -148,10 +159,9 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         instances: List[Dict] = []
         for data in data_pack.get_data(context_type, requests, offset):
             instances.append(data)
-            if (len(instances) ==
-                    self.batch_size - self.instance_num_in_current_batch):
+            if len(instances) == self.batch_size:
                 batch = batch_instances(instances)
-                self.instance_num_in_current_batch += len(instances)
+                # self.instance_num_in_current_batch += len(instances)
                 self.batch_is_full = True
                 yield (batch, len(instances))
                 instances = []
@@ -159,14 +169,14 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
         # Flush the remaining data.
         if len(instances) > 0:
-            self.instance_num_in_current_batch += len(instances)
+            # self.instance_num_in_current_batch += len(instances)
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
     @staticmethod
     def default_hparams() -> Dict:
         return {
-            'batch_size': 1,
+            'batch_size': 10,
         }
 
 

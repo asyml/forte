@@ -1,0 +1,10 @@
+sphinx
+sphinx-rtd-theme >= 0.2.4
+Pygments >= 2.1.1
+funcsigs
+recommonmark
+mypy_extensions
+sphinxcontrib-spelling
+
+# PyTorch installation for ReadTheDocs
+https://download.pytorch.org/whl/cpu/torch-1.1.0-cp37-cp37m-linux_x86_64.whl

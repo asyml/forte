@@ -1,9 +1,12 @@
+from typing import Generic
+
 from texar.torch import HParams
 
-from forte.common import Resources
+from forte.common.resources import Resources
+from forte.data.base_pack import PackType
 
 
-class PipeComponent:
+class PipeComponent(Generic[PackType]):
     def initialize(self, resource: Resources, configs: HParams):
         """
         The pipeline will call the initialize method at the start of a
@@ -11,13 +14,15 @@ class PipeComponent:
         and register global resources into ``resource``. The implementation
         should set up the states of the component.
 
-        :param configs: The configuration passed in to set up this component.
-        :param resource: A global resource register. User can register
-        shareable resources here, for example, the vocabulary.
-        :return:
-        """
 
-        raise NotImplementedError("This component has not been implemented")
+        Args:
+            resource: A global resource register. User can register
+              shareable resources here, for example, the vocabulary.
+            configs: The configuration passed in to set up this component.
+
+        Returns:
+        """
+        pass
 
     def finish(self, resource: Resources):
         """
@@ -33,4 +38,4 @@ class PipeComponent:
         Returns:
 
         """
-        raise NotImplementedError("This component has not been implemented")
+        pass

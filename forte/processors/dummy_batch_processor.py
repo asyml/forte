@@ -1,3 +1,9 @@
+"""
+This file contains examples of batch processor implementations, which basically
+create entries arbitrarily. The processors here are useful as placeholders and
+test cases.
+
+"""
 from typing import Dict, Optional
 
 import numpy as np
@@ -5,6 +11,7 @@ import numpy as np
 from forte.data import DataPack
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology import relation_ontology
+from forte.data.ontology.relation_ontology import EntityMention
 from forte.processors.base import BatchProcessor, ProcessInfo
 
 __all__ = [
@@ -14,7 +21,11 @@ __all__ = [
 
 class DummyRelationExtractor(BatchProcessor):
     """
-    A dummy relation extractor
+    A dummy relation extractor.
+
+    Note that to use :class:`DummyRelationExtractor`, the :attr:`ontology` of
+    :class:`Pipeline` must be an ontology that includes
+    ``forte.data.ontology.relation_ontology``.
     """
 
     def __init__(self) -> None:
@@ -26,6 +37,7 @@ class DummyRelationExtractor(BatchProcessor):
         self.batcher = self.define_batcher()
 
     def define_batcher(self) -> ProcessingBatcher:
+        # pylint: disable=no-self-use
         return FixedSizeDataPackBatcher()
 
     def define_context(self):
@@ -61,21 +73,21 @@ class DummyRelationExtractor(BatchProcessor):
         for tid, entity in zip(entities_tid, entities_span):
             parent = []
             child = []
-            ner_type = []
+            rel_type = []
 
             entity_num = len(entity)
             for i in range(entity_num):
                 for j in range(i + 1, entity_num):
                     parent.append(tid[i])
                     child.append(tid[j])
-                    ner_type.append("dummy_relation")
+                    rel_type.append("dummy_relation")
 
             pred["RelationLink"]["parent.tid"].append(
                 np.array(parent))
             pred["RelationLink"]["child.tid"].append(
                 np.array(child))
             pred["RelationLink"]["rel_type"].append(
-                np.array(ner_type))
+                np.array(rel_type))
 
         return pred
 
@@ -88,10 +100,10 @@ class DummyRelationExtractor(BatchProcessor):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
                 link = self._ontology.RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
-                parent = data_pack.get_entry(
+                parent: EntityMention = data_pack.get_entry(  # type: ignore
                     output_dict["RelationLink"]["parent.tid"][i][j])
                 link.set_parent(parent)
-                child = data_pack.get_entry(
+                child: EntityMention = data_pack.get_entry(  # type: ignore
                     output_dict["RelationLink"]["child.tid"][i][j])
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)

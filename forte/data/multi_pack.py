@@ -5,10 +5,13 @@ from typing import (Dict, List, Union, Iterator, Optional, Type, Any, Tuple)
 from forte.common.types import EntryType
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack, DataRequest
+from forte.data.index import BaseIndex
 from forte.data.ontology.top import (
-    Entry, Annotation, MultiPackGroup, MultiPackLink, SubEntry,
+    Annotation, MultiPackGroup, MultiPackLink, SubEntry,
     MultiPackEntries
 )
+from forte.data.ontology.core import Entry
+from forte.data.base import Span
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class MultiPackMeta(BaseMeta):
         super().__init__()
 
 
-class MultiPack(BasePack):
+class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
     """
     A :class:`MultiPack' contains multiple DataPacks and a
     collection of cross-pack entries (annotations, links, and groups)
@@ -48,15 +51,24 @@ class MultiPack(BasePack):
 
         self.links: List[MultiPackLink] = []
         self.groups: List[MultiPackGroup] = []
+
         self.meta: MultiPackMeta = MultiPackMeta()
+
+        self.index: BaseIndex = BaseIndex()
 
         self.__default_pack_prefix = '_pack'
 
     def subentry(self, pack_index: int, entry: Entry):
         return SubEntry(self, pack_index, entry.tid)
 
+    # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
+
+    def get_span_text(self, span: Span):  # pylint: disable=no-self-use
+        raise ValueError(
+            "MultiPack objects do not contain text, please refer to a "
+            "specific data pack to get text.")
 
     def add_pack(self, pack: DataPack, pack_name: Optional[str] = None):
         if pack_name in self.__name_index:
@@ -236,10 +248,10 @@ class MultiPack(BasePack):
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
-            if self.index.link_index_switch and isinstance(
+            if self.index.link_index_on and isinstance(
                     entry, MultiPackLink):
                 self.index.update_link_index([entry])
-            if self.index.group_index_switch and isinstance(
+            if self.index.group_index_on and isinstance(
                     entry, MultiPackGroup):
                 self.index.update_group_index([entry])
 
@@ -274,10 +286,28 @@ class MultiPack(BasePack):
         self.internal_metas[name].id_counter += 1
         return entry
 
+    def get_entry(self, tid: str) -> EntryType:
+        """
+        Look up the entry_index with key ``tid``.
+        """
+        entry = self.index.entry_index.get(tid)
+        if entry is None:
+            raise KeyError(
+                f"There is no entry with tid '{tid}'' in this datapack")
+        return entry
+
+    @classmethod
+    def validate_link(cls, entry: EntryType) -> bool:
+        return isinstance(entry, MultiPackLink)
+
+    @classmethod
+    def validate_group(cls, entry: EntryType) -> bool:
+        return isinstance(entry, MultiPackGroup)
+
     def view(self):
         return copy.deepcopy(self)
 
-    def record_fields(self, fields: List[str], entry_type: Type[Entry],
+    def record_fields(self, fields: List[str], entry_type: Type[EntryType],
                       component: str):
         for pack in self._packs:
             pack.record_fields(fields, entry_type, component)

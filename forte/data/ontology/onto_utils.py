@@ -1,7 +1,7 @@
 from typing import List, Dict, Union, Type
 
 from forte.data.base_pack import PackType
-from forte.data.ontology.top import Entry
+from forte.data.ontology.core import Entry
 
 
 def record_fields(output_info: Dict[Type[Entry], Union[List, Dict]],

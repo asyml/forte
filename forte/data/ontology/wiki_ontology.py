@@ -27,6 +27,9 @@ class WikiAnchor(Annotation):
 
 
 class WikiAnchorLink(Link):
+    ParentType = WikiAnchor
+    ChildType = WikiPage
+
     def __init__(self, pack: DataPack, anchor: WikiAnchor, page: WikiPage):
         super().__init__(pack, anchor, page)
 

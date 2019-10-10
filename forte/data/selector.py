@@ -25,7 +25,7 @@ class DummySelector(Selector[InputPackType, InputPackType]):
     Do nothing, return the data pack itself, which can be either DataPack
     or MultiPack
     """
-
+    # pylint: disable=no-self-use
     def select(self, pack: InputPackType) -> Iterator[InputPackType]:
         yield pack
 

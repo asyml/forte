@@ -36,7 +36,7 @@ class Example(TypedDict):
     srl: List[SRLSpan]
 
 
-class SRLSpanData(tx.data.DataBase[str, Example]):
+class SRLSpanData(tx.data.DatasetBase[str, Example]):
     def __init__(self, path: str, vocab: tx.data.Vocab, hparams):
         source = tx.data.TextLineDataSource(path)
         self._vocab = vocab

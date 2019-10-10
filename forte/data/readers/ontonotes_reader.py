@@ -26,21 +26,15 @@ class OntonotesReader(PackReader):
     download the CoNLL style annotations for the OntoNotes v5.0 release
     – LDC2013T19.tgz obtained from LDC.
 
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
     """
 
-    def __init__(self, lazy: bool = True):
-        super().__init__(lazy)
+    def __init__(self):
+        super().__init__()
         self._ontology = ontonotes_ontology
         self.define_output_info()
 
     def define_output_info(self):
-        self.output_info = {
+        return {
             self._ontology.Document: [],
             self._ontology.Sentence: ["speaker", "part_id"],
             self._ontology.Token: ["sense", "pos_tag"],
@@ -57,8 +51,12 @@ class OntonotesReader(PackReader):
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
         """
         Iterator over *.gold_conll files in the data_source
-        :param conll_directory: path to the directory containing the files
-        :return: Iterator over files with gold_conll path
+
+        Args:
+            conll_directory:  path to the directory containing the files.
+
+        Returns: Iterator over files with gold_conll path.
+
         """
         return dataset_path_iterator(conll_directory, "gold_conll")
 
