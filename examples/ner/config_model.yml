@@ -1,8 +1,5 @@
-rnn_hidden_size: 128
 output_hidden_size: 128
 dropout_rate: 0.3
-
-load_glove: yes
 
 word_emb:
     dim: 100

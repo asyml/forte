@@ -13,8 +13,8 @@ DeserializeDict = Dict[str, Callable[[Union[str, Path]], None]]
 
 class Resources:
     r"""The Resources object is a global registry used in the pipeline. Objects
-    defined as the ``Resources`` will be passed on to the processors in the
-    pipeline for the initialization.
+    defined as ``Resources`` will be passed on to the processors in the
+    pipeline for initialization.
     """
 
     def __init__(self, **kwargs):
