@@ -1,6 +1,7 @@
 # pylint: disable=logging-fstring-interpolation
 import logging
 import os
+import pickle
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -75,12 +76,19 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.config_model = configs.config_model
         self.config_data = configs.config_data
 
+        resource_path = configs.config_model.resource_dir
+
+        keys = {"word_alphabet", "char_alphabet", "ner_alphabet",
+                "word_embedding_table"}
+
+        missing_keys = list(keys.difference(self.resource.keys()))
+
+        self.resource.load(keys=missing_keys, path=resource_path)
+
         self.word_alphabet = resource.get("word_alphabet")
         self.char_alphabet = resource.get("char_alphabet")
         self.ner_alphabet = resource.get("ner_alphabet")
         word_embedding_table = resource.get("word_embedding_table")
-
-        self.normalize_func = utils.normalize_digit_word
 
         if resource.get("device"):
             self.device = resource.get("device")
@@ -88,19 +96,27 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             self.device = torch.device('cuda') if torch.cuda.is_available() \
                 else torch.device('cpu')
 
-        utils.set_random_seed(self.config_model.random_seed)
+        self.normalize_func = utils.normalize_digit_word
 
-        if resource.get("model"):
-            self.model = resource.get("model")
+        if "model" not in self.resource.keys():
+            def load_model(path):
+                model = BiRecurrentConvCRF(
+                    word_embedding_table, self.char_alphabet.size(),
+                    self.ner_alphabet.size(), self.config_model)
 
-        else:
-            self.model = BiRecurrentConvCRF(
-                word_embedding_table,
-                self.char_alphabet.size(),
-                self.ner_alphabet.size(),
-                self.config_model).to(device=self.device)
+                if os.path.exists(path):
+                    with open(path, "rb") as f:
+                        weights = pickle.load(f)
+                        model.load_state_dict(weights)
+                return model
 
+            self.resource.load(keys={"model": load_model})
+
+        self.model = resource.get("model")
+        self.model.to(self.device)
         self.model.eval()
+
+        utils.set_random_seed(self.config_model.random_seed)
 
     @torch.no_grad()
     def predict(self, data_batch: Dict[str, Dict[str, List[str]]]) \

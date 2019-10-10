@@ -2,6 +2,7 @@
 import logging
 import random
 import time
+import pickle
 from typing import List, Tuple, Iterator, Optional
 
 import numpy as np
@@ -68,16 +69,12 @@ class CoNLLNERTrainer(BaseTrainer):
         utils.set_random_seed(self.config_model.random_seed)
 
         self.model = BiRecurrentConvCRF(
-            word_embedding_table,
-            self.char_alphabet.size(),
-            self.ner_alphabet.size(),
-            self.config_model).to(device=self.device)
+            word_embedding_table, self.char_alphabet.size(),
+            self.ner_alphabet.size(), self.config_model).to(device=self.device)
 
         self.optim = SGD(
-            self.model.parameters(),
-            lr=self.config_model.learning_rate,
-            momentum=self.config_model.momentum,
-            nesterov=True)
+            self.model.parameters(), lr=self.config_model.learning_rate,
+            momentum=self.config_model.momentum, nesterov=True)
 
         self.trained_epochs = 0
 
@@ -232,9 +229,17 @@ class CoNLLNERTrainer(BaseTrainer):
                         f"epoch={best_epoch}")
 
     def finish(self, resources: Resources):  # pylint: disable=unused-argument
-
         if self.resource:
-            self.resource.save(output_dir=self.config_model.resource_dir)
+            keys_to_serializers = {}
+            for key in resources.keys():
+                if key == "model":
+                    keys_to_serializers[key] = \
+                        lambda x, y: pickle.dump(x.state_dict(), open(y, "wb"))
+                else:
+                    keys_to_serializers[key] = \
+                        lambda x, y: pickle.dump(x, open(y, "wb"))
+
+            self.resource.save(keys_to_serializers)
 
         self.save_model_checkpoint()
 
