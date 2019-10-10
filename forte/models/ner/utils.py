@@ -27,7 +27,7 @@ def load_glove_embedding(embedding_path, normalize_digits=True):
 
     """
 
-    embedd_dim = -1
+    embed_dim = -1
     embedd_dict = dict()
     with open(embedding_path, "r") as file:
         for line in file:
@@ -36,13 +36,13 @@ def load_glove_embedding(embedding_path, normalize_digits=True):
                 continue
 
             tokens = line.split()
-            if embedd_dim < 0:
-                embedd_dim = len(tokens) - 1
+            if embed_dim < 0:
+                embed_dim = len(tokens) - 1
             else:
-                assert embedd_dim + 1 == len(
+                assert embed_dim + 1 == len(
                     tokens
-                ), f"glove_dim{embedd_dim} cur_dim{len(tokens)}"
-            embedd = np.empty(embedd_dim, dtype=np.float32)
+                ), f"glove_dim{embed_dim} cur_dim{len(tokens)}"
+            embedd = np.empty(embed_dim, dtype=np.float32)
             embedd[:] = tokens[1:]
             word = (
                 DIGIT_RE.sub("0", tokens[0]) if normalize_digits else tokens[0]

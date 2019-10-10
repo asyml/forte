@@ -1,4 +1,3 @@
-import os
 import yaml
 
 from texar.torch import HParams
@@ -8,7 +7,6 @@ from forte.data.ontology import conll03_ontology as conll
 from forte.data.ontology.conll03_ontology import Sentence
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.processors.ner_predictor import CoNLLNERPredictor
-from forte.common.resources import Resources
 
 config_data = yaml.safe_load(open("config_data.yml", "r"))
 config_model = yaml.safe_load(open("config_model.yml", "r"))
@@ -17,11 +15,8 @@ config = HParams({}, default_hparams=None)
 config.add_hparam('config_data', config_data)
 config.add_hparam('config_model', config_model)
 
-resources: Resources = Resources()
-resources.load(path=os.path.join(config.config_model.resource_dir,
-                                 "resources.pkl"))
 
-pl = Pipeline(resources)
+pl = Pipeline()
 pl.set_reader(CoNLL03Reader())
 pl.add_processor(CoNLLNERPredictor(), config=config)
 

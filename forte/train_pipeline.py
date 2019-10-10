@@ -65,7 +65,7 @@ class TrainPipeline:
         for p in self.preprocessors:
             prepare_pl.add_processor(p)
 
-        prepare_pl.run(self.configs.config_data.val_path)
+        prepare_pl.run(self.configs.config_data.train_path)
 
         for p in self.preprocessors:
             p.finish(resource=self.resource)
