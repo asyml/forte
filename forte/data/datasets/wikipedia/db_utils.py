@@ -17,16 +17,13 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
 
     count = 0
     for statements in NIFParser(redirect_path):
-        for s, v, o in statements:
+        for statement in statements:
+            s, v, o, c = statement
             if str(v) == redirect_rel:
                 count += 1
                 from_page = get_resource_name(s)
                 redirect_page = get_resource_name(o)
                 redirect_to[from_page] = redirect_page
-    #             sys.stdout.write("\r[%s] Parsed %d lines." % (
-    #                 datetime.datetime.now().time(), count))
-    #
-    # sys.stdout.write("\nFinish loading redirects.\n")
     return redirect_to
 
 
@@ -51,7 +48,7 @@ def strip_url_params(url) -> str:
 
 
 class NIFBufferedContextReader:
-    def __init__(self, nif_path: str):
+    def __init__(self, nif_path: str, buffer_size: int = 100):
         self.__parser = NIFParser(nif_path)
 
         self.__buf_statement: Dict[str, List] = {}
@@ -59,8 +56,11 @@ class NIFBufferedContextReader:
         self.__prev_context: str = ''
         self.__statements = []
 
+        self.__buffer_size = buffer_size
+
     def get(self, context: rdflib.Graph):
-        context_ = context.identifier
+        context_ = strip_url_params(context.identifier)
+
         if context_ in self.__buf_statement:
             return self.__buf_statement[context_]
         else:
@@ -68,8 +68,11 @@ class NIFBufferedContextReader:
             statements = []
 
             for g in self.__parser:
+                if len(self.__buf_statement) >= self.__buffer_size:
+                    return []
+
                 for s, v, o, c in g:
-                    c_ = c.identifier
+                    c_ = strip_url_params(c.identifier)
                     if c_ not in self.__buf_statement:
                         # Read in new contexts to the buffer.
                         self.__buf_statement[c_] = [(s, v, o)]

@@ -11,6 +11,7 @@ class WikiPage(ontology.Document):
         super().__init__(pack, begin, end)
         self._body: WikiBody
         self._page_id: str
+        self._page_name: str
 
     def set_page_id(self, pid: str):
         self.set_fields(_page_id=pid)
@@ -18,6 +19,12 @@ class WikiPage(ontology.Document):
     @property
     def page_id(self):
         return self._page_id
+
+    def set_page_name(self, page_name: str):
+        self.set_fields(_page_name=page_name)
+
+    def page_name(self):
+        return self._page_name
 
 
 class WikiBody(Annotation):
@@ -47,22 +54,37 @@ class WikiTitle(Annotation):
 
 
 class WikiAnchor(Annotation):
-    pass
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self._target_page_name: str
+
+    @property
+    def target_page_name(self):
+        return self._target_page_name
+
+    def set_target_page_name(self, page_name: str):
+        self._target_page_name = page_name
 
 
-class WikiAnchorLink(Link):
-    ParentType = WikiAnchor
-    ChildType = WikiPage
-
-    def __init__(self, pack: DataPack, anchor: WikiAnchor, page: WikiPage):
-        super().__init__(pack, anchor, page)
-
-
-class WikiInfoBox(Entry):
+class WikiInfoBoxEntry(Entry):
     def __init__(self, pack: DataPack):
         super().__init__(pack)
-        self._literal_entries: Dict[str, str] = {}
-        self._object_entries: Dict[str, str] = {}
+        self._key: str
+        self._value: str
+
+    @property
+    def key(self):
+        return self._key
+
+    def set_key(self, key: str):
+        self._key = key
+
+    @property
+    def value(self):
+        return self._value
+
+    def set_value(self, value: str):
+        self._value = value
 
 
 class WikiCategories(Entry):

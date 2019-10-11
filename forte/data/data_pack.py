@@ -61,6 +61,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
+        self.generics: List[Entry] = []
 
         self.replace_back_operations: ReplaceOperationsType = []
         self.processed_original_spans: List[Tuple[Span, Span]] = []
@@ -319,10 +320,11 @@ class DataPack(BasePack[Entry, Link, Group]):
         elif isinstance(entry, Group):
             target = self.groups
         else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
+            target = self.generics
+            # raise ValueError(
+            #     f"Invalid entry type {type(entry)}. A valid entry "
+            #     f"should be an instance of Annotation, Link, or Group."
+            # )
 
         add_new = allow_duplicate or (entry not in target)
 
