@@ -10,8 +10,8 @@ import numpy as np
 
 from forte.data import DataPack
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
-from forte.data.ontology import relation_ontology
-from forte.data.ontology.relation_ontology import EntityMention
+from forte.data.ontology import base_ontology
+from forte.data.ontology.base_ontology import EntityMention
 from forte.processors.base import BatchProcessor, ProcessInfo
 
 __all__ = [
@@ -30,7 +30,7 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self) -> None:
         super().__init__()
-        self._ontology = relation_ontology
+        self._ontology = base_ontology
         self.define_context()
 
         self.batch_size = 4

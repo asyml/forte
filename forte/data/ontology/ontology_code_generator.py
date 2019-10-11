@@ -12,9 +12,10 @@ from collections import defaultdict
 from distutils.dir_util import copy_tree
 
 from types import ModuleType
+from typing import Dict, Tuple, List, Set, Optional
+
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
-from typing import Dict, Tuple, List, Set
 
 from forte.data.ontology import utils
 from forte.data.ontology.base import top
@@ -53,6 +54,10 @@ class OntologyCodeGenerator:
         # json, in the order of preference of modules
         self.default_imports: List[str] = ['typing', 'forte.data.data_pack',
                                            ontology_base_module.__name__]
+        # lines to be added in the beginning of the file to pass errors
+        self.ignore_errors: List[str] = [
+            '# flake8: noqa', '# mypy: ignore-errors',
+            '# pylint: disable=line-too-long,trailing-newlines']
         # mapping from package name to corresponding generated file and
         # folder path
         self._generated_ontology_record: Dict[str, Tuple[str, str]] = {}
@@ -68,9 +73,8 @@ class OntologyCodeGenerator:
         self._initialize_primary_types()
         # create a `tempdir` where the generated files will be saved temporarily
         # until the generation is complete
-        self._tempdir = None
-        self._dirs = None
-        self._all_jsons = None
+        self._tempdir: Optional[str] = None
+        self._dirs: Optional[List[str]] = None
 
     def _initialize_primary_types(self):
         """
@@ -91,17 +95,17 @@ class OntologyCodeGenerator:
 
         # adding all the imports
         for elem in tree.body:
-            if type(elem) == ast.Import:
+            if isinstance(elem, ast.Import):
                 for import_ in elem.names:
                     import_name = import_.name.split('.')[-1]
                     imports[import_name] = import_.name
 
-            if type(elem) == ast.ImportFrom:
+            if isinstance(elem, ast.ImportFrom):
                 for import_ in elem.names:
                     imports[import_.name] = f"{elem.module}.{import_.name}"
 
             # adding all the module objects defined in __all__ to imports
-            if type(elem) == ast.Assign and len(elem.targets) > 0:
+            if isinstance(elem, ast.Assign) and len(elem.targets) > 0:
                 if elem.targets[0].id == '__all__':
                     imports.update(
                         [(name.s,
@@ -109,14 +113,14 @@ class OntologyCodeGenerator:
                          for name in elem.value.elts])
 
             # adding init arguments for each class
-            if type(elem) == ast.ClassDef:
+            if isinstance(elem, ast.ClassDef):
                 for func in elem.body:
-                    if type(func) == ast.FunctionDef and \
+                    if isinstance(func, ast.FunctionDef) and \
                             func.name == '__init__':
                         for i, arg in enumerate(func.args.args):
                             if arg.annotation is not None:
                                 arg_ann = arg.annotation
-                                while type(arg_ann) == ast.Subscript:
+                                while isinstance(arg_ann, ast.Subscript):
                                     module = arg_ann.value.id
                                     if module is not None and module in imports:
                                         arg_ann.value.id = imports[module]
@@ -132,7 +136,7 @@ class OntologyCodeGenerator:
         self._top_entries = base_entries
 
     def generate_ontology(self, json_file_path: str,
-                          destination_dir: str = None,
+                          destination_dir: Optional[str] = None,
                           is_dry_run: bool = False):
         """
             Function to generate and save the python ontology code after reading
@@ -193,7 +197,7 @@ class OntologyCodeGenerator:
         # extract imported json files and generate ontology for them
         json_imports: List[str] = curr_dict[self._IMPORTS] \
             if self._IMPORTS in curr_dict else []
-        modules_to_import = []
+        modules_to_import: List[str] = []
         for imported in json_imports:
             resolved_imported = utils.search_in_dirs(imported, self._dirs)
             if resolved_imported is None:
@@ -244,8 +248,8 @@ class OntologyCodeGenerator:
 
                 # creating the file if it does not exist
                 if not os.path.exists(entry_file):
-                    ontology_file_docstring = '\n'.join([
-                        '# mypy: ignore-errors', '"""',
+                    ontology_file_docstring = '\n'.join(self.ignore_errors +[
+                        '"""',
                         'Automatically generated file. Do not change by hand',
                         '"""'])
                     all_imports = set()
@@ -388,14 +392,14 @@ class OntologyCodeGenerator:
 
         Example:
             If the subclass structure is -
-            `DependencyToken` inherits `Token` inherits `Annotation`
-            The base_entry for both `DependencyToken` and `Token` should be
+            `Token` inherits `Token` inherits `Annotation`
+            The base_entry for both `Token` and `Token` should be
             `Annotation`
         """
         if parent_entry in self._top_entries:
-            base_entry = parent_entry
+            base_entry: str = parent_entry
         else:
-            base_entry: str = self._base_entry_map_seen[parent_entry]
+            base_entry = self._base_entry_map_seen[parent_entry]
         self._base_entry_map_seen[entry_name] = base_entry
         return base_entry
 

@@ -9,7 +9,7 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataRequest
-from forte.data.ontology.base import base_ontology
+from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
 from forte.utils import get_full_module_name
 from forte.pipeline_component import PipelineComponent

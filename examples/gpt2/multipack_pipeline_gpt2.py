@@ -1,5 +1,5 @@
 import json
-from forte.data.ontology.base import base_ontology
+from forte.data.ontology import base_ontology
 
 from forte.multipack_pipeline import MultiPackPipeline
 

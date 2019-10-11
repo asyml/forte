@@ -6,7 +6,7 @@ from texar.torch import HParams
 
 from forte.common import Resources
 from forte.data import DataPack
-from forte.data.ontology.base import base_ontology
+from forte.data.ontology import base_ontology
 from forte.processors import ProcessInfo, Alphabet
 from forte.processors import VocabularyProcessor
 from forte.models.NER.utils import load_glove_embedding, \

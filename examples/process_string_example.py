@@ -3,10 +3,9 @@ import os
 from termcolor import colored
 from texar.torch import HParams
 
-import forte.data.ontology.base.base_ontology as base_ontology
-import forte.data.ontology.stanfordnlp_ontology as stanford
-from forte.data.ontology.ontonotes_ontology import (
-    PredicateMention, PredicateArgument)
+from forte.data.ontology import base_ontology
+from forte.data.ontology.base_ontology import \
+    PredicateMention, PredicateArgument
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors import (
@@ -96,23 +95,23 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
                      config=config)
     pl.add_processor(processor=SimpleJsonPackWriter(),
                      config=output_config)
-    pl.set_ontology(stanford)
+    pl.set_ontology(base_ontology)
 
     pl.initialize()
 
     pack = pl.process(text)
-    for sentence in pack.get(stanford.Sentence):
+    for sentence in pack.get(base_ontology.Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
         tokens = [(token.text, token.pos_tag, token.lemma) for token in
-                  pack.get(stanford.Token, sentence)]
+                  pack.get(base_ontology.Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
 
         print(colored("Dependency Relations:", 'red'))
         for link in pack.get(
-                stanford.Dependency, sentence):
-            parent: stanford.Token = link.get_parent()  # type: ignore
-            child: stanford.Token = link.get_child()  # type: ignore
+                base_ontology.Dependency, sentence):
+            parent: base_ontology.Token = link.get_parent()  # type: ignore
+            child: base_ontology.Token = link.get_child()  # type: ignore
             print(colored(child.text, 'cyan'),
                   "has relation",
                   colored(link.rel_type, 'green'),

@@ -1,4 +1,6 @@
+# flake8: noqa
 # mypy: ignore-errors
+# pylint: disable=line-too-long,trailing-newlines
 """
 Automatically generated file. Do not change by hand
 """

@@ -6,8 +6,7 @@ import unittest
 
 from typing import List
 
-from forte.data.ontology.universal_dependency_ontology import (
-    Sentence, UniversalDependency)
+from forte.data.ontology.base_ontology import Sentence, Dependency
 from forte.data.readers.conllu_ud_reader import ConllUDReader
 from forte.data.data_pack import DataPack
 
@@ -27,8 +26,8 @@ class ConllUDReaderTest(unittest.TestCase):
                         "20041117_172714"]
 
     def test_reader_text(self):
-        doc_module = 'forte.data.ontology.base.base_ontology.Document'
-        sent_module = 'forte.data.ontology.base.base_ontology.Sentence'
+        doc_module = 'forte.data.ontology.base_ontology.Document'
+        sent_module = 'forte.data.ontology.base_ontology.Sentence'
 
         expected_docs_text = [
             ["From the AP comes this story :",
@@ -63,7 +62,7 @@ class ConllUDReaderTest(unittest.TestCase):
         self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
         self.assertEqual(
             len(data_pack.get_entries_by_type(Sentence)), 1)
-        dependencies = data_pack.get_entries_by_type(UniversalDependency)
+        dependencies = data_pack.get_entries_by_type(Dependency)
         for link in dependencies:
             root_token = get_dependency_tree_root(link, data_pack)
             self.assertEqual(root_token.text, "nominated")

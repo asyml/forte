@@ -6,8 +6,8 @@ into data_pack format
 from typing import Iterator, Dict, Tuple, Any
 
 from forte.data.io_utils import dataset_path_iterator
-from forte.data.ontology.universal_dependency_ontology import \
-    (Document, Sentence, DependencyToken, UniversalDependency)
+from forte.data.ontology.base_ontology import \
+    (Document, Sentence, Token, Dependency)
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 
@@ -27,10 +27,10 @@ class ConllUDReader(PackReader):
         return {
             Document: [],
             Sentence: [],
-            DependencyToken: ["universal_pos_tag", "features", "lemma",
-                              "language_pos_tag", "misc"],
+            Token: ["pos_tag", "features", "lemma",
+                              "xpos_tag", "misc"],
             # primary / enhanced dependencies
-            UniversalDependency: ["type"]
+            Dependency: ["type"]
         }
 
     def _cache_key_function(self, data_pack: Any) -> str:
@@ -68,8 +68,8 @@ class ConllUDReader(PackReader):
 
     def parse_pack(self, doc_lines) -> DataPack:
         # pylint: disable=no-self-use
-        token_comp_fields = ["id", "form", "lemma", "universal_pos_tag",
-                             "language_pos_tag", "features", "head", "label",
+        token_comp_fields = ["id", "form", "lemma", "pos_tag",
+                             "xpos_tag", "features", "head", "label",
                              "enhanced_dependency_relations", "misc"]
 
         token_multi_fields = ["features", "misc",
@@ -77,7 +77,7 @@ class ConllUDReader(PackReader):
 
         token_feature_fields = ["features", "misc"]
 
-        token_entry_fields = ["lemma", "universal_pos_tag", "language_pos_tag",
+        token_entry_fields = ["lemma", "pos_tag", "xpos_tag",
                               "features", "misc"]
 
         data_pack: DataPack = DataPack()
@@ -88,7 +88,7 @@ class ConllUDReader(PackReader):
         doc_id: str
 
         sent_text: str
-        sent_tokens: Dict[str, Tuple[Dict[str, Any], DependencyToken]] = {}
+        sent_tokens: Dict[str, Tuple[Dict[str, Any], Token]] = {}
 
         for line in doc_lines:
             line = line.strip()
@@ -124,8 +124,8 @@ class ConllUDReader(PackReader):
                 word_begin = doc_offset
                 word_end = doc_offset + len(word)
 
-                token: DependencyToken \
-                    = DependencyToken(data_pack, word_begin, word_end)
+                token: Token \
+                    = Token(data_pack, word_begin, word_end)
                 kwargs = {key: token_comps[key]
                           for key in token_entry_fields}
 
@@ -159,7 +159,7 @@ class ConllUDReader(PackReader):
                             data_pack_: data_pack to which the
                             dependency is to be added
                         """
-                        dependency = UniversalDependency(
+                        dependency = Dependency(
                             data_pack, dep_parent, dep_child)
                         dependency.dep_label = dep_label
                         dependency.type = dep_type

@@ -3,7 +3,7 @@ from typing import List
 import stanfordnlp
 from texar.torch import HParams
 
-import forte.data.ontology.stanfordnlp_ontology as ontology
+import forte.data.ontology.base_ontology as ontology
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.processors.base import PackProcessor, ProcessInfo

@@ -2,12 +2,10 @@ import yaml
 from texar.torch import HParams
 
 from forte.pipeline import Pipeline
-from forte.data.ontology.base import base_ontology
-from forte.data.ontology.conll03_ontology import Sentence
+from forte.data.ontology import base_ontology
+from forte.data.ontology.base_ontology import Sentence
 from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.processors.ner_predictor import (
-    CoNLLNERPredictor,
-)
+from forte.processors.ner_predictor import CoNLLNERPredictor
 from forte.common.resources import Resources
 
 resources: Resources = Resources()

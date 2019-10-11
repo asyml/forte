@@ -7,10 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from forte.data.ontology import relation_ontology, conll03_ontology
-from forte.data.ontology.base import base_ontology
-from forte.data.readers import OntonotesReader, ProdigyReader, \
-    CoNLL03Reader, StringReader
+from forte.data.ontology import base_ontology
+from forte.data.readers import OntonotesReader, ProdigyReader, CoNLL03Reader, \
+    StringReader
 from forte.pipeline import Pipeline
 from forte.processors.dummy_pack_processor import DummyPackProcessor
 
@@ -21,7 +20,7 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         self.dataset_path = "examples/data_samples/ontonotes/00"
 
         self.nlp = Pipeline()
-        self.nlp.set_ontology(relation_ontology)
+        self.nlp.set_ontology(base_ontology)
 
         self.nlp.set_reader(OntonotesReader())
         self.nlp.add_processor(DummyPackProcessor())
@@ -33,12 +32,12 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
-            for sentence in pack.get_entries(relation_ontology.Sentence):
+            for sentence in pack.get_entries(base_ontology.Sentence):
                 doc_exists = True
                 sent_text = sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
-                          pack.get_entries(relation_ontology.Token, sentence)]
+                          pack.get_entries(base_ontology.Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
 
@@ -49,7 +48,7 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         self.dataset_path = "examples/data_samples/conll03"
 
         self.nlp = Pipeline()
-        self.nlp.set_ontology(conll03_ontology)
+        self.nlp.set_ontology(base_ontology)
 
         self.nlp.set_reader(CoNLL03Reader())
         self.nlp.add_processor(DummyPackProcessor())
@@ -62,12 +61,12 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
-            for sentence in pack.get_entries(conll03_ontology.Sentence):
+            for sentence in pack.get_entries(base_ontology.Sentence):
                 doc_exists = True
                 sent_text = sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
-                          pack.get_entries(conll03_ontology.Token, sentence)]
+                          pack.get_entries(base_ontology.Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
 

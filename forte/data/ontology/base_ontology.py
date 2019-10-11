@@ -1,7 +1,7 @@
 """
 This class defines the basic ontology supported by our system
 """
-from typing import Optional, Set
+from typing import Optional, Set, Dict, List
 
 from forte.data.data_pack import DataPack
 from forte.data.ontology.base.top import Annotation, Link, Group
@@ -16,7 +16,8 @@ __all__ = [
     "PredicateArgument",
     "CoreferenceGroup",
     "CoreferenceMention",
-    "Dependency"
+    "Dependency",
+    "RelationLink"
 ]
 
 
@@ -33,6 +34,14 @@ class Token(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.pos_tag: str
+        self.xpos_tag: str  # language specific pos tag
+        self.lemma: str  # lemma or stem of word form
+        self.chunk_tag: str
+        self.ner_tag: str
+        self.sense: str
+        self.is_root: bool  # if the token is a root of, say, dependency tree
+        self.features: Dict[str, List[str]]
+        self.misc: Dict[str, List[str]]
 
 
 class Sentence(Annotation):
@@ -174,3 +183,30 @@ class Dependency(Link):
                  child: Optional[Token] = None):
         super().__init__(pack, parent, child)
         self.dep_label = None
+        self.rel_type: str
+        self.dep_type: str
+
+
+class RelationLink(Link):
+    """
+    A :class:`~forte.data.ontology.top.Link` type entry which take
+    :class:`~forte.data.ontology.base_ontology.EntityMention`
+    objects as parent and child.
+
+    Args:
+        pack (DataPack): the containing pack of this link.
+        parent (Entry, optional): the parent entry of the link.
+        child (Entry, optional): the child entry of the link.
+    """
+    ParentType = EntityMention
+    """The entry type of the parent node of :class:`RelationLink`."""
+    ChildType = EntityMention
+    """The entry type of the child node of :class:`RelationLink`."""
+
+    def __init__(
+            self,
+            pack: DataPack,
+            parent: Optional[EntityMention] = None,
+            child: Optional[EntityMention] = None):
+        super().__init__(pack, parent, child)
+        self.rel_type = None

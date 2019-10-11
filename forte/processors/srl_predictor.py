@@ -7,11 +7,11 @@ import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
 from forte.data.base import Span
-from forte.data.ontology.ontonotes_ontology import \
+from forte.data.ontology.base_ontology import \
     PredicateMention, PredicateArgument
 from forte.common.resources import Resources
 from forte.data import DataPack
-from forte.data.ontology import ontonotes_ontology
+from forte.data.ontology import base_ontology
 from forte.models.srl.model import LabeledSpanGraphNetwork
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
@@ -45,7 +45,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def __init__(self):
         super().__init__()
 
-        self._ontology = ontonotes_ontology
+        self._ontology = base_ontology
         self.define_context()
 
         self.batch_size = 4

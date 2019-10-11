@@ -8,7 +8,7 @@ from typing import Iterator, Any
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from forte.data.ontology import conll03_ontology
+from forte.data.ontology import base_ontology
 
 __all__ = [
     "CoNLL03Reader"
@@ -22,7 +22,7 @@ class CoNLL03Reader(PackReader):
 
     def __init__(self):
         super().__init__()
-        self._ontology = conll03_ontology
+        self._ontology = base_ontology
 
     def define_output_info(self):
         return {

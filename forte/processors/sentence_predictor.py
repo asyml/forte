@@ -1,5 +1,5 @@
 from forte.data import DataPack
-from forte.data.ontology.base import base_ontology
+from forte.data.ontology import base_ontology
 from forte.processors.base import PackProcessor, ProcessInfo
 
 __all__ = [

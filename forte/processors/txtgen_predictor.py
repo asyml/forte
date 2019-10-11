@@ -13,7 +13,7 @@ from forte.data.batchers import (
     ProcessingBatcher,
     FixedSizeMultiPackProcessingBatcher
 )
-from forte.data.ontology.base import base_ontology
+from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import \

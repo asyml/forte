@@ -11,7 +11,7 @@ from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.datasets.conll import conll_utils
-from forte.data.ontology import conll03_ontology as conll
+from forte.data.ontology import base_ontology as conll
 from forte.models.NER.utils import normalize_digit_word, set_random_seed
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor

@@ -13,8 +13,11 @@ class GenerateOntologyTest(unittest.TestCase):
     def test_generated_code(self):
         # read json and generate code in a file
         generator = OntologyCodeGenerator()
-        json_file_path = pathlib.Path('../configs/example_ontology_config.json')
-        folder_path = generator.generate_ontology(str(json_file_path.resolve()),
+        json_file_name = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            '../configs/example_ontology_config.json')
+        json_file_path = str(pathlib.Path(json_file_name).resolve())
+        folder_path = generator.generate_ontology(json_file_path,
                                                   is_dry_run=True)
 
         # record code
@@ -23,7 +26,8 @@ class GenerateOntologyTest(unittest.TestCase):
         for root, dirs, files in os.walk(folder_path):
             generated_files.extend([os.path.join(root, file)
                                     for file in files if file.endswith('.py')])
-            final_root = root
+            if not root.endswith('__pycache__'):
+                final_root = root
         generated_files = sorted(generated_files)
 
         expected_final_root = os.path.join(folder_path, 'forte/data/ontology')

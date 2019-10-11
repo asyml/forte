@@ -3,13 +3,12 @@ The reader that reads Ontonotes data into Datapacks.
 """
 import os
 from collections import defaultdict
-from typing import (DefaultDict, List, Optional, Tuple,
-                    Dict, Any, Iterator)
+from typing import DefaultDict, List, Optional, Tuple, Dict, Any, Iterator
 
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
-from forte.data.ontology import ontonotes_ontology
-from forte.data.ontology.base.base_ontology import (
+from forte.data.ontology import base_ontology
+from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument, CoreferenceMention)
 from forte.data.readers.base_reader import PackReader
 
@@ -30,7 +29,7 @@ class OntonotesReader(PackReader):
 
     def __init__(self):
         super().__init__()
-        self._ontology = ontonotes_ontology
+        self._ontology = base_ontology
         self.define_output_info()
 
     def define_output_info(self):

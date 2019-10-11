@@ -2,7 +2,6 @@
     Ontology related utils
 """
 import os
-import sys
 from importlib import util as import_util
 from pathlib import Path
 from pydoc import locate
@@ -18,8 +17,8 @@ def get_user_objects_from_module(module_str, custom_dirs=None):
     Args:
         module_str: Module in the form of string, package.module.
         custom_dirs: custom directories to search from if `module_str` not a
-        part of imported modules. 
-        
+        part of imported modules.
+
     Returns: A list of objects present in the module `module_str`,
              None is module not found
 
@@ -40,20 +39,6 @@ def get_user_objects_from_module(module_str, custom_dirs=None):
                 return module.__all__
         return []
     return module.__all__
-
-
-def get_classes_from_folder(directory):
-    """
-    Args:
-        directory: Directory path
-
-    Returns: A list of classes present in the modules contained in the directory
-
-    """
-    import glob
-    modules = glob.glob(os.path.join(directory, "*.py"))
-    classes = [get_classes_from_module(module) for module in modules]
-    return classes
 
 
 def record_fields(output_info: Dict[Type[Entry], Union[List, Dict]],

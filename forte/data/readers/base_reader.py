@@ -15,7 +15,7 @@ from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.pipeline_component import PipelineComponent
-from forte.data.ontology.base import base_ontology
+from forte.data.ontology import base_ontology
 from forte.data.ontology.base.core import Entry
 from forte.data.ontology.utils import record_fields
 from forte.utils import get_full_module_name

@@ -6,7 +6,7 @@
 
 from termcolor import colored
 
-from forte.data.ontology import conll03_ontology as Ont
+from forte.data.ontology import base_ontology as Ont
 from forte.pipeline import Pipeline
 
 # # Creates the pipeline here
