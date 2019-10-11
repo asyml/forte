@@ -2,13 +2,18 @@
     Module to automatically generate python ontology given json file
     Performs a preliminary check of class dependencies
 """
-import json
 import os
+import sys
+import json
 import shutil
+import tempfile
+from pathlib import Path
+from collections import defaultdict
+from distutils.dir_util import copy_tree
+
+from types import ModuleType
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
-from types import ModuleType
-
 from typing import Dict, Tuple, List, Set
 
 from forte.data.ontology import utils
@@ -22,17 +27,18 @@ class OntologyCodeGenerator:
         >>> _, generated_file, _ = OntologyCodeGenerator().generate_ontology(
         'test/example_ontology_config.json')
         >>> assert open(generated_file, 'r').read() == \
-                   open('test/true_example_ontology.py', 'r').read()
+                   open(example_ontology.py).read()
     """
 
     # string constants
-    _ONTOLOGY_NAME: str = "ontology_name"
     _IMPORTS: str = "imports"
     _ENTRY_DEFINITIONS: str = "entry_definitions"
     _ENTRY_NAME: str = "entry_name"
+    _ENTRY_DESC: str = "entry_description"
     _PARENT_ENTRY: str = "parent_entry"
     _ATTRIBUTES: str = "attributes"
     _ATTRIBUTE_NAME: str = "attribute_name"
+    _ATTRIBUTE_DESC: str = "attribute_description"
     _ATTRIBUTE_TYPE: str = "attribute_type"
     _ELEMENT_TYPE: str = "element_type"
     _ATTRIBUTE_DEFAULT_VALUE: str = "attribute_default_value"
@@ -43,24 +49,28 @@ class OntologyCodeGenerator:
 
     def __init__(self, ontology_base_module: ModuleType = top):
         self.ontology_base_module = ontology_base_module
-        # imports to be added to the ontology other than the ones defined in the
-        # json
-        self.additional_imports: List[str] = ['typing',
-                                              'forte.data.data_pack',
-                                              ontology_base_module.__name__]
-        # mapping from ontology full name to corresponding generated file and
+        # modules to be added to the ontology other than the ones defined in the
+        # json, in the order of preference of modules
+        self.default_imports: List[str] = ['typing', 'forte.data.data_pack',
+                                           ontology_base_module.__name__]
+        # mapping from package name to corresponding generated file and
         # folder path
         self._generated_ontology_record: Dict[str, Tuple[str, str]] = {}
         # entries corresponding to top.py
         self._top_entries: Dict[str, str] = {}
         self._initialize_top_entries()
         # mapping from entries seen till now with their "base parents" which
-        # should be one of the keys of self._base_entries
+        # should be one of the keys of self._top_entries
         self._base_entry_map_seen: Dict[str, str] = {}
         # declare a tree to store the entries and their attributes in order to
         # validate the class dependency structure
         self._validation_tree: Dict[str, Set] = {}
         self._initialize_primary_types()
+        # create a `tempdir` where the generated files will be saved temporarily
+        # until the generation is complete
+        self._tempdir = None
+        self._dirs = None
+        self._all_jsons = None
 
     def _initialize_primary_types(self):
         """
@@ -72,8 +82,8 @@ class OntologyCodeGenerator:
     def _initialize_top_entries(self):
         """
         Parses the file corresponding to `self.ontology_base_module` and
-        extracts the class definitions and the corresponding __init__ arguments
-        Returns: Dictionary mapping class definitions with `__init__` arguments
+        extracts the class definitions and the corresponding `__init__` args.
+        Returns: Dictionary mapping class definitions with `__init__` arguments.
         """
         tree = ast.parse(open(self.ontology_base_module.__file__).read())
         imports = {}
@@ -121,116 +131,176 @@ class OntologyCodeGenerator:
                         base_entries[imports[elem.name]] = args_str
         self._top_entries = base_entries
 
-    def generate_ontology(self, json_file_path: str):
+    def generate_ontology(self, json_file_path: str,
+                          destination_dir: str = None,
+                          is_dry_run: bool = False):
         """
-        Function to generate and save the python ontology code after reading
-        ontology from the input json file
-        Args:
-            json_file_path: The input json file to read the ontology from
-        Returns:
-            - Ontology module name
-            - Path of python ontology file if the code executes correctly
-            - Top level path of nested packages created
+            Function to generate and save the python ontology code after reading
+            ontology from the input json file
+            Args:
+                json_file_path: The input json file to read the ontology from
+                destination_dir: The folder in which config packages are to be
+                generated. If not provided, current working directory is used.
+                Not used if `is_dry_run` is `True`.
+                is_dry_run: if `True`, creates the ontology in the temporary
+                directory, else, creates the ontology in the `destination_dir`
+            Returns:
+                Base directory path in which the modules are created.
         """
-        with open(json_file_path, 'r') as f:
-            # reading ontology
-            json_string: str = f.read()
-            ontology: Dict = json.loads(json_string)
-            ontology_full_name: str = ontology[self._ONTOLOGY_NAME]
-            custom_imports: List[str] = ontology[self._IMPORTS]
+        self._tempdir = tempfile.mkdtemp()
+        # `tempdir`, current working directory and the directory of the
+        # json_file_path to the list of directory trees to be examined
+        self._dirs = [os.path.split(json_file_path)[0],
+                      self._tempdir, os.getcwd()]
 
-            entry_definitions: List[Dict] = ontology[self._ENTRY_DEFINITIONS]
+        sys.path = self._dirs + sys.path
 
-            self.additional_imports = [value
-                                       for value in self.additional_imports
-                                       if value not in custom_imports]
-            all_imports = self.additional_imports + custom_imports
+        # validation of imported classes
+        for import_module in self.default_imports:
+            for obj_str in utils.get_user_objects_from_module(import_module):
+                full_obj_str = f"{import_module}.{obj_str}"
 
-            # validation of imported classes
-            package_imports = list(all_imports)
-            for import_module in custom_imports:
-                for class_str in utils.get_classes_from_module(import_module):
-                    package_imports.append(f"{import_module}.{class_str}")
-
-            for import_module in package_imports:
-                if import_module in self._validation_tree:
-                    raise Warning(f"The module {import_module} is already "
+                if full_obj_str in self._validation_tree:
+                    raise Warning(f"The object {full_obj_str} is already "
                                   f"added in the ontology, will be overridden")
-                self._validation_tree[import_module] = set()
+                self._validation_tree[full_obj_str] = set()
 
-            # getting ontology info
-            ontology_folder, ontology_file_name \
-                = self._get_ontology_info(ontology_full_name)
+        self._generate_ontology(json_file_path,
+                                visited_paths=defaultdict(lambda: False),
+                                rec_visited_paths=defaultdict(lambda: False))
 
-            ontology_file_docstring: str = f'# mypy: ignore-errors\n' \
-                                           f'"""\nOntology file for ' \
-                                           f'{ontology_full_name}\n' \
-                                           f'Automatically generated file. ' \
-                                           f'Do not change by hand\n"""'
+        # when everything is successfully completed, copy the contents of
+        # `self._tempdir` to the provided folder
+        if not is_dry_run:
+            destination_dir = os.getcwd() if destination_dir is None else \
+                destination_dir
+            copy_tree(self._tempdir, destination_dir)
+            return destination_dir
 
-            import_code = ''
-            for import_module in all_imports:
-                import_code += f"import {import_module}\n"
+        return self._tempdir
 
-            entries_code = ''
-            entry_name_list_code = ''
-            for entry_definition in entry_definitions:
-                entry_code, entry_name = self._get_entry_code(entry_definition)
-                entries_code += entry_code
-                entry_name_list_code += f'{self._INDENT}"{entry_name}",\n'
-            globals_code = f'__all__ = [\n{entry_name_list_code}]'
+    def _generate_ontology(self, json_file_path: str, visited_paths: Dict,
+                           rec_visited_paths: Dict):
 
-            # combining code snippets to form ontology code
-            ontology_code: str = f"{ontology_file_docstring}\n{import_code}\n" \
-                f"{globals_code}\n{entries_code}"
+        visited_paths[json_file_path] = True
+        rec_visited_paths[json_file_path] = True
 
-            # creating ontology package directories in the current directory if
-            # required
-            ontology_dir_path: str = os.path.join(os.getcwd(), ontology_folder)
+        with open(json_file_path, 'r') as f:
+            curr_str = f.read()
 
-            # validating and adding ontology_full_name
-            if os.path.isdir(ontology_dir_path) and ontology_full_name in \
-                    utils.get_classes_from_folder(ontology_dir_path):
-                raise ValueError(f"The class named {ontology_full_name} is"
-                                 f"already present in the {ontology_dir_path}")
+        curr_dict = json.loads(curr_str)
 
-            if ontology_full_name in self._validation_tree:
-                raise ValueError(f"The class named {ontology_full_name} is"
-                                 f"already present")
+        # extract imported json files and generate ontology for them
+        json_imports: List[str] = curr_dict[self._IMPORTS] \
+            if self._IMPORTS in curr_dict else []
+        modules_to_import = []
+        for imported in json_imports:
+            resolved_imported = utils.search_in_dirs(imported, self._dirs)
+            if resolved_imported is None:
+                raise ValueError(f"Ontology corresponding to {imported} not"
+                                 f"found in the current directory or the "
+                                 f"directory of original json config")
+            else:
+                imported = resolved_imported
+            if imported in rec_visited_paths:
+                raise ValueError(f"Ontology corresponding to {imported} already"
+                                 f" generated, cycles not permitted, aborting")
+            elif imported not in visited_paths:
+                modules_to_import.extend(self._generate_ontology(
+                    imported, visited_paths, rec_visited_paths))
 
-            self._validation_tree[ontology_full_name] = set()
+        # once the ontologies for all the imported files is generated, generate
+        # ontology of the current file
+        modules_to_import = self._generate_ontology_per_ontology_dict(
+            curr_dict, modules_to_import)
+        rec_visited_paths[json_file_path] = False
+        return modules_to_import
 
-            # Clean up in case of any error
+    def _generate_ontology_per_ontology_dict(self, onto_dict,
+                                             modules_to_import):
+        entry_definitions: List[Dict] = onto_dict[self._ENTRY_DEFINITIONS]
+
+        new_modules_to_import = []
+        for entry_definition in entry_definitions:
+            entry_pkg, entry_filename, entry_name, entry_code, attributes \
+                = self._get_entry_code(entry_definition)
+            globals_code = f'__all__.extend("{entry_name}")'
+            entry_code = '\n\n\n'.join([globals_code, entry_code]) + '\n\n'
+
+            entry_module_name: str = f"{entry_pkg}.{entry_filename}"
+            entry_class_name: str = f"{entry_module_name}.{entry_name}"
+
             try:
-                if not os.path.isdir(ontology_dir_path):
-                    os.makedirs(ontology_dir_path)
+                # creating entry directory and file in the tempdir if required
+                entry_dir: str = os.path.join(self._tempdir,
+                                              *entry_pkg.split('.'))
+                Path(entry_dir).mkdir(parents=True, exist_ok=True)
 
-                # creating the ontology python file and populating it
-                ontology_file_path: str = os.path.join(ontology_dir_path,
-                                                       ontology_file_name)
+                # recording the generated entry file details
+                entry_file: str = \
+                    f'{os.path.join(entry_dir, entry_filename)}.py'
+                self._generated_ontology_record[entry_class_name] = (entry_file,
+                                                                     entry_dir)
 
-                with open(ontology_file_path, 'w') as file:
-                    file.write(ontology_code)
+                # creating the file if it does not exist
+                if not os.path.exists(entry_file):
+                    ontology_file_docstring = '\n'.join([
+                        '# mypy: ignore-errors', '"""',
+                        'Automatically generated file. Do not change by hand',
+                        '"""'])
+                    all_imports = set()
+                    import_code = ''
+                    for import_ in self.default_imports + modules_to_import:
+                        if import_ not in all_imports:
+                            import_code += f"import {import_}\n"
+                        all_imports.add(import_)
 
-                # recording the generate ontology file details
-                self._generated_ontology_record[ontology_full_name] \
-                    = (ontology_file_path, ontology_folder)
+                    with open(entry_file, 'w') as f:
+                        f.write('\n\n'.join([ontology_file_docstring,
+                                             import_code,
+                                             '__all__ = []', '']))
 
-            except Exception:
-                self.cleanup_generated_ontology(ontology_full_name)
+                # validating and adding entry class to the module
+                if entry_name in utils.get_user_objects_from_module(
+                        entry_module_name, self._dirs):
+                    raise ValueError(f"The entry class with name {entry_name} "
+                                     f"is already present in the module "
+                                     f"{entry_module_name}")
+
+                if entry_class_name in self._validation_tree:
+                    raise ValueError(f"The class named {entry_class_name} is"
+                                     f"already declared")
+
+                with open(entry_file, 'a') as f:
+                    f.write(entry_code)
+
+            except ValueError:
+                self.cleanup_generated_ontology(entry_class_name)
                 raise
 
-            return ontology_full_name, ontology_file_path, ontology_folder
+            # passing modules to be imported by child modules
+            new_modules_to_import.append(entry_module_name)
 
-    def cleanup_generated_ontology(self, ontology_full_name: str):
+            # adding entry and the corresponding attributes to validation tree
+            self._validation_tree[entry_class_name] = set()
+            for attribute_name in attributes:
+                if attribute_name in self._validation_tree[entry_class_name]:
+                    raise Warning(
+                        f"Attribute type for the entry {entry_class_name} and "
+                        f"the attribute {attribute_name} already present in "
+                        f"the ontology, will be overridden")
+                self._validation_tree[entry_class_name].add(attribute_name)
+        return new_modules_to_import
+
+    def cleanup_generated_ontology(self, class_name: str):
         """
         Deletes the generated ontology file and corresponding folder if empty
         Args:
-            ontology_full_name: Full name of the ontology (with package name)
+            class_name: Full name of the ontology (with package name)
         """
-        if ontology_full_name in self._generated_ontology_record:
+        if class_name in self._generated_ontology_record:
             ontology_file_path, ontology_folder = \
-                self._generated_ontology_record[ontology_full_name]
+                self._generated_ontology_record[class_name]
 
             # delete generated file
             os.remove(ontology_file_path)
@@ -243,25 +313,6 @@ class OntologyCodeGenerator:
             if num_files == 0:
                 shutil.rmtree(top_path)
 
-    @staticmethod
-    def _get_ontology_info(ontology_full_name: str):
-        """
-        Function to parse ontology package and name, create required folders
-        if the ontology package is not the same as current package
-        Args:
-            ontology_full_name: Full namespace of the ontology
-
-        Returns:
-            - Directory path where the generated file would be stored
-            - Name of the file to be generated
-        """
-        namespace: List[str] = ontology_full_name.split('.')
-
-        ontology_folder: str = os.path.join(*namespace[0:-1])
-        ontology_file_name: str = namespace[-1] + '.py'
-
-        return ontology_folder, ontology_file_name
-
     def _get_entry_code(self, entry_definition: Dict):
         """
         Args:
@@ -272,8 +323,7 @@ class OntologyCodeGenerator:
 
         # reading the entry definition dictionary
         entry_full_name: str = entry_definition[self._ENTRY_NAME]
-        entry_split = entry_full_name.split('.')
-        entry_name: str = entry_split[-1]
+        entry_package, entry_file, entry_name = entry_full_name.rsplit('.', 2)
 
         parent_entry: str = entry_definition[self._PARENT_ENTRY]
 
@@ -287,29 +337,41 @@ class OntologyCodeGenerator:
             raise Warning(f"Entry {entry_full_name} already present in the "
                           f"ontology, will be overridden.")
 
-        # add the entry to the tree
-        self._validation_tree[entry_full_name] = set()
+        # getting entry descriptions
+        entry_desc = entry_definition[self._ENTRY_DESC] \
+            if self._ENTRY_DESC in entry_definition and \
+            entry_definition[self._ENTRY_DESC] is not None and \
+            entry_definition[self._ENTRY_DESC].strip() != '' else None
 
         # generate arguments to be passed inside init and super functions
         # according to whether the entry is a descended of Annotation, Link
         # or Group
         base_entry: str = self._get_and_set_base_entry(entry_full_name,
                                                        parent_entry)
-        init_arguments: str = self._top_entries[base_entry]
-        super_arguments: str = ', '.join(
-            [item.split(':')[0].strip() for item in init_arguments.split(',')])
+        init_args: str = self._top_entries[base_entry]
+        super_args: str = ', '.join([item.split(':')[0].strip()
+                                     for item in init_args.split(',')])
 
         # generate code inside init function
         class_line: str = f"class {entry_name}({parent_entry}):"
-        init_line: str = f"def __init__(self, {init_arguments}):"
-        super_line: str = f"super().__init__({super_arguments})\n"
+        attributes, attribute_code, attribute_desc_map, attribute_type_map = \
+            self._get_attribute_code_description_type(entry_definition,
+                                                      entry_full_name)
+        class_desc, init_desc = self._generate_class_description(
+            entry_desc, attributes, attribute_desc_map, attribute_type_map)
 
-        entry_code: str = f"\n\n{class_line}\n{self._INDENT}{init_line}\n"\
-            f"{self._INDENT}{self._INDENT}{super_line}"
+        class_desc_lst = [class_desc] if class_desc is not None else []
+        init_desc_lst = [init_desc] if init_desc is not None else []
 
-        entry_code += self._get_attribute_code(entry_definition,
-                                               entry_full_name)
-        return entry_code, entry_name
+        init_line: str = f"{self._INDENT}def __init__(self, {init_args}):"
+        super_line: str = f"{2 * self._INDENT}super().__init__({super_args})"
+
+        entry_code_lines = [class_line] + class_desc_lst + [init_line] + \
+            init_desc_lst + [super_line, attribute_code]
+
+        entry_code = '\n'.join(entry_code_lines)
+
+        return entry_package, entry_file, entry_name, entry_code, attributes
 
     def _get_and_set_base_entry(self, entry_name: str, parent_entry: str):
         """
@@ -331,22 +393,31 @@ class OntologyCodeGenerator:
             `Annotation`
         """
         if parent_entry in self._top_entries:
-            return parent_entry
+            base_entry = parent_entry
         else:
             base_entry: str = self._base_entry_map_seen[parent_entry]
         self._base_entry_map_seen[entry_name] = base_entry
         return base_entry
 
-    def _get_attribute_code(self, entry_definition, entry_full_name):
+    def _get_attribute_code_description_type(self, entry_definition,
+                                             entry_full_name):
+        attributes_list = []
         attribute_code = ''
+        attribute_desc_map, attribute_type_map = dict(), dict()
         # extracting attributes
         attributes: List[Dict] = entry_definition[self._ATTRIBUTES] \
             if self._ATTRIBUTES in entry_definition else []
 
         for attribute in attributes:
-            attribute_init_code: str = self._get_attribute_init_code(
-                attribute, entry_full_name)
+            attribute_name, attribute_init_code, attribute_type \
+                = self._get_attribute_init_code(attribute, entry_full_name)
             attribute_code += f"{attribute_init_code}"
+            attributes_list.append(attribute_name)
+            attribute_type_map[attribute_name] = attribute_type
+            att_desc = attribute[self._ATTRIBUTE_DESC] \
+                if self._ATTRIBUTE_DESC in attribute else None
+            attribute_desc_map[attribute_name] = None \
+                if att_desc is None or att_desc.strip() == '' else att_desc
 
         # generate getter and setter functions
         for attribute in attributes:
@@ -354,7 +425,9 @@ class OntologyCodeGenerator:
             attribute_getter_setter_code: str = \
                 self._get_attribute_getter_setter_code(attribute)
             attribute_code += f"{attribute_getter_setter_code}"
-        return attribute_code
+
+        return (attributes_list, attribute_code, attribute_desc_map,
+                attribute_type_map)
 
     def _get_attribute_init_code(self, attribute: Dict, entry_full_name: str):
         """
@@ -384,18 +457,12 @@ class OntologyCodeGenerator:
 
         # element type should be present in the validation tree
         if attribute_type in self._COMPOSITE_TYPES:
-            if element_type not in self._validation_tree:
-                raise ValueError(f"Element type for the entry {entry_full_name}"
-                                 f" and the attribute {attribute_name} not "
-                                 f"declared in the ontology")
+            if not (element_type in self._validation_tree
+                    or element_type == entry_full_name):
+                raise ValueError(f"Element type {element_type} for the entry "
+                                 f"{entry_full_name} and the attribute "
+                                 f"{attribute_name} not declared in ontology")
             attribute_type = f"typing.{attribute_type}"
-
-        # adding attribute to the entry
-        if attribute_name in self._validation_tree[entry_full_name]:
-            raise Warning(f"Attribute type for the entry {entry_full_name} and "
-                          f"the attribute {attribute_name} already present in "
-                          f"the ontology, will be overridden")
-        self._validation_tree[entry_full_name].add(attribute_name)
 
         if self._ATTRIBUTE_DEFAULT_VALUE in attribute and \
                 attribute[self._ATTRIBUTE_DEFAULT_VALUE] is not None:
@@ -412,7 +479,7 @@ class OntologyCodeGenerator:
             f"self._{attribute_name}: typing.Optional[{attribute_type}" \
             f"{composite_code}] = {attribute_default}\n"
 
-        return code_string
+        return attribute_name, code_string, attribute_type
 
     def _get_attribute_getter_setter_code(self, attribute: Dict):
         """
@@ -436,3 +503,28 @@ class OntologyCodeGenerator:
             f"(self, {attribute_name}: {attribute_type}):\n" \
             f"{self._INDENT}{self._INDENT}self.set_fields(" \
             f"_{attribute_name}={attribute_name})\n"
+
+    def _generate_class_description(self, entry_desc, attributes,
+                                    attribute_descriptions, attribute_types):
+        all_att_none = all([attribute_descriptions[att] is None for att in
+                            attributes])
+        if entry_desc is None or entry_desc.strip() == '':
+            entry_desc = None
+        else:
+            entry_desc = self._INDENT + ('\n' + self._INDENT).join(
+                ['"""', entry_desc, '"""'])
+
+        if all_att_none:
+            init_desc = None
+        else:
+            arg_desc_lines = [f"{attribute} ({attribute_types[attribute]}): "
+                              f"{attribute_descriptions[attribute]}"
+                              for attribute in attributes]
+            arg_desc = self._INDENT + \
+                ('\n' + 3 * self._INDENT).join(arg_desc_lines)
+
+            init_desc = 2 * self._INDENT + \
+                ('\n' + 2 * self._INDENT).join(['"""', 'Attributes:', arg_desc,
+                                                '"""'])
+
+        return entry_desc, init_desc
