@@ -7,6 +7,9 @@ This reader is based on DBpedia's extracted datasets.
 """
 from typing import Any, Iterator, Dict, Type, Union, List
 
+from texar.torch import HParams
+
+from forte import Resources
 from forte.data import DataPack
 from forte.data.ontology import Entry
 from forte.data.ontology.wiki_ontology import WikiPage, WikiSection, \
@@ -20,7 +23,7 @@ from forte.data.datasets.wikipedia.db_utils import (
 
 class DBpediaWikiReader(PackReader):
     def initialize(self, resource: Resources, configs: HParams):
-        redirects = load_redirects(wiki_redirect)
+        self.redirects = load_redirects(configs.redirect_path)
 
     def define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
         pass
