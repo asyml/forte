@@ -38,7 +38,7 @@ class WikiSection(Annotation):
         self._is_intro: bool
 
     def set_is_intro(self, is_intro: bool):
-        self.set_is_intro(is_intro)
+        self.set_fields(_is_intro=is_intro)
 
     @property
     def is_intro(self):
@@ -71,6 +71,9 @@ class WikiInfoBoxEntry(Entry):
         super().__init__(pack)
         self._key: str
         self._value: str
+        self._is_raw: bool
+        self._is_literal: bool
+        self._is_object: bool
 
     @property
     def key(self):
@@ -85,6 +88,28 @@ class WikiInfoBoxEntry(Entry):
 
     def set_value(self, value: str):
         self._value = value
+
+    @property
+    def is_raw(self):
+        return self._is_raw
+
+    def set_is_raw(self, is_raw: bool):
+        self.set_fields(_is_raw=is_raw)
+
+    @property
+    def is_literal(self):
+        return self._is_literal
+
+    def set_is_literal(self, is_literal: bool):
+        self.set_fields(_is_literal=is_literal)
+
+    @property
+    def is_object(self):
+        return self._is_object
+
+    def set_is_object(self, is_object: bool):
+        self.set_fields(_is_object=is_object)
+
 
 
 class WikiCategories(Entry):

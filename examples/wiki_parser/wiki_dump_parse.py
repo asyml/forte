@@ -2,6 +2,7 @@
 This creates a pipeline to parse the Wikipedia dump and save the results
 as MultiPacks onto disk.
 """
+import logging
 import sys
 import os
 import csv
@@ -13,6 +14,8 @@ from forte.common.resources import Resources
 from forte.data import DataPack, pack_utils
 from forte.data.base_pack import PackType
 from forte.data.datasets.wikipedia.dbpedia_based_reader import DBpediaWikiReader
+from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \
+    DBpediaInfoBoxReader
 from forte.data.ontology.wiki_ontology import WikiPage
 from forte.pipeline import Pipeline
 from forte.processors.base.writers import JsonPackWriter
@@ -74,28 +77,55 @@ class WikiArticleWriter(JsonPackWriter):
 
 def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
          mapping_objects: str, nif_text_links: str, redirects: str,
-         output_path: str):
-    pl = Pipeline()
-    pl.set_reader(DBpediaWikiReader(), config=HParams(
+         info_boxs: str, output_path: str):
+    # The datasets are read in two steps.
+
+    # First, we create the NIF reader that read the NIF in order.
+    nif_pl = Pipeline()
+    nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
         {
             'redirect_path': redirects
         },
         DBpediaWikiReader.default_hparams()
     ))
 
-    config = HParams(
+    raw_pack_dir = os.path.join(output_path, 'nif_raw')
+    nif_pl.add_processor(WikiArticleWriter(), config=HParams(
         {
-            'output_dir': output_path,
+            'output_dir': raw_pack_dir,
             'zip_pack': True,
         },
         WikiArticleWriter.default_hparams()
-    )
+    ))
 
-    pl.add_processor(WikiArticleWriter(), config=config)
+    nif_pl.initialize()
 
-    pl.initialize()
-    pl.run(nif_context, nif_page_structure, mapping_literals, mapping_objects,
-           nif_text_links)
+    # Now we run the NIF text pipeline.
+    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+    logging.info('Start running the DBpedia text pipeline.')
+    nif_pl.run(nif_context, nif_page_structure, nif_text_links)
+
+    # Second, we add info boxes to the packs with NIF.
+    ib_pl = Pipeline()
+    ib_pl.set_reader(DBpediaInfoBoxReader(), config=HParams(
+        {
+            'pack_index': os.path.join(raw_pack_dir, 'article.idx'),
+            'pack_dir': raw_pack_dir,
+        },
+        DBpediaInfoBoxReader.default_hparams()
+    ))
+
+    ib_pl.add_processor(WikiArticleWriter(), config=HParams(
+        {
+            'output_dir': os.path.join(output_path, 'nif_info_box'),
+            'zip_pack': True,
+        },
+        WikiArticleWriter.default_hparams()
+    ))
+
+    # Now we run the info box pipeline.
+    ib_pl.initialize()
+    ib_pl.run(mapping_literals, mapping_objects, info_boxs)
 
 
 if __name__ == '__main__':
@@ -118,5 +148,6 @@ if __name__ == '__main__':
         get_data('mappingbased_objects_en.tql.bz2'),
         get_data('nif_text_links_en.tql.bz2'),
         get_data('redirects_en.tql.bz2'),
+        get_data('infobox_properties_en.tql.bz2'),
         os.path.join(base_dir, 'packs'),
     )

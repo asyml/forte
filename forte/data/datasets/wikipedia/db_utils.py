@@ -1,6 +1,8 @@
 """
 A set of utilities to support reading DBpedia datasets.
 """
+import logging
+import os
 from typing import List, Dict
 
 from urllib.parse import urlparse, parse_qs
@@ -49,20 +51,24 @@ def strip_url_params(url) -> str:
 
 class NIFBufferedContextReader:
     def __init__(self, nif_path: str, buffer_size: int = 100):
+        self.data_name = os.path.basename(nif_path)
+
         self.__parser = NIFParser(nif_path)
 
         self.__buf_statement: Dict[str, List] = {}
-
         self.__prev_context: str = ''
-        self.__statements = []
-
         self.__buffer_size = buffer_size
+
+    def buf_info(self):
+        logging.info(f'The buffer size for data [{self.data_name}] '
+                     f'is {len(self.__buf_statement)}')
+
 
     def get(self, context: rdflib.Graph):
         context_ = strip_url_params(context.identifier)
 
         if context_ in self.__buf_statement:
-            return self.__buf_statement[context_]
+            return self.__buf_statement.pop(context_)
         else:
             # TODO: check if iterator will continue with the new for.
             statements = []
@@ -79,7 +85,7 @@ class NIFBufferedContextReader:
 
                         if self.__prev_context == context_:
                             # If a previous context is as required.
-                            statements = self.__buf_statement[context_]
+                            statements = self.__buf_statement.pop(context_)
                         self.__prev_context = c_
 
                         if statements:

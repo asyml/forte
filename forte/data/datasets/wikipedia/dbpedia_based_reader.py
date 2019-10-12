@@ -83,28 +83,25 @@ def add_info_boxes(pack: DataPack, info_box_statements: List):
 class DBpediaWikiReader(PackReader):
     def initialize(self, resource: Resources, configs: HParams):
         # self.redirects = load_redirects(configs.redirect_path)
-        pass
+
+        # These NIF readers organize the statements in the specific RDF context,
+        # in this case each context correspond to one wiki page, this allows
+        # us to read the information more systematically.
+        self.struct_reader = NIFBufferedContextReader(
+            configs.nif_page_structure)
+        self.link_reader = NIFBufferedContextReader(configs.nif_text_links)
 
     def define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
         pass
 
     def _collect(
             self, nif_context: str, nif_page_structure: str,
-            mapping_literals: str, mapping_objects: str,
-            nif_text_links: str
+            nif_text_links: str,
     ) -> Iterator[Dict[str, List[str]]]:
         doc_data = {
             'doc_id': '',
             'context': '',
         }
-
-        # These NIF readers organize the statements in the specific RDF context,
-        # in this case each context correspond to one wiki page, this allows
-        # us to read the information more systematically.
-        struct_reader = NIFBufferedContextReader(nif_page_structure)
-        link_reader = NIFBufferedContextReader(nif_text_links)
-        literal_info_reader = NIFBufferedContextReader(mapping_literals)
-        object_info_reader = NIFBufferedContextReader(mapping_objects)
 
         for context_statements in NIFParser(nif_context):
             for s, v, o, c in context_statements:
@@ -114,10 +111,13 @@ class DBpediaWikiReader(PackReader):
                         v) == 'isString':
                     doc_data['text'] = o.toPython()
                     doc_data['doc_name'] = get_resource_name(s)
-                    doc_data['struct'] = struct_reader.get(c)
-                    doc_data['links'] = link_reader.get(c)
-                    doc_data['literal_info'] = literal_info_reader.get(c)
-                    doc_data['object_info'] = object_info_reader.get(c)
+                    doc_data['struct'] = self.struct_reader.get(c)
+
+                    if len(doc_data['struct']) == 0:
+                        self.struct_reader.buf_info()
+
+                    doc_data['links'] = self.link_reader.get(c)
+
                     doc_data['oldid'] = get_resource_attribute(
                         c.identifier, 'oldid')
 
@@ -135,25 +135,15 @@ class DBpediaWikiReader(PackReader):
         page.set_page_id(doc_data['oldid'])
         page.set_page_name(doc_name)
 
-        if len(doc_data['struct']) == 0:
-            logging.warning(f'Structure info for [{doc_name}] not found.')
-        else:
+        if len(doc_data['struct']) > 0:
             add_struct(pack, doc_data['struct'])
-
-        if len(doc_data['links']) == 0:
-            logging.warning(f'Links for [{doc_name}] not found.')
         else:
+            logging.warning(f'Structure info for [{doc_name}] not found.')
+
+        if len(doc_data['links']) > 0:
             add_anchor_links(pack, doc_data['links'])
-
-        if len(doc_data['literal_info']) == 0:
-            logging.warning(f'Literal info boxes for [{doc_name}] not found.')
         else:
-            add_info_boxes(pack, doc_data['literal_info'])
-
-        if len(doc_data['object_info']) == 0:
-            logging.warning(f'Object info boxes for [{doc_name}] not found.')
-        else:
-            add_info_boxes(pack, doc_data['object_info'])
+            logging.warning(f'Links for [{doc_name}] not found.')
 
         pack.meta.doc_id = doc_name
 
