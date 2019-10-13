@@ -30,7 +30,8 @@ class GenerateOntologyTest(unittest.TestCase):
                 final_root = root
         generated_files = sorted(generated_files)
 
-        expected_final_root = os.path.join(folder_path, 'forte/data/ontology')
+        expected_final_root = os.path.join(folder_path, 'forte', 'data',
+                                           'ontology')
         self.assertEquals(final_root, expected_final_root)
 
         file_names = sorted(['example_import_ontology',

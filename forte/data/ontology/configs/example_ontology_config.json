@@ -7,7 +7,7 @@
         {
             "entry_name": "forte.data.ontology.example_ontology.Token",
             "parent_entry": "forte.data.ontology.example_import_ontology.Token",
-            "entry_description": null,
+            "entry_description": "",
             "attributes": [
                 {
                     "attribute_name": "related_tokens",

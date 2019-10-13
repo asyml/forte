@@ -31,14 +31,14 @@ class Token(forte.data.ontology.example_import_ontology.Token):
     def related_tokens(self):
         return self._related_tokens
 
-    def set_related_tokens(self, related_tokens: typing.List):
+    def set_related_tokens(self, related_tokens: typing.List[forte.data.ontology.example_ontology.Token]):
         self.set_fields(_related_tokens=related_tokens)
 
     @property
     def string_features(self):
         return self._string_features
 
-    def set_string_features(self, string_features: typing.List):
+    def set_string_features(self, string_features: typing.List[str]):
         self.set_fields(_string_features=string_features)
 
 

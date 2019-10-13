@@ -3,7 +3,7 @@ from typing import (Optional, Set, Tuple, Type)
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
-from forte.data.ontology.base.core import Entry, BaseLink, BaseGroup
+from forte.data.ontology.base.core import Entry, BaseLink, BaseGroup, EntryType
 from forte.data.base import Span
 
 __all__ = [
@@ -216,6 +216,13 @@ class Group(BaseGroup[Entry]):
     store a set of members, no duplications allowed.
     """
     MemberType: Type[Entry] = Entry
+
+    def __init__(
+            self,
+            pack: EntryContainer,
+            members: Optional[Set[Entry]] = None,
+    ):  # pylint: disable=useless-super-delegation
+        super().__init__(pack, members)
 
 
 class SubEntry(Entry):
