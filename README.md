@@ -1,3 +1,7 @@
+<div align="center">
+   <img src="./docs/_static/img/Forte-dark-text Copy@2x.png"><br><br>
+</div>
+
 Forte
 ---
 
