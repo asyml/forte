@@ -3,7 +3,7 @@ A set of utilities to support reading DBpedia datasets.
 """
 import logging
 import os
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Iterator
 import bz2
 import re
 from urllib.parse import urlparse, parse_qs
@@ -54,56 +54,6 @@ def strip_url_params(url) -> str:
     return parsed.scheme + "://" + parsed.netloc + parsed.path
 
 
-class NIFBufferedContextReader:
-    def __init__(self, nif_path: str, buffer_size: int = 100):
-        self.data_name = os.path.basename(nif_path)
-
-        self.__parser = NIFParser(nif_path)
-
-        self.__buf_statement: Dict[str, List] = {}
-        self.__buffer_size = buffer_size
-
-    def buf_info(self):
-        print(self.__buf_statement.keys())
-        logging.info('The buffer size for data [%s] is %s',
-                     self.data_name, len(self.__buf_statement))
-
-    def get(self, context: rdflib.Graph) -> List[state_type]:
-        context_ = context_base(context)
-
-        if context_ in self.__buf_statement:
-            return self.__buf_statement.pop(context_)
-        else:
-            statements: List[state_type] = []
-
-            prev_context = ''
-
-            while True:
-                g = next(self.__parser)
-
-                if len(self.__buf_statement) >= self.__buffer_size:
-                    # TODO: Buf is not ok.
-                    return []
-
-                for s, v, o, c in g:
-                    c_ = context_base(c)
-                    if c_ not in self.__buf_statement:
-                        # Read in new contexts to the buffer.
-                        self.__buf_statement[c_] = [(s, v, o)]
-
-                        if prev_context == context_:
-                            # If the previous context is the required one.
-                            statements = self.__buf_statement.pop(context_)
-                        prev_context = c_
-
-                        if statements:
-                            return statements
-                    else:
-                        # Context already in buffer.
-                        self.__buf_statement[c_].append((s, v, o))
-            return []
-
-
 class NIFParser:
     def __init__(self, nif_path, tuple_format='nquads'):
         if nif_path.endswith(".bz2"):
@@ -140,13 +90,74 @@ class NIFParser:
 
     def read(self):
         while True:
-            line = next(self.__nif)
-            statements = self.parse_graph(
-                line.decode('utf-8'),
-                tuple_format=self.format
-            )
-            if statements:
+            try:
+                line = next(self.__nif)
+                statements = self.parse_graph(
+                    line.decode('utf-8'),
+                    tuple_format=self.format
+                )
                 return list(statements)
+            except StopIteration:
+                break
+
+        raise StopIteration
 
     def close(self):
         self.__nif.close()
+
+
+class NIFBufferedContextReader:
+    def __init__(self, nif_path: str, buffer_size: int = 100):
+        self.data_name = os.path.basename(nif_path)
+
+        self.__parser = NIFParser(nif_path)
+
+        self.__buf_statement: Dict[str, List] = {}
+        self.__buffer_size = buffer_size
+
+        self.__last_c = ''
+        self.__statements = []
+
+    def buf_info(self):
+        logging.info('The buffer size for data [%s] is %s',
+                     self.data_name, len(self.__buf_statement))
+
+    def yield_by_context(self) -> Tuple[str, List[state_type]]:
+        res_c: str = ''
+        res_states: List = []
+
+        while True:
+            try:
+                for statements in self.__parser:
+                    for s, v, o, c in statements:
+                        c_ = context_base(c)
+
+                        if not c_ == self.__last_c and self.__last_c is not '':
+                            res_c = self.__last_c
+                            res_states.extend(self.__statements)
+                            self.__statements.clear()
+
+                        self.__statements.append((s, v, o))
+                        self.__last_c = c_
+
+                        if not res_c == '':
+                            return res_c, res_states
+            except StopIteration:
+                break
+
+        if len(self.__statements) > 0:
+            yield self.__last_c, self.__statements
+
+    def get(self, context: rdflib.Graph) -> List[state_type]:
+        # TODO: fix this.
+        context_ = context_base(context)
+
+        for c_, statements in self.yield_by_context():
+            if c_ == context_:
+                return statements
+            elif context_ in self.__buf_statement:
+                return self.__buf_statement[context_]
+            elif self.__buffer_size > len(self.__buf_statement):
+                self.__buf_statement[c_] = statements
+            else:
+                logging.info('[%s] not found in [%s]', context_, self.data_name)

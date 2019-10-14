@@ -83,19 +83,10 @@ class DBpediaInfoBoxReader(PackReader):
             for resource, rel, value, c in statements:
                 if len(property_statements) > 0 and not context_base(
                         c) == context_base(last_con):
-                    literals: List[state_type] = literal_info_reader.get(
-                        last_con)
-                    objects: List[state_type] = object_info_reader.get(last_con)
-
-                    print(context_base(last_con))
-                    print('buf info for literal reader')
-                    literal_info_reader.buf_info()
-                    input('check buf growth')
-
                     yield get_resource_name(property_statements[0][0]), {
                         'properties': property_statements,
-                        'literals': literals,
-                        'objects': objects,
+                        'literals': literal_info_reader.get(last_con),
+                        'objects': object_info_reader.get(last_con),
                     }
                     property_statements = []
 
@@ -103,20 +94,18 @@ class DBpediaInfoBoxReader(PackReader):
                 last_con = c
 
         if len(property_statements) > 0:
-            literals = literal_info_reader.get(last_con)
-            objects = object_info_reader.get(last_con)
-
             resource = property_statements[0][0]
 
             yield get_resource_name(resource), {
                 'properties': property_statements,
-                'literals': literals,
-                'objects': objects,
+                'literals': literal_info_reader.get(last_con),
+                'objects': object_info_reader.get(last_con),
             }
 
     def parse_pack(self, collection: Tuple[str, Dict[str, List[state_type]]]
                    ) -> Iterator[DataPack]:
         resource_name, info_box_data = collection
+
         if resource_name in self.pack_index:
             pack_path = os.path.join(
                 self.pack_dir,
