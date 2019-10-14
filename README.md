@@ -1,5 +1,5 @@
 <div align="center">
-   <img src="./docs/_static/img/Forte-dark-text Copy@2x.png"><br><br>
+   <img src="./docs/_static/img/logo_h.png"><br><br>
 </div>
 
 Forte
