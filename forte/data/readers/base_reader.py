@@ -116,7 +116,7 @@ class BaseReader(PipeComponent[PackType], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def parse_pack(self, collection: Any) -> PackType:
+    def parse_pack(self, collection: Any) -> Iterator[PackType]:
         """
         Gives an iterator of Packs parsed from a collection
 
@@ -178,20 +178,20 @@ class BaseReader(PipeComponent[PackType], ABC):
                         self._get_cache_location(collection)):
                     yield pack
             else:
-                pack = self.parse_pack(collection)
+                for pack in self.parse_pack(collection):
+                    # write to the cache if _cache_directory specified
+                    if self._cache_directory is not None:
+                        self.cache_data(self._cache_directory, collection, pack)
 
-                # write to the cache if _cache_directory specified
-                if self._cache_directory is not None:
-                    self.cache_data(self._cache_directory, collection, pack)
-
-                if self.output_info:
-                    record_fields(self.output_info, self.component_name, pack)
-                if not isinstance(pack, self.pack_type):
-                    raise ValueError(
-                        f"No Pack object read from the given "
-                        f"collection {collection}, returned {type(pack)}."
-                    )
-                yield pack
+                    if self.output_info:
+                        record_fields(self.output_info,
+                                      self.component_name, pack)
+                    if not isinstance(pack, self.pack_type):
+                        raise ValueError(
+                            f"No Pack object read from the given "
+                            f"collection {collection}, returned {type(pack)}."
+                        )
+                    yield pack
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:
         """

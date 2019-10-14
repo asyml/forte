@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-class JsonPackWriter(BaseProcessor, ABC):
+class JsonPackWriter(BaseProcessor[PackType], ABC):
     def __init__(self):
         super().__init__()
         self.root_output_dir: str = ''

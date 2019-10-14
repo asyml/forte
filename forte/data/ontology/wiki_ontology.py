@@ -1,9 +1,9 @@
-from typing import List, Dict
+from typing import List
 
 import forte.data.ontology.base_ontology as ontology
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import Annotation, Link
 from forte.data.ontology.core import Entry
+from forte.data.ontology.top import Annotation
 
 
 class WikiPage(ontology.Document):
@@ -66,12 +66,32 @@ class WikiAnchor(Annotation):
         self._target_page_name = page_name
 
 
-class WikiInfoBoxEntry(Entry):
+class WikiInfoBoxProperty(Entry):
     def __init__(self, pack: DataPack):
         super().__init__(pack)
         self._key: str
         self._value: str
-        self._is_raw: bool
+
+    @property
+    def key(self):
+        return self._key
+
+    def set_key(self, key: str):
+        self._key = key
+
+    @property
+    def value(self):
+        return self._value
+
+    def set_value(self, value: str):
+        self._value = value
+
+
+class WikiInfoBoxMapped(Entry):
+    def __init__(self, pack: DataPack):
+        super().__init__(pack)
+        self._key: str
+        self._value: str
         self._is_literal: bool
         self._is_object: bool
 
@@ -90,13 +110,6 @@ class WikiInfoBoxEntry(Entry):
         self._value = value
 
     @property
-    def is_raw(self):
-        return self._is_raw
-
-    def set_is_raw(self, is_raw: bool):
-        self.set_fields(_is_raw=is_raw)
-
-    @property
     def is_literal(self):
         return self._is_literal
 
@@ -109,7 +122,6 @@ class WikiInfoBoxEntry(Entry):
 
     def set_is_object(self, is_object: bool):
         self.set_fields(_is_object=is_object)
-
 
 
 class WikiCategories(Entry):

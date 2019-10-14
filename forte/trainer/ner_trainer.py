@@ -5,10 +5,10 @@ from typing import Iterator, Optional
 from typing import List, Tuple
 
 import numpy as np
+from tqdm import tqdm
 import torch
 from torch.optim import SGD
 import torchtext
-from tqdm import tqdm
 from texar.torch import HParams
 
 from forte.common.resources import Resources

@@ -33,7 +33,7 @@ class PlainSentenceTxtgenReader(MultiPackReader):
     def _cache_key_function(self, txt_path: str) -> str:
         return os.path.basename(txt_path)
 
-    def parse_pack(self, file_path: str) -> MultiPack:
+    def parse_pack(self, file_path: str) -> Iterator[MultiPack]:
         m_pack: MultiPack = MultiPack()
 
         input_pack_name = "input_src"
@@ -76,4 +76,4 @@ class PlainSentenceTxtgenReader(MultiPackReader):
             }
         )
 
-        return m_pack
+        yield m_pack

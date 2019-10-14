@@ -3,14 +3,15 @@ A set of utilities to support reading DBpedia datasets.
 """
 import logging
 import os
-from typing import List, Dict
-
-from urllib.parse import urlparse, parse_qs
-import rdflib
+from typing import List, Dict, Tuple
 import bz2
 import re
+from urllib.parse import urlparse, parse_qs
+
+import rdflib
 
 dbpedia_prefix = "http://dbpedia.org/resource/"
+state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]
 
 
 def load_redirects(redirect_path: str) -> Dict[str, str]:
@@ -20,7 +21,7 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
     count = 0
     for statements in NIFParser(redirect_path):
         for statement in statements:
-            s, v, o, c = statement
+            s, v, o, _ = statement
             if str(v) == redirect_rel:
                 count += 1
                 from_page = get_resource_name(s)
@@ -32,6 +33,10 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
 def get_resource_attribute(url, param_name) -> str:
     parsed = urlparse(url)
     return parse_qs(parsed.query)[param_name][0]
+
+
+def context_base(c: rdflib.Graph) -> str:
+    return strip_url_params(c.identifier)
 
 
 def get_resource_fragment(url) -> str:
@@ -56,43 +61,47 @@ class NIFBufferedContextReader:
         self.__parser = NIFParser(nif_path)
 
         self.__buf_statement: Dict[str, List] = {}
-        self.__prev_context: str = ''
         self.__buffer_size = buffer_size
 
     def buf_info(self):
-        logging.info(f'The buffer size for data [{self.data_name}] '
-                     f'is {len(self.__buf_statement)}')
+        print(self.__buf_statement.keys())
+        logging.info('The buffer size for data [%s] is %s',
+                     self.data_name, len(self.__buf_statement))
 
-
-    def get(self, context: rdflib.Graph):
-        context_ = strip_url_params(context.identifier)
+    def get(self, context: rdflib.Graph) -> List[state_type]:
+        context_ = context_base(context)
 
         if context_ in self.__buf_statement:
             return self.__buf_statement.pop(context_)
         else:
-            # TODO: check if iterator will continue with the new for.
-            statements = []
+            statements: List[state_type] = []
 
-            for g in self.__parser:
+            prev_context = ''
+
+            while True:
+                g = next(self.__parser)
+
                 if len(self.__buf_statement) >= self.__buffer_size:
+                    # TODO: Buf is not ok.
                     return []
 
                 for s, v, o, c in g:
-                    c_ = strip_url_params(c.identifier)
+                    c_ = context_base(c)
                     if c_ not in self.__buf_statement:
                         # Read in new contexts to the buffer.
                         self.__buf_statement[c_] = [(s, v, o)]
 
-                        if self.__prev_context == context_:
-                            # If a previous context is as required.
+                        if prev_context == context_:
+                            # If the previous context is the required one.
                             statements = self.__buf_statement.pop(context_)
-                        self.__prev_context = c_
+                        prev_context = c_
 
                         if statements:
                             return statements
                     else:
                         # Context already in buffer.
                         self.__buf_statement[c_].append((s, v, o))
+            return []
 
 
 class NIFParser:

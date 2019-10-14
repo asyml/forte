@@ -23,6 +23,7 @@ setuptools.setup(
         'jsonpickle',
         'pyyaml',
         'deprecation',
+        'smart-open',
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],

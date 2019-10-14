@@ -6,7 +6,7 @@ from typing import Type
 
 from forte.data import DataPack
 from forte.data.ontology.core import EntryType
-from forte.common.exception import *
+from forte.common.exception import EntryNotFoundError
 
 
 def get_single(pack: DataPack, entry_type: Type[EntryType]) -> EntryType:

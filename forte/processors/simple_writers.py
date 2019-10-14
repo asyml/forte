@@ -7,4 +7,9 @@ class SimpleJsonPackWriter(JsonPackWriter):
         pass
 
     def sub_output_path(self, pack: PackType) -> str:
-        return pack.meta.doc_id
+        doc_id = pack.meta.doc_id
+        if doc_id is None:
+            raise ValueError(
+                "Doc id for data pack not set, "
+                "please supply to use this writer.")
+        return doc_id
