@@ -1,5 +1,5 @@
-from abc import abstractmethod
 from typing import TypeVar, Generic
+
 from forte.data.base import Span
 
 E = TypeVar('E')

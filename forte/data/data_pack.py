@@ -12,7 +12,7 @@ from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
 from forte.data.base import Span
 from forte.data.ontology.top import (
-    Annotation, Link, Group, SinglePackEntries
+    Annotation, Link, Group
 )
 from forte.data import io_utils
 

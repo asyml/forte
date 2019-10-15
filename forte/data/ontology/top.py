@@ -2,7 +2,7 @@ from functools import total_ordering
 from typing import (Optional, Set, Tuple, Type)
 
 from forte.common.exception import IncompleteEntryError
-from forte.data import PackType
+from forte.data.base_pack import PackType
 from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base import Span
 
