@@ -122,19 +122,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return self.__poison
 
     @abstractmethod
-    def validate(self, entry: EntryType) -> bool:
-        """
-        Validate whether this type can be added.
-
-        Args:
-            entry:
-
-        Returns:
-
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def add_entry(self, entry: EntryType) -> EntryType:
         """
         Force add an :class:`~forte.data.ontology.top.Entry` object to

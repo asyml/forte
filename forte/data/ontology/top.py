@@ -2,7 +2,7 @@ from functools import total_ordering
 from typing import (Optional, Set, Tuple, Type)
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.container import EntryContainer
+from forte.data import PackType
 from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base import Span
 
@@ -26,13 +26,13 @@ class Annotation(Entry):
     in the text.
 
     Args:
-        pack (EntryContainer): The container that this annotation
+        pack (PackType): The container that this annotation
          will be added to.
         begin (int): The offset of the first character in the annotation.
         end (int): The offset of the last character in the annotation + 1.
     """
 
-    def __init__(self, pack: EntryContainer, begin: int, end: int):
+    def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack)
         if begin > end:
             raise ValueError(
@@ -118,7 +118,7 @@ class Link(BaseLink):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
@@ -231,7 +231,7 @@ class SubEntry(Entry):
         entry_id: The tid of the entry in the sub pack.
     """
 
-    def __init__(self, pack: EntryContainer, pack_index: int, entry_id: str):
+    def __init__(self, pack: PackType, pack_index: int, entry_id: str):
         super().__init__(pack)
         self._pack_index: int = pack_index
         self._entry_id: str = entry_id
@@ -274,7 +274,7 @@ class MultiPackLink(BaseLink):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             parent: Optional[SubEntry],
             child: Optional[SubEntry],
     ):
@@ -370,7 +370,7 @@ class MultiPackGroup(BaseGroup[SubEntry]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             members: Optional[Set[SubEntry]],
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)

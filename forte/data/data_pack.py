@@ -100,10 +100,6 @@ class DataPack(BasePack[Entry, Link, Group]):
     def get_span_text(self, span: Span):
         return self._text[span.begin: span.end]
 
-    # pylint: disable=no-self-use
-    def validate(self, entry: EntryType) -> bool:
-        return isinstance(entry, SinglePackEntries)
-
     @staticmethod
     def make_poison():
         """

@@ -4,12 +4,10 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
-from typing import (
-    Iterable, Optional, Set, Type, Hashable,
-    TypeVar, Generic)
+from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
 
 from forte.data.base import Indexable
-from forte.data.container import EntryContainer
+from forte.data.container import ContainerType
 from forte.utils import get_full_module_name
 from forte.common.const import default_component
 
@@ -17,6 +15,8 @@ __all__ = [
     "Entry",
     "BaseLink",
     "BaseGroup",
+    "LinkType",
+    "GroupType",
 ]
 
 
@@ -39,7 +39,7 @@ class Entry(Indexable):
             pack: Each entry should be associated with one pack upon creation.
     """
 
-    def __init__(self, pack: EntryContainer):
+    def __init__(self, pack: ContainerType):
         super(Entry, self).__init__()
 
         self._tid: str
@@ -52,7 +52,7 @@ class Entry(Indexable):
         # we create a generic class EntryContainer to be the place holder of
         # the actual. Whether this entry can be added to the pack is delegated
         # to be checked by the pack.
-        self.__pack: EntryContainer = pack
+        self.__pack: ContainerType = pack
         pack.validate(self)
 
     @property
@@ -87,7 +87,7 @@ class Entry(Indexable):
         self._tid = f"{get_full_module_name(self)}.{tid}"
 
     @property
-    def pack(self) -> EntryContainer:
+    def pack(self) -> ContainerType:
         return self.__pack
 
     def set_fields(self, **kwargs):
@@ -145,7 +145,7 @@ EntryType = TypeVar("EntryType", bound=Entry)
 class BaseLink(Entry, ABC):
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: ContainerType,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
@@ -233,7 +233,7 @@ class BaseGroup(Entry, Generic[EntryType]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: ContainerType,
             members: Optional[Set[EntryType]] = None,
     ):
         super().__init__(pack)

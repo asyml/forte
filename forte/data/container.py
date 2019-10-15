@@ -11,20 +11,11 @@ class EntryContainer(Generic[E, L, G]):
     def __init__(self):
         pass
 
-    @abstractmethod
-    def validate(self, item: E) -> bool:
-        """
-        Validate whether this type can be added.
-        Args:
-            item:
-
-        Returns:
-
-        """
-        raise NotImplementedError
-
     def get_entry(self, tid: str):
         raise NotImplementedError
 
     def get_span_text(self, span: Span):
         raise NotImplementedError
+
+
+ContainerType = TypeVar("ContainerType", bound=EntryContainer)
