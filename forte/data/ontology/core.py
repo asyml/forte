@@ -6,7 +6,6 @@ representation system.
 from abc import abstractmethod, ABC
 from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
 
-from forte.data.base import Indexable
 from forte.data.container import ContainerType
 from forte.utils import get_full_module_name
 from forte.common.const import default_component
@@ -20,7 +19,7 @@ __all__ = [
 ]
 
 
-class Entry(Indexable):
+class Entry(Generic[ContainerType]):
     """
         The base class inherited by all NLP entries. This is the main data type
         for all in-text NLP analysis results. The main sub-types are

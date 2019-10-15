@@ -29,11 +29,11 @@ class Span:
         return (self.begin, self.end) == (other.begin, other.end)
 
 
-class Indexable(ABC):
-    """
-    A class that implement this would be indexable within the pack it lives in.
-    """
-
-    @property
-    def index_key(self) -> Hashable:
-        raise NotImplementedError
+# class Indexable(ABC):
+#     """
+#     A class that implement this would be indexable within the pack it lives in.
+#     """
+#
+#     @property
+#     def index_key(self) -> Hashable:
+#         raise NotImplementedError

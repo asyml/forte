@@ -4,11 +4,12 @@ from typing import (Dict, List, Union, Iterator, Optional, Type, Any, Tuple)
 
 from forte.common.types import EntryType
 from forte.data.base_pack import BaseMeta, BasePack
+from forte.data.container import E
 from forte.data.data_pack import DataPack, DataRequest
 from forte.data.index import BaseIndex
 from forte.data.ontology.top import (
     Annotation, MultiPackGroup, MultiPackLink, SubEntry,
-)
+    MultiPackEntries)
 from forte.data.ontology.core import Entry
 from forte.data.base import Span
 
@@ -56,6 +57,10 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
         self.index: BaseIndex = BaseIndex()
 
         self.__default_pack_prefix = '_pack'
+
+    # pylint: disable=no-self-use
+    def validate(self, entry: EntryType) -> bool:
+        return isinstance(entry, MultiPackEntries)
 
     def subentry(self, pack_index: int, entry: Entry):
         return SubEntry(self, pack_index, entry.tid)

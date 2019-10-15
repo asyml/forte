@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import TypeVar, Generic
 
 from forte.data.base import Span
@@ -10,6 +11,18 @@ G = TypeVar('G')
 class EntryContainer(Generic[E, L, G]):
     def __init__(self):
         pass
+
+    @abstractmethod
+    def validate(self, item: E) -> bool:
+        """
+        Validate whether this entry type can be added. This method is called by
+        the entries at the init stage.
+
+        Args:
+            item: The entry itself.
+        Returns:
+        """
+        raise NotImplementedError
 
     def get_entry(self, tid: str):
         raise NotImplementedError

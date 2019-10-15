@@ -218,7 +218,7 @@ class Group(BaseGroup[Entry]):
     MemberType: Type[Entry] = Entry
 
 
-class SubEntry(Entry):
+class SubEntry(Entry[PackType]):
     """
     This is used to identify an Entry in one of the packs in the
     :class:`Multipack`.
