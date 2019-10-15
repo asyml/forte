@@ -2,7 +2,8 @@ import copy
 import logging
 from abc import abstractmethod
 from collections import defaultdict
-from typing import (Dict, List, Optional, Set, Type, Tuple, TypeVar, Union)
+from typing import (Dict, List, Optional, Set, Type, Tuple, TypeVar, Union,
+                    Iterator)
 
 import jsonpickle
 
@@ -16,7 +17,6 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "BasePack",
     "BaseMeta",
-    "InternalMeta",
     "PackType"
 ]
 
@@ -31,11 +31,11 @@ class BaseMeta:
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id: Optional[str] = doc_id
 
-        # TODO: These two are definitely internal.
-        # the pack has been processed by which processor in the pipeline
-        self.process_state: str = ''
-        # the pack has been chached by which processor in the pipeline
-        self.cache_state: str = ''
+        # # TODO: These two are definitely internal.
+        # # the pack has been processed by which processor in the pipeline
+        # self.process_state: str = ''
+        # # the pack has been cached by which processor in the pipeline
+        # self.cache_state: str = ''
 
 
 class InternalMeta:
@@ -53,17 +53,6 @@ class InternalMeta:
         self.id_counter = 0
         self.fields_created = defaultdict(set)
         self.default_component = None
-
-        # TODO: Finish the update of this true component_records.
-        # A index of the component records of entries and fields. These will
-        # indicate "who" created the entry and modified the fields.
-        self.component_records: Dict[
-            str,  # The component name.
-            Set[int],  # The set of entries created by this component.
-            Set[  # The set of fields created by this component.
-                Tuple[int, str]  # The 2-tuple identify the entry field.
-            ]
-        ]
 
 
 class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
@@ -89,11 +78,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self.internal_metas: \
             Dict[type, InternalMeta] = defaultdict(InternalMeta)
 
-        # This is used internally when a processor takes the ownership of this
-        # DataPack.
-        self._owner_component: str = '__default__'
-        self.__poison: bool = False
-
     def enter_processing(self, component_name: str):
         self._owner_component = component_name
 
@@ -108,18 +92,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             if not hasattr(self.meta, k):
                 raise AttributeError(f"Meta has no attribute named {k}")
             setattr(self.meta, k, v)
-
-    def set_as_poison(self):
-        self.__poison = True
-
-    def is_poison(self) -> bool:
-        """
-        Indicate that this is a poison (a placeholder element that indicate
-        the end of the flow).
-        Returns:
-
-        """
-        return self.__poison
 
     @abstractmethod
     def add_entry(self, entry: EntryType) -> EntryType:

@@ -37,8 +37,6 @@ class BaseProcessor(PipeComponent[PackType], ABC):
         self.selector = DummySelector()
         self.__is_last_step = False
 
-    # TODO: what if we have config-free processors? It might be cumbersome to
-    #  always require a config.
     def initialize(self, resource: Resources, configs: Optional[HParams]):
         """
         The pipeline will call the initialize method at the start of a
@@ -48,8 +46,8 @@ class BaseProcessor(PipeComponent[PackType], ABC):
 
         Args:
             resource: A global resource register. User can register
-        shareable resources here, for example, the vocabulary.
-            configs:  The configuration passed in to set up this processor.
+             shareable resources here, for example, the vocabulary.
+            configs: The configuration passed in to set up this processor.
 
         Returns:
 
@@ -91,11 +89,9 @@ class BaseProcessor(PipeComponent[PackType], ABC):
         # Do the actual processing.
         self._process(input_pack)
 
-        if not input_pack.is_poison():
+        if self.output_info:
             record_fields(self.output_info, self.component_name, input_pack)
 
-        # Mark that the pack is processed by the processor.
-        input_pack.meta.process_state = self.component_name
         # Release the control of the DataPack.
         input_pack.exit_processing()
 
@@ -114,6 +110,14 @@ class BaseProcessor(PipeComponent[PackType], ABC):
 
         """
         raise NotImplementedError
+
+    def flush(self):
+        """
+        Indicate that there will be no more packs to be passed in.
+        Returns:
+
+        """
+        pass
 
     @staticmethod
     def default_hparams():

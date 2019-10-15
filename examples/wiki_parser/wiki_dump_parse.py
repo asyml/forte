@@ -44,7 +44,7 @@ class WikiArticleWriter(JsonPackWriter):
         doc_id = str(pack.meta.doc_id)
         return os.path.join(sub_dir, doc_id)
 
-    def process(self, input_pack: PackType):
+    def _process(self, input_pack: PackType):
         """
         Write an index from the document id to the relative storage of this
         DataPack. This can be used as a simple index to retrieve the relevant

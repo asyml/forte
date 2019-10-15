@@ -6,9 +6,9 @@ representation system.
 from abc import abstractmethod, ABC
 from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
 
+from forte.common.const import default_component
 from forte.data.container import ContainerType
 from forte.utils import get_full_module_name
-from forte.common.const import default_component
 
 __all__ = [
     "Entry",
@@ -41,7 +41,7 @@ class Entry(Generic[ContainerType]):
     def __init__(self, pack: ContainerType):
         super(Entry, self).__init__()
 
-        self._tid: str
+        self._tid: int = -1
 
         self.__component: str = default_component
         self.__modified_fields: Set[str] = set()
@@ -55,35 +55,22 @@ class Entry(Generic[ContainerType]):
         pack.validate(self)
 
     @property
-    def tid(self):
+    def tid(self) -> int:
         return self._tid
+
+    def set_component(self, component: str):
+        self.__component = component
 
     @property
     def component(self):
         return self.__component
 
-    def set_component(self, component: str):
+    def set_tid(self):
         """
-        Set the component of the creator of this entry.
-
-        Args:
-            component: The component name of the creator (processor or reader).
-
-        Returns:
-
+        Set the entry id with the auto-increment manager
         """
-        self.__component = component
-
-    def set_tid(self, tid: str):
-        """
-        Set the entry id.
-
-        To avoid duplicate, we use the full module path and class name as the
-        prefix of ``tid``. A pack-level unique ``tid`` is automatically
-        assigned when you add an entry to a pack, so users are **not** suggested
-        to set ``tid`` directly.
-        """
-        self._tid = f"{get_full_module_name(self)}.{tid}"
+        # self._tid = f"{get_full_module_name(self)}.{tid}"
+        self._tid = self.pack.get_next_id()
 
     @property
     def pack(self) -> ContainerType:
@@ -102,7 +89,7 @@ class Entry(Generic[ContainerType]):
 
         """
         for field_name, field_value in kwargs.items():
-            # TODO: This is wrong, absense of attribute is treated the same as
+            # TODO: This is wrong, absence of attribute is treated the same as
             #  the attribute being None. We need to really identify
             #  whether the field exists to disallow users adding unknown fields.
             # if not hasattr(self, field_name):
@@ -111,6 +98,7 @@ class Entry(Generic[ContainerType]):
             #         f"has no attribute {field_name}"
             #     )
             setattr(self, field_name, field_value)
+            self.__pack.current_component()
             self.__modified_fields.add(field_name)
 
     def get_field(self, field_name):

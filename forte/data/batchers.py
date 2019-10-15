@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import (
-    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic
-)
+    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic,
+    Iterator)
 
 from texar.torch import HParams
 
@@ -65,41 +65,47 @@ class ProcessingBatcher(Generic[PackType]):
         """
         raise NotImplementedError
 
+    def flush(self) -> Iterator[Dict]:
+        """
+        Flush the remaining data.
+        Returns:
+
+        """
+        if self.current_batch:
+            remaining = {}
+            remaining.update(self.current_batch)
+            yield remaining
+            self.current_batch = {}
+            self.current_batch_sources = []
+
     def get_batch(
             self,
             input_pack: PackType,
             context_type: Type[Annotation],
             requests: DataRequest,
-    ):
+    ) -> Iterator[Dict]:
         """
         Returns an iterator of data batches.
         """
-        if input_pack.is_poison():
-            # No more packs, flush the remaining instances.
-            if self.current_batch:
+        # cache the new pack and generate batches
+        self.data_pack_pool.append(input_pack)
+
+        for (data_batch, instance_num) in self._get_data_batch(
+                input_pack, context_type, requests):
+            self.current_batch = merge_batches(
+                [self.current_batch, data_batch]
+            )
+            self.current_batch_sources.append(instance_num)
+
+            # Yield a batch on two conditions.
+            # 1. If we do not want to have batches to cross_pack, we should
+            # yield since this pack is exhausted.
+            # 2. We could also yield when the batcher condition is met:
+            # i.e. ``_should_yield()`` is True.
+            if not self.cross_pack or self._should_yield():
                 yield self.current_batch
                 self.current_batch = {}
                 self.current_batch_sources = []
-        else:
-            # cache the new pack and generate batches
-            self.data_pack_pool.append(input_pack)
-
-            for (data_batch, instance_num) in self._get_data_batch(
-                    input_pack, context_type, requests):
-                self.current_batch = merge_batches(
-                    [self.current_batch, data_batch]
-                )
-                self.current_batch_sources.append(instance_num)
-
-                # Yield a batch on two conditions.
-                # 1. If we do not want to have batches to cross_pack, we should
-                # yield since this pack is exhausted.
-                # 2. We could also yield when the batcher condition is met:
-                # i.e. ``_should_yield()`` is True.
-                if not self.cross_pack or self._should_yield():
-                    yield self.current_batch
-                    self.current_batch = {}
-                    self.current_batch_sources = []
 
     def _get_data_batch(
             self,

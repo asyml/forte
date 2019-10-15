@@ -6,7 +6,6 @@ import yaml
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.data_pack import DataPack
 from forte.data.base_pack import PackType
 from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
@@ -21,12 +20,28 @@ __all__ = [
 
 
 class ProcessJob:
-    def __init__(self, step_num: int, pack: PackType):
-        self.step_num = step_num
-        self.pack = pack
+    def __init__(self, step_num: int, pack: Optional[PackType],
+                 is_poison: bool):
+        self.__step_num: int = step_num
+        self.__pack: Optional[PackType] = pack
+        self.__is_poison: bool = is_poison
 
     def increment(self):
-        self.step_num += 1
+        self.__step_num += 1
+
+    @property
+    def step_num(self) -> int:
+        return self.__step_num
+
+    @property
+    def pack(self) -> PackType:
+        if self.__pack is None:
+            raise ValueError("This job do not have a valid pack.")
+        return self.__pack
+
+    @property
+    def is_poison(self) -> bool:
+        return self.__is_poison
 
 
 class ProcessBuffer:
@@ -52,10 +67,10 @@ class ProcessBuffer:
                 raise StopIteration
             try:
                 job_pack = next(self.__data_iter)
-                return ProcessJob(0, job_pack)
+                return ProcessJob(0, job_pack, False)
             except StopIteration:
                 self.__data_exhausted = True
-                return ProcessJob(0, DataPack.make_poison())
+                return ProcessJob(0, None, True)
         else:
             return self.__buffer.pop()
 
@@ -79,6 +94,16 @@ class ProcessBuffer:
             return False
 
 
+class ComponentManager:
+    """
+    A pipeline level manager that manages the component information, such as
+    creation components and modification records.
+    """
+    # TODO: record component of current process externally instead of internally.
+    def __init__(self):
+        pass
+
+
 class BasePipeline(Generic[PackType]):
     """
         This controls the main inference flow of the system. A pipeline is
@@ -95,7 +120,7 @@ class BasePipeline(Generic[PackType]):
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
 
-        self.__working_component: str
+        # self.__working_component: str
 
         self._ontology = base_ontology
 
@@ -259,21 +284,21 @@ class BasePipeline(Generic[PackType]):
             yield from data_iter
         else:
             for job in buf:
-                if not job.pack.is_poison():
+                if not job.is_poison:
                     s = self._selectors[job.step_num]
                     for c_pack in s.select(job.pack):
                         self._processors[job.step_num].process(c_pack)
+
                 else:
                     # Pass the poison pack to the processor, so they know this
                     # is ending.
-                    self._processors[job.step_num].process(job.pack)
+                    self._processors[job.step_num].flush()
 
                 # Put the job back to the process queue, if not success, that
                 # means this job is done processing.
                 if not buf.queue_process(job):
-                    done_pack: PackType = job.pack
-                    if not done_pack.is_poison():
-                        yield done_pack
+                    if not job.is_poison:
+                        yield job.pack
 
             # # Keep a list of packs and only release it when all processors
             # # are done with them.

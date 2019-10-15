@@ -102,17 +102,6 @@ class DataPack(BasePack[Entry, Link, Group]):
     def get_span_text(self, span: Span):
         return self._text[span.begin: span.end]
 
-    @staticmethod
-    def make_poison():
-        """
-            A poison is an object that used denote the end of a data stream.
-            Internally, we use a special poison pack object to indicate there
-            is no more data to consume by downstream.
-        """
-        pack = DataPack('__poison__')
-        pack.set_as_poison()
-        return pack
-
     def set_text(self,
                  text: str,
                  replace_func: Optional[
@@ -327,6 +316,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         if add_new:
             # add the entry to the target entry list
             entry.set_tid(str(self.internal_metas[entry.__class__].id_counter))
+
             entry.set_component(self._owner_component)
 
             if isinstance(target, list):
@@ -385,27 +375,27 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.index.turn_group_index_switch(on=False)
         self.index.deactivate_coverage_index()
 
-    def record_fields(self, fields: List[str], entry_type: Type[EntryType],
-                      component: str):
-        """Record in the internal meta that the ``entry_type`` entires generated
-        by ``component`` have ``fields``.
-
-        If ``component`` is "_ALL_", we will record the ``fields`` for all
-        entries of the type ``entry_type`` regardless of their component in
-        the internal meta.
-        """
-        fields.append("tid")
-        if issubclass(entry_type, Annotation):
-            fields.append("span")
-        internal_meta = self.internal_metas[entry_type]
-
-        if component == "_ALL_":
-            for field_set in internal_meta.fields_created.values():
-                field_set.update(fields)
-        else:
-            if internal_meta.default_component is None:
-                internal_meta.default_component = component
-            internal_meta.fields_created[component].update(fields)
+    # def record_fields(self, fields: List[str], entry_type: Type[EntryType],
+    #                   component: str):
+    #     """Record in the internal meta that the ``entry_type`` entires generated
+    #     by ``component`` have ``fields``.
+    #
+    #     If ``component`` is "_ALL_", we will record the ``fields`` for all
+    #     entries of the type ``entry_type`` regardless of their component in
+    #     the internal meta.
+    #     """
+    #     fields.append("tid")
+    #     if issubclass(entry_type, Annotation):
+    #         fields.append("span")
+    #     internal_meta = self.internal_metas[entry_type]
+    #
+    #     if component == "_ALL_":
+    #         for field_set in internal_meta.fields_created.values():
+    #             field_set.update(fields)
+    #     else:
+    #         if internal_meta.default_component is None:
+    #             internal_meta.default_component = component
+    #         internal_meta.fields_created[component].update(fields)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
@@ -439,7 +429,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             context_type (str): The granularity of the data context, which
                 could be any ``Annotation`` type.
-            requests (dict): The entry types and fields required.
+            request (dict): The entry types and fields required.
                 The keys of the requests dict are the required entry types
                 and the value should be either:
 
@@ -461,7 +451,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 Note that for all annotation types, `"text"` and `"span"`
                 fields are returned by default; for all link types, `"child"`
                 and `"parent"` fields are returned by default.
-            offset (int): Will skip the first `offset` instances and generate
+            skip_k (int): Will skip the first `skip_k` instances and generate
                 data from the `offset` + 1 th instance.
 
         Returns:
