@@ -97,7 +97,7 @@ class Annotation(Entry):
         return self.pack.get_span_text(self.span)
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 
@@ -122,8 +122,8 @@ class Link(BaseLink):
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
-        self._parent: Optional[str] = None
-        self._child: Optional[str] = None
+        self._parent: Optional[int] = None
+        self._child: Optional[int] = None
         super().__init__(pack, parent, child)
 
     # TODO: Can we get better type hint here?
@@ -231,10 +231,10 @@ class SubEntry(Entry[PackType]):
         entry_id: The tid of the entry in the sub pack.
     """
 
-    def __init__(self, pack: PackType, pack_index: int, entry_id: str):
+    def __init__(self, pack: PackType, pack_index: int, entry_id: int):
         super().__init__(pack)
         self._pack_index: int = pack_index
-        self._entry_id: str = entry_id
+        self._entry_id: int = entry_id
 
     @property
     def pack_index(self):
@@ -254,7 +254,7 @@ class SubEntry(Entry[PackType]):
                 ) == (type(other), other.pack_index, other.entry)
 
     @property
-    def index_key(self) -> Tuple[int, str]:
+    def index_key(self) -> Tuple[int, int]:
         return self._pack_index, self._entry_id
 
 
@@ -287,8 +287,8 @@ class MultiPackLink(BaseLink):
         """
         super().__init__(pack, parent, child)
 
-        self._parent: Optional[Tuple[int, str]] = None
-        self._child: Optional[Tuple[int, str]] = None
+        self._parent: Optional[Tuple[int, int]] = None
+        self._child: Optional[Tuple[int, int]] = None
 
         if parent is not None:
             self.set_parent(parent)
@@ -296,13 +296,13 @@ class MultiPackLink(BaseLink):
             self.set_child(child)
 
     @property
-    def parent(self) -> Tuple[int, str]:
+    def parent(self) -> Tuple[int, int]:
         if self._parent is None:
             raise IncompleteEntryError("Parent is not set for this link.")
         return self._parent
 
     @property
-    def child(self) -> Tuple[int, str]:
+    def child(self) -> Tuple[int, int]:
         if self._child is None:
             raise IncompleteEntryError("Child is not set for this link.")
         return self._child

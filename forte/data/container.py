@@ -60,7 +60,7 @@ class EntryContainer(Generic[E, L, G]):
         """
         raise NotImplementedError
 
-    def get_entry(self, tid: str):
+    def get_entry(self, tid: int):
         raise NotImplementedError
 
     def get_span_text(self, span: Span):

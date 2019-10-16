@@ -240,7 +240,7 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
         if entry not in target:
             # add the entry to the target entry list
             entry_cls = entry.__class__
-            entry.set_tid(str(self.internal_metas[entry_cls].id_counter))
+            entry.set_tid()
             target.append(entry)
 
             self.internal_metas[entry_cls].id_counter += 1
@@ -280,12 +280,12 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
 
         # add the entry to the target entry list
         name = entry.__class__
-        entry.set_tid(str(self.internal_metas[name].id_counter))
+        entry.set_tid()
         target.append(entry)
         self.internal_metas[name].id_counter += 1
         return entry
 
-    def get_entry(self, tid: str) -> EntryType:
+    def get_entry(self, tid: int) -> EntryType:
         """
         Look up the entry_index with key ``tid``.
         """

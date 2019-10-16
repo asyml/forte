@@ -180,7 +180,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         for i in range(len(output_dict["Token"]["tid"])):
             # an instance
             for j in range(len(output_dict["Token"]["tid"][i])):
-                tid = output_dict["Token"]["tid"][i][j]
+                tid: int = output_dict["Token"]["tid"][i][j]  # type: ignore
 
                 orig_token: conll.Token = data_pack.get_entry(  # type: ignore
                     tid)

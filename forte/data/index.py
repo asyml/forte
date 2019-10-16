@@ -25,15 +25,22 @@ class BaseIndex(Generic[EntryType]):
     """
 
     def __init__(self):
-        # basic indexes (switches always on)
-        self.entry_index: Dict[str, EntryType] = dict()
-        self.type_index: DefaultDict[Type, Set[str]] = defaultdict(set)
-        self.component_index: DefaultDict[str, Set[str]] = defaultdict(set)
 
-        # other indexes (built when first looked up)
-        self._group_index = defaultdict(set)
+        # List of basic indexes (switches always on).
+
+        # Mapping from entry's tid to entry type.
+        self.entry_index: Dict[int, EntryType] = dict()
+
+        # Mapping from entry's type to entries' id.
+        self.type_index: DefaultDict[Type, Set[int]] = defaultdict(set)
+
+        # self.component_index: DefaultDict[str, Set[str]] = defaultdict(set)
+
+        # List of other indexes (built when first looked up).
+        self._group_index: DefaultDict[Hashable, Set[int, int]] = defaultdict(set)
         self._link_index: Dict[str, DefaultDict[Hashable, set]] = dict()
-        # indexing switches
+
+        # Indexing switches.
         self._group_index_switch = False
         self._link_index_switch = False
 
@@ -55,7 +62,7 @@ class BaseIndex(Generic[EntryType]):
         for entry in entries:
             self.entry_index[entry.tid] = entry
             self.type_index[type(entry)].add(entry.tid)
-            self.component_index[entry.component].add(entry.tid)
+            # self.component_index[entry.component].add(entry.tid)
 
     @property
     def link_index_on(self):
@@ -99,13 +106,13 @@ class BaseIndex(Generic[EntryType]):
         self._group_index = defaultdict(set)
         self.update_group_index(groups)
 
-    def link_index(self, tid: str, as_parent: bool = True) -> Set[str]:
+    def link_index(self, tid: int, as_parent: bool = True) -> Set[int]:
         """
         Look up the link_index with key ``tid``. If the link index is not built,
         this will throw a ``PackIndexError``.
 
         Args:
-            tid (str): the tid of the entry being looked up.
+            tid (int): the tid of the entry being looked up.
             as_parent (bool): If `as_patent` is True, will look up
                 :attr:`link_index["parent_index"] and return the tids of links
                 whose parent is `tid`. Otherwise,  will look up
@@ -120,7 +127,7 @@ class BaseIndex(Generic[EntryType]):
         else:
             return self._link_index["child_index"][tid]
 
-    def group_index(self, tid: str) -> Set[str]:
+    def group_index(self, tid: int) -> Set[int]:
         """
         Look up the group_index with key `tid`. If the index is not built, this
         will raise a ``PackIndexError``

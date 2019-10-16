@@ -8,7 +8,6 @@ from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
 
 from forte.common.const import default_component
 from forte.data.container import ContainerType
-from forte.utils import get_full_module_name
 
 __all__ = [
     "Entry",
@@ -16,6 +15,7 @@ __all__ = [
     "BaseGroup",
     "LinkType",
     "GroupType",
+    "EntryType",
 ]
 
 
@@ -203,7 +203,7 @@ class BaseLink(Entry, ABC):
         return hash((type(self), self.get_parent(), self.get_child()))
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 
@@ -226,7 +226,7 @@ class BaseGroup(Entry, Generic[EntryType]):
         super().__init__(pack)
 
         # Store the group member's id.
-        self._members: Set[str] = set()
+        self._members: Set[int] = set()
         if members is not None:
             self.add_members(members)
 
@@ -309,7 +309,7 @@ class BaseGroup(Entry, Generic[EntryType]):
         return member_entries
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 
