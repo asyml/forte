@@ -2,6 +2,7 @@
 This defines some selector interface used as glue to combine
 DataPack/multiPack processors and Pipeline.
 """
+import re
 from typing import Generic, Iterator, TypeVar
 
 from forte.data import BasePack
@@ -36,13 +37,12 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
 
 
 class NameMatchSelector(SinglePackSelector):
-    """
+    r"""
     Select a DataPack from a MultiPack with specified name
     """
-
     def __init__(self, select_name: str):
         super().__init__()
-        assert self.select_name is not None
+        assert select_name is not None
         self.select_name: str = select_name
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
@@ -55,3 +55,46 @@ class NameMatchSelector(SinglePackSelector):
         if matches == 0:
             raise ValueError(f"pack name {self.select_name}"
                              f"not in the MultiPack")
+
+
+class RegexNameMatchSelector(SinglePackSelector):
+    r"""
+    Select a DataPack from a MultiPack using a regex.
+    """
+    def __init__(self, select_name: str):
+        super().__init__()
+        assert select_name is not None
+        self.select_name: str = select_name
+
+    def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
+        if len(m_pack.packs) == 0:
+            raise ValueError("Multi-pack is empty")
+
+        else:
+            for name, pack in m_pack.iter_packs():
+                if re.match(self.select_name, name):
+                    yield pack
+
+
+class FirstPackSelector(SinglePackSelector):
+    r"""Select the first entry from the multi-pack and yield it.
+    """
+
+    def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
+        if len(m_pack.packs) == 0:
+            raise ValueError(f"Multi-pack has no data packs.")
+
+        else:
+            yield m_pack.packs[0]
+
+
+class AllPackSelector(SinglePackSelector):
+    r"""Select all the packs from the multi-pack and yield them
+    """
+
+    def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
+        if len(m_pack.packs) == 0:
+            raise ValueError(f"Multi-pack has no data packs.")
+
+        else:
+            yield from m_pack.packs

@@ -36,12 +36,12 @@ class EmbeddingBasedIndexer(BaseIndexer):
         super().__init__()
         self._hparams = HParams(hparams=hparams,
                                 default_hparams=self.default_hparams())
-        self.meta_data = {}
+        self._meta_data: Dict[int, str] = {}
         res = faiss.StandardGpuResources()
         dim = self._hparams.dim
-        self.index = faiss.GpuIndexFlatIP(res, dim)
+        self._index = faiss.GpuIndexFlatIP(res, dim)
 
-    def default_hparams(self):
+    def default_hparams(self):  # pylint: disable=no-self-use
         return {
             "index_type": "GpuIndexFlatIP",
             "dim": 768
@@ -52,8 +52,8 @@ class EmbeddingBasedIndexer(BaseIndexer):
 
     def add(self, vectors, meta_data):
         # todo: manage the copying of tensors between CPU and GPU efficiently
-        self.index.add(vectors.cpu().numpy())
-        self.meta_data.update(meta_data)
+        self._index.add(vectors.cpu().numpy())
+        self._meta_data.update(meta_data)
 
     def embed(self):
         pass
@@ -71,8 +71,8 @@ class EmbeddingBasedIndexer(BaseIndexer):
         Returns:
 
         """
-        _, indices = self.index.search(query, k)
-        return [[(idx, self.meta_data[idx]) for idx in index]
+        _, indices = self._index.search(query, k)
+        return [[(idx, self._meta_data[idx]) for idx in index]
                 for index in indices]
 
     def save(self, path: str):
@@ -86,14 +86,14 @@ class EmbeddingBasedIndexer(BaseIndexer):
         """
         if os.path.exists(path):
             logging.warning("f{path} directory already exists. Index will be "
-                            "saved into an exisiting directory")
+                            "saved into an existing directory")
         else:
             os.makedirs(name=path)
 
-        cpu_index = faiss.index_gpu_to_cpu(self.index)
+        cpu_index = faiss.index_gpu_to_cpu(self._index)
         faiss.write_index(cpu_index, f"{path}/index.faiss")
         with open(f"{path}/index.meta_data", "wb") as f:
-            pickle.dump(self.meta_data, f)
+            pickle.dump(self._meta_data, f)
 
     def load(self, path: str):
         r"""Load the index and meta data from ``path`` directory.
@@ -109,10 +109,10 @@ class EmbeddingBasedIndexer(BaseIndexer):
         # todo: handle the transfer of model between GPU and CPU efficiently
         cpu_index = faiss.read_index(f"{path}/index.faiss")
         res = faiss.StandardGpuResources()
-        self.index = faiss.index_cpu_to_gpu(res, 0, cpu_index)
+        self._index = faiss.index_cpu_to_gpu(res, 0, cpu_index)
 
         with open(f"{path}/index.meta_data", "rb") as f:
-            self.meta_data = pickle.load(f)
+            self._meta_data = pickle.load(f)
 
 
 class BertBasedIndexer(BaseIndexer):
@@ -125,5 +125,3 @@ class BertBasedIndexer(BaseIndexer):
 
     def embed(self):
         pass
-
-

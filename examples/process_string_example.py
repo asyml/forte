@@ -24,7 +24,7 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
     pl.add_processor(NLTKWordTokenizer())
     pl.add_processor(NLTKPOSTagger())
 
-    """ner_configs = HParams(
+    ner_configs = HParams(
         {
             'storage_path': os.path.join(ner_model_dir, 'resources.pkl')
         },
@@ -32,7 +32,7 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
 
     ner_predictor = CoNLLNERPredictor()
 
-    pl.add_processor(ner_predictor, ner_configs)"""
+    pl.add_processor(ner_predictor, ner_configs)
 
     srl_configs = HParams(
         {
@@ -44,9 +44,10 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
 
     pl.initialize()
 
-    text = ["The plain green Norway spruce is displayed in the gallery's foyer. "
+    text = (
+        "The plain green Norway spruce is displayed in the gallery's foyer. "
         "Wentworth worked as an assistant to sculptor Henry Moore in the "
-        "late 1960s. His reputation as a sculptor grew in the 1980s."]
+        "late 1960s. His reputation as a sculptor grew in the 1980s.")
 
     pack = pl.process_one(text)
 
@@ -144,7 +145,6 @@ def main():
     stanford_nlp_example1('en', eng_text, output_config)
     stanford_nlp_example1('fr', fr_text, output_config)
 
-    print("Running SRL now...")
     string_processor_example(ner_dir, srl_dir)
 
 

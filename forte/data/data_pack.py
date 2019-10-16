@@ -61,7 +61,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
-        self.query: Query = None
+        self.query: np.array = None
 
         self.replace_back_operations: ReplaceOperationsType = []
         self.processed_original_spans: List[Tuple[Span, Span]] = []

@@ -136,7 +136,7 @@ class CoNLLNERTrainer(BaseTrainer):
         train_total = 0.0
 
         start_time = time.time()
-        self.model.run()
+        self.model.train()
 
         # Each time we will clear and reload the train_instances_cache
         instances = self.train_instances_cache

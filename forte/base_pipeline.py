@@ -8,7 +8,6 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.base_pack import PackType
-from forte.data.base_pack import BasePack
 from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
 from forte.data.selector import Selector, DummySelector
@@ -135,7 +134,7 @@ class BasePipeline(Generic[PackType]):
         raise NotImplementedError
 
     def initialize(self):
-        # self._reader.initialize()
+        self._reader.initialize(resource=self.resource, configs=None)
         self.initialize_processors()
 
     def set_ontology(self, ontology):
@@ -149,8 +148,10 @@ class BasePipeline(Generic[PackType]):
             processor.set_ontology(self._ontology)
             processor.set_input_info()
             processor.set_output_info()
-        # Indicate this as the last processor.
-        self.processors[-1].set_as_last()
+
+        if len(self.processors) > 0:
+            # Indicate this as the last processor.
+            self.processors[-1].set_as_last()
 
     def set_reader(self, reader: BaseReader):
         # reader.set_ontology(self._ontology)
@@ -164,12 +165,9 @@ class BasePipeline(Generic[PackType]):
     def processor_configs(self):
         return self._configs
 
-    def add_processor(
-            self,
-            processor: BaseProcessor,
-            config: Optional[HParams] = None,
-            selector: Optional[Selector] = None,
-    ):
+    def add_processor(self, processor: BaseProcessor,
+                      config: Optional[HParams] = None,
+                      selector: Optional[Selector] = None):
         self._processors_index[processor.component_name] = len(self.processors)
 
         self._processors.append(processor)
@@ -177,6 +175,8 @@ class BasePipeline(Generic[PackType]):
 
         if selector is None:
             self._selectors.append(DummySelector())
+        else:
+            self._selectors.append(selector)
 
     def process(self, *args, **kwargs) -> PackType:
         """

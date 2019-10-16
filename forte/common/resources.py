@@ -59,9 +59,6 @@ class Resources:
     def get(self, key: str):
         return self.resources.get(key)
 
-    def get(self, key: str):
-        return self.resources[key]
-
     def update(self, **kwargs):
         self.resources.update(**kwargs)
 

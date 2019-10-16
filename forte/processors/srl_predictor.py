@@ -2,9 +2,9 @@ import logging
 import os
 from typing import Dict, List, Tuple
 
+import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
-import torch
 
 from forte.data.base import Span
 from forte.data.ontology.ontonotes_ontology import PredicateMention, \
@@ -57,6 +57,8 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def initialize(self,
                    resource: Resources,  # pylint: disable=unused-argument
                    configs: HParams):
+
+        super().initialize(resource, configs.batcher)
 
         model_dir = configs.storage_path
 

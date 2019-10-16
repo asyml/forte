@@ -1,6 +1,7 @@
 import copy
 import logging
-from typing import (Dict, List, Union, Iterator, Optional, Type, Any, Tuple)
+from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
+                    Tuple)
 
 from forte.common.types import EntryType
 from forte.data.base_pack import BaseMeta, BasePack
@@ -86,7 +87,7 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             )
 
         self._packs.append(pack)
-        pid = len(self._pack_names) - 1
+        pid = len(self._packs) - 1
 
         if pack_name is None:
             pack_name = f'{self.__default_pack_prefix}_{pid}'
@@ -97,6 +98,10 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
     @property
     def packs(self) -> List[DataPack]:
         return self._packs
+
+    @property
+    def pack_names(self) -> Set[str]:
+        return set(self._pack_names)
 
     def update_pack(self, named_packs: Dict[str, DataPack]):
         for pack_name, pack in named_packs.items():
