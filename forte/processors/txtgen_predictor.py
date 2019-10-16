@@ -14,7 +14,6 @@ from forte.data.batchers import (
     FixedSizeMultiPackProcessingBatcher
 )
 from forte.data.ontology import base_ontology
-from forte.models.gpt import processor
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import \
     MultiPackBatchProcessor
@@ -98,10 +97,10 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         self.model.to(device=self.device)
 
         resource.update(model=self.model)
-        self.word_processor = processor.get_encoder(
-            self.model.pretrained_model_dir)
+        self.word_processor = tx.data.GPT2Tokenizer(
+            pretrained_model_name=configs.pretrained_model_name)
 
-        end_token = self.word_processor.encoder["<|endoftext|>"]
+        end_token = self.word_processor.map_token_to_id("<|endoftext|>")
 
         def _get_helper(start_tokens):
             if self.top_p:
@@ -157,9 +156,10 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         complete_sentences = []
         for i in range(instance_num):
             si = sample_id[i][context_length[i]:]
-            sentences.append(self.word_processor.decode(si.tolist()))
+            sentences.append(self.word_processor.map_id_to_text(si.tolist()))
             si = sample_id[i]
-            complete_sentences.append(self.word_processor.decode(si.tolist()))
+            complete_sentences.append(
+                self.word_processor.map_id_to_text(si.tolist()))
         preds["output_sents"] += complete_sentences
         return preds
 
@@ -213,7 +213,8 @@ class TxtgenPredictor(MultiPackBatchProcessor):
 
         """
         batch_size = len(data)
-        batch_tokens = [self.word_processor.encode(sent) for sent in data]
+        batch_tokens = [self.word_processor.map_text_to_token(sent)
+                        for sent in data]
 
         batch_length = max([len(d) for d in batch_tokens])
         wid_inputs = np.empty([batch_size, batch_length], dtype=np.int64)
