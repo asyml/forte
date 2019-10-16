@@ -44,6 +44,7 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         self.define_context()
 
     def _define_input_info(self) -> DataRequest:
+        # pylint: disable=no-self-use
         return {}
 
     def define_context(self):
