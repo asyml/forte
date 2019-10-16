@@ -1,16 +1,16 @@
-from collections import Counter
 import logging
+from collections import Counter
+
 import numpy as np
-
 import torch
-
 from texar.torch import HParams
+
 from forte.common import Resources
 from forte.data import DataPack
 from forte.data.ontology import conll03_ontology as conll
-from forte.processors import ProcessInfo, Alphabet
-from forte.processors import VocabularyProcessor
 from forte.models.ner.utils import load_glove_embedding, normalize_digit_word
+from forte.processors import Alphabet
+from forte.processors import VocabularyProcessor
 
 __all__ = [
     "CoNLL03VocabularyProcessor",
@@ -119,7 +119,8 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         word_embedding_table = construct_word_embedding_table(embedding_dict,
                                                               word_alphabet)
 
-        logging.info(f'word embedding table size:{word_embedding_table.size()}')
+        logging.info('word embedding table size:%d}',
+                     word_embedding_table.size())
 
         # Adding vocabulary information to resource.
         resource.update(

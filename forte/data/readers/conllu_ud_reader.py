@@ -22,17 +22,6 @@ class ConllUDReader(PackReader):
     2.4 dataset.
     """
 
-    def define_output_info(self):
-        # pylint: disable=no-self-use
-        return {
-            Document: [],
-            Sentence: [],
-            DependencyToken: ["universal_pos_tag", "features", "lemma",
-                              "language_pos_tag", "misc"],
-            # primary / enhanced dependencies
-            UniversalDependency: ["type"]
-        }
-
     def _cache_key_function(self, data_pack: Any) -> str:
         # pylint: disable=no-self-use
         if data_pack.meta.doc_id is None:

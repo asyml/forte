@@ -11,11 +11,11 @@ from texar.torch.hyperparams import HParams
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
+from forte.common.types import DataRequest
 from forte.data.datasets.conll import conll_utils
 from forte.data.ontology import conll03_ontology as conll, Annotation
 from forte.models.ner import utils
-from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
 logger = logging.getLogger(__name__)
@@ -53,8 +53,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
     def define_context(self) -> Type[Annotation]:
         return self._ontology.Sentence
 
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
             self._ontology.Token: [],
             self._ontology.Sentence: [],
         }

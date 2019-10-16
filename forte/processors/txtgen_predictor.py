@@ -15,7 +15,7 @@ from forte.data.batchers import (
 )
 from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
-from forte.processors.base import ProcessInfo
+from forte.data.data_pack import DataRequest
 from forte.processors.base.batch_processor import \
     MultiPackBatchProcessor
 
@@ -43,11 +43,8 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         self.device = None
         self.define_context()
 
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self.ontology.Sentence: []
-        }
-        return output_info
+    def _define_input_info(self) -> DataRequest:
+        return {}
 
     def define_context(self):
         # pylint: disable=no-self-use
@@ -230,8 +227,9 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             'input_pack_name': None,
             'output_pack_name': None,
             'selector': {
-                'type': 'nlp.forte.data.selector.DummySelector',
+                'type': 'forte.data.selector.DummySelector',
                 'args': None,
                 'kwargs': {}
-            }
+            },
+            'batch_size': 10,
         }

@@ -5,7 +5,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import (Iterator, Optional, Dict, Type, List, Union, Any)
+from typing import (Iterator, Optional, Any)
 
 import jsonpickle
 
@@ -15,7 +15,6 @@ from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import base_ontology
-from forte.data.ontology.core import Entry
 from forte.pipeline_component import PipeComponent
 from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
@@ -66,9 +65,6 @@ class BaseReader(PipeComponent[PackType], ABC):
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
 
-        self.output_info: Dict[
-            Type[Entry], Union[List, Dict]] = self.define_output_info()
-
     @property
     def pack_type(self):
         raise NotImplementedError
@@ -78,11 +74,6 @@ class BaseReader(PipeComponent[PackType], ABC):
 
     def set_ontology(self, ontology):
         self._ontology = ontology
-        self.define_output_info()
-
-    @abstractmethod
-    def define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
-        return {}
 
     # TODO: This should not be in the reader class.
     @staticmethod

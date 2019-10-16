@@ -23,12 +23,6 @@ class StringReader(PackReader):
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-        self.define_output_info()
-
-    def define_output_info(self):
-        return {
-            self._ontology.Document: [],
-        }
 
     # pylint: disable=no-self-use,unused-argument
     def _cache_key_function(self, collection) -> str:

@@ -22,14 +22,6 @@ class ProdigyReader(PackReader):
             ``iter()`` returns a list.
     """
 
-    def define_output_info(self):
-        # pylint: disable=no-self-use
-        return {
-            Document: [],
-            Token: [],
-            EntityMention: ["ner_type"]
-        }
-
     # pylint: disable=no-self-use
     def _cache_key_function(self, data: dict) -> str:
         return data['meta']['id']

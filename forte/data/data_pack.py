@@ -6,7 +6,7 @@ from typing import (
 import numpy as np
 from sortedcontainers import SortedList
 
-from forte.common.types import EntryType, ReplaceOperationsType
+from forte.common.types import EntryType, ReplaceOperationsType, DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
@@ -19,10 +19,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "Meta",
     "DataPack",
-    "DataRequest",
 ]
-
-DataRequest = Dict[Type[Entry], Union[Dict, List]]
 
 
 class Meta(BaseMeta):

@@ -8,11 +8,12 @@ from typing import Dict, Optional, Type
 
 import numpy as np
 
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
+from forte.common.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology import relation_ontology, Annotation
 from forte.data.ontology.relation_ontology import EntityMention
-from forte.processors.base import BatchProcessor, ProcessInfo
+from forte.processors.base import BatchProcessor
 
 __all__ = [
     "DummyRelationExtractor",
@@ -41,8 +42,8 @@ class DummyRelationExtractor(BatchProcessor):
     def define_context(self) -> Type[Annotation]:
         return self._ontology.Sentence
 
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
             self._ontology.Token: [],
             self._ontology.EntityMention: {
                 "fields": ["ner_type", "tid"]

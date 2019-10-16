@@ -8,7 +8,6 @@ from texar.torch import HParams
 
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
-from forte.data.data_pack import DataRequest
 from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
 from forte.process_manager import ProcessManager
@@ -17,10 +16,7 @@ from forte.pipeline_component import PipeComponent
 
 __all__ = [
     "BaseProcessor",
-    "ProcessInfo",
 ]
-
-ProcessInfo = DataRequest
 
 process_manager = ProcessManager()
 

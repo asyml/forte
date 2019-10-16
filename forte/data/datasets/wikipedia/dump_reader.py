@@ -46,18 +46,6 @@ class WikiDumpReader(PackReader):
     def _cache_key_function(self, collection: Any) -> str:
         pass
 
-    def define_output_info(self):
-        # pylint: disable=no-self-use
-        return {
-            wiki_ontology.WikiPage: ["body"],
-            wiki_ontology.WikiBody: ["introduction", "sections"],
-            wiki_ontology.WikiSection: [],
-            wiki_ontology.WikiAnchor: [],
-            wiki_ontology.WikiAnchorLink: [],
-            wiki_ontology.WikiInfoBox: ['text_entries', 'entity_entries'],
-            wiki_ontology.WikiCategories: ['categories'],
-        }
-
     def _collect(  # type: ignore
             self,
             wiki_dump_file: str,

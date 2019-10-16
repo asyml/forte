@@ -6,7 +6,8 @@ from typing import (
 from texar.torch import HParams
 
 from forte.data.base_pack import PackType
-from forte.data import DataPack, MultiPack, DataRequest
+from forte.data import DataPack, MultiPack
+from forte.common.types import DataRequest
 from forte.data.io_utils import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation
 
@@ -133,7 +134,6 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         super().__init__(cross_pack)
         # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
-
         default_config = HParams(None, self.default_hparams())
         self.batch_size = default_config.batch_size
 
@@ -256,5 +256,6 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
     @staticmethod
     def default_hparams() -> Dict:
         return {
+            'batch_size': 10,
             'input_pack_name': 'source',
         }

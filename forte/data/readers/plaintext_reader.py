@@ -39,11 +39,6 @@ class PlainTextReader(PackReader):
     def _cache_key_function(self, text_file: str) -> str:
         return os.path.basename(text_file)
 
-    def define_output_info(self):
-        return {
-            self._ontology.Document: [],
-        }
-
     # pylint: disable=no-self-use,unused-argument
     def text_replace_operation(self, text: str):
         return []
