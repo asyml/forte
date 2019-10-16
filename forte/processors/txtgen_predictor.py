@@ -15,7 +15,7 @@ from forte.data.batchers import (
 )
 from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
-from forte.data.data_pack import DataRequest
+from forte.common.types import DataRequest
 from forte.processors.base.batch_processor import \
     MultiPackBatchProcessor
 

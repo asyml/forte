@@ -4,13 +4,13 @@ from typing import Dict, Optional, Type
 from texar.torch import HParams
 
 from forte.common import Resources
+from forte.common.types import DataRequest
 from forte.data.base_pack import PackType
 from forte.data import DataPack, MultiPack
 from forte.data import slice_batch
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology.top import Annotation
 from forte.processors.base.base_processor import BaseProcessor
-from forte.data.data_pack import DataRequest
 
 __all__ = [
     "BaseBatchProcessor",
