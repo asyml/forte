@@ -83,6 +83,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def define_context(self):
         self.context_type = base_ontology.Sentence
 
+    # pylint: disable=no-self-use
     def _define_input_info(self) -> ProcessInfo:
         input_info: ProcessInfo = {
             base_ontology.Token: []

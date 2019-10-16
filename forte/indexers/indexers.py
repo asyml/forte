@@ -4,9 +4,9 @@ import pickle
 from abc import ABC
 from typing import Optional, Dict, Union
 
-import faiss
-
 from texar.torch import HParams
+
+import faiss
 
 __all__ = [
     "ElasticSearchIndexer",
