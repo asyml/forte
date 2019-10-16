@@ -86,7 +86,7 @@ class WikiDumpReader(PackReader):
             element = (wiki_id, title, redirect, revision_id, links, text)
             yield element
 
-    def parse_pack(self, collection: Tuple) -> DataPack:
+    def _parse_pack(self, collection: Tuple) -> Iterator[DataPack]:
         pack = DataPack()
 
         wiki_id, title, redirect, revision_id, links, text = collection
@@ -96,7 +96,7 @@ class WikiDumpReader(PackReader):
 
         print(wiki_id, title, redirect, revision_id, links, text)
 
-        return pack
+        yield pack
 
     def process_page_content(self):
         pass

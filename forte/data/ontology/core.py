@@ -8,6 +8,7 @@ from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
 
 from forte.common.const import default_component
 from forte.data.container import ContainerType
+from forte.process_manager import ProcessManager
 
 __all__ = [
     "Entry",
@@ -17,6 +18,8 @@ __all__ = [
     "GroupType",
     "EntryType",
 ]
+
+process_manager = ProcessManager()
 
 
 class Entry(Generic[ContainerType]):
@@ -98,8 +101,7 @@ class Entry(Generic[ContainerType]):
             #         f"has no attribute {field_name}"
             #     )
             setattr(self, field_name, field_value)
-            self.__pack.current_component()
-            self.__modified_fields.add(field_name)
+            self.__pack.add_field_record(self.tid, field_name)
 
     def get_field(self, field_name):
         return getattr(self, field_name)

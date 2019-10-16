@@ -64,7 +64,7 @@ class OntonotesReader(PackReader):
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 
-    def parse_pack(self, file_path: str) -> DataPack:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
 
         with open(file_path, encoding="utf8") as doc:
@@ -225,7 +225,7 @@ class OntonotesReader(PackReader):
             pack.set_meta(**kwargs_i)
             pack.set_text(text, replace_func=self.text_replace_operation)
 
-        return pack
+        yield pack
 
     def _process_entity_annotations(
             self,

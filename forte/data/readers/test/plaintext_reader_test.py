@@ -25,7 +25,7 @@ class PlainTextReaderTest(unittest.TestCase):
 
     def test_reader_no_replace_test(self):
         # Read with no replacements
-        pack = PlainTextReader().parse_pack(self.file_path)
+        pack = list(PlainTextReader().parse_pack(self.file_path))[0]
         self.assertEqual(pack.text, self.orig_text)
 
     @data(
@@ -43,7 +43,7 @@ class PlainTextReaderTest(unittest.TestCase):
         span_ops, output = value
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
-        pack = reader.parse_pack(self.file_path)
+        pack = list(reader.parse_pack(self.file_path))[0]
         self.assertEqual(pack.text, output)
 
         orig_text_from_pack = pack.get_original_text()
@@ -82,7 +82,7 @@ class PlainTextReaderTest(unittest.TestCase):
         input_span, expected_span, mode = value
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
-        pack = reader.parse_pack(self.file_path)
+        pack = list(reader.parse_pack(self.file_path))[0]
         self.assertEqual(pack.text, output)
 
         output_span = pack.get_original_span(input_span, mode)
@@ -105,7 +105,7 @@ class PlainTextReaderTest(unittest.TestCase):
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
         try:
-            reader.parse_pack(self.file_path)
+            list(reader.parse_pack(self.file_path))[0]
         except ValueError:
             pass
         except Exception:

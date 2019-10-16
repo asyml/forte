@@ -86,16 +86,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
         }
         return input_info
 
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.PredicateMention:
-                ["pred_type", "span"],
-            self._ontology.PredicateArgument: ["span"],
-            self._ontology.PredicateLink:
-                ["parent", "child", "arg_type"]
-        }
-        return output_info
-
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
             sentence.tolist() for sentence in data_batch["Token"]["text"]]

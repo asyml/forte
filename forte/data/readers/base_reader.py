@@ -16,8 +16,8 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import base_ontology
 from forte.data.ontology.core import Entry
-from forte.data.ontology.onto_utils import record_fields
 from forte.pipeline_component import PipeComponent
+from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
 
 __all__ = [
@@ -27,6 +27,8 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+process_manager = ProcessManager()
 
 
 class BaseReader(PipeComponent[PackType], ABC):
@@ -115,10 +117,26 @@ class BaseReader(PipeComponent[PackType], ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def parse_pack(self, collection: Any) -> PackType:
+    def parse_pack(self, collection: Any) -> Iterator[PackType]:
         """
-        Gives an iterator of Packs parsed from a collection
+        Calls the _parse_pack method to create packs from the collection.
+        This internally setup the component meta data. Users should implement
+        the :meth: ``_parse_pack`` method.
+
+        Args:
+            collection:
+
+        Returns:
+
+        """
+        process_manager.set_current_component(self.component_name)
+        yield from self._parse_pack(collection)
+
+    @abstractmethod
+    def _parse_pack(self, collection: Any) -> Iterator[PackType]:
+        """
+        Gives an iterator of Packs parsed from a collection. Readers should
+        implement this class to populate the class input.
 
         Args:
             collection: Object that can be parsed into a Pack
@@ -177,19 +195,21 @@ class BaseReader(PipeComponent[PackType], ABC):
                         self._get_cache_location(collection)):
                     yield pack
             else:
-                pack = self.parse_pack(collection)
+                not_first = False
+                for pack in self.parse_pack(collection):
+                    # write to the cache if _cache_directory specified
 
-                # write to the cache if _cache_directory specified
-                if self._cache_directory is not None:
-                    self.cache_data(self._cache_directory, collection, pack)
+                    if self._cache_directory is not None:
+                        self.cache_data(
+                            self._cache_directory, collection, pack, not_first)
 
-                record_fields(self.output_info, self.component_name, pack)
-                if not isinstance(pack, self.pack_type):
-                    raise ValueError(
-                        f"No Pack object read from the given "
-                        f"collection {collection}, returned {type(pack)}."
-                    )
-                yield pack
+                    if not isinstance(pack, self.pack_type):
+                        raise ValueError(
+                            f"No Pack object read from the given "
+                            f"collection {collection}, returned {type(pack)}."
+                        )
+                    not_first = True
+                    yield pack
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:
         """
@@ -211,7 +231,8 @@ class BaseReader(PipeComponent[PackType], ABC):
     def cache_data(self,
                    cache_directory: Path,
                    collection: Any,
-                   pack: PackType):
+                   pack: PackType,
+                   append: bool):
         """
         Specify the path to the cache directory.
 
@@ -229,6 +250,7 @@ class BaseReader(PipeComponent[PackType], ABC):
             collection: The collection to be read as a DataPack, this collection
             can be used here to create the cache key.
             pack: The data pack to be cached.
+            append: Whether to allow appending to the cache.
 
         Returns:
 
@@ -240,14 +262,14 @@ class BaseReader(PipeComponent[PackType], ABC):
         )
 
         logger.info("Caching pack to %s", cache_filename)
-        if self.append_to_cache:
+        if append:
             with open(cache_filename, 'a') as cache:
                 cache.write(self.serialize_instance(pack) + "\n")
         else:
             with open(cache_filename, 'w') as cache:
                 cache.write(self.serialize_instance(pack) + "\n")
 
-    def read_from_cache(self, cache_filename: Path) -> List[PackType]:
+    def read_from_cache(self, cache_filename: Path) -> Iterator[PackType]:
         """
         Reads one or more Packs from a cache_filename,
         and yields Pack(s) from the cache file.
@@ -258,7 +280,6 @@ class BaseReader(PipeComponent[PackType], ABC):
         Returns: List of cached data packs.
 
         """
-        datapacks = []
         logger.info("reading from cache file %s", cache_filename)
         with cache_filename.open("r") as cache_file:
             for line in cache_file:
@@ -267,9 +288,7 @@ class BaseReader(PipeComponent[PackType], ABC):
                     raise TypeError(f"Pack deserialized from {cache_filename} "
                                     f"is {type(pack)},"
                                     f"but expect {self.pack_type}")
-                datapacks.append(pack)
-
-        return datapacks
+                yield pack
 
     def finish(self, resources: Resources):
         pass

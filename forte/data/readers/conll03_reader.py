@@ -46,7 +46,7 @@ class CoNLL03Reader(PackReader):
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 
-    def parse_pack(self, file_path: str) -> DataPack:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
 
@@ -114,4 +114,4 @@ class CoNLL03Reader(PackReader):
         pack.meta.doc_id = file_path
         doc.close()
 
-        return pack
+        yield pack

@@ -53,7 +53,7 @@ class ProdigyReader(PackReader):
             for line in f:
                 yield json.loads(line)
 
-    def parse_pack(self, data: dict) -> DataPack:
+    def _parse_pack(self, data: dict) -> Iterator[DataPack]:
         """
         Extracts information from input `data` of one document
         output from Prodigy Annotator including the text,
@@ -89,4 +89,4 @@ class ProdigyReader(PackReader):
 
         pack.meta.doc_id = data['meta']['id']
 
-        return pack
+        yield pack

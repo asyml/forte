@@ -48,7 +48,7 @@ class StringReader(PackReader):
         for data in data_strings:
             yield data
 
-    def parse_pack(self, data_source: str) -> DataPack:
+    def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
         """
         Takes a raw string and converts into a DataPack
 
@@ -65,4 +65,4 @@ class StringReader(PackReader):
 
         pack.set_text(data_source, replace_func=self.text_replace_operation)
 
-        return pack
+        yield pack

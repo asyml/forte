@@ -48,7 +48,7 @@ class PlainTextReader(PackReader):
     def text_replace_operation(self, text: str):
         return []
 
-    def parse_pack(self, file_path: str) -> DataPack:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
 
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:
@@ -61,4 +61,4 @@ class PlainTextReader(PackReader):
         pack.add_or_get_entry(document)
 
         pack.meta.doc_id = file_path
-        return pack
+        yield pack

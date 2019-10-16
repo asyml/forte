@@ -120,27 +120,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             self.processed_original_spans, self.orig_text_len
         ) = io_utils.modify_text_and_track_ops(text, span_ops)
 
-    def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        """
-        Try to add an :class:`~forte.data.ontology.top.Entry` object to
-        the :class:`DataPack` object.
-        If a same entry already exists, will return the existing entry
-        instead of adding the new one. Note that we regard two entries as the
-        same if their :meth:`~forte.data.ontology.top.Entry.eq` have
-        the same return value, and users could
-        override :meth:`~forte.data.ontology.top.Entry.eq` in their
-        custom entry classes.
-
-        Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-                object to be added to the pack.
-
-        Returns:
-            If a same entry already exists, returns the existing
-            entry. Otherwise, return the (input) entry just added.
-        """
-        return self.__add_entry(entry, False)
-
     def get_original_text(self):
         """Get original unmodified text from the :class:`DataPack` object.
         :return: Original text after applying the `replace_back_operations`
@@ -283,10 +262,31 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The input entry itself
         """
-        return self.__add_entry(entry, True)
+        return self.__add_entry_with_check(entry, True)
 
-    def __add_entry(self, entry: EntryType,
-                    allow_duplicate: bool = True) -> EntryType:
+    def add_or_get_entry(self, entry: EntryType) -> EntryType:
+        """
+        Try to add an :class:`~forte.data.ontology.top.Entry` object to
+        the :class:`DataPack` object.
+        If a same entry already exists, will return the existing entry
+        instead of adding the new one. Note that we regard two entries as the
+        same if their :meth:`~forte.data.ontology.top.Entry.eq` have
+        the same return value, and users could
+        override :meth:`~forte.data.ontology.top.Entry.eq` in their
+        custom entry classes.
+
+        Args:
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+                object to be added to the pack.
+
+        Returns:
+            If a same entry already exists, returns the existing
+            entry. Otherwise, return the (input) entry just added.
+        """
+        return self.__add_entry_with_check(entry, False)
+
+    def __add_entry_with_check(self, entry: EntryType,
+                               allow_duplicate: bool = True) -> EntryType:
         """
         Internal method to add an :class:`Entry` object to the
         :class:`DataPack` object.
@@ -316,13 +316,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             # add the entry to the target entry list
             entry.set_tid()
 
-            entry.set_component(self._owner_component)
+            self.add_entry_creation_record(entry.tid)
 
             if isinstance(target, list):
                 target.append(entry)
             else:
                 target.add(entry)
-            self.internal_metas[entry.__class__].id_counter += 1
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
@@ -366,36 +365,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                 break
 
         # update basic index
-        self.index.entry_index.pop(entry.tid)
-        self.index.type_index[type(entry)].remove(entry.tid)
-        # self.index.component_index[entry.component].remove(entry.tid)
+        self.index.remove_entry(entry)
 
         # set other index invalid
         self.index.turn_link_index_switch(on=False)
         self.index.turn_group_index_switch(on=False)
         self.index.deactivate_coverage_index()
-
-    def record_fields(self, fields: List[str], entry_type: Type[EntryType],
-                      component: str):
-        """Record in the internal meta that the ``entry_type`` entries generated
-        by ``component`` have ``fields``.
-
-        If ``component`` is "_ALL_", we will record the ``fields`` for all
-        entries of the type ``entry_type`` regardless of their component in
-        the internal meta.
-        """
-        fields.append("tid")
-        if issubclass(entry_type, Annotation):
-            fields.append("span")
-        internal_meta = self.internal_metas[entry_type]
-
-        if component == "_ALL_":
-            for field_set in internal_meta.fields_created.values():
-                field_set.update(fields)
-        else:
-            if internal_meta.default_component is None:
-                internal_meta.default_component = component
-            internal_meta.fields_created[component].update(fields)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
@@ -475,10 +450,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         context_components, _, context_fields = self._parse_request_args(
             context_type, context_args)
 
-        # TODO: Update this component filter.
         valid_context_ids: Set[int] = self.get_ids_by_type(context_type)
         if context_components:
-            valid_component_id: Set[str] = set()
+            valid_component_id: Set[int] = set()
             for component in context_components:
                 valid_component_id |= self.get_ids_by_component(component)
             valid_context_ids &= valid_component_id
@@ -559,15 +533,18 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"The request should be of an iterable type or a dict."
             )
 
-        # check the existence of fields
-        for meta_key, meta_val in self.internal_metas.items():
-            if issubclass(meta_key, a_type):
-                for meta_c, meta_f in meta_val.fields_created.items():
-                    if components is None or meta_c in components:
-                        if not fields.issubset(meta_f):
-                            raise KeyError(
-                                f"The {a_type} generated by {meta_c} doesn't "
-                                f"have the fields requested.")
+        # # check the existence of fields
+        #
+        # self.field_records
+        #
+        # for meta_key, meta_val in self.internal_metas.items():
+        #     if issubclass(meta_key, a_type):
+        #         for meta_c, meta_f in meta_val.fields_created.items():
+        #             if components is None or meta_c in components:
+        #                 if not fields.issubset(meta_f):
+        #                     raise KeyError(
+        #                         f"The {a_type} generated by {meta_c} doesn't "
+        #                         f"have the fields requested.")
 
         fields.add("tid")
         return components, unit, fields
@@ -711,7 +688,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         if components is not None:
             if isinstance(components, str):
                 components = [components]
-            valid_component_id: Set[str] = set()
+            valid_component_id: Set[int] = set()
             for component in components:
                 valid_component_id |= self.get_ids_by_component(component)
             valid_id &= valid_component_id
@@ -848,10 +825,10 @@ class DataIndex(BaseIndex):
             entry2 (str or Annotation): Another :class:`Annotation` object to be
                 checked, or the tid of the Annotation.
         """
-        entry1_: Annotation = self.entry_index[
-            entry1] if isinstance(entry1, int) else entry1
-        entry2_: Annotation = self.entry_index[
-            entry2] if isinstance(entry2, int) else entry1
+        entry1_: Annotation = self._entry_index[
+            entry1] if isinstance(entry1, (int, np.integer)) else entry1
+        entry2_: Annotation = self._entry_index[
+            entry2] if isinstance(entry2, (int, np.integer)) else entry1
 
         if not isinstance(entry1_, Annotation):
             raise TypeError(f"'entry1' should be an instance of Annotation,"
@@ -880,9 +857,11 @@ class DataIndex(BaseIndex):
             span (Span): A :class:`Span` object to be checked. We will check
                 whether the ``inner_entry`` is within this span.
         """
-
-        if isinstance(inner_entry, int):
-            inner_entry = self.entry_index[inner_entry]
+        # The reason of this check is that the get_data method will use numpy
+        # integers. This might create problems when other unexpected integers
+        # are used.
+        if isinstance(inner_entry, (int, np.integer)):
+            inner_entry = self._entry_index[inner_entry]
 
         if isinstance(inner_entry, Annotation):
             inner_begin = inner_entry.span.begin

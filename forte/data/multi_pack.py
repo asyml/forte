@@ -239,11 +239,9 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
 
         if entry not in target:
             # add the entry to the target entry list
-            entry_cls = entry.__class__
             entry.set_tid()
+            self.add_entry_creation_record(entry.tid)
             target.append(entry)
-
-            self.internal_metas[entry_cls].id_counter += 1
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
@@ -279,17 +277,16 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             )
 
         # add the entry to the target entry list
-        name = entry.__class__
         entry.set_tid()
+        self.add_entry_creation_record(entry.tid)
         target.append(entry)
-        self.internal_metas[name].id_counter += 1
         return entry
 
     def get_entry(self, tid: int) -> EntryType:
         """
         Look up the entry_index with key ``tid``.
         """
-        entry = self.index.entry_index.get(tid)
+        entry = self.index.get_entry(tid)
         if entry is None:
             raise KeyError(
                 f"There is no entry with tid '{tid}'' in this datapack")
@@ -305,8 +302,3 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
 
     def view(self):
         return copy.deepcopy(self)
-
-    def record_fields(self, fields: List[str], entry_type: Type[EntryType],
-                      component: str):
-        for pack in self._packs:
-            pack.record_fields(fields, entry_type, component)

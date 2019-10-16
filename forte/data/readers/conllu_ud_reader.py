@@ -66,7 +66,7 @@ class ConllUDReader(PackReader):
                         yield doc_lines
                         doc_lines = []
 
-    def parse_pack(self, doc_lines) -> DataPack:
+    def _parse_pack(self, doc_lines) -> Iterator[DataPack]:
         # pylint: disable=no-self-use
         token_comp_fields = ["id", "form", "lemma", "universal_pos_tag",
                              "language_pos_tag", "features", "head", "label",
@@ -196,4 +196,4 @@ class ConllUDReader(PackReader):
         data_pack.meta.doc_id = doc_id
         data_pack.set_text(doc_text.strip())
 
-        return data_pack
+        yield data_pack

@@ -11,9 +11,6 @@ __all__ = [
 ]
 
 
-
-
-
 def get_full_module_name(o, lower=False):
     """
     Returns the full module and class name of an object o.

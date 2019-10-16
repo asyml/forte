@@ -2,10 +2,13 @@ from abc import abstractmethod
 from typing import TypeVar, Generic, Dict, Set, Tuple
 
 from forte.data.base import Span
+from forte.process_manager import ProcessManager
 
 E = TypeVar('E')
 L = TypeVar('L')
 G = TypeVar('G')
+
+process_manager = ProcessManager()
 
 
 class IdManager:
@@ -24,29 +27,32 @@ class IdManager:
 
 class EntryContainer(Generic[E, L, G]):
     def __init__(self):
-        # This is used internally when a processor takes the ownership of this
-        # DataPack.
-        self._owner_component: str = '__default__'
-        self.component_records: Dict[
-            str,  # The component name.
-            Set[int],  # The set of entries created by this component.
-            Set[  # The set of fields modified by this component.
-                Tuple[int, str]  # The 2-tuple identify the entry field.
-            ]
-        ]
+        # Record the set of entries created by some components.
+        self.creation_records: Dict[str, Set[int]] = {}
+
+        # Record the set of fields modified by this component. The 2-tuple
+        # identify the entry field, such as (2, lemma).
+        self.field_records: Dict[str, Set[Tuple[int, str]]] = {}
+
+        # The Id manager controls the ID management in this container
         self._id_manager = IdManager()
 
-    def enter_processing(self, component_name: str):
-        self._owner_component = component_name
+    def add_entry_creation_record(self, entry_id: int):
+        c = process_manager.component
 
-    def current_component(self):
-        return self._owner_component
+        print('creating with ', c, entry_id)
 
-    def exit_processing(self):
-        self._owner_component = '__default__'
+        try:
+            self.creation_records[c].add(entry_id)
+        except KeyError:
+            self.creation_records[c] = {entry_id}
 
-    def add_entry_creation_record(self, component_name: str, entry_id: int):
-        self.internal_metas['']
+    def add_field_record(self, entry_id: int, field_name: str):
+        c = process_manager.component
+        try:
+            self.field_records[c].add((entry_id, field_name))
+        except KeyError:
+            self.field_records[c] = {(entry_id, field_name)}
 
     @abstractmethod
     def validate(self, item: E) -> bool:

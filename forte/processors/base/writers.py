@@ -13,7 +13,6 @@ from texar.torch.hyperparams import HParams
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.io_utils import ensure_dir
-from forte.processors import ProcessInfo
 from forte.processors.base.base_processor import BaseProcessor
 
 logger = logging.getLogger(__name__)
@@ -39,15 +38,6 @@ class JsonPackWriter(BaseProcessor, ABC):
 
         if not os.path.exists(self.root_output_dir):
             os.makedirs(self.root_output_dir)
-
-    def _define_input_info(self) -> ProcessInfo:
-        # No specific requirements from the writer, it can write anything to
-        # DataPack.
-        return {}
-
-    def _define_output_info(self) -> ProcessInfo:
-        # This writer don't create any entries.
-        return {}
 
     @abstractmethod
     def sub_output_dir(self, pack: PackType) -> str:

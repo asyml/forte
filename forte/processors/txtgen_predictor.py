@@ -43,16 +43,6 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         self.device = None
         self.define_context()
 
-    def _define_input_info(self) -> ProcessInfo:
-        """
-        Define the input info for each Data pack in the MultiPack
-        for future query
-        """
-        input_info: ProcessInfo = {
-            self.ontology.Sentence: []
-        }
-        return input_info
-
     def _define_output_info(self) -> ProcessInfo:
         output_info: ProcessInfo = {
             self.ontology.Sentence: []
@@ -121,8 +111,6 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             return helper
 
         self._get_helper = _get_helper
-        self._define_input_info()
-        self._define_output_info()
 
     @torch.no_grad()
     def predict(self, data_batch: Dict):
@@ -196,11 +184,6 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             # We may also consider adding two link with opposite directions
             # Here the unidirectional link indicates the generation dependency
         output_pack.set_text(text)
-
-    def _record_fields(self, data_pack: MultiPack):
-        data_pack.record_fields(
-            ["span"], self.ontology.Sentence, self.component_name
-        )
 
     def get_batch_tensor(self, data: List, device):
         """

@@ -4,10 +4,10 @@ Tests for conllU reader
 import os
 import unittest
 
-from typing import List
+from typing import List, Iterable
 
 from forte.data.ontology.universal_dependency_ontology import \
-    (Sentence, UniversalDependency)
+    (Document, Sentence, UniversalDependency)
 from forte.data.readers.conllu_ud_reader import ConllUDReader
 from forte.data.data_pack import DataPack
 
@@ -46,14 +46,18 @@ class ConllUDReaderTest(unittest.TestCase):
             data_pack = self.data_packs[doc_index]
             self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
 
-            doc_entry = data_pack.get_entry(f"{doc_module}.{0}")
+            doc_entry = None
+            for d in data_pack.get(Document):
+                doc_entry = d
+                break
 
             expected_doc_text = expected_docs_text[doc_index]
             self.assertEqual(doc_entry.text, ' '.join(expected_doc_text))
 
-            for sent_index, expected_sent_text in enumerate(expected_doc_text):
-                sent_entry = data_pack.get_entry(
-                    f"{sent_module}.{sent_index}")
+            sent_entries = data_pack.get(Sentence)
+
+            for sent_entry, expected_sent_text in zip(
+                    sent_entries, expected_doc_text):
                 self.assertEqual(sent_entry.text, expected_sent_text)
 
     def test_reader_dependency_tree(self):

@@ -94,16 +94,6 @@ class ProcessBuffer:
             return False
 
 
-class ComponentManager:
-    """
-    A pipeline level manager that manages the component information, such as
-    creation components and modification records.
-    """
-    # TODO: record component of current process externally instead of internally.
-    def __init__(self):
-        pass
-
-
 class BasePipeline(Generic[PackType]):
     """
         This controls the main inference flow of the system. A pipeline is
@@ -171,10 +161,6 @@ class BasePipeline(Generic[PackType]):
         for processor, config in zip(self.processors, self.processor_configs):
             processor.initialize(self.resource, config)
             processor.set_ontology(self._ontology)
-            processor.set_input_info()
-            processor.set_output_info()
-        # Indicate this as the last processor.
-        self.processors[-1].set_as_last()
 
     def set_reader(self, reader: BaseReader):
         # reader.set_ontology(self._ontology)
@@ -246,6 +232,7 @@ class BasePipeline(Generic[PackType]):
                 path.
         """
         first_pack = []
+
         for p in self._reader.iter(*args, **kwargs):
             first_pack.append(p)
             break
@@ -288,7 +275,6 @@ class BasePipeline(Generic[PackType]):
                     s = self._selectors[job.step_num]
                     for c_pack in s.select(job.pack):
                         self._processors[job.step_num].process(c_pack)
-
                 else:
                     # Pass the poison pack to the processor, so they know this
                     # is ending.

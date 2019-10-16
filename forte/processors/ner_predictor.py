@@ -46,8 +46,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.train_instances_cache = []
 
         self._ontology = conll
-        self.input_info = self._define_input_info()
-        self.define_context()
 
         self.batch_size = 3
         self.batcher = self.define_batcher()
@@ -61,12 +59,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             self._ontology.Sentence: [],
         }
         return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.EntityMention: ["ner_type", "span"],
-        }
-        return output_info
 
     def initialize(self, resource: Resources, configs: HParams):
 

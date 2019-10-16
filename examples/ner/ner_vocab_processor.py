@@ -70,12 +70,6 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         else:
             return x
 
-    def _define_input_info(self) -> ProcessInfo:
-        pass
-
-    def _define_output_info(self) -> ProcessInfo:
-        pass
-
     def _process(self, data_pack: DataPack):
         """
         Process the data pack to collect vocabulary information.

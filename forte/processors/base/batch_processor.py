@@ -10,6 +10,7 @@ from forte.data import slice_batch
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology.top import Annotation
 from forte.processors.base.base_processor import BaseProcessor
+from forte.data.data_pack import DataRequest
 
 __all__ = [
     "BaseBatchProcessor",
@@ -33,6 +34,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     def __init__(self):
         super().__init__()
         self.context_type: Type[Annotation] = self.define_context()
+        self.input_info: DataRequest = self._define_input_info()
+
         self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
@@ -52,6 +55,18 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         The "context" parameter here has the same meaning as the
         :meth:`get_data()` function in class :class:`DataPack`.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _define_input_info(self) -> DataRequest:
+        """
+        User should define the input_info for the batch processors here. The
+        input info will be used to get batched data for this processor.
+
+        The request here has the same meaning as the
+        :meth:`get_data()` function in class :class:`DataPack`.
+
         """
         raise NotImplementedError
 
