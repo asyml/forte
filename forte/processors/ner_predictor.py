@@ -2,7 +2,7 @@
 import logging
 import os
 import pickle
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
 import torch
@@ -13,7 +13,7 @@ from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.data.datasets.conll import conll_utils
-from forte.data.ontology import conll03_ontology as conll
+from forte.data.ontology import conll03_ontology as conll, Annotation
 from forte.models.ner import utils
 from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
@@ -50,8 +50,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.batch_size = 3
         self.batcher = self.define_batcher()
 
-    def define_context(self):
-        self.context_type = self._ontology.Sentence
+    def define_context(self) -> Type[Annotation]:
+        return self._ontology.Sentence
 
     def _define_input_info(self) -> ProcessInfo:
         input_info: ProcessInfo = {
