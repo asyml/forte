@@ -10,10 +10,10 @@ from forte.data.base import Span
 from forte.data.ontology.ontonotes_ontology import PredicateMention, \
     PredicateArgument
 from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
+from forte.common.types import DataRequest
 from forte.data.ontology import ontonotes_ontology
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
 logger = logging.getLogger(__name__)
@@ -80,21 +80,11 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
             self._ontology.Token: []
         }
         return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.PredicateMention:
-                ["pred_type", "span"],
-            self._ontology.PredicateArgument: ["span"],
-            self._ontology.PredicateLink:
-                ["parent", "child", "arg_type"]
-        }
-        return output_info
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [

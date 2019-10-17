@@ -1,6 +1,4 @@
-from abc import ABC
 from functools import total_ordering
-from typing import Hashable
 
 
 @total_ordering
@@ -27,13 +25,3 @@ class Span:
 
     def __eq__(self, other):
         return (self.begin, self.end) == (other.begin, other.end)
-
-
-class Indexable(ABC):
-    """
-    A class that implement this would be indexable within the pack it lives in.
-    """
-
-    @property
-    def index_key(self) -> Hashable:
-        raise NotImplementedError

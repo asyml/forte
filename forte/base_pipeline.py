@@ -6,7 +6,6 @@ import yaml
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.data_pack import DataPack
 from forte.data.base_pack import PackType
 from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
@@ -21,21 +20,33 @@ __all__ = [
 
 
 class ProcessJob:
-    def __init__(self, step_num: int, pack: PackType):
-        self.step_num = step_num
-        self.pack = pack
+    def __init__(self, step_num: int, pack: Optional[PackType],
+                 is_poison: bool):
+        self.__step_num: int = step_num
+        self.__pack: Optional[PackType] = pack
+        self.__is_poison: bool = is_poison
 
     def increment(self):
-        self.step_num += 1
+        self.__step_num += 1
+
+    @property
+    def step_num(self) -> int:
+        return self.__step_num
+
+    @property
+    def pack(self) -> PackType:
+        if self.__pack is None:
+            raise ValueError("This job do not have a valid pack.")
+        return self.__pack
+
+    @property
+    def is_poison(self) -> bool:
+        return self.__is_poison
 
 
 class ProcessBuffer:
 
-    def __init__(
-            self,
-            data_iter: Iterator[PackType],
-            total_step: int
-    ):
+    def __init__(self, data_iter: Iterator[PackType], total_step: int):
         self.__data_iter: Iterator[PackType] = data_iter
         self.__buffer: List[ProcessJob] = []
         self.__data_exhausted = False
@@ -56,10 +67,10 @@ class ProcessBuffer:
                 raise StopIteration
             try:
                 job_pack = next(self.__data_iter)
-                return ProcessJob(0, job_pack)
+                return ProcessJob(0, job_pack, False)
             except StopIteration:
                 self.__data_exhausted = True
-                return ProcessJob(0, DataPack.make_poison())
+                return ProcessJob(0, None, True)
         else:
             return self.__buffer.pop()
 
@@ -92,16 +103,14 @@ class BasePipeline(Generic[PackType]):
     """
 
     def __init__(self, resource: Optional[Resources] = None):
-        self.__reader: BaseReader
-        self.__reader_config: Optional[HParams] = None
+        self._reader: BaseReader
+        self._processors: List[BaseProcessor] = []
+        self._selectors: List[Selector] = []
 
-        self.__processors: List[BaseProcessor] = []
-        self.__selectors: List[Selector] = []
+        self._processors_index: Dict = {'': -1}
+        self._configs: List[Optional[HParams]] = []
 
-        self.__processors_index: Dict = {'': -1}
-        self.__configs: List[Optional[HParams]] = []
-
-        self.__working_component: str
+        # self.__working_component: str
 
         self._ontology = base_ontology
 
@@ -141,36 +150,29 @@ class BasePipeline(Generic[PackType]):
 
     def initialize(self):
         # self._reader.initialize()
-        self.initialize_components()
+        self.initialize_processors()
 
     def set_ontology(self, ontology):
         self._ontology = ontology
         for processor in self.processors:
             processor.set_ontology(self._ontology)
 
-    def initialize_components(self):
-        self.__reader.initialize(self.resource, self.__reader_config)
+    def initialize_processors(self):
+        for processor, config in zip(self.processors, self.processor_configs):
+            processor.initialize(self.resource, config)
+            processor.set_ontology(self._ontology)
 
-        for component, config in zip(self.__processors, self.__configs):
-            component.initialize(self.resource, config)
-            if isinstance(component, BaseProcessor):
-                component.set_input_info()
-                component.set_output_info()
-        # Indicate this as the last processor.
-        self.processors[-1].set_as_last()
-
-    def set_reader(self, reader: BaseReader, config: Optional[HParams] = None):
-        reader.set_ontology(self._ontology)
-        self.__reader = reader
-        self.__reader_config = config
+    def set_reader(self, reader: BaseReader):
+        # reader.set_ontology(self._ontology)
+        self._reader = reader
 
     @property
     def processors(self):
-        return self.__processors
+        return self._processors
 
     @property
     def processor_configs(self):
-        return self.__configs
+        return self._configs
 
     def add_processor(
             self,
@@ -178,12 +180,13 @@ class BasePipeline(Generic[PackType]):
             config: Optional[HParams] = None,
             selector: Optional[Selector] = None,
     ):
-        self.__processors_index[processor.component_name] = len(self.processors)
-        self.__processors.append(processor)
-        self.__configs.append(config)
+        self._processors_index[processor.component_name] = len(self.processors)
+
+        self._processors.append(processor)
+        self.processor_configs.append(config)
 
         if selector is None:
-            self.__selectors.append(DummySelector())
+            self._selectors.append(DummySelector())
 
     def process(self, *args, **kwargs) -> PackType:
         """
@@ -229,7 +232,8 @@ class BasePipeline(Generic[PackType]):
                 path.
         """
         first_pack = []
-        for p in self.__reader.iter(*args, **kwargs):
+
+        for p in self._reader.iter(*args, **kwargs):
             first_pack.append(p)
             break
 
@@ -247,12 +251,11 @@ class BasePipeline(Generic[PackType]):
         Args:
             **kwargs, which can be one or more data sources.
         """
-        data_iter = self.__reader.iter(*args, **kwargs)
+        data_iter = self._reader.iter(*args, **kwargs)
         return self.process_packs(data_iter)
 
     def process_packs(
-            self, data_iter: Iterator[PackType]
-    ) -> Iterator[PackType]:
+            self, data_iter: Iterator[PackType]) -> Iterator[PackType]:
         """
         Process an iterator of data packs and return the  processed ones.
 
@@ -262,24 +265,86 @@ class BasePipeline(Generic[PackType]):
         Returns: A list data packs.
 
         """
-        buf = ProcessBuffer(data_iter, len(self.__processors))
+        buf = ProcessBuffer(data_iter, len(self._processors))
 
         if len(self.processors) == 0:
             yield from data_iter
         else:
             for job in buf:
-                if not job.pack.is_poison():
-                    s = self.__selectors[job.step_num]
+                if not job.is_poison:
+                    s = self._selectors[job.step_num]
                     for c_pack in s.select(job.pack):
-                        self.__processors[job.step_num].process(c_pack)
+                        self._processors[job.step_num].process(c_pack)
                 else:
                     # Pass the poison pack to the processor, so they know this
                     # is ending.
-                    self.__processors[job.step_num].process(job.pack)
+                    self._processors[job.step_num].flush()
 
                 # Put the job back to the process queue, if not success, that
                 # means this job is done processing.
                 if not buf.queue_process(job):
-                    done_pack: PackType = job.pack
-                    if not done_pack.is_poison():
-                        yield done_pack
+                    if not job.is_poison:
+                        yield job.pack
+
+            # # Keep a list of packs and only release it when all processors
+            # # are done with them.
+            # packs = []
+            #
+            # for pack in data_iter:
+            #     packs.append(pack)
+            #
+            #     for i, (processor, selector) in enumerate(
+            #             zip(self._processors, self._selectors)):
+            #         for p in packs:
+            #             for c_pack in selector.select(p):
+            #                 in_cache = (c_pack.meta.cache_state ==
+            #                             processor.component_name)
+            #                 # TODO: can_process needs double check.
+            #                 # We need to record a step here with a number
+            #                 # instead of a processor component
+            #                 # And we need a clean way to record whether we are
+            #                 # done processing anything, the component_name
+            #                 # is not reliable, especially used together with
+            #                 # a selector.
+            #                 can_process = (
+            #                         i == 0 or c_pack.meta.process_state ==
+            #                         self.processors[i - 1].component_name)
+            #                 if can_process and not in_cache:
+            #                     self.__working_component = \
+            #                         processor.component_name
+            #                     processor.process(c_pack)
+            #
+            #     for p in list(packs):
+            #         # must iterate through a copy of the original list
+            #         # because of the removing operation
+            #         # TODO we'd better add a special component_name instead of
+            #         #   using the previous processor. The can also cause some
+            #         #   indexing problem.
+            #         if (p.meta.process_state ==
+            #                 self.processors[-1].component_name):
+            #             yield p
+            #             packs.remove(p)
+            #
+            # # Now the data iteration is over. We may still have some packs
+            # # that are not fully processed. Now we "flush" them.
+            #
+            # # A special poison pack is added to the end of the data stream. It
+            # # will not be processed by any of the processors, but it will tell
+            # # the processors that the stream ends.
+            # for p in list(packs) + [BasePack.get_poison()]:
+            #     # TODO double check starts
+            #     start = self._processors_index[p.meta.process_state] + 1
+            #     for processor, selector in zip(self._processors[start:],
+            #                                    self._selectors):
+            #         self.__working_component = processor.component_name
+            #
+            #         if not p.is_poison():
+            #             for c_pack in selector.select(p):
+            #                 processor.process(c_pack)
+            #         else:
+            #             processor.process(p)
+            #
+            #     # And we certainly won't return the poison pack.
+            #     if not p.is_poison():
+            #         yield p
+            #     packs.remove(p)

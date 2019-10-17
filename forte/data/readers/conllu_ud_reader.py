@@ -22,17 +22,6 @@ class ConllUDReader(PackReader):
     2.4 dataset.
     """
 
-    def define_output_info(self):
-        # pylint: disable=no-self-use
-        return {
-            Document: [],
-            Sentence: [],
-            DependencyToken: ["universal_pos_tag", "features", "lemma",
-                              "language_pos_tag", "misc"],
-            # primary / enhanced dependencies
-            UniversalDependency: ["type"]
-        }
-
     def _cache_key_function(self, data_pack: Any) -> str:
         # pylint: disable=no-self-use
         if data_pack.meta.doc_id is None:
@@ -66,7 +55,7 @@ class ConllUDReader(PackReader):
                         yield doc_lines
                         doc_lines = []
 
-    def parse_pack(self, doc_lines) -> Iterator[DataPack]:
+    def _parse_pack(self, doc_lines) -> Iterator[DataPack]:
         # pylint: disable=no-self-use
         token_comp_fields = ["id", "form", "lemma", "universal_pos_tag",
                              "language_pos_tag", "features", "head", "label",

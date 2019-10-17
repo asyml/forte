@@ -15,7 +15,7 @@ from forte.data.batchers import (
 )
 from forte.data.ontology import base_ontology
 from forte.models.gpt import processor
-from forte.processors.base import ProcessInfo
+from forte.common.types import DataRequest
 from forte.processors.base.batch_processor import \
     MultiPackBatchProcessor
 
@@ -43,21 +43,9 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         self.device = None
         self.define_context()
 
-    def _define_input_info(self) -> ProcessInfo:
-        """
-        Define the input info for each Data pack in the MultiPack
-        for future query
-        """
-        input_info: ProcessInfo = {
-            self.ontology.Sentence: []
-        }
-        return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self.ontology.Sentence: []
-        }
-        return output_info
+    def _define_input_info(self) -> DataRequest:
+        # pylint: disable=no-self-use
+        return {}
 
     def define_context(self):
         # pylint: disable=no-self-use
@@ -121,8 +109,6 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             return helper
 
         self._get_helper = _get_helper
-        self._define_input_info()
-        self._define_output_info()
 
     @torch.no_grad()
     def predict(self, data_batch: Dict):
@@ -197,11 +183,6 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             # Here the unidirectional link indicates the generation dependency
         output_pack.set_text(text)
 
-    def _record_fields(self, data_pack: MultiPack):
-        data_pack.record_fields(
-            ["span"], self.ontology.Sentence, self.component_name
-        )
-
     def get_batch_tensor(self, data: List, device):
         """
 
@@ -247,8 +228,9 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             'input_pack_name': None,
             'output_pack_name': None,
             'selector': {
-                'type': 'nlp.forte.data.selector.DummySelector',
+                'type': 'forte.data.selector.DummySelector',
                 'args': None,
                 'kwargs': {}
-            }
+            },
+            'batch_size': 10,
         }

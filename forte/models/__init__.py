@@ -1,1 +1,1 @@
-from forte.models.NER import *
+from forte.models.ner import *

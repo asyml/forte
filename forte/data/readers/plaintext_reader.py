@@ -39,16 +39,11 @@ class PlainTextReader(PackReader):
     def _cache_key_function(self, text_file: str) -> str:
         return os.path.basename(text_file)
 
-    def define_output_info(self):
-        return {
-            self._ontology.Document: [],
-        }
-
     # pylint: disable=no-self-use,unused-argument
     def text_replace_operation(self, text: str):
         return []
 
-    def parse_pack(self, file_path: str) -> Iterator[DataPack]:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
 
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:

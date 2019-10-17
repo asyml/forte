@@ -47,10 +47,17 @@ class BaseTrainer(PipeComponent):
     def get_loss(self, instances: Iterator[Dict]):
         raise NotImplementedError
 
+    def update_resource(self):
+        r"""Update the resource after every epoch which can be consumed by the
+        predictor
+        """
+        raise NotImplementedError
+
     def pack_finish_action(self, pack_count: int):
         """
         This function will be called by the pipeline when one pack is
         finished.
+
         Args:
             pack_count:
 
