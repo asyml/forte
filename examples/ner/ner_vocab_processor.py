@@ -119,7 +119,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         word_embedding_table = construct_word_embedding_table(embedding_dict,
                                                               word_alphabet)
 
-        logging.info('word embedding table size:%d}',
+        logging.info('word embedding table size: %s',
                      word_embedding_table.size())
 
         # Adding vocabulary information to resource.
