@@ -21,7 +21,7 @@ class DataPackTest(unittest.TestCase):
             os.path.dirname(forte.__file__)),
             "examples/data_samples/ontonotes/00/abc_0059.gold_conll"
         )
-        self.data_pack = self.reader.parse_pack(data_path)
+        self.data_pack = list(self.reader.parse_pack(data_path))[0]
 
     def test_get_data(self):
         requests = {

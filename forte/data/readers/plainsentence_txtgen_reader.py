@@ -20,10 +20,6 @@ class PlainSentenceTxtgenReader(MultiPackReader):
     each line is a sentence, and wrap it with MultiPack for the following
     text generation processors.
     """
-    def define_output_info(self):
-        return {
-            self._ontology.Sentence: [],
-        }
 
     # pylint: disable=no-self-use
     def _collect(self, text_directory: str) -> Iterator[Any]:  # type: ignore
@@ -33,7 +29,7 @@ class PlainSentenceTxtgenReader(MultiPackReader):
     def _cache_key_function(self, txt_path: str) -> str:
         return os.path.basename(txt_path)
 
-    def parse_pack(self, file_path: str) -> MultiPack:
+    def _parse_pack(self, file_path: str) -> Iterator[MultiPack]:
         m_pack: MultiPack = MultiPack()
 
         input_pack_name = "input_src"
@@ -76,4 +72,8 @@ class PlainSentenceTxtgenReader(MultiPackReader):
             }
         )
 
-        return m_pack
+        yield m_pack
+
+    @staticmethod
+    def default_hparams():
+        return {}

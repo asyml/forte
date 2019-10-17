@@ -61,9 +61,10 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
                 selector_hparams = processor_hparams.selector
                 selector_class = get_class(selector_hparams['type'])
                 selector_kwargs = selector_hparams["kwargs"]
+
                 selector = selector_class(**selector_kwargs)
 
-                self.add_processor(p, selector, processor_hparams)
+                self.add_processor(p, processor_hparams, selector)
 
             self.initialize()
 
@@ -81,7 +82,7 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
 
 
 def create_class_with_kwargs(
-        class_name: str, class_args: Dict, h_params: Optional[HParams] = None):
+        class_name: str, class_args: Dict, h_params: Optional[Dict] = None):
     cls = get_class(class_name)
     if not class_args:
         class_args = {}
@@ -92,7 +93,7 @@ def create_class_with_kwargs(
 
     p_params: Dict = {}
 
-    if "config_path" in h_params:
+    if "config_path" in h_params and not h_params["config_path"] is None:
         filebased_hparams = yaml.safe_load(open(h_params["config_path"]))
     else:
         filebased_hparams = {}

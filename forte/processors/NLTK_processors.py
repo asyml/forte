@@ -2,7 +2,6 @@ from nltk import word_tokenize, pos_tag, sent_tokenize
 
 from forte.data.data_pack import DataPack
 from forte.data.ontology import base_ontology
-from forte.processors.base import ProcessInfo
 from forte.processors.base import PackProcessor
 
 
@@ -10,22 +9,11 @@ class NLTKWordTokenizer(PackProcessor):
     """
     A wrapper of NLTK word tokenizer.
     """
+
     def __init__(self):
         super().__init__()
         self.sentence_component = None
         self._ontology = base_ontology
-
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
-            self._ontology.Sentence: ["span"]
-        }
-        return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.Token: ["span"]
-        }
-        return output_info
 
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(entry_type=self._ontology.Sentence,
@@ -46,29 +34,11 @@ class NLTKPOSTagger(PackProcessor):
     """
     A wrapper of NLTK pos tagger.
     """
+
     def __init__(self):
         super().__init__()
         self.token_component = None
         self._ontology = base_ontology
-
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
-            self._ontology.Sentence: ["span"],
-            self._ontology.Token: {
-                "fields": ["span"],
-                "component": self.token_component
-            }
-        }
-        return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.Token: {
-                "component": self.token_component,
-                "fields": ["pos_tag"]
-            }
-        }
-        return output_info
 
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(self._ontology.Sentence):
@@ -85,21 +55,10 @@ class NLTKSentenceSegmenter(PackProcessor):
     """
     A wrapper of NLTK sentence tokenizer.
     """
+
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
-            self._ontology.Document: ["span"]
-        }
-        return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.Sentence: ["span"]
-        }
-        return output_info
 
     def _process(self, input_pack: DataPack):
         text = input_pack.text

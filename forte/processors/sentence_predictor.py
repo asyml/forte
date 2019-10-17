@@ -1,6 +1,6 @@
 from forte.data import DataPack
 from forte.data.ontology import base_ontology
-from forte.processors.base import PackProcessor, ProcessInfo
+from forte.processors.base import PackProcessor
 
 __all__ = [
     "PeriodSentenceSegmenter"
@@ -16,18 +16,6 @@ class PeriodSentenceSegmenter(PackProcessor):
     def __init__(self):
         super().__init__()
         self._ontology = base_ontology
-
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
-            self._ontology.Document: ["span"]
-        }
-        return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.Sentence: ["span"]
-        }
-        return output_info
 
     def _process(self, input_pack: DataPack):
         text = input_pack.text

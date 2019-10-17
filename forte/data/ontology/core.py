@@ -4,23 +4,25 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
-from typing import (
-    Iterable, Optional, Set, Type, Hashable,
-    TypeVar, Generic)
+from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
 
-from forte.data.base import Indexable
-from forte.data.container import EntryContainer
-from forte.utils import get_full_module_name
 from forte.common.const import default_component
+from forte.data.container import ContainerType
+from forte.process_manager import ProcessManager
 
 __all__ = [
     "Entry",
     "BaseLink",
     "BaseGroup",
+    "LinkType",
+    "GroupType",
+    "EntryType",
 ]
 
+process_manager = ProcessManager()
 
-class Entry(Indexable):
+
+class Entry(Generic[ContainerType]):
     """
         The base class inherited by all NLP entries. This is the main data type
         for all in-text NLP analysis results. The main sub-types are
@@ -39,10 +41,10 @@ class Entry(Indexable):
             pack: Each entry should be associated with one pack upon creation.
     """
 
-    def __init__(self, pack: EntryContainer):
+    def __init__(self, pack: ContainerType):
         super(Entry, self).__init__()
 
-        self._tid: str
+        self._tid: int = -1
 
         self.__component: str = default_component
         self.__modified_fields: Set[str] = set()
@@ -52,42 +54,29 @@ class Entry(Indexable):
         # we create a generic class EntryContainer to be the place holder of
         # the actual. Whether this entry can be added to the pack is delegated
         # to be checked by the pack.
-        self.__pack: EntryContainer = pack
+        self.__pack: ContainerType = pack
         pack.validate(self)
 
     @property
-    def tid(self):
+    def tid(self) -> int:
         return self._tid
+
+    def set_component(self, component: str):
+        self.__component = component
 
     @property
     def component(self):
         return self.__component
 
-    def set_component(self, component: str):
+    def set_tid(self):
         """
-        Set the component of the creator of this entry.
-
-        Args:
-            component: The component name of the creator (processor or reader).
-
-        Returns:
-
+        Set the entry id with the auto-increment manager
         """
-        self.__component = component
-
-    def set_tid(self, tid: str):
-        """
-        Set the entry id.
-
-        To avoid duplicate, we use the full module path and class name as the
-        prefix of ``tid``. A pack-level unique ``tid`` is automatically
-        assigned when you add an entry to a pack, so users are **not** suggested
-        to set ``tid`` directly.
-        """
-        self._tid = f"{get_full_module_name(self)}.{tid}"
+        # self._tid = f"{get_full_module_name(self)}.{tid}"
+        self._tid = self.pack.get_next_id()
 
     @property
-    def pack(self) -> EntryContainer:
+    def pack(self) -> ContainerType:
         return self.__pack
 
     def set_fields(self, **kwargs):
@@ -103,7 +92,7 @@ class Entry(Indexable):
 
         """
         for field_name, field_value in kwargs.items():
-            # TODO: This is wrong, absense of attribute is treated the same as
+            # TODO: This is wrong, absence of attribute is treated the same as
             #  the attribute being None. We need to really identify
             #  whether the field exists to disallow users adding unknown fields.
             # if not hasattr(self, field_name):
@@ -112,7 +101,7 @@ class Entry(Indexable):
             #         f"has no attribute {field_name}"
             #     )
             setattr(self, field_name, field_value)
-            self.__modified_fields.add(field_name)
+            self.__pack.add_field_record(self.tid, field_name)
 
     def get_field(self, field_name):
         return getattr(self, field_name)
@@ -145,7 +134,7 @@ EntryType = TypeVar("EntryType", bound=Entry)
 class BaseLink(Entry, ABC):
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: ContainerType,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
@@ -216,7 +205,7 @@ class BaseLink(Entry, ABC):
         return hash((type(self), self.get_parent(), self.get_child()))
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 
@@ -233,13 +222,13 @@ class BaseGroup(Entry, Generic[EntryType]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: ContainerType,
             members: Optional[Set[EntryType]] = None,
     ):
         super().__init__(pack)
 
         # Store the group member's id.
-        self._members: Set[str] = set()
+        self._members: Set[int] = set()
         if members is not None:
             self.add_members(members)
 
@@ -322,7 +311,7 @@ class BaseGroup(Entry, Generic[EntryType]):
         return member_entries
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 

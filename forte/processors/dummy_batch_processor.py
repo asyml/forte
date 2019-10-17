@@ -4,15 +4,16 @@ create entries arbitrarily. The processors here are useful as placeholders and
 test cases.
 
 """
-from typing import Dict, Optional
+from typing import Dict, Optional, Type
 
 import numpy as np
 
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
+from forte.common.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
-from forte.data.ontology import relation_ontology
+from forte.data.ontology import relation_ontology, Annotation
 from forte.data.ontology.relation_ontology import EntityMention
-from forte.processors.base import BatchProcessor, ProcessInfo
+from forte.processors.base import BatchProcessor
 
 __all__ = [
     "DummyRelationExtractor",
@@ -30,34 +31,25 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self) -> None:
         super().__init__()
+        # TODO: remove this.
         self._ontology = relation_ontology
-        self.define_context()
-
         self.batch_size = 4
-        self.batcher = self.define_batcher()
 
     def define_batcher(self) -> ProcessingBatcher:
         # pylint: disable=no-self-use
         return FixedSizeDataPackBatcher()
 
-    def define_context(self):
-        self.context_type = self._ontology.Sentence
+    def define_context(self) -> Type[Annotation]:
+        return self._ontology.Sentence
 
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
             self._ontology.Token: [],
             self._ontology.EntityMention: {
                 "fields": ["ner_type", "tid"]
             }
         }
         return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.RelationLink:
-                ["parent", "child", "rel_type"]
-        }
-        return output_info
 
     def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
         entities_span = data_batch["EntityMention"]["span"]

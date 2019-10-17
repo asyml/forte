@@ -31,21 +31,6 @@ class OntonotesReader(PackReader):
     def __init__(self):
         super().__init__()
         self._ontology = ontonotes_ontology
-        self.define_output_info()
-
-    def define_output_info(self):
-        return {
-            self._ontology.Document: [],
-            self._ontology.Sentence: ["speaker", "part_id"],
-            self._ontology.Token: ["sense", "pos_tag"],
-            self._ontology.EntityMention: ["ner_type"],
-            self._ontology.PredicateMention:
-                ["pred_lemma", "pred_type", "framenet_id"],
-            self._ontology.PredicateArgument: [],
-            self._ontology.PredicateLink: ["parent", "child", "arg_type"],
-            self._ontology.CoreferenceMention: [],
-            self._ontology.CoreferenceGroup: ["coref_type", "members"]
-        }
 
     # pylint: disable=no-self-use
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
@@ -64,7 +49,7 @@ class OntonotesReader(PackReader):
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 
-    def parse_pack(self, file_path: str) -> DataPack:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
 
         with open(file_path, encoding="utf8") as doc:
@@ -225,7 +210,7 @@ class OntonotesReader(PackReader):
             pack.set_meta(**kwargs_i)
             pack.set_text(text, replace_func=self.text_replace_operation)
 
-        return pack
+        yield pack
 
     def _process_entity_annotations(
             self,

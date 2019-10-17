@@ -27,7 +27,7 @@ setuptools.setup(
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions', 'allennlp'],
-        'txtgen': ['regex'],
+        'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt'],
         'example': ['termcolor'],
