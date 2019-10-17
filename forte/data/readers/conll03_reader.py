@@ -2,6 +2,7 @@
 The reader that reads CoNLL ner_data into our internal json data datasets.
 """
 import codecs
+import logging
 import os
 from typing import Iterator, Any
 
@@ -17,7 +18,7 @@ __all__ = [
 
 class CoNLL03Reader(PackReader):
     """
-    :class:`CoNLL03Reader` is designed to read in the CoNLL03-NER dataset.
+    :class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
     """
 
     def __init__(self):
@@ -34,6 +35,7 @@ class CoNLL03Reader(PackReader):
 
         Returns: Iterator over files in the path with conll extensions.
         """
+        logging.info("Reading .conll from %s", conll_directory)
         return dataset_path_iterator(conll_directory, "conll")
 
     def _cache_key_function(self, conll_file: str) -> str:

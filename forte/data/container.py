@@ -40,8 +40,6 @@ class EntryContainer(Generic[E, L, G]):
     def add_entry_creation_record(self, entry_id: int):
         c = process_manager.component
 
-        print('creating with ', c, entry_id)
-
         try:
             self.creation_records[c].add(entry_id)
         except KeyError:

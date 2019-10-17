@@ -28,7 +28,6 @@ class ProcessManager:
     def set_current_component(self, component_name: str):
         if self.instance is not None:
             self.instance.current_component = component_name
-            print('current component is now ', component_name)
         else:
             raise AttributeError('The process manager is not initialized.')
 

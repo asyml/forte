@@ -116,13 +116,13 @@ class NIFBufferedContextReader:
         self.__buffer_size = buffer_size
 
         self.__last_c = ''
-        self.__statements = []
+        self.__statements: List[state_type] = []
 
     def buf_info(self):
         logging.info('The buffer size for data [%s] is %s',
                      self.data_name, len(self.__buf_statement))
 
-    def yield_by_context(self) -> Tuple[str, List[state_type]]:
+    def yield_by_context(self) -> Iterator[Tuple[str, List[state_type]]]:
         res_c: str = ''
         res_states: List = []
 
