@@ -17,14 +17,14 @@ Processors:
         input_pack_name: "input_src"
         output_pack_name: "output_tgt"
         batch_size: 10
-  - type: "forte.processors.NLTK_processors.NLTKWordTokenizer"
+  - type: "forte.processors.nltk_processors.NLTKWordTokenizer"
     hparams:
       overwrite_configs:
         selector:
           type: "forte.data.selector.NameMatchSelector"
           kwargs:
             select_name: output_tgt
-  - type: "forte.processors.NLTK_processors.NLTKPOSTagger"
+  - type: "forte.processors.nltk_processors.NLTKPOSTagger"
     hparams:
       overwrite_configs:
         selector:
