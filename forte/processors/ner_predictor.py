@@ -2,7 +2,7 @@
 import logging
 import os
 import pickle
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
 import torch
@@ -11,11 +11,11 @@ from texar.torch.hyperparams import HParams
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
+from forte.common.types import DataRequest
 from forte.data.datasets.conll import conll_utils
-from forte.data.ontology import conll03_ontology as conll
+from forte.data.ontology import conll03_ontology as conll, Annotation
 from forte.models.ner import utils
-from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
 logger = logging.getLogger(__name__)
@@ -46,27 +46,19 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.train_instances_cache = []
 
         self._ontology = conll
-        self.input_info = self._define_input_info()
-        self.define_context()
 
         self.batch_size = 3
         self.batcher = self.define_batcher()
 
-    def define_context(self):
-        self.context_type = self._ontology.Sentence
+    def define_context(self) -> Type[Annotation]:
+        return self._ontology.Sentence
 
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
             self._ontology.Token: [],
             self._ontology.Sentence: [],
         }
         return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.EntityMention: ["ner_type", "span"],
-        }
-        return output_info
 
     def initialize(self, resource: Resources, configs: HParams):
 
@@ -180,7 +172,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         for i in range(len(output_dict["Token"]["tid"])):
             # an instance
             for j in range(len(output_dict["Token"]["tid"][i])):
-                tid = output_dict["Token"]["tid"][i][j]
+                tid: int = output_dict["Token"]["tid"][i][j]  # type: ignore
 
                 orig_token: conll.Token = data_pack.get_entry(  # type: ignore
                     tid)

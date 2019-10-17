@@ -6,7 +6,7 @@ from texar.torch import HParams
 import forte.data.ontology.stanfordnlp_ontology as ontology
 from forte.common.resources import Resources
 from forte.data import DataPack
-from forte.processors.base import PackProcessor, ProcessInfo
+from forte.processors.base import PackProcessor
 
 __all__ = [
     "StandfordNLPProcessor",
@@ -32,37 +32,6 @@ class StandfordNLPProcessor(PackProcessor):
         self.set_up()
         self.nlp = stanfordnlp.Pipeline(**configs.todict(),
                                         models_dir=self.MODELS_DIR)
-
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
-            self._ontology.Document: ["span"]
-        }
-        return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        """
-        Define the output_info of the processor. This depends on the user's
-        choice of processors for the StanfordNLP toolkit.
-        Returns:
-
-        """
-        output_info: ProcessInfo = {self._ontology.Sentence: ["span"]}
-
-        if "tokenize" in self.processors:
-            token_outputs = ['span']
-            if 'pos' in self.processors:
-                token_outputs.append('pos_tag')
-                token_outputs.append('upos')
-                token_outputs.append('xpos')
-            if 'lemma' in self.processors:
-                token_outputs.append('lemma')
-            output_info[self._ontology.Token] = token_outputs
-
-        if 'depparse' in self.processors:
-            output_info[self._ontology.Dependency] = \
-                ["parent", "child", "rel_type"]
-
-        return output_info
 
     @staticmethod
     def default_hparams():

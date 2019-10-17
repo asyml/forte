@@ -2,6 +2,7 @@
 The reader that reads CoNLL ner_data into our internal json data datasets.
 """
 import codecs
+import logging
 import os
 from typing import Iterator, Any
 
@@ -17,19 +18,12 @@ __all__ = [
 
 class CoNLL03Reader(PackReader):
     """
-    :class:`CoNLL03Reader` is designed to read in the CoNLL03-NER dataset.
+    :class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
     """
 
     def __init__(self):
         super().__init__()
         self._ontology = conll03_ontology
-
-    def define_output_info(self):
-        return {
-            self._ontology.Document: [],
-            self._ontology.Sentence: [],
-            self._ontology.Token: ["chunk_tag", "pos_tag", "ner_tag"]
-        }
 
     # pylint: disable=no-self-use
     def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
@@ -41,12 +35,13 @@ class CoNLL03Reader(PackReader):
 
         Returns: Iterator over files in the path with conll extensions.
         """
+        logging.info("Reading .conll from %s", conll_directory)
         return dataset_path_iterator(conll_directory, "conll")
 
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 
-    def parse_pack(self, file_path: str) -> DataPack:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
 
@@ -114,4 +109,4 @@ class CoNLL03Reader(PackReader):
         pack.meta.doc_id = file_path
         doc.close()
 
-        return pack
+        yield pack

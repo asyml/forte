@@ -46,18 +46,6 @@ class WikiDumpReader(PackReader):
     def _cache_key_function(self, collection: Any) -> str:
         pass
 
-    def define_output_info(self):
-        # pylint: disable=no-self-use
-        return {
-            wiki_ontology.WikiPage: ["body"],
-            wiki_ontology.WikiBody: ["introduction", "sections"],
-            wiki_ontology.WikiSection: [],
-            wiki_ontology.WikiAnchor: [],
-            wiki_ontology.WikiAnchorLink: [],
-            wiki_ontology.WikiInfoBox: ['text_entries', 'entity_entries'],
-            wiki_ontology.WikiCategories: ['categories'],
-        }
-
     def _collect(  # type: ignore
             self,
             wiki_dump_file: str,
@@ -86,7 +74,7 @@ class WikiDumpReader(PackReader):
             element = (wiki_id, title, redirect, revision_id, links, text)
             yield element
 
-    def parse_pack(self, collection: Tuple) -> DataPack:
+    def _parse_pack(self, collection: Tuple) -> Iterator[DataPack]:
         pack = DataPack()
 
         wiki_id, title, redirect, revision_id, links, text = collection
@@ -96,7 +84,7 @@ class WikiDumpReader(PackReader):
 
         print(wiki_id, title, redirect, revision_id, links, text)
 
-        return pack
+        yield pack
 
     def process_page_content(self):
         pass

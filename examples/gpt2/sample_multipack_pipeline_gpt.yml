@@ -1,7 +1,7 @@
 # This provides a configuration for inference only
 
 Reader:
-  type: PlainSentenceTxtgenReader
+  type: "forte.data.readers.PlainSentenceTxtgenReader"
   kwargs: null
 
 Processors:
@@ -16,14 +16,15 @@ Processors:
         pretrained_model_name: "117M"
         input_pack_name: "input_src"
         output_pack_name: "output_tgt"
-  - type: "forte.processors.impl.NLTKWordTokenizer"
+        batch_size: 10
+  - type: "forte.processors.NLTK_processors.NLTKWordTokenizer"
     hparams:
       overwrite_configs:
         selector:
           type: "forte.data.selector.NameMatchSelector"
           kwargs:
             select_name: output_tgt
-  - type: "forte.processors.impl.NLTKPOSTagger"
+  - type: "forte.processors.NLTK_processors.NLTKPOSTagger"
     hparams:
       overwrite_configs:
         selector:
