@@ -11,7 +11,7 @@ from abc import abstractmethod, ABC
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.base_pack import PackType
 from forte.data.io_utils import ensure_dir
 from forte.processors.base.base_processor import BaseProcessor
 
@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-class JsonPackWriter(BaseProcessor[DataPack], ABC):
+class JsonPackWriter(BaseProcessor[PackType], ABC):
     def __init__(self):
         super().__init__()
         self.root_output_dir: str = ''
@@ -40,7 +40,7 @@ class JsonPackWriter(BaseProcessor[DataPack], ABC):
             os.makedirs(self.root_output_dir)
 
     @abstractmethod
-    def sub_output_path(self, pack: DataPack) -> str:
+    def sub_output_path(self, pack: PackType) -> str:
         """
         Allow defining output path using the information of the pack.
         Args:
@@ -62,7 +62,7 @@ class JsonPackWriter(BaseProcessor[DataPack], ABC):
             'zip_pack': False,
         }
 
-    def _process(self, input_pack: DataPack):
+    def _process(self, input_pack: PackType):
         sub_path = self.sub_output_path(input_pack)
         if sub_path == '':
             raise ValueError(
