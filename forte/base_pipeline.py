@@ -104,13 +104,13 @@ class BasePipeline(Generic[PackType]):
 
     def __init__(self, resource: Optional[Resources] = None):
         self._reader: BaseReader
+        self._reader_config: Optional[HParams]
+
         self._processors: List[BaseProcessor] = []
         self._selectors: List[Selector] = []
 
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
-
-        # self.__working_component: str
 
         self._ontology = base_ontology
 
@@ -149,7 +149,7 @@ class BasePipeline(Generic[PackType]):
         raise NotImplementedError
 
     def initialize(self):
-        # self._reader.initialize()
+        self._reader.initialize(self.resource, self._reader_config)
         self.initialize_processors()
 
     def set_ontology(self, ontology):
@@ -162,9 +162,9 @@ class BasePipeline(Generic[PackType]):
             processor.initialize(self.resource, config)
             processor.set_ontology(self._ontology)
 
-    def set_reader(self, reader: BaseReader):
-        # reader.set_ontology(self._ontology)
+    def set_reader(self, reader: BaseReader, config: Optional[HParams] = None):
         self._reader = reader
+        self._reader_config = config
 
     @property
     def processors(self):

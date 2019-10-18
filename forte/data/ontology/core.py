@@ -6,7 +6,6 @@ representation system.
 from abc import abstractmethod, ABC
 from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
 
-from forte.common.const import default_component
 from forte.data.container import ContainerType
 from forte.process_manager import ProcessManager
 
@@ -46,9 +45,6 @@ class Entry(Generic[ContainerType]):
 
         self._tid: int = -1
 
-        self.__component: str = default_component
-        self.__modified_fields: Set[str] = set()
-
         # The Entry should have a reference to the data pack, and the data pack
         # need to store the entries. In order to resolve the cyclic references,
         # we create a generic class EntryContainer to be the place holder of
@@ -61,19 +57,15 @@ class Entry(Generic[ContainerType]):
     def tid(self) -> int:
         return self._tid
 
-    def set_component(self, component: str):
-        self.__component = component
-
-    @property
-    def component(self):
-        return self.__component
-
     def set_tid(self):
         """
         Set the entry id with the auto-increment manager
         """
         # self._tid = f"{get_full_module_name(self)}.{tid}"
         self._tid = self.pack.get_next_id()
+
+    def attach(self, pack: ContainerType):
+        self.__pack = pack
 
     @property
     def pack(self) -> ContainerType:

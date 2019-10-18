@@ -57,6 +57,23 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
 
         self.__default_pack_prefix = '_pack'
 
+    def __getstate__(self):
+        """
+        In serialization,
+         - will not serialize the indexes
+        """
+        state = self.__dict__.copy()
+        state.pop('index')
+        return state
+
+    def __setstate__(self, state):
+        """
+        In deserialization, we
+         - initialize the indexes.
+        """
+        self.__dict__.update(state)
+        self.index = BaseIndex()
+
     # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
