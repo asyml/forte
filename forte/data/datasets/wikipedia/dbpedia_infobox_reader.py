@@ -102,8 +102,9 @@ class DBpediaInfoBoxReader(PackReader):
                 'objects': object_info_reader.get(last_con),
             }
 
-    def parse_pack(self, collection: Tuple[str, Dict[str, List[state_type]]]
-                   ) -> Iterator[DataPack]:
+    def _parse_pack(
+            self, collection: Tuple[str, Dict[str, List[state_type]]]
+    ) -> Iterator[DataPack]:
         resource_name, info_box_data = collection
 
         if resource_name in self.pack_index:

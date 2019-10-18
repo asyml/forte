@@ -75,7 +75,7 @@ class NIFParser:
     def __next__(self):
         return self.read()
 
-    def parse_graph(self, data: str, tuple_format: str) -> rdflib.Graph:
+    def parse_graph(self, data: str, tuple_format: str) -> List:
         if self.format == 'nquads':
             g_ = rdflib.ConjunctiveGraph()
         else:
@@ -84,45 +84,44 @@ class NIFParser:
         g_.parse(data=data, format=tuple_format)
 
         if self.format == 'nquads':
-            return g_.quads()
+            return list(g_.quads())
         else:
-            return g_
+            return list(g_)
 
     def read(self):
         while True:
-            try:
-                line = next(self.__nif)
-                statements = self.parse_graph(
-                    line.decode('utf-8'),
-                    tuple_format=self.format
-                )
-                return list(statements)
-            except StopIteration:
-                break
+            line = next(self.__nif)
+            statements = list(self.parse_graph(
+                line.decode('utf-8'),
+                tuple_format=self.format
+            ))
 
-        raise StopIteration
+            if len(statements) > 0:
+                return list(statements)
 
     def close(self):
         self.__nif.close()
 
 
-class NIFBufferedContextReader:
-    def __init__(self, nif_path: str, buffer_size: int = 100):
-        self.data_name = os.path.basename(nif_path)
-
+class ContextGroupedNIFReader:
+    def __init__(self, nif_path: str):
         self.__parser = NIFParser(nif_path)
-
-        self.__buf_statement: Dict[str, List] = {}
-        self.__buffer_size = buffer_size
+        self.data_name = os.path.basename(nif_path)
 
         self.__last_c = ''
         self.__statements: List[state_type] = []
 
-    def buf_info(self):
-        logging.info('The buffer size for data [%s] is %s',
-                     self.data_name, len(self.__buf_statement))
+    def __enter__(self):
+        return self
 
-    def yield_by_context(self) -> Iterator[Tuple[str, List[state_type]]]:
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.__parser.close()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+
         res_c: str = ''
         res_states: List = []
 
@@ -146,18 +145,40 @@ class NIFBufferedContextReader:
                 break
 
         if len(self.__statements) > 0:
-            yield self.__last_c, self.__statements
+            return self.__last_c, self.__statements
+
+
+class NIFBufferedContextReader:
+    def __init__(self, nif_path: str, buffer_size: int = 100):
+        self.data_name = os.path.basename(nif_path)
+
+        self.__parser = ContextGroupedNIFReader(nif_path)
+
+        self.buf_statement: Dict[str, List] = {}
+        self.__buffer_size = buffer_size
+
+    def buf_info(self):
+        logging.info('The buffer size for data [%s] is %s',
+                     self.data_name, len(self.buf_statement))
 
     def get(self, context: rdflib.Graph) -> List[state_type]:
+        import pdb
         # TODO: fix this.
         context_ = context_base(context)
 
-        for c_, statements in self.yield_by_context():
+        for c_, statements in self.__parser:
+            # if self.data_name == 'nif_text_links_en.tql.bz2':
+            #     print('yielded from the context generator')
+            #     print('iter: ', c_, len(statements), 'when search:', context_,
+            #           'in data ', self.data_name)
+            #     print('---------')
+            #     pdb.set_trace()
             if c_ == context_:
+                # The return statement here make the yield context lost.
                 return statements
-            elif context_ in self.__buf_statement:
-                return self.__buf_statement[context_]
-            elif self.__buffer_size > len(self.__buf_statement):
-                self.__buf_statement[c_] = statements
+            elif context_ in self.buf_statement:
+                return self.buf_statement[context_]
+            elif self.__buffer_size > len(self.buf_statement):
+                self.buf_statement[c_] = statements
             else:
                 logging.info('[%s] not found in [%s]', context_, self.data_name)

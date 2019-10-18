@@ -126,7 +126,7 @@ class DBpediaWikiReader(PackReader):
 
                     yield str_data, node_data
 
-    def parse_pack(
+    def _parse_pack(
             self, doc_data: Tuple[Dict[str, str], Dict[str, List[state_type]]]
     ) -> Iterator[DataPack]:
         str_data, node_data = doc_data

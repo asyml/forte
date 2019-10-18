@@ -91,28 +91,28 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
 
     raw_pack_dir = os.path.join(output_path, 'nif_raw')
 
-    # # First, we create the NIF reader that read the NIF in order.
-    # nif_pl = Pipeline()
-    # nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
-    #     {
-    #         'redirect_path': redirects,
-    #         'nif_page_structure': nif_page_structure,
-    #         'nif_text_links': nif_text_links,
-    #     },
-    #     DBpediaWikiReader.default_hparams()
-    # ))
-    #
-    # nif_pl.add_processor(WikiArticleWriter(), config=HParams(
-    #     {
-    #         'output_dir': raw_pack_dir,
-    #         'zip_pack': True,
-    #     },
-    #     WikiArticleWriter.default_hparams()
-    # ))
-    #
-    # nif_pl.initialize()
-    # logging.info('Start running the DBpedia text pipeline.')
-    # nif_pl.run(nif_context)
+    # First, we create the NIF reader that read the NIF in order.
+    nif_pl = Pipeline()
+    nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
+        {
+            'redirect_path': redirects,
+            'nif_page_structure': nif_page_structure,
+            'nif_text_links': nif_text_links,
+        },
+        DBpediaWikiReader.default_hparams()
+    ))
+
+    nif_pl.add_processor(WikiArticleWriter(), config=HParams(
+        {
+            'output_dir': raw_pack_dir,
+            'zip_pack': True,
+        },
+        WikiArticleWriter.default_hparams()
+    ))
+
+    nif_pl.initialize()
+    logging.info('Start running the DBpedia text pipeline.')
+    nif_pl.run(nif_context)
 
     # Second, we add info boxes to the packs with NIF.
     ib_pl = Pipeline()
