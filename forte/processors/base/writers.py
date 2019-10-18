@@ -28,7 +28,7 @@ class JsonPackWriter(BaseProcessor[DataPack], ABC):
         self.root_output_dir: str = ''
         self.zip_pack: bool = False
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, _: Resources, configs: HParams):
         self.root_output_dir = configs.output_dir
         self.zip_pack = configs.zip_pack
 

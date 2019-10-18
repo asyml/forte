@@ -50,7 +50,8 @@ class EntryContainer(Generic[E, L, G]):
         state = self.__dict__.copy()
         state['serialization'] = {}
         # TODO: need test cases here.
-        state['serialization']['next_id'] = self._id_manager.current_id_counter()
+        state['serialization']['next_id'] = \
+            self._id_manager.current_id_counter()
         state.pop('_id_manager')
         return state
 
