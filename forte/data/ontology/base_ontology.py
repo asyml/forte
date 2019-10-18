@@ -155,7 +155,6 @@ class CoreferenceGroup(Group):
                  pack: DataPack,
                  members: Optional[Set[CoreferenceMention]] = None):
         super().__init__(pack, members)  # type: ignore
-        self.coref_type = None
 
 
 class Dependency(Link):

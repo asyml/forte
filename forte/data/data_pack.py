@@ -11,7 +11,8 @@ from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
 from forte.data.base import Span
-from forte.data.ontology.top import (Annotation, Link, Group, SinglePackEntries)
+from forte.data.ontology.top import (Annotation, Link, Group, SinglePackEntries,
+                                     Generic)
 from forte.data import io_utils
 
 logger = logging.getLogger(__name__)
@@ -24,15 +25,18 @@ __all__ = [
 
 class Meta(BaseMeta):
     """
-    Meta information of :class:`~forte.data.data_pack.DataPack`.
+    Basic Meta information associated with each instance of
+    :class:`~forte.data.data_pack.DataPack`.
+
+    Args:
+        doc_id:  An unique ID assigned to identify the data pack.
+        language: The language used by this data pack, default is English.
+        span_unit: The unit used for interpreting the Span object of this
+          data pack. Default is character.
     """
 
-    def __init__(
-            self,
-            doc_id: Optional[str] = None,
-            language: str = 'eng',
-            span_unit: str = 'character'
-    ):
+    def __init__(self, doc_id: Optional[str] = None,
+                 language: str = 'eng', span_unit: str = 'character'):
         super().__init__(doc_id)
         self.language = language
         self.span_unit = span_unit
@@ -56,6 +60,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
+        self.generics: List[Generic] = []
 
         self.replace_back_operations: ReplaceOperationsType = []
         self.processed_original_spans: List[Tuple[Span, Span]] = []
@@ -70,9 +75,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         1) will serialize the annotation sorted list as a normal list;
         2) will not serialize the indexes
         """
-        state = self.__dict__.copy()
+        state = super(DataPack, self).__getstate__()
         state['annotations'] = list(state['annotations'])
         state.pop('index')
+
         return state
 
     def __setstate__(self, state):
@@ -81,12 +87,24 @@ class DataPack(BasePack[Entry, Link, Group]):
         1) transform the annotation list back to a sorted list;
         2) initialize the indexes.
         """
-        self.__dict__.update(state)
+        super(DataPack, self).__setstate__(state)
         self.annotations = SortedList(self.annotations)
         self.index = DataIndex()
         self.index.update_basic_index(list(self.annotations))
         self.index.update_basic_index(self.links)
         self.index.update_basic_index(self.groups)
+
+        for a in self.annotations:
+            a.set_pack(self)
+
+        for a in self.links:
+            a.set_pack(self)
+
+        for a in self.groups:
+            a.set_pack(self)
+
+        for a in self.generics:
+            a.set_pack(a)
 
     # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:

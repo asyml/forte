@@ -7,6 +7,7 @@ from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base import Span
 
 __all__ = [
+    "Generic",
     "Annotation",
     "Group",
     "Link",
@@ -16,6 +17,10 @@ __all__ = [
     "SinglePackEntries",
     "MultiPackEntries",
 ]
+
+
+class Generic(Entry):
+    pass
 
 
 @total_ordering

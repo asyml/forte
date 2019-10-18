@@ -246,11 +246,17 @@ class BasePipeline(Generic[PackType]):
     def process_dataset(self, *args, **kwargs) -> Iterator[PackType]:
         """
         Process the documents in the data source(s) and return an
-        iterator or list of DataPacks.
+        iterator or list of DataPacks. The arguments are directly passed
+        to the reader to take data from the source.
 
         Args:
-            **kwargs, which can be one or more data sources.
+            *args:
+            **kwargs:
         """
+        # TODO: This is a generator, but the name may be confusing since the
+        #  user might expect this function will do all the processing, if
+        #  this is called like `process_dataset(args)` instead of
+        #  `for p in process_dataset(args)`, this will have no effect.
         data_iter = self._reader.iter(*args, **kwargs)
         return self.process_packs(data_iter)
 
