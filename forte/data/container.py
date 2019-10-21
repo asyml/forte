@@ -16,13 +16,16 @@ class IdManager:
     Control the ids assigned to each entry.
     """
 
-    def __init__(self):
-        self.__id_counter = 0
+    def __init__(self, initial_id_count: int = 0):
+        self.__id_counter = initial_id_count
 
     def get_id(self):
         i = self.__id_counter
         self.__id_counter += 1
         return i
+
+    def current_id_counter(self):
+        return self.__id_counter
 
 
 class EntryContainer(Generic[E, L, G]):
@@ -36,6 +39,30 @@ class EntryContainer(Generic[E, L, G]):
 
         # The Id manager controls the ID management in this container
         self._id_manager = IdManager()
+
+    def __getstate__(self):
+        """
+        In serialization:
+         - We create a special field for serialization information
+         - we don't serialize the IdManager object directly, instead we save
+           the max count in the serialization information dict.
+        """
+        state = self.__dict__.copy()
+        state['serialization'] = {}
+        # TODO: need test cases here.
+        state['serialization']['next_id'] = \
+            self._id_manager.current_id_counter()
+        state.pop('_id_manager')
+        return state
+
+    def __setstate__(self, state):
+        """
+        In deserialization,
+          - The IdManager is recreated from the id count.
+        """
+        self._id_manager = IdManager(state['serialization'])
+        self.__dict__.update(state)
+        self.__dict__.pop('serialization')
 
     def add_entry_creation_record(self, entry_id: int):
         c = process_manager.component

@@ -194,11 +194,11 @@ class OntonotesReader(PackReader):
                     has_rows = False
 
             # group the coreference mentions in the whole document
-            for group_id, mention_list in groups.items():
-                kwargs_i = {"coref_type": group_id}
+            for _, mention_list in groups.items():
+                # kwargs_i = {"coref_type": group_id}
                 group = self._ontology.CoreferenceGroup(  # type: ignore
                     pack)
-                group.set_fields(**kwargs_i)
+                # group.set_fields(**kwargs_i)
                 group.add_members(mention_list)
                 pack.add_or_get_entry(group)
 

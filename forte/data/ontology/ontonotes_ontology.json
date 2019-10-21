@@ -1,0 +1,51 @@
+{
+  "ontology_name": "forte.data.ontology.ontonotes_ontology",
+  "imports": [
+    "forte.data.ontology.top",
+    "forte.data.ontology.base_ontology"
+  ],
+  "entry_definitions": [
+    {
+      "entry_name": "forte.data.ontology.ontonotes_ontology.Token",
+      "parent_entry": "forte.data.ontology.base_ontology.Token",
+      "attributes": [
+        {
+          "attribute_name": "sense",
+          "attribute_type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "forte.data.ontology.ontonotes_ontology.Sentence",
+      "parent_entry": "forte.data.ontology.base_ontology.Sentence",
+      "attributes": [
+        {
+          "attribute_name": "speaker",
+          "attribute_type": "str"
+        },
+        {
+          "attribute_name": "part_id",
+          "attribute_type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "forte.data.ontology.base_ontology.PredicateMention",
+      "parent_entry": "forte.data.ontology.base_ontology.PredicateMention",
+      "attributes": [
+        {
+          "attribute_name": "pred_type",
+          "attribute_type": "str"
+        },
+        {
+          "attribute_name": "pred_lemma",
+          "attribute_type": "str"
+        },
+        {
+          "attribute_name": "framenet_id",
+          "attribute_type": "str"
+        }
+      ]
+    }
+  ]
+}

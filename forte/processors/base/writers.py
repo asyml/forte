@@ -22,13 +22,13 @@ __all__ = [
 ]
 
 
-class JsonPackWriter(BaseProcessor, ABC):
+class JsonPackWriter(BaseProcessor[PackType], ABC):
     def __init__(self):
         super().__init__()
         self.root_output_dir: str = ''
         self.zip_pack: bool = False
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, _: Resources, configs: HParams):
         self.root_output_dir = configs.output_dir
         self.zip_pack = configs.zip_pack
 
@@ -40,7 +40,7 @@ class JsonPackWriter(BaseProcessor, ABC):
             os.makedirs(self.root_output_dir)
 
     @abstractmethod
-    def sub_output_dir(self, pack: PackType) -> str:
+    def sub_output_path(self, pack: PackType) -> str:
         """
         Allow defining output path using the information of the pack.
         Args:
@@ -59,11 +59,16 @@ class JsonPackWriter(BaseProcessor, ABC):
         """
         return {
             'output_dir': None,
-            'zip_pack': True,
+            'zip_pack': False,
         }
 
     def _process(self, input_pack: PackType):
-        p = os.path.join(self.root_output_dir, self.sub_output_dir(input_pack))
+        sub_path = self.sub_output_path(input_pack)
+        if sub_path == '':
+            raise ValueError(
+                "No concrete path provided from sub_output_path.")
+
+        p = os.path.join(self.root_output_dir, sub_path)
         ensure_dir(p)
 
         if self.zip_pack:
