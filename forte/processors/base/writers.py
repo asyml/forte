@@ -28,7 +28,7 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
         self.root_output_dir: str = ''
         self.zip_pack: bool = False
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, _: Resources, configs: HParams):
         self.root_output_dir = configs.output_dir
         self.zip_pack = configs.zip_pack
 
@@ -42,8 +42,7 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
     @abstractmethod
     def sub_output_path(self, pack: PackType) -> str:
         """
-        The implementation of this defines relative output path based on the
-        information of the pack. For example, it can be the pack's doc id.
+        Allow defining output path using the information of the pack.
         Args:
             pack:
 
@@ -60,11 +59,16 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
         """
         return {
             'output_dir': None,
-            'zip_pack': True,
+            'zip_pack': False,
         }
 
     def _process(self, input_pack: PackType):
-        p = os.path.join(self.root_output_dir, self.sub_output_path(input_pack))
+        sub_path = self.sub_output_path(input_pack)
+        if sub_path == '':
+            raise ValueError(
+                "No concrete path provided from sub_output_path.")
+
+        p = os.path.join(self.root_output_dir, sub_path)
         ensure_dir(p)
 
         if self.zip_pack:

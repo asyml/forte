@@ -1,7 +1,7 @@
 """
 This class defines the basic ontology supported by our system
 """
-from typing import Optional, Set
+from typing import Optional
 
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation, Link, Group
@@ -151,11 +151,7 @@ class CoreferenceGroup(Group):
     MemberType = CoreferenceMention
     """The entry type of group members of :class:`CoreferenceGroup`."""
 
-    def __init__(self,
-                 pack: DataPack,
-                 members: Optional[Set[CoreferenceMention]] = None):
-        super().__init__(pack, members)  # type: ignore
-        self.coref_type = None
+    pass
 
 
 class Dependency(Link):

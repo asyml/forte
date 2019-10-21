@@ -53,6 +53,19 @@ class Entry(Generic[ContainerType]):
         self.__pack: ContainerType = pack
         pack.validate(self)
 
+    def __getstate__(self):
+        """
+        In serialization:
+         - The pack is not serialize, and it will be set by the container.
+
+        This also implies that it is not advised to serialize an entry on its
+        own, without the Container as the context, there is little semantics
+        remained in an entry.
+        """
+        state = self.__dict__.copy()
+        state.pop('_Entry__pack')
+        return state
+
     @property
     def tid(self) -> int:
         return self._tid
@@ -70,6 +83,9 @@ class Entry(Generic[ContainerType]):
     @property
     def pack(self) -> ContainerType:
         return self.__pack
+
+    def set_pack(self, pack: ContainerType):
+        self.__pack = pack
 
     def set_fields(self, **kwargs):
         """
