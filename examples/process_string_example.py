@@ -8,8 +8,9 @@ from forte.data.ontology.base_ontology import (
     PredicateMention, PredicateArgument)
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors import CoNLLNERPredictor, SRLPredictor
-from forte.processors.simple_writers import SimpleJsonPackWriter
+from forte.processors import (
+    CoNLLNERPredictor, SRLPredictor)
+from forte.processors.writers import DocIdJsonPackWriter
 from forte.processors.nltk_processors import (
     NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
 from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
@@ -92,7 +93,7 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
     )
     pl.add_processor(processor=StandfordNLPProcessor(models_path),
                      config=config)
-    pl.add_processor(processor=SimpleJsonPackWriter(),
+    pl.add_processor(processor=DocIdJsonPackWriter(),
                      config=output_config)
     pl.set_ontology(base_ontology)
 
@@ -129,7 +130,7 @@ def main():
         {
             'output_dir': '.'
         },
-        SimpleJsonPackWriter.default_hparams(),
+        DocIdJsonPackWriter.default_hparams(),
     )
 
     eng_text = "The plain green Norway spruce is displayed in the gallery's " \
