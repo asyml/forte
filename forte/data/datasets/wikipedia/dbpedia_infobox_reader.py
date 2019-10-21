@@ -8,7 +8,7 @@ This will use the following datasets from DBpedia:
 """
 import csv
 import os
-from typing import Optional, List, Iterator, Dict, Tuple
+from typing import List, Iterator, Dict, Tuple
 
 import rdflib
 from smart_open import open
@@ -18,8 +18,8 @@ from forte import Resources, logging
 from forte.data import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader)
-from ft.onto.wikipedia import WikiInfoBoxProperty, WikiInfoBoxMapped
 from forte.data.readers import PackReader
+from ft.onto.wikipedia import WikiInfoBoxProperty, WikiInfoBoxMapped
 
 state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]
 
@@ -58,29 +58,25 @@ def read_index(pack_index_path: str) -> Dict[str, str]:
 class DBpediaInfoBoxReader(PackReader):
     def __init__(self):
         super().__init__()
-        self.pack_index: Dict[str, str] = {}
-        self.pack_dir: str = '.'
-        self.reading_log: str = '.'
-        self.redirects: Dict[str, str] = {}
-
+        self.pack_index: Dict[str, str]
+        self.pack_dir: str
+        self.redirects: Dict[str, str]
         self.logger = logging.getLogger(__name__)
 
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
+    def initialize(self, resource: Resources, configs: HParams):
         # pylint: disable=attribute-defined-outside-init
-        self.pack_index: Dict[str, str] = read_index(configs.pack_index)
-        self.pack_dir: str = configs.pack_dir
+        self.pack_index = read_index(configs.pack_index)
+        self.pack_dir = configs.pack_dir
+
+        self.redirects = resource.get('redirects')
 
         self.literal_info_reader = NIFBufferedContextReader(
             configs.mapping_literals)
         self.object_info_reader = NIFBufferedContextReader(
             configs.mapping_objects)
 
-        self.redirects = resource.get('redirects')
-
         # Set up logging.
-        self.reading_log: str = configs.reading_log
-
-        f_handler = logging.FileHandler(self.reading_log)
+        f_handler = logging.FileHandler(configs.reading_log)
         f_format = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         f_handler.setFormatter(f_format)

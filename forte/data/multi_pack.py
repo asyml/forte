@@ -36,10 +36,10 @@ class MultiPackMeta(BaseMeta):
         super().__init__()
 
 
-class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
+class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     """
     A :class:`MultiPack' contains multiple DataPacks and a
-    collection of cross-pack entries (annotations, links, and groups)
+    collection of cross-pack entries (links, and groups)
     """
 
     def __init__(self):

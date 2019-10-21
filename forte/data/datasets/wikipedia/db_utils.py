@@ -28,6 +28,8 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
                 from_page = get_resource_name(s)
                 redirect_page = get_resource_name(o)
                 redirect_to[from_page] = redirect_page
+                if count % 50000 == 0:
+                    logging.info("Loaded %d redirects.", count)
     return redirect_to
 
 
@@ -109,7 +111,7 @@ class ContextGroupedNIFReader:
         self.__parser = NIFParser(nif_path)
         self.data_name = os.path.basename(nif_path)
 
-        self.__last_c = ''
+        self.__last_c: str = ''
         self.__statements: List[state_type] = []
 
     def __enter__(self):
@@ -131,7 +133,7 @@ class ContextGroupedNIFReader:
                     for s, v, o, c in statements:
                         c_ = context_base(c)
 
-                        if not c_ == self.__last_c and self.__last_c is not '':
+                        if c_ != self.__last_c and self.__last_c != '':
                             res_c = self.__last_c
                             res_states.extend(self.__statements)
                             self.__statements.clear()
@@ -180,6 +182,4 @@ class NIFBufferedContextReader:
                     self.buf_statement.popitem(False)
                     self.buf_statement[c_] = statements
 
-                    import pdb
-                    pdb.set_trace()
-                    return []
+        return []

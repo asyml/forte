@@ -2,26 +2,24 @@
 This creates a pipeline to parse the Wikipedia dump and save the results
 as MultiPacks onto disk.
 """
+import csv
 import logging
+import os
 import pickle
 import sys
-import os
-import csv
 from typing import TextIO, Any, Dict
 
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data import DataPack, pack_utils
-from forte.data.base_pack import PackType
-from forte.data.datasets.wikipedia.db_utils import NIFParser, get_resource_name, \
-    load_redirects
+from forte.data.datasets.wikipedia.db_utils import load_redirects
 from forte.data.datasets.wikipedia.dbpedia_based_reader import DBpediaWikiReader
 from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \
     DBpediaInfoBoxReader
-from ft.onto.wikipedia import WikiPage
 from forte.pipeline import Pipeline
 from forte.processors.base.writers import JsonPackWriter
+from ft.onto.wikipedia import WikiPage
 
 __all__ = [
     'WikiArticleWriter',
@@ -125,9 +123,9 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         WikiArticleWriter.default_hparams()
     ))
 
-    # nif_pl.initialize()
-    # logging.info('Start running the DBpedia text pipeline.')
-    # nif_pl.run(nif_context)
+    nif_pl.initialize()
+    logging.info('Start running the DBpedia text pipeline.')
+    nif_pl.run(nif_context)
 
     # Second, we add info boxes to the packs with NIF.
     ib_pl = Pipeline()

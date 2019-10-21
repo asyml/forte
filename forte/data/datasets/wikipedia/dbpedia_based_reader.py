@@ -15,13 +15,13 @@ from texar.torch import HParams
 from forte import Resources
 from forte.data import DataPack
 from forte.data.ontology import Entry
-from ft.onto.wikipedia import WikiPage, WikiSection, WikiParagraph, WikiTitle, \
-    WikiAnchor, WikiInfoBoxMapped
 from forte.data.readers import PackReader
 from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
     get_resource_name, get_resource_fragment
 )
+from ft.onto.wikipedia import (WikiPage, WikiSection, WikiParagraph, WikiTitle,
+                               WikiAnchor, WikiInfoBoxMapped)
 
 state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]
 
