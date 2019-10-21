@@ -17,7 +17,7 @@ __all__.extend("Token")
 
 
 class Token(forte.data.ontology.example_import_ontology.Token):
-    def __init__(self, pack: forte.data.container.EntryContainer, begin: int, end: int):
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         """
         Attributes:
             related_tokens (typing.List): Tokens related to the current token

@@ -7,7 +7,6 @@ import gzip
 import logging
 import os
 from abc import abstractmethod, ABC
-from typing import Optional
 
 from texar.torch.hyperparams import HParams
 

@@ -2,7 +2,7 @@ from functools import total_ordering
 from typing import (Optional, Set, Tuple, Type)
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.container import EntryContainer
+from forte.data.container import EntryContainer, ContainerType
 from forte.data.ontology.base.core import Entry, BaseLink, BaseGroup
 from forte.data.base_pack import PackType
 from forte.data.base import Span
@@ -21,7 +21,8 @@ __all__ = [
 
 
 class Generic(Entry):
-    pass
+    def __init__(self, pack: ContainerType):
+        super(Generic, self).__init__(pack=pack)
 
 
 @total_ordering

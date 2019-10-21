@@ -6,7 +6,7 @@ import unittest
 
 from typing import List
 
-from forte.data.ontology.base_ontology import Sentence, Dependency
+from forte.data.ontology.base_ontology import Sentence, Document, Dependency
 from forte.data.readers.conllu_ud_reader import ConllUDReader
 from forte.data.data_pack import DataPack
 

@@ -19,7 +19,7 @@ class Token(forte.data.ontology.base.top.Annotation):
     """
     Base parent token entry
     """
-    def __init__(self, pack: forte.data.container.EntryContainer, begin: int, end: int):
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._pos_tag: typing.Optional[str] = None
         self._lemma: typing.Optional[str] = None
@@ -43,7 +43,7 @@ __all__.extend("EntityMention")
 
 
 class EntityMention(forte.data.ontology.base.top.Annotation):
-    def __init__(self, pack: forte.data.container.EntryContainer, begin: int, end: int):
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._entity_type: typing.Optional[str] = None
 

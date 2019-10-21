@@ -263,7 +263,7 @@ class OntologyCodeGenerator:
 
     def _generate_ontology(self, json_file_path: str,
                            visited_paths: Optional[Dict[str, bool]] = None,
-                           rec_visited_paths: Optional[Dict[str, bool]] = None) \
+                           rec_visited_paths: Optional[Dict[str, bool]] = None)\
             -> List[str]:
         """
         Performs a topological traversal on the directed graph formed by the
