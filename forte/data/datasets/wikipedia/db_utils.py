@@ -162,22 +162,15 @@ class NIFBufferedContextReader:
                      self.data_name, len(self.buf_statement))
 
     def get(self, context: rdflib.Graph) -> List[state_type]:
-        import pdb
         # TODO: fix this.
         context_ = context_base(context)
 
+        if context_ in self.buf_statement:
+            return self.buf_statement.pop(context_)
+
         for c_, statements in self.__parser:
-            # if self.data_name == 'nif_text_links_en.tql.bz2':
-            #     print('yielded from the context generator')
-            #     print('iter: ', c_, len(statements), 'when search:', context_,
-            #           'in data ', self.data_name)
-            #     print('---------')
-            #     pdb.set_trace()
             if c_ == context_:
-                # The return statement here make the yield context lost.
                 return statements
-            elif context_ in self.buf_statement:
-                return self.buf_statement[context_]
             elif self.__buffer_size > len(self.buf_statement):
                 self.buf_statement[c_] = statements
             else:
