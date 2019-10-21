@@ -151,10 +151,7 @@ class CoreferenceGroup(Group):
     MemberType = CoreferenceMention
     """The entry type of group members of :class:`CoreferenceGroup`."""
 
-    def __init__(self,
-                 pack: DataPack,
-                 members: Optional[Set[CoreferenceMention]] = None):
-        super().__init__(pack, members)  # type: ignore
+    pass
 
 
 class Dependency(Link):
