@@ -7,13 +7,11 @@ import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
 from forte.data.base import Span
-from forte.data.ontology.base_ontology import \
-    PredicateMention, PredicateArgument
-from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.data.ontology import base_ontology
+from forte.common.resources import Resources
+from forte.common.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
 logger = logging.getLogger(__name__)
@@ -80,21 +78,11 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def define_context(self):
         self.context_type = self._ontology.Sentence
 
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
             self._ontology.Token: []
         }
         return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.PredicateMention:
-                ["pred_type", "span"],
-            self._ontology.PredicateArgument: ["span"],
-            self._ontology.PredicateLink:
-                ["parent", "child", "arg_type"]
-        }
-        return output_info
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
@@ -136,12 +124,13 @@ class SRLPredictor(FixedSizeBatchProcessor):
             for pred_span, arg_result in predictions:
 
                 pred = data_pack.add_entry(
-                    PredicateMention(data_pack, pred_span.begin, pred_span.end)
+                    self._ontology.PredicateMention(
+                        data_pack, pred_span.begin, pred_span.end)
                 )
 
                 for arg_span, label in arg_result:
                     arg = data_pack.add_or_get_entry(
-                        PredicateArgument(
+                        self._ontology.PredicateArgument(
                             data_pack, arg_span.begin, arg_span.end
                         )
                     )

@@ -3,7 +3,8 @@ from typing import (Optional, Set, Tuple, Type)
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
-from forte.data.ontology.base.core import Entry, BaseLink, BaseGroup, EntryType
+from forte.data.ontology.base.core import Entry, BaseLink, BaseGroup
+from forte.data.base_pack import PackType
 from forte.data.base import Span
 
 __all__ = [
@@ -26,13 +27,13 @@ class Annotation(Entry):
     in the text.
 
     Args:
-        pack (EntryContainer): The container that this annotation
+        pack (PackType): The container that this annotation
          will be added to.
         begin (int): The offset of the first character in the annotation.
         end (int): The offset of the last character in the annotation + 1.
     """
 
-    def __init__(self, pack: EntryContainer, begin: int, end: int):
+    def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack)
         if begin > end:
             raise ValueError(
@@ -97,7 +98,7 @@ class Annotation(Entry):
         return self.pack.get_span_text(self.span)
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 
@@ -118,12 +119,12 @@ class Link(BaseLink):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
-        self._parent: Optional[str] = None
-        self._child: Optional[str] = None
+        self._parent: Optional[int] = None
+        self._child: Optional[int] = None
         super().__init__(pack, parent, child)
 
     # TODO: Can we get better type hint here?
@@ -225,7 +226,7 @@ class Group(BaseGroup[Entry]):
         super().__init__(pack, members)
 
 
-class SubEntry(Entry):
+class SubEntry(Entry[PackType]):
     """
     This is used to identify an Entry in one of the packs in the
     :class:`Multipack`.
@@ -238,10 +239,10 @@ class SubEntry(Entry):
         entry_id: The tid of the entry in the sub pack.
     """
 
-    def __init__(self, pack: EntryContainer, pack_index: int, entry_id: str):
+    def __init__(self, pack: PackType, pack_index: int, entry_id: int):
         super().__init__(pack)
         self._pack_index: int = pack_index
-        self._entry_id: str = entry_id
+        self._entry_id: int = entry_id
 
     @property
     def pack_index(self):
@@ -261,7 +262,7 @@ class SubEntry(Entry):
                 ) == (type(other), other.pack_index, other.entry)
 
     @property
-    def index_key(self) -> Tuple[int, str]:
+    def index_key(self) -> Tuple[int, int]:
         return self._pack_index, self._entry_id
 
 
@@ -281,7 +282,7 @@ class MultiPackLink(BaseLink):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             parent: Optional[SubEntry],
             child: Optional[SubEntry],
     ):
@@ -294,8 +295,8 @@ class MultiPackLink(BaseLink):
         """
         super().__init__(pack, parent, child)
 
-        self._parent: Optional[Tuple[int, str]] = None
-        self._child: Optional[Tuple[int, str]] = None
+        self._parent: Optional[Tuple[int, int]] = None
+        self._child: Optional[Tuple[int, int]] = None
 
         if parent is not None:
             self.set_parent(parent)
@@ -303,13 +304,13 @@ class MultiPackLink(BaseLink):
             self.set_child(child)
 
     @property
-    def parent(self) -> Tuple[int, str]:
+    def parent(self) -> Tuple[int, int]:
         if self._parent is None:
             raise IncompleteEntryError("Parent is not set for this link.")
         return self._parent
 
     @property
-    def child(self) -> Tuple[int, str]:
+    def child(self) -> Tuple[int, int]:
         if self._child is None:
             raise IncompleteEntryError("Child is not set for this link.")
         return self._child
@@ -377,7 +378,7 @@ class MultiPackGroup(BaseGroup[SubEntry]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             members: Optional[Set[SubEntry]],
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)

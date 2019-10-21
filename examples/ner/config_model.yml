@@ -1,11 +1,5 @@
-
-word_embed_dim: 100
-char_embed_dim: 30
-rnn_hidden_size: 128
 output_hidden_size: 128
 dropout_rate: 0.3
-
-load_glove: yes
 
 word_emb:
     dim: 100
@@ -14,7 +8,6 @@ word_emb:
     # "dropout_rate": 0.3,
     # "dropout_strategy": 'item'
 
-embedding_path: ner_data/glove/glove.6B/glove.6B.100d.txt
 
 char_emb:
     dim: 30
@@ -46,27 +39,12 @@ decay_rate: 0.05
 
 random_seed: 1234
 
-# opt = {
-#     "optimizer": {
-#         "type": "MomentumOptimizer",
-#         "kwargs": {"learning_rate": learning_rate,
-#                    "momentum": 0.9,
-#                    "use_nesterov": True}
-#     },
-#     "learning_rate_decay": {
-#         "type": "inverse_time_decay",
-#         "kwargs": {
-#             "decay_steps": decay_interval,
-#             "decay_rate": decay_rate,
-#             "staircase": True
-#         },
-#         "start_decay_step": 1
-#     }
-# }
-
 initializer:
     "type": "xavier_uniform_"
 
 
-# "The path to save model.",
+# path to save model
 model_path: "best_ner_crf_model.ckpt"
+
+# path to save resources
+resource_dir: "./"

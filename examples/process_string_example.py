@@ -4,16 +4,15 @@ from termcolor import colored
 from texar.torch import HParams
 
 from forte.data.ontology import base_ontology
-from forte.data.ontology.base_ontology import \
-    PredicateMention, PredicateArgument
+from forte.data.ontology.base_ontology import (
+    PredicateMention, PredicateArgument)
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors import (
-    CoNLLNERPredictor, SRLPredictor)
+from forte.processors import CoNLLNERPredictor, SRLPredictor
 from forte.processors.simple_writers import SimpleJsonPackWriter
-from examples.processors.NLTK_processors import NLTKWordTokenizer, \
-    NLTKPOSTagger, NLTKSentenceSegmenter
-from examples.processors.StanfordNLP_processor import StandfordNLPProcessor
+from forte.processors.nltk_processors import (
+    NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
+from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
 
 
 def string_processor_example(ner_model_dir: str, srl_model_dir: str):

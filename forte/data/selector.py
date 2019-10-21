@@ -25,6 +25,7 @@ class DummySelector(Selector[InputPackType, InputPackType]):
     Do nothing, return the data pack itself, which can be either DataPack
     or MultiPack
     """
+
     # pylint: disable=no-self-use
     def select(self, pack: InputPackType) -> Iterator[InputPackType]:
         yield pack
@@ -42,7 +43,7 @@ class NameMatchSelector(SinglePackSelector):
 
     def __init__(self, select_name: str):
         super().__init__()
-        assert self.select_name is not None
+        assert select_name is not None
         self.select_name: str = select_name
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:

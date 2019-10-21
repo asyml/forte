@@ -1,12 +1,13 @@
 from abc import abstractmethod
 from typing import (
-    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic
-)
+    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic,
+    Iterator)
 
 from texar.torch import HParams
 
 from forte.data.base_pack import PackType
-from forte.data import DataPack, MultiPack, DataRequest
+from forte.data import DataPack, MultiPack
+from forte.common.types import DataRequest
 from forte.data.io_utils import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation
 
@@ -65,41 +66,47 @@ class ProcessingBatcher(Generic[PackType]):
         """
         raise NotImplementedError
 
+    def flush(self) -> Iterator[Dict]:
+        """
+        Flush the remaining data.
+        Returns:
+
+        """
+        if self.current_batch:
+            remaining = {}
+            remaining.update(self.current_batch)
+            yield remaining
+            self.current_batch = {}
+            self.current_batch_sources = []
+
     def get_batch(
             self,
             input_pack: PackType,
             context_type: Type[Annotation],
             requests: DataRequest,
-    ):
+    ) -> Iterator[Dict]:
         """
         Returns an iterator of data batches.
         """
-        if input_pack.is_poison():
-            # No more packs, flush the remaining instances.
-            if self.current_batch:
+        # cache the new pack and generate batches
+        self.data_pack_pool.append(input_pack)
+
+        for (data_batch, instance_num) in self._get_data_batch(
+                input_pack, context_type, requests):
+            self.current_batch = merge_batches(
+                [self.current_batch, data_batch]
+            )
+            self.current_batch_sources.append(instance_num)
+
+            # Yield a batch on two conditions.
+            # 1. If we do not want to have batches to cross_pack, we should
+            # yield since this pack is exhausted.
+            # 2. We could also yield when the batcher condition is met:
+            # i.e. ``_should_yield()`` is True.
+            if not self.cross_pack or self._should_yield():
                 yield self.current_batch
                 self.current_batch = {}
                 self.current_batch_sources = []
-        else:
-            # cache the new pack and generate batches
-            self.data_pack_pool.append(input_pack)
-
-            for (data_batch, instance_num) in self._get_data_batch(
-                    input_pack, context_type, requests):
-                self.current_batch = merge_batches(
-                    [self.current_batch, data_batch]
-                )
-                self.current_batch_sources.append(instance_num)
-
-                # Yield a batch on two conditions.
-                # 1. If we do not want to have batches to cross_pack, we should
-                # yield since this pack is exhausted.
-                # 2. We could also yield when the batcher condition is met:
-                # i.e. ``_should_yield()`` is True.
-                if not self.cross_pack or self._should_yield():
-                    yield self.current_batch
-                    self.current_batch = {}
-                    self.current_batch_sources = []
 
     def _get_data_batch(
             self,
@@ -125,9 +132,8 @@ class ProcessingBatcher(Generic[PackType]):
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def __init__(self, cross_pack=True):
         super().__init__(cross_pack)
-        self.instance_num_in_current_batch = 0
+        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
-
         default_config = HParams(None, self.default_hparams())
         self.batch_size = default_config.batch_size
 
@@ -135,7 +141,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         config_ = HParams(config, self.default_hparams())
         self.batch_size = config_.batch_size
 
-        self.instance_num_in_current_batch = 0
+        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
@@ -159,10 +165,9 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         instances: List[Dict] = []
         for data in data_pack.get_data(context_type, requests, offset):
             instances.append(data)
-            if (len(instances) ==
-                    self.batch_size - self.instance_num_in_current_batch):
+            if len(instances) == self.batch_size:
                 batch = batch_instances(instances)
-                self.instance_num_in_current_batch += len(instances)
+                # self.instance_num_in_current_batch += len(instances)
                 self.batch_is_full = True
                 yield (batch, len(instances))
                 instances = []
@@ -170,14 +175,14 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
         # Flush the remaining data.
         if len(instances) > 0:
-            self.instance_num_in_current_batch += len(instances)
+            # self.instance_num_in_current_batch += len(instances)
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
     @staticmethod
     def default_hparams() -> Dict:
         return {
-            'batch_size': 5,
+            'batch_size': 10,
         }
 
 
@@ -251,5 +256,6 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
     @staticmethod
     def default_hparams() -> Dict:
         return {
+            'batch_size': 10,
             'input_pack_name': 'source',
         }

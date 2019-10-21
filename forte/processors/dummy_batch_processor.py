@@ -4,15 +4,15 @@ create entries arbitrarily. The processors here are useful as placeholders and
 test cases.
 
 """
-from typing import Dict, Optional
+from typing import Dict, Optional, Type
 
 import numpy as np
 
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
+from forte.common.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology import base_ontology
-from forte.data.ontology.base_ontology import EntityMention
-from forte.processors.base import BatchProcessor, ProcessInfo
+from forte.processors.base import BatchProcessor
 
 __all__ = [
     "DummyRelationExtractor",
@@ -32,32 +32,23 @@ class DummyRelationExtractor(BatchProcessor):
         super().__init__()
         self._ontology = base_ontology
         self.define_context()
-
         self.batch_size = 4
-        self.batcher = self.define_batcher()
 
     def define_batcher(self) -> ProcessingBatcher:
         # pylint: disable=no-self-use
         return FixedSizeDataPackBatcher()
 
-    def define_context(self):
-        self.context_type = self._ontology.Sentence
+    def define_context(self) -> Type[base_ontology.Annotation]:
+        return self._ontology.Sentence
 
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
             self._ontology.Token: [],
             self._ontology.EntityMention: {
                 "fields": ["ner_type", "tid"]
             }
         }
         return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.RelationLink:
-                ["parent", "child", "rel_type"]
-        }
-        return output_info
 
     def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
         entities_span = data_batch["EntityMention"]["span"]
@@ -100,10 +91,12 @@ class DummyRelationExtractor(BatchProcessor):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
                 link = self._ontology.RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
-                parent: EntityMention = data_pack.get_entry(  # type: ignore
-                    output_dict["RelationLink"]["parent.tid"][i][j])
+                parent: base_ontology.EntityMention = \
+                    data_pack.get_entry(  # type: ignore
+                        output_dict["RelationLink"]["parent.tid"][i][j])
                 link.set_parent(parent)
-                child: EntityMention = data_pack.get_entry(  # type: ignore
-                    output_dict["RelationLink"]["child.tid"][i][j])
+                child: base_ontology.EntityMention = \
+                    data_pack.get_entry(  # type: ignore
+                        output_dict["RelationLink"]["child.tid"][i][j])
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)
