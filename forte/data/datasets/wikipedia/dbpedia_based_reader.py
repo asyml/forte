@@ -15,12 +15,12 @@ from texar.torch import HParams
 from forte import Resources
 from forte.data import DataPack
 from forte.data.ontology import Entry
-from forte.data.ontology.wiki_ontology import WikiPage, WikiSection, \
-    WikiParagraph, WikiTitle, WikiAnchor, WikiInfoBoxMapped
+from ft.onto.wikipedia import WikiPage, WikiSection, WikiParagraph, WikiTitle, \
+    WikiAnchor, WikiInfoBoxMapped
 from forte.data.readers import PackReader
 from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
-    get_resource_name, get_resource_fragment, load_redirects
+    get_resource_name, get_resource_fragment
 )
 
 state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]
@@ -52,7 +52,8 @@ def add_struct(pack: DataPack, struct_statements: List):
                 input('new struct type?')
 
 
-def add_anchor_links(pack: DataPack, text_link_statements: List[state_type]):
+def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
+                     redirects: Dict[str, str]):
     link_grouped: DefaultDict[str,
                               Dict[str, rdflib.term.Node]] = defaultdict(dict)
     for nif_range, rel, info in text_link_statements:
@@ -70,7 +71,12 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type]):
                     print(info_value)
                     input('unknown anchor type.')
             if info_key == 'taIdentRef':
-                anchor.set_target_page_name(get_resource_name(info_value))
+                target_page_name = get_resource_name(info_value)
+                if target_page_name in redirects:
+                    import pdb
+                    pdb.set_trace()
+                    target_page_name = redirects[target_page_name]
+                anchor.set_target_page_name(target_page_name)
         pack.add_entry(anchor)
 
 
@@ -89,10 +95,10 @@ class DBpediaWikiReader(PackReader):
         super().__init__()
         self.struct_reader = None
         self.link_reader = None
+        self.redirects: Dict[str, str] = {}
 
     def initialize(self, resource: Resources, configs: HParams):
-        # TODO: use redirects.
-        # self.redirects = load_redirects(configs.redirect_path)
+        self.redirects = resource.get('redirects')
 
         # These NIF readers organize the statements in the specific RDF context,
         # in this case each context correspond to one wiki page, this allows
@@ -104,9 +110,9 @@ class DBpediaWikiReader(PackReader):
     def define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
         pass
 
-    def _collect(  # type: ignore
-            self, nif_context: str
-    ) -> Iterator[Tuple[Dict[str, str], Dict[str, List[state_type]]]]:
+    def _collect(self, nif_context: str  # type: ignore
+                 ) -> Iterator[Tuple[Dict[str, str],
+                                     Dict[str, List[state_type]]]]:
         str_data: Dict[str, str] = {}
         node_data: Dict[str, List[state_type]] = {}
 
@@ -133,6 +139,10 @@ class DBpediaWikiReader(PackReader):
 
         pack = DataPack()
         doc_name: str = str_data['doc_name']
+        if doc_name in self.redirects:
+            import pdb
+            pdb.set_trace()
+            doc_name = self.redirects[doc_name]
 
         full_text: str = str_data['text']
 
@@ -148,7 +158,7 @@ class DBpediaWikiReader(PackReader):
             logging.warning('Structure info for %s not found.', doc_name)
 
         if len(node_data['links']) > 0:
-            add_anchor_links(pack, node_data['links'])
+            add_anchor_links(pack, node_data['links'], self.redirects)
         else:
             logging.warning('Links for [%s] not found.', doc_name)
 

@@ -74,6 +74,12 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
         self.__dict__.update(state)
         self.index = BaseIndex()
 
+        for a in self.links:
+            a.set_pack(self)
+
+        for a in self.groups:
+            a.set_pack(self)
+
     # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
@@ -255,9 +261,8 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             )
 
         if entry not in target:
-            # add the entry to the target entry list
-            entry.set_tid()
-            self.add_entry_creation_record(entry.tid)
+            self.record_entry(entry)
+
             target.append(entry)
 
             # update the data pack index if needed

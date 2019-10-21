@@ -3,10 +3,11 @@ A set of utilities to support reading DBpedia datasets.
 """
 import logging
 import os
-from typing import List, Dict, Tuple, Iterator
+from typing import List, Dict, Tuple, Union
 import bz2
 import re
 from urllib.parse import urlparse, parse_qs
+from collections import OrderedDict
 
 import rdflib
 
@@ -121,7 +122,6 @@ class ContextGroupedNIFReader:
         return self
 
     def __next__(self):
-
         res_c: str = ''
         res_states: List = []
 
@@ -149,21 +149,21 @@ class ContextGroupedNIFReader:
 
 
 class NIFBufferedContextReader:
-    def __init__(self, nif_path: str, buffer_size: int = 100):
+    def __init__(self, nif_path: str, buffer_size: int = 1000):
         self.data_name = os.path.basename(nif_path)
 
         self.__parser = ContextGroupedNIFReader(nif_path)
 
-        self.buf_statement: Dict[str, List] = {}
-        self.__buffer_size = buffer_size
+        self.buf_statement: OrderedDict[str, List] = OrderedDict()
+        self.__buf_size = buffer_size
 
     def buf_info(self):
         logging.info('The buffer size for data [%s] is %s',
                      self.data_name, len(self.buf_statement))
 
-    def get(self, context: rdflib.Graph) -> List[state_type]:
-        # TODO: fix this.
-        context_ = context_base(context)
+    def get(self, context: Union[rdflib.Graph, str]) -> List[state_type]:
+        context_ = context_base(context) if isinstance(
+            context, rdflib.Graph) else str(context)
 
         if context_ in self.buf_statement:
             return self.buf_statement.pop(context_)
@@ -171,7 +171,15 @@ class NIFBufferedContextReader:
         for c_, statements in self.__parser:
             if c_ == context_:
                 return statements
-            elif self.__buffer_size > len(self.buf_statement):
-                self.buf_statement[c_] = statements
             else:
-                logging.info('[%s] not found in [%s]', context_, self.data_name)
+                if len(self.buf_statement) < self.__buf_size:
+                    # Put the current statements in to buffer.
+                    self.buf_statement[c_] = statements
+                else:
+                    # The buffer is full, pop the oldest.
+                    self.buf_statement.popitem(False)
+                    self.buf_statement[c_] = statements
+
+                    import pdb
+                    pdb.set_trace()
+                    return []

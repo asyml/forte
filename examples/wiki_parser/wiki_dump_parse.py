@@ -3,20 +3,23 @@ This creates a pipeline to parse the Wikipedia dump and save the results
 as MultiPacks onto disk.
 """
 import logging
+import pickle
 import sys
 import os
 import csv
-from typing import TextIO, Any
+from typing import TextIO, Any, Dict
 
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data import DataPack, pack_utils
 from forte.data.base_pack import PackType
+from forte.data.datasets.wikipedia.db_utils import NIFParser, get_resource_name, \
+    load_redirects
 from forte.data.datasets.wikipedia.dbpedia_based_reader import DBpediaWikiReader
 from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \
     DBpediaInfoBoxReader
-from forte.data.ontology.wiki_ontology import WikiPage
+from ft.onto.wikipedia import WikiPage
 from forte.pipeline import Pipeline
 from forte.processors.base.writers import JsonPackWriter
 
@@ -87,12 +90,24 @@ class WikiArticleWriter(JsonPackWriter[DataPack]):
 def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
          mapping_objects: str, nif_text_links: str, redirects: str,
          info_boxs: str, output_path: str):
-    # The datasets are read in two steps.
+    # Load redirects.
+    logging.info("Loading redirects")
+    redirect_pickle = os.path.join(output_path, 'redirects.pickle')
+    if os.path.exists(redirect_pickle):
+        redirect_map: Dict[str, str] = pickle.load(open(redirect_pickle, 'rb'))
+    else:
+        redirect_map: Dict[str, str] = load_redirects(redirects)
+        with open(redirect_pickle, 'wb') as pickle_f:
+            pickle.dump(redirect_map, pickle_f)
+    logging.info("Done loading.")
 
+    # The datasets are read in two steps.
     raw_pack_dir = os.path.join(output_path, 'nif_raw')
 
     # First, we create the NIF reader that read the NIF in order.
     nif_pl = Pipeline()
+    nif_pl.resource.update('redirects', redirect_map)
+
     nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
         {
             'redirect_path': redirects,
@@ -110,16 +125,20 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         WikiArticleWriter.default_hparams()
     ))
 
-    nif_pl.initialize()
-    logging.info('Start running the DBpedia text pipeline.')
-    nif_pl.run(nif_context)
+    # nif_pl.initialize()
+    # logging.info('Start running the DBpedia text pipeline.')
+    # nif_pl.run(nif_context)
 
     # Second, we add info boxes to the packs with NIF.
     ib_pl = Pipeline()
+    ib_pl.resource.update('redirects', redirect_map)
     ib_pl.set_reader(DBpediaInfoBoxReader(), config=HParams(
         {
             'pack_index': os.path.join(raw_pack_dir, 'article.idx'),
             'pack_dir': raw_pack_dir,
+            'mapping_literals': mapping_literals,
+            'mapping_objects': mapping_objects,
+            'reading_log': os.path.join(output_path, 'infobox.log')
         },
         DBpediaInfoBoxReader.default_hparams()
     ))
@@ -134,7 +153,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
 
     # Now we run the info box pipeline.
     ib_pl.initialize()
-    ib_pl.run(mapping_literals, mapping_objects, info_boxs)
+    ib_pl.run(info_boxs)
 
 
 def get_data(dataset: str):
