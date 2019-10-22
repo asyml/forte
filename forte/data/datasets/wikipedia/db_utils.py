@@ -151,42 +151,62 @@ class ContextGroupedNIFReader:
 
 
 class NIFBufferedContextReader:
-    def __init__(self, nif_path: str, buffer_size: int = 1000):
+    def __init__(self, nif_path: str, half_window_size: int = 500):
         self.data_name = os.path.basename(nif_path)
 
         self.__parser = ContextGroupedNIFReader(nif_path)
 
-        self.buf_statement: OrderedDict[str, List] = OrderedDict()
-        self.__buf_size = buffer_size
+        self.window_statement: OrderedDict[
+            str, Tuple[List, int]] = OrderedDict()
+        self.__half_window_size = half_window_size
+        self.__entry_index = 0
 
-    def buf_info(self):
+    def window_info(self):
         logging.info('The buffer size for data [%s] is %s',
-                     self.data_name, len(self.buf_statement))
+                     self.data_name, len(self.window_statement))
 
     def get(self, context: Union[rdflib.Graph, str]) -> List[state_type]:
+        """
+        We assume the order of querying keys is roughly the same as the order
+        of keys in this data, that means we can find the key (context) within
+        the current reading window. This is asymptotically similar to a full
+        dataset search by increasing the window size.
+
+        Args:
+            context: The context to find in this window.
+
+        Returns:
+            A list of statements if found in the window, otherwise an empty
+            list.
+
+        """
         context_ = context_base(context) if isinstance(
             context, rdflib.Graph) else str(context)
 
-        if context_ in self.buf_statement:
-            return self.buf_statement.pop(context_)
+        if context_ in self.window_statement:
+            return self.window_statement.pop(context_)[0]
 
         for c_, statements in self.__parser:
+            self.__entry_index += 1
             if c_ == context_:
                 return statements
             else:
-                if len(self.buf_statement) < self.__buf_size:
-                    # Put the current statements into buffer.
-                    self.buf_statement[c_] = statements
-                else:
-                    # The buffer is full, pop the oldest.
-                    self.buf_statement.popitem(False)
-                    self.buf_statement[c_] = statements
+                self.window_statement[c_] = (statements, self.__entry_index)
 
+                # Find the oldest index.
+                oldest_index = -1
+                for _, (_, index) in self.window_statement.items():
+                    oldest_index = index
+                    break
+
+                # If the oldest index is out of the window, we will pop it.
+                if oldest_index > 0 and (
+                        oldest_index <=
+                        self.__entry_index - self.__half_window_size):
+                    self.window_statement.popitem(False)
+
+                if len(self.window_statement) > self.__half_window_size * 2:
                     # Give up on this search.
-                    logging.warning(
-                        "Cannot find [%s] in data [%s]", context,
-                        self.data_name
-                    )
                     return []
 
         return []
