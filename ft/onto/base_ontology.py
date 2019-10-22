@@ -136,8 +136,13 @@ class PredicateLink(top.Link):
 
     def __init__(self,
                  pack: data_pack.DataPack,
+<<<<<<< HEAD:ft/onto/base_ontology.py
                  parent: typing.Optional[PredicateMention] = None,
                  child: typing.Optional[PredicateArgument] = None):
+=======
+                 parent: typing.Optional[ParentType] = None,
+                 child: typing.Optional[ChildType] = None):
+>>>>>>> 8cdf9e27e0adb86c9e2f503ec05a620fb833cec8:ft/onto/base_ontology.py
         super().__init__(pack, parent, child)
         self.arg_type = None
 
@@ -173,7 +178,11 @@ class CoreferenceGroup(top.Group):
     def __init__(
             self,
             pack: data_pack.DataPack,
+<<<<<<< HEAD:ft/onto/base_ontology.py
             members: typing.Optional[typing.Set[top.Entry]] = None,
+=======
+            members: typing.Optional[typing.Set[CoreferenceMention]] = None,
+>>>>>>> 8cdf9e27e0adb86c9e2f503ec05a620fb833cec8:ft/onto/base_ontology.py
     ):
         super().__init__(pack, members)
 
@@ -190,8 +199,13 @@ class Dependency(top.Link):
 
     def __init__(self,
                  pack: data_pack.DataPack,
+<<<<<<< HEAD:ft/onto/base_ontology.py
                  parent: typing.Optional[Token] = None,
                  child: typing.Optional[Token] = None):
+=======
+                 parent: typing.Optional[ParentType] = None,
+                 child: typing.Optional[ChildType] = None):
+>>>>>>> 8cdf9e27e0adb86c9e2f503ec05a620fb833cec8:ft/onto/base_ontology.py
         super().__init__(pack, parent, child)
         self.dep_label = None
         self.rel_type: str
@@ -217,7 +231,12 @@ class RelationLink(top.Link):
     def __init__(
             self,
             pack: data_pack.DataPack,
+<<<<<<< HEAD:ft/onto/base_ontology.py
             parent: typing.Optional[EntityMention] = None,
             child: typing.Optional[EntityMention] = None):
+=======
+            parent: typing.Optional[ParentType] = None,
+            child: typing.Optional[ChildType] = None):
+>>>>>>> 8cdf9e27e0adb86c9e2f503ec05a620fb833cec8:ft/onto/base_ontology.py
         super().__init__(pack, parent, child)
         self.rel_type = None
