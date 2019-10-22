@@ -3,9 +3,9 @@ import yaml
 from texar.torch import HParams
 
 from forte.pipeline import Pipeline
-from ft.onto import base_ontology
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.processors.ner_predictor import CoNLLNERPredictor
+from ft.onto import base_ontology
 
 config_data = yaml.safe_load(open("config_data.yml", "r"))
 config_model = yaml.safe_load(open("config_model.yml", "r"))
