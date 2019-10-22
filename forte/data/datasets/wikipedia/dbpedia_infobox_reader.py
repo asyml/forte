@@ -8,6 +8,7 @@ This will use the following datasets from DBpedia:
 """
 import csv
 import os
+import sys
 from typing import List, Iterator, Dict, Tuple
 
 from smart_open import open
@@ -100,6 +101,10 @@ class DBpediaInfoBoxReader(PackReader):
             resource_name = self.redirects[resource_name]
 
         if resource_name in self.pack_index:
+
+            sys.stdout.write("\033[K")  # Clear to the end of line.
+            print(f' -- Add infobox to resource: [resource_name]', end='\r')
+
             pack_path = os.path.join(
                 self.pack_dir,
                 self.pack_index[resource_name]

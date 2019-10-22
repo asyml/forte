@@ -175,11 +175,18 @@ class NIFBufferedContextReader:
                 return statements
             else:
                 if len(self.buf_statement) < self.__buf_size:
-                    # Put the current statements in to buffer.
+                    # Put the current statements into buffer.
                     self.buf_statement[c_] = statements
                 else:
                     # The buffer is full, pop the oldest.
                     self.buf_statement.popitem(False)
                     self.buf_statement[c_] = statements
+
+                    # Give up on this search.
+                    logging.warning(
+                        "Cannot find [%s] in data [%s]", context,
+                        self.data_name
+                    )
+                    return []
 
         return []
