@@ -17,7 +17,6 @@ from forte.data.multi_pack import MultiPack
 from forte.pipeline_component import PipelineComponent
 from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
-from ft.onto import base_ontology
 
 __all__ = [
     "BaseReader",
@@ -61,9 +60,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         self.from_cache = from_cache
         self._cache_directory = cache_directory
-        self._ontology = base_ontology
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
+        self._ontology = None
 
     @property
     def pack_type(self):

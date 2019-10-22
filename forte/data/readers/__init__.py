@@ -1,4 +1,3 @@
-from forte.data.readers.base_reader import *
 from forte.data.readers.conll03_reader import *
 from forte.data.readers.conllu_ud_reader import *
 from forte.data.readers.ontonotes_reader import *
