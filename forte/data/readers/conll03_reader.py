@@ -9,7 +9,7 @@ from typing import Iterator, Any
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from forte.data.ontology import base_ontology
+from ft.onto import base_ontology
 
 __all__ = [
     "CoNLL03Reader"
@@ -67,9 +67,9 @@ class CoNLL03Reader(PackReader):
                 word_end = offset + len(word)
 
                 # Add tokens.
-                kwargs_i = {"pos_tag": pos_tag,
-                            "chunk_tag": chunk_id,
-                            "ner_tag": ner_tag}
+                kwargs_i = {"pos": pos_tag,
+                            "chunk": chunk_id,
+                            "ner": ner_tag}
                 token = self._ontology.Token(  # type: ignore
                     pack, word_begin, word_end
                 )

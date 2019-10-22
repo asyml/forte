@@ -1,6 +1,6 @@
 from forte.data import DataPack
-from forte.data.ontology import base_ontology
 from forte.processors.base import PackProcessor
+from ft.onto import base_ontology
 
 __all__ = [
     "PeriodSentenceSegmenter"

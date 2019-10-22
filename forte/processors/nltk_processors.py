@@ -1,8 +1,8 @@
 from nltk import word_tokenize, pos_tag, sent_tokenize
 
 from forte.data.data_pack import DataPack
-from forte.data.ontology import base_ontology
 from forte.processors.base import PackProcessor
+from ft.onto import base_ontology
 
 
 class NLTKWordTokenizer(PackProcessor):

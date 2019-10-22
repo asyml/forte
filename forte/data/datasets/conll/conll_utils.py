@@ -18,10 +18,10 @@ def write_tokens_to_file(pred_pack, pred_request, refer_pack, refer_request,
         )
         for i in range(len(pred_tokens["text"])):
             w = tgt_tokens["text"][i]
-            p = tgt_tokens["pos_tag"][i]
-            ch = tgt_tokens["chunk_tag"][i]
-            tgt = tgt_tokens["ner_tag"][i]
-            pred = pred_tokens["ner_tag"][i]
+            p = tgt_tokens["pos"][i]
+            ch = tgt_tokens["chunk"][i]
+            tgt = tgt_tokens["ner"][i]
+            pred = pred_tokens["ner"][i]
 
             opened_file.write(
                 "%d %s %s %s %s %s\n" % (i + 1, w, p, ch, tgt, pred)

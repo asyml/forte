@@ -10,13 +10,10 @@ from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
 from forte.data.batchers import (
-    ProcessingBatcher,
-    FixedSizeMultiPackProcessingBatcher
-)
-from forte.data.ontology import base_ontology
+    ProcessingBatcher, FixedSizeMultiPackProcessingBatcher)
 from forte.common.types import DataRequest
-from forte.processors.base.batch_processor import \
-    MultiPackBatchProcessor
+from forte.processors.base.batch_processor import MultiPackBatchProcessor
+from ft.onto import base_ontology
 
 logger = logging.getLogger(__name__)
 
@@ -154,8 +151,8 @@ class TxtgenPredictor(MultiPackBatchProcessor):
     def pack(self, data_pack: MultiPack, output_dict):
         """
         Write the prediction results back to datapack. If :attr:`_overwrite`
-        is `True`, write the predicted ner_tag to the original tokens.
-        Otherwise, create a new set of tokens and write the predicted ner_tag
+        is `True`, write the predicted ner to the original tokens.
+        Otherwise, create a new set of tokens and write the predicted ner
         to the new tokens (usually use this configuration for evaluation.)
         """
         assert output_dict is not None

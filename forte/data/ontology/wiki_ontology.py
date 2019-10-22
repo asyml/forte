@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-import forte.data.ontology.base_ontology as base_ontology
+import ft.onto.base_ontology as base_ontology
 from forte.data.data_pack import DataPack
 from forte.data.ontology.base.top import Entry, Annotation, Link
 

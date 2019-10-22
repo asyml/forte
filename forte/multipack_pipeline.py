@@ -90,7 +90,9 @@ def create_class_with_kwargs(
 
     p_params: Dict = {}
 
-    if "config_path" in h_params and not h_params["config_path"] is None:
+    if h_params is not None and \
+            "config_path" in h_params and \
+            h_params["config_path"] is not None:
         filebased_hparams = yaml.safe_load(open(h_params["config_path"]))
     else:
         filebased_hparams = {}

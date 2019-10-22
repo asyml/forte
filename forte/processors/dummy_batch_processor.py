@@ -11,8 +11,9 @@ import numpy as np
 from forte.data.data_pack import DataPack
 from forte.common.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
-from forte.data.ontology import base_ontology
 from forte.processors.base import BatchProcessor
+from ft.onto import base_ontology
+from ft.onto.base_ontology import EntityMention
 
 __all__ = [
     "DummyRelationExtractor",
@@ -38,7 +39,7 @@ class DummyRelationExtractor(BatchProcessor):
         # pylint: disable=no-self-use
         return FixedSizeDataPackBatcher()
 
-    def define_context(self) -> Type[base_ontology.Annotation]:
+    def define_context(self) -> Type[base_ontology.Sentence]:
         return self._ontology.Sentence
 
     def _define_input_info(self) -> DataRequest:
@@ -91,12 +92,10 @@ class DummyRelationExtractor(BatchProcessor):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
                 link = self._ontology.RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
-                parent: base_ontology.EntityMention = \
-                    data_pack.get_entry(  # type: ignore
+                parent: EntityMention = data_pack.get_entry(  # type: ignore
                         output_dict["RelationLink"]["parent.tid"][i][j])
                 link.set_parent(parent)
-                child: base_ontology.EntityMention = \
-                    data_pack.get_entry(  # type: ignore
+                child: EntityMention = data_pack.get_entry(  # type: ignore
                         output_dict["RelationLink"]["child.tid"][i][j])
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)

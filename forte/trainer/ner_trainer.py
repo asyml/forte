@@ -13,10 +13,10 @@ from tqdm import tqdm
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.ontology import base_ontology as conll
 from forte.trainer.base.base_trainer import BaseTrainer
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
+from ft.onto import base_ontology as conll
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ class CoNLLNERTrainer(BaseTrainer):
         request_string = {
             "context_type": conll.Sentence,
             "request": {
-                self.ontology.Token: ["ner_tag"],
+                self.ontology.Token: ["ner"],
                 self.ontology.Sentence: [],  # span by default
             }
         }
@@ -94,7 +94,7 @@ class CoNLLNERTrainer(BaseTrainer):
         tokens = instance["Token"]
         word_ids = []
         char_id_seqs = []
-        ner_tags, ner_ids = tokens["ner_tag"], []
+        ner_tags, ner_ids = tokens["ner"], []
 
         for word in tokens["text"]:
             char_ids = []

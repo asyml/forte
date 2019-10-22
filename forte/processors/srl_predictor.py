@@ -8,11 +8,11 @@ from texar.torch.hyperparams import HParams
 
 from forte.data.base import Span
 from forte.data.data_pack import DataPack
-from forte.data.ontology import base_ontology
 from forte.common.resources import Resources
 from forte.common.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
+from ft.onto import base_ontology
 
 logger = logging.getLogger(__name__)
 

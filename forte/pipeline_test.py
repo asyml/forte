@@ -3,8 +3,8 @@ Unit tests for Pipeline.
 """
 import unittest
 
-from forte.data.ontology import base_ontology
-from forte.data.ontology.base_ontology import *
+from ft.onto import base_ontology
+from ft.onto.base_ontology import Token, Sentence, RelationLink
 from forte.data.readers import OntonotesReader
 from forte.pipeline import Pipeline
 from forte.processors.dummy_batch_processor import *

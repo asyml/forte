@@ -1,19 +1,18 @@
 """
 This class defines the basic ontology supported by our system
 """
-from typing import Optional, Dict, List
-
-from forte.data.data_pack import DataPack
-from forte.data.ontology.base.top import Annotation, Link, Group
+import typing as typing
+import forte.data.data_pack as data_pack
+import forte.data.ontology.base.top as top
 
 __all__ = [
     "Token",
+    "Sentence",
     "Document",
     "EntityMention",
-    "Sentence",
+    "PredicateArgument",
     "PredicateMention",
     "PredicateLink",
-    "PredicateArgument",
     "CoreferenceGroup",
     "CoreferenceMention",
     "Dependency",
@@ -21,7 +20,7 @@ __all__ = [
 ]
 
 
-class Token(Annotation):
+class Token(top.Annotation):
     """
     A span based annotation :class:`Token`.
 
@@ -29,22 +28,27 @@ class Token(Annotation):
         pack (DataPack): The data pack this token belongs to.
         begin (int): The offset of the first character in the token.
         end (int): The offset of the last character in the token + 1.
+
+    Attributes:
+        xpos (str): Language specific pos tag.
+        lemma (str): Lemma or stem of word form.
+        is_root (bool): If the token is a root of, say, dependency tree.
     """
 
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    def __init__(self, pack: data_pack.DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.pos_tag: str
-        self.xpos_tag: str  # language specific pos tag
-        self.lemma: str  # lemma or stem of word form
-        self.chunk_tag: str
-        self.ner_tag: str
+        self.pos: str
+        self.xpos: str
+        self.lemma: str
+        self.chunk: str
+        self.ner: str
         self.sense: str
-        self.is_root: bool  # if the token is a root of, say, dependency tree
-        self.features: Dict[str, List[str]]
-        self.misc: Dict[str, List[str]]
+        self.is_root: bool
+        self.features: typing.Dict[str, typing.List[str]]
+        self.miscellaneous: typing.Dict[str, typing.List[str]]
 
 
-class Sentence(Annotation):
+class Sentence(top.Annotation):
     """
     A span based annotation :class:`Sentence`.
 
@@ -53,10 +57,11 @@ class Sentence(Annotation):
         begin (int): The offset of the first character in the sentence.
         end (int): The offset of the last character in the sentence + 1.
     """
-    pass
+    def __init__(self, pack: data_pack.DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
-class Document(Annotation):
+class Document(top.Annotation):
     """
     A span based annotation :class:`Document`.
 
@@ -65,10 +70,11 @@ class Document(Annotation):
         begin (int): The offset of the first character in the document.
         end (int): The offset of the last character in the document + 1.
     """
-    pass
+    def __init__(self, pack: data_pack.DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
-class EntityMention(Annotation):
+class EntityMention(top.Annotation):
     """
     A span based annotation :class:`EntityMention`.
 
@@ -78,12 +84,12 @@ class EntityMention(Annotation):
         end (int): The offset of the last character in the entity mention + 1.
     """
 
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    def __init__(self, pack: data_pack.DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.ner_type: str
 
 
-class PredicateArgument(Annotation):
+class PredicateArgument(top.Annotation):
     """
     A span based annotation :class:`PredicateArgument`.
 
@@ -94,10 +100,11 @@ class PredicateArgument(Annotation):
         end (int): The offset of the last character in the predicate argument
             + 1.
     """
-    pass
+    def __init__(self, pack: data_pack.DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
-class PredicateMention(Annotation):
+class PredicateMention(top.Annotation):
     """
     A span based annotation :class:`PredicateMention`.
 
@@ -106,10 +113,12 @@ class PredicateMention(Annotation):
         end (int): The offset of the last character in the predicate mention
             + 1.
     """
-    pass
+
+    def __init__(self, pack: data_pack.DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
-class PredicateLink(Link):
+class PredicateLink(top.Link):
     """
     A :class:`Link` type entry which take :class:`PredicateMention` as parent
     and :class:`PredicateArgument` as child.
@@ -126,14 +135,14 @@ class PredicateLink(Link):
     """The entry type of the child node of :class:`PredicateLink`."""
 
     def __init__(self,
-                 pack: DataPack,
-                 parent: Optional[PredicateMention] = None,
-                 child: Optional[PredicateArgument] = None):
+                 pack: data_pack.DataPack,
+                 parent: typing.Optional[PredicateMention] = None,
+                 child: typing.Optional[PredicateArgument] = None):
         super().__init__(pack, parent, child)
         self.arg_type = None
 
 
-class CoreferenceMention(Annotation):
+class CoreferenceMention(top.Annotation):
     """
     A span based annotation :class:`CoreferenceMention`.
 
@@ -144,10 +153,11 @@ class CoreferenceMention(Annotation):
         end (int): The offset of the last character in the coreference mention
             + 1.
     """
-    pass
+    def __init__(self, pack: data_pack.DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
-class CoreferenceGroup(Group):
+class CoreferenceGroup(top.Group):
     """
     A :class:`Group` type entry which take :class:`CoreferenceMention` as
     members.
@@ -160,10 +170,15 @@ class CoreferenceGroup(Group):
     MemberType = CoreferenceMention
     """The entry type of group members of :class:`CoreferenceGroup`."""
 
-    pass
+    def __init__(
+            self,
+            pack: data_pack.DataPack,
+            members: typing.Optional[typing.Set[top.Entry]] = None,
+    ):
+        super().__init__(pack, members)
 
 
-class Dependency(Link):
+class Dependency(top.Link):
     """
     A :class:`Link` type entry which represent a syntactic dependency.
     """
@@ -174,18 +189,18 @@ class Dependency(Link):
     """The entry type of the child node of :class:`Dependency`."""
 
     def __init__(self,
-                 pack: DataPack,
-                 parent: Optional[Token] = None,
-                 child: Optional[Token] = None):
+                 pack: data_pack.DataPack,
+                 parent: typing.Optional[Token] = None,
+                 child: typing.Optional[Token] = None):
         super().__init__(pack, parent, child)
         self.dep_label = None
         self.rel_type: str
         self.dep_type: str
 
 
-class RelationLink(Link):
+class RelationLink(top.Link):
     """
-    A :class:`~forte.data.ontology.top.Link` type entry which take
+    A :class:`~forte.data.ontology.forte.data.ontology.base.Link` type entry which take
     :class:`~forte.data.ontology.base_ontology.EntityMention`
     objects as parent and child.
 
@@ -201,8 +216,8 @@ class RelationLink(Link):
 
     def __init__(
             self,
-            pack: DataPack,
-            parent: Optional[EntityMention] = None,
-            child: Optional[EntityMention] = None):
+            pack: data_pack.DataPack,
+            parent: typing.Optional[EntityMention] = None,
+            child: typing.Optional[EntityMention] = None):
         super().__init__(pack, parent, child)
         self.rel_type = None
