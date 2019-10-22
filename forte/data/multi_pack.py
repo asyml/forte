@@ -179,7 +179,7 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
                             "component": ["dummy"],
                             "fields": ["speaker"],
                         },
-                    base_ontology.Token: ["pos_tag", "sense""],
+                    base_ontology.Token: ["pos", "sense""],
                     base_ontology.EntityMention: {
                         "unit": "Token",
                     },

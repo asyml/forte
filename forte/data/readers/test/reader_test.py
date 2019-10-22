@@ -7,9 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from forte.data.ontology import base_ontology
-from forte.data.readers import OntonotesReader, ProdigyReader, CoNLL03Reader, \
-    StringReader
+from ft.onto import base_ontology
+from forte.data.readers import (
+    OntonotesReader, ProdigyReader, CoNLL03Reader, StringReader)
 from forte.pipeline import Pipeline
 from forte.processors.dummy_pack_processor import DummyPackProcessor
 

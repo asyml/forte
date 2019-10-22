@@ -8,11 +8,11 @@ from texar.torch import HParams
 
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
-from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
 from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
 from forte.pipeline_component import PipelineComponent
+from ft.onto import base_ontology
 
 __all__ = [
     "BaseProcessor",

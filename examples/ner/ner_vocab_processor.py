@@ -84,7 +84,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         for instance in data_pack.get_data(
                 context_type=conll.Sentence,
                 request={
-                    conll.Token: ["chunk_tag", "pos_tag", "ner_tag"]
+                    conll.Token: ["chunk", "pos", "ner"]
                 }):
             for token in instance["Token"]["text"]:
                 for char in token:
@@ -92,11 +92,11 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
                 word = self.normalize_func(token)
                 self.word_cnt[word] += 1
 
-            for pos in instance["Token"]["pos_tag"]:
+            for pos in instance["Token"]["pos"]:
                 self.pos_cnt[pos] += 1
-            for chunk in instance["Token"]["chunk_tag"]:
+            for chunk in instance["Token"]["chunk"]:
                 self.chunk_cnt[chunk] += 1
-            for ner in instance["Token"]["ner_tag"]:
+            for ner in instance["Token"]["ner"]:
                 self.ner_cnt[ner] += 1
 
     def finish(self, resource: Resources):

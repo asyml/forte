@@ -1,6 +1,6 @@
 from termcolor import colored
 
-from forte.data.ontology import base_ontology as Ont
+from ft.onto import base_ontology as Ont
 from forte.pipeline import Pipeline
 
 pl = Pipeline()

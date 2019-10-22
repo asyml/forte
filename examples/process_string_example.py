@@ -3,13 +3,10 @@ import os
 from termcolor import colored
 from texar.torch import HParams
 
-from forte.data.ontology import base_ontology
-from forte.data.ontology.base_ontology import (
-    PredicateMention, PredicateArgument)
+from ft.onto import base_ontology
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors import (
-    CoNLLNERPredictor, SRLPredictor)
+from forte.processors import CoNLLNERPredictor, SRLPredictor
 from forte.processors.writers import DocIdJsonPackWriter
 from forte.processors.nltk_processors import (
     NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)

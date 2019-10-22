@@ -8,13 +8,14 @@ import numpy as np
 import torch
 from texar.torch.hyperparams import HParams
 
+from ft.onto import base_ontology as conll
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.common.types import DataRequest
 from forte.data.datasets.conll import conll_utils
-from forte.data.ontology import base_ontology as conll, Annotation
+from forte.data.ontology import Annotation
 from forte.models.ner import utils
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 
@@ -137,7 +138,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         word, char, masks, unused_lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
-        pred: Dict = {"Token": {"ner_tag": [], "tid": []}}
+        pred: Dict = {"Token": {"ner": [], "tid": []}}
 
         for i in range(len(tokens["tid"])):
             tids = tokens["tid"][i]
@@ -145,7 +146,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             for j in range(len(tids)):
                 ner_tags.append(self.ner_alphabet.get_instance(preds[i][j]))
 
-            pred["Token"]["ner_tag"].append(np.array(ner_tags))
+            pred["Token"]["ner"].append(np.array(ner_tags))
             pred["Token"]["tid"].append(np.array(tids))
 
         return pred
@@ -161,7 +162,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
              output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
         """
         Write the prediction results back to datapack. by writing the predicted
-        ner_tag to the original tokens.
+        ner to the original tokens.
         """
 
         if output_dict is None:
@@ -176,12 +177,12 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
                 orig_token: conll.Token = data_pack.get_entry(  # type: ignore
                     tid)
-                ner_tag: str = output_dict["Token"]["ner_tag"][i][j]
+                ner_tag: str = output_dict["Token"]["ner"][i][j]
 
                 orig_token.set_fields(ner_tag=ner_tag)
 
                 token = orig_token
-                token_ner = token.get_field("ner_tag")
+                token_ner = token.get_field("ner")
                 if token_ner[0] == "B":
                     current_entity_mention = (token.span.begin, token_ner[2:])
                 elif token_ner[0] == "I":
@@ -297,7 +298,7 @@ class CoNLLNEREvaluator(Evaluator):
             "context_type": conll.Sentence,
             "request": {
                 conll.Token: {
-                    "fields": ["ner_tag"],
+                    "fields": ["ner"],
                 },
                 conll.Sentence: [],  # span by default
             },
@@ -307,7 +308,7 @@ class CoNLLNEREvaluator(Evaluator):
             "context_type": conll.Sentence,
             "request": {
                 conll.Token: {
-                    "fields": ["chunk_tag", "pos_tag", "ner_tag"]},
+                    "fields": ["chunk", "pos", "ner"]},
                 conll.Sentence: [],  # span by default
             }
         }

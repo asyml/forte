@@ -1,8 +1,8 @@
 from functools import total_ordering
-from typing import (Optional, Set, Tuple, Type)
+from typing import Optional, Set, Tuple, Type
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.container import EntryContainer, ContainerType
+from forte.data.container import EntryContainer
 from forte.data.ontology.base.core import Entry, BaseLink, BaseGroup
 from forte.data.base_pack import PackType
 from forte.data.base import Span
@@ -12,6 +12,7 @@ __all__ = [
     "Annotation",
     "Group",
     "Link",
+    "MultiPackGeneric",
     "MultiPackGroup",
     "MultiPackLink",
     "SubEntry",
@@ -21,7 +22,7 @@ __all__ = [
 
 
 class Generic(Entry):
-    def __init__(self, pack: ContainerType):
+    def __init__(self, pack: PackType):
         super(Generic, self).__init__(pack=pack)
 
 
@@ -270,6 +271,11 @@ class SubEntry(Entry[PackType]):
     @property
     def index_key(self) -> Tuple[int, int]:
         return self._pack_index, self._entry_id
+
+
+class MultiPackGeneric(Entry):
+    def __init__(self, pack: PackType):
+        super(MultiPackGeneric, self).__init__(pack=pack)
 
 
 class MultiPackLink(BaseLink):

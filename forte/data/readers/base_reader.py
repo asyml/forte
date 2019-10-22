@@ -15,9 +15,9 @@ from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.pipeline_component import PipelineComponent
-from forte.data.ontology import base_ontology
 from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
+from ft.onto import base_ontology
 
 __all__ = [
     "BaseReader",

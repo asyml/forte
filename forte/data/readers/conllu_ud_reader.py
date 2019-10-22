@@ -6,10 +6,9 @@ into data_pack format
 from typing import Iterator, Dict, Tuple, Any
 
 from forte.data.io_utils import dataset_path_iterator
-from forte.data.ontology.base_ontology import \
-    (Document, Sentence, Token, Dependency)
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
+from ft.onto.base_ontology import Document, Sentence, Token, Dependency
 
 __all__ = [
     "ConllUDReader"
@@ -57,17 +56,17 @@ class ConllUDReader(PackReader):
 
     def _parse_pack(self, doc_lines) -> Iterator[DataPack]:
         # pylint: disable=no-self-use
-        token_comp_fields = ["id", "form", "lemma", "pos_tag",
-                             "xpos_tag", "features", "head", "label",
-                             "enhanced_dependency_relations", "misc"]
+        token_comp_fields = ["id", "form", "lemma", "pos",
+                             "xpos", "features", "head", "label",
+                             "enhanced_dependency_relations", "miscellaneous"]
 
-        token_multi_fields = ["features", "misc",
+        token_multi_fields = ["features", "miscellaneous",
                               "enhanced_dependency_relations"]
 
-        token_feature_fields = ["features", "misc"]
+        token_feature_fields = ["features", "miscellaneous"]
 
-        token_entry_fields = ["lemma", "pos_tag", "xpos_tag",
-                              "features", "misc"]
+        token_entry_fields = ["lemma", "pos", "xpos",
+                              "features", "miscellaneous"]
 
         data_pack: DataPack = DataPack()
         doc_sent_begin: int = 0

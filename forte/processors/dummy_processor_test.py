@@ -6,7 +6,7 @@ import unittest
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.pipeline import Pipeline
 from forte.processors.dummy_batch_processor import DummyRelationExtractor
-from forte.data.ontology import base_ontology
+from ft.onto import base_ontology
 
 
 class DummyProcessorTest(unittest.TestCase):

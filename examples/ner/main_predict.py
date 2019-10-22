@@ -3,7 +3,7 @@ import yaml
 from texar.torch import HParams
 
 from forte.pipeline import Pipeline
-from forte.data.ontology import base_ontology
+from ft.onto import base_ontology
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.processors.ner_predictor import CoNLLNERPredictor
 
@@ -25,11 +25,11 @@ for pack in pl.process_dataset(config.config_data.test_path):
     for pred_sentence in pack.get_data(
             context_type=base_ontology.Sentence,
             request={
-                base_ontology.Token: {"fields": ["ner_tag"]},
+                base_ontology.Token: {"fields": ["ner"]},
                 base_ontology.Sentence: [],  # span by default
                 base_ontology.EntityMention: {}
             }):
         print("============================")
         print(pred_sentence["context"])
-        print(pred_sentence["Token"]["ner_tag"])
+        print(pred_sentence["Token"]["ner"])
         print("============================")

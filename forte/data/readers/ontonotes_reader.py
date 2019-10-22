@@ -5,11 +5,9 @@ import os
 from collections import defaultdict
 from typing import DefaultDict, List, Optional, Tuple, Dict, Any, Iterator
 
+from ft.onto import base_ontology
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
-from forte.data.ontology import base_ontology
-from forte.data.ontology.base_ontology import (
-    PredicateMention, PredicateArgument, CoreferenceMention)
 from forte.data.readers.base_reader import PackReader
 
 __all__ = [
@@ -61,13 +59,14 @@ class OntonotesReader(PackReader):
 
             # auxiliary structures
             current_entity_mention: Optional[Tuple[int, str]] = None
-            verbal_predicates: List[PredicateMention] = []
+            verbal_predicates: List[base_ontology.PredicateMention] = []
 
             current_pred_arg: List[Optional[Tuple[int, str]]] = []
-            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]] = []
+            verbal_pred_args: List[List[Tuple[
+                base_ontology.PredicateArgument, str]]] = []
 
-            groups: DefaultDict[int, List[CoreferenceMention]] = \
-                defaultdict(list)
+            groups: DefaultDict[int, List[
+                base_ontology.CoreferenceMention]] = defaultdict(list)
             coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
 
             for line in doc:
@@ -93,7 +92,7 @@ class OntonotesReader(PackReader):
                     word_end = offset + len(word)
 
                     # add tokens
-                    kwargs_i: Dict[str, Any] = {"pos_tag": pos_tag,
+                    kwargs_i: Dict[str, Any] = {"pos": pos_tag,
                                                 "sense": word_sense}
                     token = self._ontology.Token(  # type: ignore
                         pack, word_begin, word_end
@@ -248,7 +247,8 @@ class OntonotesReader(PackReader):
             word_begin: int,
             word_end: int,
             current_pred_arg: List[Optional[Tuple[int, str]]],
-            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]],
+            verbal_pred_args: List[List[Tuple[base_ontology.PredicateArgument,
+                                              str]]],
     ) -> None:
 
         for label_index, label in enumerate(labels):
@@ -284,7 +284,7 @@ class OntonotesReader(PackReader):
             word_begin: int,
             word_end: int,
             coref_stacks: DefaultDict[int, List[int]],
-            groups: DefaultDict[int, List[CoreferenceMention]],
+            groups: DefaultDict[int, List[base_ontology.CoreferenceMention]],
     ) -> None:
 
         if label == "-":
