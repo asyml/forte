@@ -45,11 +45,7 @@ def add_struct(pack: DataPack, struct_statements: List):
                 title = WikiTitle(pack, begin, end)
                 pack.add_entry(title)
             else:
-                print('raw struct')
-                print(struct_type)
-                print('fragment')
-                print(struct_)
-                input('new struct type?')
+                logging.warning("Unknown struct type: %s", struct_type)
 
 
 def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
@@ -68,13 +64,10 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
             if info_key == 'type':
                 anchor_type = get_resource_fragment(info_value)
                 if not anchor_type == 'Phrase' and not anchor_type == 'Word':
-                    print(info_value)
-                    input('unknown anchor type.')
+                    logging.warning("Unknown anchor type: %s", info_value)
             if info_key == 'taIdentRef':
                 target_page_name = get_resource_name(info_value)
                 if target_page_name in redirects:
-                    import pdb
-                    pdb.set_trace()
                     target_page_name = redirects[target_page_name]
                 anchor.set_target_page_name(target_page_name)
         pack.add_entry(anchor)
@@ -140,8 +133,6 @@ class DBpediaWikiReader(PackReader):
         pack = DataPack()
         doc_name: str = str_data['doc_name']
         if doc_name in self.redirects:
-            import pdb
-            pdb.set_trace()
             doc_name = self.redirects[doc_name]
 
         full_text: str = str_data['text']
