@@ -104,7 +104,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
 
     # First, we create the NIF reader that read the NIF in order.
     nif_pl = Pipeline()
-    nif_pl.resource.update('redirects', redirect_map)
+    nif_pl.resource.update(redirects=redirect_map)
 
     nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
         {
@@ -129,7 +129,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
 
     # Second, we add info boxes to the packs with NIF.
     ib_pl = Pipeline()
-    ib_pl.resource.update('redirects', redirect_map)
+    ib_pl.resource.update(redirects=redirect_map)
     ib_pl.set_reader(DBpediaInfoBoxReader(), config=HParams(
         {
             'pack_index': os.path.join(raw_pack_dir, 'article.idx'),

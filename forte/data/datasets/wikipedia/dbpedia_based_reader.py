@@ -9,8 +9,8 @@ import logging
 from collections import defaultdict
 from typing import Any, Iterator, Dict, Type, Union, List, DefaultDict, Tuple
 
-import rdflib
 from texar.torch import HParams
+import rdflib
 
 from forte import Resources
 from forte.data import DataPack
