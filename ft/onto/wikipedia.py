@@ -1,5 +1,5 @@
 from forte.data import DataPack
-from forte.data.ontology.top import Annotation, Generic
+from forte.data.ontology import Annotation, Generic
 from ft.onto import base_ontology as ontology
 
 
