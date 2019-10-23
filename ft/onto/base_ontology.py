@@ -1,9 +1,9 @@
 """
 This class defines the basic ontology supported by our system
 """
-import typing as typing
-import forte.data.data_pack as data_pack
-import forte.data.ontology.base.top as top
+import typing
+from forte.data import data_pack
+from forte.data.ontology.base import top
 
 __all__ = [
     "Token",
@@ -200,8 +200,8 @@ class Dependency(top.Link):
 
 class RelationLink(top.Link):
     """
-    A :class:`~forte.data.ontology.forte.data.ontology.base.Link` type entry which take
-    :class:`~forte.data.ontology.base_ontology.EntityMention`
+    A :class:`~forte.data.ontology.forte.data.ontology.base.Link` type entry
+    which takes :class:`~forte.data.ontology.base_ontology.EntityMention`
     objects as parent and child.
 
     Args:

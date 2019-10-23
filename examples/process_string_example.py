@@ -54,7 +54,7 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
         # first method to get entry in a sentence
-        tokens = [(token.text, token.pos_tag) for token in
+        tokens = [(token.text, token.pos) for token in
                   pack.get(Token, sentence)]
         entities = [(entity.text, entity.ner_type) for entity in
                     pack.get(EntityMention, sentence)]
@@ -102,7 +102,7 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
     for sentence in pack.get(Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
-        tokens = [(token.text, token.pos_tag, token.lemma) for token in
+        tokens = [(token.text, token.pos, token.lemma) for token in
                   pack.get(Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
 

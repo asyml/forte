@@ -5,3 +5,8 @@ jsonpickle
 torch
 pyyaml
 allennlp
+ddt
+stanfordnlp
+termcolor
+tqdm
+torchtext

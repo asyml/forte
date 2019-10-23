@@ -5,7 +5,8 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import (Iterator, Optional, Any)
+from typing import Iterator, Optional, Any
+from types import ModuleType
 
 import jsonpickle
 
@@ -62,7 +63,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
-        self._ontology = None
+        self._ontology: Optional[ModuleType] = None
 
     @property
     def pack_type(self):
