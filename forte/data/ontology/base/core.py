@@ -7,7 +7,6 @@ from abc import abstractmethod, ABC
 from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
 
 from forte.data.container import ContainerType
-from forte.process_manager import ProcessManager
 
 __all__ = [
     "Entry",
@@ -17,8 +16,6 @@ __all__ = [
     "GroupType",
     "EntryType",
 ]
-
-process_manager = ProcessManager()
 
 
 class Entry(Generic[ContainerType]):
@@ -51,6 +48,7 @@ class Entry(Generic[ContainerType]):
         # the actual. Whether this entry can be added to the pack is delegated
         # to be checked by the pack.
         self.__pack: ContainerType = pack
+        self.__field_modified: Set[str] = set()
         pack.validate(self)
 
     def __getstate__(self):
@@ -64,7 +62,14 @@ class Entry(Generic[ContainerType]):
         """
         state = self.__dict__.copy()
         state.pop('_Entry__pack')
+        state.pop('_Entry__field_modified')
         return state
+
+    def __setstate__(self, state):
+        # Recover the internal __field_modified dict for the entry.
+        # NOTE: the __pack will be set via set_pack from the Pack side.
+        self.__dict__['_Entry__field_modified'] = set()
+        self.__dict__.update(state)
 
     @property
     def tid(self) -> int:
@@ -76,6 +81,9 @@ class Entry(Generic[ContainerType]):
         """
         # self._tid = f"{get_full_module_name(self)}.{tid}"
         self._tid = self.pack.get_next_id()
+
+    def attach(self, pack: ContainerType):
+        self.__pack = pack
 
     @property
     def pack(self) -> ContainerType:
@@ -106,7 +114,19 @@ class Entry(Generic[ContainerType]):
             #         f"has no attribute {field_name}"
             #     )
             setattr(self, field_name, field_value)
-            self.__pack.add_field_record(self.tid, field_name)
+            if self.tid == -1:
+                # This means the entry is not part of any data pack yet, we
+                # remember the field modification for now.
+                self.__field_modified.add(field_name)
+            else:
+                # We add the record to the system.
+                self.__pack.add_field_record(self.tid, field_name)
+
+    def get_fields_modified(self) -> Set[str]:
+        return self.__field_modified
+
+    def reset_fields_modified(self):
+        self.__field_modified.clear()
 
     def get_field(self, field_name):
         return getattr(self, field_name)

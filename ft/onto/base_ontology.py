@@ -157,6 +157,7 @@ class CoreferenceMention(top.Annotation):
         super().__init__(pack, begin, end)
 
 
+# pylint: disable=duplicate-bases
 class CoreferenceGroup(top.Group):
     """
     A :class:`Group` type entry which take :class:`CoreferenceMention` as

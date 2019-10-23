@@ -19,12 +19,12 @@ class IdManager:
     def __init__(self, initial_id_count: int = 0):
         self.__id_counter = initial_id_count
 
-    def get_id(self):
+    def get_id(self) -> int:
         i = self.__id_counter
         self.__id_counter += 1
         return i
 
-    def current_id_counter(self):
+    def current_id_counter(self) -> int:
         return self.__id_counter
 
 
@@ -60,7 +60,7 @@ class EntryContainer(Generic[E, L, G]):
         In deserialization,
           - The IdManager is recreated from the id count.
         """
-        self._id_manager = IdManager(state['serialization'])
+        self._id_manager = IdManager(state['serialization']['next_id'])
         self.__dict__.update(state)
         self.__dict__.pop('serialization')
 

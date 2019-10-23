@@ -7,6 +7,13 @@ class PackIndexError(Exception):
 
 class IncompleteEntryError(Exception):
     """
-    Raise this error when the entry is not complete
+    Raise this error when the entry is not complete.
+    """
+    pass
+
+
+class EntryNotFoundError(ValueError):
+    """
+    Raise this error when the entry is not found in the data pack.
     """
     pass

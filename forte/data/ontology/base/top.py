@@ -217,6 +217,7 @@ class Link(BaseLink):
         return self.pack.get_entry(self._child)
 
 
+# pylint: disable=duplicate-bases
 class Group(BaseGroup[Entry]):
     """
     Group is an entry that represent a group of other entries. For example,
@@ -382,6 +383,7 @@ class MultiPackLink(BaseLink):
         return SubEntry(self.pack, pack_idx, child_tid)
 
 
+# pylint: disable=duplicate-bases
 class MultiPackGroup(BaseGroup[SubEntry]):
     """
     Group type entries, such as "coreference group". Each group has a set

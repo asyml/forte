@@ -23,6 +23,7 @@ setuptools.setup(
         'jsonpickle',
         'pyyaml',
         'deprecation',
+        'smart-open',
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
@@ -31,7 +32,7 @@ setuptools.setup(
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt'],
         'example': ['termcolor'],
-        'wikipedia': ['mwxml', 'mwtypes']
+        'wikipedia': ['rdflib']
     },
     package_data={
     },
