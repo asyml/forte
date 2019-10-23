@@ -104,7 +104,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             a.set_pack(self)
 
         for a in self.generics:
-            a.set_pack(a)
+            a.set_pack(self)
 
     # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
@@ -320,22 +320,21 @@ class DataPack(BasePack[Entry, Link, Group]):
         elif isinstance(entry, Group):
             target = self.groups
         else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
+            target = self.generics
+            # raise ValueError(
+            #     f"Invalid entry type {type(entry)}. A valid entry "
+            #     f"should be an instance of Annotation, Link, or Group."
+            # )
 
         add_new = allow_duplicate or (entry not in target)
 
         if add_new:
-            # add the entry to the target entry list
-            entry.set_tid()
-
-            self.add_entry_creation_record(entry.tid)
+            self.record_entry(entry)
 
             if isinstance(target, list):
                 target.append(entry)
             else:
+                # For the sorted list case.
                 target.add(entry)
 
             # update the data pack index if needed

@@ -36,10 +36,10 @@ class MultiPackMeta(BaseMeta):
         super().__init__()
 
 
-class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
+class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     """
     A :class:`MultiPack' contains multiple DataPacks and a
-    collection of cross-pack entries (annotations, links, and groups)
+    collection of cross-pack entries (links, and groups)
     """
 
     def __init__(self):
@@ -56,6 +56,29 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
         self.index: BaseIndex = BaseIndex()
 
         self.__default_pack_prefix = '_pack'
+
+    def __getstate__(self):
+        """
+        In serialization,
+         - will not serialize the indexes
+        """
+        state = self.__dict__.copy()
+        state.pop('index')
+        return state
+
+    def __setstate__(self, state):
+        """
+        In deserialization, we
+         - initialize the indexes.
+        """
+        self.__dict__.update(state)
+        self.index = BaseIndex()
+
+        for a in self.links:
+            a.set_pack(self)
+
+        for a in self.groups:
+            a.set_pack(self)
 
     # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
@@ -238,9 +261,8 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             )
 
         if entry not in target:
-            # add the entry to the target entry list
-            entry.set_tid()
-            self.add_entry_creation_record(entry.tid)
+            self.record_entry(entry)
+
             target.append(entry)
 
             # update the data pack index if needed

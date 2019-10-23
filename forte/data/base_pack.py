@@ -29,12 +29,6 @@ class BaseMeta:
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id: Optional[str] = doc_id
 
-        # # TODO: These two are definitely internal.
-        # # the pack has been processed by which processor in the pipeline
-        # self.process_state: str = ''
-        # # the pack has been cached by which processor in the pipeline
-        # self.cache_state: str = ''
-
 
 class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     """
@@ -100,6 +94,28 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             entry. Otherwise, return the (input) entry just added.
         """
         raise NotImplementedError
+
+    def record_entry(self, entry: EntryType):
+        """
+        Record basic information for the entry:
+          - Set the id for the entry.
+          - Record the creator component for the entry.
+          - Record the field creator component for the entry.
+        Args:
+            entry: The entry to be added.
+
+        Returns:
+
+        """
+        # Assign a new id for the entry.
+        entry.set_tid()
+
+        # Once we have the id of this entry, we can record the component
+        self.add_entry_creation_record(entry.tid)
+        for f in entry.get_fields_modified():
+            # We record the fields created before pack attachment.
+            self.add_field_record(entry.tid, f)
+        entry.reset_fields_modified()
 
     def serialize(self) -> str:
         """
