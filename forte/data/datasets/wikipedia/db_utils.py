@@ -3,6 +3,7 @@ A set of utilities to support reading DBpedia datasets.
 """
 import logging
 import os
+import sys
 from typing import List, Dict, Tuple, Union
 import bz2
 import re
@@ -55,6 +56,31 @@ def strip_url_params(url) -> str:
     parsed = urlparse(url)
     # scheme + netloc + path
     return parsed.scheme + "://" + parsed.netloc + parsed.path
+
+
+def print_progress(msg: str):
+    """
+    Print progress message to the same line.
+    Args:
+        msg: The message to print
+
+    Returns:
+
+    """
+    sys.stdout.write("\033[K")  # Clear to the end of line.
+    print(f' -- {msg}', end='\r')
+
+
+def print_notice(msg: str):
+    """
+    Print additional notice in a new line.
+    Args:
+        msg: The message to print
+
+    Returns:
+
+    """
+    print(f'\n -- {msg}')
 
 
 class NIFParser:
@@ -151,14 +177,14 @@ class ContextGroupedNIFReader:
 
 
 class NIFBufferedContextReader:
-    def __init__(self, nif_path: str, half_window_size: int = 500):
+    def __init__(self, nif_path: str, buffer_size: int = 500):
         self.data_name = os.path.basename(nif_path)
 
         self.__parser = ContextGroupedNIFReader(nif_path)
 
         self.window_statement: OrderedDict[
             str, Tuple[List, int]] = OrderedDict()
-        self.__half_window_size = half_window_size
+        self.__buffer_size = buffer_size
         self.__entry_index = 0
 
     def window_info(self):
@@ -200,12 +226,10 @@ class NIFBufferedContextReader:
                     break
 
                 # If the oldest index is out of the window, we will pop it.
-                if oldest_index > 0 and (
-                        oldest_index <=
-                        self.__entry_index - self.__half_window_size):
+                if 0 < oldest_index <= self.__entry_index - self.__buffer_size:
                     self.window_statement.popitem(False)
 
-                if len(self.window_statement) > self.__half_window_size * 2:
+                if len(self.window_statement) >= self.__buffer_size:
                     # Give up on this search.
                     return []
 

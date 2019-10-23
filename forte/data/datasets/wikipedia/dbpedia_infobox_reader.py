@@ -8,17 +8,17 @@ This will use the following datasets from DBpedia:
 """
 import csv
 import os
-import sys
 from typing import List, Iterator, Dict, Tuple
 
+import rdflib
 from smart_open import open
 from texar.torch import HParams
-import rdflib
 
 from forte import Resources, logging
 from forte.data import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
-    get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader)
+    get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader,
+    print_progress, print_notice)
 from forte.data.readers import PackReader
 from ft.onto.wikipedia import WikiInfoBoxProperty, WikiInfoBoxMapped
 
@@ -101,9 +101,7 @@ class DBpediaInfoBoxReader(PackReader):
             resource_name = self.redirects[resource_name]
 
         if resource_name in self.pack_index:
-
-            sys.stdout.write("\033[K")  # Clear to the end of line.
-            print(f' -- Add infobox to resource: [resource_name]', end='\r')
+            print_progress(f'Add infobox to resource: [{resource_name}]')
 
             pack_path = os.path.join(
                 self.pack_dir,
@@ -119,6 +117,7 @@ class DBpediaInfoBoxReader(PackReader):
                     add_property(pack, info_box_data['properties'])
                     yield pack
         else:
+            print_notice(f"Resource {resource_name} is not in the raw packs.")
             self.logger.warning("Resource %s is not in the raw packs.",
                                 resource_name)
 

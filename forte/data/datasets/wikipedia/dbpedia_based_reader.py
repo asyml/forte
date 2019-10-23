@@ -8,19 +8,18 @@ This reader is based on DBpedia's extracted datasets.
 import logging
 from collections import defaultdict
 from typing import Any, Iterator, Dict, Type, Union, List, DefaultDict, Tuple
-import sys
 
-from texar.torch import HParams
 import rdflib
+from texar.torch import HParams
 
 from forte import Resources
 from forte.data import DataPack
-from forte.data.ontology import Entry
-from forte.data.readers import PackReader
 from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
-    get_resource_name, get_resource_fragment
-)
+    get_resource_name, get_resource_fragment,
+    print_progress)
+from forte.data.ontology import Entry
+from forte.data.readers import PackReader
 from ft.onto.wikipedia import (WikiPage, WikiSection, WikiParagraph, WikiTitle,
                                WikiAnchor, WikiInfoBoxMapped)
 
@@ -113,9 +112,7 @@ class DBpediaWikiReader(PackReader):
         for context_statements in NIFParser(nif_context):
             for s, v, o, c in context_statements:
                 nif_type = get_resource_attribute(s, "nif")
-                sys.stdout.write("\033[K")  # Clear to the end of line.
-                print(f' -- Collecting DBpedia context: [{c.identifier}]',
-                      end='\r')
+                print_progress(f'Collecting DBpedia context: [{c.identifier}]')
 
                 if nif_type and nif_type == "context" and get_resource_fragment(
                         v) == 'isString':
