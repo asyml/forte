@@ -188,6 +188,9 @@ class BasePipeline(Generic[PackType]):
         if selector is None:
             self._selectors.append(DummySelector())
 
+        else:
+            self._selectors.append(selector)
+
     def process(self, *args, **kwargs) -> PackType:
         """
         Alias for process_one.

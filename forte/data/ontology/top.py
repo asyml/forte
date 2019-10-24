@@ -273,9 +273,7 @@ class MultiPackLink(BaseLink):
     """
 
     ParentType: Type[SubEntry]
-    """The parent type of this link."""
     ChildType: Type[SubEntry]
-    """The Child type of this link."""
 
     def __init__(
             self,
@@ -290,15 +288,10 @@ class MultiPackLink(BaseLink):
             an entry.
             child:
         """
-        super().__init__(pack, parent, child)
-
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
 
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
+        super().__init__(pack, parent, child)
 
     @property
     def parent(self) -> Tuple[int, int]:
@@ -324,14 +317,14 @@ class MultiPackLink(BaseLink):
         Returns:
 
         """
-        if not isinstance(parent, self.ParentType):
+        if not isinstance(parent, Entry):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}")
         self._parent = parent.index_key
 
     def set_child(self, child: SubEntry):  # type: ignore
-        if not isinstance(child, self.ChildType):
+        if not isinstance(child, Entry):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ChildType}, but get {type(child)}")

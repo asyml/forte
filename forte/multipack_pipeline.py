@@ -42,12 +42,12 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
 
         reader_config = configs["Reader"]
 
-        reader, _ = create_class_with_kwargs(
+        reader, reader_hparams = create_class_with_kwargs(
             class_name=reader_config["type"],
             class_args=reader_config.get("kwargs", {}),
-        )
+            h_params=reader_config.get("hparams", {}))
 
-        self.set_reader(reader)
+        self.set_reader(reader, reader_hparams)
 
         # HParams cannot create HParams from the inner dict of list
         if "Processors" in configs and configs["Processors"] is not None:
@@ -55,8 +55,7 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
                 p, processor_hparams = create_class_with_kwargs(
                     class_name=processor_configs["type"],
                     class_args=processor_configs.get("kwargs", {}),
-                    h_params=processor_configs.get("hparams", {}),
-                )
+                    h_params=processor_configs.get("hparams", {}))
 
                 selector_hparams = processor_hparams.selector
                 selector_class = get_class(selector_hparams['type'])
@@ -69,11 +68,8 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
             self.initialize()
 
         if "Ontology" in configs.keys() and configs["Ontology"] is not None:
-            module_path = ["__main__",
-                           "nlp.forte.data.ontology"]
-            self._ontology = get_class(
-                configs["Ontology"],
-                module_path)
+            module_path = ["__main__", "forte.data.ontology"]
+            self._ontology = get_class(configs["Ontology"], module_path)
             for processor in self.processors:
                 processor.set_ontology(self._ontology)
         else:

@@ -108,7 +108,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             )
 
         self._packs.append(pack)
-        pid = len(self._pack_names) - 1
+        pid = len(self._packs) - 1
 
         if pack_name is None:
             pack_name = f'{self.__default_pack_prefix}_{pid}'

@@ -134,6 +134,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         super().__init__(cross_pack)
         # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
+        self.last_batch = False
         default_config = HParams(None, self.default_hparams())
         self.batch_size = default_config.batch_size
 
@@ -145,7 +146,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
-        return self.batch_is_full
+        return self.batch_is_full or self.last_batch
 
     def _get_data_batch(
             self,
@@ -176,13 +177,14 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         # Flush the remaining data.
         if len(instances) > 0:
             # self.instance_num_in_current_batch += len(instances)
+            self.last_batch = True
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
     @staticmethod
     def default_hparams() -> Dict:
         return {
-            'batch_size': 10,
+            'batch_size': 10
         }
 
 
@@ -202,8 +204,9 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
 
     def __init__(self, cross_pack: bool = True):
         super().__init__(cross_pack)
-        self.instance_num_in_current_batch = 0
+        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
+        self.last_batch = False
 
         default_config = HParams(None, self.default_hparams())
         self.input_pack_name = default_config.input_pack_name
@@ -215,11 +218,11 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
         self.input_pack_name = config.input_pack_name
         self.batch_size = config.batch_size
 
-        self.instance_num_in_current_batch = 0
+        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
-        return self.batch_is_full
+        return self.batch_is_full or self.last_batch
 
     # TODO: Principled way of get data from multi pack?
     def _get_data_batch(
@@ -238,24 +241,26 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             containing the required annotations and context, and ``cnt`` is
             the number of instances in the batch.
         """
-        input_pack = data_pack.packs[self.input_pack_name]
+        input_pack = data_pack.get_pack(self.input_pack_name)
 
         instances: List[Dict] = []
         for data in input_pack.get_data(context_type, requests, offset):
             instances.append(data)
-            if (len(instances) ==
-                    self.batch_size - self.instance_num_in_current_batch):
+            if len(instances) == self.batch_size:
                 batch = batch_instances(instances)
+                self.batch_is_full = True
                 yield (batch, len(instances))
                 instances = []
+                self.batch_is_full = False
 
         if len(instances):
             batch = batch_instances(instances)
+            self.last_batch = True
             yield (batch, len(instances))
 
     @staticmethod
     def default_hparams() -> Dict:
         return {
             'batch_size': 10,
-            'input_pack_name': 'source',
+            'input_pack_name': 'source'
         }

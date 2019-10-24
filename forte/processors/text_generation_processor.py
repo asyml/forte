@@ -20,8 +20,12 @@ from forte.processors.base.batch_processor import \
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "TextGenerationProcessor"
+]
 
-class TxtgenPredictor(MultiPackBatchProcessor):
+
+class TextGenerationProcessor(MultiPackBatchProcessor):
 
     def __init__(self):
         super().__init__()
@@ -122,19 +126,16 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         preds['input_sents_tids'] += data_batch['tid']
 
         context, context_length = self.get_batch_tensor(
-            data_batch["context"], device=self.device
-        )
+            data_batch["context"], device=self.device)
+
         start_tokens = context[:, 0]
         max_decoding_length = self.max_decoding_length
 
         helper = self._get_helper(start_tokens)
 
         output, _ = self.model(
-            context=context,
-            context_sequence_length=context_length,
-            max_decoding_length=max_decoding_length,
-            helper=helper,
-        )
+            context=context, context_sequence_length=context_length,
+            max_decoding_length=max_decoding_length, helper=helper)
 
         sample_id = output.sample_id
         instance_num = len(sample_id)
@@ -157,27 +158,25 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         to the new tokens (usually use this configuration for evaluation.)
         """
         assert output_dict is not None
-        output_pack = data_pack.packs[self.output_pack_name]
+        output_pack = data_pack.get_pack(self.output_pack_name)
 
         input_sent_tids = output_dict["input_sents_tids"]
         output_sentences = output_dict["output_sents"]
 
         text = output_pack.text
-        input_pack = data_pack.packs[self.input_pack_name]
+        input_pack = data_pack.get_pack(self.input_pack_name)
+        start = len(text)
         for input_id, output_sentence in zip(input_sent_tids, output_sentences):
-            offset = len(output_pack.text)
             sent = self.ontology.Sentence(
-                output_pack, offset, offset + len(output_sentence)
-            )
+                output_pack, start, start + len(output_sentence))
             output_pack.add_entry(sent)
             text += output_sentence + "\n"
+            start = len(text)
 
             input_sent = input_pack.get_entry(input_id)
             cross_link = MultiPackLink(
-                data_pack,
-                data_pack.subentry(self.input_pack_name, input_sent),
-                data_pack.subentry(self.output_pack_name, sent),
-            )
+                data_pack, data_pack.subentry(self.input_pack_name, input_sent),
+                data_pack.subentry(self.output_pack_name, sent))
             data_pack.add_entry(cross_link)
             # We may also consider adding two link with opposite directions
             # Here the unidirectional link indicates the generation dependency
@@ -206,7 +205,8 @@ class TxtgenPredictor(MultiPackBatchProcessor):
             inst_size = len(wids)
             lengths[i] = inst_size
             # word ids
-            wid_inputs[i, :inst_size] = wids
+            wid_inputs[i, :inst_size] = \
+                self.word_processor.map_token_to_id(wids)
             wid_inputs[i, inst_size:] = 0
             # The existence of length will mask these padding positions out
             # So we just set the padding value as 0,
