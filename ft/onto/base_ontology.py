@@ -32,7 +32,8 @@ class Token(Annotation):
         ud_xpos (str): Language specific pos tag. Used in CoNLL-U Format. Refer
         https://universaldependencies.org/format.html
         lemma (str): Lemma or stem of word form.
-        is_root (bool): If the token is a root of, say, dependency tree. Used in
+        is_root (bool): If the token is a root of, say, dependency tree.
+        ud_misc (Dict[str, List[str]]): Miscellaneous features. Used in
         CoNLL-U Format. Refer https://universaldependencies.org/format.html
     """
 

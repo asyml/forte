@@ -18,7 +18,7 @@ state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]
 
 def load_redirects(redirect_path: str) -> Dict[str, str]:
     redirect_to = {}
-    redirect_rel = "http://dbpedia.org/base_ontology/wikiPageRedirects"
+    redirect_rel = "http://dbpedia.org/ontology/wikiPageRedirects"
 
     count = 0
     for statements in NIFParser(redirect_path):

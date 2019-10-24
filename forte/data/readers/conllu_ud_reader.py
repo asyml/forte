@@ -30,7 +30,7 @@ class ConllUDReader(PackReader):
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = no-self-use, unused-argument
         """
-        Iterator over ontology files in the data_source
+        Iterator over conll files in the data_source
 
         Args:
             args: args[0] is the directory to the conllu files.
