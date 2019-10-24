@@ -68,9 +68,6 @@ base_ontology
 .. autoclass:: forte.data.ontology.base_ontology.PredicateLink
     :members:
 
-.. autoclass:: forte.data.ontology.base_ontology.CoreferenceMention
-    :members:
-
 .. autoclass:: forte.data.ontology.base_ontology.CoreferenceGroup
     :members:
 

@@ -5,10 +5,10 @@ into data_pack format
 """
 from typing import Iterator, Dict, Tuple, Any
 
+from ft.onto.base_ontology import Document, Sentence, Token, Dependency
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Document, Sentence, Token, Dependency
 
 __all__ = [
     "ConllUDReader"
@@ -30,7 +30,7 @@ class ConllUDReader(PackReader):
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = no-self-use, unused-argument
         """
-        Iterator over conll files in the data_source
+        Iterator over ontology files in the data_source
 
         Args:
             args: args[0] is the directory to the conllu files.
@@ -57,16 +57,16 @@ class ConllUDReader(PackReader):
     def _parse_pack(self, doc_lines) -> Iterator[DataPack]:
         # pylint: disable=no-self-use
         token_comp_fields = ["id", "form", "lemma", "pos",
-                             "xpos", "features", "head", "label",
-                             "enhanced_dependency_relations", "miscellaneous"]
+                             "ud_xpos", "features", "head", "label",
+                             "enhanced_dependency_relations", "ud_misc"]
 
-        token_multi_fields = ["features", "miscellaneous",
+        token_multi_fields = ["features", "ud_misc",
                               "enhanced_dependency_relations"]
 
-        token_feature_fields = ["features", "miscellaneous"]
+        token_feature_fields = ["features", "ud_misc"]
 
-        token_entry_fields = ["lemma", "pos", "xpos",
-                              "features", "miscellaneous"]
+        token_entry_fields = ["lemma", "pos", "ud_xpos",
+                              "features", "ud_misc"]
 
         data_pack: DataPack = DataPack()
         doc_sent_begin: int = 0

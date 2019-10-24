@@ -10,8 +10,8 @@ import csv
 import os
 from typing import List, Iterator, Dict, Tuple
 
-from smart_open import open
 from texar.torch import HParams
+from smart_open import open
 import rdflib
 
 from forte import Resources, logging

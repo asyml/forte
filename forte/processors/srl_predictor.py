@@ -33,7 +33,10 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
     Note that to use :class:`SRLPredictor`, the :attr:`ontology` of
     :class:`Pipeline` must be an ontology that includes
-    ``forte.data.ontology.ontonotes_ontology``.
+    ``ft.onto.base_ontology.Token``, ``ft.onto.base_ontology.Sentence``,
+    ``ft.onto.base_ontology.PredicateMention``,
+    ``ft.onto.base_ontology.PredicateArgument`` and
+    ``ft.onto.base_ontology.PredicateLink``.
     """
 
     word_vocab: tx.data.Vocab

@@ -6,8 +6,3 @@ torch
 pyyaml
 smart-open
 allennlp
-ddt
-stanfordnlp
-termcolor
-tqdm
-torchtext

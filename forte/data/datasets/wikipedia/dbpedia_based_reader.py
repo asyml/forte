@@ -1,7 +1,7 @@
 """
 Read wikipedia articles and parse each article into a DataPack, which contains
 some basic structure of a Wikipedia article, such as links, categories and
-info-boxes, see `forte.data.ontology.wiki_ontology` for more information.
+info-boxes, see `ft.onto.wiki_ontology` for more information.
 
 This reader is based on DBpedia's extracted datasets.
 """

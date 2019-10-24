@@ -8,7 +8,7 @@ import jsonpickle
 from forte.common.types import EntryType, LinkType, GroupType
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.base.core import Entry
+from forte.data.ontology.core import Entry
 
 
 __all__ = [

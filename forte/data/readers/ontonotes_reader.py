@@ -66,7 +66,7 @@ class OntonotesReader(PackReader):
                 base_ontology.PredicateArgument, str]]] = []
 
             groups: DefaultDict[int, List[
-                base_ontology.CoreferenceMention]] = defaultdict(list)
+                base_ontology.EntityMention]] = defaultdict(list)
             coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
 
             for line in doc:
@@ -284,7 +284,7 @@ class OntonotesReader(PackReader):
             word_begin: int,
             word_end: int,
             coref_stacks: DefaultDict[int, List[int]],
-            groups: DefaultDict[int, List[base_ontology.CoreferenceMention]],
+            groups: DefaultDict[int, List[base_ontology.EntityMention]],
     ) -> None:
 
         if label == "-":
@@ -297,7 +297,7 @@ class OntonotesReader(PackReader):
                     group_id = int(segment[1:-1])
 
                     coref_mention = \
-                        self._ontology.CoreferenceMention(  # type: ignore
+                        self._ontology.EntityMention(  # type: ignore
                             pack, word_begin, word_end
                         )
                     coref_mention = pack.add_or_get_entry(
@@ -314,7 +314,7 @@ class OntonotesReader(PackReader):
                 group_id = int(segment[:-1])
                 start = coref_stacks[group_id].pop()
                 coref_mention = \
-                    self._ontology.CoreferenceMention(  # type: ignore
+                    self._ontology.EntityMention(  # type: ignore
                         pack, start, word_end
                     )
                 coref_mention = pack.add_or_get_entry(

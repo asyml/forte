@@ -9,7 +9,7 @@ from forte.data.base_pack import PackType
 from forte.data import DataPack, MultiPack
 from forte.data import slice_batch
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
-from forte.data.ontology.base.top import Annotation
+from forte.data.ontology.top import Annotation
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [

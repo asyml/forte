@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from texar.torch.hyperparams import HParams
 
-from ft.onto import base_ontology as conll
+from ft.onto import base_ontology
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
@@ -29,8 +29,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
        <https://arxiv.org/abs/1603.01354>`_.
 
        Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
-       :class:`Pipeline` must be an ontology that includes
-       ``forte.data.ontology.conll03_ontology``.
+       :class:`Pipeline` must be an ontology that include
+       ``ft.onto.base_ontology.Token`` and ``ft.onto.base_ontology.Sentence``.
     """
 
     def __init__(self):
@@ -46,7 +46,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         self.train_instances_cache = []
 
-        self._ontology = conll
+        self._ontology = base_ontology
 
         self.batch_size = 3
         self.batcher = self.define_batcher()
@@ -175,8 +175,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid: int = output_dict["Token"]["tid"][i][j]  # type: ignore
 
-                orig_token: conll.Token = data_pack.get_entry(  # type: ignore
-                    tid)
+                orig_token: base_ontology.Token = data_pack.get_entry(tid)  # type: ignore # pylint: disable=line-too-long
                 ner_tag: str = output_dict["Token"]["ner"][i][j]
 
                 orig_token.set_fields(ner_tag=ner_tag)
@@ -287,7 +286,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config: Optional[HParams] = None):
         super().__init__(config)
-        self._ontology = conll
+        self._ontology = base_ontology
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
@@ -295,21 +294,21 @@ class CoNLLNEREvaluator(Evaluator):
 
     def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
         pred_getdata_args = {
-            "context_type": conll.Sentence,
+            "context_type": base_ontology.Sentence,
             "request": {
-                conll.Token: {
+                base_ontology.Token: {
                     "fields": ["ner"],
                 },
-                conll.Sentence: [],  # span by default
+                base_ontology.Sentence: [],  # span by default
             },
         }
 
         refer_getdata_args = {
-            "context_type": conll.Sentence,
+            "context_type": base_ontology.Sentence,
             "request": {
-                conll.Token: {
+                base_ontology.Token: {
                     "fields": ["chunk", "pos", "ner"]},
-                conll.Sentence: [],  # span by default
+                base_ontology.Sentence: [],  # span by default
             }
         }
 

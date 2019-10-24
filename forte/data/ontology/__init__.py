@@ -1,2 +1,2 @@
-from forte.data.ontology.base.top import *
-from forte.data.ontology.base.core import *
+from forte.data.ontology.top import *
+from forte.data.ontology.core import *

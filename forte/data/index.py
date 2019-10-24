@@ -4,7 +4,7 @@ from typing import DefaultDict, Dict, List, Set, Type, Hashable, Generic, \
     Iterable, Tuple
 
 from forte.common.exception import PackIndexError
-from forte.data.ontology.base.core import GroupType, LinkType, EntryType
+from forte.data.ontology.core import GroupType, LinkType, EntryType
 
 logger = logging.getLogger(__name__)
 

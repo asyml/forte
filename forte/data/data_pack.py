@@ -10,9 +10,9 @@ from forte.common.types import EntryType, ReplaceOperationsType, DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
 from forte.data.base import Span
-from forte.data.ontology.base.core import Entry
-from forte.data.ontology.base.top import (Annotation, Link, Group,
-                                          SinglePackEntries, Generic)
+from forte.data.ontology.core import Entry
+from forte.data.ontology.top import (Annotation, Link, Group,
+                                     SinglePackEntries, Generic)
 from forte.data import io_utils
 
 logger = logging.getLogger(__name__)

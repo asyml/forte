@@ -31,7 +31,7 @@ class CoNLL03Reader(PackReader):
         Iterator over conll files in the data_source
 
         Args:
-            conll_directory:  directory to the conll files.
+            conll_directory: directory to the conll files.
 
         Returns: Iterator over files in the path with conll extensions.
         """

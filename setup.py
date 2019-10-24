@@ -13,7 +13,7 @@ setuptools.setup(
     long_description=long_description,
     license='Apache License Version 2.0',
 
-    packages=setuptools.find_packages(include=['forte.*']),
+    packages=setuptools.find_packages(include=['forte.*', 'ft.*']),
     platforms='any',
 
     install_requires=[
