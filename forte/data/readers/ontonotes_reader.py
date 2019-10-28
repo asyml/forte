@@ -248,8 +248,8 @@ class OntonotesReader(PackReader):
                     raise ValueError(
                         "current_pred_arg is None when meet right blanket.")
 
-                arg_begin = current_pred_arg[label_index][0]
-                arg_type = current_pred_arg[label_index][1]
+                arg_begin = current_pred_arg[label_index][0]  # type: ignore
+                arg_type = current_pred_arg[label_index][1]  # type: ignore
 
                 pred_arg = PredicateArgument(pack, arg_begin, word_end)
                 pred_arg = pack.add_or_get_entry(pred_arg)
