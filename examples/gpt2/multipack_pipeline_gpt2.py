@@ -1,5 +1,5 @@
 import json
-from forte.data.ontology import base_ontology
+from ft.onto.base_ontology import Sentence
 
 from forte.multipack_pipeline import MultiPackPipeline
 
@@ -15,10 +15,8 @@ output_pack_name = "output_tgt"
 
 multipack = pl.process_one(input_dir)
 
-src_cnt = len(list(multipack.get_pack(input_pack_name).get(
-    base_ontology.Sentence)))
-tgt_cnt = len(list(multipack.get_pack(output_pack_name).get(
-    base_ontology.Sentence)))
+src_cnt = len(list(multipack.get_pack(input_pack_name).get(Sentence)))
+tgt_cnt = len(list(multipack.get_pack(output_pack_name).get(Sentence)))
 link_cnt = len(multipack.links)
 print(f'sentence_cnt: src{src_cnt}, tgt{tgt_cnt}, link_cnt{link_cnt}')
 

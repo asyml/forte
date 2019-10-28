@@ -9,10 +9,10 @@ from sortedcontainers import SortedList
 from forte.common.types import EntryType, ReplaceOperationsType, DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry
 from forte.data.base import Span
-from forte.data.ontology.top import (Annotation, Link, Group, SinglePackEntries,
-                                     Generic)
+from forte.data.ontology.core import Entry
+from forte.data.ontology.top import (
+    Annotation, Link, Group, SinglePackEntries, Generic)
 from forte.data import io_utils
 
 logger = logging.getLogger(__name__)
@@ -408,7 +408,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                             "component": ["dummy"],
                             "fields": ["speaker"],
                         },
-                    base_ontology.Token: ["pos_tag", "sense""],
+                    base_ontology.Token: ["pos", "sense""],
                     base_ontology.EntityMention: {
                         "unit": "Token",
                     },

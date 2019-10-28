@@ -8,11 +8,10 @@ from texar.torch import HParams
 
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
-from forte.data.ontology import base_ontology
 from forte.data.selector import DummySelector
 from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
-from forte.pipeline_component import PipeComponent
+from forte.pipeline_component import PipelineComponent
 
 __all__ = [
     "BaseProcessor",
@@ -21,7 +20,7 @@ __all__ = [
 process_manager = ProcessManager()
 
 
-class BaseProcessor(PipeComponent[PackType], ABC):
+class BaseProcessor(PipelineComponent[PackType], ABC):
     """
     The basic processor class. To be inherited by all kinds of processors
     such as trainer, predictor and evaluator.
@@ -29,7 +28,6 @@ class BaseProcessor(PipeComponent[PackType], ABC):
 
     def __init__(self):
         self.component_name = get_full_module_name(self)
-        self._ontology = base_ontology
         self.selector = DummySelector()
 
     def initialize(self, resource: Resources, configs: Optional[HParams]):
@@ -48,13 +46,6 @@ class BaseProcessor(PipeComponent[PackType], ABC):
 
         """
         pass
-
-    # TODO: remove this.
-    def set_ontology(self, ontology):
-        """
-        Set the ontology of this processor, will be called by the Pipeline.
-        """
-        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
 
     def process(self, input_pack: PackType):
         # Set the component for recording purpose.

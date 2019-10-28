@@ -3,17 +3,15 @@ import os
 from termcolor import colored
 from texar.torch import HParams
 
-import forte.data.ontology.base_ontology as base_ontology
-import forte.data.ontology.stanfordnlp_ontology as stanford
-from forte.data.ontology.ontonotes_ontology import (
-    PredicateMention, PredicateArgument)
+from ft.onto.base_ontology import (
+    Token, Sentence, Dependency, EntityMention, PredicateMention,
+    PredicateArgument, PredicateLink)
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors import (
-    CoNLLNERPredictor, SRLPredictor)
+from forte.processors import CoNLLNERPredictor, SRLPredictor
 from forte.processors.writers import DocIdJsonPackWriter
-from forte.processors.nltk_processors import NLTKWordTokenizer, \
-    NLTKPOSTagger, NLTKSentenceSegmenter
+from forte.processors.nltk_processors import (
+    NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
 from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
 
 
@@ -51,27 +49,26 @@ def string_processor_example(ner_model_dir: str, srl_model_dir: str):
 
     pack = pl.process_one(text)
 
-    for sentence in pack.get(base_ontology.Sentence):
+    for sentence in pack.get(Sentence):
         sent_text = sentence.text
-        print(colored("base_ontology.Sentence:", 'red'), sent_text, "\n")
+        print(colored("Sentence:", 'red'), sent_text, "\n")
         # first method to get entry in a sentence
-        tokens = [(token.text, token.pos_tag) for token in
-                  pack.get(base_ontology.Token, sentence)]
+        tokens = [(token.text, token.pos) for token in
+                  pack.get(Token, sentence)]
         entities = [(entity.text, entity.ner_type) for entity in
-                    pack.get(base_ontology.EntityMention, sentence)]
+                    pack.get(EntityMention, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
         print(colored("EntityMentions:", 'red'), entities, "\n")
 
         # second method to get entry in a sentence
         print(colored("Semantic role labels:", 'red'))
-        for link in pack.get(
-                base_ontology.PredicateLink, sentence):
+        for link in pack.get(PredicateLink, sentence):
             parent: PredicateMention = link.get_parent()  # type: ignore
             child: PredicateArgument = link.get_child()  # type: ignore
             print(f"  - \"{child.text}\" is role {link.arg_type} of "
                   f"predicate \"{parent.text}\"")
-            entities = [entity.text for entity
-                        in pack.get(base_ontology.EntityMention, child)]
+            entities = [entity.text for entity in
+                        pack.get(EntityMention, child)]
             print("      Entities in predicate argument:", entities, "\n")
         print()
 
@@ -96,23 +93,21 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
                      config=config)
     pl.add_processor(processor=DocIdJsonPackWriter(),
                      config=output_config)
-    pl.set_ontology(stanford)
 
     pl.initialize()
 
     pack = pl.process(text)
-    for sentence in pack.get(stanford.Sentence):
+    for sentence in pack.get(Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
-        tokens = [(token.text, token.pos_tag, token.lemma) for token in
-                  pack.get(stanford.Token, sentence)]
+        tokens = [(token.text, token.pos, token.lemma) for token in
+                  pack.get(Token, sentence)]
         print(colored("Tokens:", 'red'), tokens, "\n")
 
         print(colored("Dependency Relations:", 'red'))
-        for link in pack.get(
-                stanford.Dependency, sentence):
-            parent: stanford.Token = link.get_parent()  # type: ignore
-            child: stanford.Token = link.get_child()  # type: ignore
+        for link in pack.get(Dependency, sentence):
+            parent: Token = link.get_parent()  # type: ignore
+            child: Token = link.get_child()  # type: ignore
             print(colored(child.text, 'cyan'),
                   "has relation",
                   colored(link.rel_type, 'green'),

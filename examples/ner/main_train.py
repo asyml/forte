@@ -3,8 +3,7 @@ import yaml
 
 from texar.torch.hyperparams import HParams
 from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.processors.ner_predictor import (
-    CoNLLNEREvaluator, CoNLLNERPredictor)
+from forte.processors.ner_predictor import CoNLLNEREvaluator, CoNLLNERPredictor
 from forte.train_pipeline import TrainPipeline
 from forte.trainer.ner_trainer import CoNLLNERTrainer
 from examples.ner.ner_vocab_processor import CoNLL03VocabularyProcessor

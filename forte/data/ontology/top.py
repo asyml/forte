@@ -1,9 +1,10 @@
 from functools import total_ordering
-from typing import (Optional, Set, Tuple, Type)
+from typing import Optional, Set, Tuple, Type
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.base_pack import PackType
+from forte.data.container import EntryContainer
 from forte.data.ontology.core import Entry, BaseLink, BaseGroup
+from forte.data.base_pack import PackType
 from forte.data.base import Span
 
 __all__ = [
@@ -11,6 +12,7 @@ __all__ = [
     "Annotation",
     "Group",
     "Link",
+    "MultiPackGeneric",
     "MultiPackGroup",
     "MultiPackLink",
     "SubEntry",
@@ -20,7 +22,8 @@ __all__ = [
 
 
 class Generic(Entry):
-    pass
+    def __init__(self, pack: PackType):
+        super(Generic, self).__init__(pack=pack)
 
 
 @total_ordering
@@ -214,6 +217,7 @@ class Link(BaseLink):
         return self.pack.get_entry(self._child)
 
 
+# pylint: disable=duplicate-bases
 class Group(BaseGroup[Entry]):
     """
     Group is an entry that represent a group of other entries. For example,
@@ -221,6 +225,13 @@ class Group(BaseGroup[Entry]):
     store a set of members, no duplications allowed.
     """
     MemberType: Type[Entry] = Entry
+
+    def __init__(
+            self,
+            pack: EntryContainer,
+            members: Optional[Set[Entry]] = None,
+    ):  # pylint: disable=useless-super-delegation
+        super().__init__(pack, members)
 
 
 class SubEntry(Entry[PackType]):
@@ -261,6 +272,11 @@ class SubEntry(Entry[PackType]):
     @property
     def index_key(self) -> Tuple[int, int]:
         return self._pack_index, self._entry_id
+
+
+class MultiPackGeneric(Entry):
+    def __init__(self, pack: PackType):
+        super(MultiPackGeneric, self).__init__(pack=pack)
 
 
 class MultiPackLink(BaseLink):
@@ -367,6 +383,7 @@ class MultiPackLink(BaseLink):
         return SubEntry(self.pack, pack_idx, child_tid)
 
 
+# pylint: disable=duplicate-bases
 class MultiPackGroup(BaseGroup[SubEntry]):
     """
     Group type entries, such as "coreference group". Each group has a set

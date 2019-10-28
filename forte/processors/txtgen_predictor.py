@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
@@ -10,13 +10,10 @@ from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.data import MultiPackLink
 from forte.data.batchers import (
-    ProcessingBatcher,
-    FixedSizeMultiPackProcessingBatcher
-)
-from forte.data.ontology import base_ontology
+    ProcessingBatcher, FixedSizeMultiPackProcessingBatcher)
 from forte.common.types import DataRequest
-from forte.processors.base.batch_processor import \
-    MultiPackBatchProcessor
+from forte.processors.base.batch_processor import MultiPackBatchProcessor
+from ft.onto.base_ontology import Sentence
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +27,6 @@ class TxtgenPredictor(MultiPackBatchProcessor):
 
         self.word_processor = None
         self.model = None
-        self.ontology = base_ontology
 
         self.batch_size = 6
         self._get_helper = None
@@ -48,13 +44,13 @@ class TxtgenPredictor(MultiPackBatchProcessor):
 
     def define_context(self):
         # pylint: disable=no-self-use
-        self.context_type = self._ontology.Sentence
+        self.context_type = Sentence
 
     def define_batcher(self) -> ProcessingBatcher:
         # pylint: disable=no-self-use
         return FixedSizeMultiPackProcessingBatcher()
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
         """
         Args:
             resource:
@@ -72,14 +68,16 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         """
         super().initialize(resource, configs)
 
-        self.input_pack_name = configs.input_pack_name
-        self.output_pack_name = configs.output_pack_name
+        if configs is not None:
+            self.input_pack_name = configs.input_pack_name
+            self.output_pack_name = configs.output_pack_name
 
-        self.max_decoding_length = configs.max_decoding_length
-        self.temperature = configs.temperature
-        self.top_k = configs.top_k
-        self.top_p = configs.top_p
-        self.model = tx.modules.GPT2Decoder(configs.pretrained_model_name)
+            self.max_decoding_length = configs.max_decoding_length
+            self.temperature = configs.temperature
+            self.top_k = configs.top_k
+            self.top_p = configs.top_p
+            self.model = tx.modules.GPT2Decoder(configs.pretrained_model_name)
+
         self.device = torch.device("cuda" if torch.cuda.is_available()
                                    else "cpu")
         self.model.to(device=self.device)
@@ -152,8 +150,8 @@ class TxtgenPredictor(MultiPackBatchProcessor):
     def pack(self, data_pack: MultiPack, output_dict):
         """
         Write the prediction results back to datapack. If :attr:`_overwrite`
-        is `True`, write the predicted ner_tag to the original tokens.
-        Otherwise, create a new set of tokens and write the predicted ner_tag
+        is `True`, write the predicted ner to the original tokens.
+        Otherwise, create a new set of tokens and write the predicted ner
         to the new tokens (usually use this configuration for evaluation.)
         """
         assert output_dict is not None
@@ -166,9 +164,7 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         input_pack = data_pack.packs[self.input_pack_name]
         for input_id, output_sentence in zip(input_sent_tids, output_sentences):
             offset = len(output_pack.text)
-            sent = self.ontology.Sentence(
-                output_pack, offset, offset + len(output_sentence)
-            )
+            sent = Sentence(output_pack, offset, offset + len(output_sentence))
             output_pack.add_entry(sent)
             text += output_sentence + "\n"
 

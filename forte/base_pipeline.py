@@ -7,7 +7,6 @@ from texar.torch import HParams
 
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
-from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
 from forte.data.selector import Selector, DummySelector
 from forte.processors.base import BaseProcessor
@@ -112,8 +111,6 @@ class BasePipeline(Generic[PackType]):
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
 
-        self._ontology = base_ontology
-
         if resource is None:
             self.resource = Resources()
         else:
@@ -152,15 +149,9 @@ class BasePipeline(Generic[PackType]):
         self._reader.initialize(self.resource, self._reader_config)
         self.initialize_processors()
 
-    def set_ontology(self, ontology):
-        self._ontology = ontology
-        for processor in self.processors:
-            processor.set_ontology(self._ontology)
-
     def initialize_processors(self):
         for processor, config in zip(self.processors, self.processor_configs):
             processor.initialize(self.resource, config)
-            processor.set_ontology(self._ontology)
 
     def set_reader(self, reader: BaseReader, config: Optional[HParams] = None):
         self._reader = reader

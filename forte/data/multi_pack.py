@@ -7,8 +7,7 @@ from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
 from forte.data.index import BaseIndex
 from forte.data.ontology.top import (
-    Annotation, MultiPackGroup, MultiPackLink, SubEntry,
-    MultiPackEntries)
+    Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries)
 from forte.data.ontology.core import Entry
 from forte.data.base import Span
 
@@ -203,7 +202,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                             "component": ["dummy"],
                             "fields": ["speaker"],
                         },
-                    base_ontology.Token: ["pos_tag", "sense""],
+                    base_ontology.Token: ["pos", "sense""],
                     base_ontology.EntityMention: {
                         "unit": "Token",
                     },

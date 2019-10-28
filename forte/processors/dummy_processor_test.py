@@ -1,20 +1,18 @@
 """
 Unit tests for dummy processor.
 """
-import os
 import unittest
 
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.pipeline import Pipeline
 from forte.processors.dummy_batch_processor import DummyRelationExtractor
-from forte.data.ontology import relation_ontology
+from ft.onto.base_ontology import RelationLink
 
 
 class DummyProcessorTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.nlp = Pipeline()
-        self.nlp.set_ontology(relation_ontology)
         self.reader = OntonotesReader()
 
         self.data_path = "examples/data_samples/ontonotes/00/"
@@ -26,7 +24,7 @@ class DummyProcessorTest(unittest.TestCase):
     def test_processor(self):
         pack = self.nlp.process(self.data_path)
 
-        relations = list(pack.get_entries(relation_ontology.RelationLink))
+        relations = list(pack.get_entries(RelationLink))
 
         assert (len(relations) > 0)
 

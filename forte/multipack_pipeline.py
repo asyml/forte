@@ -68,18 +68,6 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
 
             self.initialize()
 
-        if "Ontology" in configs.keys() and configs["Ontology"] is not None:
-            module_path = ["__main__",
-                           "nlp.forte.data.ontology"]
-            self._ontology = get_class(
-                configs["Ontology"],
-                module_path)
-            for processor in self.processors:
-                processor.set_ontology(self._ontology)
-        else:
-            logger.warning("Ontology not specified in config, will use "
-                           "base_ontology by default.")
-
 
 def create_class_with_kwargs(
         class_name: str, class_args: Dict, h_params: Optional[Dict] = None):
@@ -88,18 +76,18 @@ def create_class_with_kwargs(
         class_args = {}
     obj = cls(**class_args)
 
-    if h_params is None:
-        h_params = {}
-
     p_params: Dict = {}
 
-    if "config_path" in h_params and not h_params["config_path"] is None:
+    if h_params is not None and \
+            "config_path" in h_params and \
+            h_params["config_path"] is not None:
         filebased_hparams = yaml.safe_load(open(h_params["config_path"]))
     else:
         filebased_hparams = {}
     p_params.update(filebased_hparams)
 
-    p_params.update(h_params.get("overwrite_configs", {}))
+    if h_params is not None:
+        p_params.update(h_params.get("overwrite_configs", {}))
     default_processor_hparams = cls.default_hparams()
 
     processor_hparams = HParams(p_params,
