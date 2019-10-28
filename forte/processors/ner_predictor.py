@@ -9,6 +9,7 @@ import torch
 from texar.torch.hyperparams import HParams
 
 from ft.onto import base_ontology
+from ft.onto.base_ontology import Token, Sentence, EntityMention
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
@@ -51,13 +52,15 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.batch_size = 3
         self.batcher = self.define_batcher()
 
+    # pylint: disable=no-self-use
     def define_context(self) -> Type[Annotation]:
-        return self._ontology.Sentence
+        return Sentence
 
+    # pylint: disable=no-self-use
     def _define_input_info(self) -> DataRequest:
         input_info: DataRequest = {
-            self._ontology.Token: [],
-            self._ontology.Sentence: [],
+            Token: [],
+            Sentence: [],
         }
         return input_info
 
@@ -158,6 +161,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
+    # pylint: disable=no-self-use
     def pack(self, data_pack: DataPack,
              output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
         """
@@ -175,7 +179,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid: int = output_dict["Token"]["tid"][i][j]  # type: ignore
 
-                orig_token: base_ontology.Token = data_pack.get_entry(tid)  # type: ignore # pylint: disable=line-too-long
+                orig_token: Token = data_pack.get_entry(tid)  # type: ignore # pylint: disable=line-too-long
                 ner_tag: str = output_dict["Token"]["ner"][i][j]
 
                 orig_token.set_fields(ner_tag=ner_tag)
@@ -194,15 +198,16 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                         continue
 
                     kwargs_i = {"ner_type": current_entity_mention[1]}
-                    entity = self._ontology.EntityMention(
-                        data_pack, current_entity_mention[0], token.span.end)
+                    entity = EntityMention(data_pack,
+                                           current_entity_mention[0],
+                                           token.span.end)
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
                 elif token_ner[0] == "S":
                     current_entity_mention = (token.span.begin, token_ner[2:])
                     kwargs_i = {"ner_type": current_entity_mention[1]}
-                    entity = self._ontology.EntityMention(
-                        data_pack, current_entity_mention[0], token.span.end)
+                    entity = EntityMention(data_pack, current_entity_mention[0],
+                                           token.span.end)
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
 
@@ -294,21 +299,21 @@ class CoNLLNEREvaluator(Evaluator):
 
     def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
         pred_getdata_args = {
-            "context_type": base_ontology.Sentence,
+            "context_type": Sentence,
             "request": {
-                base_ontology.Token: {
+                Token: {
                     "fields": ["ner"],
                 },
-                base_ontology.Sentence: [],  # span by default
+                Sentence: [],  # span by default
             },
         }
 
         refer_getdata_args = {
-            "context_type": base_ontology.Sentence,
+            "context_type": Sentence,
             "request": {
-                base_ontology.Token: {
+                Token: {
                     "fields": ["chunk", "pos", "ner"]},
-                base_ontology.Sentence: [],  # span by default
+                Sentence: [],  # span by default
             }
         }
 

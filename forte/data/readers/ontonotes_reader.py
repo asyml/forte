@@ -6,6 +6,8 @@ from collections import defaultdict
 from typing import DefaultDict, List, Optional, Tuple, Dict, Any, Iterator
 
 from ft.onto import base_ontology
+from ft.onto.base_ontology import (
+    EntityMention, PredicateArgument, PredicateMention)
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
@@ -59,14 +61,12 @@ class OntonotesReader(PackReader):
 
             # auxiliary structures
             current_entity_mention: Optional[Tuple[int, str]] = None
-            verbal_predicates: List[base_ontology.PredicateMention] = []
+            verbal_predicates: List[PredicateMention] = []
 
             current_pred_arg: List[Optional[Tuple[int, str]]] = []
-            verbal_pred_args: List[List[Tuple[
-                base_ontology.PredicateArgument, str]]] = []
+            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]] = []
 
-            groups: DefaultDict[int, List[
-                base_ontology.EntityMention]] = defaultdict(list)
+            groups: DefaultDict[int, List[EntityMention]] = defaultdict(list)
             coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
 
             for line in doc:
@@ -247,8 +247,7 @@ class OntonotesReader(PackReader):
             word_begin: int,
             word_end: int,
             current_pred_arg: List[Optional[Tuple[int, str]]],
-            verbal_pred_args: List[List[Tuple[base_ontology.PredicateArgument,
-                                              str]]],
+            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]],
     ) -> None:
 
         for label_index, label in enumerate(labels):
@@ -284,7 +283,7 @@ class OntonotesReader(PackReader):
             word_begin: int,
             word_end: int,
             coref_stacks: DefaultDict[int, List[int]],
-            groups: DefaultDict[int, List[base_ontology.EntityMention]],
+            groups: DefaultDict[int, List[EntityMention]],
     ) -> None:
 
         if label == "-":

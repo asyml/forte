@@ -7,6 +7,7 @@ from typing import Iterator, List, Union
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from ft.onto import base_ontology
+from ft.onto.base_ontology import Document
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,7 @@ class StringReader(PackReader):
         """
         pack = DataPack()
 
-        document = base_ontology.Document(
-            pack, 0, len(data_source))
+        document = Document(pack, 0, len(data_source))
         pack.add_or_get_entry(document)
 
         pack.set_text(data_source, replace_func=self.text_replace_operation)

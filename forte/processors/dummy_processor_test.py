@@ -7,6 +7,7 @@ from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.pipeline import Pipeline
 from forte.processors.dummy_batch_processor import DummyRelationExtractor
 from ft.onto import base_ontology
+from ft.onto.base_ontology import RelationLink
 
 
 class DummyProcessorTest(unittest.TestCase):
@@ -25,7 +26,7 @@ class DummyProcessorTest(unittest.TestCase):
     def test_processor(self):
         pack = self.nlp.process(self.data_path)
 
-        relations = list(pack.get_entries(base_ontology.RelationLink))
+        relations = list(pack.get_entries(RelationLink))
 
         assert (len(relations) > 0)
 

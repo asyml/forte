@@ -5,7 +5,7 @@ from texar.torch import HParams
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.processors.ner_predictor import CoNLLNERPredictor
-from ft.onto import base_ontology
+from ft.onto.base_ontology import Token, Sentence, EntityMention
 
 config_data = yaml.safe_load(open("config_data.yml", "r"))
 config_model = yaml.safe_load(open("config_model.yml", "r"))
@@ -23,11 +23,11 @@ pl.initialize()
 
 for pack in pl.process_dataset(config.config_data.test_path):
     for pred_sentence in pack.get_data(
-            context_type=base_ontology.Sentence,
+            context_type=Sentence,
             request={
-                base_ontology.Token: {"fields": ["ner"]},
-                base_ontology.Sentence: [],  # span by default
-                base_ontology.EntityMention: {}
+                Token: {"fields": ["ner"]},
+                Sentence: [],  # span by default
+                EntityMention: {}
             }):
         print("============================")
         print(pred_sentence["context"])

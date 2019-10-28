@@ -4,6 +4,7 @@ import stanfordnlp
 from texar.torch import HParams
 
 from ft.onto import base_ontology
+from ft.onto.base_ontology import Token, Sentence, Dependency
 from forte.common.resources import Resources
 from forte.data import DataPack
 from forte.processors.base import PackProcessor
@@ -58,12 +59,10 @@ class StandfordNLPProcessor(PackProcessor):
             begin_pos = doc.find(sentence.words[0].text, end_pos)
             end_pos = doc.find(sentence.words[-1].text, begin_pos) + len(
                 sentence.words[-1].text)
-            sentence_entry = self._ontology.Sentence(
-                input_pack, begin_pos, end_pos
-            )
+            sentence_entry = Sentence(input_pack, begin_pos, end_pos)
             input_pack.add_or_get_entry(sentence_entry)
 
-            tokens: List[base_ontology.Token] = []
+            tokens: List[Token] = []
             if "tokenize" in self.processors:
                 offset = sentence_entry.span.begin
                 end_pos_word = 0
@@ -73,10 +72,10 @@ class StandfordNLPProcessor(PackProcessor):
                     begin_pos_word = sentence_entry.text. \
                         find(word.text, end_pos_word)
                     end_pos_word = begin_pos_word + len(word.text)
-                    token = self._ontology.Token(
-                        input_pack,
-                        begin_pos_word + offset, end_pos_word + offset
-                    )
+                    token = Token(input_pack,
+                                  begin_pos_word + offset,
+                                  end_pos_word + offset
+                                  )
 
                     if "pos" in self.processors:
                         token.set_fields(pos_tag=word.pos)
@@ -95,8 +94,7 @@ class StandfordNLPProcessor(PackProcessor):
                 for token, word in zip(tokens, sentence.words):
                     child = token  # current token
                     parent = tokens[word.governor - 1]  # Root token
-                    relation_entry = self._ontology.Dependency(
-                        input_pack, parent, child)
+                    relation_entry = Dependency(input_pack, parent, child)
                     relation_entry.set_fields(
                         rel_type=word.dependency_relation)
 

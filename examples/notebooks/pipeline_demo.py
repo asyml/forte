@@ -1,6 +1,6 @@
 from termcolor import colored
 
-from ft.onto import base_ontology
+from ft.onto.base_ontology import Token, Sentence, EntityMention
 from forte.pipeline import Pipeline
 
 pl = Pipeline()
@@ -28,25 +28,25 @@ win_medal_text = "British hurdler Sarah Claxton is confident she can win her " \
 
 pack = pl.process_one(win_medal_text)
 
-for sentence in pack.get(base_ontology.Sentence):
+for sentence in pack.get(Sentence):
     sent_text = sentence.text
     print(colored("Sentence:", 'red'), sent_text, "\n")
 
-for sentence in pack.get(base_ontology.Sentence):
+for sentence in pack.get(Sentence):
     tokens = [(token.text, token.pos_tag) for token in
-              pack.get(base_ontology.Token, sentence)]
+              pack.get(Token, sentence)]
     print(colored("Tokens:", 'red'), tokens, "\n")
     break
 
-for sentence in pack.get(base_ontology.Sentence):
-    for entity in pack.get(base_ontology.EntityMention, sentence):
+for sentence in pack.get(Sentence):
+    for entity in pack.get(EntityMention, sentence):
         print(colored("EntityMention:", 'red'),
               entity.text,
               'has type',
               colored(entity.ner_type, 'blue'), "\n")
 
-for sentence in pack.get(base_ontology.Sentence):
-    for entity in pack.get(base_ontology.EntityMention, sentence):
+for sentence in pack.get(Sentence):
+    for entity in pack.get(EntityMention, sentence):
         print(f"Entity: {entity.text}")
-        for token in pack.get(base_ontology.Token, entity):
+        for token in pack.get(Token, entity):
             print(f"Has token {token.text}")

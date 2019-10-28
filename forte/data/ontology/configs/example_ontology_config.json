@@ -1,0 +1,27 @@
+{
+    "ontology_name": "example_ontology",
+    "imports": [
+       "example_import_ontology_config.json"
+    ],
+    "entry_definitions": [
+        {
+            "entry_name": "forte.data.ontology.example_ontology.Token",
+            "parent_entry": "forte.data.ontology.example_import_ontology.Token",
+            "entry_description": "",
+            "attributes": [
+                {
+                    "attribute_name": "related_tokens",
+                    "attribute_description": "Tokens related to the current token",
+                    "attribute_type": "List",
+                    "element_type": "forte.data.ontology.example_ontology.Token"
+                },
+                {
+                    "attribute_name": "string_features",
+                    "attribute_description": "Miscellaneous string features",
+                    "attribute_type": "List",
+                    "element_type": "str"
+                }
+            ]
+        }
+    ]
+}

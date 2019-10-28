@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from ft.onto import base_ontology
+from ft.onto.base_ontology import Token, Sentence, Document, EntityMention
 from forte.data.readers import (
     OntonotesReader, ProdigyReader, CoNLL03Reader, StringReader)
 from forte.pipeline import Pipeline
@@ -32,12 +33,12 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
-            for sentence in pack.get_entries(base_ontology.Sentence):
+            for sentence in pack.get_entries(Sentence):
                 doc_exists = True
                 sent_text = sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
-                          pack.get_entries(base_ontology.Token, sentence)]
+                          pack.get_entries(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
 
@@ -61,12 +62,12 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
-            for sentence in pack.get_entries(base_ontology.Sentence):
+            for sentence in pack.get_entries(Sentence):
                 doc_exists = True
                 sent_text = sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
-                          pack.get_entries(base_ontology.Token, sentence)]
+                          pack.get_entries(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
 
@@ -115,7 +116,7 @@ class ProdigyReaderTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.fp.name):
             # get documents from pack
-            for doc in pack.get_entries(base_ontology.Document):
+            for doc in pack.get_entries(Document):
                 doc_exists = True
                 self.token_check(doc, pack)
                 self.label_check(doc, pack)
@@ -126,14 +127,14 @@ class ProdigyReaderTest(unittest.TestCase):
         doc_text = doc.text
         # Compare document text with tokens
         tokens = [token.text for token in
-                  pack.get_entries(base_ontology.Token, doc)]
+                  pack.get_entries(Token, doc)]
         self.assertEqual(tokens[2], "dolor")
         self.assertEqual(doc_text.replace(" ", ""), "".join(tokens))
 
     def label_check(self, doc, pack):
         # make sure that the labels are read in correctly
         labels = [label.ner_type for label in
-                  pack.get_entries(base_ontology.EntityMention, doc)]
+                  pack.get_entries(EntityMention, doc)]
         self.assertEqual(labels, ["sample_latin", "sample_latin"])
 
 

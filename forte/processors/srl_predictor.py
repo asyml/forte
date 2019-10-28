@@ -13,6 +13,8 @@ from forte.common.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 from ft.onto import base_ontology
+from ft.onto.base_ontology import (
+    Token, Sentence, PredicateLink, PredicateMention, PredicateArgument)
 
 logger = logging.getLogger(__name__)
 
@@ -79,12 +81,11 @@ class SRLPredictor(FixedSizeBatchProcessor):
         self.model.eval()
 
     def define_context(self):
-        self.context_type = self._ontology.Sentence
+        self.context_type = Sentence
 
+    # pylint: disable=no-self-use
     def _define_input_info(self) -> DataRequest:
-        input_info: DataRequest = {
-            self._ontology.Token: []
-        }
+        input_info: DataRequest = {Token: []}
         return input_info
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
@@ -126,18 +127,16 @@ class SRLPredictor(FixedSizeBatchProcessor):
         for predictions in batch_predictions:
             for pred_span, arg_result in predictions:
 
-                pred = data_pack.add_entry(
-                    self._ontology.PredicateMention(
-                        data_pack, pred_span.begin, pred_span.end)
+                pred = data_pack.add_entry(PredicateMention(
+                    data_pack, pred_span.begin, pred_span.end)
                 )
 
                 for arg_span, label in arg_result:
-                    arg = data_pack.add_or_get_entry(
-                        self._ontology.PredicateArgument(
+                    arg = data_pack.add_or_get_entry(PredicateArgument(
                             data_pack, arg_span.begin, arg_span.end
                         )
                     )
-                    link = self._ontology.PredicateLink(data_pack, pred, arg)
+                    link = PredicateLink(data_pack, pred, arg)
                     link.set_fields(arg_type=label)
                     data_pack.add_or_get_entry(link)
 

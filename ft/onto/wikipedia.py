@@ -1,9 +1,9 @@
 from forte.data import DataPack
 from forte.data.ontology import Annotation, Generic
-from ft.onto import base_ontology
+from ft.onto.base_ontology import Document
 
 
-class WikiPage(base_ontology.Document):
+class WikiPage(Document):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._body: WikiBody

@@ -17,6 +17,7 @@ from forte.trainer.base.base_trainer import BaseTrainer
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from ft.onto import base_ontology
+from ft.onto.base_ontology import Token, Sentence
 
 logger = logging.getLogger(__name__)
 
@@ -82,10 +83,10 @@ class CoNLLNERTrainer(BaseTrainer):
 
     def data_request(self):
         request_string = {
-            "context_type": base_ontology.Sentence,
+            "context_type": Sentence,
             "request": {
-                self.ontology.Token: ["ner"],
-                self.ontology.Sentence: [],  # span by default
+                Token: ["ner"],
+                Sentence: [],  # span by default
             }
         }
         return request_string

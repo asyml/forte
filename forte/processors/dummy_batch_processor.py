@@ -13,7 +13,7 @@ from forte.common.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.processors.base import BatchProcessor
 from ft.onto import base_ontology
-from ft.onto.base_ontology import EntityMention
+from ft.onto.base_ontology import Sentence, EntityMention
 
 __all__ = [
     "DummyRelationExtractor",
@@ -39,7 +39,7 @@ class DummyRelationExtractor(BatchProcessor):
         # pylint: disable=no-self-use
         return FixedSizeDataPackBatcher()
 
-    def define_context(self) -> Type[base_ontology.Sentence]:
+    def define_context(self) -> Type[Sentence]:
         return self._ontology.Sentence
 
     def _define_input_info(self) -> DataRequest:

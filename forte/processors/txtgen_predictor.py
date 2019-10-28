@@ -14,6 +14,7 @@ from forte.data.batchers import (
 from forte.common.types import DataRequest
 from forte.processors.base.batch_processor import MultiPackBatchProcessor
 from ft.onto import base_ontology
+from ft.onto.base_ontology import Sentence
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class TxtgenPredictor(MultiPackBatchProcessor):
 
     def define_context(self):
         # pylint: disable=no-self-use
-        self.context_type = self._ontology.Sentence
+        self.context_type = Sentence
 
     def define_batcher(self) -> ProcessingBatcher:
         # pylint: disable=no-self-use
@@ -165,9 +166,7 @@ class TxtgenPredictor(MultiPackBatchProcessor):
         input_pack = data_pack.packs[self.input_pack_name]
         for input_id, output_sentence in zip(input_sent_tids, output_sentences):
             offset = len(output_pack.text)
-            sent = self.ontology.Sentence(
-                output_pack, offset, offset + len(output_sentence)
-            )
+            sent = Sentence(output_pack, offset, offset + len(output_sentence))
             output_pack.add_entry(sent)
             text += output_sentence + "\n"
 
