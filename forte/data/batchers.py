@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from typing import (
-    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic,
-    Iterator)
+    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator)
 
 from texar.torch import HParams
 

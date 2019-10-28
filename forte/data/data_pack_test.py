@@ -6,8 +6,9 @@ import os
 import unittest
 
 import forte
-from forte.data.ontology import ontonotes_ontology
-from forte.data.ontology.ontonotes_ontology import Sentence, Document
+from ft.onto.base_ontology import (
+    Token, Sentence, Document, EntityMention, PredicateArgument, PredicateLink,
+    PredicateMention)
 from forte.data.readers import OntonotesReader
 
 logging.basicConfig(level=logging.DEBUG)
@@ -25,15 +26,15 @@ class DataPackTest(unittest.TestCase):
 
     def test_get_data(self):
         requests = {
-            ontonotes_ontology.Sentence: ["speaker"],
-            ontonotes_ontology.Token: ["pos_tag", "sense"],
-            ontonotes_ontology.EntityMention: [],
-            ontonotes_ontology.PredicateMention: [],
-            ontonotes_ontology.PredicateArgument: {
+            Sentence: ["speaker"],
+            Token: ["pos", "sense"],
+            EntityMention: [],
+            PredicateMention: [],
+            PredicateArgument: {
                 "fields": [],
                 "unit": "Token"
             },
-            ontonotes_ontology.PredicateLink: {
+            PredicateLink: {
                 "component": self.reader.component_name,
                 "fields": ["parent", "child", "arg_type"]
             }

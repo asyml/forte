@@ -12,6 +12,8 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
 
+from ft.onto.base_ontology import Sentence
+
 __all__ = [
     "MultiPackSentenceReader"
 ]
@@ -56,13 +58,11 @@ class MultiPackSentenceReader(MultiPackReader):
                 if len(line) == 0:
                     continue
 
-                # fix: mypy0.730 throws Module has no attribute "Sentence" error
-                sent = self._ontology.Sentence(  # type: ignore
-                    input_pack, offset, offset + len(line))
-
-                text += line + "\n"
+                # add sentence
+                sent = Sentence(input_pack, offset, offset + len(line))
                 input_pack.add_entry(sent)
-                offset = len(text)
+                text += line + '\n'
+                offset = offset + len(line) + 1
 
             input_pack.set_text(
                 text, replace_func=self.text_replace_operation)

@@ -7,10 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from forte.data.ontology import relation_ontology, base_ontology, \
-    conll03_ontology
-from forte.data.readers import OntonotesReader, ProdigyReader, \
-    CoNLL03Reader, StringReader
+from ft.onto.base_ontology import Token, Sentence, Document, EntityMention
+from forte.data.readers import (
+    OntonotesReader, ProdigyReader, CoNLL03Reader, StringReader)
 from forte.pipeline import Pipeline
 from forte.processors.dummy_pack_processor import DummyPackProcessor
 
@@ -21,7 +20,6 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         self.dataset_path = "examples/data_samples/ontonotes/00"
 
         self.nlp = Pipeline()
-        self.nlp.set_ontology(relation_ontology)
 
         self.nlp.set_reader(OntonotesReader())
         self.nlp.add_processor(DummyPackProcessor())
@@ -33,12 +31,12 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
-            for sentence in pack.get_entries(relation_ontology.Sentence):
+            for sentence in pack.get_entries(Sentence):
                 doc_exists = True
                 sent_text = sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
-                          pack.get_entries(relation_ontology.Token, sentence)]
+                          pack.get_entries(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
 
@@ -49,7 +47,6 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         self.dataset_path = "examples/data_samples/conll03"
 
         self.nlp = Pipeline()
-        self.nlp.set_ontology(conll03_ontology)
 
         self.nlp.set_reader(CoNLL03Reader())
         self.nlp.add_processor(DummyPackProcessor())
@@ -62,12 +59,12 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
-            for sentence in pack.get_entries(conll03_ontology.Sentence):
+            for sentence in pack.get_entries(Sentence):
                 doc_exists = True
                 sent_text = sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
-                          pack.get_entries(conll03_ontology.Token, sentence)]
+                          pack.get_entries(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
 
@@ -79,7 +76,6 @@ class ProdigyReaderTest(unittest.TestCase):
         self.fp = tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl',
                                               delete=False)
         self.nlp = Pipeline()
-        self.nlp.set_ontology(base_ontology)
         self.nlp.set_reader(ProdigyReader())
         self.create_sample_file()
 
@@ -116,7 +112,7 @@ class ProdigyReaderTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.fp.name):
             # get documents from pack
-            for doc in pack.get_entries(base_ontology.Document):
+            for doc in pack.get_entries(Document):
                 doc_exists = True
                 self.token_check(doc, pack)
                 self.label_check(doc, pack)
@@ -127,14 +123,14 @@ class ProdigyReaderTest(unittest.TestCase):
         doc_text = doc.text
         # Compare document text with tokens
         tokens = [token.text for token in
-                  pack.get_entries(base_ontology.Token, doc)]
+                  pack.get_entries(Token, doc)]
         self.assertEqual(tokens[2], "dolor")
         self.assertEqual(doc_text.replace(" ", ""), "".join(tokens))
 
     def label_check(self, doc, pack):
         # make sure that the labels are read in correctly
         labels = [label.ner_type for label in
-                  pack.get_entries(base_ontology.EntityMention, doc)]
+                  pack.get_entries(EntityMention, doc)]
         self.assertEqual(labels, ["sample_latin", "sample_latin"])
 
 
@@ -144,7 +140,6 @@ class StringReaderPipelineTest(unittest.TestCase):
         self.dataset_path = "examples/"
 
         self.pl1 = Pipeline()
-        self.pl1.set_ontology(base_ontology)
         self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))
         self.pl1.set_reader(StringReader())
 

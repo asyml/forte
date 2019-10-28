@@ -20,12 +20,12 @@ install:
   # Install test tools.
   - pip install pylint==2.3.1 flake8==3.7.7
   - pip install mypy>=0.730
-  - pip install pytest
+  - pip install pytest==4.3.1
 
 script:
   # linting
-  - pylint forte/ examples/
-  - flake8 forte/ examples/
+  - pylint forte/ examples/ ft/
+  - flake8 forte/ examples/ ft/
   # type checking
   - mypy .
   # unit tests

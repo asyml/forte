@@ -1,22 +1,21 @@
 """
 This class defines the basic ontology supported by our system
 """
-from typing import Optional
-
+from typing import Optional, Dict, List, Set
 from forte.data.data_pack import DataPack
-from forte.data.ontology.top import Annotation, Link, Group
+from forte.data.ontology import Entry, Annotation, Link, Group
 
 __all__ = [
     "Token",
+    "Sentence",
     "Document",
     "EntityMention",
-    "Sentence",
+    "PredicateArgument",
     "PredicateMention",
     "PredicateLink",
-    "PredicateArgument",
     "CoreferenceGroup",
-    "CoreferenceMention",
-    "Dependency"
+    "Dependency",
+    "RelationLink"
 ]
 
 
@@ -28,11 +27,27 @@ class Token(Annotation):
         pack (DataPack): The data pack this token belongs to.
         begin (int): The offset of the first character in the token.
         end (int): The offset of the last character in the token + 1.
+
+    Attributes:
+        ud_xpos (str): Language specific pos tag. Used in CoNLL-U Format. Refer
+        https://universaldependencies.org/format.html
+        lemma (str): Lemma or stem of word form.
+        is_root (bool): If the token is a root of, say, dependency tree.
+        ud_misc (Dict[str, List[str]]): Miscellaneous features. Used in
+        CoNLL-U Format. Refer https://universaldependencies.org/format.html
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.pos_tag: str
+        self.pos: str
+        self.ud_xpos: str
+        self.lemma: str
+        self.chunk: str
+        self.ner: str
+        self.sense: str
+        self.is_root: bool
+        self.features: Dict[str, List[str]]
+        self.ud_misc: Dict[str, List[str]]
 
 
 class Sentence(Annotation):
@@ -44,7 +59,8 @@ class Sentence(Annotation):
         begin (int): The offset of the first character in the sentence.
         end (int): The offset of the last character in the sentence + 1.
     """
-    pass
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 class Document(Annotation):
@@ -56,7 +72,8 @@ class Document(Annotation):
         begin (int): The offset of the first character in the document.
         end (int): The offset of the last character in the document + 1.
     """
-    pass
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 class EntityMention(Annotation):
@@ -71,7 +88,7 @@ class EntityMention(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.ner_type: str
+        self.ner_type: Optional[str] = None
 
 
 class PredicateArgument(Annotation):
@@ -85,7 +102,8 @@ class PredicateArgument(Annotation):
         end (int): The offset of the last character in the predicate argument
             + 1.
     """
-    pass
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 class PredicateMention(Annotation):
@@ -97,7 +115,9 @@ class PredicateMention(Annotation):
         end (int): The offset of the last character in the predicate mention
             + 1.
     """
-    pass
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 class PredicateLink(Link):
@@ -124,34 +144,26 @@ class PredicateLink(Link):
         self.arg_type = None
 
 
-class CoreferenceMention(Annotation):
-    """
-    A span based annotation :class:`CoreferenceMention`.
-
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the coreference
-            mention.
-        end (int): The offset of the last character in the coreference mention
-            + 1.
-    """
-    pass
-
-
+# pylint: disable=duplicate-bases
 class CoreferenceGroup(Group):
     """
-    A :class:`Group` type entry which take :class:`CoreferenceMention` as
+    A :class:`Group` type entry which take :class:`EntityMention` as
     members.
 
     Args:
-        members (Set[CoreferenceMention], optional): a set of
-            :class:`CoreferenceMention` objects which are the members of the
+        members (Set[EntityMention], optional): a set of
+            :class:`EntityMention` objects which are the members of the
             group.
     """
-    MemberType = CoreferenceMention
+    MemberType = EntityMention
     """The entry type of group members of :class:`CoreferenceGroup`."""
 
-    pass
+    def __init__(
+            self,
+            pack: DataPack,
+            members: Optional[Set[Entry]] = None
+    ):
+        super().__init__(pack, members)
 
 
 class Dependency(Link):
@@ -170,3 +182,29 @@ class Dependency(Link):
                  child: Optional[Token] = None):
         super().__init__(pack, parent, child)
         self.dep_label = None
+        self.rel_type: str
+        self.dep_type: str
+
+
+class RelationLink(Link):
+    """
+    A :class:`~ft.onto.base.Link` type entry which takes
+    :class:`~ft.onto.base_ontology.EntityMention` objects as parent and child.
+
+    Args:
+        pack (DataPack): the containing pack of this link.
+        parent (Entry, optional): the parent entry of the link.
+        child (Entry, optional): the child entry of the link.
+    """
+    ParentType = EntityMention
+    """The entry type of the parent node of :class:`RelationLink`."""
+    ChildType = EntityMention
+    """The entry type of the child node of :class:`RelationLink`."""
+
+    def __init__(
+            self,
+            pack: DataPack,
+            parent: Optional[EntityMention] = None,
+            child: Optional[EntityMention] = None):
+        super().__init__(pack, parent, child)
+        self.rel_type = None

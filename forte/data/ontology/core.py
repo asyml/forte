@@ -4,7 +4,7 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
-from typing import (Iterable, Optional, Set, Type, Hashable, TypeVar, Generic)
+from typing import Iterable, Optional, Set, Type, Hashable, TypeVar, Generic
 
 from forte.data.container import ContainerType
 

@@ -13,10 +13,10 @@ import torchtext
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.ontology import conll03_ontology as conll
 from forte.trainer.base.base_trainer import BaseTrainer
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
+from ft.onto.base_ontology import Token, Sentence
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,6 @@ class CoNLLNERTrainer(BaseTrainer):
         self.device = None
         self.optim, self.trained_epochs = None, None
 
-        self.ontology = conll
         self.resource: Optional[Resources] = None
 
         self.train_instances_cache = []
@@ -82,10 +81,10 @@ class CoNLLNERTrainer(BaseTrainer):
 
     def data_request(self):
         request_string = {
-            "context_type": conll.Sentence,
+            "context_type": Sentence,
             "request": {
-                self.ontology.Token: ["ner_tag"],
-                self.ontology.Sentence: [],  # span by default
+                Token: ["ner"],
+                Sentence: [],  # span by default
             }
         }
         return request_string
@@ -94,7 +93,7 @@ class CoNLLNERTrainer(BaseTrainer):
         tokens = instance["Token"]
         word_ids = []
         char_id_seqs = []
-        ner_tags, ner_ids = tokens["ner_tag"], []
+        ner_tags, ner_ids = tokens["ner"], []
 
         for word in tokens["text"]:
             char_ids = []
@@ -277,7 +276,7 @@ class CoNLLNERTrainer(BaseTrainer):
               `[batch_size, batch_length, char_length]` representing the char
               ids for each word in the batch
             - ``ners``: A tensor of shape `[batch_size, batch_length]`
-              representing the NER ids for each word in the batch
+              representing the ner ids for each word in the batch
             - ``masks``: A tensor of shape `[batch_size, batch_length]`
               representing the indices to be masked in the batch. 1 indicates
               no masking.

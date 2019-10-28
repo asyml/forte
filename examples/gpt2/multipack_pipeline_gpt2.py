@@ -5,6 +5,8 @@ from termcolor import colored
 from forte.data.ontology import base_ontology
 from forte.multipack_pipeline import MultiPackPipeline
 
+from ft.onto.base_ontology import Sentence
+
 pl = MultiPackPipeline()
 
 pl.init_from_config_path("sample_multipack_pipeline_gpt.yml")
@@ -18,10 +20,8 @@ input_dir = "data/"
 
 multipack = pl.process_one(input_dir)
 
-src_cnt = len(list(multipack.get_pack(input_pack_name).get(
-    base_ontology.Sentence)))
-tgt_cnt = len(list(multipack.get_pack(output_pack_name).get(
-    base_ontology.Sentence)))
+src_cnt = len(list(multipack.get_pack(input_pack_name).get(Sentence)))
+tgt_cnt = len(list(multipack.get_pack(output_pack_name).get(Sentence)))
 link_cnt = len(multipack.links)
 print(f'sentence_cnt: src{src_cnt}, tgt{tgt_cnt}, link_cnt{link_cnt}')
 

@@ -68,12 +68,3 @@ class Pipeline(BasePipeline[DataPack]):
                 self.add_processor(p, processor_hparams)
 
             self.initialize()
-
-        if "Ontology" in configs.keys() and configs["Ontology"] is not None:
-            module_path = ["__main__",
-                           "nlp.forte.data.ontology"]
-            self.set_ontology(get_class(configs["Ontology"], module_path))
-
-        else:
-            logger.warning("Ontology not specified in config, will use "
-                           "base_ontology by default.")

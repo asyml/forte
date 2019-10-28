@@ -5,7 +5,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import (Iterator, Optional, Any)
+from typing import Iterator, Optional, Any
 
 import jsonpickle
 
@@ -14,8 +14,7 @@ from forte.common.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology import base_ontology
-from forte.pipeline_component import PipeComponent
+from forte.pipeline_component import PipelineComponent
 from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
 
@@ -30,7 +29,7 @@ logger = logging.getLogger(__name__)
 process_manager = ProcessManager()
 
 
-class BaseReader(PipeComponent[PackType], ABC):
+class BaseReader(PipelineComponent[PackType], ABC):
     """
         The basic data reader class.
         To be inherited by all data readers.
@@ -61,7 +60,6 @@ class BaseReader(PipeComponent[PackType], ABC):
 
         self.from_cache = from_cache
         self._cache_directory = cache_directory
-        self._ontology = base_ontology
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
 
@@ -71,9 +69,6 @@ class BaseReader(PipeComponent[PackType], ABC):
 
     def __reader_name(self):
         return self.__class__.__name__
-
-    def set_ontology(self, ontology):
-        self._ontology = ontology
 
     # TODO: This should not be in the reader class.
     @staticmethod

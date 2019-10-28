@@ -4,7 +4,7 @@ import sys
 from termcolor import colored
 from texar.torch import HParams
 
-from forte.data.ontology.base_ontology import (
+from ft.onto.base_ontology import (
     Token, Sentence, EntityMention, PredicateLink, PredicateArgument,
     PredicateMention)
 from forte.pipeline import Pipeline
@@ -45,7 +45,7 @@ def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
             sent_text = sentence.text
             print(colored("Sentence:", 'red'), sent_text, "\n")
             # first method to get entry in a sentence
-            tokens = [(token.text, token.pos_tag) for token in
+            tokens = [(token.text, token.pos) for token in
                       pack.get(Token, sentence)]
             entities = [(entity.text, entity.ner_type) for entity in
                         pack.get(EntityMention, sentence)]
