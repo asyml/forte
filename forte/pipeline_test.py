@@ -3,7 +3,6 @@ Unit tests for Pipeline.
 """
 import unittest
 
-from ft.onto import base_ontology
 from ft.onto.base_ontology import Token, Sentence, RelationLink
 from forte.data.readers import OntonotesReader
 from forte.pipeline import Pipeline
@@ -16,7 +15,6 @@ class PipelineTest(unittest.TestCase):
         self.dataset_path = "examples/ontonotes_sample_dataset/00"
 
         self.nlp = Pipeline()
-        self.nlp.set_ontology(base_ontology)
 
         self.nlp.set_reader(OntonotesReader())
         self.processor = DummyRelationExtractor()

@@ -284,6 +284,8 @@ class OntologyCodeGenerator:
         # first time.
         if visited_paths is None:
             visited_paths = defaultdict(lambda: False)
+
+        if rec_visited_paths is None:
             rec_visited_paths = defaultdict(lambda: False)
 
         visited_paths[json_file_path] = True

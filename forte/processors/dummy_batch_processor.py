@@ -12,8 +12,7 @@ from forte.data.data_pack import DataPack
 from forte.common.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.processors.base import BatchProcessor
-from ft.onto import base_ontology
-from ft.onto.base_ontology import Sentence, EntityMention
+from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
 __all__ = [
     "DummyRelationExtractor",
@@ -31,7 +30,6 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self) -> None:
         super().__init__()
-        self._ontology = base_ontology
         self.define_context()
         self.batch_size = 4
 
@@ -40,14 +38,14 @@ class DummyRelationExtractor(BatchProcessor):
         return FixedSizeDataPackBatcher()
 
     def define_context(self) -> Type[Sentence]:
-        return self._ontology.Sentence
+        # pylint: disable=no-self-use
+        return Sentence
 
     def _define_input_info(self) -> DataRequest:
+        # pylint: disable=no-self-use
         input_info: DataRequest = {
-            self._ontology.Token: [],
-            self._ontology.EntityMention: {
-                "fields": ["ner_type", "tid"]
-            }
+            Token: [],
+            EntityMention: {"fields": ["ner_type", "tid"]}
         }
         return input_info
 
@@ -84,13 +82,14 @@ class DummyRelationExtractor(BatchProcessor):
         return pred
 
     def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
+        # pylint: disable=no-self-use
         """Add corresponding fields to data_pack"""
         if output_dict is None:
             return
 
         for i in range(len(output_dict["RelationLink"]["parent.tid"])):
             for j in range(len(output_dict["RelationLink"]["parent.tid"][i])):
-                link = self._ontology.RelationLink(data_pack)
+                link = RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
                 parent: EntityMention = data_pack.get_entry(  # type: ignore
                         output_dict["RelationLink"]["parent.tid"][i][j])

@@ -3,7 +3,6 @@ from typing import List
 import stanfordnlp
 from texar.torch import HParams
 
-from ft.onto import base_ontology
 from ft.onto.base_ontology import Token, Sentence, Dependency
 from forte.common.resources import Resources
 from forte.data import DataPack
@@ -17,7 +16,6 @@ __all__ = [
 class StandfordNLPProcessor(PackProcessor):
     def __init__(self, models_path: str):
         super().__init__()
-        self._ontology = base_ontology
         self.processors = ""
         self.nlp = None
         self.MODELS_DIR = models_path

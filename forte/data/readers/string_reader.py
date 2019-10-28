@@ -6,7 +6,6 @@ from typing import Iterator, List, Union
 
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from ft.onto import base_ontology
 from ft.onto.base_ontology import Document
 
 logger = logging.getLogger(__name__)
@@ -20,11 +19,6 @@ class StringReader(PackReader):
     """
     :class:`StringReader` is designed to read in a list of string variables.
     """
-
-    def __init__(self):
-        super().__init__()
-        self._ontology = base_ontology
-
     # pylint: disable=no-self-use,unused-argument
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"

@@ -12,7 +12,6 @@ from forte.data.selector import DummySelector
 from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
 from forte.pipeline_component import PipelineComponent
-from ft.onto import base_ontology
 
 __all__ = [
     "BaseProcessor",
@@ -29,7 +28,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
     def __init__(self):
         self.component_name = get_full_module_name(self)
-        self._ontology = base_ontology
         self.selector = DummySelector()
 
     def initialize(self, resource: Resources, configs: Optional[HParams]):
@@ -48,13 +46,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
         """
         pass
-
-    # TODO: remove this.
-    def set_ontology(self, ontology):
-        """
-        Set the ontology of this processor, will be called by the Pipeline.
-        """
-        self._ontology = ontology  # pylint: disable=attribute-defined-outside-init
 
     def process(self, input_pack: PackType):
         # Set the component for recording purpose.

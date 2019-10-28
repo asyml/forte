@@ -68,18 +68,6 @@ class MultiPackPipeline(BasePipeline[MultiPack]):
 
             self.initialize()
 
-        if "Ontology" in configs.keys() and configs["Ontology"] is not None:
-            module_path = ["__main__",
-                           "nlp.forte.data.ontology"]
-            self._ontology = get_class(
-                configs["Ontology"],
-                module_path)
-            for processor in self.processors:
-                processor.set_ontology(self._ontology)
-        else:
-            logger.warning("Ontology not specified in config, will use "
-                           "base_ontology by default.")
-
 
 def create_class_with_kwargs(
         class_name: str, class_args: Dict, h_params: Optional[Dict] = None):

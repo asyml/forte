@@ -12,7 +12,6 @@ from forte.common.resources import Resources
 from forte.common.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
-from ft.onto import base_ontology
 from ft.onto.base_ontology import (
     Token, Sentence, PredicateLink, PredicateMention, PredicateArgument)
 
@@ -32,13 +31,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
     An Semantic Role labeler trained according to `He, Luheng, et al.
     "Jointly predicting predicates and arguments in neural semantic role
     labeling." <https://aclweb.org/anthology/P18-2058>`_.
-
-    Note that to use :class:`SRLPredictor`, the :attr:`ontology` of
-    :class:`Pipeline` must be an ontology that includes
-    ``ft.onto.base_ontology.Token``, ``ft.onto.base_ontology.Sentence``,
-    ``ft.onto.base_ontology.PredicateMention``,
-    ``ft.onto.base_ontology.PredicateArgument`` and
-    ``ft.onto.base_ontology.PredicateLink``.
     """
 
     word_vocab: tx.data.Vocab
@@ -48,7 +40,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def __init__(self):
         super().__init__()
 
-        self._ontology = base_ontology
         self.define_context()
 
         self.batch_size = 4

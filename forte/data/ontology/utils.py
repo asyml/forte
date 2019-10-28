@@ -9,7 +9,7 @@ from pydoc import locate
 from typing import List, Dict, Union, Type
 
 from forte.data.base_pack import PackType
-from forte.data.ontology.base.core import Entry
+from forte.data.ontology.core import Entry
 
 
 def get_user_objects_from_module(module_str, custom_dirs=None):

@@ -5,9 +5,9 @@ import os
 from collections import defaultdict
 from typing import DefaultDict, List, Optional, Tuple, Dict, Any, Iterator
 
-from ft.onto import base_ontology
 from ft.onto.base_ontology import (
-    EntityMention, PredicateArgument, PredicateMention)
+    Token, Sentence, Document, EntityMention, PredicateArgument,
+    PredicateLink, CoreferenceGroup, PredicateMention)
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
@@ -26,11 +26,6 @@ class OntonotesReader(PackReader):
     – LDC2013T19.tgz obtained from LDC.
 
     """
-
-    def __init__(self):
-        super().__init__()
-        self._ontology = base_ontology
-
     # pylint: disable=no-self-use
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
         """
@@ -94,9 +89,7 @@ class OntonotesReader(PackReader):
                     # add tokens
                     kwargs_i: Dict[str, Any] = {"pos": pos_tag,
                                                 "sense": word_sense}
-                    token = self._ontology.Token(  # type: ignore
-                        pack, word_begin, word_end
-                    )
+                    token = Token(pack, word_begin, word_end)
                     token.set_fields(**kwargs_i)
                     pack.add_or_get_entry(token)
 
@@ -117,10 +110,8 @@ class OntonotesReader(PackReader):
                             "pred_type": "verb" if word_is_verbal_predicate
                             else "other"
                         }
-                        pred_mention = \
-                            self._ontology.PredicateMention(  # type: ignore
-                                pack, word_begin, word_end
-                            )
+                        pred_mention = PredicateMention(
+                                pack, word_begin, word_end)
                         pred_mention.set_fields(**kwargs_i)
                         pred_mention = pack.add_or_get_entry(
                             pred_mention
@@ -168,9 +159,7 @@ class OntonotesReader(PackReader):
                             kwargs_i = {
                                 "arg_type": arg[1],
                             }
-                            link = self._ontology.PredicateLink(  # type: ignore
-                                pack, predicate, arg[0]
-                            )
+                            link = PredicateLink(pack, predicate, arg[0])
                             link.set_fields(**kwargs_i)
                             pack.add_or_get_entry(link)
 
@@ -181,9 +170,7 @@ class OntonotesReader(PackReader):
                     # add sentence
 
                     kwargs_i = {"speaker": speaker, "part_id": part_id}
-                    sent = self._ontology.Sentence(  # type: ignore
-                        pack, sentence_begin, offset - 1
-                    )
+                    sent = Sentence(pack, sentence_begin, offset - 1)
                     sent.set_fields(**kwargs_i)
                     pack.add_or_get_entry(sent)
 
@@ -194,14 +181,12 @@ class OntonotesReader(PackReader):
             # group the coreference mentions in the whole document
             for _, mention_list in groups.items():
                 # kwargs_i = {"coref_type": group_id}
-                group = self._ontology.CoreferenceGroup(  # type: ignore
-                    pack)
+                group = CoreferenceGroup(pack)
                 # group.set_fields(**kwargs_i)
                 group.add_members(mention_list)
                 pack.add_or_get_entry(group)
 
-            document = self._ontology.Document(  # type: ignore
-                pack, 0, len(text))
+            document = Document(pack, 0, len(text))
             pack.add_or_get_entry(document)
 
             kwargs_i = {"doc_id": document_id}
@@ -230,9 +215,7 @@ class OntonotesReader(PackReader):
                     "current_entity_mention is None when meet right blanket.")
             # Exiting a span, add and then reset the current span.
             kwargs_i = {"ner_type": current_entity_mention[1]}
-            entity = self._ontology.EntityMention(  # type: ignore
-                pack, current_entity_mention[0], word_end
-            )
+            entity = EntityMention(pack, current_entity_mention[0], word_end)
             entity.set_fields(**kwargs_i)
             pack.add_or_get_entry(entity)
 
@@ -265,12 +248,10 @@ class OntonotesReader(PackReader):
                     raise ValueError(
                         "current_pred_arg is None when meet right blanket.")
 
-                arg_begin = current_pred_arg[label_index][0]  # type: ignore
-                arg_type = current_pred_arg[label_index][1]  # type: ignore
+                arg_begin = current_pred_arg[label_index][0]
+                arg_type = current_pred_arg[label_index][1]
 
-                pred_arg = self._ontology.PredicateArgument(  # type: ignore
-                    pack, arg_begin, word_end
-                )
+                pred_arg = PredicateArgument(pack, arg_begin, word_end)
                 pred_arg = pack.add_or_get_entry(pred_arg)
 
                 verbal_pred_args[label_index].append((pred_arg, arg_type))
@@ -295,13 +276,8 @@ class OntonotesReader(PackReader):
                     # The span begins and ends at this word (single word span).
                     group_id = int(segment[1:-1])
 
-                    coref_mention = \
-                        self._ontology.EntityMention(  # type: ignore
-                            pack, word_begin, word_end
-                        )
-                    coref_mention = pack.add_or_get_entry(
-                        coref_mention
-                    )
+                    coref_mention = EntityMention(pack, word_begin, word_end)
+                    coref_mention = pack.add_or_get_entry(coref_mention)
 
                     groups[group_id].append(coref_mention)
                 else:
@@ -312,12 +288,7 @@ class OntonotesReader(PackReader):
                 # The span for this id is ending, but not start at this word.
                 group_id = int(segment[:-1])
                 start = coref_stacks[group_id].pop()
-                coref_mention = \
-                    self._ontology.EntityMention(  # type: ignore
-                        pack, start, word_end
-                    )
-                coref_mention = pack.add_or_get_entry(
-                    coref_mention
-                )
+                coref_mention = EntityMention(pack, start, word_end)
+                coref_mention = pack.add_or_get_entry(coref_mention)
 
                 groups[group_id].append(coref_mention)

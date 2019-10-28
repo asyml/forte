@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ft.onto import base_ontology
 from ft.onto.base_ontology import Token, Sentence, Document, EntityMention
 from forte.data.readers import (
     OntonotesReader, ProdigyReader, CoNLL03Reader, StringReader)
@@ -21,7 +20,6 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         self.dataset_path = "examples/data_samples/ontonotes/00"
 
         self.nlp = Pipeline()
-        self.nlp.set_ontology(base_ontology)
 
         self.nlp.set_reader(OntonotesReader())
         self.nlp.add_processor(DummyPackProcessor())
@@ -49,7 +47,6 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         self.dataset_path = "examples/data_samples/conll03"
 
         self.nlp = Pipeline()
-        self.nlp.set_ontology(base_ontology)
 
         self.nlp.set_reader(CoNLL03Reader())
         self.nlp.add_processor(DummyPackProcessor())
@@ -79,7 +76,6 @@ class ProdigyReaderTest(unittest.TestCase):
         self.fp = tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl',
                                               delete=False)
         self.nlp = Pipeline()
-        self.nlp.set_ontology(base_ontology)
         self.nlp.set_reader(ProdigyReader())
         self.create_sample_file()
 
@@ -144,7 +140,6 @@ class StringReaderPipelineTest(unittest.TestCase):
         self.dataset_path = "examples/"
 
         self.pl1 = Pipeline()
-        self.pl1.set_ontology(base_ontology)
         self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))
         self.pl1.set_reader(StringReader())
 

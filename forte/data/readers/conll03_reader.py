@@ -9,7 +9,7 @@ from typing import Iterator, Any
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto import base_ontology
+from ft.onto.base_ontology import Token, Sentence, Document
 
 __all__ = [
     "CoNLL03Reader"
@@ -20,11 +20,6 @@ class CoNLL03Reader(PackReader):
     """
     :class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
     """
-
-    def __init__(self):
-        super().__init__()
-        self._ontology = base_ontology
-
     # pylint: disable=no-self-use
     def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
         """
@@ -70,9 +65,7 @@ class CoNLL03Reader(PackReader):
                 kwargs_i = {"pos": pos_tag,
                             "chunk": chunk_id,
                             "ner": ner_tag}
-                token = self._ontology.Token(  # type: ignore
-                    pack, word_begin, word_end
-                )
+                token = Token(pack, word_begin, word_end)
 
                 token.set_fields(**kwargs_i)
                 pack.add_or_get_entry(token)
@@ -85,9 +78,7 @@ class CoNLL03Reader(PackReader):
                     # Skip consecutive empty lines.
                     continue
                 # add sentence
-                sent = self._ontology.Sentence(  # type: ignore
-                    pack, sentence_begin, offset - 1
-                )
+                sent = Sentence(pack, sentence_begin, offset - 1)
                 pack.add_or_get_entry(sent)
 
                 sentence_begin = offset
@@ -96,13 +87,11 @@ class CoNLL03Reader(PackReader):
 
         if has_rows:
             # Add the last sentence if exists.
-            sent = self._ontology.Sentence(  # type: ignore
-                pack, sentence_begin, offset - 1
-            )
+            sent = Sentence(pack, sentence_begin, offset - 1)
             sentence_cnt += 1
             pack.add_or_get_entry(sent)
 
-        document = self._ontology.Document(pack, 0, len(text))  # type: ignore
+        document = Document(pack, 0, len(text))
         pack.add_or_get_entry(document)
 
         pack.set_text(text, replace_func=self.text_replace_operation)

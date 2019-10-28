@@ -13,7 +13,6 @@ from forte.data.batchers import (
     ProcessingBatcher, FixedSizeMultiPackProcessingBatcher)
 from forte.common.types import DataRequest
 from forte.processors.base.batch_processor import MultiPackBatchProcessor
-from ft.onto import base_ontology
 from ft.onto.base_ontology import Sentence
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,6 @@ class TxtgenPredictor(MultiPackBatchProcessor):
 
         self.word_processor = None
         self.model = None
-        self.ontology = base_ontology
 
         self.batch_size = 6
         self._get_helper = None

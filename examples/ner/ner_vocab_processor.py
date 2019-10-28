@@ -7,10 +7,10 @@ from texar.torch import HParams
 
 from forte.common import Resources
 from forte.data import DataPack
-from forte.data.ontology import conll03_ontology as conll
 from forte.models.ner.utils import load_glove_embedding, normalize_digit_word
 from forte.processors import Alphabet
 from forte.processors import VocabularyProcessor
+from ft.onto.base_ontology import Token, Sentence
 
 __all__ = [
     "CoNLL03VocabularyProcessor",
@@ -82,10 +82,8 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         """
         # for data_pack in input_pack:
         for instance in data_pack.get_data(
-                context_type=conll.Sentence,
-                request={
-                    conll.Token: ["chunk", "pos", "ner"]
-                }):
+                context_type=Sentence,
+                request={Token: ["chunk", "pos", "ner"]}):
             for token in instance["Token"]["text"]:
                 for char in token:
                     self.char_cnt[char] += 1

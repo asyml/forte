@@ -8,8 +8,6 @@ import numpy as np
 import torch
 from texar.torch.hyperparams import HParams
 
-from ft.onto import base_ontology
-from ft.onto.base_ontology import Token, Sentence, EntityMention
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
@@ -19,6 +17,7 @@ from forte.data.datasets.conll import conll_utils
 from forte.data.ontology import Annotation
 from forte.models.ner import utils
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
+from ft.onto.base_ontology import Token, Sentence, EntityMention
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +45,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.device = None
 
         self.train_instances_cache = []
-
-        self._ontology = base_ontology
 
         self.batch_size = 3
         self.batcher = self.define_batcher()
@@ -291,7 +288,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config: Optional[HParams] = None):
         super().__init__(config)
-        self._ontology = base_ontology
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"

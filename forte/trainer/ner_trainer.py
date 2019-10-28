@@ -16,7 +16,6 @@ from forte.common.resources import Resources
 from forte.trainer.base.base_trainer import BaseTrainer
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
-from ft.onto import base_ontology
 from ft.onto.base_ontology import Token, Sentence
 
 logger = logging.getLogger(__name__)
@@ -39,7 +38,6 @@ class CoNLLNERTrainer(BaseTrainer):
         self.device = None
         self.optim, self.trained_epochs = None, None
 
-        self.ontology = base_ontology
         self.resource: Optional[Resources] = None
 
         self.train_instances_cache = []

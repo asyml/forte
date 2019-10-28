@@ -4,6 +4,7 @@ The reader that reads CoNLL ner_data into our internal json data datasets.
 import os
 from typing import Any, Iterator
 
+from ft.onto.base_ontology import Sentence
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -49,9 +50,7 @@ class PlainSentenceTxtgenReader(MultiPackReader):
                     # skip empty lines
                     continue
                 # add sentence
-                sent = self._ontology.Sentence(  # type: ignore
-                    offset, offset + len(line)
-                )
+                sent = Sentence(input_pack, offset, offset + len(line))
                 input_pack.add_entry(sent)
                 text += line + '\n'
                 offset = offset + len(line) + 1

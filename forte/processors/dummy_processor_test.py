@@ -6,7 +6,6 @@ import unittest
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.pipeline import Pipeline
 from forte.processors.dummy_batch_processor import DummyRelationExtractor
-from ft.onto import base_ontology
 from ft.onto.base_ontology import RelationLink
 
 
@@ -14,7 +13,6 @@ class DummyProcessorTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.nlp = Pipeline()
-        self.nlp.set_ontology(base_ontology)
         self.reader = OntonotesReader()
 
         self.data_path = "examples/data_samples/ontonotes/00/"

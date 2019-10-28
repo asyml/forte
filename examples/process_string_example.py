@@ -3,7 +3,6 @@ import os
 from termcolor import colored
 from texar.torch import HParams
 
-from ft.onto import base_ontology
 from ft.onto.base_ontology import (
     Token, Sentence, Dependency, EntityMention, PredicateMention,
     PredicateArgument, PredicateLink)
@@ -94,7 +93,6 @@ def stanford_nlp_example1(lang: str, text: str, output_config: HParams):
                      config=config)
     pl.add_processor(processor=DocIdJsonPackWriter(),
                      config=output_config)
-    pl.set_ontology(base_ontology)
 
     pl.initialize()
 
