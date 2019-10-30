@@ -3,6 +3,7 @@ import logging
 import random
 import time
 import pickle
+from pathlib import Path
 from typing import List, Tuple, Iterator, Optional
 
 import numpy as np
@@ -238,7 +239,8 @@ class CoNLLNERTrainer(BaseTrainer):
                     keys_to_serializers[key] = \
                         lambda x, y: pickle.dump(x, open(y, "wb"))
 
-            self.resource.save(keys_to_serializers)
+            self.resource.save(keys_to_serializers,
+                               output_dir=self.config_model.resource_dir)
 
         self.save_model_checkpoint()
 
@@ -247,7 +249,13 @@ class CoNLLNERTrainer(BaseTrainer):
             "model": self.model.state_dict(),
             "optimizer": self.optim.state_dict(),
         }
-        torch.save(states, self.config_model.model_path)
+
+        path = Path(self.config_model.model_path)
+        if not Path(self.config_model.model_path).exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+        with path.open(mode="wb") as f:
+            torch.save(states, f)
 
     def load_model_checkpoint(self):
         ckpt = torch.load(self.config_model.model_path)

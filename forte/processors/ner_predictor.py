@@ -179,7 +179,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 orig_token: Token = data_pack.get_entry(tid)  # type: ignore # pylint: disable=line-too-long
                 ner_tag: str = output_dict["Token"]["ner"][i][j]
 
-                orig_token.set_fields(ner_tag=ner_tag)
+                orig_token.set_fields(ner=ner_tag)
 
                 token = orig_token
                 token_ner = token.get_field("ner")

@@ -28,7 +28,7 @@ hidden state of each token to the label compatibility space, which is called
 While we choose to define the label compatibility score as a matrix (with 
 shape `[label_cnt, label_cnt]`), which is a more general definition as far as we know. Also, this
 definition brings less parameters. Fortunately, this 
-implementation is provided by AllenNLP already so we don't need to rebuild the wheel. we don't 
+implementation is provided by AllenNLP already so we don't need to rebuild the wheel. We don't
 apply any label transition restriction since we believe the model should be able to learn such 
 restriction from data itself.
 
@@ -40,7 +40,7 @@ You need to install the [Texar-pytorch](https://github.com/asyml/texar-pytorch) 
 
 
 For data part, put the CONLL03 english data in the corresponding directory (`train_path`, `val_path`, and `test_path`)
-specified in `config_data.py`. The required data format is the same as the official codebase
+specified in `config_data.py`. The data format is the same as the official codebase
 (https://github.com/XuezheMax/NeuroNLP2#data-format).
  
 Then simply run
@@ -49,7 +49,7 @@ python main_train.py
 ```
 
 The resource will be saved under `resource_dir` (specified in `config_model.yml`) with file name 
-`resources.pkl` and the model will be saved in `model_path`. (also specified in `config_model.py`)
+`resources.pkl` and the model will be saved in `model_path`. (also specified in `config_model.yml`)
 
 To run prediction using a trained model, run
 

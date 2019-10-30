@@ -1,12 +1,8 @@
-import os
-import sys
-
+import argparse
+import yaml
 from termcolor import colored
 from texar.torch import HParams
 
-from ft.onto.base_ontology import (
-    Token, Sentence, EntityMention, PredicateLink, PredicateArgument,
-    PredicateMention)
 from forte.pipeline import Pipeline
 from forte.data.readers import PlainTextReader
 from forte.processors import (
@@ -14,29 +10,28 @@ from forte.processors import (
 from forte.processors.nltk_processors import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
 
+from ft.onto.base_ontology import Token, Sentence, EntityMention, \
+    PredicateLink, PredicateArgument, PredicateMention
 
-def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--data-dir", type=str, default="data/",
+                    help="Data directory to read the text files from")
+
+
+def main(dataset_dir: str):
+    config = yaml.safe_load(open("config.yml", "r"))
+    config = HParams(config, default_hparams=None)
+
     pl = Pipeline()
     pl.set_reader(PlainTextReader())
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())
     pl.add_processor(NLTKPOSTagger())
+    pl.add_processor(CoNLLNERPredictor(), config=config.NER)
+    pl.add_processor(SRLPredictor(), config=config.SRL)
 
-    ner_configs = HParams(
-        {
-            'storage_path': os.path.join(ner_model_path, 'resources.pkl')
-        },
-        CoNLLNERPredictor.default_hparams())
-
-    pl.add_processor(CoNLLNERPredictor(), ner_configs)
-
-    srl_configs = HParams(
-        {
-            'storage_path': srl_model_path,
-        },
-        SRLPredictor.default_hparams()
-    )
-    pl.add_processor(SRLPredictor(), srl_configs)
     pl.initialize()
 
     for pack in pl.process_dataset(dataset_dir):
@@ -45,7 +40,7 @@ def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
             sent_text = sentence.text
             print(colored("Sentence:", 'red'), sent_text, "\n")
             # first method to get entry in a sentence
-            tokens = [(token.text, token.pos) for token in
+            tokens = [(token.text, token.pos_tag) for token in
                       pack.get(Token, sentence)]
             entities = [(entity.text, entity.ner_type) for entity in
                         pack.get(EntityMention, sentence)]
@@ -54,8 +49,7 @@ def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
 
             # second method to get entry in a sentence
             print(colored("Semantic role labels:", 'red'))
-            for link in pack.get(
-                    PredicateLink, sentence):
+            for link in pack.get(PredicateLink, sentence):
                 parent: PredicateMention = link.get_parent()  # type: ignore
                 child: PredicateArgument = link.get_child()  # type: ignore
                 print(f"  - \"{child.text}\" is role {link.arg_type} of "
@@ -69,6 +63,5 @@ def main(dataset_dir: str, ner_model_path: str, srl_model_path: str):
 
 
 if __name__ == '__main__':
-    (data_dir, ner_dir,  # pylint: disable=unbalanced-tuple-unpacking
-     srl_dir) = sys.argv[1:]
-    main(data_dir, ner_dir, srl_dir)
+    args = parser.parse_args()
+    main(args.data_dir)
