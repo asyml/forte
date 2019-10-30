@@ -58,4 +58,15 @@ python main_predict.py
 ```
 
 In the above script, we first load the resource then create a pipeline with CoNLL03 Reader and 
-Predictor. We then run this pipeline on the test dataset.  
+Predictor. We then run this pipeline on the test dataset.
+
+# Results
+
+The default configuration provided in `config_data.yml` runs for 200 epochs and takes around 5.5 
+hours to train on a single GeForce GTX 1080 Ti with 11GB of GPU memory. You should be able to 
+achieve the following results during training. 
+
+```bash
+INFO:forte.trainer.ner_trainer:Best val acc:  98.900, precision: 95.040, recall: 94.720, F1: 94.880, epoch=129
+INFO:forte.trainer.ner_trainer:Best test acc:  98.010, precision:  91.430, recall:  91.450, F1:  91.440, epoch=129
+```    
