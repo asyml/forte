@@ -8,4 +8,8 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/hunterhector/forte/blob/master/LICENSE)
 
 
-The NLP pipeline is a toolkit based on Texar, aiming to provide a set of flexible and user-friendly modules for major NLP tasks with State-of-the-art performance.
+#Forte is currently under incubation, please check back soon.
+
+Forte is a NLP pipeline toolkit based on Texar, aiming to building a full pipeline of text retrieval, ranking, analysis and generation. It also 
+provide a set of flexible and user-friendly modules for major NLP tasks with State-of-the-art performance.
+
