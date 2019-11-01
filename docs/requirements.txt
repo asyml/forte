@@ -8,6 +8,7 @@ sphinxcontrib-spelling
 
 pyyaml
 jsonpickle
+sortedcontainers
 texar
 texar-pytorch
 
