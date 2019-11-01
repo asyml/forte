@@ -5,7 +5,9 @@ funcsigs
 recommonmark
 mypy_extensions
 sphinxcontrib-spelling
+
 pyyaml
+jsonpickle
 texar
 texar-pytorch
 
