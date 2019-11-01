@@ -35,7 +35,7 @@ with open("multipack_output.txt", "w+") as fout:
         for token in output_pack.get(entry_type=Token,
                                      range_annotation=gen_sentence):
             print(colored("Token", "red"), token.text,
-                  colored("POS Tag", "red"), token.pos_tag)
+                  colored("POS Tag", "red"), token.pos)
         print("======================END======================")
     parsed = json.loads(multipack.serialize())
     fout.write(json.dumps(parsed, indent=4))

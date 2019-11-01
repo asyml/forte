@@ -40,7 +40,7 @@ def main(dataset_dir: str):
             sent_text = sentence.text
             print(colored("Sentence:", 'red'), sent_text, "\n")
             # first method to get entry in a sentence
-            tokens = [(token.text, token.pos_tag) for token in
+            tokens = [(token.text, token.pos) for token in
                       pack.get(Token, sentence)]
             entities = [(entity.text, entity.ner_type) for entity in
                         pack.get(EntityMention, sentence)]

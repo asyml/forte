@@ -72,4 +72,4 @@ class TestNLTKPOSTagger(unittest.TestCase):
         for i, sentence in enumerate(pack.get(Sentence)):
             for j, token in enumerate(
                     pack.get(entry_type=Token, range_annotation=sentence)):
-                self.assertEqual(token.pos_tag, pos[i][j])
+                self.assertEqual(token.pos, pos[i][j])
