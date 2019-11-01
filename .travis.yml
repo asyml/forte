@@ -29,7 +29,7 @@ script:
   # type checking
   - mypy .
   # needed for test cases
-  - python -m nltk.downloader punkt
+  - python -m nltk.downloader punkt averaged_perceptron_tagger
   # unit tests
   - pytest
 
