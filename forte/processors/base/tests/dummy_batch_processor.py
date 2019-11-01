@@ -7,12 +7,16 @@ test cases.
 from typing import Dict, Optional, Type
 
 import numpy as np
+from texar.torch import HParams
 
+from forte.common import Resources
 from forte.data.data_pack import DataPack
 from forte.common.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
-from forte.processors.base import BatchProcessor
-from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
+from forte.processors.base import BatchProcessor, FixedSizeBatchProcessor, \
+    FixedSizeMultiPackBatchProcessor
+from ft.onto.base_ontology import Document, Token, Sentence, EntityMention, \
+    RelationLink
 
 __all__ = [
     "DummyRelationExtractor",
@@ -20,8 +24,7 @@ __all__ = [
 
 
 class DummyRelationExtractor(BatchProcessor):
-    """
-    A dummy relation extractor.
+    r"""A dummy relation extractor.
 
     Note that to use :class:`DummyRelationExtractor`, the :attr:`ontology` of
     :class:`Pipeline` must be an ontology that includes
@@ -30,8 +33,10 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self) -> None:
         super().__init__()
-        self.define_context()
-        self.batch_size = 4
+        self.batcher = self.define_batcher()
+
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
+        self.batcher.initialize(configs.batcher)
 
     def define_batcher(self) -> ProcessingBatcher:
         # pylint: disable=no-self-use
@@ -98,3 +103,43 @@ class DummyRelationExtractor(BatchProcessor):
                         output_dict["RelationLink"]["child.tid"][i][j])
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)
+
+    @staticmethod
+    def default_hparams():
+        return {
+            "batcher": {"batch_size": 10}
+        }
+
+
+class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
+    def __init__(self) -> None:
+        super().__init__()
+        self.counter = 0
+        self.batcher = self.define_batcher()
+
+    def initialize(self, resource: Resources, configs: Optional[HParams]):
+        self.batcher.initialize(configs.batcher)
+
+    def define_context(self) -> Type[Sentence]:
+        # pylint: disable=no-self-use
+        return Sentence
+
+    def _define_input_info(self) -> DataRequest:
+        # pylint: disable=no-self-use
+        return {}
+
+    def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
+        # track the number of times `predict` was called
+        self.counter += 1
+        return data_batch
+
+    def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
+        # pylint: disable=no-self-use
+        """Add corresponding fields to data_pack"""
+        pass
+
+    @staticmethod
+    def default_hparams():
+        return {
+            "batcher": {"batch_size": 10}
+        }

@@ -79,11 +79,8 @@ class ProcessingBatcher(Generic[PackType]):
             self.current_batch_sources = []
 
     def get_batch(
-            self,
-            input_pack: PackType,
-            context_type: Type[Annotation],
-            requests: DataRequest,
-    ) -> Iterator[Dict]:
+            self, input_pack: PackType, context_type: Type[Annotation],
+            requests: DataRequest) -> Iterator[Dict]:
         """
         Returns an iterator of data batches.
         """
@@ -93,14 +90,13 @@ class ProcessingBatcher(Generic[PackType]):
         for (data_batch, instance_num) in self._get_data_batch(
                 input_pack, context_type, requests):
             self.current_batch = merge_batches(
-                [self.current_batch, data_batch]
-            )
+                [self.current_batch, data_batch])
             self.current_batch_sources.append(instance_num)
 
             # Yield a batch on two conditions.
-            # 1. If we do not want to have batches to cross_pack, we should
-            # yield since this pack is exhausted.
-            # 2. We could also yield when the batcher condition is met:
+            # 1. If we do not want to have batches from different pack, we
+            # should yield since this pack is exhausted.
+            # 2. We should also yield when the batcher condition is met:
             # i.e. ``_should_yield()`` is True.
             if not self.cross_pack or self._should_yield():
                 yield self.current_batch
@@ -108,11 +104,9 @@ class ProcessingBatcher(Generic[PackType]):
                 self.current_batch_sources = []
 
     def _get_data_batch(
-            self,
-            data_pack: PackType,
-            context_type: Type[Annotation],
-            requests: Optional[DataRequest] = None,
-            offset: int = 0) -> Iterable[Tuple[Dict, int]]:
+            self, data_pack: PackType, context_type: Type[Annotation],
+            requests: Optional[DataRequest] = None, offset: int = 0) \
+            -> Iterable[Tuple[Dict, int]]:
         """
         Get data batches based on the requests.
 
@@ -131,7 +125,6 @@ class ProcessingBatcher(Generic[PackType]):
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def __init__(self, cross_pack=True):
         super().__init__(cross_pack)
-        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
         self.last_batch = False
         default_config = HParams(None, self.default_hparams())
@@ -140,21 +133,16 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def initialize(self, config: HParams):
         config_ = HParams(config, self.default_hparams())
         self.batch_size = config_.batch_size
-
-        # self.instance_num_in_current_batch = 0
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
         return self.batch_is_full or self.last_batch
 
     def _get_data_batch(
-            self,
-            data_pack: DataPack,
-            context_type: Type[Annotation],
+            self, data_pack: DataPack, context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
-        """
-        Try to get batches from a dataset  with ``batch_size``, but will
+        r"""Try to get batches from a dataset  with ``batch_size``, but will
         yield an incomplete batch if the data_pack is exhausted.
 
         Returns:
@@ -167,7 +155,6 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             instances.append(data)
             if len(instances) == self.batch_size:
                 batch = batch_instances(instances)
-                # self.instance_num_in_current_batch += len(instances)
                 self.batch_is_full = True
                 yield (batch, len(instances))
                 instances = []
@@ -175,7 +162,6 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
         # Flush the remaining data.
         if len(instances) > 0:
-            # self.instance_num_in_current_batch += len(instances)
             self.last_batch = True
             batch = batch_instances(instances)
             yield (batch, len(instances))

@@ -3,24 +3,27 @@ Unit tests for Pipeline.
 """
 import unittest
 
-from ft.onto.base_ontology import Token, Sentence, RelationLink
+from texar.torch import HParams
+
 from forte.data.readers import OntonotesReader
 from forte.pipeline import Pipeline
-from forte.processors.dummy_batch_processor import *
+from forte.processors.base.tests.dummy_batch_processor import *
+from ft.onto.base_ontology import Token, Sentence, RelationLink
 
 
 class PipelineTest(unittest.TestCase):
     def setUp(self) -> None:
         # Define and config the Pipeline
-        self.dataset_path = "examples/ontonotes_sample_dataset/00"
-
         self.nlp = Pipeline()
-
         self.nlp.set_reader(OntonotesReader())
-        self.processor = DummyRelationExtractor()
-        self.nlp.add_processor(self.processor)
-
+        dummy = DummyRelationExtractor()
+        config = HParams({"batcher": {"batch_size": 5}},
+                         dummy.default_hparams())
+        self.nlp.add_processor(dummy, config=config)
         self.nlp.initialize()
+
+        self.dataset_path = \
+            "forte/tests/data_samples/ontonotes_sample_dataset/00"
 
     def test_process_next(self):
         # get processed pack from dataset

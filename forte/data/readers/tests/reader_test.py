@@ -11,13 +11,13 @@ from ft.onto.base_ontology import Token, Sentence, Document, EntityMention
 from forte.data.readers import (
     OntonotesReader, ProdigyReader, CoNLL03Reader, StringReader)
 from forte.pipeline import Pipeline
-from forte.processors.dummy_pack_processor import DummyPackProcessor
+from forte.processors.base.tests.dummy_pack_processor import DummyPackProcessor
 
 
 class OntonotesReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "examples/data_samples/ontonotes/00"
+        self.dataset_path = "forte/data/readers/tests/data_samples/ontonotes/00"
 
         self.nlp = Pipeline()
 
@@ -44,7 +44,7 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "examples/data_samples/conll03"
+        self.dataset_path = "forte/data/readers/tests/data_samples/conll03"
 
         self.nlp = Pipeline()
 
@@ -137,7 +137,7 @@ class ProdigyReaderTest(unittest.TestCase):
 class StringReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "examples/"
+        self.dataset_path = "forte/data/readers/tests/"
 
         self.pl1 = Pipeline()
         self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))
