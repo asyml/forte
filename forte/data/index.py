@@ -10,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseIndex(Generic[EntryType]):
-    """
-    A set of indexes used in :class:`BasePack`:
+    r"""A set of indexes used in :class:`BasePack`:
 
     #. :attr:`entry_index`, the index from each tid to the corresponding entry
     #. :attr:`type_index`, the index from each type to the entries of
@@ -43,7 +42,7 @@ class BaseIndex(Generic[EntryType]):
         self._link_index_switch = False
 
     def update_basic_index(self, entries: List[EntryType]):
-        """Build or update the basic indexes, including
+        r"""Build or update the basic indexes, including
 
         (1) :attr:`entry_index`,
         the index from each tid to the corresponding entry;
@@ -87,9 +86,9 @@ class BaseIndex(Generic[EntryType]):
         self._group_index_switch = on
 
     def build_link_index(self, links: List[LinkType]):
-        """
-        Build the :attr:`link_index`, the index from child and parent
-        nodes to links. It will build the links with the links in the dataset.
+        r"""Build the :attr:`link_index`, the index from child and parent nodes
+        to links. It will build the links with the links in the dataset.
+
         :attr:`link_index` consists of two sub-indexes:
         "child_index" is the index from child nodes to their corresponding
         links, and "parent_index" is the index from parent nodes to their
@@ -104,8 +103,8 @@ class BaseIndex(Generic[EntryType]):
         self.update_link_index(links)
 
     def build_group_index(self, groups: List[GroupType]):
-        """
-        Build :attr:`group_index`, the index from group members to groups.
+        r"""Build :attr:`group_index`, the index from group members to groups.
+
         Returns:
 
         """
@@ -115,9 +114,8 @@ class BaseIndex(Generic[EntryType]):
         self.update_group_index(groups)
 
     def link_index(self, tid: int, as_parent: bool = True) -> Set[int]:
-        """
-        Look up the link_index with key ``tid``. If the link index is not built,
-        this will throw a ``PackIndexError``.
+        r"""Look up the link_index with key ``tid``. If the link index is not
+        built, this will throw a ``PackIndexError``.
 
         Args:
             tid (int): the tid of the entry being looked up.
@@ -136,21 +134,22 @@ class BaseIndex(Generic[EntryType]):
             return self._link_index["child_index"][tid]
 
     def group_index(self, tid: int) -> Set[int]:
-        """
-        Look up the group_index with key `tid`. If the index is not built, this
-        will raise a ``PackIndexError``
+        r"""Look up the group_index with key `tid`. If the index is not built,
+        this will raise a ``PackIndexError``.
         """
         if not self._group_index_switch:
             raise PackIndexError('Group index for pack not build')
         return self._group_index[tid]
 
     def update_link_index(self, links: List[LinkType]):
-        """
-        Update :attr:`link_index` with the provided links, the index from child
-        and parent to links. :attr:`link_index` consists of two sub-indexes:
-        "child_index" is the index from child nodes to their corresponding
-        links, and "parent_index" is the index from parent nodes to their
-        corresponding links.
+        r"""Update :attr:`link_index` with the provided links, the index from
+        child and parent to links.
+
+        :attr:`link_index` consists of two sub-indexes:
+            - "child_index" is the index from child nodes to their corresponding
+            links
+            - "parent_index" is the index from parent nodes to their
+            corresponding links.
 
         Args:
             links (list): a list of links to be added into the index.
@@ -169,7 +168,7 @@ class BaseIndex(Generic[EntryType]):
             ].add(link.tid)
 
     def update_group_index(self, groups: List[GroupType]):
-        """Build or update :attr:`group_index`, the index from group members
+        r"""Build or update :attr:`group_index`, the index from group members
          to groups.
 
         Args:

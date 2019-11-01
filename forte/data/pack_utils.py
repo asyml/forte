@@ -10,10 +10,9 @@ from forte.common.exception import EntryNotFoundError
 
 
 def get_single(pack: DataPack, entry_type: Type[EntryType]) -> EntryType:
-    """
-    Take a single entry of type :attr:`entry_type` from the provided data pack.
-    This is useful when the target entry type normally appears only one time in
-    the DataPack. For example, a Document entry.
+    """Take a single entry of type :attr:`entry_type` from the provided data
+    pack. This is useful when the target entry type normally appears only one
+    time in the DataPack for e.g., a Document entry.
 
     Args:
         pack: The provided data pack to take entries from.

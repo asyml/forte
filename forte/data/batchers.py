@@ -18,13 +18,11 @@ __all__ = [
 
 
 class ProcessingBatcher(Generic[PackType]):
-    """
-    This defines the basis interface of the Batcher used in
-    :class:`~forte.processors.batch_processor.BatchProcessor`.
-    This Batcher only batches data sequentially.
-    The Batcher receives new packs
-    dynamically and cache the current packs so that the processors can
-    pack prediction results into the data packs.
+    r"""This defines the basis interface of the Batcher used in
+    :class:`~forte.processors.batch_processor.BatchProcessor`. This Batcher
+    only batches data sequentially. It receives new packs dynamically and cache
+    the current packs so that the processors can pack prediction results into
+    the data packs.
 
     Args:
         cross_pack (bool, optional): whether to allow batches go across
@@ -40,8 +38,7 @@ class ProcessingBatcher(Generic[PackType]):
 
     def initialize(  # pylint: disable=unused-argument
             self, config: Optional[HParams]):
-        """
-        The implementation should initialize the batcher and setup the
+        r"""The implementation should initialize the batcher and setup the
         internal states of this batcher.
         This batcher will be called at the pipeline initialize stage.
 
@@ -54,11 +51,10 @@ class ProcessingBatcher(Generic[PackType]):
 
     @abstractmethod
     def _should_yield(self) -> bool:
-        """
-        User should implement this based on the state of the batcher to indicate
-        whether the batch criteria is met and the batcher should yield the
-        current batch. For example, whether the number of instances reaches the
-        batch size.
+        r"""User should implement this based on the state of the batcher to
+        indicate whether the batch criteria is met and the batcher should yield
+        the current batch. For example, whether the number of instances reaches
+        the batch size.
 
         Returns:
 
@@ -66,8 +62,8 @@ class ProcessingBatcher(Generic[PackType]):
         raise NotImplementedError
 
     def flush(self) -> Iterator[Dict]:
-        """
-        Flush the remaining data.
+        r"""Flush the remaining data.
+
         Returns:
 
         """
@@ -81,9 +77,7 @@ class ProcessingBatcher(Generic[PackType]):
     def get_batch(
             self, input_pack: PackType, context_type: Type[Annotation],
             requests: DataRequest) -> Iterator[Dict]:
-        """
-        Returns an iterator of data batches.
-        """
+        r"""Returns an iterator of data batches."""
         # cache the new pack and generate batches
         self.data_pack_pool.append(input_pack)
 
@@ -107,8 +101,7 @@ class ProcessingBatcher(Generic[PackType]):
             self, data_pack: PackType, context_type: Type[Annotation],
             requests: Optional[DataRequest] = None, offset: int = 0) \
             -> Iterable[Tuple[Dict, int]]:
-        """
-        Get data batches based on the requests.
+        r"""Get data batches based on the requests.
 
         Args:
             data_pack: The data pack to retrieve data from.
@@ -174,17 +167,18 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
 
 class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
-    """
-    A Batcher used in ``MultiPackBatchProcessors``.
+    r"""A Batcher used in ``MultiPackBatchProcessors``.
+
     The Batcher calls the ProcessingBatcher inherently on each specified
     data pack in the MultiPack.
 
-    It's flexible to query MultiPack so we delegate the task to the subclasses.
-    Such as:
-    - query all packs with the same ``context`` and ``input_info``.
-    - query different packs with different ``context``s and ``input_info``s.
+    It's flexible to query MultiPack so we delegate the task to the subclasses
+    such as:
+        - query all packs with the same ``context`` and ``input_info``.
+        - query different packs with different ``context``s and ``input_info``s.
+
     Since the batcher will save the data_pack_pool on the fly, it's not trivial
-        to batching and slicing multiple data packs in the same time
+    to do batching and slicing multiple data packs in the same time
     """
 
     def __init__(self, cross_pack: bool = True):
@@ -216,9 +210,8 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
-        """
-        Try to get batches of size ``batch_size``. If the tail instances cannot
-        make up a full batch, will generate a small batch with the tail
+        r"""Try to get batches of size ``batch_size``. If the tail instances
+        cannot make up a full batch, will generate a small batch with the tail
         instances.
 
         Returns:

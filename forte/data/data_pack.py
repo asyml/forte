@@ -483,7 +483,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 skipped += 1
                 continue
 
-            data = dict()
+            data: Dict[str, Any] = dict()
             data["context"] = self.text[context.span.begin: context.span.end]
             data["offset"] = context.span.begin
 
@@ -501,8 +501,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                             f"same time is not allowed")
                     data[a_type.__name__] = \
                         self._generate_annotation_entry_data(
-                            a_type, a_args, data, context
-                        )
+                            a_type, a_args, data, context)
+
             if link_types:
                 for l_type, l_args in link_types.items():
                     if l_type.__name__ in data.keys():
@@ -511,8 +511,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                             f"same class name {l_type.__name__} at the "
                             f"same time is not allowed")
                     data[l_type.__name__] = self._generate_link_entry_data(
-                        l_type, l_args, data, context
-                    )
+                        l_type, l_args, data, context)
 
             if group_types:
                 # pylint: disable=unused-variable
