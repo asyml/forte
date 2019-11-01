@@ -121,8 +121,8 @@ class Link(BaseLink):
         parent (Entry, optional): the parent entry of the link.
         child (Entry, optional): the child entry of the link.
     """
-    ParentType: Type[Entry]
-    ChildType: Type[Entry]
+    ParentType = Entry
+    ChildType = Entry
 
     def __init__(
             self,
@@ -288,8 +288,8 @@ class MultiPackLink(BaseLink):
     have one additional index on which pack it comes from.
     """
 
-    ParentType: Type[SubEntry]
-    ChildType: Type[SubEntry]
+    ParentType = SubEntry
+    ChildType = SubEntry
 
     def __init__(
             self,
@@ -333,14 +333,14 @@ class MultiPackLink(BaseLink):
         Returns:
 
         """
-        if not isinstance(parent, Entry):
+        if not isinstance(parent, self.ParentType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}")
         self._parent = parent.index_key
 
     def set_child(self, child: SubEntry):  # type: ignore
-        if not isinstance(child, Entry):
+        if not isinstance(child, self.ChildType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ChildType}, but get {type(child)}")
