@@ -1,5 +1,5 @@
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type
+from typing import Optional, Set, Tuple, Type, Any
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
@@ -121,8 +121,9 @@ class Link(BaseLink):
         parent (Entry, optional): the parent entry of the link.
         child (Entry, optional): the child entry of the link.
     """
-    ParentType = Entry
-    ChildType = Entry
+    # this type Any is needed since subclasses of this class will have new types
+    ParentType: Any = Entry
+    ChildType: Any = Entry
 
     def __init__(
             self,
