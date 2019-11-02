@@ -147,9 +147,9 @@ class BaseIndex(Generic[EntryType]):
 
         :attr:`link_index` consists of two sub-indexes:
             - "child_index" is the index from child nodes to their corresponding
-            links
+              links
             - "parent_index" is the index from parent nodes to their
-            corresponding links.
+              corresponding links.
 
         Args:
             links (list): a list of links to be added into the index.
