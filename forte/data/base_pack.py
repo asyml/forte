@@ -100,6 +100,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
           - Set the id for the entry.
           - Record the creator component for the entry.
           - Record the field creator component for the entry.
+
         Args:
             entry: The entry to be added.
 

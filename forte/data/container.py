@@ -79,11 +79,13 @@ class EntryContainer(Generic[E, L, G]):
         except KeyError:
             self.field_records[c] = {(entry_id, field_name)}
 
+    # TODO: this method is currently not used.
     @abstractmethod
     def validate(self, item: E) -> bool:
         """
         Validate whether this entry type can be added. This method is called by
-        the entries at the init stage.
+        the :meth:`~forte.data.ontology.top.Entry.__init__` method in the
+        :class:`~forte.data.ontology.top.Entry` when adding to the pack.
 
         Args:
             item: The entry itself.
