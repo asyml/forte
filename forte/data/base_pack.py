@@ -19,10 +19,8 @@ __all__ = [
 
 
 class BaseMeta:
-    """
-    Basic Meta information for both
-    :class:`~forte.data.data_pack.DataPack` and
-    :class:`~forte.data.multi_pack.MultiPack`.
+    r"""Basic Meta information for both :class:`~forte.data.data_pack.DataPack`
+    and :class:`~forte.data.multi_pack.MultiPack`.
     """
 
     def __init__(self, doc_id: Optional[str] = None):
@@ -30,8 +28,7 @@ class BaseMeta:
 
 
 class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
-    """
-    The base class of :class:`~forte.data.data_pack.DataPack` and
+    r"""The base class of :class:`~forte.data.data_pack.DataPack` and
     :class:`~forte.data.multi_pack.MultiPack`.
 
     Args:
@@ -40,7 +37,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     """
 
     # pylint: disable=too-many-public-methods
-
     def __init__(self, doc_id: Optional[str] = None):
         super().__init__()
 
@@ -58,10 +54,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     @abstractmethod
     def add_entry(self, entry: EntryType) -> EntryType:
-        """
-        Force add an :class:`~forte.data.ontology.top.Entry` object to
-        the :class:`BasePack` object.
-        Allow duplicate entries in a pack.
+        r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
+        :class:`BasePack` object. Allow duplicate entries in a pack.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.top.Entry`
@@ -74,9 +68,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     @abstractmethod
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        """
-        Try to add an :class:`~forte.data.ontology.top.Entry` object to
-        the :class:`BasePack` object.
+        r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
+        :class:`BasePack` object.
+
         If a same entry already exists, will return the existing entry
         instead of adding the new one. Note that we regard two entries as the
         same if their :meth:`~forte.data.ontology.top.Entry.eq` have
@@ -95,11 +89,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def record_entry(self, entry: EntryType):
-        """
+        r"""
+
         Record basic information for the entry:
           - Set the id for the entry.
           - Record the creator component for the entry.
           - Record the field creator component for the entry.
+
         Args:
             entry: The entry to be added.
 
@@ -117,9 +113,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         entry.reset_fields_modified()
 
     def serialize(self) -> str:
-        """
-        Serializes a pack to a string.
-        """
+        r"""Serializes a pack to a string."""
         return jsonpickle.encode(self, unpicklable=True)
 
     def view(self):
@@ -127,9 +121,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     # TODO: how to make this return the precise type here?
     def get_entry(self, tid: int) -> EntryType:
-        """
-        Look up the entry_index with key ``tid``.
-        """
+        r"""Look up the entry_index with key ``tid``."""
         entry: EntryType = self.index.get_entry(tid)
         if entry is None:
             raise KeyError(
@@ -137,9 +129,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return entry
 
     def get_ids_by_component(self, component: str) -> Set[int]:
-        """
-        Look up the component_index with key ``component``.
-        """
+        r"""Look up the component_index with key ``component``."""
         print(self.creation_records)
         entry_set: Set[int] = self.creation_records[component]
 
@@ -153,8 +143,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 for tid in self.get_ids_by_component(component)}
 
     def get_ids_by_type(self, entry_type: Type[EntryType]) -> Set[int]:
-        """
-        Look up the type_index with key ``entry_type``.
+        r"""Look up the type_index with key ``entry_type``.
 
         Returns:
              A set of entry tids. The entries are instances of entry_type (

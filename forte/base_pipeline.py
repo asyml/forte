@@ -179,6 +179,9 @@ class BasePipeline(Generic[PackType]):
         if selector is None:
             self._selectors.append(DummySelector())
 
+        else:
+            self._selectors.append(selector)
+
     def process(self, *args, **kwargs) -> PackType:
         """
         Alias for process_one.
@@ -282,66 +285,3 @@ class BasePipeline(Generic[PackType]):
                 if not buf.queue_process(job):
                     if not job.is_poison:
                         yield job.pack
-
-            # # Keep a list of packs and only release it when all processors
-            # # are done with them.
-            # packs = []
-            #
-            # for pack in data_iter:
-            #     packs.append(pack)
-            #
-            #     for i, (processor, selector) in enumerate(
-            #             zip(self._processors, self._selectors)):
-            #         for p in packs:
-            #             for c_pack in selector.select(p):
-            #                 in_cache = (c_pack.meta.cache_state ==
-            #                             processor.component_name)
-            #                 # TODO: can_process needs double check.
-            #                 # We need to record a step here with a number
-            #                 # instead of a processor component
-            #                 # And we need a clean way to record whether we are
-            #                 # done processing anything, the component_name
-            #                 # is not reliable, especially used together with
-            #                 # a selector.
-            #                 can_process = (
-            #                         i == 0 or c_pack.meta.process_state ==
-            #                         self.processors[i - 1].component_name)
-            #                 if can_process and not in_cache:
-            #                     self.__working_component = \
-            #                         processor.component_name
-            #                     processor.process(c_pack)
-            #
-            #     for p in list(packs):
-            #         # must iterate through a copy of the original list
-            #         # because of the removing operation
-            #         # TODO we'd better add a special component_name instead of
-            #         #   using the previous processor. The can also cause some
-            #         #   indexing problem.
-            #         if (p.meta.process_state ==
-            #                 self.processors[-1].component_name):
-            #             yield p
-            #             packs.remove(p)
-            #
-            # # Now the data iteration is over. We may still have some packs
-            # # that are not fully processed. Now we "flush" them.
-            #
-            # # A special poison pack is added to the end of the data stream. It
-            # # will not be processed by any of the processors, but it will tell
-            # # the processors that the stream ends.
-            # for p in list(packs) + [BasePack.get_poison()]:
-            #     # TODO double check starts
-            #     start = self._processors_index[p.meta.process_state] + 1
-            #     for processor, selector in zip(self._processors[start:],
-            #                                    self._selectors):
-            #         self.__working_component = processor.component_name
-            #
-            #         if not p.is_poison():
-            #             for c_pack in selector.select(p):
-            #                 processor.process(c_pack)
-            #         else:
-            #             processor.process(p)
-            #
-            #     # And we certainly won't return the poison pack.
-            #     if not p.is_poison():
-            #         yield p
-            #     packs.remove(p)
