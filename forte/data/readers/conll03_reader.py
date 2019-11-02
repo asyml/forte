@@ -54,7 +54,7 @@ class CoNLL03Reader(PackReader):
                 conll_components = line.split()
 
                 word = conll_components[1]
-                pos_tag = conll_components[2]
+                pos = conll_components[2]
                 chunk_id = conll_components[3]
                 ner_tag = conll_components[4]
 
@@ -62,7 +62,7 @@ class CoNLL03Reader(PackReader):
                 word_end = offset + len(word)
 
                 # Add tokens.
-                kwargs_i = {"pos": pos_tag,
+                kwargs_i = {"pos": pos,
                             "chunk": chunk_id,
                             "ner": ner_tag}
                 token = Token(pack, word_begin, word_end)
@@ -99,3 +99,7 @@ class CoNLL03Reader(PackReader):
         doc.close()
 
         yield pack
+
+    @staticmethod
+    def default_hparams():
+        return {}

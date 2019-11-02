@@ -41,7 +41,7 @@ class NLTKPOSTagger(PackProcessor):
             token_texts = [token.text for token in token_entries]
             taggings = pos_tag(token_texts)
             for token, tag in zip(token_entries, taggings):
-                token.pos = tag[1]
+                token.set_fields(pos=tag[1])
 
 
 class NLTKSentenceSegmenter(PackProcessor):

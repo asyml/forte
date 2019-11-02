@@ -12,9 +12,7 @@ process_manager = ProcessManager()
 
 
 class IdManager:
-    """
-    Control the ids assigned to each entry.
-    """
+    r"""Control the ids assigned to each entry."""
 
     def __init__(self, initial_id_count: int = 0):
         self.__id_counter = initial_id_count
@@ -41,11 +39,10 @@ class EntryContainer(Generic[E, L, G]):
         self._id_manager = IdManager()
 
     def __getstate__(self):
-        """
-        In serialization:
-         - We create a special field for serialization information
-         - we don't serialize the IdManager object directly, instead we save
-           the max count in the serialization information dict.
+        r"""In serialization:
+            - We create a special field for serialization information
+            - we don't serialize the IdManager object directly, instead we save
+            the max count in the serialization information dict.
         """
         state = self.__dict__.copy()
         state['serialization'] = {}
@@ -56,9 +53,8 @@ class EntryContainer(Generic[E, L, G]):
         return state
 
     def __setstate__(self, state):
-        """
-        In deserialization,
-          - The IdManager is recreated from the id count.
+        r"""In deserialization,
+            - The IdManager is recreated from the id count.
         """
         self._id_manager = IdManager(state['serialization']['next_id'])
         self.__dict__.update(state)
@@ -79,16 +75,15 @@ class EntryContainer(Generic[E, L, G]):
         except KeyError:
             self.field_records[c] = {(entry_id, field_name)}
 
-    # TODO: this method is currently not used.
     @abstractmethod
     def validate(self, item: E) -> bool:
-        """
-        Validate whether this entry type can be added. This method is called by
+        r"""Validate whether this entry type can be added. This method is called by
         the :meth:`~forte.data.ontology.top.Entry.__init__` method in the
         :class:`~forte.data.ontology.top.Entry` when adding to the pack.
 
         Args:
             item: The entry itself.
+
         Returns:
         """
         raise NotImplementedError

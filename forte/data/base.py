@@ -3,8 +3,7 @@ from functools import total_ordering
 
 @total_ordering
 class Span:
-    """
-    A class recording the span of annotations. :class:`Span` objects can
+    r"""A class recording the span of annotations. :class:`Span` objects can
     be totally ordered according to their :attr:`begin` as the first sort key
     and :attr:`end` as the second sort key.
 
