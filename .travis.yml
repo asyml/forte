@@ -23,6 +23,7 @@ install:
   - pip install pytest==4.3.1
   # Install code coverage tools.
   - pip install coverage
+  - pip install codecov
 
 script:
   # linting
@@ -62,7 +63,7 @@ jobs:
         - sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
 
 after_success:
-  bash <(curl -s https://codecov.io/bash)
+  - codecov
 
 notifications:
   email: false
