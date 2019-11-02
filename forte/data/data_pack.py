@@ -614,8 +614,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 unit_span_begin = unit_begin
                 unit_span_end = unit_span_begin + 1
 
-                while self.index.in_span(data[unit]["tid"][unit_span_end],
-                                         annotation.span):
+                while (unit_span_end < len(data[unit]["tid"]) and
+                       self.index.in_span(data[unit]["tid"][unit_span_end],
+                                          annotation.span)):
                     unit_span_end += 1
 
                 a_dict["unit_span"].append((unit_span_begin, unit_span_end))
