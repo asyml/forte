@@ -22,7 +22,7 @@ install:
   - pip install mypy>=0.730
   - pip install pytest==4.3.1
   # Install code coverage tools.
-  pip install coverage
+  - pip install coverage
 
 script:
   # linting
