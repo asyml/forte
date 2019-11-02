@@ -44,7 +44,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     # pylint: disable=too-many-public-methods
     r"""A :class:`DataPack` contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural
-    language text could be a document, paragraph or in any other granularity.
+    language text could be a document617, paragraph or in any other granularity.
 
     Args:
         doc_id (str, optional): A universal id of this data pack.

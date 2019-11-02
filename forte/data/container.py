@@ -77,8 +77,10 @@ class EntryContainer(Generic[E, L, G]):
 
     @abstractmethod
     def validate(self, item: E) -> bool:
-        r"""Validate whether this entry type can be added. This method is called
-        by the entries at the init stage.
+        r"""Validate whether this entry type can be added. This method is
+        called by the :meth:`~forte.data.ontology.top.Entry.__init__` method
+        when an instance of :class:`~forte.data.ontology.top.Entry` is being
+        added to the pack.
 
         Args:
             item: The entry itself.
