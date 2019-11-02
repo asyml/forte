@@ -49,15 +49,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
             cache_directory (str, optional): The base directory to place the
                 path of the caching files. Each collection is contained in one
                 cached file, under this directory. The cached location for each
-#                 collection is computed by :meth:`_cache_key_function`. Note:
-#                 A collection is the data returned by :meth:`_collect`.
+                collection is computed by :meth:`_cache_key_function`. Note:
+                A collection is the data returned by :meth:`_collect`.
             append_to_cache (bool, optional): Decide whether to append write
                 if cache file already exists.  By default (``False``), we
                 will overwrite the existing caching file. If ``True``, we will
                 cache the datapack append to end of the caching file.
     """
-
-
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
