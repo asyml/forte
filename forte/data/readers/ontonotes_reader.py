@@ -3,7 +3,7 @@ The reader that reads Ontonotes data into Datapacks.
 """
 import os
 from collections import defaultdict
-from typing import DefaultDict, List, Optional, Tuple, Dict, Any, Iterator
+from typing import (Any, DefaultDict, Iterator, List, Optional, Tuple)
 
 from ft.onto.base_ontology import (
     Token, Sentence, Document, EntityMention, PredicateArgument,
@@ -25,7 +25,35 @@ class OntonotesReader(PackReader):
     download the CoNLL style annotations for the OntoNotes v5.0 release
     – LDC2013T19.tgz obtained from LDC.
 
+    Args:
+        missing_fields: A list of strings representing fields to ignore. Please
+            see :attr:`PartialOntonotesReader.FIELDS` for fields.
     """
+
+    FIELDS = {
+        "document_id": 0,
+        "part_number": 1,
+        # "word_number": 2,  # always ignored
+        "word": 3,
+        "pos_tag": 4,
+        # "parse_bit": 5,  # always ignored
+        "lemmatised_word": 6,
+        "framenet_id": 7,
+        "word_sense": 8,
+        "speaker": 9,
+        "entity_label": 10,
+        # TODO: Include this?
+        # "coreference": -1,  # always ignored
+    }
+    _TOTAL_FIELDS = 12  # excluding predicate labels, including coreference
+
+    def __init__(self, missing_fields: Optional[List[str]] = None):
+        super().__init__()
+        missing_fields = set(missing_fields)
+        self._keep_fields = sorted(
+            [column for field, column in self.FIELDS.items()
+             if field not in missing_fields])
+
     # pylint: disable=no-self-use
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
         """
@@ -43,11 +71,21 @@ class OntonotesReader(PackReader):
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 
+    def _parse_line(self, line: str) -> List[Optional[str]]:
+        parts = line.split()
+        expanded_parts: List[Optional[str]] = [None] * self._TOTAL_FIELDS
+        for pos, part in zip(self._keep_fields, parts):
+            expanded_parts[pos] = part
+        expanded_parts = (expanded_parts[:-1] +
+                          parts[len(self._keep_fields):] +
+                          expanded_parts[-1:])
+        return expanded_parts
+
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
 
         with open(file_path, encoding="utf8") as doc:
-            text = ""
+            words = []
             offset = 0
             has_rows = False
 
@@ -71,9 +109,9 @@ class OntonotesReader(PackReader):
                     break
 
                 if line != "" and not line.startswith("#"):
-                    conll_components = line.split()
+                    conll_components = self._parse_line(line)
                     document_id = conll_components[0]
-                    part_id = int(conll_components[1])
+                    part_id = conll_components[1]
                     word = conll_components[3]
                     pos_tag = conll_components[4]
                     lemmatised_word = conll_components[6]
@@ -87,11 +125,12 @@ class OntonotesReader(PackReader):
                     word_end = offset + len(word)
 
                     # add tokens
-                    kwargs_i: Dict[str, Any] = {"pos": pos_tag,
-                                                "sense": word_sense}
                     token = Token(pack, word_begin, word_end)
-                    token.set_fields(**kwargs_i)
-                    pack.add_or_get_entry(token)
+                    if pos_tag is not None:
+                        token.set_fields(pos_tag=pos_tag)
+                    if word_sense is not None:
+                        token.set_fields(sense=word_sense)
+                    pack.add_entry(token)
 
                     # add entity mentions
                     current_entity_mention = self._process_entity_annotations(
@@ -100,12 +139,11 @@ class OntonotesReader(PackReader):
                     )
 
                     # add predicate mentions
-                    if lemmatised_word != "-":
+                    if lemmatised_word is not None and lemmatised_word != "-":
                         word_is_verbal_predicate = any(
                             ["(V" in x for x in pred_labels]
                         )
                         kwargs_i = {
-                            "framenet_id": framenet_id,
                             "pred_lemma": lemmatised_word,
                             "pred_type": "verb" if word_is_verbal_predicate
                             else "other"
@@ -113,9 +151,9 @@ class OntonotesReader(PackReader):
                         pred_mention = PredicateMention(
                                 pack, word_begin, word_end)
                         pred_mention.set_fields(**kwargs_i)
-                        pred_mention = pack.add_or_get_entry(
-                            pred_mention
-                        )
+                        if framenet_id is not None:
+                            pred_mention.set_fields(framenet_id=framenet_id)
+                        pack.add_entry(pred_mention)
 
                         if word_is_verbal_predicate:
                             verbal_predicates.append(pred_mention)
@@ -144,7 +182,7 @@ class OntonotesReader(PackReader):
                         groups,
                     )
 
-                    text += word + " "
+                    words.append(word)
                     offset = word_end + 1
                     has_rows = True
 
@@ -161,7 +199,7 @@ class OntonotesReader(PackReader):
                             }
                             link = PredicateLink(pack, predicate, arg[0])
                             link.set_fields(**kwargs_i)
-                            pack.add_or_get_entry(link)
+                            pack.add_entry(link)
 
                     verbal_predicates = []
                     current_pred_arg = []
@@ -169,10 +207,12 @@ class OntonotesReader(PackReader):
 
                     # add sentence
 
-                    kwargs_i = {"speaker": speaker, "part_id": part_id}
                     sent = Sentence(pack, sentence_begin, offset - 1)
-                    sent.set_fields(**kwargs_i)
-                    pack.add_or_get_entry(sent)
+                    if speaker is not None:
+                        sent.set_fields(speaker=speaker)
+                    if part_id is not None:
+                        sent.set_fields(part_id=int(part_id))
+                    pack.add_entry(sent)
 
                     sentence_begin = offset
 
@@ -184,13 +224,14 @@ class OntonotesReader(PackReader):
                 group = CoreferenceGroup(pack)
                 # group.set_fields(**kwargs_i)
                 group.add_members(mention_list)
-                pack.add_or_get_entry(group)
+                pack.add_entry(group)
 
+            text = " ".join(words)
             document = Document(pack, 0, len(text))
-            pack.add_or_get_entry(document)
+            pack.add_entry(document)
 
-            kwargs_i = {"doc_id": document_id}
-            pack.set_meta(**kwargs_i)
+            if document_id is not None:
+                pack.set_meta(doc_id=document_id)
             pack.set_text(text, replace_func=self.text_replace_operation)
 
         yield pack
@@ -198,11 +239,13 @@ class OntonotesReader(PackReader):
     def _process_entity_annotations(
             self,
             pack: DataPack,
-            label: str,
+            label: Optional[str],
             word_begin: int,
             word_end: int,
             current_entity_mention: Optional[Tuple[int, str]],
     ) -> Optional[Tuple[int, str]]:
+        if label is None:
+            return None
 
         ner_type = label.strip("()*")
 
@@ -217,7 +260,7 @@ class OntonotesReader(PackReader):
             kwargs_i = {"ner_type": current_entity_mention[1]}
             entity = EntityMention(pack, current_entity_mention[0], word_end)
             entity.set_fields(**kwargs_i)
-            pack.add_or_get_entry(entity)
+            pack.add_entry(entity)
 
             current_entity_mention = None
 
@@ -235,13 +278,11 @@ class OntonotesReader(PackReader):
 
         for label_index, label in enumerate(labels):
 
-            arg_type = label.strip("()*")
-            if arg_type == "V":
-                continue
-
             if "(" in label:
                 # Entering into a span
+                arg_type = label.strip("()*")
                 current_pred_arg[label_index] = (word_begin, arg_type)
+
             if ")" in label:
                 # Exiting a span
                 if current_pred_arg[label_index] is None:
@@ -251,10 +292,11 @@ class OntonotesReader(PackReader):
                 arg_begin = current_pred_arg[label_index][0]  # type: ignore
                 arg_type = current_pred_arg[label_index][1]  # type: ignore
 
-                pred_arg = PredicateArgument(pack, arg_begin, word_end)
-                pred_arg = pack.add_or_get_entry(pred_arg)
+                if arg_type != "V":
+                    pred_arg = PredicateArgument(pack, arg_begin, word_end)
+                    pred_arg = pack.add_entry(pred_arg)
 
-                verbal_pred_args[label_index].append((pred_arg, arg_type))
+                    verbal_pred_args[label_index].append((pred_arg, arg_type))
                 current_pred_arg[label_index] = None
 
     def _process_coref_annotations(
@@ -267,7 +309,7 @@ class OntonotesReader(PackReader):
             groups: DefaultDict[int, List[EntityMention]],
     ) -> None:
 
-        if label == "-":
+        if label is None or label == "-":
             return
         for segment in label.split("|"):
             # The conll representation of coref spans allows spans to overlap.
@@ -277,7 +319,7 @@ class OntonotesReader(PackReader):
                     group_id = int(segment[1:-1])
 
                     coref_mention = EntityMention(pack, word_begin, word_end)
-                    coref_mention = pack.add_or_get_entry(coref_mention)
+                    coref_mention = pack.add_entry(coref_mention)
 
                     groups[group_id].append(coref_mention)
                 else:
