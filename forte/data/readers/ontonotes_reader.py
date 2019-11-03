@@ -3,7 +3,8 @@ The reader that reads Ontonotes data into Datapacks.
 """
 import os
 from collections import defaultdict
-from typing import (Any, DefaultDict, Iterator, List, Optional, Tuple)
+from typing import (Any, DefaultDict, Iterator, List, Optional, Tuple,
+                    NamedTuple, Union)
 
 from ft.onto.base_ontology import (
     Token, Sentence, Document, EntityMention, PredicateArgument,
@@ -26,33 +27,78 @@ class OntonotesReader(PackReader):
     – LDC2013T19.tgz obtained from LDC.
 
     Args:
-        missing_fields: A list of strings representing fields to ignore. Please
-            see :attr:`PartialOntonotesReader.FIELDS` for fields.
+        column_format: A list of strings indicating which field each column in a
+            line corresponds to. Available field types include:
+
+            - ``"document_id"``
+            - ``"part_number"``
+            - ``"word"``
+            - ``"pos_tag"``
+            - ``"lemmatised_word"``
+            - ``"framenet_id"``
+            - ``"word_sense"``
+            - ``"speaker"``
+            - ``"entity_label"``
+            - ``"coreference"``
+            - ``"*predicate_labels"``
+
+            Field types marked with ``*`` indicate a variable-column field: it
+            could span multiple fields. Only one such field is allowed in the
+            format specification.
+
+            If a column should be ignored, fill in `None` at the corresponding
+            position.
     """
 
-    FIELDS = {
-        "document_id": 0,
-        "part_number": 1,
-        # "word_number": 2,  # always ignored
-        "word": 3,
-        "pos_tag": 4,
-        # "parse_bit": 5,  # always ignored
-        "lemmatised_word": 6,
-        "framenet_id": 7,
-        "word_sense": 8,
-        "speaker": 9,
-        "entity_label": 10,
-        # TODO: Include this?
-        # "coreference": -1,  # always ignored
-    }
-    _TOTAL_FIELDS = 12  # excluding predicate labels, including coreference
+    class ParsedFields(NamedTuple):
+        word: str
+        predicate_labels: List[str]
+        document_id: Optional[str] = None
+        part_number: Optional[str] = None
+        pos_tag: Optional[str] = None
+        lemmatised_word: Optional[str] = None
+        framenet_id: Optional[str] = None
+        word_sense: Optional[str] = None
+        speaker: Optional[str] = None
+        entity_label: Optional[str] = None
+        coreference: Optional[str] = None
 
-    def __init__(self, missing_fields: Optional[List[str]] = None):
+    _DEFAULT_FORMAT = [
+        "document_id", "part_number", None, "word", "pos_tag", None,
+        "lemmatised_word", "framenet_id", "word_sense", "speaker",
+        "entity_label", "*predicate_labels", "coreference",
+    ]
+    _STAR_FIELDS = {"predicate_labels"}
+    _REQUIRED_FIELDS = ["word", "predicate_labels"]
+
+    def __init__(self, column_format: Optional[List[Optional[str]]] = None):
         super().__init__()
-        missing_fields = set(missing_fields)
-        self._keep_fields = sorted(
-            [column for field, column in self.FIELDS.items()
-             if field not in missing_fields])
+        column_format = column_format or self._DEFAULT_FORMAT
+        # Validate column format.
+        seen_fields = set()
+        self._column_format = []
+        self._star_pos = None
+        for idx, field in enumerate(column_format):
+            if field is None:
+                self._column_format.append(None)
+                continue
+            if field.startswith("*"):
+                if self._star_pos is not None:
+                    raise ValueError(f"Only one field can begin with '*'")
+                field = field[1:]
+                if field not in self._STAR_FIELDS:
+                    raise ValueError(f"Field '{field}' cannot begin with '*'")
+                self._star_pos = idx
+            if field not in self.ParsedFields._fields:
+                raise ValueError(f"Unsupported field type: '{field}'")
+            if field in seen_fields:
+                raise ValueError(f"Duplicate field type: '{field}'")
+            seen_fields.add(field)
+            self._column_format.append(field)
+        # Sanity check: certain fields must be present in format.
+        for field in self._REQUIRED_FIELDS:
+            if field not in seen_fields:
+                raise ValueError(f"'{field}' field is required")
 
     # pylint: disable=no-self-use
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
@@ -71,15 +117,17 @@ class OntonotesReader(PackReader):
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 
-    def _parse_line(self, line: str) -> List[Optional[str]]:
-        parts = line.split()
-        expanded_parts: List[Optional[str]] = [None] * self._TOTAL_FIELDS
-        for pos, part in zip(self._keep_fields, parts):
-            expanded_parts[pos] = part
-        expanded_parts = (expanded_parts[:-1] +
-                          parts[len(self._keep_fields):] +
-                          expanded_parts[-1:])
-        return expanded_parts
+    def _parse_line(self, line: str) -> 'ParsedFields':
+        parts: List[Union[str, List[str]]] = line.split()
+        fields = {}
+        if self._star_pos is not None:
+            l = self._star_pos
+            r = len(parts) - (len(self._column_format) - self._star_pos - 1)
+            parts = parts[:l] + [parts[l:r]] + parts[r:]
+        for field, part in zip(self._column_format, parts):
+            if field is not None:
+                fields[field] = part
+        return self.ParsedFields(**fields)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
@@ -109,63 +157,59 @@ class OntonotesReader(PackReader):
                     break
 
                 if line != "" and not line.startswith("#"):
-                    conll_components = self._parse_line(line)
-                    document_id = conll_components[0]
-                    part_id = conll_components[1]
-                    word = conll_components[3]
-                    pos_tag = conll_components[4]
-                    lemmatised_word = conll_components[6]
-                    framenet_id = conll_components[7]
-                    word_sense = conll_components[8]
-                    speaker = conll_components[9]
-                    entity_label = conll_components[10]
-                    pred_labels = conll_components[11:-1]
+                    fields = self._parse_line(line)
+                    speaker = fields.speaker
+                    if fields.part_number is not None:
+                        part_id = int(fields.part_number)
+                    document_id = fields.document_id
 
+                    assert fields.word is not None
                     word_begin = offset
-                    word_end = offset + len(word)
+                    word_end = offset + len(fields.word)
 
                     # add tokens
                     token = Token(pack, word_begin, word_end)
-                    if pos_tag is not None:
-                        token.set_fields(pos_tag=pos_tag)
-                    if word_sense is not None:
-                        token.set_fields(sense=word_sense)
+                    if fields.pos_tag is not None:
+                        token.set_fields(pos_tag=fields.pos_tag)
+                    if fields.word_sense is not None:
+                        token.set_fields(sense=fields.word_sense)
                     pack.add_entry(token)
 
                     # add entity mentions
                     current_entity_mention = self._process_entity_annotations(
-                        pack, entity_label, word_begin, word_end,
-                        current_entity_mention
+                        pack, fields.entity_label, word_begin, word_end,
+                        current_entity_mention,
                     )
 
                     # add predicate mentions
-                    if lemmatised_word is not None and lemmatised_word != "-":
+                    if (fields.lemmatised_word is not None and
+                            fields.lemmatised_word != "-"):
                         word_is_verbal_predicate = any(
-                            ["(V" in x for x in pred_labels]
-                        )
+                            "(V" in x for x in fields.predicate_labels)
                         kwargs_i = {
-                            "pred_lemma": lemmatised_word,
-                            "pred_type": "verb" if word_is_verbal_predicate
-                            else "other"
+                            "pred_lemma": fields.lemmatised_word,
+                            "pred_type": ("verb" if word_is_verbal_predicate
+                                          else "other")
                         }
                         pred_mention = PredicateMention(
-                                pack, word_begin, word_end)
+                            pack, word_begin, word_end)
                         pred_mention.set_fields(**kwargs_i)
-                        if framenet_id is not None:
-                            pred_mention.set_fields(framenet_id=framenet_id)
+                        if fields.framenet_id is not None:
+                            pred_mention.set_fields(
+                                framenet_id=fields.framenet_id)
                         pack.add_entry(pred_mention)
 
                         if word_is_verbal_predicate:
                             verbal_predicates.append(pred_mention)
 
                     if not verbal_pred_args:
-                        current_pred_arg = [None for _ in pred_labels]
-                        verbal_pred_args = [[] for _ in pred_labels]
+                        current_pred_arg = [None] * len(fields.predicate_labels)
+                        verbal_pred_args = [[] for _ in fields.predicate_labels]
 
                     # add predicate arguments
                     self._process_pred_annotations(
                         pack,
-                        conll_components[11:-1],
+                        fields.predicate_labels,
                         word_begin,
                         word_end,
                         current_pred_arg,
@@ -175,14 +219,14 @@ class OntonotesReader(PackReader):
                     # add coreference mentions
                     self._process_coref_annotations(
                         pack,
-                        conll_components[-1],
+                        fields.coreference,
                         word_begin,
                         word_end,
                         coref_stacks,
                         groups,
                     )
 
-                    words.append(word)
+                    words.append(fields.word)
                     offset = word_end + 1
                     has_rows = True
 
@@ -302,7 +346,7 @@ class OntonotesReader(PackReader):
     def _process_coref_annotations(
             self,
             pack: DataPack,
-            label: str,
+            label: Optional[str],
             word_begin: int,
             word_end: int,
             coref_stacks: DefaultDict[int, List[int]],
