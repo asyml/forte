@@ -1,7 +1,7 @@
 # ***automatically_generated***
 # flake8: noqa
 # mypy: ignore-errors
-# pylint: disable
+# pylint: skip-file
 """
 Automatically generated file. Do not change manually.
 """

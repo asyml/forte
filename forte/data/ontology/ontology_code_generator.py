@@ -3,7 +3,6 @@
     Performs a preliminary check of dependencies
 """
 import os
-import time
 import json
 import logging
 import tempfile
@@ -23,6 +22,7 @@ from forte.data.ontology.code_generation_util import (
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger(__name__)
+
 
 class OntologyCodeGenerator:
     """
@@ -65,7 +65,7 @@ class OntologyCodeGenerator:
             f'# {self.AUTO_GEN_CONST}',
             '# flake8: noqa',
             '# mypy: ignore-errors',
-            '# pylint: disable']
+            '# pylint: skip-file']
 
         # Mapping from entries parsed from the `base_ontology_module`
         # (default is `top.py`), to their `__init__` arguments.
@@ -89,7 +89,7 @@ class OntologyCodeGenerator:
 
         # A temporary directory to save the generated file structure until the
         # generation is completed and verified.
-        self.tempdir: Optional[str] = None
+        self.tempdir: str
 
         # Directories to be examined to find json files for user-defined config
         # imports.
@@ -261,9 +261,9 @@ class OntologyCodeGenerator:
 
         modules_to_import: List[str] = []
 
-        for import_ref in json_imports_dict:  # example_import_ontology
+        for import_ref in json_imports_dict:
             import_schema = json_imports_dict[import_ref]
-            import_namespace = import_schema["type"]  # ft.onto.example_import_ontology
+            import_namespace = import_schema["type"]
             self.ref_to_namespace[import_ref] = import_namespace
             import_file = f"{import_namespace.split('.')[-1]}_config.json"
             import_json_file = utils.search_in_dirs(import_file,
@@ -349,39 +349,34 @@ class OntologyCodeGenerator:
 
         return new_modules_to_import
 
-    def cleanup_generated_ontology(self, path):
+    def cleanup_generated_ontology(self, path, is_forced=False):
         """
         Deletes the generated ontology files.
         """
         path = os.path.abspath(path)
         if os.path.isfile(path):
-            is_dir = False
             is_empty = False
             if os.access(path, os.R_OK):
                 with open(path, 'r') as f:
                     line = f.readlines()[0]
                     if line.startswith(f'# {self.AUTO_GEN_CONST}'):
                         is_empty = True
+            if is_empty:
+                os.unlink(path)
         else:
-            is_dir = True
             is_empty = True
             for child in os.listdir(path):
                 child_path = os.path.join(path, child)
-                if not self.cleanup_generated_ontology(child_path):
+                if not self.cleanup_generated_ontology(child_path, is_forced):
                     is_empty = False
-        if is_empty:
-            log.info(f"Cleaning up the generated file {path}... "
-                     f"Press ^C to stop!")
-            try:
-                time.sleep(2)
-            except KeyboardInterrupt:
-                log.info(f"Cleanup terminated, not deleting {path}.")
-                raise
-            if is_dir:
-                os.rmdir(path)
-            else:
-                os.unlink(path)
-            log.info(f"Deleted {path}.")
+            if is_empty:
+                to_delete = is_forced
+                if not is_forced:
+                    to_delete_prompt = f"Delete the directory {path}? <y/n>: "
+                    to_delete = input(to_delete_prompt).lower() == "y"
+                if to_delete:
+                    os.rmdir(path)
+            log.info("Deleted %s.", path)
         return is_empty
 
     def parse_entry(self, ref_name: str, schema: Dict) -> Tuple[DefinitionItem,
@@ -392,8 +387,8 @@ class OntologyCodeGenerator:
             schema: Dictionary containing specifications for an entry.
 
         Returns: extracted entry information: entry package string, entry
-        filename, entry class entry_name, generated entry code and entry attribute
-        names.
+        filename, entry class entry_name, generated entry code and entry
+        attribute names.
         """
         name = schema["namespace"]
         # reading the entry definition dictionary
@@ -426,7 +421,7 @@ class OntologyCodeGenerator:
         return entry_item, list(properties.keys())
 
     def parse_type(self, type_):
-        if type(type_) == str:
+        if isinstance(type_, str):
             return self.ref_to_namespace[type_]
         refs = type_['$ref'].split('/')[1:]
         return f'"{refs[1]}"' if len(refs) == 2 else self.parse_ref_type(refs)

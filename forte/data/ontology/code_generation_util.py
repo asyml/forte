@@ -1,6 +1,6 @@
 import os
 from collections import OrderedDict
-from typing import Dict, List, Optional, Any
+from typing import List, Optional, Any
 
 
 class Config:
@@ -28,15 +28,17 @@ def empty_lines(num: int):
 
 
 class Item:
-    def __init__(self, name: str, description: str):
+    def __init__(self, name: str, description: Optional[str]):
         self.name: str = name
-        self.description: str = description
+        self.description: Optional[str] = description
 
     def type_name(self):
         return self.name
 
     def to_description(self, level: int) -> Optional[str]:
-        return ''
+        if self.description is not None:
+            return indent_code([self.description], level)
+        return None
 
     def to_code(self, level: int) -> str:
         raise NotImplementedError
@@ -119,7 +121,7 @@ class DefinitionItem(Item):
         self.properties: List[Property] = \
             [] if properties is None else properties
         self.description = description if description else None
-        self.init_args = init_args
+        self.init_args = init_args if init_args is not None else ''
 
     def to_init_code(self, level: int) -> str:
         return indent_line(f"def __init__(self, {self.init_args}):", level)
@@ -168,7 +170,7 @@ class FileItem:
         self.entry_file_exists = os.path.exists(entry_file)
 
     def to_code(self, level: int) -> str:
-        lines = []
+        lines: List[str] = []
         if not self.entry_file_exists:
             lines = [self.to_description(0),
                      self.to_import_code(0),
@@ -186,4 +188,3 @@ class FileItem:
         for import_ in self.imports:
             imports_set[f"import {import_}"] = None
         return indent_code(list(imports_set), level)
-

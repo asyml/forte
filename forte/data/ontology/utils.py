@@ -5,9 +5,11 @@ import os
 from importlib import util as import_util
 from pathlib import Path
 from pydoc import locate
+from typing import Optional
 
 
-def get_user_objects_from_module(module_str, custom_dirs=None):
+def get_user_objects_from_module(module_str: str,
+                                 custom_dirs: Optional[str] = None):
     """
     Args:
         module_str: Module in the form of string, package.module.
@@ -19,21 +21,22 @@ def get_user_objects_from_module(module_str, custom_dirs=None):
 
     """
     module = locate(module_str)
-    if module is None:
-        if custom_dirs is not None:
-            module_file = module_str.replace('.', '/') + '.py'
-            for dir_ in custom_dirs:
-                filepath = os.path.join(dir_, module_file)
-                try:
-                    spec = import_util.spec_from_file_location(module_str,
-                                                               filepath)
-                    module = import_util.module_from_spec(spec)
-                    spec.loader.exec_module(module)
-                except Exception:
-                    continue
-                return module.__all__
-        return []
-    return module.__all__
+    if module is not None and hasattr(module, '__all__'):
+        return module.__all__
+    objects = []
+    if custom_dirs is not None:
+        module_file = module_str.replace('.', '/') + '.py'
+        for dir_ in custom_dirs:
+            filepath = os.path.join(dir_, module_file)
+            try:
+                spec = import_util.spec_from_file_location(module_str,
+                                                           filepath)
+                module = import_util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                objects = module.__all__
+            except (FileNotFoundError, AttributeError):
+                continue
+    return objects
 
 
 def search_in_dirs(file, dirs_paths):
