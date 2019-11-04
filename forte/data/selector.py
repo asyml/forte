@@ -21,9 +21,8 @@ class Selector(Generic[InputPackType, OutputPackType]):
 
 
 class DummySelector(Selector[InputPackType, InputPackType]):
-    """
-    Do nothing, return the data pack itself, which can be either DataPack
-    or MultiPack
+    r"""Do nothing, return the data pack itself, which can be either DataPack or
+    MultiPack
     """
 
     # pylint: disable=no-self-use
@@ -37,9 +36,7 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
 
 
 class NameMatchSelector(SinglePackSelector):
-    """
-    Select a DataPack from a MultiPack with specified name
-    """
+    r"""Select a DataPack from a MultiPack with specified name"""
 
     def __init__(self, select_name: str):
         super().__init__()

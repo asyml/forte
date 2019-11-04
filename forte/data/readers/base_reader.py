@@ -46,18 +46,16 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 try to read an datapack from the first line of the caching file.
                 If ``False``, the reader will only read from the original file
                 and use the cache file path only for output.
-            cache_directory (str, optional): The path of the caching file. If
-                :attr:`cache_file_path` is ``None`` and
-                :attr:`self._cache_directory` is not ``None``, use the result
-                of :meth:`_get_cache_location_for_file_path`. If both
-                :attr:`cache_file_path` and :attr:`self._cache_directory`
-                are ``None``, will not read from or write to a caching file.
+            cache_directory (str, optional): The base directory to place the
+                path of the caching files. Each collection is contained in one
+                cached file, under this directory. The cached location for each
+                collection is computed by :meth:`_cache_key_function`. Note:
+                A collection is the data returned by :meth:`_collect`.
             append_to_cache (bool, optional): Decide whether to append write
                 if cache file already exists.  By default (``False``), we
                 will overwrite the existing caching file. If ``True``, we will
                 cache the datapack append to end of the caching file.
     """
-
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
@@ -107,7 +105,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         Calls the _parse_pack method to create packs from the collection.
         This internally setup the component meta data. Users should implement
-        the :meth: ``_parse_pack`` method.
+        the :meth:`_parse_pack` method.
 
         Args:
             collection:

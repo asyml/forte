@@ -75,7 +75,7 @@ class OntonotesReader(PackReader):
                     document_id = conll_components[0]
                     part_id = int(conll_components[1])
                     word = conll_components[3]
-                    pos_tag = conll_components[4]
+                    pos = conll_components[4]
                     lemmatised_word = conll_components[6]
                     framenet_id = conll_components[7]
                     word_sense = conll_components[8]
@@ -87,7 +87,7 @@ class OntonotesReader(PackReader):
                     word_end = offset + len(word)
 
                     # add tokens
-                    kwargs_i: Dict[str, Any] = {"pos": pos_tag,
+                    kwargs_i: Dict[str, Any] = {"pos": pos,
                                                 "sense": word_sense}
                     token = Token(pack, word_begin, word_end)
                     token.set_fields(**kwargs_i)

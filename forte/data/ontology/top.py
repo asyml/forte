@@ -1,5 +1,5 @@
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type
+from typing import Optional, Set, Tuple, Type, Any
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
@@ -121,8 +121,9 @@ class Link(BaseLink):
         parent (Entry, optional): the parent entry of the link.
         child (Entry, optional): the child entry of the link.
     """
-    ParentType: Type[Entry]
-    ChildType: Type[Entry]
+    # this type Any is needed since subclasses of this class will have new types
+    ParentType: Any = Entry
+    ChildType: Any = Entry
 
     def __init__(
             self,
@@ -288,10 +289,8 @@ class MultiPackLink(BaseLink):
     have one additional index on which pack it comes from.
     """
 
-    ParentType: Type[SubEntry]
-    """The parent type of this link."""
-    ChildType: Type[SubEntry]
-    """The Child type of this link."""
+    ParentType = SubEntry
+    ChildType = SubEntry
 
     def __init__(
             self,
@@ -306,15 +305,10 @@ class MultiPackLink(BaseLink):
             an entry.
             child:
         """
-        super().__init__(pack, parent, child)
-
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
 
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
+        super().__init__(pack, parent, child)
 
     @property
     def parent(self) -> Tuple[int, int]:
