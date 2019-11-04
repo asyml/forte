@@ -28,7 +28,7 @@ hidden state of each token to the label compatibility space, which is called
 While we choose to define the label compatibility score as a matrix (with 
 shape `[label_cnt, label_cnt]`), which is a more general definition as far as we know. Also, this
 definition brings less parameters. Fortunately, this 
-implementation is provided by AllenNLP already so we don't need to rebuild the wheel. we don't 
+implementation is provided by AllenNLP already so we don't need to rebuild the wheel. We don't
 apply any label transition restriction since we believe the model should be able to learn such 
 restriction from data itself.
 
@@ -40,7 +40,7 @@ You need to install the [Texar-pytorch](https://github.com/asyml/texar-pytorch) 
 
 
 For data part, put the CONLL03 english data in the corresponding directory (`train_path`, `val_path`, and `test_path`)
-specified in `config_data.py`. The required data format is the same as the official codebase
+specified in `config_data.py`. The data format is the same as the official codebase
 (https://github.com/XuezheMax/NeuroNLP2#data-format).
  
 Then simply run
@@ -49,7 +49,7 @@ python main_train.py
 ```
 
 The resource will be saved under `resource_dir` (specified in `config_model.yml`) with file name 
-`resources.pkl` and the model will be saved in `model_path`. (also specified in `config_model.py`)
+`resources.pkl` and the model will be saved in `model_path`. (also specified in `config_model.yml`)
 
 To run prediction using a trained model, run
 
@@ -58,4 +58,15 @@ python main_predict.py
 ```
 
 In the above script, we first load the resource then create a pipeline with CoNLL03 Reader and 
-Predictor. We then run this pipeline on the test dataset.  
+Predictor. We then run this pipeline on the test dataset.
+
+# Results
+
+The default configuration provided in `config_data.yml` runs for 200 epochs and takes around 5.5 
+hours to train on a single GeForce GTX 1080 Ti with 11GB of GPU memory. You should be able to 
+achieve the following results during training. 
+
+```bash
+INFO:forte.trainer.ner_trainer:Best val acc:  98.900, precision: 95.040, recall: 94.720, F1: 94.880, epoch=129
+INFO:forte.trainer.ner_trainer:Best test acc:  98.010, precision:  91.430, recall:  91.450, F1:  91.440, epoch=129
+```    

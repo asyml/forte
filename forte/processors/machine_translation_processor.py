@@ -9,8 +9,10 @@ from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data import DataPack, MultiPack
-from forte.data.ontology import base_ontology
-from forte.processors.base import MultiPackProcessor, ProcessInfo
+from forte.processors.base import MultiPackProcessor
+from forte.common.types import DataRequest
+
+from ft.onto.base_ontology import Document, Utterance
 
 __all__ = [
     "MachineTranslationProcessor"
@@ -23,7 +25,6 @@ class MachineTranslationProcessor(MultiPackProcessor):
 
     def __init__(self) -> None:
         super().__init__()
-        self._ontology = base_ontology
         self.microsoft_translate_url = \
             "https://api.cognitive.microsofttranslator.com/translate"
         self.microsoft_headers_content_type = 'application/json'
@@ -43,16 +44,16 @@ class MachineTranslationProcessor(MultiPackProcessor):
             self.out_pack_name = configs.out_pack_name
 
     # pylint: disable=no-self-use
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
 
         }
 
         return input_info
 
     # pylint: disable=no-self-use
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
+    def _define_output_info(self) -> DataRequest:
+        output_info: DataRequest = {
 
         }
 
@@ -76,8 +77,8 @@ class MachineTranslationProcessor(MultiPackProcessor):
         text = response.json()[0]["translations"][0]["text"]
         pack = DataPack()
 
-        document = base_ontology.Document(pack, 0, len(text))
-        utterance = base_ontology.Utterance(pack, 0, len(text))
+        document = Document(pack, 0, len(text))
+        utterance = Utterance(pack, 0, len(text))
         pack.add_or_get_entry(document)
         pack.add_or_get_entry(utterance)
 

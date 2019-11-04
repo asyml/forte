@@ -4,10 +4,9 @@ The reader that reads plain text data into Datapacks.
 import logging
 from typing import Iterator, List, Union
 
-from forte import config
 from forte.data.data_pack import DataPack
-from forte.data.ontology import base_ontology
 from forte.data.readers.base_reader import PackReader
+from ft.onto.base_ontology import Document
 
 logger = logging.getLogger(__name__)
 
@@ -20,17 +19,6 @@ class StringReader(PackReader):
     """
     :class:`StringReader` is designed to read in a list of string variables.
     """
-
-    def __init__(self):
-        super().__init__()
-        self._ontology = base_ontology
-        self.define_output_info()
-
-    def define_output_info(self):
-        return {
-            self._ontology.Document: [],
-        }
-
     # pylint: disable=no-self-use,unused-argument
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
@@ -49,7 +37,7 @@ class StringReader(PackReader):
         for data in data_strings:
             yield data
 
-    def parse_pack(self, data_source: str) -> DataPack:
+    def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
         """
         Takes a raw string and converts into a DataPack
 
@@ -58,15 +46,11 @@ class StringReader(PackReader):
 
         Returns: DataPack containing Document.
         """
-        config.working_component = self.component_name
-
         pack = DataPack()
 
-        document = base_ontology.Document(
-            pack, 0, len(data_source))
+        document = Document(pack, 0, len(data_source))
         pack.add_or_get_entry(document)
 
         pack.set_text(data_source, replace_func=self.text_replace_operation)
 
-        config.working_component = None
-        return pack
+        yield pack

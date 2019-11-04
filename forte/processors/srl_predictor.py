@@ -1,20 +1,19 @@
 import logging
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
 from forte.data.base import Span
-from forte.data.ontology.ontonotes_ontology import PredicateMention, \
-    PredicateArgument
+from forte.data.data_pack import DataPack
 from forte.common.resources import Resources
-from forte.data import DataPack
-from forte.data.ontology import ontonotes_ontology, base_ontology
+from forte.common.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
-from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
+from ft.onto.base_ontology import (
+    Token, Sentence, PredicateLink, PredicateMention, PredicateArgument)
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +31,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
     An Semantic Role labeler trained according to `He, Luheng, et al.
     "Jointly predicting predicates and arguments in neural semantic role
     labeling." <https://aclweb.org/anthology/P18-2058>`_.
-
-    Note that to use :class:`SRLPredictor`, the :attr:`ontology` of
-    :class:`Pipeline` must be an ontology that includes
-    ``forte.data.ontology.ontonotes_ontology``.
     """
 
     word_vocab: tx.data.Vocab
@@ -45,7 +40,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def __init__(self):
         super().__init__()
 
-        self._ontology = ontonotes_ontology
         self.define_context()
 
         self.batch_size = 4
@@ -55,13 +49,10 @@ class SRLPredictor(FixedSizeBatchProcessor):
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
     def initialize(self,
-                   resource: Resources,  # pylint: disable=unused-argument
-                   configs: HParams):
+                   _: Resources,
+                   configs: Optional[HParams]):
 
-        super().initialize(resource, configs.batcher)
-
-        model_dir = configs.storage_path
-
+        model_dir = configs.storage_path if configs is not None else None
         logger.info("restoring SRL model from %s", model_dir)
 
         self.word_vocab = tx.data.Vocab(
@@ -81,24 +72,12 @@ class SRLPredictor(FixedSizeBatchProcessor):
         self.model.eval()
 
     def define_context(self):
-        self.context_type = base_ontology.Sentence
+        self.context_type = Sentence
 
     # pylint: disable=no-self-use
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
-            base_ontology.Token: []
-        }
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {Token: []}
         return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.PredicateMention:
-                ["pred_type", "span"],
-            self._ontology.PredicateArgument: ["span"],
-            self._ontology.PredicateLink:
-                ["parent", "child", "arg_type"]
-        }
-        return output_info
 
     def predict(self, data_batch: Dict) -> Dict[str, List[Prediction]]:
         text: List[List[str]] = [
@@ -139,17 +118,16 @@ class SRLPredictor(FixedSizeBatchProcessor):
         for predictions in batch_predictions:
             for pred_span, arg_result in predictions:
 
-                pred = data_pack.add_entry(
-                    PredicateMention(data_pack, pred_span.begin, pred_span.end)
+                pred = data_pack.add_entry(PredicateMention(
+                    data_pack, pred_span.begin, pred_span.end)
                 )
 
                 for arg_span, label in arg_result:
-                    arg = data_pack.add_or_get_entry(
-                        PredicateArgument(
+                    arg = data_pack.add_or_get_entry(PredicateArgument(
                             data_pack, arg_span.begin, arg_span.end
                         )
                     )
-                    link = self._ontology.PredicateLink(data_pack, pred, arg)
+                    link = PredicateLink(data_pack, pred, arg)
                     link.set_fields(arg_type=label)
                     data_pack.add_or_get_entry(link)
 

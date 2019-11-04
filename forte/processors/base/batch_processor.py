@@ -4,6 +4,7 @@ from typing import Dict, Optional, Type
 from texar.torch import HParams
 
 from forte.common import Resources
+from forte.common.types import DataRequest
 from forte.data.base_pack import PackType
 from forte.data import DataPack, MultiPack
 from forte.data import slice_batch
@@ -33,6 +34,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     def __init__(self):
         super().__init__()
         self.context_type: Type[Annotation] = self.define_context()
+        self.input_info: DataRequest = self._define_input_info()
+
         self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
@@ -52,6 +55,18 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         The "context" parameter here has the same meaning as the
         :meth:`get_data()` function in class :class:`DataPack`.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _define_input_info(self) -> DataRequest:
+        """
+        User should define the input_info for the batch processors here. The
+        input info will be used to get batched data for this processor.
+
+        The request here has the same meaning as the
+        :meth:`get_data()` function in class :class:`DataPack`.
+
         """
         raise NotImplementedError
 
@@ -80,20 +95,22 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         Returns:
 
         """
-        if input_pack.meta.cache_state == self.component_name:
-            input_pack = None  # type: ignore
-        else:
-            input_pack.meta.cache_state = self.component_name
-
         if self.use_coverage_index:
             self.prepare_coverage_index(input_pack)
+
         for batch in self.batcher.get_batch(
                 input_pack, self.context_type, self.input_info):
             pred = self.predict(batch)
             self.pack_all(pred)
-            self.finish_up_packs(-1)
+            self.update_batcher_pool(-1)
         if len(self.batcher.current_batch_sources) == 0:
-            self.finish_up_packs()
+            self.update_batcher_pool()
+
+    def flush(self):
+        for batch in self.batcher.flush():
+            pred = self.predict(batch)
+            self.pack_all(pred)
+            self.update_batcher_pool(-1)
 
     @abstractmethod
     def predict(self, data_batch: Dict) -> Dict:
@@ -138,9 +155,9 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         """
         raise NotImplementedError
 
-    def finish_up_packs(self, end: Optional[int] = None):
+    def update_batcher_pool(self, end: Optional[int] = None):
         """
-        Do finishing work for packs in :attr:`data_pack_pool` from the
+        Update the batcher pool in :attr:`data_pack_pool` from the
         beginning to ``end`` (``end`` is not included).
 
         Args:
@@ -149,6 +166,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
                 (``end`` is not included). If `None`, will finish up all the
                 packs in :attr:`data_pack_pool`.
         """
+        # TODO the purpose of this function is confusing, especially the -1
+        #   argument value.
         if end is None:
             end = len(self.batcher.data_pack_pool)
         self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]

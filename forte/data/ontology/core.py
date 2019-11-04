@@ -4,23 +4,21 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
-from typing import (
-    Iterable, Optional, Set, Type, Hashable,
-    TypeVar, Generic)
+from typing import Iterable, Optional, Set, Type, Hashable, TypeVar, Generic
 
-from forte.data.base import Indexable
-from forte.data.container import EntryContainer
-from forte.utils import get_full_module_name
-from forte.common.const import default_component
+from forte.data.container import ContainerType
 
 __all__ = [
     "Entry",
     "BaseLink",
     "BaseGroup",
+    "LinkType",
+    "GroupType",
+    "EntryType",
 ]
 
 
-class Entry(Indexable):
+class Entry(Generic[ContainerType]):
     """
         The base class inherited by all NLP entries. This is the main data type
         for all in-text NLP analysis results. The main sub-types are
@@ -39,56 +37,60 @@ class Entry(Indexable):
             pack: Each entry should be associated with one pack upon creation.
     """
 
-    def __init__(self, pack: EntryContainer):
+    def __init__(self, pack: ContainerType):
         super(Entry, self).__init__()
 
-        self._tid: str
-
-        self.__component: str = default_component
-        self.__modified_fields: Set[str] = set()
+        self._tid: int = -1
 
         # The Entry should have a reference to the data pack, and the data pack
         # need to store the entries. In order to resolve the cyclic references,
         # we create a generic class EntryContainer to be the place holder of
         # the actual. Whether this entry can be added to the pack is delegated
         # to be checked by the pack.
-        self.__pack: EntryContainer = pack
+        self.__pack: ContainerType = pack
+        self.__field_modified: Set[str] = set()
         pack.validate(self)
 
+    def __getstate__(self):
+        """
+        In serialization:
+         - The pack is not serialize, and it will be set by the container.
+
+        This also implies that it is not advised to serialize an entry on its
+        own, without the Container as the context, there is little semantics
+        remained in an entry.
+        """
+        state = self.__dict__.copy()
+        state.pop('_Entry__pack')
+        state.pop('_Entry__field_modified')
+        return state
+
+    def __setstate__(self, state):
+        # Recover the internal __field_modified dict for the entry.
+        # NOTE: the __pack will be set via set_pack from the Pack side.
+        self.__dict__['_Entry__field_modified'] = set()
+        self.__dict__.update(state)
+
     @property
-    def tid(self):
+    def tid(self) -> int:
         return self._tid
 
-    @property
-    def component(self):
-        return self.__component
-
-    def set_component(self, component: str):
+    def set_tid(self):
         """
-        Set the component of the creator of this entry.
-
-        Args:
-            component: The component name of the creator (processor or reader).
-
-        Returns:
-
+        Set the entry id with the auto-increment manager
         """
-        self.__component = component
+        # self._tid = f"{get_full_module_name(self)}.{tid}"
+        self._tid = self.pack.get_next_id()
 
-    def set_tid(self, tid: str):
-        """
-        Set the entry id.
-
-        To avoid duplicate, we use the full module path and class name as the
-        prefix of ``tid``. A pack-level unique ``tid`` is automatically
-        assigned when you add an entry to a pack, so users are **not** suggested
-        to set ``tid`` directly.
-        """
-        self._tid = f"{get_full_module_name(self)}.{tid}"
+    def attach(self, pack: ContainerType):
+        self.__pack = pack
 
     @property
-    def pack(self) -> EntryContainer:
+    def pack(self) -> ContainerType:
         return self.__pack
+
+    def set_pack(self, pack: ContainerType):
+        self.__pack = pack
 
     def set_fields(self, **kwargs):
         """
@@ -103,7 +105,7 @@ class Entry(Indexable):
 
         """
         for field_name, field_value in kwargs.items():
-            # TODO: This is wrong, absense of attribute is treated the same as
+            # TODO: This is wrong, absence of attribute is treated the same as
             #  the attribute being None. We need to really identify
             #  whether the field exists to disallow users adding unknown fields.
             # if not hasattr(self, field_name):
@@ -112,7 +114,19 @@ class Entry(Indexable):
             #         f"has no attribute {field_name}"
             #     )
             setattr(self, field_name, field_value)
-            self.__modified_fields.add(field_name)
+            if self.tid == -1:
+                # This means the entry is not part of any data pack yet, we
+                # remember the field modification for now.
+                self.__field_modified.add(field_name)
+            else:
+                # We add the record to the system.
+                self.__pack.add_field_record(self.tid, field_name)
+
+    def get_fields_modified(self) -> Set[str]:
+        return self.__field_modified
+
+    def reset_fields_modified(self):
+        self.__field_modified.clear()
 
     def get_field(self, field_name):
         return getattr(self, field_name)
@@ -145,7 +159,7 @@ EntryType = TypeVar("EntryType", bound=Entry)
 class BaseLink(Entry, ABC):
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: ContainerType,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
@@ -216,7 +230,7 @@ class BaseLink(Entry, ABC):
         return hash((type(self), self.get_parent(), self.get_child()))
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 
@@ -233,13 +247,13 @@ class BaseGroup(Entry, Generic[EntryType]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: ContainerType,
             members: Optional[Set[EntryType]] = None,
     ):
         super().__init__(pack)
 
         # Store the group member's id.
-        self._members: Set[str] = set()
+        self._members: Set[int] = set()
         if members is not None:
             self.add_members(members)
 
@@ -322,7 +336,7 @@ class BaseGroup(Entry, Generic[EntryType]):
         return member_entries
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 

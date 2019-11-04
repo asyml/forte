@@ -7,6 +7,11 @@ Data
 Ontology
 ==========
 
+base
+----------
+.. autoclass:: forte.data.base.Span
+    :members:
+
 core
 ----------
 .. autoclass:: forte.data.ontology.core.Entry
@@ -18,10 +23,6 @@ core
 .. autoclass:: forte.data.ontology.core.BaseGroup
     :members:
 
-base
-----------
-.. autoclass:: forte.data.base.Span
-    :members:
 
 top
 ----------
@@ -41,61 +42,6 @@ top
     :members:
 
 .. autoclass:: forte.data.ontology.top.SubEntry
-    :members:
-
-
-base_ontology
----------------
-
-.. autoclass:: forte.data.ontology.base_ontology.Document
-    :members:
-
-.. autoclass:: forte.data.ontology.base_ontology.Sentence
-    :members:
-
-.. autoclass:: forte.data.ontology.base_ontology.Token
-    :members:
-
-.. autoclass:: forte.data.ontology.base_ontology.EntityMention
-    :members:
-
-.. autoclass:: forte.data.ontology.base_ontology.PredicateMention
-    :members:
-
-.. autoclass:: forte.data.ontology.base_ontology.PredicateArgument
-    :members:
-
-.. autoclass:: forte.data.ontology.base_ontology.PredicateLink
-    :members:
-
-.. autoclass:: forte.data.ontology.base_ontology.CoreferenceMention
-    :members:
-
-.. autoclass:: forte.data.ontology.base_ontology.CoreferenceGroup
-    :members:
-
-conll03_ontology
------------------
-
-.. autoclass:: forte.data.ontology.conll03_ontology.Token
-    :members:
-
-ontonotes_ontology
-------------------
-
-.. autoclass:: forte.data.ontology.ontonotes_ontology.Token
-    :members:
-
-.. autoclass:: forte.data.ontology.ontonotes_ontology.Sentence
-    :members:
-
-.. autoclass:: forte.data.ontology.ontonotes_ontology.PredicateMention
-    :members:
-
-relation_ontology
-------------------
-
-.. autoclass:: forte.data.ontology.relation_ontology.RelationLink
     :members:
 
 Packs
@@ -119,11 +65,6 @@ Packs
 :hidden:`Meta`
 ------------------------
 .. autoclass:: forte.data.data_pack.Meta
-    :members:
-
-:hidden:`InternalMeta`
-------------------------
-.. autoclass:: forte.data.base_pack.InternalMeta
     :members:
 
 :hidden:`BaseIndex`

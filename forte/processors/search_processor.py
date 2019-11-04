@@ -5,9 +5,11 @@ from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data import DataPack, MultiPack
-from forte.data.ontology import base_ontology
-from forte.processors.base import MultiPackProcessor, ProcessInfo
+from forte.processors.base import MultiPackProcessor
 from forte.indexers import EmbeddingBasedIndexer
+from forte.common.types import DataRequest
+
+from ft.onto.base_ontology import Document
 
 __all__ = [
     "SearchProcessor",
@@ -20,7 +22,6 @@ class SearchProcessor(MultiPackProcessor):
 
     def __init__(self) -> None:
         super().__init__()
-        self._ontology = base_ontology
 
         self.index = EmbeddingBasedIndexer(hparams={
             "index_type": "GpuIndexFlatIP",
@@ -37,20 +38,12 @@ class SearchProcessor(MultiPackProcessor):
             self.k = configs.k or 5
 
     # pylint: disable=no-self-use
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
 
         }
 
         return input_info
-
-    # pylint: disable=no-self-use
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-
-        }
-
-        return output_info
 
     def _process(self, input_pack: MultiPack):
         query_pack = input_pack.get_pack("pack")
@@ -62,7 +55,7 @@ class SearchProcessor(MultiPackProcessor):
         counter = 0
         for doc in documents:
             pack = DataPack()
-            document = self._ontology.Document(pack=pack, begin=0, end=len(doc))
+            document = Document(pack=pack, begin=0, end=len(doc))
             pack.add_entry(document)
             pack.set_text(doc)
             packs[f"doc_{counter}"] = pack

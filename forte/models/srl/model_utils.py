@@ -204,8 +204,7 @@ class CharCNN(tx.ModuleBase):
             pad_length = self._max_filter_width - max_word_len
             embed = torch.cat([embed, embed.new_zeros(
                 *embed.size()[:2], pad_length)], dim=2)
-        kernel_outputs = [kernel(embed) for kernel in
-                          self.cnn_kernels]
+        kernel_outputs = [kernel(embed) for kernel in self.cnn_kernels]
         cnn_output = torch.cat(
             [torch.max(out, dim=2)[0] for out in kernel_outputs], dim=1)
 

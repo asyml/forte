@@ -4,10 +4,10 @@ from typing import Dict, Iterator
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.pipeline_component import PipeComponent
+from forte.pipeline_component import PipelineComponent
 
 
-class BaseTrainer(PipeComponent):
+class BaseTrainer(PipelineComponent):
     def __init__(self):  # pylint: disable=unused-argument
         super().__init__()
         self._stop_train = False

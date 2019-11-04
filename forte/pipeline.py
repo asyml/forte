@@ -6,7 +6,7 @@ from texar.torch.hyperparams import HParams
 
 from forte.base_pipeline import BasePipeline
 from forte.data import DataPack
-from forte.utils import get_class
+from forte.utils import get_class, create_class_with_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,17 @@ class Pipeline(BasePipeline[DataPack]):
         Returns:
 
         """
-        # HParams cannot create HParams from the inner dict of list
+        if "Reader" not in configs or configs["Reader"] is None:
+            raise KeyError('No reader in the configuration')
+
+        reader_config = configs["Reader"]
+
+        reader, reader_hparams = create_class_with_kwargs(
+            class_name=reader_config["type"],
+            class_args=reader_config.get("kwargs", {}),
+            h_params=reader_config.get("hparams", {}))
+
+        self.set_reader(reader, reader_hparams)
 
         if "Processors" in configs and configs["Processors"] is not None:
             for processor_configs in configs["Processors"]:
@@ -68,12 +78,3 @@ class Pipeline(BasePipeline[DataPack]):
                 self.add_processor(p, processor_hparams)
 
             self.initialize()
-
-        if "Ontology" in configs.keys() and configs["Ontology"] is not None:
-            module_path = ["__main__",
-                           "nlp.forte.data.ontology"]
-            self.set_ontology(get_class(configs["Ontology"], module_path))
-
-        else:
-            logger.warning("Ontology not specified in config, will use "
-                           "base_ontology by default.")

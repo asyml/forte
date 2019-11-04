@@ -8,8 +8,6 @@ from texar.torch import HParams
 from texar.torch.data import RecordData, DataIterator
 
 from forte.indexers import EmbeddingBasedIndexer
-# from forte.data.ontology import conll03_ontology as conll
-from forte.data.ontology import base_ontology as ontology
 from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
@@ -19,8 +17,10 @@ from forte.processors.machine_translation_processor import \
 from forte.processors.query_creator import QueryCreator
 from forte.processors.search_processor import SearchProcessor
 from forte.data.selector import NameMatchSelector
-from examples.processors.NLTK_processors import \
+from forte.processors.nltk_processors import \
     (NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
+
+from ft.onto.base_ontology import PredicateLink, Sentence
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -112,7 +112,6 @@ def main():
         processor=MachineTranslationProcessor(), config=config.back_translator)
 
     query_pipeline.initialize()
-    query_pipeline.set_ontology(ontology)
 
     for m_pack in query_pipeline.process_dataset():
 
@@ -137,12 +136,12 @@ def main():
         print(colored("Retrieved Document", "green"), pack.text, "\n")
         print(colored("German Translation", "green"),
               m_pack.get_pack("response").text, "\n")
-        for sentence in pack.get(ontology.Sentence):
+        for sentence in pack.get(Sentence):
             sent_text = sentence.text
-            print(colored("base_ontology.Sentence:", 'red'), sent_text, "\n")
+            print(colored("Sentence:", 'red'), sent_text, "\n")
 
             print(colored("Semantic role labels:", 'red'))
-            for link in pack.get(ontology.PredicateLink, sentence):
+            for link in pack.get(PredicateLink, sentence):
                 parent = link.get_parent()
                 child = link.get_child()
                 print(f"  - \"{child.text}\" is role {link.arg_type} of "

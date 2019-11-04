@@ -13,7 +13,7 @@ setuptools.setup(
     long_description=long_description,
     license='Apache License Version 2.0',
 
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(include=['forte.*', 'ft.*']),
     platforms='any',
 
     install_requires=[
@@ -23,15 +23,16 @@ setuptools.setup(
         'jsonpickle',
         'pyyaml',
         'deprecation',
+        'smart-open',
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions', 'allennlp'],
-        'txtgen': ['regex'],
+        'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt'],
         'example': ['termcolor'],
-        'wikipedia': ['mwxml', 'mwtypes']
+        'wikipedia': ['rdflib']
     },
     package_data={
     },
@@ -42,5 +43,5 @@ setuptools.setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
-    ],
+    ]
 )

@@ -3,14 +3,12 @@ import logging
 from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
                     Tuple)
 
-from forte.common.types import EntryType
+from forte.common.types import EntryType, DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
-from forte.data.data_pack import DataPack, DataRequest
+from forte.data.data_pack import DataPack
 from forte.data.index import BaseIndex
 from forte.data.ontology.top import (
-    Annotation, MultiPackGroup, MultiPackLink, SubEntry,
-    MultiPackEntries
-)
+    Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries)
 from forte.data.ontology.core import Entry
 from forte.data.base import Span
 
@@ -30,18 +28,15 @@ MdRequest = Dict[
 
 
 class MultiPackMeta(BaseMeta):
-    """
-    Meta information of a MultiPack.
-    """
+    r"""Meta information of a MultiPack."""
 
     def __init__(self):
         super().__init__()
 
 
-class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
-    """
-    A :class:`MultiPack' contains multiple DataPacks and a
-    collection of cross-pack entries (annotations, links, and groups)
+class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
+    r"""A :class:`MultiPack' contains multiple DataPacks and a collection of
+    cross-pack entries (links, and groups)
     """
 
     def __init__(self):
@@ -59,12 +54,33 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
 
         self.__default_pack_prefix = '_pack'
 
-    def subentry(self, pack_index: int, entry: Entry):
-        return SubEntry(self, pack_index, entry.tid)
+    def __getstate__(self):
+        r"""In serialization,
+            - will not serialize the indexes
+        """
+        state = self.__dict__.copy()
+        state.pop('index')
+        return state
+
+    def __setstate__(self, state):
+        r"""In deserialization, we
+            - initialize the indexes.
+        """
+        self.__dict__.update(state)
+        self.index = BaseIndex()
+
+        for a in self.links:
+            a.set_pack(self)
+
+        for a in self.groups:
+            a.set_pack(self)
 
     # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
+
+    def subentry(self, pack_index: int, entry: Entry):
+        return SubEntry(self, pack_index, entry.tid)
 
     def get_span_text(self, span: Span):  # pylint: disable=no-self-use
         raise ValueError(
@@ -112,10 +128,9 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             yield pack_name, pack
 
     def rename_pack(self, old_name: str, new_name: str):
-        """
-        Rename the pack to a new name. If the new_name is already taken, a
-        ValueError will be raised. If the old_name is not found, then a KeyError
-        will be raised just as missing value from a dictionary.
+        r"""Rename the pack to a new name. If the new_name is already taken, a
+        ``ValueError`` will be raised. If the old_name is not found, then a
+        ``KeyError`` will be raised just as missing value from a dictionary.
 
         Args:
             old_name: The old name of the pack.
@@ -140,8 +155,7 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             request: Optional[DataRequest] = None,
             skip_k: int = 0
     ) -> Iterator[Dict[str, Any]]:
-        """
-        Get pack data from one of the packs specified by the name. This is
+        r"""Get pack data from one of the packs specified by the name. This is
         equivalent to calling the :meth: `get_data` in :class: `DataPack`.
 
         Args:
@@ -175,7 +189,7 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             self,
             request: MdRequest,
     ):
-        """
+        r"""
         Example:
 
             .. code-block:: python
@@ -186,7 +200,7 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
                             "component": ["dummy"],
                             "fields": ["speaker"],
                         },
-                    base_ontology.Token: ["pos_tag", "sense""],
+                    base_ontology.Token: ["pos", "sense""],
                     base_ontology.EntityMention: {
                         "unit": "Token",
                     },
@@ -219,9 +233,8 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
         pass
 
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        """
-        Try to add an :class:`Entry` object to the :class:`Multipack` object.
-        If a same entry already exists, will return the existing entry
+        r"""Try to add an :class:`Entry` object to the :class:`Multipack`
+        object. If a same entry already exists, will return the existing entry
         instead of adding the new one. Note that we regard two entries to be
         same if their :meth:`eq` have the same return value, and users could
         override :meth:`eq` in their custom entry classes.
@@ -244,12 +257,9 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             )
 
         if entry not in target:
-            # add the entry to the target entry list
-            entry_cls = entry.__class__
-            entry.set_tid(str(self.internal_metas[entry_cls].id_counter))
-            target.append(entry)
+            self.record_entry(entry)
 
-            self.internal_metas[entry_cls].id_counter += 1
+            target.append(entry)
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
@@ -264,8 +274,8 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
         return target[target.index(entry)]
 
     def add_entry(self, entry: EntryType) -> EntryType:
-        """
-        Force add an :class:`Entry` object to the :class:`MultiPack` object.
+        r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
+
         Allow duplicate entries in a datapack.
 
         Args:
@@ -285,17 +295,14 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
             )
 
         # add the entry to the target entry list
-        name = entry.__class__
-        entry.set_tid(str(self.internal_metas[name].id_counter))
+        entry.set_tid()
+        self.add_entry_creation_record(entry.tid)
         target.append(entry)
-        self.internal_metas[name].id_counter += 1
         return entry
 
-    def get_entry(self, tid: str) -> EntryType:
-        """
-        Look up the entry_index with key ``tid``.
-        """
-        entry = self.index.entry_index.get(tid)
+    def get_entry(self, tid: int) -> EntryType:
+        r"""Look up the entry_index with key ``tid``."""
+        entry = self.index.get_entry(tid)
         if entry is None:
             raise KeyError(
                 f"There is no entry with tid '{tid}'' in this datapack")
@@ -311,8 +318,3 @@ class MultiPack(BasePack[SubEntry, MultiPackLink, MultiPackGroup]):
 
     def view(self):
         return copy.deepcopy(self)
-
-    def record_fields(self, fields: List[str], entry_type: Type[EntryType],
-                      component: str):
-        for pack in self._packs:
-            pack.record_fields(fields, entry_type, component)

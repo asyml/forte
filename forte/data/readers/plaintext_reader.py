@@ -6,8 +6,8 @@ from typing import Iterator, Any
 
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
-from forte.data.ontology import base_ontology
 from forte.data.readers.base_reader import PackReader
+from ft.onto.base_ontology import Document
 
 __all__ = [
     "PlainTextReader",
@@ -18,10 +18,6 @@ class PlainTextReader(PackReader):
     """
     :class:`PlainTextReader` is designed to read in plain text dataset.
     """
-
-    def __init__(self):
-        super().__init__()
-        self._ontology = base_ontology
 
     # pylint: disable=no-self-use
     def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
@@ -39,16 +35,11 @@ class PlainTextReader(PackReader):
     def _cache_key_function(self, text_file: str) -> str:
         return os.path.basename(text_file)
 
-    def define_output_info(self):
-        return {
-            self._ontology.Document: [],
-        }
-
     # pylint: disable=no-self-use,unused-argument
     def text_replace_operation(self, text: str):
         return []
 
-    def parse_pack(self, file_path: str) -> DataPack:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
 
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:
@@ -56,9 +47,8 @@ class PlainTextReader(PackReader):
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
-        document = self._ontology.Document(pack,  # type: ignore
-                                           0, len(pack.text))
+        document = Document(pack, 0, len(pack.text))
         pack.add_or_get_entry(document)
 
         pack.meta.doc_id = file_path
-        return pack
+        yield pack

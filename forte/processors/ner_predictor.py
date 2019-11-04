@@ -2,7 +2,7 @@
 import logging
 import os
 import pickle
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
 import torch
@@ -11,12 +11,13 @@ from texar.torch.hyperparams import HParams
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.common.evaluation import Evaluator
 from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
+from forte.common.types import DataRequest
 from forte.data.datasets.conll import conll_utils
-from forte.data.ontology import conll03_ontology as conll
+from forte.data.ontology import Annotation
 from forte.models.ner import utils
-from forte.processors.base import ProcessInfo
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
+from ft.onto.base_ontology import Token, Sentence, EntityMention
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
        <https://arxiv.org/abs/1603.01354>`_.
 
        Note that to use :class:`CoNLLNERPredictor`, the :attr:`ontology` of
-       :class:`Pipeline` must be an ontology that includes
-       ``forte.data.ontology.conll03_ontology``.
+       :class:`Pipeline` must be an ontology that include
+       ``ft.onto.base_ontology.Token`` and ``ft.onto.base_ontology.Sentence``.
     """
 
     def __init__(self):
@@ -45,28 +46,20 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         self.train_instances_cache = []
 
-        self._ontology = conll
-        self.input_info = self._define_input_info()
-        self.define_context()
-
         self.batch_size = 3
         self.batcher = self.define_batcher()
 
-    def define_context(self):
-        self.context_type = self._ontology.Sentence
+    # pylint: disable=no-self-use
+    def define_context(self) -> Type[Annotation]:
+        return Sentence
 
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
-            self._ontology.Token: [],
-            self._ontology.Sentence: [],
+    # pylint: disable=no-self-use
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
+            Token: [],
+            Sentence: [],
         }
         return input_info
-
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
-            self._ontology.EntityMention: ["ner_type", "span"],
-        }
-        return output_info
 
     def initialize(self, resource: Resources, configs: HParams):
 
@@ -145,7 +138,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         word, char, masks, unused_lengths = batch_data
         preds = self.model.decode(word, char, mask=masks)
 
-        pred: Dict = {"Token": {"ner_tag": [], "tid": []}}
+        pred: Dict = {"Token": {"ner": [], "tid": []}}
 
         for i in range(len(tokens["tid"])):
             tids = tokens["tid"][i]
@@ -153,7 +146,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             for j in range(len(tids)):
                 ner_tags.append(self.ner_alphabet.get_instance(preds[i][j]))
 
-            pred["Token"]["ner_tag"].append(np.array(ner_tags))
+            pred["Token"]["ner"].append(np.array(ner_tags))
             pred["Token"]["tid"].append(np.array(tids))
 
         return pred
@@ -165,11 +158,12 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
+    # pylint: disable=no-self-use
     def pack(self, data_pack: DataPack,
              output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
         """
         Write the prediction results back to datapack. by writing the predicted
-        ner_tag to the original tokens.
+        ner to the original tokens.
         """
 
         if output_dict is None:
@@ -180,16 +174,15 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         for i in range(len(output_dict["Token"]["tid"])):
             # an instance
             for j in range(len(output_dict["Token"]["tid"][i])):
-                tid = output_dict["Token"]["tid"][i][j]
+                tid: int = output_dict["Token"]["tid"][i][j]  # type: ignore
 
-                orig_token: conll.Token = data_pack.get_entry(  # type: ignore
-                    tid)
-                ner_tag: str = output_dict["Token"]["ner_tag"][i][j]
+                orig_token: Token = data_pack.get_entry(tid)  # type: ignore # pylint: disable=line-too-long
+                ner_tag: str = output_dict["Token"]["ner"][i][j]
 
-                orig_token.set_fields(ner_tag=ner_tag)
+                orig_token.set_fields(ner=ner_tag)
 
                 token = orig_token
-                token_ner = token.get_field("ner_tag")
+                token_ner = token.get_field("ner")
                 if token_ner[0] == "B":
                     current_entity_mention = (token.span.begin, token_ner[2:])
                 elif token_ner[0] == "I":
@@ -202,15 +195,16 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                         continue
 
                     kwargs_i = {"ner_type": current_entity_mention[1]}
-                    entity = self._ontology.EntityMention(
-                        data_pack, current_entity_mention[0], token.span.end)
+                    entity = EntityMention(data_pack,
+                                           current_entity_mention[0],
+                                           token.span.end)
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
                 elif token_ner[0] == "S":
                     current_entity_mention = (token.span.begin, token_ner[2:])
                     kwargs_i = {"ner_type": current_entity_mention[1]}
-                    entity = self._ontology.EntityMention(
-                        data_pack, current_entity_mention[0], token.span.end)
+                    entity = EntityMention(data_pack, current_entity_mention[0],
+                                           token.span.end)
                     entity.set_fields(**kwargs_i)
                     data_pack.add_or_get_entry(entity)
 
@@ -294,7 +288,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config: Optional[HParams] = None):
         super().__init__(config)
-        self._ontology = conll
         self.test_component = CoNLLNERPredictor().component_name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
@@ -302,21 +295,21 @@ class CoNLLNEREvaluator(Evaluator):
 
     def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
         pred_getdata_args = {
-            "context_type": conll.Sentence,
+            "context_type": Sentence,
             "request": {
-                conll.Token: {
-                    "fields": ["ner_tag"],
+                Token: {
+                    "fields": ["ner"],
                 },
-                conll.Sentence: [],  # span by default
+                Sentence: [],  # span by default
             },
         }
 
         refer_getdata_args = {
-            "context_type": conll.Sentence,
+            "context_type": Sentence,
             "request": {
-                conll.Token: {
-                    "fields": ["chunk_tag", "pos_tag", "ner_tag"]},
-                conll.Sentence: [],  # span by default
+                Token: {
+                    "fields": ["chunk", "pos", "ner"]},
+                Sentence: [],  # span by default
             }
         }
 

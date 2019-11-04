@@ -1,19 +1,17 @@
 import logging
-from typing import (
-    Dict, Iterable, Iterator, List, Optional, Type, Union,
-    Any, Set, Callable, Tuple)
+from typing import (Dict, Iterable, Iterator, List, Optional, Type, Union, Any,
+                    Set, Callable, Tuple)
 
 import numpy as np
 from sortedcontainers import SortedList
 
-from forte.common.types import EntryType, ReplaceOperationsType
+from forte.common.types import EntryType, ReplaceOperationsType, DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry
 from forte.data.base import Span
+from forte.data.ontology.core import Entry
 from forte.data.ontology.top import (
-    Annotation, Link, Group, SinglePackEntries
-)
+    Annotation, Link, Group, SinglePackEntries, Generic)
 from forte.data import io_utils
 
 logger = logging.getLogger(__name__)
@@ -21,23 +19,22 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "Meta",
     "DataPack",
-    "DataRequest",
 ]
-
-DataRequest = Dict[Type[Entry], Union[Dict, List]]
 
 
 class Meta(BaseMeta):
-    """
-    Meta information of :class:`~forte.data.data_pack.DataPack`.
+    r"""Basic Meta information associated with each instance of
+    :class:`~forte.data.data_pack.DataPack`.
+
+    Args:
+        doc_id:  An unique ID assigned to identify the data pack.
+        language: The language used by this data pack, default is English.
+        span_unit: The unit used for interpreting the Span object of this
+          data pack. Default is character.
     """
 
-    def __init__(
-            self,
-            doc_id: Optional[str] = None,
-            language: str = 'eng',
-            span_unit: str = 'character'
-    ):
+    def __init__(self, doc_id: Optional[str] = None,
+                 language: str = 'eng', span_unit: str = 'character'):
         super().__init__(doc_id)
         self.language = language
         self.span_unit = span_unit
@@ -45,10 +42,9 @@ class Meta(BaseMeta):
 
 class DataPack(BasePack[Entry, Link, Group]):
     # pylint: disable=too-many-public-methods
-    """
-    A :class:`DataPack` contains a piece of natural language text and a
+    r"""A :class:`DataPack` contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural
-    language text could be a document, paragraph or in any other granularity.
+    language text could be a document617, paragraph or in any other granularity.
 
     Args:
         doc_id (str, optional): A universal id of this data pack.
@@ -61,7 +57,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
-        self.query: np.array = None
+        self.generics: List[Generic] = []
 
         self.replace_back_operations: ReplaceOperationsType = []
         self.processed_original_spans: List[Tuple[Span, Span]] = []
@@ -71,56 +67,65 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.meta: Meta = Meta(doc_id)
 
     def __getstate__(self):
-        """
+        r"""
         In serialization,
-        1) will serialize the annotation sorted list as a normal list;
-        2) will not serialize the indexes
+            1) will serialize the annotation sorted list as a normal list;
+            2) will not serialize the indexes
         """
-        state = self.__dict__.copy()
+        state = super(DataPack, self).__getstate__()
         state['annotations'] = list(state['annotations'])
         state.pop('index')
+
         return state
 
     def __setstate__(self, state):
-        """
+        r"""
         In deserialization, we
-        1) transform the annotation list back to a sorted list;
-        2) initialize the indexes.
+            1) transform the annotation list back to a sorted list;
+            2) initialize the indexes.
         """
-        self.__dict__.update(state)
+        super(DataPack, self).__setstate__(state)
         self.annotations = SortedList(self.annotations)
         self.index = DataIndex()
         self.index.update_basic_index(list(self.annotations))
         self.index.update_basic_index(self.links)
         self.index.update_basic_index(self.groups)
 
-    @property
-    def text(self):
-        return self._text
+        for a in self.annotations:
+            a.set_pack(self)
 
-    def get_span_text(self, span: Span):
-        return self._text[span.begin: span.end]
+        for a in self.links:
+            a.set_pack(self)
+
+        for a in self.groups:
+            a.set_pack(self)
+
+        for a in self.generics:
+            a.set_pack(self)
 
     # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)
 
-    @staticmethod
-    def make_poison():
-        """
-            A poison is an object that used denote the end of a data stream.
-            Internally, we use a special poison pack object to indicate there
-            is no more data to consume by downstream.
-        """
-        pack = DataPack('__poison__')
-        pack.set_as_poison()
-        return pack
+    @property
+    def text(self) -> str:
+        r"""Return the text of the data pack"""
+        return self._text
 
-    def set_text(self,
-                 text: str,
-                 replace_func: Optional[
-                     Callable[[str], ReplaceOperationsType]] = None
-                 ):
+    def get_span_text(self, span: Span) -> str:
+        r"""Get the text in the data pack contained in the span
+
+        Args:
+            span (Span): Span object which contains a `begin` and an `end` index
+
+        Returns:
+            The text within this span
+        """
+        return self._text[span.begin: span.end]
+
+    def set_text(
+            self, text: str, replace_func:
+            Optional[Callable[[str], ReplaceOperationsType]] = None):
 
         if len(self._text) > 0:
             logger.warning("The new text is overwriting the original one, "
@@ -129,37 +134,17 @@ class DataPack(BasePack[Entry, Link, Group]):
         span_ops = [] if replace_func is None else replace_func(text)
 
         # The spans should be mutually exclusive
-        self._text, \
-        self.replace_back_operations, \
-        self.processed_original_spans, \
-        self.orig_text_len = \
-            io_utils.modify_text_and_track_ops(text, span_ops)
-
-    def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        """
-        Try to add an :class:`~forte.data.ontology.top.Entry` object to
-        the :class:`DataPack` object.
-        If a same entry already exists, will return the existing entry
-        instead of adding the new one. Note that we regard two entries as the
-        same if their :meth:`~forte.data.ontology.top.Entry.eq` have
-        the same return value, and users could
-        override :meth:`~forte.data.ontology.top.Entry.eq` in their
-        custom entry classes.
-
-        Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-                object to be added to the pack.
-
-        Returns:
-            If a same entry already exists, returns the existing
-            entry. Otherwise, return the (input) entry just added.
-        """
-        return self.__add_entry(entry, False)
+        (
+            self._text, self.replace_back_operations,
+            self.processed_original_spans, self.orig_text_len
+        ) = io_utils.modify_text_and_track_ops(text, span_ops)
 
     def get_original_text(self):
-        """Get original unmodified text from the :class:`DataPack` object.
-        :return: Original text after applying the `replace_back_operations`
-        of :class:`DataPack` object to the modified text
+        r"""Get original unmodified text from the :class:`DataPack` object.
+
+        Returns:
+            Original text after applying the `replace_back_operations` of
+            :class:`DataPack` object to the modified text
         """
         original_text, _, _, _ = io_utils.modify_text_and_track_ops(
             self._text, self.replace_back_operations)
@@ -167,8 +152,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def get_original_span(self, input_processed_span: Span,
                           align_mode: str = "relaxed"):
-        """
-        Function to obtain span of the original text that aligns with the
+        r"""Function to obtain span of the original text that aligns with the
         given span of the processed text.
 
         Args:
@@ -224,7 +208,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         def get_original_index(input_index: int, is_begin_index: bool,
                                mode: str) -> int:
-            """
+            r"""
             Args:
                 input_index: begin or end index of the input span
                 is_begin_index: if the index is the begin index of the input
@@ -286,10 +270,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         return Span(orig_begin, orig_end)
 
     def add_entry(self, entry: EntryType) -> EntryType:
-        """
-        Force add an :class:`~forte.data.ontology.top.Entry` object to
-        the :class:`DataPack` object.
-        Allow duplicate entries in a pack.
+        r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
+        :class:`DataPack` object. Allow duplicate entries in a pack.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.top.Entry`
@@ -298,12 +280,32 @@ class DataPack(BasePack[Entry, Link, Group]):
         Returns:
             The input entry itself
         """
-        return self.__add_entry(entry, True)
+        return self.__add_entry_with_check(entry, True)
 
-    def __add_entry(self, entry: EntryType,
-                    allow_duplicate: bool = True) -> EntryType:
+    def add_or_get_entry(self, entry: EntryType) -> EntryType:
+        r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
+        :class:`DataPack` object.
+
+        If the same entry already exists, will return the existing entry
+        instead of adding the new one. Note that we regard two entries as the
+        same if their :meth:`~forte.data.ontology.top.Entry.eq` have
+        the same return value, and users could
+        override :meth:`~forte.data.ontology.top.Entry.eq` in their
+        custom entry classes.
+
+        Args:
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+                object to be added to the pack.
+
+        Returns:
+            If a same entry already exists, returns the existing
+            entry. Otherwise, return the (input) entry just added.
         """
-        Internal method to add an :class:`Entry` object to the
+        return self.__add_entry_with_check(entry, False)
+
+    def __add_entry_with_check(self, entry: EntryType,
+                               allow_duplicate: bool = True) -> EntryType:
+        r"""Internal method to add an :class:`Entry` object to the
         :class:`DataPack` object.
 
         Args:
@@ -320,23 +322,22 @@ class DataPack(BasePack[Entry, Link, Group]):
         elif isinstance(entry, Group):
             target = self.groups
         else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
+            target = self.generics
+            # raise ValueError(
+            #     f"Invalid entry type {type(entry)}. A valid entry "
+            #     f"should be an instance of Annotation, Link, or Group."
+            # )
 
         add_new = allow_duplicate or (entry not in target)
 
         if add_new:
-            # add the entry to the target entry list
-            entry.set_tid(str(self.internal_metas[entry.__class__].id_counter))
-            entry.set_component(self._owner_component)
+            self.record_entry(entry)
 
             if isinstance(target, list):
                 target.append(entry)
             else:
+                # For the sorted list case.
                 target.add(entry)
-            self.internal_metas[entry.__class__].id_counter += 1
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
@@ -350,9 +351,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             return target[target.index(entry)]
 
     def delete_entry(self, entry: EntryType):
-        """
-        Delete an :class:`~forte.data.ontology.top.Entry` object from
-        the :class:`DataPack`.
+        r"""Delete an :class:`~forte.data.ontology.top.Entry` object from the
+        :class:`DataPack`.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.top.Entry`
@@ -380,35 +380,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                 break
 
         # update basic index
-        self.index.entry_index.pop(entry.tid)
-        self.index.type_index[type(entry)].remove(entry.tid)
-        self.index.component_index[entry.component].remove(entry.tid)
+        self.index.remove_entry(entry)
+
         # set other index invalid
         self.index.turn_link_index_switch(on=False)
         self.index.turn_group_index_switch(on=False)
         self.index.deactivate_coverage_index()
-
-    def record_fields(self, fields: List[str], entry_type: Type[EntryType],
-                      component: str):
-        """Record in the internal meta that the ``entry_type`` entires generated
-        by ``component`` have ``fields``.
-
-        If ``component`` is "_ALL_", we will record the ``fields`` for all
-        entries of the type ``entry_type`` regardless of their component in
-        the internal meta.
-        """
-        fields.append("tid")
-        if issubclass(entry_type, Annotation):
-            fields.append("span")
-        internal_meta = self.internal_metas[entry_type]
-
-        if component == "_ALL_":
-            for field_set in internal_meta.fields_created.values():
-                field_set.update(fields)
-        else:
-            if internal_meta.default_component is None:
-                internal_meta.default_component = component
-            internal_meta.fields_created[component].update(fields)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
@@ -421,7 +398,8 @@ class DataPack(BasePack[Entry, Link, Group]):
     def get_data(self, context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
                  skip_k: int = 0) -> Iterator[Dict[str, Any]]:
-        """
+        r"""Fetch entries from the data_pack of type `context_type`.
+
         Example:
 
             .. code-block:: python
@@ -432,7 +410,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                             "component": ["dummy"],
                             "fields": ["speaker"],
                         },
-                    base_ontology.Token: ["pos_tag", "sense""],
+                    base_ontology.Token: ["pos", "sense""],
                     base_ontology.EntityMention: {
                         "unit": "Token",
                     },
@@ -442,7 +420,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         Args:
             context_type (str): The granularity of the data context, which
                 could be any ``Annotation`` type.
-            requests (dict): The entry types and fields required.
+            request (dict): The entry types and fields required.
                 The keys of the requests dict are the required entry types
                 and the value should be either:
 
@@ -455,7 +433,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                       is not specified, only the default fields will be
                       returned.
                     - By setting `"component"` (list), users
-                      can specify the components by which the entires are
+                      can specify the components by which the entries are
                       generated. If `"component"` is not specified, will return
                       entries generated by all components.
                     - By setting `"unit"` (string), users can
@@ -464,7 +442,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 Note that for all annotation types, `"text"` and `"span"`
                 fields are returned by default; for all link types, `"child"`
                 and `"parent"` fields are returned by default.
-            offset (int): Will skip the first `offset` instances and generate
+            skip_k (int): Will skip the first `skip_k` instances and generate
                 data from the `offset` + 1 th instance.
 
         Returns:
@@ -488,9 +466,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         context_components, _, context_fields = self._parse_request_args(
             context_type, context_args)
 
-        valid_context_ids = self.get_ids_by_type(context_type)
+        valid_context_ids: Set[int] = self.get_ids_by_type(context_type)
         if context_components:
-            valid_component_id: Set[str] = set()
+            valid_component_id: Set[int] = set()
             for component in context_components:
                 valid_component_id |= self.get_ids_by_component(component)
             valid_context_ids &= valid_component_id
@@ -505,7 +483,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 skipped += 1
                 continue
 
-            data = dict()
+            data: Dict[str, Any] = dict()
             data["context"] = self.text[context.span.begin: context.span.end]
             data["offset"] = context.span.begin
 
@@ -523,8 +501,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                             f"same time is not allowed")
                     data[a_type.__name__] = \
                         self._generate_annotation_entry_data(
-                            a_type, a_args, data, context
-                        )
+                            a_type, a_args, data, context)
+
             if link_types:
                 for l_type, l_args in link_types.items():
                     if l_type.__name__ in data.keys():
@@ -533,8 +511,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                             f"same class name {l_type.__name__} at the "
                             f"same time is not allowed")
                     data[l_type.__name__] = self._generate_link_entry_data(
-                        l_type, l_args, data, context
-                    )
+                        l_type, l_args, data, context)
 
             if group_types:
                 # pylint: disable=unused-variable
@@ -571,15 +548,18 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"The request should be of an iterable type or a dict."
             )
 
-        # check the existence of fields
-        for meta_key, meta_val in self.internal_metas.items():
-            if issubclass(meta_key, a_type):
-                for meta_c, meta_f in meta_val.fields_created.items():
-                    if components is None or meta_c in components:
-                        if not fields.issubset(meta_f):
-                            raise KeyError(
-                                f"The {a_type} generated by {meta_c} doesn't "
-                                f"have the fields requested.")
+        # # check the existence of fields
+        #
+        # self.field_records
+        #
+        # for meta_key, meta_val in self.internal_metas.items():
+        #     if issubclass(meta_key, a_type):
+        #         for meta_c, meta_f in meta_val.fields_created.items():
+        #             if components is None or meta_c in components:
+        #                 if not fields.issubset(meta_f):
+        #                     raise KeyError(
+        #                         f"The {a_type} generated by {meta_c} doesn't "
+        #                         f"have the fields requested.")
 
         fields.add("tid")
         return components, unit, fields
@@ -608,7 +588,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             a_dict["unit_span"] = []
 
         cont_begin = cont.span.begin if cont else 0
-        annotations = self.get_entries(a_type, cont, components)
+        annotations: List[Annotation] = self.get_entries(  # type: ignore
+            a_type, cont, components)
 
         for annotation in annotations:
             # we provide span, text (and also tid) by default
@@ -663,7 +644,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         a_dict["parent"] = []
         a_dict["child"] = []
 
-        links = self.get(a_type, cont, components)
+        links: List[Link] = self.get(a_type, cont, components)  # type: ignore
 
         for link in links:
             parent_type = link.ParentType.__name__
@@ -698,9 +679,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                     range_annotation: Optional[Annotation] = None,
                     components: Optional[Union[str, List[str]]] = None
                     ) -> Iterable[EntryType]:
-        """
-        Get ``entry_type`` entries from the span of ``range_annotation`` in a
-        DataPack.
+        r"""Get ``entry_type`` entries from the span of ``range_annotation`` in
+        a DataPack.
 
         Args:
             entry_type (type): The type of entries requested.
@@ -722,7 +702,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         if components is not None:
             if isinstance(components, str):
                 components = [components]
-            valid_component_id: Set[str] = set()
+            valid_component_id: Set[int] = set()
             for component in components:
                 valid_component_id |= self.get_ids_by_component(component)
             valid_id &= valid_component_id
@@ -758,12 +738,36 @@ class DataPack(BasePack[Entry, Link, Group]):
             entry_type: Type[EntryType],
             range_annotation: Optional[Annotation] = None,
             component: Optional[str] = None) -> Iterable[EntryType]:
+        r"""Get ``entry_type`` entries from the span of ``range_annotation`` in
+        a DataPack generated by component ``component``.
+
+        Example:
+
+            .. code-block:: python
+
+                for sentence in input_pack.get(Sentence):
+                    token_entries = input_pack.get(entry_type=Token,
+                                                   range_annotation=sentence,
+                                                   component=token_component)
+                    ...
+
+            In the above code snippet, we get entries of type ``Token`` within
+            each ``sentence`` which were generated by ``token_component``
+
+        Args:
+            entry_type (type): The type of entries requested.
+            range_annotation (Annotation, optional): The range of entries
+                requested. If `None`, will return valid entries in the range of
+                whole data_pack.
+            component (str or list, optional): The component generating the
+                entries requested. If `None`, will return valid entries
+                generated by any component.
+        """
         return self.get_entries(entry_type, range_annotation, component)
 
 
 class DataIndex(BaseIndex):
-    """
-    A set of indexes used in :class:`DataPack`:
+    r"""A set of indexes used in :class:`DataPack`:
 
     #. :attr:`entry_index`, the index from each tid to the corresponding entry
     #. :attr:`type_index`, the index from each type to the entries of
@@ -786,7 +790,7 @@ class DataIndex(BaseIndex):
     def __init__(self):
         super().__init__()
         self._coverage_index: Dict[Tuple[Type[Annotation], Type[EntryType]],
-                                   Dict[str, Set[str]]] = dict()
+                                   Dict[int, Set[int]]] = dict()
         self._coverage_index_valid = True
 
     @property
@@ -802,9 +806,8 @@ class DataIndex(BaseIndex):
     def coverage_index(
             self,
             outer_type: Type[Annotation],
-            inner_type: Type[EntryType]) -> Optional[Dict[str, Set[str]]]:
-        """
-        Get the coverage index from ``outer_type`` to ``inner_type``.
+            inner_type: Type[EntryType]) -> Optional[Dict[int, Set[int]]]:
+        r"""Get the coverage index from ``outer_type`` to ``inner_type``.
 
         Args:
             outer_type (type): an annotation type.
@@ -824,8 +827,7 @@ class DataIndex(BaseIndex):
             data_pack: DataPack,
             outer_type: Type[Annotation],
             inner_type: Type[EntryType]):
-        """
-        Build the coverage index from ``outer_type`` to ``inner_type``.
+        r"""Build the coverage index from ``outer_type`` to ``inner_type``.
 
         Args:
             data_pack (DataPack): The data pack to build coverage for.
@@ -840,18 +842,18 @@ class DataIndex(BaseIndex):
 
         self._coverage_index[(outer_type, inner_type)] = dict()
         for range_annotation in data_pack.get_entries_by_type(outer_type):
-            entries = data_pack.get_entries(inner_type,
-                                            range_annotation)  # type: ignore
-            entry_ids = {e.tid for e in entries}
-            self._coverage_index[(outer_type,
-                                  inner_type)][range_annotation.tid] = entry_ids
+            if isinstance(range_annotation, Annotation):
+                entries = data_pack.get_entries(inner_type, range_annotation)
+                entry_ids = {e.tid for e in entries}
+                self._coverage_index[
+                    (outer_type, inner_type)][range_annotation.tid] = entry_ids
 
         self.activate_coverage_index()
 
     def have_overlap(self,
-                     entry1: Union[Annotation, str],
-                     entry2: Union[Annotation, str]) -> bool:
-        """Check whether the two annotations have overlap in span.
+                     entry1: Union[Annotation, int],
+                     entry2: Union[Annotation, int]) -> bool:
+        r"""Check whether the two annotations have overlap in span.
 
         Args:
             entry1 (str or Annotation): An :class:`Annotation` object to be
@@ -859,10 +861,10 @@ class DataIndex(BaseIndex):
             entry2 (str or Annotation): Another :class:`Annotation` object to be
                 checked, or the tid of the Annotation.
         """
-        entry1_: Annotation = self.entry_index[
-            entry1] if isinstance(entry1, str) else entry1
-        entry2_: Annotation = self.entry_index[
-            entry2] if isinstance(entry2, str) else entry1
+        entry1_: Annotation = self._entry_index[
+            entry1] if isinstance(entry1, (int, np.integer)) else entry1
+        entry2_: Annotation = self._entry_index[
+            entry2] if isinstance(entry2, (int, np.integer)) else entry1
 
         if not isinstance(entry1_, Annotation):
             raise TypeError(f"'entry1' should be an instance of Annotation,"
@@ -876,24 +878,25 @@ class DataIndex(BaseIndex):
                     entry1_.span.end <= entry2_.span.begin)
 
     def in_span(self,
-                inner_entry: Union[str, Entry],
+                inner_entry: Union[int, Entry],
                 span: Span) -> bool:
-        """
-        Check whether the ``inner entry`` is within the given ``span``.
-        Link entries are considered in a span if both the
-        parent and the child are within the span. Group entries are
-        considered in a span if all the members are within the span.
+        r"""Check whether the ``inner entry`` is within the given ``span``. Link
+        entries are considered in a span if both the parent and the child are
+        within the span. Group entries are considered in a span if all the
+        members are within the span.
 
         Args:
-            inner_entry (str or Entry): The inner entry object to be checked
+            inner_entry (int or Entry): The inner entry object to be checked
              whether it is within ``span``. The argument can be the entry id
              or the entry object itself.
             span (Span): A :class:`Span` object to be checked. We will check
                 whether the ``inner_entry`` is within this span.
         """
-
-        if isinstance(inner_entry, str):
-            inner_entry = self.entry_index[inner_entry]
+        # The reason of this check is that the get_data method will use numpy
+        # integers. This might create problems when other unexpected integers
+        # are used.
+        if isinstance(inner_entry, (int, np.integer)):
+            inner_entry = self._entry_index[inner_entry]
 
         if isinstance(inner_entry, Annotation):
             inner_begin = inner_entry.span.begin

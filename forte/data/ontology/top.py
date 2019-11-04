@@ -1,21 +1,29 @@
 from functools import total_ordering
-from typing import (Optional, Set, Tuple, Type)
+from typing import Optional, Set, Tuple, Type, Any
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
 from forte.data.ontology.core import Entry, BaseLink, BaseGroup
+from forte.data.base_pack import PackType
 from forte.data.base import Span
 
 __all__ = [
+    "Generic",
     "Annotation",
     "Group",
     "Link",
+    "MultiPackGeneric",
     "MultiPackGroup",
     "MultiPackLink",
     "SubEntry",
     "SinglePackEntries",
     "MultiPackEntries",
 ]
+
+
+class Generic(Entry):
+    def __init__(self, pack: PackType):
+        super(Generic, self).__init__(pack=pack)
 
 
 @total_ordering
@@ -26,13 +34,13 @@ class Annotation(Entry):
     in the text.
 
     Args:
-        pack (EntryContainer): The container that this annotation
+        pack (PackType): The container that this annotation
          will be added to.
         begin (int): The offset of the first character in the annotation.
         end (int): The offset of the last character in the annotation + 1.
     """
 
-    def __init__(self, pack: EntryContainer, begin: int, end: int):
+    def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack)
         if begin > end:
             raise ValueError(
@@ -97,7 +105,7 @@ class Annotation(Entry):
         return self.pack.get_span_text(self.span)
 
     @property
-    def index_key(self) -> str:
+    def index_key(self) -> int:
         return self.tid
 
 
@@ -113,17 +121,18 @@ class Link(BaseLink):
         parent (Entry, optional): the parent entry of the link.
         child (Entry, optional): the child entry of the link.
     """
-    ParentType: Type[Entry]
-    ChildType: Type[Entry]
+    # this type Any is needed since subclasses of this class will have new types
+    ParentType: Any = Entry
+    ChildType: Any = Entry
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             parent: Optional[Entry] = None,
             child: Optional[Entry] = None
     ):
-        self._parent: Optional[str] = None
-        self._child: Optional[str] = None
+        self._parent: Optional[int] = None
+        self._child: Optional[int] = None
         super().__init__(pack, parent, child)
 
     # TODO: Can we get better type hint here?
@@ -209,6 +218,7 @@ class Link(BaseLink):
         return self.pack.get_entry(self._child)
 
 
+# pylint: disable=duplicate-bases
 class Group(BaseGroup[Entry]):
     """
     Group is an entry that represent a group of other entries. For example,
@@ -217,8 +227,15 @@ class Group(BaseGroup[Entry]):
     """
     MemberType: Type[Entry] = Entry
 
+    def __init__(
+            self,
+            pack: EntryContainer,
+            members: Optional[Set[Entry]] = None,
+    ):  # pylint: disable=useless-super-delegation
+        super().__init__(pack, members)
 
-class SubEntry(Entry):
+
+class SubEntry(Entry[PackType]):
     """
     This is used to identify an Entry in one of the packs in the
     :class:`Multipack`.
@@ -231,10 +248,10 @@ class SubEntry(Entry):
         entry_id: The tid of the entry in the sub pack.
     """
 
-    def __init__(self, pack: EntryContainer, pack_index: int, entry_id: str):
+    def __init__(self, pack: PackType, pack_index: int, entry_id: int):
         super().__init__(pack)
         self._pack_index: int = pack_index
-        self._entry_id: str = entry_id
+        self._entry_id: int = entry_id
 
     @property
     def pack_index(self):
@@ -254,8 +271,13 @@ class SubEntry(Entry):
                 ) == (type(other), other.pack_index, other.entry)
 
     @property
-    def index_key(self) -> Tuple[int, str]:
+    def index_key(self) -> Tuple[int, int]:
         return self._pack_index, self._entry_id
+
+
+class MultiPackGeneric(Entry):
+    def __init__(self, pack: PackType):
+        super(MultiPackGeneric, self).__init__(pack=pack)
 
 
 class MultiPackLink(BaseLink):
@@ -267,14 +289,12 @@ class MultiPackLink(BaseLink):
     have one additional index on which pack it comes from.
     """
 
-    ParentType: Type[SubEntry]
-    """The parent type of this link."""
-    ChildType: Type[SubEntry]
-    """The Child type of this link."""
+    ParentType = SubEntry
+    ChildType = SubEntry
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             parent: Optional[SubEntry],
             child: Optional[SubEntry],
     ):
@@ -285,24 +305,19 @@ class MultiPackLink(BaseLink):
             an entry.
             child:
         """
+        self._parent: Optional[Tuple[int, int]] = None
+        self._child: Optional[Tuple[int, int]] = None
+
         super().__init__(pack, parent, child)
 
-        self._parent: Optional[Tuple[int, str]] = None
-        self._child: Optional[Tuple[int, str]] = None
-
-        if parent is not None:
-            self.set_parent(parent)
-        if child is not None:
-            self.set_child(child)
-
     @property
-    def parent(self) -> Tuple[int, str]:
+    def parent(self) -> Tuple[int, int]:
         if self._parent is None:
             raise IncompleteEntryError("Parent is not set for this link.")
         return self._parent
 
     @property
-    def child(self) -> Tuple[int, str]:
+    def child(self) -> Tuple[int, int]:
         if self._child is None:
             raise IncompleteEntryError("Child is not set for this link.")
         return self._child
@@ -362,6 +377,7 @@ class MultiPackLink(BaseLink):
         return SubEntry(self.pack, pack_idx, child_tid)
 
 
+# pylint: disable=duplicate-bases
 class MultiPackGroup(BaseGroup[SubEntry]):
     """
     Group type entries, such as "coreference group". Each group has a set
@@ -370,7 +386,7 @@ class MultiPackGroup(BaseGroup[SubEntry]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             members: Optional[Set[SubEntry]],
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)

@@ -6,9 +6,7 @@ import yaml
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.data_pack import DataPack
 from forte.data.base_pack import PackType
-from forte.data.ontology import base_ontology
 from forte.data.readers import BaseReader
 from forte.data.selector import Selector, DummySelector
 from forte.processors.base import BaseProcessor
@@ -21,12 +19,28 @@ __all__ = [
 
 
 class ProcessJob:
-    def __init__(self, step_num: int, pack: PackType):
-        self.step_num = step_num
-        self.pack = pack
+    def __init__(self, step_num: int, pack: Optional[PackType],
+                 is_poison: bool):
+        self.__step_num: int = step_num
+        self.__pack: Optional[PackType] = pack
+        self.__is_poison: bool = is_poison
 
     def increment(self):
-        self.step_num += 1
+        self.__step_num += 1
+
+    @property
+    def step_num(self) -> int:
+        return self.__step_num
+
+    @property
+    def pack(self) -> PackType:
+        if self.__pack is None:
+            raise ValueError("This job do not have a valid pack.")
+        return self.__pack
+
+    @property
+    def is_poison(self) -> bool:
+        return self.__is_poison
 
 
 class ProcessBuffer:
@@ -52,10 +66,10 @@ class ProcessBuffer:
                 raise StopIteration
             try:
                 job_pack = next(self.__data_iter)
-                return ProcessJob(0, job_pack)
+                return ProcessJob(0, job_pack, False)
             except StopIteration:
                 self.__data_exhausted = True
-                return ProcessJob(0, DataPack.make_poison())
+                return ProcessJob(0, None, True)
         else:
             return self.__buffer.pop()
 
@@ -89,15 +103,13 @@ class BasePipeline(Generic[PackType]):
 
     def __init__(self, resource: Optional[Resources] = None):
         self._reader: BaseReader
+        self._reader_config: Optional[HParams]
+
         self._processors: List[BaseProcessor] = []
         self._selectors: List[Selector] = []
 
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
-
-        self.__working_component: str
-
-        self._ontology = base_ontology
 
         if resource is None:
             self.resource = Resources()
@@ -134,28 +146,16 @@ class BasePipeline(Generic[PackType]):
         raise NotImplementedError
 
     def initialize(self):
-        self._reader.initialize(resource=self.resource, configs=None)
+        self._reader.initialize(self.resource, self._reader_config)
         self.initialize_processors()
-
-    def set_ontology(self, ontology):
-        self._ontology = ontology
-        for processor in self.processors:
-            processor.set_ontology(self._ontology)
 
     def initialize_processors(self):
         for processor, config in zip(self.processors, self.processor_configs):
             processor.initialize(self.resource, config)
-            processor.set_ontology(self._ontology)
-            processor.set_input_info()
-            processor.set_output_info()
 
-        if len(self.processors) > 0:
-            # Indicate this as the last processor.
-            self.processors[-1].set_as_last()
-
-    def set_reader(self, reader: BaseReader):
-        # reader.set_ontology(self._ontology)
+    def set_reader(self, reader: BaseReader, config: Optional[HParams] = None):
         self._reader = reader
+        self._reader_config = config
 
     @property
     def processors(self):
@@ -222,6 +222,7 @@ class BasePipeline(Generic[PackType]):
                 path.
         """
         first_pack = []
+
         for p in self._reader.iter(*args, **kwargs):
             first_pack.append(p)
             break
@@ -235,11 +236,17 @@ class BasePipeline(Generic[PackType]):
     def process_dataset(self, *args, **kwargs) -> Iterator[PackType]:
         """
         Process the documents in the data source(s) and return an
-        iterator or list of DataPacks.
+        iterator or list of DataPacks. The arguments are directly passed
+        to the reader to take data from the source.
 
         Args:
-            **kwargs, which can be one or more data sources.
+            *args:
+            **kwargs:
         """
+        # TODO: This is a generator, but the name may be confusing since the
+        #  user might expect this function will do all the processing, if
+        #  this is called like `process_dataset(args)` instead of
+        #  `for p in process_dataset(args)`, this will have no effect.
         data_iter = self._reader.iter(*args, **kwargs)
         return self.process_packs(data_iter)
 
@@ -260,81 +267,17 @@ class BasePipeline(Generic[PackType]):
             yield from data_iter
         else:
             for job in buf:
-                if not job.pack.is_poison():
+                if not job.is_poison:
                     s = self._selectors[job.step_num]
                     for c_pack in s.select(job.pack):
                         self._processors[job.step_num].process(c_pack)
                 else:
                     # Pass the poison pack to the processor, so they know this
                     # is ending.
-                    self._processors[job.step_num].process(job.pack)
+                    self._processors[job.step_num].flush()
 
                 # Put the job back to the process queue, if not success, that
                 # means this job is done processing.
                 if not buf.queue_process(job):
-                    done_pack: PackType = job.pack
-                    if not done_pack.is_poison():
-                        yield done_pack
-
-            # # Keep a list of packs and only release it when all processors
-            # # are done with them.
-            # packs = []
-            #
-            # for pack in data_iter:
-            #     packs.append(pack)
-            #
-            #     for i, (processor, selector) in enumerate(
-            #             zip(self._processors, self._selectors)):
-            #         for p in packs:
-            #             for c_pack in selector.select(p):
-            #                 in_cache = (c_pack.meta.cache_state ==
-            #                             processor.component_name)
-            #                 # TODO: can_process needs double check.
-            #                 # We need to record a step here with a number
-            #                 # instead of a processor component
-            #                 # And we need a clean way to record whether we are
-            #                 # done processing anything, the component_name
-            #                 # is not reliable, especially used together with
-            #                 # a selector.
-            #                 can_process = (
-            #                         i == 0 or c_pack.meta.process_state ==
-            #                         self.processors[i - 1].component_name)
-            #                 if can_process and not in_cache:
-            #                     self.__working_component = \
-            #                         processor.component_name
-            #                     processor.process(c_pack)
-            #
-            #     for p in list(packs):
-            #         # must iterate through a copy of the original list
-            #         # because of the removing operation
-            #         # TODO we'd better add a special component_name instead of
-            #         #   using the previous processor. The can also cause some
-            #         #   indexing problem.
-            #         if (p.meta.process_state ==
-            #                 self.processors[-1].component_name):
-            #             yield p
-            #             packs.remove(p)
-            #
-            # # Now the data iteration is over. We may still have some packs
-            # # that are not fully processed. Now we "flush" them.
-            #
-            # # A special poison pack is added to the end of the data stream. It
-            # # will not be processed by any of the processors, but it will tell
-            # # the processors that the stream ends.
-            # for p in list(packs) + [BasePack.get_poison()]:
-            #     # TODO double check starts
-            #     start = self._processors_index[p.meta.process_state] + 1
-            #     for processor, selector in zip(self._processors[start:],
-            #                                    self._selectors):
-            #         self.__working_component = processor.component_name
-            #
-            #         if not p.is_poison():
-            #             for c_pack in selector.select(p):
-            #                 processor.process(c_pack)
-            #         else:
-            #             processor.process(p)
-            #
-            #     # And we certainly won't return the poison pack.
-            #     if not p.is_poison():
-            #         yield p
-            #     packs.remove(p)
+                    if not job.is_poison:
+                        yield job.pack

@@ -1,32 +1,35 @@
 # This provides a configuration for inference only
 
 Reader:
-  type: PlainSentenceTxtgenReader
-  kwargs: null
+  type: "forte.data.readers.MultiPackSentenceReader"
+  hparams:
+    overwrite_configs:
+      input_pack_name: "input_src"
+      output_pack_name: "output_tgt"
 
 Processors:
-  - type: "forte.processors.TxtgenPredictor"
-    kwargs:
+  - type: "forte.processors.TextGenerationProcessor"
     hparams:
-      config_path:
       overwrite_configs:
         max_decoding_length: 128
         temperature: 0.7
         top_k: 40
-        pretrained_model_name: "117M"
+        pretrained_model_name: "gpt2-small"
         input_pack_name: "input_src"
         output_pack_name: "output_tgt"
-  - type: "forte.processors.impl.NLTKWordTokenizer"
+        batch_size: 64
+  - type: "forte.processors.nltk_processors.NLTKWordTokenizer"
     hparams:
       overwrite_configs:
         selector:
           type: "forte.data.selector.NameMatchSelector"
           kwargs:
-            select_name: output_tgt
-  - type: "forte.processors.impl.NLTKPOSTagger"
+            select_name: "output_tgt"
+  - type: "forte.processors.nltk_processors.NLTKPOSTagger"
     hparams:
       overwrite_configs:
         selector:
           type: "forte.data.selector.NameMatchSelector"
           kwargs:
-            select_name: output_tgt
+            select_name: "output_tgt"
+

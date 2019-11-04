@@ -3,11 +3,6 @@ dropout_rate: 0.3
 
 word_emb:
     dim: 100
-    # TODO(haoransh): currently we leave the dropout out of this definition
-    #  scope to make code more consistent with character encoding
-    # "dropout_rate": 0.3,
-    # "dropout_strategy": 'item'
-
 
 char_emb:
     dim: 30
@@ -42,9 +37,8 @@ random_seed: 1234
 initializer:
     "type": "xavier_uniform_"
 
-
 # path to save model
-model_path: "best_ner_crf_model.ckpt"
+model_path: "resources/best_ner_crf_model.ckpt"
 
 # path to save resources
-resource_dir: "./"
+resource_dir: "resources/"

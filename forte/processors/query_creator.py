@@ -6,8 +6,8 @@ from texar.torch.data import BERTTokenizer
 
 from forte.common.resources import Resources
 from forte.data import MultiPack
-from forte.data.ontology import base_ontology
-from forte.processors.base import MultiPackProcessor, ProcessInfo
+from forte.processors.base import MultiPackProcessor
+from forte.common.types import DataRequest
 
 __all__ = [
     "QueryCreator"
@@ -18,9 +18,9 @@ class QueryCreator(MultiPackProcessor):
     r"""This processor is used to search for relevant documents for a query
     """
 
+    # pylint: disable=useless-super-delegation
     def __init__(self) -> None:
         super().__init__()
-        self._ontology = base_ontology
 
     def initialize(self, resources: Resources, configs: HParams):
         self.resource = resources
@@ -33,16 +33,16 @@ class QueryCreator(MultiPackProcessor):
         self.encoder.to(self.device)
 
     # pylint: disable=no-self-use
-    def _define_input_info(self) -> ProcessInfo:
-        input_info: ProcessInfo = {
+    def _define_input_info(self) -> DataRequest:
+        input_info: DataRequest = {
 
         }
 
         return input_info
 
     # pylint: disable=no-self-use
-    def _define_output_info(self) -> ProcessInfo:
-        output_info: ProcessInfo = {
+    def _define_output_info(self) -> DataRequest:
+        output_info: DataRequest = {
 
         }
 
@@ -78,4 +78,5 @@ class QueryCreator(MultiPackProcessor):
         _, query_vector = self.get_embeddings(input_ids, segment_ids)
         query_vector = torch.mean(query_vector, dim=0, keepdim=True)
         query_vector = query_vector.cpu().numpy()
+        # todo: change this to a generic
         query_pack.query = query_vector
