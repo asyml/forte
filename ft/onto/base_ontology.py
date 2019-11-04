@@ -1,7 +1,7 @@
 """
 This class defines the basic ontology supported by our system
 """
-from typing import Optional, Dict, List, Set
+from typing import Optional, Dict, List, Set, Type
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Entry, Annotation, Link, Group
 
@@ -33,21 +33,21 @@ class Token(Annotation):
         https://universaldependencies.org/format.html
         lemma (str): Lemma or stem of word form.
         is_root (bool): If the token is a root of, say, dependency tree.
-        ud_misc (Dict[str, List[str]]): Miscellaneous features. Used in
+        ud_misc (Dict[str, List[str]]): Miscellaneous ud_features. Used in
         CoNLL-U Format. Refer https://universaldependencies.org/format.html
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.pos: str
-        self.ud_xpos: str
-        self.lemma: str
-        self.chunk: str
-        self.ner: str
-        self.sense: str
-        self.is_root: bool
-        self.features: Dict[str, List[str]]
-        self.ud_misc: Dict[str, List[str]]
+        self.pos: Optional[str] = None
+        self.ud_xpos: Optional[str] = None
+        self.lemma: Optional[str] = None
+        self.chunk: Optional[str] = None
+        self.ner: Optional[str] = None
+        self.sense: Optional[str] = None
+        self.is_root: Optional[bool] = None
+        self.ud_features: Optional[Dict[str, List[str]]] = None
+        self.ud_misc: Optional[Dict[str, List[str]]] = None
 
 
 class Sentence(Annotation):
@@ -181,9 +181,9 @@ class Dependency(Link):
                  parent: Optional[Token] = None,
                  child: Optional[Token] = None):
         super().__init__(pack, parent, child)
-        self.dep_label = None
-        self.rel_type: str
-        self.dep_type: str
+        self.dep_label: Optional[str] = None
+        self.rel_type: Optional[Type] = None
+        self.dep_type: Optional[Type] = None
 
 
 class RelationLink(Link):
@@ -207,4 +207,4 @@ class RelationLink(Link):
             parent: Optional[EntityMention] = None,
             child: Optional[EntityMention] = None):
         super().__init__(pack, parent, child)
-        self.rel_type = None
+        self.rel_type: Optional[Type] = None
