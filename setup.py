@@ -23,6 +23,10 @@ setuptools.setup(
         'pyyaml',
         'deprecation',
         'smart-open',
+        'typed_astunparse',
+        'funcsigs',
+        'mypy_extensions',
+        'typed_ast',
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
