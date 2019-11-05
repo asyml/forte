@@ -11,13 +11,15 @@ env:
 install:
   - pip install --upgrade pip
   - pip install --progress-bar off torch==$TORCH_VER
-  - pip install --progress-bar off .[ner,srl,txtgen,stanfordnlp,indexer,test,example]
+  - pip install --progress-bar off .[ner,srl,txtgen,stanfordnlp,test,example]
   # Install texar-pytorch.
   - git clone https://github.com/asyml/texar-pytorch.git
   - cd texar-pytorch
   - pip install --progress-bar off .
   - cd ..
   - rm -rf texar-pytorch
+  # Install faiss-cpu for coverage
+  - pip install faiss-cpu
   # Install test tools.
   - pip install pylint==2.3.1 flake8==3.7.7
   - pip install mypy>=0.730
@@ -64,8 +66,6 @@ jobs:
         - sphinx-build -W -b html -d _build/doctrees . _build/html
         # check for typos
         - sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
-
-
 
 notifications:
   email: false

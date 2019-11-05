@@ -5,8 +5,6 @@ The reader that reads text data from into Multipack.
 import logging
 from typing import Iterator
 
-from termcolor import colored
-
 from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -55,7 +53,7 @@ class MultiPackTerminalReader(MultiPackReader):
         # strings.
         while True:
             try:
-                data = input(colored("Enter your query here: ", 'green'))
+                data = input("Enter your query here: ")
                 if len(data) == 0:
                     continue
                 yield data

@@ -30,7 +30,6 @@ setuptools.setup(
         'srl': ['mypy-extensions', 'allennlp'],
         'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
-        'indexer': ['faiss'],
         'test': ['ddt'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib']
