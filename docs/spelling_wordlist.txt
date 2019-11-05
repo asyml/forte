@@ -88,4 +88,6 @@ io
 config
 pos
 iter
+docstring
+namespace
 

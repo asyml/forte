@@ -80,7 +80,7 @@ can be used to refer to this entry from other configs or other parts of the same
     * The `<package_name>` is used to generate the package directory tree. If it is not provided, it is assumed to be `ft.onto`..
     * The `<module_name>` would be the generated file name in which the entry would be placed.
     * The `<entry_name>` would be used as the generated class name.
- * The `type: str`: Defines the base class of the entry class. All the user-defined entries should inherit either any of the base entries (defined in top.py) or one of the other user-defined entries. The parent class would be used to initialize the arguments of the *\_\_init__* function.
+ * The `type: str`: Defines the base class of the entry class. All the user-defined entries should inherit either any of the base entries or one of the other user-defined entries. The parent class would be used to initialize the arguments of the *\_\_init__* function.
  * `description: Optional[str]`: String description of the entry to be used as the docstring of the generated Python class if provided.
  * `properties: Optional[Dict]`: List of attributes that would be used as instance variables of the generated class. Each keyword for the properties is defined in the next section.
 
