@@ -26,7 +26,7 @@ setuptools.setup(
         'typed_astunparse',
         'funcsigs',
         'mypy_extensions',
-        'typed_ast',
+        'typed_ast'
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],

@@ -6,3 +6,7 @@ torch
 pyyaml
 smart-open
 allennlp
+typed_astunparse
+funcsigs
+mypy_extensions
+typed_ast
