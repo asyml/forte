@@ -8,7 +8,7 @@ import logging
 import tempfile
 from pathlib import Path
 from collections import defaultdict
-from distutils.dir_util import copy_tree
+from distutils import dir_util
 
 from types import ModuleType
 from typing import Dict, List, Optional, Tuple, Set
@@ -216,7 +216,8 @@ class OntologyCodeGenerator:
                                      f"{existing_top_dir} is already present in"
                                      f"{dest_path}.")
 
-            copy_tree(self.tempdir, dest_path)
+            dir_util.copy_tree(self.tempdir, dest_path)
+
             return dest_path
 
         return self.tempdir
@@ -305,7 +306,10 @@ class OntologyCodeGenerator:
         for ref_name in entry_definitions:
             definition = entry_definitions[ref_name]
             full_name = definition["namespace"]
-            pkg, filename, name = full_name.rsplit('.', 2)
+            name_split = full_name.rsplit('.', 2)
+            if len(name_split) == 2:
+                name_split = ['ft.onto'] + name_split
+            pkg, filename, name = name_split
             self.ref_to_namespace[name] = full_name
             if full_name in self.allowed_types_tree:
                 raise Warning(f"Class {full_name} already present in the "

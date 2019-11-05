@@ -25,7 +25,9 @@
                     "description": "Miscellaneous string features",
                     "type": "List",
                     "items": {
-                        "$ref": "#/definitions/Token"
+                        "type": {
+                            "$ref": "#/definitions/Token"
+                        }
                     }
                 }
             }

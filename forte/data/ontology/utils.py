@@ -5,7 +5,7 @@ import os
 from importlib import util as import_util
 from pathlib import Path
 from pydoc import locate
-from typing import Optional
+from typing import Optional, List
 
 
 def get_user_objects_from_module(module_str: str,
@@ -22,8 +22,8 @@ def get_user_objects_from_module(module_str: str,
     """
     module = locate(module_str)
     if module is not None and hasattr(module, '__all__'):
-        return module.__all__
-    objects = []
+        return module.__all__  # type: ignore
+    objects: List[str] = []
     if custom_dirs is not None:
         module_file = module_str.replace('.', '/') + '.py'
         for dir_ in custom_dirs:
@@ -32,8 +32,8 @@ def get_user_objects_from_module(module_str: str,
                 spec = import_util.spec_from_file_location(module_str,
                                                            filepath)
                 module = import_util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                objects = module.__all__
+                spec.loader.exec_module(module)  # type: ignore
+                objects = module.__all__  # type: ignore
             except (FileNotFoundError, AttributeError):
                 continue
     return objects
