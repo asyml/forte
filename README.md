@@ -4,7 +4,7 @@
 
 -----------------
 
-[![Build Status](https://travis-ci.com/hunterhector/forte.svg?token=stxAYykN8cafiEFmeAea&branch=master)](https://travis-ci.com/hunterhector/forte)
+[![Build Status](https://travis-ci.org/asyml/forte.svg?branch=master)](https://travis-ci.org/asyml/forte)
 [![Documentation Status](https://readthedocs.org/projects/asyml-forte/badge/?version=latest)](https://asyml-forte.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/hunterhector/forte/blob/master/LICENSE)
 
