@@ -52,17 +52,17 @@ A simple example user-defined ontology looks like the following:
 }
 ```
 #### Breakdown of the Simple Example Ontology ####
-The JSON config loosely follows the vocabulary of [JSON Schema](json-schema.org).
+The JSON config loosely follows the vocabulary of [JSON Schema](http://json-schema.org).
 ##### Skeleton of the schema #####
 ```json
 {
   "name": "simple_ontology",
   "description": "Simple Ontology",
   "imports": [
-  ...
+  
   ],
   "definitions": [
-  ...
+  
   ]
 }
 ```
@@ -90,7 +90,7 @@ can be used to refer to this entry from other configs or other parts of the same
 * `type: Union[str, Dict]`: Type of the attribute. Currently supported types are:
     * Primary types - `int`, `float`, `str` 
     * Composite types - `List`
-    * Referred types - An entry can be referred using referred types. The entries could be in the same config or any of the imported configs. More on this in the [Specifying References](specifying-references) section.
+    * Referred types - An entry can be referred using referred types. The entries could be in the same config or any of the imported configs. More on this in the [Specifying References](#specifying-references) section.
 * `items: Dict`: If the `type` of the property is one of the composite types, then `items/type` can defines the type of the items contained in the property. As of now, we only support arrays of uniform types.
 
 ### Specifying References ###
