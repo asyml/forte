@@ -12,7 +12,7 @@ setuptools.setup(
     description="NLP pipeline",
     long_description=long_description,
     license='Apache License Version 2.0',
-    packages=setuptools.find_packages(include=['forte.*', 'ft.*', 'generate_ontology.*']),
+    packages=setuptools.find_packages(include=['forte.*', 'ft.*', 'scripts.*']),
     platforms='any',
 
     install_requires=[
@@ -41,7 +41,7 @@ setuptools.setup(
     },
     entry_points={
           'console_scripts': [
-              'generate_ontology = generate_ontology.__main__:main'
+              'generate_ontology = scripts.generate_ontology.__main__:main'
           ]
       },
     classifiers=[
