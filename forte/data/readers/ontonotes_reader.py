@@ -4,7 +4,7 @@ The reader that reads Ontonotes data into Datapacks.
 import os
 from collections import defaultdict
 from typing import (Any, DefaultDict, Iterator, List, Optional, Tuple,
-                    NamedTuple, Union)
+                    NamedTuple, Union, Set, Sequence)
 
 from ft.onto.base_ontology import (
     Token, Sentence, Document, EntityMention, PredicateArgument,
@@ -28,7 +28,9 @@ class OntonotesReader(PackReader):
 
     Args:
         column_format: A list of strings indicating which field each column in a
-            line corresponds to. Available field types include:
+            line corresponds to. The length of the list should be equal to the
+            number of columns in the files to be read. Available field types
+            include:
 
             - ``"document_id"``
             - ``"part_number"``
@@ -75,8 +77,8 @@ class OntonotesReader(PackReader):
         super().__init__()
         column_format = column_format or self._DEFAULT_FORMAT
         # Validate column format.
-        seen_fields = set()
-        self._column_format = []
+        seen_fields: Set[str] = set()
+        self._column_format: List[Optional[str]] = []
         self._star_pos = None
         for idx, field in enumerate(column_format):
             if field is None:
@@ -118,16 +120,16 @@ class OntonotesReader(PackReader):
         return os.path.basename(conll_file)
 
     def _parse_line(self, line: str) -> 'ParsedFields':
-        parts: List[Union[str, List[str]]] = line.split()
+        parts = line.split()
         fields = {}
         if self._star_pos is not None:
             l = self._star_pos
             r = len(parts) - (len(self._column_format) - self._star_pos - 1)
-            parts = parts[:l] + [parts[l:r]] + parts[r:]
+            parts = parts[:l] + [parts[l:r]] + parts[r:]  # type: ignore
         for field, part in zip(self._column_format, parts):
             if field is not None:
                 fields[field] = part
-        return self.ParsedFields(**fields)
+        return self.ParsedFields(**fields)  # type: ignore
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
@@ -170,7 +172,7 @@ class OntonotesReader(PackReader):
                     # add tokens
                     token = Token(pack, word_begin, word_end)
                     if fields.pos_tag is not None:
-                        token.set_fields(pos_tag=fields.pos_tag)
+                        token.set_fields(pos=fields.pos_tag)
                     if fields.word_sense is not None:
                         token.set_fields(sense=fields.word_sense)
                     pack.add_entry(token)
