@@ -76,7 +76,7 @@ class StandfordNLPProcessor(PackProcessor):
                                   )
 
                     if "pos" in self.processors:
-                        token.set_fields(pos_tag=word.pos)
+                        token.set_fields(pos=word.pos)
                         token.set_fields(upos=word.upos)
                         token.set_fields(xpos=word.xpos)
 

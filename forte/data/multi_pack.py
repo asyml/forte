@@ -27,18 +27,15 @@ MdRequest = Dict[
 
 
 class MultiPackMeta(BaseMeta):
-    """
-    Meta information of a MultiPack.
-    """
+    r"""Meta information of a MultiPack."""
 
     def __init__(self):
         super().__init__()
 
 
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
-    """
-    A :class:`MultiPack' contains multiple DataPacks and a
-    collection of cross-pack entries (links, and groups)
+    r"""A :class:`MultiPack' contains multiple DataPacks and a collection of
+    cross-pack entries (links, and groups)
     """
 
     def __init__(self):
@@ -57,18 +54,16 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.__default_pack_prefix = '_pack'
 
     def __getstate__(self):
-        """
-        In serialization,
-         - will not serialize the indexes
+        r"""In serialization,
+            - will not serialize the indexes
         """
         state = self.__dict__.copy()
         state.pop('index')
         return state
 
     def __setstate__(self, state):
-        """
-        In deserialization, we
-         - initialize the indexes.
+        r"""In deserialization, we
+            - initialize the indexes.
         """
         self.__dict__.update(state)
         self.index = BaseIndex()
@@ -107,7 +102,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             )
 
         self._packs.append(pack)
-        pid = len(self._pack_names) - 1
+        pid = len(self._packs) - 1
 
         if pack_name is None:
             pack_name = f'{self.__default_pack_prefix}_{pid}'
@@ -128,10 +123,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             yield pack_name, pack
 
     def rename_pack(self, old_name: str, new_name: str):
-        """
-        Rename the pack to a new name. If the new_name is already taken, a
-        ValueError will be raised. If the old_name is not found, then a KeyError
-        will be raised just as missing value from a dictionary.
+        r"""Rename the pack to a new name. If the new_name is already taken, a
+        ``ValueError`` will be raised. If the old_name is not found, then a
+        ``KeyError`` will be raised just as missing value from a dictionary.
 
         Args:
             old_name: The old name of the pack.
@@ -156,8 +150,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             request: Optional[DataRequest] = None,
             skip_k: int = 0
     ) -> Iterator[Dict[str, Any]]:
-        """
-        Get pack data from one of the packs specified by the name. This is
+        r"""Get pack data from one of the packs specified by the name. This is
         equivalent to calling the :meth: `get_data` in :class: `DataPack`.
 
         Args:
@@ -191,7 +184,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             self,
             request: MdRequest,
     ):
-        """
+        r"""
         Example:
 
             .. code-block:: python
@@ -235,9 +228,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pass
 
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        """
-        Try to add an :class:`Entry` object to the :class:`Multipack` object.
-        If a same entry already exists, will return the existing entry
+        r"""Try to add an :class:`Entry` object to the :class:`Multipack`
+        object. If a same entry already exists, will return the existing entry
         instead of adding the new one. Note that we regard two entries to be
         same if their :meth:`eq` have the same return value, and users could
         override :meth:`eq` in their custom entry classes.
@@ -277,8 +269,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return target[target.index(entry)]
 
     def add_entry(self, entry: EntryType) -> EntryType:
-        """
-        Force add an :class:`Entry` object to the :class:`MultiPack` object.
+        r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
+
         Allow duplicate entries in a datapack.
 
         Args:
@@ -304,9 +296,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return entry
 
     def get_entry(self, tid: int) -> EntryType:
-        """
-        Look up the entry_index with key ``tid``.
-        """
+        r"""Look up the entry_index with key ``tid``."""
         entry = self.index.get_entry(tid)
         if entry is None:
             raise KeyError(
