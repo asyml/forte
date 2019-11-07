@@ -1,27 +1,31 @@
 {
-    "name": "ft.onto.example_import_ontology",
-    "definitions": {
-        "Token": {
+    "name": "example_import_ontology",
+    "definitions": [
+        {
             "namespace": "ft.onto.example_import_ontology.Token",
-            "type": "Annotation",
+            "parent_type": "Annotation",
             "description": "Base parent token entry",
-            "properties": {
-                "pos": {
+            "attributes": [
+                {
+                    "name": "pos",
                     "type": "str"
                 },
-                "lemma": {
+                {
+                    "name": "lemma",
                     "type": "str"
                 }
-            }
+            ]
         },
-        "EntityMention": {
+        {
             "namespace": "ft.onto.example_import_ontology.EntityMention",
-            "type": "Annotation",
-            "properties": {
-                "entity_type": {
+            "parent_type": "Annotation",
+            "attributes":
+            [
+                {
+                    "name":"entity_type",
                     "type": "str"
                 }
-            }
+            ]
         }
-    }
+    ]
 }

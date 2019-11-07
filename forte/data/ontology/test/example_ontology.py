@@ -21,12 +21,12 @@ class Token(ft.onto.example_import_ontology.Token):
     """
         Args:
             related_tokens (typing.Optional[typing.List[str]]): Tokens related to the current token
-            string_features (typing.Optional[typing.List["Token"]]): Miscellaneous string features
+            string_features (typing.Optional[typing.List[ft.onto.example_ontology.Token]]): Miscellaneous string features
     """
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._related_tokens: typing.Optional[typing.List[str]] = None
-        self._string_features: typing.Optional[typing.List["Token"]] = None
+        self._string_features: typing.Optional[typing.List[ft.onto.example_ontology.Token]] = None
 
     @property
     def related_tokens(self):
@@ -39,5 +39,5 @@ class Token(ft.onto.example_import_ontology.Token):
     def string_features(self):
         return self._string_features
 
-    def set_string_features(self, string_features: typing.Optional[typing.List["Token"]]):
+    def set_string_features(self, string_features: typing.Optional[typing.List[ft.onto.example_ontology.Token]]):
         self._string_features = string_features

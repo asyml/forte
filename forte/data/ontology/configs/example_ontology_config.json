@@ -1,36 +1,28 @@
 {
     "name": "example_ontology",
     "description": "",
-    "imports": {
-        "example_import_ontology": {
-            "type": "ft.onto.example_import_ontology"
-        }
-    },
-    "definitions": {
-        "Token" : {
+    "import_paths": [
+        "example_import_ontology_config.json"
+    ],
+    "definitions": [
+        {
             "namespace": "ft.onto.example_ontology.Token",
-            "type": {
-                "$ref": "#/imports/example_import_ontology/definitions/Token"
-            },
+            "parent_type": "ft.onto.example_import_ontology.Token",
             "description": "",
-            "properties": {
-                "related_tokens": {
+            "attributes": [
+                {
+                    "name": "related_tokens",
                     "description": "Tokens related to the current token",
                     "type": "List",
-                    "items": {
-                        "type": "str"
-                    }
+                    "item_type": "str"
                 },
-                "string_features": {
+                {
+                    "name": "string_features",
                     "description": "Miscellaneous string features",
                     "type": "List",
-                    "items": {
-                        "type": {
-                            "$ref": "#/definitions/Token"
-                        }
-                    }
+                    "item_type": "ft.onto.example_ontology.Token"
                 }
-            }
+            ]
         }
-    }
+    ]
 }

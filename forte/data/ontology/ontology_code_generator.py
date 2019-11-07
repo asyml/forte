@@ -258,15 +258,15 @@ class OntologyCodeGenerator:
         curr_dict = json.loads(curr_str)
 
         # Extract imported json files and generate ontology for them.
-        json_imports_dict: Dict = curr_dict.get("imports", {})
+        json_imports: List = curr_dict.get("import_paths", [])
 
         modules_to_import: List[str] = []
 
-        for import_ref in json_imports_dict:
-            import_schema = json_imports_dict[import_ref]
-            import_namespace = import_schema["type"]
-            self.ref_to_namespace[import_ref] = import_namespace
-            import_file = f"{import_namespace.split('.')[-1]}_config.json"
+        for import_file in json_imports:
+            # import_schema = json_imports[import_ref]
+            # import_namespace = import_schema["type"]
+            # self.ref_to_namespace[import_ref] = import_namespace
+            # import_file = f"{import_namespace.split('.')[-1]}_config.json"
             import_json_file = utils.search_in_dirs(import_file,
                                                     self.json_paths)
             if import_json_file is None:
@@ -300,11 +300,10 @@ class OntologyCodeGenerator:
         Returns:
             Modules to be imported by dependencies of the current ontology.
         """
-        entry_definitions: Dict[str, Dict] = schema["definitions"]
+        entry_definitions: List[Dict] = schema["definitions"]
 
         new_modules_to_import = []
-        for ref_name in entry_definitions:
-            definition = entry_definitions[ref_name]
+        for definition in entry_definitions:
             full_name = definition["namespace"]
             name_split = full_name.rsplit('.', 2)
             if len(name_split) == 2:
@@ -315,7 +314,7 @@ class OntologyCodeGenerator:
                 raise Warning(f"Class {full_name} already present in the "
                               f"ontology, will be overridden.")
             self.allowed_types_tree[full_name] = set()
-            entry_item, properties = self.parse_entry(ref_name, definition)
+            entry_item, properties = self.parse_entry(name, definition)
             module_name: str = f"{pkg}.{filename}"
             class_name: str = f"{module_name}.{name}"
 
@@ -396,9 +395,9 @@ class OntologyCodeGenerator:
         """
         name = schema["namespace"]
         # reading the entry definition dictionary
-        parent_entry: str = self.parse_type(schema["type"])
+        parent_entry: str = self.parse_type(schema["parent_type"])
 
-        properties: Dict[str, Dict] = schema["properties"]
+        properties: List[Dict] = schema.get("attributes", [])
 
         # validate if the entry parent is present in the tree
         if parent_entry not in self.allowed_types_tree:
@@ -409,12 +408,10 @@ class OntologyCodeGenerator:
         base_entry: str = self.get_and_set_base_entry(name, parent_entry)
         init_args: str = self.top_init_args[base_entry]
 
-        property_items = []
-        if properties is not None:
-            for prop_name in properties:
-                prop_schema = properties[prop_name]
-                property_items.append(self.parse_property(name, prop_name,
-                                                          prop_schema))
+        property_items, property_names = [], []
+        for prop_schema in properties:
+            property_names.append(prop_schema["name"])
+            property_items.append(self.parse_property(name, prop_schema))
 
         entry_item = DefinitionItem(name=ref_name,
                                     class_type=parent_entry,
@@ -422,22 +419,13 @@ class OntologyCodeGenerator:
                                     properties=property_items,
                                     description=schema.get("description", None))
 
-        return entry_item, list(properties.keys())
+        return entry_item, property_names
 
     def parse_type(self, type_):
-        if isinstance(type_, str):
-            return self.ref_to_namespace[type_]
-        refs = type_['$ref'].split('/')[1:]
-        return f'"{refs[1]}"' if len(refs) == 2 else self.parse_ref_type(refs)
+        return self.ref_to_namespace.get(type_, type_)
 
-    def parse_ref_type(self, refs: List[str], prefix=''):
-        ref = refs[1]
-        ref_namespace = self.ref_to_namespace[ref]
-        if refs[0] == "imports":
-            return self.parse_ref_type(refs[2:], ref_namespace)
-        return ref_namespace if prefix == '' else '.'.join([prefix, ref])
-
-    def parse_property(self, entry_name, name, schema):
+    def parse_property(self, entry_name, schema):
+        name = schema["name"]
         type_str = schema["type"]
         type_ = self.parse_type(type_str)
 
@@ -453,7 +441,12 @@ class OntologyCodeGenerator:
         # TODO: Only supports array for now!
         # element type should be present in the validation tree
         if type_str in CompositeItem.TYPES:
-            item_type = schema["items"].get("type", schema["items"])
+            if "item_type" not in schema:
+                raise ValueError(
+                    f"Item type for the entry {entry_name} "
+                    f"of the attribute {name} not declared"
+                )
+            item_type = schema["item_type"]
             item_type = self.parse_type(item_type)
             item_type_norm = item_type.replace('"', '')
             if not (item_type_norm in self.allowed_types_tree
@@ -462,7 +455,7 @@ class OntologyCodeGenerator:
                     or item_type_norm == entry_name):
                 raise ValueError(
                     f"Item type {item_type_norm} for the entry {entry_name} "
-                    f"of the property {name} not declared in ontology")
+                    f"of the attribute {name} not declared in ontology")
 
             return CompositeItem(name, type_, [item_type], desc, default)
 
