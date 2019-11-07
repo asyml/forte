@@ -19,46 +19,39 @@ A simple example user-defined ontology looks like the following:
 {
     "name": "simple_ontology",
     "description": "",
-    "imports": {
-        "upper_ontology": {
-            "type": "ft.onto.upper_ontology"
-        }
-    },
-    "definitions": {
-        "Token" : {
+    "import_paths": [
+        "upper_ontology_config.json"
+    ],
+    "definitions": [
+        {
             "namespace": "ft.onto.simple_ontology.Token",
-            "type": {
-                "$ref": "#/imports/upper_ontology/definitions/Token"
-            },
+            "parent_type": "ft.onto.upper_ontology.Token",
             "description": "",
-            "properties": {
-                "related_tokens": {
+            "attributes": [
+                {
+                    "name": "related_tokens",
                     "description": "Tokens related to the current token",
                     "type": "List",
-                    "items": {
-                        "type": "str"
-                    }
+                    "item_type": "str"
                 },
-                "string_features": {
+                {
+                    "name": "string_features",
                     "description": "Miscellaneous string features",
                     "type": "List",
-                    "items": {
-                        "$ref": "#/definitions/Token"
-                    }
+                    "item_type": "ft.onto.simple_ontology.Token"
                 }
-            }
+            ]
         }
-    }
+    ]
 }
 ```
 #### Breakdown of the Simple Example Ontology ####
-The JSON config loosely follows the vocabulary of [JSON Schema](http://json-schema.org).
-##### Skeleton of the schema #####
+The skeleton of the json schema looks like the following:
 ```json
 {
   "name": "simple_ontology",
   "description": "Simple Ontology",
-  "imports": [
+  "import_paths": [
   
   ],
   "definitions": [
@@ -68,51 +61,39 @@ The JSON config loosely follows the vocabulary of [JSON Schema](http://json-sche
 ```
 - The `name` and `description` are annotation keywords meant for descriptive
 purposes only. They do not add any value to the ontology generation.
-- `imports` are an optional keyword. They are used to define a list of json configs 
-that the current config might depend on. This is an advanced concept, and can be 
-skipped. Expanded in more detail in the [Specifying Dependencies](#specifying-dependencies) section.
-- `definitions:` contain entry definition objects, where each entry definition is represented as a dictionary. For each entry, one class will be generated. The keywords of `definitions` are explained in the next section.
+- `import_paths` are an optional keyword. They are used to define a list of json configs 
+paths that the current config might depend on. 
+    - The entries of the current config can use
+the entries of the imported configs in type specifications or defining parent classes. 
+    - The import paths either be absolute paths or relative to the directory of 
+    the current config, current working directory, or to one of the user-provided
+    ``config_paths`` (see [usage](#usage).)
+- `definitions:` is a list of entry definition, where each entry is represented as a dictionary. For each entry, one class will be generated. The keywords of an entry are explained in the next section.
 
 ##### ```definitions``` #####
-* The top level keyword defines the reference name of the entry class, which
-can be used to refer to this entry from other configs or other parts of the same config.
+For each definition - 
 * The `namespace: str` keyword contain the full namespace of the entry. It should be of the form ```<package_name>.<module_name>.<entry_name>``` or ```<module_name>.<entry_name>```.
-    * The `<package_name>` is used to generate the package directory tree. If it is not provided, it is assumed to be `ft.onto`..
+    * The `<package_name>` is used to generate the package directory tree. If it is not provided, it is assumed to be `ft.onto`.
     * The `<module_name>` would be the generated file name in which the entry would be placed.
     * The `<entry_name>` would be used as the generated class name.
  * The `type: str`: Defines the base class of the entry class. All the user-defined entries should inherit either any of the base entries or one of the other user-defined entries. The parent class would be used to initialize the arguments of the *\_\_init__* function.
  * `description: Optional[str]`: String description of the entry to be used as the docstring of the generated Python class if provided.
- * `properties: Optional[Dict]`: List of attributes that would be used as instance variables of the generated class. Each keyword for the properties is defined in the next section.
+ * `attributes: Optional[List]`: List of attributes that would be used as instance variables of the generated class. Each keyword for an attribute is defined in the next section.
 
-##### ```properties``` #####
-* The top level keyword defines the name of the property unique to the entry.
+##### ```attributes``` #####
+For each attribute - 
+* The `name` keyword defines the name of the property unique to the entry.
 * `description: Optional[str]`: String description of the attribute to be used as the docstring of the generated Python class if provided.
-* `type: Union[str, Dict]`: Type of the attribute. Currently supported types are:
+* `type: str`: Type of the attribute. Currently supported types are:
     * Primary types - `int`, `float`, `str` 
     * Composite types - `List`
-    * Referred types - An entry can be referred using referred types. The entries could be in the same config or any of the imported configs. More on this in the [Specifying References](#specifying-references) section.
-* `items: Dict`: If the `type` of the property is one of the composite types, then `items/type` can defines the type of the items contained in the property. As of now, we only support arrays of uniform types.
-
-### Specifying References ###
-The `type` keyword can contain a reference type of the format, `{"$ref": "#/definitions/Token"}`. The idea is to use the schema that is stored under the result of evaluating the pointer `/definitions/Token` where Token is the reference to the entry under the same JSON config.
-
-We could also be looking in the imported configs for references. The format for doing so is `{"$ref": "#/imports/<import_reference>/definitions/<entry_reference>"}`. The `import_reference` are the references to the import config
-defined in `imports` and `entry_reference` is the reference to the entry under the imported JSON config. The import chain can be
-arbitrarily long. 
-
-### Specifying Dependencies ###
-- `imports` are defined at the top level of the config. They are used to define 
-the path of the config that the current config might depend on.
-    The format of `imports` object is as follows:
-    ```json
-    {
-      "simple_ontology": {
-        "type": "ft/onto/upper_ontology_config.json"
-      }
-    }
-  ```
-    Here, the top level keyword, `simple_ontology`, defines the 
-    reference to the imported config file defined using the `type` keyword.
+    * Base entries - The attributes can be of the type base
+    entries (defined in the `top` module) and can be directly referred by the
+     class name.
+    * User-defined types - The attributes can be of the type entries that are
+    user defined, and are specified as their namespaces. These entries could be
+    defined (a) in the same config (b) any of the imported configs.
+* `item_type: str`: If the `type` of the property is one of the composite types, then `item_type` can defines the type of the items contained in the property. As of now, we only support arrays of uniform types.
 
 ### Usage ###
 * Write the json config(s) as per the instructions in the previous sections. Let the base json config be defined in the path ``demo_ontology_config.json``.
