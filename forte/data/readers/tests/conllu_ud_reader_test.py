@@ -7,7 +7,7 @@ import unittest
 from typing import List
 
 from ft.onto.base_ontology import Sentence, Document, Dependency
-from forte.data.readers.conllu_ud_reader import ConllUDReader
+from forte.data.readers import ConllUDReader
 from forte.data.data_pack import DataPack
 
 
