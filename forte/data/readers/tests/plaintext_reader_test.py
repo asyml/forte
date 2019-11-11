@@ -5,7 +5,7 @@ import unittest
 from ddt import ddt, data
 
 from forte.data.base import Span
-from forte.data.readers.plaintext_reader import PlainTextReader
+from forte.data.readers import PlainTextReader
 
 
 @ddt
