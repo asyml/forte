@@ -301,20 +301,22 @@ class OntologyCodeGenerator:
             Modules to be imported by dependencies of the current ontology.
         """
         entry_definitions: List[Dict] = schema["definitions"]
+        pkg = schema.get("prefix", "ft.onto")
 
         new_modules_to_import = []
         for definition in entry_definitions:
-            full_name = definition["namespace"]
-            name_split = full_name.rsplit('.', 2)
-            if len(name_split) == 2:
-                name_split = ['ft.onto'] + name_split
-            pkg, filename, name = name_split
+            entry_name = definition["entry_name"]
+            full_name = f'{pkg}.{entry_name}'
+            filename, name = entry_name.split('.')
             self.ref_to_namespace[name] = full_name
+            self.ref_to_namespace[entry_name] = full_name
             if full_name in self.allowed_types_tree:
                 raise Warning(f"Class {full_name} already present in the "
                               f"ontology, will be overridden.")
             self.allowed_types_tree[full_name] = set()
-            entry_item, properties = self.parse_entry(name, definition)
+            entry_item, properties = self.parse_entry(name,
+                                                      full_name,
+                                                      definition)
             module_name: str = f"{pkg}.{filename}"
             class_name: str = f"{module_name}.{name}"
 
@@ -382,18 +384,19 @@ class OntologyCodeGenerator:
             log.info("Deleted %s.", path)
         return is_empty
 
-    def parse_entry(self, ref_name: str, schema: Dict) -> Tuple[DefinitionItem,
-                                                                List[str]]:
+    def parse_entry(self, ref_name: str, namespace: str, schema: Dict) \
+            -> Tuple[DefinitionItem, List[str]]:
         """
         Args:
-            ref_name:
+            ref_name: Reference name of the entry.
+            namespace: Full namespace of the entry.
             schema: Dictionary containing specifications for an entry.
 
         Returns: extracted entry information: entry package string, entry
         filename, entry class entry_name, generated entry code and entry
         attribute names.
         """
-        name = schema["namespace"]
+        name = namespace
         # reading the entry definition dictionary
         parent_entry: str = self.parse_type(schema["parent_type"])
 

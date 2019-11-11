@@ -2,7 +2,7 @@
     "name": "example_import_ontology",
     "definitions": [
         {
-            "namespace": "ft.onto.example_import_ontology.Token",
+            "entry_name": "example_import_ontology.Token",
             "parent_type": "Annotation",
             "description": "Base parent token entry",
             "attributes": [
@@ -17,7 +17,7 @@
             ]
         },
         {
-            "namespace": "ft.onto.example_import_ontology.EntityMention",
+            "entry_name": "example_import_ontology.EntityMention",
             "parent_type": "Annotation",
             "attributes":
             [

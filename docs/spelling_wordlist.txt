@@ -90,4 +90,5 @@ pos
 iter
 docstring
 namespace
+namespaces
 

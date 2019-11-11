@@ -6,21 +6,21 @@
     ],
     "definitions": [
         {
-            "namespace": "ft.onto.example_ontology.Token",
-            "parent_type": "ft.onto.example_import_ontology.Token",
+            "entry_name": "example_ontology.Word",
+            "parent_type": "example_import_ontology.Token",
             "description": "",
             "attributes": [
                 {
-                    "name": "related_tokens",
-                    "description": "Tokens related to the current token",
+                    "name": "string_features",
+                    "description": "To demonstrate the composite type, List.",
                     "type": "List",
                     "item_type": "str"
                 },
                 {
-                    "name": "string_features",
-                    "description": "Miscellaneous string features",
+                    "name": "word_forms",
+                    "description": "To demonstrate that an attribute can have the entry it is contained in as it's type or item_type.",
                     "type": "List",
-                    "item_type": "ft.onto.example_ontology.Token"
+                    "item_type": "example_ontology.Word"
                 }
             ]
         }

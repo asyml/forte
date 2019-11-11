@@ -9,9 +9,9 @@ This _Ontology Configuration_ tutorial teaches how to:
 
 Overview of Forte concepts used in this tutorial:
 * *Ontology* - A set of entries, one ontology can span one or multiple python modules. The modules always belong to the package `forte.data.ontology`.
-* *Entry* - An entry corresponds to one NLP unit to be annotated, or defines relationship between other entries. `Token`, `Sentence` and `DependencyLink` are some examples of entries. generates one python class.
-* *Attribute* - An attribute generally corresponds to an annotation to an entry, like, `pos_tag` for the entry `Token`.
-* *Base Entry* - Base entries are a set of entries defined in Forte, in the module `forte.data.ontology.base.top`. All user-defined entries should extend one of the base entries.
+* *Entry* - An entry corresponds to one NLP unit in the document, for instance, an annotated sequence or relationship between annotated sequences. `Token`, `Sentence` and `DependencyLink` are some examples of entries. One entry defined in the config is used to generate one python class.
+* *Attribute* - An attribute generally corresponds to a label or property associated with an entry, like, `pos_tag` for the entry `Token`.
+* *Top Entry* - Top entries are a set of entries defined in Forte, in the module `forte.data.ontology.base.top`. All user-defined entries should extend one of the top entries.
  
 ### Simple Ontology config ###
 A simple example user-defined ontology looks like the following:
@@ -51,6 +51,7 @@ The skeleton of the json schema looks like the following:
 {
   "name": "simple_ontology",
   "description": "Simple Ontology",
+  "prefix": "ft.onto",
   "import_paths": [
   
   ],
@@ -60,34 +61,43 @@ The skeleton of the json schema looks like the following:
 }
 ```
 - The `name` and `description` are annotation keywords meant for descriptive
-purposes only. They do not add any value to the ontology generation.
-- `import_paths` are an optional keyword. They are used to define a list of json configs 
-paths that the current config might depend on. 
-    - The entries of the current config can use
-the entries of the imported configs in type specifications or defining parent classes. 
+purposes only.
+- The `prefix` is an optional keyword that refers to the package name for all
+the entry names and types. The default value of `prefix` is `ft.onto`. 
+It is to be specified only when the user prefers to use a custom package name
+for the generated ontology.
+- `import_paths` is an optional keyword. It is used to define a list of json
+configs paths that the current config might depend on.
+    - The entries of the current config can use the entries of the imported
+    configs in type specifications or defining parent classes. 
     - The import paths either be absolute paths or relative to the directory of 
-    the current config, current working directory, or to one of the user-provided
-    ``config_paths`` (see [usage](#usage).)
-- `definitions:` is a list of entry definition, where each entry is represented as a dictionary. For each entry, one class will be generated. The keywords of an entry are explained in the next section.
+    the current config, current working directory, or to one of the
+    user-provided ``config_paths`` (see [usage](#usage).)
+- `definitions:` is a list of entry definition, where each entry is represented
+as a dictionary. For each entry, one class will be generated. The keywords of an
+entry are explained in the next section.
 
 ##### ```definitions``` #####
 For each definition - 
-* The `namespace: str` keyword contain the full namespace of the entry. It should be of the form ```<package_name>.<module_name>.<entry_name>``` or ```<module_name>.<entry_name>```.
-    * The `<package_name>` is used to generate the package directory tree. If it is not provided, it is assumed to be `ft.onto`.
-    * The `<module_name>` would be the generated file name in which the entry would be placed.
+* The `entry_name` keyword defines the name of the entry. It should be 
+of the form ```<module_name>.<entry_name>```.
+    * The package name is `ft.onto` by default (unless, the ``prefix`` keyword 
+    is defined at the top level of the config). It is used to generate the package directory tree.
+    * The `<module_name>` would be the generated file name in which the entry would be placed. Note that entries defined in the same
+    config can have module names that are different from each other.
     * The `<entry_name>` would be used as the generated class name.
- * The `type: str`: Defines the base class of the entry class. All the user-defined entries should inherit either any of the base entries or one of the other user-defined entries. The parent class would be used to initialize the arguments of the *\_\_init__* function.
- * `description: Optional[str]`: String description of the entry to be used as the docstring of the generated Python class if provided.
- * `attributes: Optional[List]`: List of attributes that would be used as instance variables of the generated class. Each keyword for an attribute is defined in the next section.
+ * The `parent_type`: Defines the base class of the generated entry class. All the user-defined entries should inherit either any of the top entries or one of the other user-defined entries.
+ * `description`: Optional keyword used to define description of the entry to be used as the comment of the generated Python class if provided.
+ * `attributes`: List of attributes that would be used as instance variables of the generated class. Each keyword for an attribute is defined in the next section.
 
 ##### ```attributes``` #####
 For each attribute - 
 * The `name` keyword defines the name of the property unique to the entry.
-* `description: Optional[str]`: String description of the attribute to be used as the docstring of the generated Python class if provided.
+* `description`: Optional keyword used to define description of the entry to be used as the comment of the generated Python class if provided.
 * `type: str`: Type of the attribute. Currently supported types are:
-    * Primary types - `int`, `float`, `str` 
+    * Primitive types - `int`, `float`, `str`, `bool`
     * Composite types - `List`
-    * Base entries - The attributes can be of the type base
+    * Top entries - The attributes can be of the type base
     entries (defined in the `top` module) and can be directly referred by the
      class name.
     * User-defined types - The attributes can be of the type entries that are
