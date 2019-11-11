@@ -1,9 +1,9 @@
 """
 This class defines the basic ontology supported by our system
 """
-from typing import Optional, Dict, List, Set
+from typing import Optional, Dict, List, Set, Any
 from forte.data.data_pack import DataPack
-from forte.data.ontology import Entry, Annotation, Link, Group
+from forte.data.ontology import Entry, Annotation, Link, Group, Generic
 
 __all__ = [
     "Token",
@@ -15,7 +15,8 @@ __all__ = [
     "PredicateLink",
     "CoreferenceGroup",
     "Dependency",
-    "RelationLink"
+    "RelationLink",
+    "Query"
 ]
 
 
@@ -63,6 +64,19 @@ class Sentence(Annotation):
         super().__init__(pack, begin, end)
 
 
+class Passage(Annotation):
+    """
+    A span based annotation :class:`Passage`.
+
+    Args:
+        pack (DataPack): The data pack this token belongs to.
+        begin (int): The offset of the first character in the sentence.
+        end (int): The offset of the last character in the sentence + 1.
+    """
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+
 class Document(Annotation):
     """
     A span based annotation :class:`Document`.
@@ -74,6 +88,7 @@ class Document(Annotation):
     """
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.label: Any = None
 
 
 class EntityMention(Annotation):
@@ -222,3 +237,21 @@ class Utterance(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.seq_num: str
+
+
+class Query(Generic):
+    r""" A generic query type to be used for Information Retrieval applications.
+    The query can be of any type - a string, array or a tensor.
+
+    Args:
+        pack (DataPack): The data pack this query belongs to.
+
+    Attr:
+        query: (Any): Query to be searched against.
+        doc_ids (Optional[Dict[str, str]]): Document labels pertaining to the
+        query mapped to the list of corresponding document ids.
+    """
+    def __init__(self, pack: DataPack):
+        super().__init__(pack)
+        self.query: Any = None
+        self.doc_ids: Optional[Dict[str, List[str]]] = None
