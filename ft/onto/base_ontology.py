@@ -21,6 +21,7 @@ from forte.data.ontology import Entry, Annotation, Link, Group, Generic
 __all__ = [
     "Token",
     "Sentence",
+    "Passage",
     "Document",
     "EntityMention",
     "PredicateArgument",
