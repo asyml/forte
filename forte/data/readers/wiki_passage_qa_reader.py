@@ -117,6 +117,7 @@ class WikiPassageQAReader(PackReader):
         data_pack.meta.doc_id = doc_id
 
         annotations: List[Union[Passage, Document, Query]] = []
+
         if not is_query:
             # add passages
             for passage in doc_content:
