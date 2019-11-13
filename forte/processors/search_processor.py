@@ -5,9 +5,10 @@ from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data import DataPack, MultiPack
+from forte.common.types import DataRequest
+from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
 from forte.indexers import EmbeddingBasedIndexer
-from forte.common.types import DataRequest
 
 from ft.onto.base_ontology import Document
 
@@ -48,8 +49,8 @@ class SearchProcessor(MultiPackProcessor):
 
     def _process(self, input_pack: MultiPack):
         query_pack = input_pack.get_pack("pack")
-        query = query_pack.query
-        results = self.index.search(query, self.k)
+        first_query = list(query_pack.get_entries(Query))[0]
+        results = self.index.search(first_query.value, self.k)
         documents = [r[1] for result in results for r in result]
 
         packs = {}

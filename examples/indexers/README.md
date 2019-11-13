@@ -44,5 +44,5 @@ The machine translation processor currently uses Bing APIs to perform the transl
 following environment variable to use the processor
 
 ```
-export MICROSOFT_API_KEY=2699c6fb32684483ae050b45f2af3de9
+export MICROSOFT_API_KEY=<YOUR_MICROSOFT_KEY>
 ```

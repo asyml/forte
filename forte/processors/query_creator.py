@@ -9,6 +9,8 @@ from forte.data import MultiPack
 from forte.processors.base import MultiPackProcessor
 from forte.common.types import DataRequest
 
+from forte.data.ontology import Query
+
 __all__ = [
     "QueryCreator"
 ]
@@ -78,5 +80,5 @@ class QueryCreator(MultiPackProcessor):
         _, query_vector = self.get_embeddings(input_ids, segment_ids)
         query_vector = torch.mean(query_vector, dim=0, keepdim=True)
         query_vector = query_vector.cpu().numpy()
-        # todo: change this to a generic
-        query_pack.query = query_vector
+        query = Query(pack=query_pack, value=query_vector)
+        query_pack.add_or_get_entry(query)

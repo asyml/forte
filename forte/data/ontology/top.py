@@ -1,5 +1,6 @@
 from functools import total_ordering
 from typing import Optional, Set, Tuple, Type, Any
+import numpy as np
 
 from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
@@ -16,6 +17,8 @@ __all__ = [
     "MultiPackGroup",
     "MultiPackLink",
     "SubEntry",
+    "Embedding",
+    "Query",
     "SinglePackEntries",
     "MultiPackEntries",
 ]
@@ -390,6 +393,57 @@ class MultiPackGroup(BaseGroup[SubEntry]):
             members: Optional[Set[SubEntry]],
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)
+
+
+class Embedding(Entry):
+    r"""An entry type to store embeddings/vectors. This type stores the
+    embedding of the entry types. This should be used in
+    conjunction with other entry types for e.g., Tokens, Annotations etc.
+
+    Args:
+        pack (Data pack): Data pack reference to which this query will be added
+    """
+
+    def __init__(self, pack):
+        super().__init__(pack)
+        self.value: np.ndarray
+
+    def __getstate__(self):
+        r"""During serialization, convert the numpy array as a list.
+
+        Returns:
+            A dict with numpy array converted to list
+        """
+
+        state = self.__dict__
+        state["value"] = self.value.tolist()
+        return state
+
+    # pylint: disable=attribute-defined-outside-init
+    def __setstate__(self, state):
+        r"""During de-serialization, convert the list back to numpy array.
+
+        Args:
+            state (dict): A dictionary which is used to initialize the current
+                object.
+        """
+
+        state["value"] = np.array(state["value"])
+        self.__dict__ = state["value"]
+
+
+class Query(Generic):
+    r"""An entry type representing queries for information retrieval tasks.
+
+    Args:
+        pack (Data pack): Data pack reference to which this query will be added
+        value (numpy array or str): A vector or a string (in case of traditional
+            models) representing the query.
+    """
+
+    def __init__(self, pack: PackType, value):
+        super().__init__(pack)
+        self.value: Embedding = value
 
 
 SinglePackEntries = (Link, Group, Annotation)
