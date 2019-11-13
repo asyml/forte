@@ -32,7 +32,8 @@ setuptools.setup(
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt'],
         'example': ['termcolor'],
-        'wikipedia': ['rdflib']
+        'wikipedia': ['rdflib'],
+        'ir': ['pandas']
     },
     package_data={
     },
