@@ -1,3 +1,16 @@
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 A reader to read `WikiPassageQA` dataset, that contains documents divided into
 passages and queries labeled with relevant passages and documents. This reader
@@ -85,7 +98,7 @@ class WikiPassageQAReader(PackReader):
         if passage_mode:
             df["labels"] = df.apply(_get_passage_ids, axis=1)
         else:
-            df["labels"].apply(lambda labels: labels.split(','), inplace=True)
+            df["labels"] = df["DocumentID"].apply(lambda lst: [f'{lst}'])
 
         # send all the queries with relevant docs
         for _, row in df.iterrows():
@@ -95,11 +108,11 @@ class WikiPassageQAReader(PackReader):
         for _, row in df.iterrows():
             for doc_id in row["labels"]:
                 if passage_mode:
-                    doc_id_, passage_id = doc_id.split('_')
-                    doc_content = [corpus[doc_id_][passage_id]]
+                    did, pid = doc_id.split('_')
+                    doc_content = [corpus[did][pid]]
                 else:
-                    doc_content = [corpus[doc_id][passage_id]
-                                   for passage_id in corpus[doc_id]]
+                    doc = corpus[doc_id]
+                    doc_content = [doc[pid] for pid in sorted(doc.keys())]
                 yield False, doc_id, doc_content, None
 
     def _parse_pack(self, doc_info: DocInfoType) -> Iterator[DataPack]:
@@ -123,7 +136,7 @@ class WikiPassageQAReader(PackReader):
             for passage in doc_content:
                 annotations.append(Passage(data_pack, 0, len(passage)))
 
-            doc_text = '\n'.join(doc_content)
+            doc_text = os.linesep.join(doc_content)
             annotations.append(Document(data_pack, 0, len(doc_text)))
             data_pack.set_text(doc_text)
         else:
