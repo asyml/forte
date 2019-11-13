@@ -2,13 +2,14 @@ import os
 import logging
 import pickle
 from abc import ABC
-from typing import Optional, Dict, Union
+from typing import Optional, List, Tuple, Dict, Union, Any
 import numpy as np
 
 import torch
 from texar.torch import HParams
-
 import faiss
+
+from forte import utils
 
 __all__ = [
     "ElasticSearchIndexer",
@@ -50,9 +51,10 @@ class EmbeddingBasedIndexer(BaseIndexer):
             and default values.
     """
 
-    INDEX_TYPE_TO_CLASS = {
-        "IndexFlatL2": faiss.IndexFlatL2,
-        "GpuIndexFlatIP": faiss.GpuIndexFlatIP
+    INDEX_TYPE_TO_CONFIG = {
+        "GpuIndexFlatL2": "GpuIndexFlatConfig",
+        "GpuIndexFlatIP": "GpuIndexFlatConfig",
+        "GpuIndexIVFFlat": "GpuIndexIVFFlatConfig"
     }
 
     def __init__(self, hparams: Optional[Union[Dict, HParams]] = None):
@@ -62,28 +64,43 @@ class EmbeddingBasedIndexer(BaseIndexer):
         self._meta_data: Dict[int, str] = {}
 
         index_type = self._hparams.index_type
-        self.index_class = self.INDEX_TYPE_TO_CLASS[index_type] if \
-            isinstance(index_type, str) else index_type
-
+        device = self._hparams.device
         dim = self._hparams.dim
 
-        # GPU based indexers are prefixed with "Gpu"
-        if self.index_class.__name__.startswith("Gpu"):
-            res = faiss.StandardGpuResources()
-            self._index = self.index_class(res, dim)
+        if device.lower().startswith("gpu"):
+            if isinstance(index_type, str) and not index_type.startswith("Gpu"):
+                index_type = "Gpu" + index_type
+
+            index_class = utils.get_class(index_type, module_paths=["faiss"])
+            gpu_resource = faiss.StandardGpuResources()
+            gpu_id = int(device[3:])
+            if faiss.get_num_gpus() < gpu_id:
+                gpu_id = 0
+                logging.warning("Cannot create the index on device %s. "
+                                "Total number of GPUs on this machine is "
+                                "%s. Using gpu0 for the index.",
+                                self._hparams.device, faiss.get_num_gpus())
+            config_class_name = \
+                self.INDEX_TYPE_TO_CONFIG.get(index_class.__name__)
+            config = utils.get_class(config_class_name,
+                                     module_paths=["faiss"])()
+            config.device = gpu_id
+            self._index = index_class(gpu_resource, dim, config)
 
         else:
-            self._index = self.index_class(dim)
+            index_class = utils.get_class(index_type, module_paths=["faiss"])
+            self._index = index_class(dim)
 
     @staticmethod
-    def default_hparams():
+    def default_hparams() -> Dict[str, Any]:
         r"""Returns a dictionary of default hyperparameters.
 
         .. code-block:: python
 
             {
-                "index_type": "GpuIndexFlatIP",
-                "dim": 768
+                "index_type": "IndexFlatIP",
+                "dim": 768,
+                "device": "cpu"
             }
 
         Here:
@@ -99,8 +116,9 @@ class EmbeddingBasedIndexer(BaseIndexer):
         """
 
         return {
-            "index_type": "GpuIndexFlatIP",
-            "dim": 768
+            "index_type": "IndexFlatIP",
+            "dim": 768,
+            "device": "cpu"
         }
 
     def index(self):
@@ -130,7 +148,7 @@ class EmbeddingBasedIndexer(BaseIndexer):
     def embed(self):
         pass
 
-    def search(self, query, k):
+    def search(self, query: np.ndarray, k: int) -> List[List[Tuple[int, str]]]:
         r"""Search ``k`` nearest vectors for the ``query`` in the index.
 
         Args:
@@ -156,7 +174,7 @@ class EmbeddingBasedIndexer(BaseIndexer):
         return [[(idx, self._meta_data[idx]) for idx in index]
                 for index in indices]
 
-    def save(self, path: str):
+    def save(self, path: str) -> None:
         r"""Save the index and meta data in ``path`` directory. The index
         will be saved as ``index.faiss`` and ``index.meta_data`` respectively
         inside ``path`` directory.
@@ -172,29 +190,42 @@ class EmbeddingBasedIndexer(BaseIndexer):
         else:
             os.makedirs(path)
 
-        cpu_index = faiss.index_gpu_to_cpu(self._index)
+        cpu_index = faiss.index_gpu_to_cpu(self._index) \
+            if self._index.__class__.__name__.startswith("Gpu") else self._index
         faiss.write_index(cpu_index, f"{path}/index.faiss")
         with open(f"{path}/index.meta_data", "wb") as f:
             pickle.dump(self._meta_data, f)
 
-    def load(self, path: str):
+    def load(self, path: str, device: Optional[str] = None) -> None:
         r"""Load the index and meta data from ``path`` directory.
 
         Args:
             path (str): A path to the directory to load the index from.
+            device (optional str): Device to load the index into. If None,
+                value will be picked from hyperparameters.
 
         """
 
         if not os.path.exists(path):
-            raise ValueError(f"Failed to load the index. "
-                             f"{path} does not exist.")
+            raise ValueError(f"Failed to load the index. {path} "
+                             f"does not exist.")
 
-        # todo: handle the transfer of model between GPU and CPU efficiently
         cpu_index = faiss.read_index(f"{path}/index.faiss")
 
-        if self.index_class.__name__.startswith("Gpu"):
-            res = faiss.StandardGpuResources()
-            self._index = faiss.index_cpu_to_gpu(res, 0, cpu_index)
+        if device is None:
+            device = self._hparams.device
+
+        if device.lower().startswith("gpu"):
+            gpu_resource = faiss.StandardGpuResources()
+            gpu_id = int(device[3:])
+            if faiss.get_num_gpus() < gpu_id:
+                gpu_id = 0
+                logging.warning("Cannot create the index on device %s. "
+                                "Total number of GPUs on this machine is "
+                                "%s. Using the gpu0 for the index.",
+                                device, faiss.get_num_gpus())
+            self._index = faiss.index_cpu_to_gpu(
+                gpu_resource, gpu_id, cpu_index)
 
         else:
             self._index = cpu_index

@@ -65,7 +65,8 @@ def main():
         data_iterator = DataIterator(record_data)
         index = EmbeddingBasedIndexer(hparams={
             "index_type": "GpuIndexFlatIP",
-            "dim": 768
+            "dim": 768,
+            "device": "gpu0"
         })
 
         for idx, batch in enumerate(data_iterator):

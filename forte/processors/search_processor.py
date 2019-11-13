@@ -25,7 +25,8 @@ class SearchProcessor(MultiPackProcessor):
 
         self.index = EmbeddingBasedIndexer(hparams={
             "index_type": "GpuIndexFlatIP",
-            "dim": 768
+            "dim": 768,
+            "device": "gpu0"
         })
 
     def initialize(self, resources: Optional[Resources],

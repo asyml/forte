@@ -16,6 +16,7 @@ class TestEmbeddingBasedIndexer(unittest.TestCase):
         self.index.add(vectors, meta_data={0: "0", 1: "1", 2: "2"})
 
     def test_indexer(self):
+        self.assertEqual(self.index._index.ntotal, 3)
         actual_results = [[np.array([1, 0], dtype=np.float32),
                            np.array([1, 1], dtype=np.float32)],
                           [np.array([1, 0], dtype=np.float32),
