@@ -1,24 +1,20 @@
 {
-  "ontology_name": "forte.data.ontology.stanfordnlp_ontology",
-  "imports": [
-    "forte.data.ontology.top",
-    "forte.data.ontology.base_ontology"
-  ],
+  "ontology_name": "stanfordnlp_ontology",
   "entry_definitions": [
     {
-      "entry_name": "forte.data.ontology.stanfordnlp_ontology.Token",
-      "parent_entry": "forte.data.ontology.top.Annotation",
+      "entry_name": "stanfordnlp_ontology.Token",
+      "parent_entry": "Annotation",
       "attributes": [
         {
           "attribute_name": "lemma",
           "attribute_type": "str"
         },
         {
-          "attribute_name": "pos_tag",
-          "attribute_type": "str"
+          "attribute_name": "is_verb",
+          "attribute_type": "bool"
         },
         {
-          "attribute_name": "upos",
+          "attribute_name": "num_chars",
           "attribute_type": "str"
         },
         {
@@ -28,27 +24,27 @@
       ]
     },
     {
-      "entry_name": "forte.data.ontology.stanfordnlp_ontology.Sentence",
-      "parent_entry": "forte.data.ontology.top.Annotation",
+      "entry_name": "stanfordnlp_ontology.Sentence",
+      "parent_entry": "Annotation",
       "attributes": [
         {
           "attribute_name": "tokens",
           "attribute_type": "List",
-          "element_type": "forte.data.ontology.stanfordnlp_ontology.Token"
+          "element_type": "stanfordnlp_ontology.Token"
         }
       ]
     },
     {
-      "entry_name": "forte.data.ontology.stanfordnlp_ontology.Document",
-      "parent_entry": "forte.data.ontology.top.Annotation"
+      "entry_name": "stanfordnlp_ontology.Document",
+      "parent_entry": "Annotation"
     },
     {
-      "entry_name": "forte.data.ontology.stanfordnlp_ontology.Dependency",
-      "parent_entry": "forte.data.ontology.top.Link",
-      "parent_type": "forte.data.ontology.stanfordnlp_ontology.Token",
-      "child_type": "forte.data.ontology.stanfordnlp_ontology.Token",
+      "entry_name": "stanfordnlp_ontology.Dependency",
+      "parent_entry": "Link",
       "attributes": [
         {
+          "parent_type": "stanfordnlp_ontology.Token",
+          "child_type": "stanfordnlp_ontology.Token",
           "attribute_name": "rel_type",
           "attribute_type": "str"
         }

@@ -61,14 +61,14 @@ def search_in_dirs(file, dirs_paths):
     return None
 
 
-def get_top_level_dirs(path):
+def get_top_level_dirs(path: Optional[str]):
     """
     Args:
         path: Path for which the directories at depth==1 are to be returned
     Returns:
         Directories at depth==1 for `path`.
     """
-    if not os.path.exists(path):
+    if path is None or not os.path.exists(path):
         return []
     return [item for item in os.listdir(path)
             if os.path.isdir(os.path.join(path, item))]

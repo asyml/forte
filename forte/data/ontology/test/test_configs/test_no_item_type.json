@@ -1,0 +1,15 @@
+{
+    "name": "test_ontology",
+    "definitions": [
+        {
+            "entry_name": "test_ontology.Word",
+            "parent_type": "Annotation",
+            "attributes": [
+                {
+                    "name": "features",
+                    "type": "List"
+                }
+            ]
+        }
+    ]
+}

@@ -174,7 +174,7 @@ def prepare_rnn_seq(rnn_input, lengths, hx=None, masks=None, batch_first=False):
 
     Args:
         rnn_input: [seq_len, batch, input_size]:
-            tensor containing the ud_features of the input sequence.
+            tensor containing the features of the input sequence.
         lengths: [batch]:
             tensor containing the lengthes of the input sequence
         hx: [num_layers * num_directions, batch, hidden_size]:
