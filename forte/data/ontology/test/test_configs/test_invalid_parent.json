@@ -1,0 +1,20 @@
+{
+    "name": "test_ontology",
+    "definitions": [
+        {
+            "entry_name": "test_ontology.Token",
+            "parent_type": "Entry",
+            "description": "Base parent token entry",
+            "attributes": [
+                {
+                    "name": "pos",
+                    "type": "str"
+                },
+                {
+                    "name": "lemma",
+                    "type": "str"
+                }
+            ]
+        }
+    ]
+}

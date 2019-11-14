@@ -8,7 +8,8 @@ This _Ontology Configuration_ tutorial teaches how to:
 * Generate the corresponding Python ontologies automatically and use them in your project. 
 
 Overview of Forte concepts used in this tutorial:
-* *Ontology* - A set of entries, one ontology can span one or multiple python modules. The modules always belong to the package `forte.data.ontology`.
+* *Ontology* - A set of entries, one ontology can span one or more python 
+modules. The modules generally belong to the package `ft.onto`.
 * *Entry* - An entry corresponds to one NLP unit in the document, for instance, an annotated sequence or relationship between annotated sequences. `Token`, `Sentence` and `DependencyLink` are some examples of entries. One entry defined in the config is used to generate one python class.
 * *Attribute* - An attribute generally corresponds to a label or property associated with an entry, like, `pos_tag` for the entry `Token`.
 * *Top Entry* - Top entries are a set of entries defined in Forte, in the module `forte.data.ontology.base.top`. All user-defined entries should extend one of the top entries.

@@ -1,3 +1,16 @@
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import os
 from collections import OrderedDict
 from typing import List, Optional, Any
@@ -5,7 +18,7 @@ from typing import List, Optional, Any
 
 class Config:
     indent: int = 4
-    line_break: str = "\n"
+    line_break: str = os.linesep
 
 
 def indent(level: int) -> str:
@@ -31,9 +44,6 @@ class Item:
     def __init__(self, name: str, description: Optional[str]):
         self.name: str = name
         self.description: Optional[str] = description
-
-    def type_name(self):
-        return self.name
 
     def to_description(self, level: int) -> Optional[str]:
         if self.description is not None:
@@ -63,18 +73,18 @@ class Property(Item):
                  (f"def {name}(self):", 0),
                  (f"return self._{name}", 1),
                  (empty_lines(0), 0),
-                 (f"def set_{name}(self, {name}: {self.type_name()}):", 0),
+                 (f"def set_{name}(self, {name}: {self.to_code(0)}):", 0),
                  (f"self._{name} = {name}", 1),
                  (empty_lines(0), 0)]
         return indent_code([indent_line(*line) for line in lines], level)
 
     def to_init_code(self, level: int) -> str:
-        return indent_line(f"self._{self.name}: {self.type_name()} = "
+        return indent_line(f"self._{self.name}: {self.to_code(0)} = "
                            f"{repr(self.default)}", level)
 
     def to_description(self, level: int) -> Optional[str]:
         if self.description is not None and self.description.strip() != '':
-            return indent_line(f"{self.name} ({self.type_name()}): "
+            return indent_line(f"{self.name} ({self.to_code(0)}): "
                                f"{self.description}", level)
         return None
 
@@ -90,7 +100,7 @@ class BasicItem(Property):
         super().__init__(name, type_str, description, default)
         self.type_str = type_str
 
-    def type_name(self):
+    def to_code(self, level: int = 0) -> str:
         return f"typing.Optional[{self.type_str}]"
 
 
@@ -106,8 +116,14 @@ class CompositeItem(Property):
         super().__init__(name, type_str, description, default)
         self.items = items
 
-    def type_name(self):
-        return f"typing.Optional[{self.type_str}[{', '.join(self.items)}]]"
+    def to_code(self, level: int = 0) -> str:
+        items = list(OrderedDict([(item, None) for item in self.items]).keys())
+        item_type_str = f"{', '.join(items)}"
+
+        if len(self.items) > 1:
+            item_type_str = f"typing.Union[{item_type_str}]"
+
+        return f"typing.Optional[{self.type_str}[{item_type_str}]]"
 
 
 class DefinitionItem(Item):

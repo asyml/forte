@@ -61,7 +61,7 @@ def search_in_dirs(file, dirs_paths):
     return None
 
 
-def get_top_level_dirs(path):
+def get_top_level_dirs(path: Optional[str]):
     """
     Args:
         path: Path for which the directories at depth==1 are to be returned
