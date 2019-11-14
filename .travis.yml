@@ -37,7 +37,7 @@ script:
   # unit tests
   - pytest
   # test covarege
-  - coverage run -m unittest discover -p "*_test.py"
+  - coverage run -m pytest
 
 after_success:
   - codecov
