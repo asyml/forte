@@ -24,9 +24,8 @@ install:
   - pip install pylint==2.3.1 flake8==3.7.7
   - pip install mypy>=0.730
   - pip install pytest==4.3.1
-  - pip install pytest-cov
   # Install code coverage tools.
-  # - pip install coverage
+  - pip install coverage
   - pip install codecov
 
 script:
@@ -39,9 +38,8 @@ script:
   - python -m nltk.downloader punkt averaged_perceptron_tagger
   # unit tests
   - pytest
-  # test covarege
-  - pytest --cov-report=xml --cov
-  #- coverage run -m unittest discover -p "*_test.py"
+  # test coverage
+  - coverage run -m pytest
 
 after_success:
   - codecov
