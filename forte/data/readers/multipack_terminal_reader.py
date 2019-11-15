@@ -21,9 +21,7 @@ __all__ = [
 
 
 class MultiPackTerminalReader(MultiPackReader):
-    r"""
-    A reader designed to read text from the terminal
-    """
+    r"""A reader designed to read text from the terminal."""
 
     # pylint: disable=useless-super-delegation
     def __init__(self):
@@ -32,6 +30,7 @@ class MultiPackTerminalReader(MultiPackReader):
     # pylint: disable=unused-argument
     def initialize(self, resource: Resources, configs: HParams):
         self.resource = resource
+        self.config = configs
 
     # pylint: disable=no-self-use
     def define_output_info(self):
@@ -69,6 +68,7 @@ class MultiPackTerminalReader(MultiPackReader):
             data_source: str that contains text of a document
 
         Returns: MultiPack containing a datapack for the current query
+
         """
 
         multi_pack = MultiPack()
@@ -87,6 +87,6 @@ class MultiPackTerminalReader(MultiPackReader):
         pack.add_or_get_entry(utterance)
 
         pack.set_text(data_source, replace_func=self.text_replace_operation)
-        multi_pack.update_pack({"query": pack})
+        multi_pack.update_pack({self.config.pack_name: pack})
 
         yield multi_pack

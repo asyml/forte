@@ -11,7 +11,7 @@ response for a context.
 In this example, the user speaks in German and the bot extracts information stored in English. The 
 bot finally translates the response to German. For text analysis, we run a *Semantic Role 
 Labeler* (SRL) on the retrieved response to identify predicate mentions and arguments. Let us see a 
-step-by-step guide on how to use run this example.
+step-by-step guide on how to run this example.
 
 ## Using the example in inference mode
 
@@ -19,19 +19,19 @@ step-by-step guide on how to use run this example.
 
 Before we run the chatbot, we need to download the models. 
 
-- Download chatbot model by running
+- Download chatbot model
 
 ```bash
 python download_models.py --model-name chatbot-bert
 ```
 
-- Download the index by running
+- Download the index
 
 ```bash
 python download_models.py --model-name indexer
 ```
 
-- Download the SRL model by running
+- Download the SRL model
 
 ```bash
 python download_models.py --model-name srl
@@ -68,11 +68,11 @@ We use the conversation dataset used in the paper
 dataset. The dataset consists of several conversations between two entities A and B. Download and
 extract the dataset into `data/` folder
 
-**Note**: There is a minor issue with the dataset. Particularly, on line 810, the response from B is
- missing. Hence we fix this as below
+**Note**: There is a minor issue with the dataset. Particularly, in line 810, the response from B is
+ missing. We fix this as below
 
 ```python
-sed -i '810s/.*/2 mine too ! ! ! ! ! now i can play quake and feed my dogs\tnice. do you have farms?/' source/all_none_original_no_cands.txt
+sed -i '810s/.*/2 mine too ! ! ! ! ! now i can play quake and feed my dogs\tnice. do you have farms?/' data/source/all_none_original_no_cands.txt > data/source/dataset.txt
 ```
 
 You can use replace *"nice. do you have farms?"* with any text as long as the response is
@@ -110,11 +110,24 @@ python finetune_bert_chatbot.py
 ```
 
 We finetune for 1 epoch using Adam optimizer. This process takes ~1.5 hours to train on a single 
-GeForce GTX 1080 Ti with 11GB of GPU memory. After 1 epoch, test accuracy should be around `80%`.
+GeForce GTX 1080 Ti with 11GB of GPU memory. After 1 epoch, test accuracy should be around `81%`.
+The model is saved in `model/`.
+
+```bash
+Evaluating on eval dataset. Accuracy based on Cosine Similarity: 0.8014592933947773,Accuracy 
+based on logits: 0.8031753897666931,nsamples: 7812
+step: 8050; loss: 0.2928136885166168
+step: 8100; loss: 0.4982462227344513
+step: 8150; loss: 0.5195412039756775
+step: 8200; loss: 0.15928469598293304
+Evaluating on test dataset. Accuracy based on Cosine Similarity: 0.8077812018489985,Accuracy 
+based on logits: 0.8115370273590088,nsamples: 7788
+Saving the model...
+```
 
 ### Download SRL model
 
-The training process above does not train an SRL model. Hence we download it as below
+The training process above does not train an SRL model. We download it as below
 
 ```bash
 python download_models.py --model-name srl

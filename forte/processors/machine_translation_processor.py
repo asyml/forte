@@ -37,6 +37,8 @@ class MachineTranslationProcessor(MultiPackProcessor):
     # pylint: disable=unused-argument
     def initialize(self, resources: Optional[Resources],
                    configs: Optional[HParams]):
+        self.resources = resources
+
         if configs:
             self.src_language = configs.src_language
             self.target_language = configs.target_language

@@ -30,7 +30,7 @@ class QueryCreator(MultiPackProcessor):
         self.config = configs
 
         self.tokenizer = \
-            BERTTokenizer(pretrained_model_name="bert-base-uncased")
+            BERTTokenizer(pretrained_model_name=self.config.tokenizer_model)
 
         self.device = torch.device("cuda" if torch.cuda.is_available()
                                    else "cpu")
@@ -63,15 +63,15 @@ class QueryCreator(MultiPackProcessor):
     @torch.no_grad()
     def get_embeddings(self, inputs, sequence_length, segment_ids):
         output, _ = self.encoder(inputs=inputs,
-                            sequence_length=sequence_length,
-                            segment_ids=segment_ids)
+                                 sequence_length=sequence_length,
+                                 segment_ids=segment_ids)
         cls_token = output[:, 0, :]
 
         return cls_token
 
     def _process(self, input_pack: MultiPack):
 
-        query_pack = input_pack.get_pack("pack")
+        query_pack = input_pack.get_pack(self.config.query_pack_name)
         context = [query_pack.text]
 
         # use context to build the query
@@ -86,7 +86,8 @@ class QueryCreator(MultiPackProcessor):
         text = ' '.join(context)
 
         input_ids, segment_ids, input_mask = \
-            self.tokenizer.encode_text(text_a=text, max_seq_length=128)
+            self.tokenizer.encode_text(
+                text_a=text, max_seq_length=self.config.max_seq_length)
         input_ids = torch.LongTensor(input_ids).unsqueeze(0).to(self.device)
         segment_ids = torch.LongTensor(segment_ids).unsqueeze(0).to(self.device)
         input_mask = torch.LongTensor(input_mask).unsqueeze(0).to(self.device)

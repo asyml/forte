@@ -223,9 +223,7 @@ if __name__ == "__main__":
     print("Saving the model...")
     states = {
         'bert': chatbot_bert.bert.state_dict(),
-        'classifier': chatbot_bert.classifier.state_dict(),
-        'optimizer': optim.state_dict(),
-        'scheduler': scheduler.state_dict(),
+        'classifier': chatbot_bert.classifier.state_dict()
     }
     with open(Path(args.output_dir, 'chatbot_model.ckpt'), "wb") as f:
         pickle.dump(states, f)
