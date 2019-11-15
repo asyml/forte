@@ -1,0 +1,66 @@
+translator:
+  src_language: "de"
+  target_language: "en"
+  in_pack_name: "query"
+  out_pack_name: "pack"
+
+query_creator:
+  vocab_file: "data/pretrained_models/uncased_L-12_H-768_A-12/vocab.txt"
+
+indexer:
+  max_seq_length: 512
+  batch_size: 128
+  pickle_data_dir: "data/imdb.pkl"
+  model_dir: "data/faiss-index.mdl"
+  k: 1
+
+NER:
+  config_data:
+    max_char_length: 45
+    num_char_pad: 2
+
+  config_model:
+
+    resource_dir: "data/ner"
+
+    output_hidden_size: 128
+    dropout_rate: 0.3
+
+    char_emb:
+      dim: 30
+      initializer:
+        'type': 'normal_'
+
+    char_cnn_conv:
+      in_channels: 30
+      out_channels: 30
+      kernel_size: 3
+      padding: 2
+
+    bilstm_sentence_encoder:
+      # Input size should be the sum of char_embed.dim and word_emb.dim
+      rnn_cell_fw:
+        input_size: 130
+        type: LSTMCell
+        kwargs:
+          num_units: 128
+      rnn_cell_share_config: yes
+      output_layer_fw:
+        num_layers: 0
+      output_layer_share_config: yes
+
+    initializer:
+      "type": "xavier_uniform_"
+
+    random_seed: 1234
+
+SRL:
+  storage_path: "data/srl"
+  batcher:
+    batch_size: 1
+
+back_translator:
+  src_language: "en"
+  target_language: "de"
+  in_pack_name: "doc_0"
+  out_pack_name: "response"
