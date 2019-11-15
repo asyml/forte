@@ -1,8 +1,21 @@
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 The reader for reading sentences from text files into MultiPack
 """
 import os
-from typing import Any, Iterator
+from typing import Any, Iterator, Dict
 
 from texar.torch import HParams
 
@@ -20,14 +33,19 @@ __all__ = [
 
 
 class MultiPackSentenceReader(MultiPackReader):
-    r"""
-    :class:`PlainSentenceTxtgenReader` is designed to read a file where
-    each line is a sentence, and wrap it with MultiPack for the following
-    text generation processors.
+    r""":class:`MultiPackSentenceReader` is designed to read a directory of
+    files and convert each file's contents into a data pack. This class yields a
+    multipack with pack ``input_pack_name`` containing the file's contents.
+    It additionally packs an empty pack with name ``output_pack_name`` into the
+    multipack.
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.config = HParams(None, self.default_hparams())
+
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resource: Resources, configs: HParams) -> None:
         self.resource = resource
         self.config = configs
 
@@ -77,8 +95,32 @@ class MultiPackSentenceReader(MultiPackReader):
             yield m_pack
 
     @staticmethod
-    def default_hparams():
+    def default_hparams() -> Dict[str, str]:
+        r"""Returns a dictionary of hyperparameters with default values.
+
+        .. code-block:: python
+
+            {
+                "name": "multipack_sentence_reader"
+                "input_pack_name": "input_src",
+                "output_pack_name": "output_tgt"
+            }
+
+        Here:
+
+        `"name"`: str
+            Name of the reader
+
+        `"input_pack_name"`: str
+            Name of the input pack. This name can be used to retrieve the input
+            pack from the multipack.
+
+        `"output_pack_name"`: str
+            Name of the output pack. This name can be used to retrieve the
+            output pack from the multipack.
+        """
         return {
+            "name": "multipack_sentence_reader",
             "input_pack_name": "input_src",
             "output_pack_name": "output_tgt"
         }
