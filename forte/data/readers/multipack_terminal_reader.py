@@ -1,6 +1,19 @@
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # pylint: disable=attribute-defined-outside-init
 """
-The reader that reads text data from into Multipack.
+The reader that reads text data from a terminal and packs into a Multipack.
 """
 import logging
 from typing import Iterator
@@ -11,7 +24,7 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
 
-from ft.onto.base_ontology import Document, Utterance
+from ft.onto.base_ontology import Utterance
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +44,6 @@ class MultiPackTerminalReader(MultiPackReader):
     def initialize(self, resource: Resources, configs: HParams):
         self.resource = resource
         self.config = configs
-
-    # pylint: disable=no-self-use
-    def define_output_info(self):
-        return {
-            Document: [],
-        }
 
     # pylint: disable=no-self-use,unused-argument
     def _cache_key_function(self, collection) -> str:
