@@ -106,9 +106,6 @@ def main():
     query_pipeline.add_processor(
         processor=SRLPredictor(), config=config.SRL,
         selector=NameMatchSelector(select_name="doc_0"))
-    # query_pipeline.add_processor(
-    #    processor=CoNLLNERPredictor(), config=config.NER,
-    #    selector=NameMatchSelector(select_name="doc_0"))
     query_pipeline.add_processor(
         processor=MachineTranslationProcessor(), config=config.back_translator)
 
@@ -117,13 +114,13 @@ def main():
     for m_pack in query_pipeline.process_dataset():
 
         # update resource to be used in the next conversation
-        query_pack = m_pack.get_pack("query")
+        query_pack = m_pack.get_pack("pack")
         if resource.get("user_utterance"):
             resource.get("user_utterance").append(query_pack)
         else:
             resource.update(user_utterance=[query_pack])
 
-        response_pack = m_pack.get_pack("response")
+        response_pack = m_pack.get_pack("doc_0")
 
         if resource.get("bot_utterance"):
             resource.get("bot_utterance").append(response_pack)

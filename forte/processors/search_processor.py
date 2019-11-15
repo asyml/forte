@@ -13,13 +13,12 @@ from forte.indexers import EmbeddingBasedIndexer
 from ft.onto.base_ontology import Document
 
 __all__ = [
-    "SearchProcessor",
+    "SearchProcessor"
 ]
 
 
 class SearchProcessor(MultiPackProcessor):
-    r"""This processor is used to search for relevant documents for a query
-    """
+    r"""This processor searches for relevant documents for a query"""
 
     def __init__(self) -> None:
         super().__init__()

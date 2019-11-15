@@ -1,4 +1,6 @@
 # pylint: disable=attribute-defined-outside-init
+import pickle
+
 import torch
 from texar.torch.hyperparams import HParams
 from texar.torch.modules import BERTEncoder
@@ -17,8 +19,7 @@ __all__ = [
 
 
 class QueryCreator(MultiPackProcessor):
-    r"""This processor is used to search for relevant documents for a query
-    """
+    r"""This processor searches relevant documents for a query"""
 
     # pylint: disable=useless-super-delegation
     def __init__(self) -> None:
@@ -26,12 +27,21 @@ class QueryCreator(MultiPackProcessor):
 
     def initialize(self, resources: Resources, configs: HParams):
         self.resource = resources
-        vocab_file = configs.vocab_file
-        self.tokenizer = BERTTokenizer.load(vocab_file)
+        self.config = configs
 
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu")
-        self.encoder = BERTEncoder(pretrained_model_name="bert-base-uncased")
+        self.tokenizer = \
+            BERTTokenizer(pretrained_model_name="bert-base-uncased")
+
+        self.device = torch.device("cuda" if torch.cuda.is_available()
+                                   else "cpu")
+
+        self.encoder = BERTEncoder(
+            pretrained_model_name=None, hparams={"pretrained_model_name": None})
+
+        with open(self.config.model_path, "rb") as f:
+            state_dict = pickle.load(f)
+
+        self.encoder.load_state_dict(state_dict["bert"])
         self.encoder.to(self.device)
 
     # pylint: disable=no-self-use
@@ -51,12 +61,15 @@ class QueryCreator(MultiPackProcessor):
         return output_info
 
     @torch.no_grad()
-    def get_embeddings(self, input_ids, segment_ids):
-        return self.encoder(inputs=input_ids, segment_ids=segment_ids)
+    def get_embeddings(self, inputs, sequence_length, segment_ids):
+        output, _ = self.encoder(inputs=inputs,
+                            sequence_length=sequence_length,
+                            segment_ids=segment_ids)
+        cls_token = output[:, 0, :]
+
+        return cls_token
 
     def _process(self, input_pack: MultiPack):
-        input_ids = []
-        segment_ids = []
 
         query_pack = input_pack.get_pack("pack")
         context = [query_pack.text]
@@ -70,14 +83,17 @@ class QueryCreator(MultiPackProcessor):
             bot_pack = input_pack.get_pack("bot_utterance")
             context.append(bot_pack.text)
 
-        for text in context:
-            t = self.tokenizer.encode_text(text)
-            input_ids.append(t[0])
-            segment_ids.append(t[1])
+        text = ' '.join(context)
 
-        input_ids = torch.LongTensor(input_ids).to(self.device)
-        segment_ids = torch.LongTensor(segment_ids).to(self.device)
-        _, query_vector = self.get_embeddings(input_ids, segment_ids)
+        input_ids, segment_ids, input_mask = \
+            self.tokenizer.encode_text(text_a=text, max_seq_length=128)
+        input_ids = torch.LongTensor(input_ids).unsqueeze(0).to(self.device)
+        segment_ids = torch.LongTensor(segment_ids).unsqueeze(0).to(self.device)
+        input_mask = torch.LongTensor(input_mask).unsqueeze(0).to(self.device)
+        sequence_length = (1 - (input_mask == 0)).sum(dim=1)
+        query_vector = self.get_embeddings(inputs=input_ids,
+                                           sequence_length=sequence_length,
+                                           segment_ids=segment_ids)
         query_vector = torch.mean(query_vector, dim=0, keepdim=True)
         query_vector = query_vector.cpu().numpy()
         query = Query(pack=query_pack, value=query_vector)

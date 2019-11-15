@@ -1,0 +1,25 @@
+translator:
+  src_language: "de"
+  target_language: "en"
+  in_pack_name: "query"
+  out_pack_name: "pack"
+
+query_creator:
+  model_path: "model/chatbot_model.ckpt"
+  max_seq_length: 128
+
+indexer:
+  batch_size: 128
+  model_dir: "model/chatbot"
+  k: 1
+
+SRL:
+  storage_path: "model/srl"
+  batcher:
+    batch_size: 1
+
+back_translator:
+  src_language: "en"
+  target_language: "de"
+  in_pack_name: "doc_0"
+  out_pack_name: "response"
