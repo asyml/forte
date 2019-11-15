@@ -20,7 +20,7 @@ This reader is based on DBpedia's extracted datasets.
 """
 import logging
 from collections import defaultdict
-from typing import Any, Iterator, Dict, Type, Union, List, DefaultDict, Tuple
+from typing import Any, Iterator, Dict, List, DefaultDict, Tuple
 
 from texar.torch import HParams
 import rdflib
@@ -31,7 +31,6 @@ from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
     get_resource_name, get_resource_fragment,
     print_progress)
-from forte.data.ontology import Entry
 from forte.data.readers import PackReader
 from ft.onto.wikipedia import (WikiPage, WikiSection, WikiParagraph, WikiTitle,
                                WikiAnchor, WikiInfoBoxMapped)
@@ -112,9 +111,6 @@ class DBpediaWikiReader(PackReader):
         self.struct_reader = NIFBufferedContextReader(
             configs.nif_page_structure)
         self.link_reader = NIFBufferedContextReader(configs.nif_text_links)
-
-    def define_output_info(self) -> Dict[Type[Entry], Union[List, Dict]]:
-        pass
 
     def _collect(self, nif_context: str  # type: ignore
                  ) -> Iterator[Tuple[Dict[str, str],

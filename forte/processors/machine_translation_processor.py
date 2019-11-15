@@ -10,7 +10,6 @@ from texar.torch.hyperparams import HParams
 from forte.common.resources import Resources
 from forte.data import DataPack, MultiPack
 from forte.processors.base import MultiPackProcessor
-from forte.common.types import DataRequest
 
 from ft.onto.base_ontology import Document, Utterance
 
@@ -42,22 +41,6 @@ class MachineTranslationProcessor(MultiPackProcessor):
             self.target_language = configs.target_language
             self.in_pack_name = configs.in_pack_name
             self.out_pack_name = configs.out_pack_name
-
-    # pylint: disable=no-self-use
-    def _define_input_info(self) -> DataRequest:
-        input_info: DataRequest = {
-
-        }
-
-        return input_info
-
-    # pylint: disable=no-self-use
-    def _define_output_info(self) -> DataRequest:
-        output_info: DataRequest = {
-
-        }
-
-        return output_info
 
     def _process(self, input_pack: MultiPack):
         query = input_pack.get_pack(self.in_pack_name).text

@@ -7,7 +7,6 @@ from texar.torch.data import BERTTokenizer
 from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.processors.base import MultiPackProcessor
-from forte.common.types import DataRequest
 
 from forte.data.ontology import Query
 
@@ -33,22 +32,6 @@ class QueryCreator(MultiPackProcessor):
             "cuda" if torch.cuda.is_available() else "cpu")
         self.encoder = BERTEncoder(pretrained_model_name="bert-base-uncased")
         self.encoder.to(self.device)
-
-    # pylint: disable=no-self-use
-    def _define_input_info(self) -> DataRequest:
-        input_info: DataRequest = {
-
-        }
-
-        return input_info
-
-    # pylint: disable=no-self-use
-    def _define_output_info(self) -> DataRequest:
-        output_info: DataRequest = {
-
-        }
-
-        return output_info
 
     @torch.no_grad()
     def get_embeddings(self, input_ids, segment_ids):

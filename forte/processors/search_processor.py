@@ -5,7 +5,6 @@ from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data import DataPack, MultiPack
-from forte.common.types import DataRequest
 from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
 from forte.indexers import EmbeddingBasedIndexer
@@ -38,14 +37,6 @@ class SearchProcessor(MultiPackProcessor):
         if configs:
             self.index.load(configs.model_dir)
             self.k = configs.k or 5
-
-    # pylint: disable=no-self-use
-    def _define_input_info(self) -> DataRequest:
-        input_info: DataRequest = {
-
-        }
-
-        return input_info
 
     def _process(self, input_pack: MultiPack):
         query_pack = input_pack.get_pack("pack")

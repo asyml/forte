@@ -11,7 +11,7 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
 
-from ft.onto.base_ontology import Document, Utterance
+from ft.onto.base_ontology import Utterance
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +32,6 @@ class MultiPackTerminalReader(MultiPackReader):
     # pylint: disable=unused-argument
     def initialize(self, resource: Resources, configs: HParams):
         self.resource = resource
-
-    # pylint: disable=no-self-use
-    def define_output_info(self):
-        return {
-            Document: [],
-        }
 
     # pylint: disable=no-self-use,unused-argument
     def _cache_key_function(self, collection) -> str:
