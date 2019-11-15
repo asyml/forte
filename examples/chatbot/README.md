@@ -6,7 +6,7 @@ analysis on the retrieved results. We use the dataset released as part of this p
 of conversations between two entities A and B. We finetune a BERT model that helps retrieve a 
 response for a context.
 
-**Note**: All the commands below should be run from `examples/indexers/` directory.
+**Note**: All the commands below should be run from `examples/chatbot/` directory.
 
 In this example, the user speaks in German and the bot extracts information stored in English. The 
 bot finally translates the response to German. For text analysis, we run a *Semantic Role 
@@ -130,7 +130,9 @@ python chatbot_example.py
 
 to see your chatbot in action.
 
-Below is sample run of the chatbot example ![](example.gif)
+Below is sample run of the chatbot example 
+
+![](example.gif)
 
 ## Temporary settings
 
