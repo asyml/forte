@@ -1,32 +1,37 @@
 """
 Various utilities specific to data processing.
 """
-import collections
 import logging
 import os
 import sys
 import tarfile
 import urllib.request
 import zipfile
-from typing import List, Optional, overload, Union, Dict, Tuple
+from typing import List, Optional, TypeVar, overload
 
-import numpy as np
-
-from texar.torch.utils import utils_io
-from texar.torch.utils.types import MaybeList, MaybeTuple, PathLike
+PathLike = TypeVar('PathLike', str, os.PathLike)
 
 __all__ = [
-    "maybe_download",
-    "read_words",
-    "make_vocab",
-    "count_file_lines"
+    "maybe_download"
 ]
 
-Py3 = sys.version_info[0] == 3
-
-
-# TODO: Remove these once pylint supports function stubs.
 # pylint: disable=unused-argument,function-redefined,missing-docstring
+
+
+def maybe_create_dir(dirname: str) -> bool:
+    r"""Creates directory if it does not exist.
+
+    Args:
+        dirname (str): Path to the directory.
+
+    Returns:
+        bool: Whether a new directory is created.
+    """
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+        return True
+    return False
+
 
 @overload
 def maybe_download(urls: List[str], path: PathLike,
@@ -53,7 +58,7 @@ def maybe_download(urls, path, filenames=None, extract=False):
     Returns:
         A list of paths to the downloaded files.
     """
-    utils_io.maybe_create_dir(path)
+    maybe_create_dir(path)
 
     if not isinstance(urls, (list, tuple)):
         is_list = False
@@ -168,127 +173,3 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     print(f'Successfully downloaded {filename}')
 
     return filepath
-
-
-def read_words(filename: str, newline_token: Optional[str] = None) -> List[str]:
-    r"""Reads word from a file.
-
-    Args:
-        filename (str): Path to the file.
-        newline_token (str, optional): The token to replace the original newline
-            token "\\n". For example, :python:`tx.data.SpecialTokens.EOS`.
-            If `None`, no replacement is performed.
-
-    Returns:
-        A list of words.
-    """
-    with open(filename, "r") as f:
-        if Py3:
-            if newline_token is None:
-                return f.read().split()
-            else:
-                return f.read().replace("\n", newline_token).split()
-        else:
-            if newline_token is None:
-                return f.read().split()
-            else:
-                return f.read().replace("\n", newline_token).split()
-
-
-# TODO: Remove these once pylint supports function stubs.
-# pylint: disable=unused-argument,function-redefined,missing-docstring
-
-# A saner overloaded version with default arguments...
-@overload
-def make_vocab(filenames: MaybeList[str], max_vocab_size: int = -1,
-               newline_token: Optional[str] = None) -> List[str]: ...
-
-
-# ... and an insane version.
-@overload
-def make_vocab(filenames: MaybeList[str], max_vocab_size: int = -1,
-               newline_token: Optional[str] = None,
-               return_type: str = "list", return_count: bool = False) \
-        -> Union[Union[List[str], Tuple[List[str], List[int]]],
-                 MaybeTuple[Dict[str, int]]]: ...
-
-
-def make_vocab(filenames, max_vocab_size=-1, newline_token=None,
-               return_type="list", return_count=False):
-    r"""Builds vocab of the files.
-
-    Args:
-        filenames (str): A (list of) files.
-        max_vocab_size (int): Maximum size of the vocabulary. Low frequency
-            words that exceeding the limit will be discarded.
-            Set to `-1` (default) if no truncation is wanted.
-        newline_token (str, optional): The token to replace the original newline
-            token "\\n". For example, :python:`tx.data.SpecialTokens.EOS`.
-            If `None`, no replacement is performed.
-        return_type (str): Either ``list`` or ``dict``. If ``list`` (default),
-            this function returns a list of words sorted by frequency. If
-            ``dict``, this function returns a dict mapping words to their index
-            sorted by frequency.
-        return_count (bool): Whether to return word counts. If `True` and
-            :attr:`return_type` is ``dict``, then a count dict is returned,
-            which is a mapping from words to their frequency.
-
-    Returns:
-        - If :attr:`return_count` is False, returns a list or dict containing
-          the vocabulary words.
-
-        - If :attr:`return_count` if True, returns a pair of list or dict
-          `(a, b)`, where `a` is a list or dict containing the vocabulary
-          words, `b` is a list or dict containing the word counts.
-    """
-
-    if not isinstance(filenames, (list, tuple)):
-        filenames = [filenames]
-
-    words: List[str] = []
-    for fn in filenames:
-        words += read_words(fn, newline_token=newline_token)
-
-    counter = collections.Counter(words)
-    count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0]))
-
-    words, counts = list(zip(*count_pairs))
-    words: List[str]
-    counts: List[int]
-    if max_vocab_size >= 0:
-        words = words[:max_vocab_size]
-    counts = counts[:max_vocab_size]
-
-    if return_type == "list":
-        if not return_count:
-            return words
-        else:
-            return words, counts
-    elif return_type == "dict":
-        word_to_id = dict(zip(words, range(len(words))))
-        if not return_count:
-            return word_to_id
-        else:
-            word_to_count = dict(zip(words, counts))
-            return word_to_id, word_to_count
-    else:
-        raise ValueError(f"Unknown return_type: {return_type}")
-
-
-# pylint: enable=unused-argument,function-redefined,missing-docstring
-
-def count_file_lines(filenames: MaybeList[str]) -> int:
-    r"""Counts the number of lines in the file(s).
-    """
-
-    def _count_lines(fn):
-        with open(fn, "rb") as f:
-            i = -1
-            for i, _ in enumerate(f):
-                pass
-            return i + 1
-
-    if not isinstance(filenames, (list, tuple)):
-        filenames = [filenames]
-    num_lines = np.sum([_count_lines(fn) for fn in filenames]).item()
-    return num_lines
