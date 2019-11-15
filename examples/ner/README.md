@@ -33,9 +33,9 @@ should be able to learn such restriction from data itself.
 
 ## Getting the data
 
-- We use the CoNLL-2003 NER dataset for this example. Please refer to https://www.clips.uantwerpen
-.be/conll2003/ner/ for instructions on how to download the dataset. The `config_data.yml` file 
-looks for the data in `ner_data/conll03_english/{train/dev/test}`. If the structure of your dataset 
+- We use the CoNLL-2003 NER dataset for this example. Please refer to [https://www.clips.uantwerpen.be/conll2003/ner/](https://www.clips.uantwerpen.be/conll2003/ner/)
+for instructions on how to download the dataset. The `config_data.yml` file looks for the data in
+`ner_data/conll03_english/{train/dev/test}`. If the structure of your dataset 
 is different, please update the YAML file accordingly.
 
 - We use GloVE vectors for word embeddings. Specifically, we use GloVE vectors trained on 6 
