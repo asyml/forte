@@ -117,7 +117,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                         model.load_state_dict(weights)
                 return model
 
-            self.resource.load(keys={"model": load_model})
+            self.resource.load(keys={"model": load_model}, path=resource_path)
 
         self.model = resource.get("model")
         self.model.to(self.device)

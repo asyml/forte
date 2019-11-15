@@ -179,12 +179,9 @@ class BasePipeline(Generic[PackType]):
     def processor_configs(self):
         return self._configs
 
-    def add_processor(
-            self,
-            processor: BaseProcessor,
-            config: Optional[HParams] = None,
-            selector: Optional[Selector] = None,
-    ):
+    def add_processor(self, processor: BaseProcessor,
+                      config: Optional[HParams] = None,
+                      selector: Optional[Selector] = None):
         self._processors_index[processor.component_name] = len(self.processors)
 
         self._processors.append(processor)
@@ -192,7 +189,6 @@ class BasePipeline(Generic[PackType]):
 
         if selector is None:
             self._selectors.append(DummySelector())
-
         else:
             self._selectors.append(selector)
 

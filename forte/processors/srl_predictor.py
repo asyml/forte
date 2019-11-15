@@ -104,7 +104,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
         batch_size = len(text)
         batch = tx.data.Batch(batch_size, text=text, text_ids=text_ids,
                               length=length, srl=[[]] * batch_size)
-        self.model = self.model.cuda()
+        self.model = self.model.to(self.device)
         batch_srl_spans = self.model.decode(batch)
 
         # Convert predictions into annotations.

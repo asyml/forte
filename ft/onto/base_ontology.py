@@ -221,3 +221,17 @@ class RelationLink(Link):
             child: Optional[EntityMention] = None):
         super().__init__(pack, parent, child)
         self.rel_type = None
+
+
+class Utterance(Annotation):
+    r"""An annotation based entry useful for dialogue.
+
+    Args:
+        pack (DataPack): The data pack this token belongs to.
+        begin (int): The offset of the first character in the entity mention.
+        end (int): The offset of the last character in the entity mention + 1.
+
+    """
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.seq_num: str
