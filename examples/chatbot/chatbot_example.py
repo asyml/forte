@@ -21,8 +21,7 @@ from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
 from forte.processors import SRLPredictor
-from forte.processors.machine_translation_processor import \
-    MachineTranslationProcessor
+from forte.processors import MachineTranslationProcessor
 from forte.processors.query_creator import QueryCreator
 from forte.processors.search_processor import SearchProcessor
 from forte.data.selector import NameMatchSelector

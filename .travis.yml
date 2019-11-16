@@ -35,6 +35,7 @@ script:
   # type checking
   - mypy .
   # needed for test cases
+  - export MICROSOFT_API_KEY=2699c6fb32684483ae050b45f2af3de9 # move this to Github variables
   - python -m nltk.downloader punkt averaged_perceptron_tagger
   # unit tests
   - pytest
