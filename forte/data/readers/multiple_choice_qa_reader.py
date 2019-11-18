@@ -21,7 +21,8 @@ from typing import Iterator, Any, List
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.mutliple_choice_qa_ontology import Article, Passage, Question, Option
+from ft.onto.mutliple_choice_qa_ontology import Article, Passage, \
+    Question, Option
 
 __all__ = [
     "MultipleChoiceQAReader",
@@ -30,7 +31,8 @@ __all__ = [
 
 class MultipleChoiceQAReader(PackReader):
     """
-    :class:`MultipleChoiceQAReader` is designed to read in multiple choice qa dataset.
+    :class:`MultipleChoiceQAReader` is designed to read in multiple choice qa
+    dataset.
     """
 
     # pylint: disable=no-self-use
@@ -84,7 +86,8 @@ class MultipleChoiceQAReader(PackReader):
             answers = dataset['answers'][qid]
             if isinstance(answers, (str, int)):
                 answers = [answers]
-            answers = [self._char_to_int(ans) for ans in answers if isinstance(ans, str)]
+            answers = [self._char_to_int(ans) for ans in answers
+                       if isinstance(ans, str)]
             question.set_answers(answers)
             pack.add_or_get_entry(question)
 
