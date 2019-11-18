@@ -22,9 +22,9 @@ class Token(forte.data.ontology.top.Annotation):
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._lemma: typing.Optional[str] = None
-        self._is_verb: typing.Optional[bool] = None
-        self._num_chars: typing.Optional[int] = None
-        self._score: typing.Optional[float] = None
+        self._pos_tag: typing.Optional[str] = None
+        self._upos: typing.Optional[str] = None
+        self._xpos: typing.Optional[str] = None
 
     @property
     def lemma(self):
@@ -34,25 +34,25 @@ class Token(forte.data.ontology.top.Annotation):
         self._lemma = lemma
 
     @property
-    def is_verb(self):
-        return self._is_verb
+    def pos_tag(self):
+        return self._pos_tag
 
-    def set_is_verb(self, is_verb: typing.Optional[bool]):
-        self._is_verb = is_verb
-
-    @property
-    def num_chars(self):
-        return self._num_chars
-
-    def set_num_chars(self, num_chars: typing.Optional[int]):
-        self._num_chars = num_chars
+    def set_pos_tag(self, pos_tag: typing.Optional[str]):
+        self._pos_tag = pos_tag
 
     @property
-    def score(self):
-        return self._score
+    def upos(self):
+        return self._upos
 
-    def set_score(self, score: typing.Optional[float]):
-        self._score = score
+    def set_upos(self, upos: typing.Optional[str]):
+        self._upos = upos
+
+    @property
+    def xpos(self):
+        return self._xpos
+
+    def set_xpos(self, xpos: typing.Optional[str]):
+        self._xpos = xpos
 
 
 __all__.extend('Sentence')
@@ -62,13 +62,13 @@ class Sentence(forte.data.ontology.top.Annotation):
 
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._tokens: typing.Optional[typing.List[ft.onto.example_complex_ontology.Token]] = None
+        self._tokens: typing.Optional[typing.List[ft.onto.stanfordnlp_ontology.Token]] = None
 
     @property
     def tokens(self):
         return self._tokens
 
-    def set_tokens(self, tokens: typing.Optional[typing.List[ft.onto.example_complex_ontology.Token]]):
+    def set_tokens(self, tokens: typing.Optional[typing.List[ft.onto.stanfordnlp_ontology.Token]]):
         self._tokens = tokens
 
 
@@ -85,6 +85,8 @@ __all__.extend('Dependency')
 
 
 class Dependency(forte.data.ontology.top.Link):
+    ParentType = ft.onto.stanfordnlp_ontology.Token
+    ChildType = ft.onto.stanfordnlp_ontology.Token
 
     def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
         super().__init__(pack, parent, child)

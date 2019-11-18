@@ -33,7 +33,7 @@ import typed_astunparse as ast_unparse
 
 from forte.data.ontology import utils, top
 from forte.data.ontology.code_generation_util import (
-    BasicItem, CompositeItem, DefinitionItem, FileItem)
+    BasicItem, CompositeItem, ClassAttributeItem, DefinitionItem, FileItem)
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger(__name__)
@@ -76,6 +76,7 @@ class OntologyCodeGenerator:
         # Builtin and local imports required in the generated python modules.
         self.required_imports: List[str] = [
             'typing',
+            'ft.onto',
             'forte.data.data_pack',
             base_ontology_module.__name__]
 
@@ -448,9 +449,11 @@ class OntologyCodeGenerator:
         """
         name = full_name
         # reading the entry definition dictionary
-        parent_entry: str = self.parse_type(schema["parent_type"])
+        parent_entry: str = self.parse_type(schema["parent_entry"])
 
         properties: List[Dict] = schema.get("attributes", [])
+
+        class_attributes: List[Dict] = schema.get("class_attributes", [])
 
         # validate if the entry parent is present in the tree
         if parent_entry not in self.allowed_types_tree:
@@ -467,10 +470,19 @@ class OntologyCodeGenerator:
             property_names.append(prop_schema["name"])
             property_items.append(self.parse_property(name, prop_schema))
 
+        # TODO: Apply stricter checking on class attributes.
+        # all the keys other than "entry_name", "parent_entry" and "attributes"
+        # are considered as class_attributes
+        class_att_items, class_att_names = [], []
+        for att_schema in class_attributes:
+            class_att_names.append(att_schema["name"])
+            class_att_items.append(self.parse_attribute(name, att_schema))
+
         entry_item = DefinitionItem(name=ref_name,
                                     class_type=parent_entry,
                                     init_args=init_args,
                                     properties=property_items,
+                                    class_attributes=class_att_items,
                                     description=schema.get("description", None))
 
         return entry_item, property_names
@@ -521,6 +533,22 @@ class OntologyCodeGenerator:
             return CompositeItem(name, type_, [item_type], desc, default)
 
         return BasicItem(name, type_, desc, default)
+
+    def parse_attribute(self, entry_name, schema):
+        name = schema["name"]
+        type_str = schema.get("type", None)
+        type_ = '' if type_str is None else self.parse_type(type_str)
+
+        desc = schema.get("description", None)
+
+        if "default" not in schema:
+            raise ValueError(f"NoDefaultClassAttribute: "
+                             f"No default value present for the class attribute"
+                             f" {name} for the entry {entry_name}.")
+
+        # if default is of the type "type" which is already seen, parse_type
+        default = self.parse_type(schema.get("default"))
+        return ClassAttributeItem(name, type_, desc, default)
 
     def get_and_set_base_entry(self, entry_name: str, parent_entry: str) \
             -> str:

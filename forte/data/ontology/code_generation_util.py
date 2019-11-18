@@ -13,7 +13,7 @@
 # limitations under the License.
 import os
 from collections import OrderedDict
-from typing import List, Optional, Any
+from typing import Optional, Any, List
 
 
 class Config:
@@ -84,9 +84,29 @@ class Property(Item):
 
     def to_description(self, level: int) -> Optional[str]:
         if self.description is not None and self.description.strip() != '':
-            return indent_line(f"{self.name} ({self.to_code(0)}): "
+            type_str = f'{self.to_code(0)}'
+            type_str = f' ({type_str})' if type_str.strip() != '' else type_str
+            return indent_line(f"{self.name}{type_str}: "
                                f"{self.description}", level)
         return None
+
+
+class ClassAttributeItem(Property):
+    def __init__(self,
+                 name: str,
+                 type_str: str,
+                 description: Optional[str] = None,
+                 default: Any = None):
+        super().__init__(name, type_str, description, default)
+        self.type_str = type_str
+
+    def to_code(self, level: int = 0) -> str:
+        return self.type_str
+
+    def to_init_code(self, level: int) -> str:
+        type_code = f'{self.to_code(0)}'
+        type_ = f': {type_code}' if type_code.strip() != '' else ''
+        return indent_line(f"{self.name}{type_} = {self.default}", level)
 
 
 class BasicItem(Property):
@@ -131,13 +151,17 @@ class DefinitionItem(Item):
                  class_type: str,
                  init_args: Optional[str] = None,
                  properties: Optional[List[Property]] = None,
+                 class_attributes: Optional[List[Property]] = None,
                  description: Optional[str] = None):
         super().__init__(name, description)
         self.class_type = class_type
         self.properties: List[Property] = \
             [] if properties is None else properties
+        self.class_attributes = [] if class_attributes is None \
+            else class_attributes
         self.description = description if description else None
         self.init_args = init_args if init_args is not None else ''
+        self.init_args = self.init_args.replace('=', ' = ')
 
     def to_init_code(self, level: int) -> str:
         return indent_line(f"def __init__(self, {self.init_args}):", level)
@@ -145,31 +169,42 @@ class DefinitionItem(Item):
     def to_code(self, level: int) -> str:
         super_args = ', '.join([item.split(':')[0].strip()
                                 for item in self.init_args.split(',')])
+        desc = self.to_description(1)
         lines = [
             empty_lines(1),
             f"__all__.extend('{self.name}')",
             empty_lines(1),
             f"class {self.name}({self.class_type}):",
-            self.to_description(1),
-            self.to_init_code(1),
-            indent_line(f"super().__init__({super_args})", 2)
         ]
+        lines += [desc] if desc.strip() else []
+        lines += [item.to_init_code(1) for item in self.class_attributes]
+        lines += [empty_lines(0)]
+        lines += [self.to_init_code(1),
+                  indent_line(f"super().__init__({super_args})", 2)]
         lines += [item.to_init_code(2) for item in self.properties]
-        lines.append(empty_lines(0))
+        lines += [empty_lines(0)]
         lines += [item.to_getter_setter_code(1) for item in self.properties]
 
         return indent_code(lines, level)
 
+    @staticmethod
+    def to_item_descs(items, title):
+        item_descs = [item.to_description(0) for item in items]
+        item_descs = [item for item in item_descs if item is not None]
+        if len(item_descs) > 0:
+            item_descs = [indent_line(title, 1)] + \
+                         [indent_line(desc, 2) for desc in item_descs]
+        return item_descs
+
     def to_description(self, level: int) -> Optional[str]:
         class_desc = [] if self.description is None else [self.description]
-        item_descs = [item.to_description(0) for item in self.properties]
-        item_descs = [item for item in item_descs if item is not None]
-        item_descs = [indent_line('Args:', 1)] + \
-                     [indent_line(desc, 2) for desc in item_descs]
-        if len(class_desc) == 0 and len(item_descs) == 0:
+        item_descs = self.to_item_descs(self.properties, 'Args:')
+        att_descs = self.to_item_descs(self.class_attributes, 'Attr:')
+        descs = class_desc + item_descs + att_descs
+        if len(descs) == 0:
             return ""
         quotes = indent_line('"""', 0)
-        return indent_code([quotes] + class_desc + item_descs + [quotes], level)
+        return indent_code([quotes] + descs + [quotes], level)
 
 
 class FileItem:

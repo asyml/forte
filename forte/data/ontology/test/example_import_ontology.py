@@ -6,6 +6,7 @@
 Automatically generated file. Do not change manually.
 """
 import typing
+import ft.onto
 import forte.data.data_pack
 import forte.data.ontology.top
 
@@ -19,8 +20,8 @@ __all__.extend('Token')
 class Token(forte.data.ontology.top.Annotation):
     """
     Base parent token entry
-        Args:
     """
+
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._pos: typing.Optional[str] = None
@@ -45,9 +46,7 @@ __all__.extend('EntityMention')
 
 
 class EntityMention(forte.data.ontology.top.Annotation):
-    """
-        Args:
-    """
+
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._entity_type: typing.Optional[str] = None

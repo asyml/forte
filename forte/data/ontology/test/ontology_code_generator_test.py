@@ -43,9 +43,9 @@ class GenerateOntologyTest(unittest.TestCase):
 
     @data(('example_ontology_config', ['example_import_ontology',
                                        'example_ontology']),
-          ('example_complex_ontology_config', ['example_complex_ontology']))
+          ('example_complex_ontology_config', ['example_complex_ontology']),
+          ('stanfordnlp_ontology', ['stanfordnlp_ontology']))
     def test_generated_code(self, value):
-        value = ('example_complex_ontology_config', ['example_complex_ontology'])
         input_file_name, file_names = value
         # read json and generate code in a file
         json_file_path = get_config_path(f'../configs/{input_file_name}.json')

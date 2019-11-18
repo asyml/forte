@@ -1,25 +1,25 @@
 {
-  "ontology_name": "stanfordnlp_ontology",
-  "entry_definitions": [
+  "name": "stanfordnlp_ontology",
+  "definitions": [
     {
       "entry_name": "stanfordnlp_ontology.Token",
       "parent_entry": "Annotation",
       "attributes": [
         {
-          "attribute_name": "lemma",
-          "attribute_type": "str"
+          "name": "lemma",
+          "type": "str"
         },
         {
-          "attribute_name": "is_verb",
-          "attribute_type": "bool"
+          "name": "pos_tag",
+          "type": "str"
         },
         {
-          "attribute_name": "num_chars",
-          "attribute_type": "str"
+          "name": "upos",
+          "type": "str"
         },
         {
-          "attribute_name": "xpos",
-          "attribute_type": "str"
+          "name": "xpos",
+          "type": "str"
         }
       ]
     },
@@ -28,9 +28,9 @@
       "parent_entry": "Annotation",
       "attributes": [
         {
-          "attribute_name": "tokens",
-          "attribute_type": "List",
-          "element_type": "stanfordnlp_ontology.Token"
+          "name": "tokens",
+          "type": "List",
+          "item_type": "stanfordnlp_ontology.Token"
         }
       ]
     },
@@ -41,12 +41,20 @@
     {
       "entry_name": "stanfordnlp_ontology.Dependency",
       "parent_entry": "Link",
+      "class_attributes": [
+        {
+          "name": "ParentType",
+          "default": "stanfordnlp_ontology.Token"
+        },
+        {
+          "name": "ChildType",
+          "default": "stanfordnlp_ontology.Token"
+        }
+      ],
       "attributes": [
         {
-          "parent_type": "stanfordnlp_ontology.Token",
-          "child_type": "stanfordnlp_ontology.Token",
-          "attribute_name": "rel_type",
-          "attribute_type": "str"
+          "name": "rel_type",
+          "type": "str"
         }
       ]
     }
