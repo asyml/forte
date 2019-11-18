@@ -33,7 +33,8 @@ setuptools.setup(
         'test': ['ddt'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'ir': ['pandas']
+        'ir': ['pandas~=0.25.3']
+        'indexer': ['faiss>=1.5.3']
     },
     package_data={
     },

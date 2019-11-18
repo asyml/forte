@@ -22,6 +22,7 @@ from forte.processors.base.base_processor import BaseProcessor
 __all__ = [
     "BasePackProcessor",
     "PackProcessor",
+    "MultiPackProcessor"
 ]
 
 

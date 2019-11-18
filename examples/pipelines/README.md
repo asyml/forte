@@ -10,6 +10,44 @@ pipeline.
 
 # Description
 
+## Install the dependencies
+
+- To run NLTK processors, please install NLTK library using
+
+```bash
+pip install nltk
+```
+
+- NER and SRL processors are built using texar-pytorch. Please follow the guidelines here 
+https://github.com/asyml/texar-pytorch#installation to install it.
+
+- To run `stanford_nlp_pipeline.py`, install Stanford NLP library using
+
+```bash
+pip install stanfordnlp
+```
+
+## Downloading the models
+
+In this pipeline, we use NER and SRL models. Before running the pipeline, we need to download the
+models
+
+For SRL,
+
+```bash
+python download_models.py --model-name srl
+```
+
+For NER,
+```bash
+python download_models.py --model-name ner
+```
+
+**Note**: The above script will save the model in `resources/`. Use `--path` option to save the 
+model into a different directory.
+
+## Running the pipeline
+
 `process_string_example.py` and `process_dataset_example.py` build the following pipeline
 
 Reader -> NLTKSentenceSegmenter -> NLTKWordTokenizer -> NLTKPOSTagger -> NER Predictor -> 
@@ -40,26 +78,3 @@ We run this pipeline on an English as well as French sentence. To see this actio
 ```bash
 python stanford_nlp_pipeline.py
 ``` 
-
-# Quick Start
-
-## Install the dependencies
-
-- To run NLTK processors, please install NLTK library using
-
-```bash
-pip install nltk
-```
-
-- NER and SRL processors are built using texar-pytorch. Please follow the guidelines here 
-https://github.com/asyml/texar-pytorch#installation to install it.
-
-- To run `stanford_nlp_pipeline.py`, install Stanford NLP library using
-
-```bash
-pip install stanfordnlp
-```
-
-
-
-
