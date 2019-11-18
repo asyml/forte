@@ -1,9 +1,10 @@
 {
     "name": "example_import_ontology",
+    "prefix": "ft.onto",
     "definitions": [
         {
-            "entry_name": "example_import_ontology.Token",
-            "parent_entry": "Annotation",
+            "entry_name": "ft.onto.example_import_ontology.Token",
+            "parent_entry": "forte.data.ontology.top.Annotation",
             "description": "Base parent token entry",
             "attributes": [
                 {
@@ -17,8 +18,8 @@
             ]
         },
         {
-            "entry_name": "example_import_ontology.EntityMention",
-            "parent_entry": "Annotation",
+            "entry_name": "ft.onto.example_import_ontology.EntityMention",
+            "parent_entry": "forte.data.ontology.top.Annotation",
             "attributes":
             [
                 {

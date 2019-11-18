@@ -1,13 +1,14 @@
 {
     "name": "example_ontology",
     "description": "",
+    "prefix": "ft.onto",
     "import_paths": [
         "example_import_ontology_config.json"
     ],
     "definitions": [
         {
-            "entry_name": "example_ontology.Word",
-            "parent_entry": "example_import_ontology.Token",
+            "entry_name": "ft.onto.example_ontology.Word",
+            "parent_entry": "ft.onto.example_import_ontology.Token",
             "description": "",
             "attributes": [
                 {
@@ -20,24 +21,24 @@
                     "name": "word_forms",
                     "description": "To demonstrate that an attribute can have the entry it is contained in as it's type or item_type.",
                     "type": "List",
-                    "item_type": "example_ontology.Word"
+                    "item_type": "ft.onto.example_ontology.Word"
                 }
             ]
         },
         {
-            "entry_name": "example_ontology.WordLink",
+            "entry_name": "ft.onto.example_ontology.WordLink",
             "parent_entry": "Link",
             "description": "",
             "class_attributes": [
                 {
                     "name": "ParentType",
                     "description": "Parent type of the link",
-                    "default": "example_ontology.Word"
+                    "default": "ft.onto.example_ontology.Word"
                 },
                 {
                     "name": "ChildType",
                     "description": "Child type of the link",
-                    "default": "example_ontology.Word"
+                    "default": "ft.onto.example_ontology.Word"
                 }
             ],
             "attributes": [

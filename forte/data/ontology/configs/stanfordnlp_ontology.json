@@ -2,8 +2,8 @@
   "name": "stanfordnlp_ontology",
   "definitions": [
     {
-      "entry_name": "stanfordnlp_ontology.Token",
-      "parent_entry": "Annotation",
+      "entry_name": "ft.onto.stanfordnlp_ontology.Token",
+      "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {
           "name": "lemma",
@@ -24,31 +24,31 @@
       ]
     },
     {
-      "entry_name": "stanfordnlp_ontology.Sentence",
-      "parent_entry": "Annotation",
+      "entry_name": "ft.onto.stanfordnlp_ontology.Sentence",
+      "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {
           "name": "tokens",
           "type": "List",
-          "item_type": "stanfordnlp_ontology.Token"
+          "item_type": "ft.onto.stanfordnlp_ontology.Token"
         }
       ]
     },
     {
-      "entry_name": "stanfordnlp_ontology.Document",
-      "parent_entry": "Annotation"
+      "entry_name": "ft.onto.stanfordnlp_ontology.Document",
+      "parent_entry": "forte.data.ontology.top.Annotation"
     },
     {
-      "entry_name": "stanfordnlp_ontology.Dependency",
-      "parent_entry": "Link",
+      "entry_name": "ft.onto.stanfordnlp_ontology.Dependency",
+      "parent_entry": "forte.data.ontology.top.Link",
       "class_attributes": [
         {
           "name": "ParentType",
-          "default": "stanfordnlp_ontology.Token"
+          "default": "ft.onto.stanfordnlp_ontology.Token"
         },
         {
           "name": "ChildType",
-          "default": "stanfordnlp_ontology.Token"
+          "default": "ft.onto.stanfordnlp_ontology.Token"
         }
       ],
       "attributes": [

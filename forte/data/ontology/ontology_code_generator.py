@@ -337,8 +337,20 @@ class OntologyCodeGenerator:
         new_modules_to_import = []
         for definition in entry_definitions:
             entry_name = definition["entry_name"]
-            full_name = f'{pkg}.{entry_name}'
-            filename, name = entry_name.split('.')
+            entry_splits = entry_name.split('.')
+            derived_entry_package = '.'.join(entry_splits[0: -2])
+            if len(entry_splits) == 1:
+                raise ValueError(f"EntryNameNotComplete: {entry_name} is not "
+                                 f"complete, please provide module name.")
+            elif len(entry_splits) == 2:
+                full_name = f'{pkg}.{entry_name}'
+            elif len(entry_splits) > 2 and derived_entry_package == pkg:
+                full_name = entry_name
+            else:
+                raise ValueError(f"EntryPackageConflict: Package name for "
+                                 f"{entry_name} conflicts with the provided "
+                                 f"prefix.")
+            filename, name = full_name.split('.')[-2:]
             self.ref_to_full_name[name] = full_name
             self.ref_to_full_name[entry_name] = full_name
             if full_name in self.allowed_types_tree:
