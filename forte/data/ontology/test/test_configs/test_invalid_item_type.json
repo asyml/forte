@@ -3,7 +3,7 @@
     "definitions": [
         {
             "entry_name": "test_ontology.Word",
-            "parent_type": "Annotation",
+            "parent_entry": "Annotation",
             "attributes": [
                 {
                     "name": "features",
