@@ -176,7 +176,7 @@ class DefinitionItem(Item):
             empty_lines(1),
             f"class {self.name}({self.class_type}):",
         ]
-        lines += [desc] if desc.strip() else []
+        lines += [desc] if desc is not None or desc.strip() == '' else []
         lines += [item.to_init_code(1) for item in self.class_attributes]
         lines += [empty_lines(0)]
         lines += [self.to_init_code(1),
