@@ -169,14 +169,15 @@ class DefinitionItem(Item):
     def to_code(self, level: int) -> str:
         super_args = ', '.join([item.split(':')[0].strip()
                                 for item in self.init_args.split(',')])
-        desc = self.to_description(1)
+        raw_desc = self.to_description(1)
+        desc: str = '' if raw_desc is None else raw_desc
         lines = [
             empty_lines(1),
             f"__all__.extend('{self.name}')",
             empty_lines(1),
             f"class {self.name}({self.class_type}):",
         ]
-        lines += [desc] if desc is not None or desc.strip() == '' else []
+        lines += [desc] if desc.strip() else []
         lines += [item.to_init_code(1) for item in self.class_attributes]
         lines += [empty_lines(0)]
         lines += [self.to_init_code(1),
