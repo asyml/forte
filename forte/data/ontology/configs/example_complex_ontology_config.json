@@ -1,9 +1,10 @@
 {
   "ontology_name": "example_complex_ontology",
+  "prefix": "ft.onto",
   "definitions": [
     {
       "entry_name": "example_complex_ontology.Token",
-      "parent_entry": "Annotation",
+      "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {
           "name": "lemma",
@@ -25,7 +26,7 @@
     },
     {
       "entry_name": "example_complex_ontology.Sentence",
-      "parent_entry": "Annotation",
+      "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {
           "name": "tokens",
