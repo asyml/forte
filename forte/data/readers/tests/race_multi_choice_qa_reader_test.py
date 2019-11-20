@@ -2,19 +2,19 @@ import json
 import unittest
 from typing import Iterator
 
-from forte.data.readers import MultipleChoiceQAReader
+from forte.data.readers import RACEMultiChoiceQAReader
 from forte.data.data_pack import DataPack
-from ft.onto.mutliple_choice_qa_ontology import Article, Question
+from ft.onto.race_mutli_choice_qa_ontology import Article, Question
 
 
-class MultipleChoiceQAReaderTest(unittest.TestCase):
+class RACEMultiChoiceQAReaderTest(unittest.TestCase):
     def setUp(self):
         self.dataset_path = \
-            "forte/data/readers/tests/data_samples/multiple_choice_qa"
+            "forte/data/readers/tests/data_samples/race_multi_choice_qa"
 
     def test_reader_no_replace_test(self):
         # Read with no replacements
-        reader = MultipleChoiceQAReader()
+        reader = RACEMultiChoiceQAReader()
         data_packs: Iterator[DataPack] = reader.iter(self.dataset_path)
         file_paths: Iterator[str] = reader._collect(self.dataset_path)
 
