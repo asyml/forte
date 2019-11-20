@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 from typing import List
 
 from forte.data import DataPack
@@ -46,10 +45,10 @@ class Question(Annotation):
         self._answers: List[int]
 
     def set_options(self, options: List[Option]):
-        self.set_fields(_options=copy.deepcopy(options))
+        self.set_fields(_options=options)
 
     def set_answers(self, answers: List[int]):
-        self.set_fields(_answers=copy.deepcopy(answers))
+        self.set_fields(_answers=answers)
 
     @property
     def options(self):

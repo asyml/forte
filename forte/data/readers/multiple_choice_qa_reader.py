@@ -46,31 +46,34 @@ class MultipleChoiceQAReader(PackReader):
         Returns: Iterator over paths to .json files
 
         """
-        return dataset_path_iterator(json_directory, ".json")
+        return dataset_path_iterator(json_directory, "")
 
     def _cache_key_function(self, json_file: str) -> str:
         return os.path.basename(json_file)
 
-    def _char_to_int(self, ch: str):
-        return ord(ch.lower()) - 97
+    def _convert_to_int(self, ch: Any) -> int:
+        if isinstance(ch, int):
+            return ch
+        if isinstance(ch, str):
+            return ord(ch.lower()) - 97
+        raise ValueError("Answers not in expected format.")
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:
             dataset = json.load(file)
 
         pack = DataPack()
-        offset = 0
-
         text: str = dataset['article']
-        offset += len(text) + 1
-        article = Article(pack, 0, offset)
+        article_end = len(text)
+        article = Article(pack, 0, article_end)
         pack.add_or_get_entry(article)
+        offset = article_end + 1
 
         for qid, ques_text in enumerate(dataset['questions']):
             text += '\n' + ques_text
             ques_end = offset + len(ques_text)
             question = Question(pack, offset, ques_end)
-            offset += ques_end + 1
+            offset = ques_end + 1
 
             options: List[Option] = []
             options_text = dataset['options'][qid]
@@ -80,14 +83,13 @@ class MultipleChoiceQAReader(PackReader):
                 option = Option(pack, offset, option_end)
                 options.append(option)
                 pack.add_or_get_entry(option)
-                offset += option_end + 1
+                offset = option_end + 1
             question.set_options(options)
 
             answers = dataset['answers'][qid]
-            if isinstance(answers, (str, int)):
+            if not isinstance(answers, list):
                 answers = [answers]
-            answers = [self._char_to_int(ans) for ans in answers
-                       if isinstance(ans, str)]
+            answers = [self._convert_to_int(ans) for ans in answers]
             question.set_answers(answers)
             pack.add_or_get_entry(question)
 
