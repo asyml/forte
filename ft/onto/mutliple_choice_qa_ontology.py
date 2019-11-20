@@ -14,7 +14,7 @@
 
 from typing import List
 
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from ft.onto.base_ontology import Document
 
