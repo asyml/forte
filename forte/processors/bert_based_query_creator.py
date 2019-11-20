@@ -13,6 +13,7 @@
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
 import pickle
+import numpy as np
 
 import torch
 from texar.torch.hyperparams import HParams
@@ -21,16 +22,16 @@ from texar.torch.data import BERTTokenizer
 
 from forte.common.resources import Resources
 from forte.data import MultiPack
-from forte.processors.base import MultiPackProcessor
+from forte.processors.base import MultiPackProcessor, QueryProcessor
 
 from forte.data.ontology import Query
 
 __all__ = [
-    "QueryCreator"
+    "BertBasedQueryCreator"
 ]
 
 
-class QueryCreator(MultiPackProcessor):
+class BertBasedQueryCreator(MultiPackProcessor, QueryProcessor):
     r"""This processor searches relevant documents for a query"""
 
     # pylint: disable=useless-super-delegation
@@ -65,6 +66,21 @@ class QueryCreator(MultiPackProcessor):
 
         return cls_token
 
+    def _build_query(self, text: str) -> np.ndarray:
+        input_ids, segment_ids, input_mask = \
+            self.tokenizer.encode_text(
+                text_a=text, max_seq_length=self.config.max_seq_length)
+        input_ids = torch.LongTensor(input_ids).unsqueeze(0).to(self.device)
+        segment_ids = torch.LongTensor(segment_ids).unsqueeze(0).to(self.device)
+        input_mask = torch.LongTensor(input_mask).unsqueeze(0).to(self.device)
+        sequence_length = (1 - (input_mask == 0)).sum(dim=1)
+        query_vector = self.get_embeddings(inputs=input_ids,
+                                           sequence_length=sequence_length,
+                                           segment_ids=segment_ids)
+        query_vector = torch.mean(query_vector, dim=0, keepdim=True)
+        query_vector = query_vector.cpu().numpy()
+        return query_vector
+
     def _process(self, input_pack: MultiPack):
 
         query_pack = input_pack.get_pack(self.config.query_pack_name)
@@ -81,17 +97,6 @@ class QueryCreator(MultiPackProcessor):
 
         text = ' '.join(context)
 
-        input_ids, segment_ids, input_mask = \
-            self.tokenizer.encode_text(
-                text_a=text, max_seq_length=self.config.max_seq_length)
-        input_ids = torch.LongTensor(input_ids).unsqueeze(0).to(self.device)
-        segment_ids = torch.LongTensor(segment_ids).unsqueeze(0).to(self.device)
-        input_mask = torch.LongTensor(input_mask).unsqueeze(0).to(self.device)
-        sequence_length = (1 - (input_mask == 0)).sum(dim=1)
-        query_vector = self.get_embeddings(inputs=input_ids,
-                                           sequence_length=sequence_length,
-                                           segment_ids=segment_ids)
-        query_vector = torch.mean(query_vector, dim=0, keepdim=True)
-        query_vector = query_vector.cpu().numpy()
+        query_vector = self._build_query(text=text)
         query = Query(pack=query_pack, value=query_vector)
         query_pack.add_or_get_entry(query)

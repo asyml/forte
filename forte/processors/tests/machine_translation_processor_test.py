@@ -9,7 +9,7 @@ from texar.torch import HParams
 
 from forte.pipeline import Pipeline
 from forte.data.readers import MultiPackSentenceReader
-from forte.processors import MachineTranslationProcessor
+from forte.processors import MicrosoftBingTranslator
 from ft.onto.base_ontology import Token, Sentence
 
 
@@ -40,7 +40,7 @@ class TestMachineTranslationProcessor(unittest.TestCase):
             {"src_language": "de", "target_language": "en",
              "in_pack_name": "input", "out_pack_name": "result"}, None)
 
-        nlp.add_processor(MachineTranslationProcessor(),
+        nlp.add_processor(MicrosoftBingTranslator(),
                           config=translator_config)
         nlp.initialize()
 

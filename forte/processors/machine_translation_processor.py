@@ -27,12 +27,16 @@ from forte.processors.base import MultiPackProcessor
 from ft.onto.base_ontology import Document, Utterance
 
 __all__ = [
-    "MachineTranslationProcessor"
+    "MicrosoftBingTranslator"
 ]
 
 
-class MachineTranslationProcessor(MultiPackProcessor):
-    r"""This processor is used to translate text from one language to another
+class MicrosoftBingTranslator(MultiPackProcessor):
+    r"""This processor translates text from one language to another using
+    Microsoft Bing Translate APIs. To use this processor, 'MICROSOFT_API_KEY'
+    should be set as an environment variable to Microsoft Translator API
+    subscription key.
+
     """
 
     def __init__(self) -> None:
@@ -49,6 +53,25 @@ class MachineTranslationProcessor(MultiPackProcessor):
     # pylint: disable=unused-argument
     def initialize(self, resources: Optional[Resources],
                    configs: Optional[HParams]):
+        r"""Initialize the processor with `resources` and `configs`. This method
+        is called by the pipeline during the initialization.
+
+        Args:
+            - resources (Resources): An object of class
+                :class:`forte.common.Resources` that holds references to objects
+                that can be shared throughout the pipeline.
+            - configs (HParams): A configuration to initialize the
+                processor. This processor is expected to hold the following
+                (key, value) pairs
+
+                - `"src_language"` (str): Source language for the translation
+                - `"target_language"` (str): Target language for the translation
+                - `"in_pack_name"` (str): Pack name to be used to fetch input
+                  datapack.
+                - `"out_pack_name"` (str): Pack name to be used to fetch output
+                  datapack
+
+        """
         self.resources = resources
 
         if configs:

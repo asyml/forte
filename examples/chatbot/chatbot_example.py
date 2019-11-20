@@ -20,10 +20,8 @@ from texar.torch import HParams
 from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
-from forte.processors import SRLPredictor
-from forte.processors import MachineTranslationProcessor
-from forte.processors.query_creator import QueryCreator
-from forte.processors.search_processor import SearchProcessor
+from forte.processors import MicrosoftBingTranslator, \
+    BertBasedQueryCreator, SearchProcessor, SRLPredictor
 from forte.data.selector import NameMatchSelector
 from forte.processors.nltk_processors import \
     (NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
@@ -44,9 +42,9 @@ def main():
         reader=MultiPackTerminalReader(), config=config.reader)
 
     query_pipeline.add_processor(
-        processor=MachineTranslationProcessor(), config=config.translator)
+        processor=MicrosoftBingTranslator(), config=config.translator)
     query_pipeline.add_processor(
-        processor=QueryCreator(), config=config.query_creator)
+        processor=BertBasedQueryCreator(), config=config.query_creator)
     query_pipeline.add_processor(
         processor=SearchProcessor(), config=config.indexer)
     query_pipeline.add_processor(
@@ -66,7 +64,7 @@ def main():
         selector=NameMatchSelector(
             select_name=config.indexer.response_pack_name[0]))
     query_pipeline.add_processor(
-        processor=MachineTranslationProcessor(), config=config.back_translator)
+        processor=MicrosoftBingTranslator(), config=config.back_translator)
 
     query_pipeline.initialize()
 

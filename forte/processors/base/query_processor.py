@@ -11,11 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from abc import ABC
+from typing import Union
+import numpy as np
 
-from forte.processors.machine_translation_processor import *
-from forte.processors.ner_predictor import *
-from forte.processors.srl_predictor import *
-from forte.processors.text_generation_processor import *
-from forte.processors.vocabulary_processor import *
-from forte.processors.bert_based_query_creator import *
-from forte.processors.search_processor import *
+from forte.processors.base.pack_processor import PackProcessor
+
+__all__ = [
+    "QueryProcessor"
+]
+
+QueryType = Union[str, np.ndarray]
+
+
+class QueryProcessor(PackProcessor, ABC):
+    r"""A base class for all processors that handle query creation for
+    information retrieval."""
+
+    def _build_query(self, text: str) -> QueryType:
+        r"""Query-related processors need to implement this class to create a
+        query from a data pack.
+
+        """
+        raise NotImplementedError
