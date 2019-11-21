@@ -42,19 +42,24 @@ class BertBasedQueryCreator(MultiPackProcessor, QueryProcessor):
         self.resource = resources
         self.config = configs
 
-        self.tokenizer = \
-            BERTTokenizer(pretrained_model_name=self.config.tokenizer_model)
-
         self.device = torch.device("cuda" if torch.cuda.is_available()
                                    else "cpu")
 
-        self.encoder = BERTEncoder(
-            pretrained_model_name=None, hparams={"pretrained_model_name": None})
+        if "name" in self.config.tokenizer:
+            self.tokenizer = \
+                BERTTokenizer(pretrained_model_name=self.config.tokenizer.name)
 
-        with open(self.config.model_path, "rb") as f:
-            state_dict = pickle.load(f)
+        if "name" in self.config.model:
+            self.encoder = BERTEncoder(
+                pretrained_model_name=self.config.model.name)
 
-        self.encoder.load_state_dict(state_dict["bert"])
+        else:
+            self.encoder = BERTEncoder(pretrained_model_name=None,
+                                       hparams={"pretrained_model_name": None})
+            with open(self.config.model.path, "rb") as f:
+                state_dict = pickle.load(f)
+            self.encoder.load_state_dict(state_dict["bert"])
+
         self.encoder.to(self.device)
 
     @torch.no_grad()

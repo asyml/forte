@@ -8,8 +8,10 @@ translator:
   out_pack_name: "pack"
 
 query_creator:
-  model_path: "model/chatbot_model.ckpt"
-  tokenizer_model: "bert-base-uncased"
+  model:
+    path: "model/chatbot_model.ckpt"
+  tokenizer:
+    name: "bert-base-uncased"
   max_seq_length: 128
   query_pack_name: "pack"
 

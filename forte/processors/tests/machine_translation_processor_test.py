@@ -12,7 +12,8 @@ from forte.data.readers import MultiPackSentenceReader
 from forte.processors import MicrosoftBingTranslator
 from ft.onto.base_ontology import Token, Sentence
 
-
+@unittest.skip("BingTranslator will be moved into examples. A texar model will "
+               "be used to write NMT processor.")
 @ddt
 class TestMachineTranslationProcessor(unittest.TestCase):
 
