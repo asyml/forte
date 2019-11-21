@@ -15,7 +15,8 @@ from abc import ABC
 from typing import Union
 import numpy as np
 
-from forte.processors.base.base_processor import BaseProcessor
+from forte.data.base_pack import PackType
+from forte.processors.base.pack_processor import BasePackProcessor
 
 __all__ = [
     "QueryProcessor"
@@ -24,7 +25,7 @@ __all__ = [
 QueryType = Union[str, np.ndarray]
 
 
-class QueryProcessor(BaseProcessor, ABC):
+class QueryProcessor(BasePackProcessor[PackType], ABC):
     r"""A base class for all processors that handle query creation for
     information retrieval."""
 

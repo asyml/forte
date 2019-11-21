@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=attribute-defined-outside-init,too-many-ancestors
+# pylint: disable=attribute-defined-outside-init
 import pickle
 import numpy as np
 
@@ -22,7 +22,7 @@ from texar.torch.data import BERTTokenizer
 
 from forte.common.resources import Resources
 from forte.data import MultiPack
-from forte.processors.base import MultiPackProcessor, QueryProcessor
+from forte.processors.base import QueryProcessor
 
 from forte.data.ontology import Query
 
@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 
-class BertBasedQueryCreator(MultiPackProcessor, QueryProcessor):
+class BertBasedQueryCreator(QueryProcessor[MultiPack]):
     r"""This processor searches relevant documents for a query"""
 
     # pylint: disable=useless-super-delegation
