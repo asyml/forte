@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Any
 
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
@@ -20,11 +20,11 @@ from ft.onto.base_ontology import Document
 
 
 class Passage(Document):
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int) -> None:
         super().__init__(pack, begin, end)
         self._passage_id: str
 
-    def set_passage_id(self, pid: str):
+    def set_passage_id(self, pid: str) -> None:
         self.set_fields(_passage_id=pid)
 
     @property
@@ -39,28 +39,53 @@ class Option(Annotation):
 
 
 class Question(Annotation):
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    OptionType: Any = Option
+
+    def __init__(self, pack: DataPack, begin: int, end: int) -> None:
         super().__init__(pack, begin, end)
-        self._options: List[Option]
-        self._answers: List[int]
+        self._options: List[int] = []
+        self._answers: List[int] = []
 
-    def set_options(self, options: List[Option]):
-        self.set_fields(_options=options)
+    def get_options(self) -> List[Option]:
+        return [self.pack.get_entry(tid) for tid in self._options]
 
-    def set_answers(self, answers: List[int]):
-        self.set_fields(_answers=answers)
+    def set_options(self, options: List[Option]) -> None:
+        options_tid = []
+        for option in options:
+            if not isinstance(option, self.OptionType):
+                raise TypeError(
+                    f"The option of {type(self)} should be an "
+                    f"instance of {self.OptionType}, but got {type(option)}")
+            options_tid.append(option.tid)
+        self.set_fields(_options=options_tid)
+
+    def clear_options(self) -> None:
+        self.set_options([])
 
     @property
-    def options(self):
+    def options(self) -> List[int]:
         return self._options
 
     @property
-    def num_options(self):
+    def num_options(self) -> int:
         return len(self._options)
 
-    @property
-    def answers(self):
+    def get_answers(self) -> List[int]:
         return self._answers
+
+    def set_answers(self, answers: List[int]) -> None:
+        self.set_fields(_answers=answers)
+
+    def clear_answers(self) -> None:
+        self.set_answers([])
+
+    @property
+    def answers(self) -> List[int]:
+        return self._answers
+
+    @property
+    def num_answers(self) -> int:
+        return len(self._answers)
 
 
 # pylint: disable=useless-super-delegation

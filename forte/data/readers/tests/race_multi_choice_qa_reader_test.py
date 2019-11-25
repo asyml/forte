@@ -42,7 +42,7 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
                 self.assertEqual(question.answers, expected_answers)
                 expected_text += '\n' + expected_question
 
-                for oid, option in enumerate(question.options):
+                for oid, option in enumerate(question.get_options()):
                     expected_option = expected['options'][qid][oid]
                     self.assertEqual(option.text, expected_option)
                     expected_text += '\n' + expected_option
