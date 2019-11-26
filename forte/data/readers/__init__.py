@@ -21,3 +21,4 @@ from forte.data.readers.plaintext_reader import *
 from forte.data.readers.prodigy_reader import *
 from forte.data.readers.string_reader import *
 from forte.data.readers.multipack_terminal_reader import *
+from forte.data.readers.race_multi_choice_qa_reader import *
