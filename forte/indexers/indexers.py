@@ -15,9 +15,12 @@ import os
 import logging
 import pickle
 from abc import ABC
-from typing import Optional, List, Tuple, Dict, Union, Any
+from typing import Optional, List, Tuple, Dict, Union, Any, Iterable
+from copy import deepcopy
 import numpy as np
 
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 import torch
 from texar.torch import HParams
 import faiss
@@ -37,19 +40,144 @@ class BaseIndexer(ABC):
     def __init__(self):
         pass
 
-    def index(self):
-        raise NotImplementedError
-
 
 class ElasticSearchIndexer(BaseIndexer):
     r"""Indexer class for Elastic Search."""
 
-    def __init__(self):
+    def __init__(self, hparams: Optional[Union[Dict, HParams]] = None):
         super().__init__()
+        self._hparams = HParams(hparams, self.default_hparams())
+        self.elasticsearch = Elasticsearch(hosts=self._hparams.hosts)
+
+    def index(self, document: Dict[str, Any], index_name: Optional[str] = None,
+              refresh: Optional[Union[bool, str]] = False) -> None:
+        r"""Index a document ``document`` in the index specified by
+        ``index_name``. If ``index_name`` is None, it will be picked from
+        hparams.
+
+        Args:
+            document (Dict): Document to be indexed into Elasticsearch indexer
+            index_name (str): Name of the index where this document will be
+                saved. If None, value will be picked from hparams.
+            refresh (bool, str): refresh settings to control when changes
+                made by this request are made visible to search. Available
+                value are "True","wait_for", "False"
+
+            .. note::
+                "refresh" setting will greatly affect the Elasticsearch
+                performance. Please refer to
+                https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
+                for more information on "refresh"
+        """
+        self.add(document, index_name, refresh)
+
+    def add(self, document: Dict[str, Any], index_name: Optional[str] = None,
+            refresh: Optional[Union[bool, str]] = False) -> None:
+        r"""Add a document ``document`` to the index specified by
+        ``index_name``. If ``index_name`` is None, it will be picked from
+        hparams.
+
+        Args:
+            document (Dict): Document to be indexed into Elasticsearch indexer
+            index_name (str): Name of the index where this document will be
+                saved. If None, value will be picked from hparams.
+            refresh (bool, str): refresh settings to control when changes
+                made by this request are made visible to search. Available
+                value are "True","wait_for", "False"
+
+            .. note::
+                "refresh" setting will greatly affect the Elasticsearch
+                performance. Please refer to
+                https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
+                for more information on "refresh"
+        """
+        index_name = index_name if index_name else self._hparams.index_name
+        self.elasticsearch.index(  # pylint: disable=unexpected-keyword-arg
+            index=index_name, body=document, refresh=refresh)
+
+    def add_bulk(self, documents: Iterable[Dict[str, Any]],
+                 index_name: Optional[str] = None,
+                 refresh: Optional[Union[bool, str]] = False) -> None:
+        r"""Add a bulk of documents to the index specified by ``index_name``.
+        If ``index_name`` is None, it will be picked from hparams.
+
+        Args:
+            documents (Iterable): An iterable of documents to be indexed.
+            index_name (str): Name of the index where this document will be
+                saved. If None, value will be picked from hparams.
+            refresh (bool, str): refresh settings to control when changes
+                made by this request are made visible to search. Available
+                value are "True","wait_for", "False"
+
+            .. note::
+                "refresh" setting will greatly affect the Elasticsearch
+                performance. Please refer to
+                https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
+                for more information on "refresh"
+        """
+        def actions():
+            for document in documents:
+                new_document = deepcopy(document)
+                new_document.update(
+                    {"_index": index_name if index_name else
+                        self.hparams.index_name,
+                     "_type": "document"})
+                yield new_document
+
+        bulk(self.elasticsearch, actions(), refresh=refresh)
+
+    def search(self, query: Dict[str, Any], index_name: Optional[str] = None) \
+            -> Dict[str, Any]:
+        r"""Search the index specified by ``index_name`` that matches the
+        ``query``.
+
+        Args:
+             query (dict): An elasticseach query which is issued to the indexer
+             index_name (str): Name of the index where documents are looked up.
+                If None, value will be picked from hparams.
+
+        Returns:
+            A dict containing the documents matching the query along with
+            meta data of the search.
+        """
+        index_name = index_name if index_name else self.hparams.index_name
+        return self.elasticsearch.search(index=index_name, body=query)
+
+    def search_all(self, query: Dict[str, Any]):
         pass
 
-    def index(self):
-        pass
+    @property
+    def hparams(self):
+        return self._hparams
+
+    @staticmethod
+    def default_hparams() -> Dict[str, Any]:
+        r"""Returns a dictionary of default hyperparameters.
+
+        .. code-block:: python
+
+            {
+                "index_name": "elastic_indexer",
+                "hosts": "localhost:9200",
+                "algorithm": "bm25"
+            }
+
+        Here:
+
+        `"index_name"`: str
+            A string representing the index to which the documents will be
+            added.
+
+        `"hosts"`: list, str
+            A list of hosts or a host which the Elasticsearch client will be
+            connected to.
+
+        """
+        return {
+            "index_name": "elastic_indexer",
+            "hosts": "localhost:9200",
+            "algorithm": "bm25"
+        }
 
 
 class EmbeddingBasedIndexer(BaseIndexer):
@@ -145,8 +273,9 @@ class EmbeddingBasedIndexer(BaseIndexer):
         Args:
             vectors (np.ndarray or torch.Tensor): A pytorch tensor or a numpy
                 array of shape ``[batch_size, *]``.
-            meta_data (optional dict): Meta data containing associated with the
-                vectors to be added.
+            meta_data (optional dict): Meta data associated with the vectors to
+                be added. Meta data can include the document contents of the
+                vectors.
         """
 
         if isinstance(vectors, torch.Tensor):

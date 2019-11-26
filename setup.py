@@ -33,7 +33,7 @@ setuptools.setup(
         'test': ['ddt'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'indexer': ['faiss>=1.5.3']
+        'indexer': ['faiss>=1.5.3', 'elasticsearch']
     },
     package_data={
     },
