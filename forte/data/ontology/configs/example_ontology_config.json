@@ -1,25 +1,51 @@
 {
-    "ontology_name": "example_ontology",
-    "imports": [
-       "example_import_ontology_config.json"
+    "name": "example_ontology",
+    "description": "",
+    "import_paths": [
+        "example_import_ontology_config.json"
     ],
-    "entry_definitions": [
+    "definitions": [
         {
-            "entry_name": "forte.data.ontology.example_ontology.Token",
-            "parent_entry": "forte.data.ontology.example_import_ontology.Token",
-            "entry_description": "",
+            "entry_name": "ft.onto.example_ontology.Word",
+            "parent_entry": "ft.onto.example_import_ontology.Token",
+            "description": "",
             "attributes": [
                 {
-                    "attribute_name": "related_tokens",
-                    "attribute_description": "Tokens related to the current token",
-                    "attribute_type": "List",
-                    "element_type": "forte.data.ontology.example_ontology.Token"
+                    "name": "string_features",
+                    "description": "To demonstrate the composite type, List.",
+                    "type": "List",
+                    "item_type": "str"
                 },
                 {
-                    "attribute_name": "string_features",
-                    "attribute_description": "Miscellaneous string features",
-                    "attribute_type": "List",
-                    "element_type": "str"
+                    "name": "word_forms",
+                    "description": "To demonstrate that an attribute can have the entry it is contained in as it's type or item_type.",
+                    "type": "List",
+                    "item_type": "ft.onto.example_ontology.Word"
+                }
+            ]
+        },
+        {
+            "entry_name": "ft.onto.example_ontology.WordLink",
+            "parent_entry": "Link",
+            "description": "",
+            "class_attributes": [
+                {
+                    "name": "ParentType",
+                    "description": "Parent type of the link",
+                    "default": "ft.onto.example_ontology.Word"
+                },
+                {
+                    "name": "ChildType",
+                    "description": "Child type of the link",
+                    "default": "ft.onto.example_ontology.Word"
+                }
+            ],
+            "attributes": [
+                {
+                    "name": "string_features",
+                    "description": "To demonstrate the composite type, List.",
+                    "type": "List",
+                    "item_type": "str"
                 }
             ]
         }

@@ -30,11 +30,12 @@ setuptools.setup(
         'srl': ['mypy-extensions', 'allennlp'],
         'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
-        'test': ['ddt'],
+        'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'ir': ['pandas~=0.25.3']
-        'indexer': ['faiss>=1.5.3']
+        'ir': ['pandas~=0.25.3'],
+        'indexer': ['faiss>=1.5.3'],
+        'codegen': ['jsonschema']
     },
     package_data={
     },
