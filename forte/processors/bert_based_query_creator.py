@@ -24,8 +24,6 @@ from forte.common.resources import Resources
 from forte.data import MultiPack
 from forte.processors.base import QueryProcessor
 
-from forte.data.ontology import Query
-
 __all__ = [
     "BertBasedQueryCreator"
 ]
@@ -86,8 +84,7 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
         query_vector = query_vector.cpu().numpy()
         return query_vector
 
-    def _process(self, input_pack: MultiPack):
-
+    def _process_query(self, input_pack: MultiPack):
         query_pack = input_pack.get_pack(self.config.query_pack_name)
         context = [query_pack.text]
 
@@ -103,5 +100,5 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
         text = ' '.join(context)
 
         query_vector = self._build_query(text=text)
-        query = Query(pack=query_pack, value=query_vector)
-        query_pack.add_or_get_entry(query)
+
+        return query_pack, query_vector

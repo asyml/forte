@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from abc import ABC
-from typing import Union
+from typing import Union, Tuple
 import numpy as np
 
 from forte.data.base_pack import PackType
+from forte.data.ontology import Query
 from forte.processors.base.pack_processor import BasePackProcessor
 
 __all__ = [
@@ -30,8 +31,39 @@ class QueryProcessor(BasePackProcessor[PackType], ABC):
     information retrieval."""
 
     def _build_query(self, text: str) -> QueryType:
-        r"""Query-related processors need to implement this class to create a
-        query from a data pack.
+        r"""Subclasses of QueryProcessor need to implement this method to create
+        a query from a text string.
+
+        Args:
+            text (str): A string for which a query will be generated
+
+        Returns:
+            A str or numpy array representing a query for `text`
 
         """
         raise NotImplementedError
+
+    def _process_query(self, input_pack: PackType) \
+            -> Tuple[PackType, QueryType]:
+        r"""Subclasses of QueryProcessor should implement this method which
+        takes in an `input_pack` and processes it to generate a query.
+
+        Args:
+            input_pack (DataPack or a MultiPack): A (data/multi)-pack for which
+                a query is generated. If `input_pack` is a multipack, the
+                processor should fetch the relevant datapack and process it to
+                generate a query.
+
+        Returns:
+             A tuple containing the `(query_pack, query)`.
+
+             - If `input_pack` is a multipack, `query_pack` is one of its data
+             pack for which a `query` is generated.
+             - If `input_pack` is a datapack, `query_pack` is the `input_pack`.
+        """
+        raise NotImplementedError
+
+    def _process(self, input_pack: PackType):
+        query_pack, query_vector = self._process_query(input_pack)
+        query = Query(pack=query_pack, value=query_vector)
+        query_pack.add_or_get_entry(query)
