@@ -196,9 +196,10 @@ class OntologyCodeGenerator:
                         init_func = func
                         break
                 if init_func is None:
-                    warnings.warn(f"No `__init__` function found in the class"
-                                    f" {elem.name} of the module "
-                                    f"{base_ontology_module}.")
+                    warnings.warn(
+                        f"No `__init__` function found in the class"
+                        f" {elem.name} of the module "
+                        f"{base_ontology_module}.")
                 else:
                     # Assuming no variable args and keyword only args present in
                     # the base ontology module
@@ -269,11 +270,12 @@ class OntologyCodeGenerator:
             generated_top_dirs = set(utils.get_top_level_dirs(self.tempdir))
             for existing_top_dir in utils.get_top_level_dirs(destination_dir):
                 if existing_top_dir in generated_top_dirs:
-                    warnings.warn(f"DirectoryAlreadyPresent: "
-                                    f"The directory with the name "
-                                    f"{existing_top_dir} is already present in "
-                                    f"{destination_dir}. Merging into the "
-                                    f"existing directory.")
+                    warnings.warn(
+                        f"DirectoryAlreadyPresent: "
+                        f"The directory with the name "
+                        f"{existing_top_dir} is already present in "
+                        f"{destination_dir}. Merging into the "
+                        f"existing directory.")
 
             dir_util.copy_tree(self.tempdir, destination_dir)
 
@@ -383,9 +385,10 @@ class OntologyCodeGenerator:
             self.ref_to_full_name[name] = entry_name
             self.ref_to_full_name[entry_name] = entry_name
             if entry_name in self.allowed_types_tree:
-                warnings.warn(f"DuplicateEntryWarning: "
-                                f"Class {entry_name} already present in the "
-                                f"ontology, will be overridden.")
+                warnings.warn(
+                    f"DuplicateEntryWarning: "
+                    f"Class {entry_name} already present in the "
+                    f"ontology, will be overridden.")
             self.allowed_types_tree[entry_name] = set()
             entry_item, properties = self.parse_entry(name,
                                                       entry_name,

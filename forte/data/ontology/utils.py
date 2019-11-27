@@ -1,14 +1,11 @@
 """
-    Ontology related utils
+    Utils related to ontology generation.
 """
 import os
 from importlib import util as import_util
 from pathlib import Path
 from pydoc import locate
 from typing import Optional, List
-
-import json
-import jsonschema
 
 
 def get_user_objects_from_module(module_str: str,
@@ -99,18 +96,3 @@ def split_file_path(path: str):
     path_split += [''] if path.startswith('/') else []
     return path_split[::-1]
 
-
-def validate_json_schema(input_filepath: str, validation_filepath: str):
-    """
-    Validates the input json schema using validation meta-schema provided in
-    `validation_filepath` according to the specification in
-    `http://json-schema.org`
-    Args:
-        input_filepath: Filepath of the json schema to be validated
-        validation_filepath: Filepath of the valiodation specification
-    """
-    with open(validation_filepath, 'r') as validation_json_file:
-        validation_schema = json.loads(validation_json_file.read())
-    with open(input_filepath, 'r') as input_json_file:
-        input_schema = json.loads(input_json_file.read())
-    jsonschema.Draft6Validator(validation_schema).validate(input_schema)
