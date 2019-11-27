@@ -17,7 +17,6 @@
 """
 import os
 import json
-import logging
 import shutil
 import warnings
 
@@ -39,15 +38,14 @@ from forte.data.ontology.code_generation_util import (
     BasicItem, CompositeItem, ClassAttributeItem, DefinitionItem, FileItem,
     Property)
 
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
-log = logging.getLogger(__name__)
 
-
-def format_warning(message, category, filename, lineno, _):
-    return '%s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
-
-
-warnings.formatwarning = format_warning  # type: ignore
+# TODO: Causing error in sphinx - fix and uncomment. Current version displays
+#  the line of code to the user, which is undesired.
+# def format_warning(message, category, filename, lineno, _):
+#     return '%s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
+#
+#
+# warnings.formatwarning = format_warning  # type: ignore
 
 
 class OntologyCodeGenerator:
