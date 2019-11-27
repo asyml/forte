@@ -43,7 +43,7 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger(__name__)
 
 
-def format_warning(message, category, filename, lineno):
+def format_warning(message, category, filename, lineno, _):
     return '%s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
 
 
