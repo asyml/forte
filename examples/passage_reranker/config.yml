@@ -1,0 +1,16 @@
+reader:
+  pack_name: "query"
+
+query_creator:
+  size: 1000
+  field: "content"
+  query_pack_name: "query"
+
+indexer:
+  query_pack_name: "query"
+  field: "content"
+  response_pack_name_prefix: "passage"
+  index_config:
+    index_name: "elastic_indexer"
+    hosts: "localhost:9200"
+    algorithm: "bm25"
