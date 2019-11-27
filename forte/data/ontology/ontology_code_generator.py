@@ -29,7 +29,7 @@ from collections import defaultdict
 from distutils import dir_util
 
 from types import ModuleType
-from typing import Dict, List, Optional, Tuple, Set, Type, no_type_check
+from typing import Dict, List, Optional, Tuple, Set, no_type_check
 
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
@@ -43,13 +43,11 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger(__name__)
 
 
-def format_warning(message: str,
-                   category: Type[Warning], filename: str, lineno: int,
-                   line: Optional[str]):  # pylint: disable = unused-argument
+def format_warning(message, category, filename, lineno):
     return '%s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
 
 
-warnings.formatwarning = format_warning
+warnings.formatwarning = format_warning  # type: ignore
 
 
 class OntologyCodeGenerator:
