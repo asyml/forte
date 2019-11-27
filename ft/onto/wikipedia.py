@@ -15,6 +15,7 @@
 from forte.data import DataPack
 from forte.data.ontology import Annotation, Generic
 from ft.onto.base_ontology import Document
+from typing import List, Optional
 
 
 class WikiPage(Document):

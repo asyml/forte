@@ -12,22 +12,31 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger(__name__)
 
 
+def normalize_path(path):
+    if path is None:
+        return None
+    return os.path.abspath(os.path.expanduser(path))
+
+
 def create(args_):
     """
     Function for the `create` mode. Generates the ontology.
     Args:
         args_: parsed args for the `create` mode
     """
-    generator = OntologyCodeGenerator(args_.config_paths,
-                                      args_.top_dir)
+    config_path = normalize_path(args_.config)
+    dest_path = normalize_path(args_.dest_path)
+    config_paths = [normalize_path(config) for config in args_.config_paths] if args_.config_paths is not None else None
+
+    generator = OntologyCodeGenerator(config_paths)
     if args_.no_dry_run is None:
         log.info("Ontology will be generated in a temporary directory as "
                  "--no_dry_run is not specified by the user.")
         args_.no_dry_run = False
 
     is_dry_run = not args_.no_dry_run
-    generated_folder = generator.generate_ontology(args_.config,
-                                                   args_.dest_path,
+    generated_folder = generator.generate_ontology(config_path,
+                                                   dest_path,
                                                    is_dry_run)
     log.info("Ontology generated in the directory %s.", generated_folder)
 
@@ -39,10 +48,15 @@ def clean(args_):
         Args:
             args_: parsed args for the `clean` mode
         """
+    dir_ = normalize_path(args_.dir)
     generator = OntologyCodeGenerator()
-    is_empty = generator.cleanup_generated_ontology(args_.dir, args_.force)
+    is_empty, del_dir = generator.cleanup_generated_ontology(dir_, args_.force)
     if not is_empty:
-        log.info("Directory %s not empty, cannot delete completely", args_.dir)
+        log.info("Directory %s not empty, cannot delete completely.", dir_)
+    else:
+        log.info("Directory %s deleted.", dir_)
+    if not args_.force:
+        log.info("Deleted files moved to %s.", del_dir)
 
 
 def main():
@@ -85,13 +99,6 @@ def main():
                                ' default directory is the current working '
                                'directory.')
 
-    create_parser.add_argument('--top_dir',
-                               type=str,
-                               required=False,
-                               default=None,
-                               help='Top level directory to be created inside '
-                               'the generated directory.')
-
     create_parser.add_argument('--config_paths',
                                type=str,
                                nargs='*',
@@ -120,7 +127,7 @@ def main():
     clean_parser.set_defaults(func=clean)
 
     options = parser.parse_args()
-    options.func()
+    options.func(options)
 
 
 if __name__ == "__main__":

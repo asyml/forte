@@ -5,10 +5,10 @@
 """
 Automatically generated file. Do not change manually.
 """
-import typing
-import ft.onto
 import forte.data.data_pack
 import forte.data.ontology.top
+import ft.onto
+import typing
 
 
 __all__ = []
@@ -32,14 +32,14 @@ class Token(forte.data.ontology.top.Annotation):
         return self._pos
 
     def set_pos(self, pos: typing.Optional[str]):
-        self._pos = pos
+        self.set_fields(_pos=pos)
 
     @property
     def lemma(self):
         return self._lemma
 
     def set_lemma(self, lemma: typing.Optional[str]):
-        self._lemma = lemma
+        self.set_fields(_lemma=lemma)
 
 
 __all__.extend('EntityMention')
@@ -56,4 +56,4 @@ class EntityMention(forte.data.ontology.top.Annotation):
         return self._entity_type
 
     def set_entity_type(self, entity_type: typing.Optional[str]):
-        self._entity_type = entity_type
+        self.set_fields(_entity_type=entity_type)

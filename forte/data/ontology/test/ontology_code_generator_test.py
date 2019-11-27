@@ -41,12 +41,18 @@ class GenerateOntologyTest(unittest.TestCase):
             self.generator.cleanup_generated_ontology(self.dir_path,
                                                       is_forced=True)
 
-    @data(('example_ontology_config', ['example_import_ontology',
-                                       'example_ontology']),
-          ('example_complex_ontology_config', ['example_complex_ontology']),
-          ('stanfordnlp_ontology', ['stanfordnlp_ontology']))
+    @data(('example_ontology_config',
+           ['ft/onto/example_import_ontology', 'ft/onto/example_ontology']),
+          ('example_complex_ontology_config',
+           ['ft/onto/example_complex_ontology']),
+          ('stanfordnlp_ontology',
+           ['ft/onto/stanfordnlp_ontology']),
+          ('example_multi_module_ontology_config',
+           ['ft/onto/ft_module', 'custom/user/custom_module']))
     def test_generated_code(self, value):
-        input_file_name, file_names = value
+        input_file_name, file_paths = value
+        file_paths = sorted(file_paths)
+
         # read json and generate code in a file
         json_file_path = get_config_path(f'../configs/{input_file_name}.json')
         folder_path = self.generator.generate_ontology(json_file_path,
@@ -54,30 +60,25 @@ class GenerateOntologyTest(unittest.TestCase):
         self.dir_path = folder_path
         # record code
         generated_files = []
-        final_root = None
         for root, dirs, files in os.walk(folder_path):
             generated_files.extend([os.path.join(root, file)
                                     for file in files if file.endswith('.py')])
-            if not root.endswith('__pycache__'):
-                final_root = root
         generated_files = sorted(generated_files)
 
-        expected_final_root = os.path.join(folder_path, 'ft', 'onto')
-        self.assertEqual(final_root, expected_final_root)
+        exp_files = sorted([f"{os.path.join(folder_path, file)}.py"
+                            for file in file_paths])
 
-        expected_files = [f"{os.path.join(final_root, file)}.py"
-                          for file in file_names]
+        self.assertCountEqual(generated_files, exp_files)
 
-        self.assertCountEqual(generated_files, expected_files)
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
+        dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                'test_outputs')
 
         for i, generated_file in enumerate(generated_files):
             with open(generated_file, 'r') as f:
                 generated_code = f.read()
 
             # assert if generated code matches with the expected code
-            expected_code_path = f"{os.path.join(dir_path, file_names[i])}.py"
+            expected_code_path = os.path.join(dir_path, f'{file_paths[i]}.py')
             with open(expected_code_path, 'r') as f:
                 expected_code = f.read()
             self.assertEqual(generated_code, expected_code)
@@ -89,8 +90,7 @@ class GenerateOntologyTest(unittest.TestCase):
         temp_filename = get_temp_filename(json_file_path, temp_dir)
         self.generator.generate_ontology(temp_filename, temp_dir, False)
         folder_path = temp_dir
-        for name in ["generated-files", "ft", "onto",
-                     "example_import_ontology.py"]:
+        for name in ["ft", "onto", "example_import_ontology.py"]:
             self.assertTrue(name in os.listdir(folder_path))
             folder_path = os.path.join(folder_path, name)
 
@@ -102,14 +102,14 @@ class GenerateOntologyTest(unittest.TestCase):
           (False, 'test_invalid_item_type.json', 'ItemTypeNotDeclared'),
           (False, 'test_no_item_type.json', 'ItemTypeNotFound'),
           (False, 'test_composite_item_type.json', 'ItemTypeCompositeError'))
-    def test_text(self, value):
-        is_warning, file, message = value
+    def test_warnings_errors(self, value):
+        expected_warning, file, message = value
         temp_dir = tempfile.mkdtemp()
         dirname = '../configs' if file.startswith('example') else 'test_configs'
         filepath = os.path.join(dirname, file)
         json_file_name = get_config_path(filepath)
         temp_filename = get_temp_filename(json_file_name, temp_dir)
-        if is_warning:
+        if expected_warning:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 self.generator.generate_ontology(temp_filename, is_dry_run=True)
@@ -122,14 +122,15 @@ class GenerateOntologyTest(unittest.TestCase):
 
     def test_directory_already_present(self):
         temp_dir = tempfile.mkdtemp()
-        os.mkdir(os.path.join(temp_dir, "generated-files"))
-        os.mkdir(os.path.join(temp_dir, "generated-files", "ft"))
+        os.mkdir(os.path.join(temp_dir, "ft"))
         json_file_path = get_config_path(
             "../configs/example_import_ontology_config.json")
         temp_filename = get_temp_filename(json_file_path, temp_dir)
-        with self.assertRaises(ValueError) as cm:
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             self.generator.generate_ontology(temp_filename, temp_dir, False)
-        self.assertTrue("DirectoryAlreadyPresent" in cm.exception.args[0])
+            self.assertEqual(len(w), 1)
+            self.assertTrue("DirectoryAlreadyPresent" in str(w[0].message))
 
     def test_top_ontology_parsing_imports(self):
         temp_dir = tempfile.mkdtemp()
@@ -140,7 +141,7 @@ class GenerateOntologyTest(unittest.TestCase):
                             'import os.path as os_path\n'
                             'from os import path\n')
         temp_module = importlib.import_module('temp')
-        _, imports = OntologyCodeGenerator.initialize_top_entries(temp_module)
+        _, imports, _ = OntologyCodeGenerator.initialize_top_entries(temp_module)
         expected_imports = {"os.path": "os.path",
                             "os_path": "os.path",
                             "path": "os.path"}

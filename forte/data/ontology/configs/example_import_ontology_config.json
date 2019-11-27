@@ -1,6 +1,5 @@
 {
     "name": "example_import_ontology",
-    "prefix": "ft.onto",
     "definitions": [
         {
             "entry_name": "ft.onto.example_import_ontology.Token",

@@ -74,7 +74,7 @@ class Property(Item):
                  (f"return self._{name}", 1),
                  (empty_lines(0), 0),
                  (f"def set_{name}(self, {name}: {self.to_code(0)}):", 0),
-                 (f"self._{name} = {name}", 1),
+                 (f"self.set_fields(_{name}={self.to_field_value()})", 1),
                  (empty_lines(0), 0)]
         return indent_code([indent_line(*line) for line in lines], level)
 
@@ -90,16 +90,11 @@ class Property(Item):
                                f"{self.description}", level)
         return None
 
+    def to_field_value(self):
+        raise NotImplementedError
+
 
 class ClassAttributeItem(Property):
-    def __init__(self,
-                 name: str,
-                 type_str: str,
-                 description: Optional[str] = None,
-                 default: Any = None):
-        super().__init__(name, type_str, description, default)
-        self.type_str = type_str
-
     def to_code(self, level: int = 0) -> str:
         return self.type_str
 
@@ -108,20 +103,20 @@ class ClassAttributeItem(Property):
         type_ = f': {type_code}' if type_code.strip() != '' else ''
         return indent_line(f"{self.name}{type_} = {self.default}", level)
 
+    def to_field_value(self):
+        pass
+
 
 class BasicItem(Property):
     TYPES = {'int', 'float', 'str', 'bool'}
 
-    def __init__(self,
-                 name: str,
-                 type_str: str,
-                 description: Optional[str] = None,
-                 default: Any = None):
-        super().__init__(name, type_str, description, default)
-        self.type_str = type_str
-
     def to_code(self, level: int = 0) -> str:
         return f"typing.Optional[{self.type_str}]"
+
+    def to_field_value(self):
+        if self.type_str in self.TYPES:
+            return self.name
+        return f"{self.name}.tid"
 
 
 class CompositeItem(Property):
@@ -130,20 +125,28 @@ class CompositeItem(Property):
     def __init__(self,
                  name: str,
                  type_str: str,
-                 items: List[str],
+                 item_type: str,
                  description: Optional[str] = None,
                  default: Any = None):
         super().__init__(name, type_str, description, default)
-        self.items = items
+        self.item_type = item_type
 
     def to_code(self, level: int = 0) -> str:
-        items = list(OrderedDict([(item, None) for item in self.items]).keys())
-        item_type_str = f"{', '.join(items)}"
+        # TODO: Assumes only one type of elements are allowed in the list,
+        #  allow multiple types
 
-        if len(self.items) > 1:
-            item_type_str = f"typing.Union[{item_type_str}]"
+        # items = list(OrderedDict([(item, None)
+        # for item in self.items]).keys())
+        # item_type_str = f"{', '.join(self.item_type)}"
 
-        return f"typing.Optional[{self.type_str}[{item_type_str}]]"
+        # if len(self.items) > 1:
+        #     item_type_str = f"typing.Union[{item_type_str}]"
+
+        return f"typing.Optional[{self.type_str}[{self.item_type}]]"
+
+    def to_field_value(self):
+        item_value_str = BasicItem('item', self.item_type).to_field_value()
+        return f"[{item_value_str} for item in {self.name}]"
 
 
 class DefinitionItem(Item):
@@ -217,7 +220,7 @@ class FileItem:
                  imports: Optional[List[str]]):
         self.description = description
         self.ignore_errors = [] if not ignore_errors else ignore_errors
-        self.imports = [] if not imports else imports
+        self.imports = [] if not imports else list(set(imports))
         self.entry_item = entry_item
         self.entry_file_exists = os.path.exists(entry_file)
 
@@ -237,6 +240,6 @@ class FileItem:
 
     def to_import_code(self, level):
         imports_set: OrderedDict[str] = {}
-        for import_ in self.imports:
+        for import_ in sorted(self.imports):
             imports_set[f"import {import_}"] = None
         return indent_code(list(imports_set), level)

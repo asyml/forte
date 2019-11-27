@@ -7,6 +7,9 @@ from pathlib import Path
 from pydoc import locate
 from typing import Optional, List
 
+import json
+import jsonschema
+
 
 def get_user_objects_from_module(module_str: str,
                                  custom_dirs: Optional[str] = None):
@@ -72,3 +75,42 @@ def get_top_level_dirs(path: Optional[str]):
         return []
     return [item for item in os.listdir(path)
             if os.path.isdir(os.path.join(path, item))]
+
+
+def split_file_path(path: str):
+    """
+    Args:
+        path: Path to be split
+
+    Returns: list containing path components
+    Examples:
+        >>> split_file_path('forte/data/ontology/file.py')
+        ['forte', 'data', 'ontology', 'file.py']
+        >>> split_file_path('/home/file.py')
+        ['', 'home', 'file.py']
+    """
+    path_split = []
+    prev_dir, curr_dir = None, (str(Path(path)), '')
+    while prev_dir != curr_dir:
+        prev_dir = curr_dir
+        if curr_dir[-1].strip():
+            path_split.append(curr_dir[-1])
+        curr_dir = os.path.split(curr_dir[0])
+    path_split += [''] if path.startswith('/') else []
+    return path_split[::-1]
+
+
+def validate_json_schema(input_filepath: str, validation_filepath: str):
+    """
+    Validates the input json schema using validation meta-schema provided in
+    `validation_filepath` according to the specification in
+    `http://json-schema.org`
+    Args:
+        input_filepath: Filepath of the json schema to be validated
+        validation_filepath: Filepath of the valiodation specification
+    """
+    with open(validation_filepath, 'r') as validation_json_file:
+        validation_schema = json.loads(validation_json_file.read())
+    with open(input_filepath, 'r') as input_json_file:
+        input_schema = json.loads(input_json_file.read())
+    jsonschema.Draft6Validator(validation_schema).validate(input_schema)

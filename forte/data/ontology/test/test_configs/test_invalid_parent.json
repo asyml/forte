@@ -2,8 +2,8 @@
     "name": "test_ontology",
     "definitions": [
         {
-            "entry_name": "test_ontology.Token",
-            "parent_entry": "Entry",
+            "entry_name": "ft.onto.test_ontology.Token",
+            "parent_entry": "forte.data.ontology.top.Entry",
             "description": "Base parent token entry",
             "attributes": [
                 {
