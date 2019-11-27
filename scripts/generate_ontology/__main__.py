@@ -6,7 +6,7 @@ import os
 import logging
 import argparse
 from argparse import RawTextHelpFormatter
-from forte.data.ontology import OntologyCodeGenerator
+import forte
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger(__name__)
@@ -26,9 +26,10 @@ def create(args_):
     """
     config_path = normalize_path(args_.config)
     dest_path = normalize_path(args_.dest_path)
-    config_paths = [normalize_path(config) for config in args_.config_paths] if args_.config_paths is not None else None
+    config_paths = [normalize_path(config) for config in args_.config_paths] \
+        if args_.config_paths is not None else None
 
-    generator = OntologyCodeGenerator(config_paths)
+    generator = forte.data.ontology.OntologyCodeGenerator(config_paths)
     if args_.no_dry_run is None:
         log.info("Ontology will be generated in a temporary directory as "
                  "--no_dry_run is not specified by the user.")
@@ -49,7 +50,7 @@ def clean(args_):
             args_: parsed args for the `clean` mode
         """
     dir_ = normalize_path(args_.dir)
-    generator = OntologyCodeGenerator()
+    generator = forte.data.ontology.OntologyCodeGenerator()
     is_empty, del_dir = generator.cleanup_generated_ontology(dir_, args_.force)
     if not is_empty:
         log.info("Directory %s not empty, cannot delete completely.", dir_)

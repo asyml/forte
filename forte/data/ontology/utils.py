@@ -95,4 +95,3 @@ def split_file_path(path: str):
         curr_dir = os.path.split(curr_dir[0])
     path_split += [''] if path.startswith('/') else []
     return path_split[::-1]
-

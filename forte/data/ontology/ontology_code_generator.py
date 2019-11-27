@@ -29,7 +29,7 @@ from collections import defaultdict
 from distutils import dir_util
 
 from types import ModuleType
-from typing import Dict, List, Optional, Tuple, Set, no_type_check
+from typing import Dict, List, Optional, Tuple, Set, Type, no_type_check
 
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
@@ -43,7 +43,9 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger(__name__)
 
 
-def format_warning(message, category, filename, lineno):
+def format_warning(message: str,
+                   category: Type[Warning], filename: str, lineno: int,
+                   line: Optional[str]):  # pylint: disable = unused-argument
     return '%s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
 
 
@@ -566,7 +568,7 @@ class OntologyCodeGenerator:
             property_names.append(prop_schema["name"])
             property_items.append(self.parse_property(name, prop_schema))
 
-        class_attribute_names = []
+        class_attribute_names: List[str] = []
         if any([item == "BaseLink" for item in core_bases]):
             class_attribute_names = self.core_base_keys["BaseLink"]
         elif any([item == "BaseGroup" for item in core_bases]):
@@ -574,7 +576,7 @@ class OntologyCodeGenerator:
 
         # TODO: Apply stricter checking on class attributes.
         # TODO: Test subtypes of Group.
-        class_att_items = []
+        class_att_items: List[Property] = []
 
         for class_att in class_attribute_names:
             if class_att in schema:
