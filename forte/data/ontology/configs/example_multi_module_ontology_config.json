@@ -50,16 +50,8 @@
           "type": "str"
         }
       ],
-      "class_attributes": [
-        {
-          "name": "ParentType",
-          "default": "ft.onto.ft_module.Token"
-        },
-        {
-          "name": "ChildType",
-          "default": "ft.onto.ft_module.Token"
-        }
-      ]
+      "parent_type": "ft.onto.ft_module.Token",
+      "child_type": "ft.onto.ft_module.Token"
     }
   ]
 }

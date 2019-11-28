@@ -28,18 +28,8 @@
             "entry_name": "ft.onto.example_ontology.WordLink",
             "parent_entry": "Link",
             "description": "",
-            "class_attributes": [
-                {
-                    "name": "ParentType",
-                    "description": "Parent type of the link",
-                    "default": "ft.onto.example_ontology.Word"
-                },
-                {
-                    "name": "ChildType",
-                    "description": "Child type of the link",
-                    "default": "ft.onto.example_ontology.Word"
-                }
-            ],
+            "parent_type": "ft.onto.example_ontology.Word",
+            "child_type": "ft.onto.example_ontology.Word",
             "attributes": [
                 {
                     "name": "string_features",
