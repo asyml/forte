@@ -3,6 +3,7 @@ Script to facilitate generating ontology given a root JSON config,
 and cleaning a folder out of generated ontologies.
 """
 import os
+import sys
 import logging
 import argparse
 from argparse import RawTextHelpFormatter
@@ -60,6 +61,13 @@ def clean(args_):
         log.info("Deleted files moved to %s.", del_dir)
 
 
+class OntologyGenerationParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('Error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
+
+
 def main():
     create_example = "python generate_ontology.py create --config " \
                      "forte/data/ontology/configs/example_ontology_config.json"
@@ -72,7 +80,7 @@ def main():
         "*clean*: Clean a folder of generated ontologies.",
         f"Example: {clean_example}"])
 
-    parser = argparse.ArgumentParser(description=file_description,
+    parser = OntologyGenerationParser(description=file_description,
                                      formatter_class=RawTextHelpFormatter)
     subs = parser.add_subparsers()
 
@@ -128,7 +136,13 @@ def main():
     clean_parser.set_defaults(func=clean)
 
     options = parser.parse_args()
-    options.func(options)
+    options_func = getattr(options, "func", None)
+    if options_func is not None:
+        options.func(options)
+    else:
+        sys.stderr.write('Error: %s\n' % "wrong usage of the script.")
+        OntologyGenerationParser().print_help()
+        exit(2)
 
 
 if __name__ == "__main__":
