@@ -9,7 +9,9 @@ def validate_json_schema(input_filepath: str, validation_filepath: str):
     """
     Validates the input json schema using validation meta-schema provided in
     `validation_filepath` according to the specification in
-    `http://json-schema.org`
+    `http://json-schema.org`.
+    If the tested json is not valid, a `jsonschema.exceptions.ValidationError`
+    is thrown.
     Args:
         input_filepath: Filepath of the json schema to be validated
         validation_filepath: Filepath of the valiodation specification

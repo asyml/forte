@@ -24,6 +24,7 @@ setuptools.setup(
         'pyyaml',
         'deprecation',
         'smart-open',
+        'jsonschema'
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
@@ -34,7 +35,6 @@ setuptools.setup(
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
         'indexer': ['faiss>=1.5.3'],
-        'codegen': ['jsonschema']
     },
     package_data={
     },

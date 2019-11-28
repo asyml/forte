@@ -6,6 +6,7 @@
   "required": [
     "definitions"
   ],
+  "additionalProperties": false,
   "properties": {
     "ontology_name": {
       "description": "Name of the ontology.",
@@ -29,6 +30,7 @@
           "entry_name",
           "parent_entry"
         ],
+        "additionalProperties": false,
         "properties": {
           "entry_name": {
             "description": "Name of the entry class.",
@@ -44,6 +46,7 @@
             "uniqueItems": true,
             "items": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "name": {
                   "description": "Name of the attribute.",
