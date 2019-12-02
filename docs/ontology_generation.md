@@ -99,7 +99,7 @@ define the full name of an entry, and is of the form
  the user-defined entries should inherit either any of the top entries or one 
  of the other user-defined entries.
  
- * The `description` keyword is optionallly is used as the comment to describe the generated Python class.
+ * The `description` keyword is optionally used as the comment to describe the generated Python class.
   
  * `attributes`: List of attributes that would be used as instance variables of 
  the generated class. Each keyword for an attribute is defined in the next 
@@ -109,7 +109,7 @@ define the full name of an entry, and is of the form
 These are the commonly used fields for each attribute of the entry definition - 
 * The `name` keyword defines the name of the property unique to the entry.
 
-* The `description` keyword is optionallly is used as the comment to describe the attribute.
+* The `description` keyword is optionally used as the comment to describe the attribute.
 
 * The `type` keyword is used to define the type of the attribute. Currently supported types are:
     * Primitive types - `int`, `float`, `str`, `bool`
