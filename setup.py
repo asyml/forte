@@ -26,17 +26,18 @@ setuptools.setup(
         'typed_astunparse',
         'funcsigs',
         'mypy_extensions',
-        'typed_ast'
+        'typed_ast',
+        'jsonschema'
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions', 'allennlp'],
         'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
-        'test': ['ddt'],
+        'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'indexer': ['faiss>=1.5.3']
+        'indexer': ['faiss>=1.5.3'],
     },
     package_data={
     },

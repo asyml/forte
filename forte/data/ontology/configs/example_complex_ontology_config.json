@@ -1,5 +1,5 @@
 {
-  "ontology_name": "example_complex_ontology",
+  "name": "example_complex_ontology",
   "definitions": [
     {
       "entry_name": "ft.onto.example_complex_ontology.Token",
