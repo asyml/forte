@@ -34,7 +34,7 @@ setuptools.setup(
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'indexer': ['faiss>=1.5.3'],
+        'ir': ['faiss>=1.5.3']
     },
     package_data={
     },
