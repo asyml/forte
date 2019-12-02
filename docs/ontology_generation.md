@@ -6,33 +6,38 @@ relate to each other.
 
 Forte allows you to define the ontology of your project 
 in JSON format. The JSON ontology is then converted to Python classes 
-automatically using Forte Ontology Generation feature.
+automatically using the Forte Ontology Generation feature.
 
 This _Ontology Configuration_ tutorial teaches how to:
 * Define a simple ontology config for your NLP project using JSON.
 * Define multiple ontology configs and the dependencies between them.
-* Generate the corresponding Python ontologies automatically and use them in 
-your project. 
+* Generate the corresponding Python classes automatically and use them in 
+your project.
 
 Overview of Forte concepts used in this tutorial:
-* *Ontology* - A collection of entries, where each entry is represented as a python class. 
-One ontology can span one or more python modules. The modules generally belong to the package `ft.onto`.
 * *Entry* - An entry corresponds to one NLP unit in the document, for instance, 
 an annotated sequence or relationship between annotated sequences. `Token`, 
 `Sentence` and `DependencyLink` are some examples of entries. One entry defined 
 in the config is used to generate one python class.
+
+* *Ontology* - A collection of `entries`, where each entry is represented as a class. 
+The entries of an ontology can span one or more Python modules. This way, the entry classes
+can be imported regardless of the ontology config they were originally generated from.
+The modules that contain these entry classes generally belong to the package `ft.onto`.
+
 * *Attribute* - An attribute generally corresponds to a label or property 
 associated with an entry, like, `pos_tag` for the entry `Token`.
-* *Top Entry* - Top entries are a set of entries defined in Forte, in the module 
-`forte.data.ontology.base.top`. All user-defined entries should extend one of 
-the top entries.
+
+* *Top Entry* - Top entries are a set of entries that are pre-defined in the Forte library, 
+in the module `forte.data.ontology.base.top`. All user-defined entries should extend one of 
+the top entries. 
  
 <!--We plan to deprecate base_ontology.py?-->
-We provide a set of commonly used entries in the module ``forte.data.ontology.base_ontology.py``. Those entries could be reused directly and need not be redefined.
+We provide a set of commonly used entries in the module ``forte.data.ontology.base_ontology.py``. 
+Those entries could be reused directly and need not be redefined in the ontology config by the user.
  
 ### A simple ontology config ###
-A simple user-defined ontology, that contains entries for words and phrases, 
-looks like the following:
+Let us define a simple ontology, that is used to define the NLP concepts, `Word` and `Phrase`.
 ```json
 {
     "name": "simple_ontology",
@@ -70,28 +75,32 @@ looks like the following:
 ```
 #### Breakdown of the simple ontology ####
 
-- The `name` and `description` are annotation keywords meant for descriptive
+- The top level `name` and `description` are annotation keywords meant for descriptive
 purposes only.
 
-- `definitions:` is a list of entry definitions, where each entry is represented
-as a dictionary. For each entry, one class will be generated. The fields keywords 
+- The `definitions` is used to enlist entry definitions, where each entry is represented
+as a json object. For each entry, one class will be generated. The keywords 
 of an entry definition are explained in the next section.
 
 ##### ```definitions``` #####
 These are the commonly used fields for each entry class definition - 
-* The `entry_name` keyword defines the name of the entry. It should be 
-of the form ```<package_name><module_name>.<entry_name>```.
+* The `entry_name` keyword defines the name of the entry. It is used to 
+define the full name of an entry, and is of the form
+```<package_name><module_name>.<entry_name>```.
     * The package name is generally `ft.onto`. It is used to create the 
     package directory tree in which the generated module resides.
     * The `<module_name>` is the name of the generated file in which the entry 
-    would be placed. Note that entries defined in the same
-    config can have module names that are different from each other.
-    * The `<entry_name>` would be used as the generated class name.
- * The `parent_type`: Defines the base class of the generated entry class. All 
+    would be placed.
+    > Note: Entries defined in the same config can have module names that are 
+    different from each other.
+    * The `<entry_name>` is used as the generated class name.
+    
+ * The `parent_type` keyword defines the base class of the generated entry class. All 
  the user-defined entries should inherit either any of the top entries or one 
  of the other user-defined entries.
- * `description`: Optional keyword used to define description of the entry to be
-  used as the comment of the generated Python class if provided.
+ 
+ * The `description` keyword is optionallly is used as the comment to describe the generated Python class.
+  
  * `attributes`: List of attributes that would be used as instance variables of 
  the generated class. Each keyword for an attribute is defined in the next 
  section.
@@ -99,17 +108,20 @@ of the form ```<package_name><module_name>.<entry_name>```.
 ##### ```attributes``` #####
 These are the commonly used fields for each attribute of the entry definition - 
 * The `name` keyword defines the name of the property unique to the entry.
-* `description`: Optional keyword used to define description of the entry to be 
-used as the comment of the generated Python class if provided.
-* `type: str`: Type of the attribute. Currently supported types are:
+
+* The `description` keyword is optionallly is used as the comment to describe the attribute.
+
+* The `type` keyword is used to define the type of the attribute. Currently supported types are:
     * Primitive types - `int`, `float`, `str`, `bool`
     * Composite types - `List`
     * Entries defined in the `top` module - The attributes can be of the type base
     entries (defined in the `forte.data.ontology.top` module) and can be directly 
     referred by the class name.
     * User-defined types - The attributes can be of the type of entries that are
-     user-defined, and are specified by their full name. These user-defined entries 
-     could be defined (a) in the same config (b) any of the imported configs.
+     user-defined. These user-defined entries could be defined (a) in the same config 
+     (b) any of the imported configs. To avoid ambiguity, only full-names of the user-defined
+     entry types are supported
+     
 * `item_type: str`: If the `type` of the property is one of the composite types,
  then `item_type` defines the type of the items contained in the property. 
 As of now, we only support arrays of uniform types.
@@ -168,8 +180,8 @@ framework are demonstrated through the following `example_complete_ontology`.
   ]
 }
 ```
-##### Top level fields #####
-- The `additional_prefixes` is an optional keyword used to define a list
+##### Additional top level fields #####
+- The `additional_prefixes` keyword is optionally used to define a list
  of package names. This list is specified when the user prefers to use one or more
   custom package names for the generated entries instead of ``ft.onto``.
   
@@ -181,46 +193,50 @@ config paths that the current config might depend on.
     - The entries of the imported configs can be used in the current config as
     types or parent classes.
     - The import paths could either be (a) absolute paths or 
-    (b) relative to the directory of the current config, 
-    current working directory, or to one of the user-provided 
+    (b) relative to the directory of the current config or the
+    current working directory (c) relative to one of the user-provided 
     ``config_paths`` (see [usage](#usage).)
     
-    For example, ``ft.onto.ft_module.Word`` has the parent entry defined in the
+    > For example, ``ft.onto.ft_module.Word`` has the parent entry defined in the
     generated module ``ft.onto.example_import_ontology``. The generation 
     framework makes sure that the imported JSON configs are generated before the
     current config. In case of cycle dependency between the JSON configs, an 
     error would be thrown.
     
-##### Entry definition fields #####
-- If the `parent_entry` is an instance of the type `forte.data.ontology.top.BaseLink`, two 
- additional fields can be defined in the entry definition - ``parent_type`` and ``child_type``. These fields are used for strict type checking of parent link type and the child link type.
+##### Additional entry definition fields #####
+* If the `parent_entry` is an instance of the type `forte.data.ontology.top.BaseLink`, two 
+ additional fields can be defined in the entry definition - ``parent_type`` and ``child_type``. 
+ These fields are used for strict type checking of parent link type and the child link type.
  
  For example, in the above ontology, the entry ``ft.onto.ft_module.Dependency``
     has the ``parent_entry`` and ``child_entry`` specified, as the parent is of 
-    the type ``Link``. 
-- Similarly, if the `parent_entry` is an instance of type `forte.data.ontology.top.BaseGroup`, an additional field, ``member_type``, can be defined in the entry
-definition. The value of `member_type` is used for strict type checking of members
-of an entry of a group type.
+    the type ``Link``.
+    
+* Similarly, if the `parent_entry` is an instance of type `forte.data.ontology.top.BaseGroup`, 
+an additional field, ``member_type``, can be defined in the entry definition. The value of 
+`member_type` is used for strict type checking of members of an entry of group type.
 
 ### Usage ###
 * Write the json config(s) as per the instructions in the previous sections. 
-* Use the command `generate_ontology --create` (added during installation of Forte) to generate the ontology, and `generate_ontology --clean` to clean up the generated ontology. The steps are detailed in
-the following sections.
+* Use the command `generate_ontology --create` (added during installation of Forte) to 
+generate the ontology, and `generate_ontology --clean` to clean up the generated ontology. 
+The steps are detailed in the following sections.
 
  #### Generating the ontology ####
  Use ``create`` mode to generate ontology modules, along with their package directories
-  given a root JSON config. If ontology generation is successful, the path of the directory where the ontology is generated is printed.
+  given a root JSON config. If ontology generation is successful, the path of the directory 
+  where the ontology is generated is printed.
  
  If ``--no_dry_run`` is not explicitly specified, the ontology package tree 
- is generated in a
- temporary directory, otherwise it is generated in the value of ``--dest_path`` 
- if provided, or, current working directory if ``--dest_path`` is not provided. 
+ is generated in a temporary directory. Otherwise it is generated in the value 
+ of ``--dest_path`` if provided, or, current working directory if ``--dest_path`` 
+ is not provided.
  
  ##### Ontology Generation Steps #####
 Let us try to generate the `example_complete_ontology` as defined above. 
 
-* Make sure
-that Forte is installed, and the `generate_ontology` command runs. To verify run `generate_ontology -h`, and the output should look like the
+* Make sure that Forte is installed. To verify that the `generate_ontology`
+command is found, run `generate_ontology -h`, and the output should look like the
 following -
     ```bash
     $ generate_ontology -h
@@ -239,11 +255,10 @@ following -
     
     optional arguments:
       -h, --help      show this help message and exit
-    
     ```
 
-* Create a user project directory, and possibly, a config directory which
-holds the configs `example_complete_ontology_config.json` and `example_import_ontology_config.json`.
+* Create a user project directory and a config directory to hold the configs 
+`example_complete_ontology_config.json` and `example_import_ontology_config.json`.
     ```bash
     $ tree user_project
     user_project
@@ -347,9 +362,9 @@ holds the configs `example_complete_ontology_config.json` and `example_import_on
     
     6 directories, 9 files
     ```
- * Our ontology generation is complete1
+ * Our ontology generation is complete!
  
- #### Cleaning the ontology ####
+ #### Cleaning the generated ontology ####
 * Use `clean` mode of `generate_ontology` to clean the generated files from a given directory.
 * All the arguments of `generate_ontology clean` are explained as below:
 
@@ -363,7 +378,9 @@ optional arguments:
               caution.
  ```
  
-* Now, let's try to clean up the recently generated files and directories. Say, there are user-created files in the generated folder, ``user_project/src/ft``, called `important_stuff`. 
+* Now, let's try to clean up *only* the automatically generated files and directories. 
+Say, there are user-created files in the generated folder, ``user_project/src/ft``, 
+called `important_stuff` that we do not want to clean up. 
      ```bash
   $ mkdir user_project/src/ft/important_stuff
   $ touch user_project/src/ft/important_stuff/file.py
@@ -384,19 +401,22 @@ optional arguments:
                 └── ft_module.py
     ``` 
 
-* Run the cleanup command and observe the directory structure. The cleanup preserves the partial directory structure in case there exists files that are not generated by the framework.
+* Run the cleanup command and observe the directory structure. The cleanup preserves the 
+partial directory structure in the case there exists files that are not generated by the framework.
     ```bash
     $ generate_ontology clean --dir user-project/src
   
     INFO:scripts.generate_ontology.__main__:Directory /Users/mansi.gupta/user_project/src not empty, cannot delete completely.
     INFO:scripts.generate_ontology.__main__:Deleted files moved to /Users/mansi.gupta/user_project/.deleted/2019-11-28-02-53-29-952561.
     ```
- * Note that the deleted directories are moved to a timestamped directory inside ``.deleted`` and can be restored, unless `--force` is passed. 
+    
+* For safety, the deleted directories are not immediately deleted but are moved to a timestamped 
+ directory inside ``.deleted`` and can be restored, unless `--force` is passed. 
  
- * If the directories that are to be generated already exist, the files will be generated in the already existing directories.
+ * If the directories that are to be generated already exist, the files will be generated in the 
+ already existing directories.
  
- * Automatically generated folders are identified by an empty marker file of the name ``.generated``, and automatically generated files are identified by special headers. If the headers or marker files are removed manually, than the cleanup won't affect them.
-
-
-
-  
+ * Automatically generated folders are identified by an empty marker file of the name ``.generated``, 
+ and automatically generated files are identified by special headers. If the headers or marker files 
+ are removed manually, than the cleanup won't affect them.
+ 
