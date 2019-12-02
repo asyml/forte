@@ -1,5 +1,5 @@
 {
-  "ontology_name": "example_multi_module_ontology",
+  "name": "example_multi_module_ontology",
   "additional_prefixes": [
     "custom.user"
   ],

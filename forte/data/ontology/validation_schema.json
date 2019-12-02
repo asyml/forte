@@ -8,9 +8,21 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "ontology_name": {
+    "name": {
       "description": "Name of the ontology.",
       "type": "string"
+    },
+    "description": {
+      "description": "Description of the ontology.",
+      "type": "string"
+    },
+    "import_paths": {
+      "description": "JSON import paths.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
     },
     "additional_prefixes": {
       "description": "",
@@ -36,6 +48,10 @@
             "description": "Name of the entry class.",
             "type": "string"
           },
+          "description": {
+            "description": "Description of the entry.",
+            "type": "string"
+          },
           "parent_entry": {
             "description": "Parent entry of the entry class.",
             "type": "string"
@@ -50,6 +66,10 @@
               "properties": {
                 "name": {
                   "description": "Name of the attribute.",
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Description of the attribute.",
                   "type": "string"
                 },
                 "type": {

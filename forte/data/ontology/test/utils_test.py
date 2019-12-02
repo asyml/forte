@@ -43,11 +43,11 @@ class JsonValidationTest(unittest.TestCase):
         ("test_configs/test_duplicate_attribute.json",
          "non-unique elements"),
         ("test_configs/test_additional_properties.json",
-         "additional properties are not allowed")
+         "Additional properties are not allowed")
     )
     def test_invalid_json(self, value):
         input_filepath, error_msg = value
         input_filepath = os.path.join(os.path.dirname(__file__), input_filepath)
         with self.assertRaises(jsonschema.exceptions.ValidationError) as cm:
             utils.validate_json_schema(input_filepath, self.valid_filepath)
-        self.assertTrue(error_msg.lower() in cm.exception.args[0])
+        self.assertTrue(error_msg in cm.exception.args[0])
