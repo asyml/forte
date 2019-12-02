@@ -64,6 +64,6 @@ class QueryProcessor(BasePackProcessor[PackType], ABC):
         raise NotImplementedError
 
     def _process(self, input_pack: PackType):
-        query_pack, query_vector = self._process_query(input_pack)
-        query = Query(pack=query_pack, value=query_vector)
-        query_pack.add_or_get_entry(query)
+        query_pack, query_value = self._process_query(input_pack)
+        query = Query(pack=query_pack, value=query_value)
+        query_pack.add_entry(query)

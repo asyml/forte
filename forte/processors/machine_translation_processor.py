@@ -100,8 +100,8 @@ class MicrosoftBingTranslator(MultiPackProcessor):
 
         document = Document(pack, 0, len(text))
         utterance = Utterance(pack, 0, len(text))
-        pack.add_or_get_entry(document)
-        pack.add_or_get_entry(utterance)
+        pack.add_entry(document)
+        pack.add_entry(utterance)
 
         pack.set_text(text=text)
         input_pack.update_pack({self.out_pack_name: pack})
