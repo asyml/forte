@@ -1,27 +1,29 @@
- {
-    "entry_definitions": [
+{
+    "name": "example_import_ontology",
+    "definitions": [
         {
-            "entry_name": "forte.data.ontology.example_import_ontology.Token",
-            "parent_entry": "forte.data.ontology.base.top.Annotation",
-            "entry_description": "Base parent token entry",
+            "entry_name": "ft.onto.example_import_ontology.Token",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "description": "Base parent token entry",
             "attributes": [
                 {
-                    "attribute_name": "pos_tag",
-                    "attribute_type": "str"
+                    "name": "pos",
+                    "type": "str"
                 },
                 {
-                    "attribute_name": "lemma",
-                    "attribute_type": "str"
+                    "name": "lemma",
+                    "type": "str"
                 }
             ]
         },
         {
-            "entry_name": "forte.data.ontology.example_import_ontology.EntityMention",
-            "parent_entry": "forte.data.ontology.base.top.Annotation",
-            "attributes": [
+            "entry_name": "ft.onto.example_import_ontology.EntityMention",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "attributes":
+            [
                 {
-                    "attribute_name": "entity_type",
-                    "attribute_type": "str"
+                    "name":"entity_type",
+                    "type": "str"
                 }
             ]
         }
