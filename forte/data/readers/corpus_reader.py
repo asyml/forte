@@ -40,8 +40,6 @@ __all__ = [
 
 class CorpusReader(PackReader):
 
-    DocInfoType = Tuple[bool, str, List[str], Optional[List[str]]]
-
     def __init__(self):
         super(CorpusReader, self).__init__()
         self.configs = None
@@ -50,7 +48,7 @@ class CorpusReader(PackReader):
         # pylint: disable = unused-argument
         self.configs = configs
 
-    def _collect(self, *args, **kwargs) -> Iterator[DocInfoType]:
+    def _collect(self, *args, **kwargs) -> Iterator[Tuple[str, str]]:
         # pylint: disable = unused-argument, undefined-variable, no-self-use
         dir_path: str = args[0]
 
