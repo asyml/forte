@@ -1,0 +1,35 @@
+reader:
+  pack_name: "query"
+
+translator:
+  src_language: "de"
+  target_language: "en"
+  in_pack_name: "query"
+  out_pack_name: "pack"
+
+query_creator:
+  model:
+    path: "model/chatbot_model.ckpt"
+  tokenizer:
+    name: "bert-base-uncased"
+  max_seq_length: 128
+  query_pack_name: "pack"
+
+indexer:
+  batch_size: 128
+  model_dir: "model/chatbot"
+  k: 1
+  query_pack_name: "pack"
+  response_pack_name:
+    - "doc_0"
+
+SRL:
+  storage_path: "model/srl"
+  batcher:
+    batch_size: 1
+
+back_translator:
+  src_language: "en"
+  target_language: "de"
+  in_pack_name: "doc_0"
+  out_pack_name: "response"
