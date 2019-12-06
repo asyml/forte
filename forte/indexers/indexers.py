@@ -97,17 +97,19 @@ class ElasticSearchIndexer(BaseIndexer):
 
     def add_bulk(self, documents: Iterable[Dict[str, Any]],
                  index_name: Optional[str] = None,
-                 refresh: Optional[Union[bool, str]] = False) -> None:
+                 **kwargs: Optional[Dict[str, Any]]) -> None:
         r"""Add a bulk of documents to the index specified by ``index_name``.
         If ``index_name`` is None, it will be picked from hparams.
 
         Args:
             documents (Iterable): An iterable of documents to be indexed.
-            index_name (str): Name of the index where this document will be
-                saved. If None, value will be picked from hparams.
-            refresh (bool, str): refresh settings to control when changes
-                made by this request are made visible to search. Available
-                value are "True","wait_for", "False"
+            index_name (optional, str): Name of the index where this document
+                will be saved. If None, value will be picked from hparams.
+            kwargs (optional, dict) : Optional keyword arguments like
+                "refresh", "request_timeout" etc. that are passed to
+                Elasticsearch's bulk API. Please refer to
+                https://elasticsearch-py.readthedocs.io/en/master/helpers.html#bulk-helpers
+                for the complete list of arguments.
 
             .. note::
                 "refresh" setting will greatly affect the Elasticsearch
@@ -124,7 +126,7 @@ class ElasticSearchIndexer(BaseIndexer):
                      "_type": "document"})
                 yield new_document
 
-        bulk(self.elasticsearch, actions(), refresh=refresh)
+        bulk(self.elasticsearch, actions(), **kwargs)
 
     def search(self, query: Dict[str, Any], index_name: Optional[str] = None) \
             -> Dict[str, Any]:

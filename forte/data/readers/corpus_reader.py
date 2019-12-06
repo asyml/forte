@@ -24,14 +24,15 @@ Nguyen, Tri, et al. "MS MARCO: A Human-Generated MAchine Reading
 COmprehension Dataset." (2016).
 """
 import os
-from typing import Iterator, List, Tuple, Optional
+from typing import Iterator, Tuple
 
 from texar.torch import HParams
 
-from ft.onto.base_ontology import Document
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from forte.common.resources import Resources
+
+from ft.onto.base_ontology import Document
 
 __all__ = [
     "CorpusReader"

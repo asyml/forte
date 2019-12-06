@@ -21,3 +21,4 @@ from forte.processors.bert_based_query_creator import *
 from forte.processors.elastic_search_query_creator import *
 from forte.processors.search_processor import *
 from forte.processors.elastic_search_processor import *
+from forte.processors.elastic_search_index_processor import *
