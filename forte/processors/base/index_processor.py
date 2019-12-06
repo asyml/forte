@@ -53,7 +53,7 @@ class IndexProcessor(BaseProcessor[DataPack], ABC):
 
         if len(self.documents) == self.config.batch_size:
             self._bulk_process()
-            # self.documents = []
+            self.documents = []
 
     def flush(self):
         if len(self.documents) > 0:
