@@ -12,7 +12,7 @@
                 },
                 {
                     "name": "pos",
-                    "type": "int"
+                    "type": "str"
                 }
             ]
         }

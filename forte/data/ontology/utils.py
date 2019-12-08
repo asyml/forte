@@ -115,4 +115,3 @@ def validate_json_schema(input_filepath: str, validation_filepath: str):
     with open(input_filepath, 'r') as input_json_file:
         input_schema = json.loads(input_json_file.read())
     jsonschema.Draft6Validator(validation_schema).validate(input_schema)
-    
