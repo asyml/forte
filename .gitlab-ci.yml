@@ -13,7 +13,7 @@ pylint:
   image: python:3.6.1
   script:
     - pip install pylint==2.3.1
-    - pylint forte/ examples/
+    - pylint forte/ examples/ ft/ scripts/
 
 flake8:
   stage: verify
@@ -21,7 +21,7 @@ flake8:
   image: python:3.6.1
   script:
     - pip install flake8==3.7.7
-    - flake8 forte/ examples/
+    - flake8 forte/ examples/ ft/ scripts/
 
 mypy:
   stage: test

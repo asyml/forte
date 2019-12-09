@@ -1,0 +1,16 @@
+{
+    "name": "test_ontology",
+    "definitions": [
+        {
+            "entry_name": "ft.onto.test_ontology.Word",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "attributes": [
+                {
+                    "name": "features",
+                    "type": "List",
+                    "item_type": "List"
+                }
+            ]
+        }
+    ]
+}

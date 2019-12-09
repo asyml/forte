@@ -12,8 +12,7 @@ setuptools.setup(
     description="NLP pipeline",
     long_description=long_description,
     license='Apache License Version 2.0',
-
-    packages=setuptools.find_packages(include=['forte.*', 'ft.*']),
+    packages=setuptools.find_packages(include=['forte.*', 'ft.*', 'scripts.*']),
     platforms='any',
 
     install_requires=[
@@ -24,6 +23,10 @@ setuptools.setup(
         'pyyaml',
         'deprecation',
         'smart-open',
+        'typed_astunparse',
+        'funcsigs',
+        'mypy_extensions',
+        'typed_ast',
         'jsonschema'
     ],
     extras_require={
@@ -38,6 +41,11 @@ setuptools.setup(
     },
     package_data={
     },
+    entry_points={
+          'console_scripts': [
+              'generate_ontology = scripts.generate_ontology.__main__:main'
+          ]
+      },
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: Education',

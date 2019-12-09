@@ -30,8 +30,8 @@ install:
 
 script:
   # linting
-  - pylint forte/ examples/ ft/
-  - flake8 forte/ examples/ ft/
+  - pylint forte/ examples/ ft/ scripts/
+  - flake8 forte/ examples/ ft/ scripts/
   # type checking
   - mypy .
   # needed for test cases
@@ -62,6 +62,7 @@ jobs:
         - rm -rf texar-pytorch
       script:
         - cd docs
+        - make html
         # build documents
         - sphinx-build -W -b html -d _build/doctrees . _build/html
         # check for typos
