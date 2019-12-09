@@ -70,16 +70,16 @@ class ConllUDReader(PackReader):
     def _parse_pack(self, doc_lines) -> Iterator[DataPack]:
         # pylint: disable=no-self-use
         token_comp_fields = ["id", "form", "lemma", "pos",
-                             "ud_xpos", "features", "head", "label",
+                             "ud_xpos", "ud_features", "head", "label",
                              "enhanced_dependency_relations", "ud_misc"]
 
-        token_multi_fields = ["features", "ud_misc",
+        token_multi_fields = ["ud_features", "ud_misc",
                               "enhanced_dependency_relations"]
 
-        token_feature_fields = ["features", "ud_misc"]
+        token_feature_fields = ["ud_features", "ud_misc"]
 
         token_entry_fields = ["lemma", "pos", "ud_xpos",
-                              "features", "ud_misc"]
+                              "ud_features", "ud_misc"]
 
         data_pack: DataPack = DataPack()
         doc_sent_begin: int = 0

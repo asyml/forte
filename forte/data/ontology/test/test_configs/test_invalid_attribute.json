@@ -1,0 +1,15 @@
+{
+    "name": "test_ontology",
+    "definitions": [
+        {
+            "entry_name": "ft.onto.test_ontology.Token",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "attributes": [
+                {
+                    "name": "pos",
+                    "type": "dict"
+                }
+            ]
+        }
+    ]
+}

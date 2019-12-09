@@ -10,6 +10,7 @@ Welcome to Forte's documentation!
    :maxdepth: 2
 
    examples.md
+   ontology_generation.md
 
 API
 ====
