@@ -49,7 +49,10 @@ class IndexProcessor(BaseProcessor[DataPack], ABC):
         raise NotImplementedError
 
     def _process(self, input_pack: DataPack):
-        self.documents.append((input_pack.meta.doc_id, input_pack.text))
+        if input_pack.meta.doc_id:
+            self.documents.append((input_pack.meta.doc_id, input_pack.text))
+        else:
+            self.documents.append(("DOC", input_pack.text))
 
         if len(self.documents) == self.config.batch_size:
             self._bulk_process()

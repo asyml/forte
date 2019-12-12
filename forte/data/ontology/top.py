@@ -455,10 +455,13 @@ class Query(Generic):
             models) representing the query.
     """
 
-    def __init__(self, pack: PackType, value: Optional[Embedding] = None):
+    def __init__(self, pack: PackType):
         super().__init__(pack)
-        self.value: Embedding = value
+        self.value = None
         self.passages: Dict[str, float] = {}
+
+    def set_value(self, value):
+        self.value = value
 
     def update_passage(self, pid_to_score: Dict[str, float]):
         self.passages.update(pid_to_score)

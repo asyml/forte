@@ -125,7 +125,7 @@ class BasePipeline(Generic[PackType]):
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
 
-        self._evaluator: Evaluator = None
+        self._evaluator: Optional[Evaluator] = None
         self._evaluator_config: Optional[HParams] = None
 
         if resource is None:
