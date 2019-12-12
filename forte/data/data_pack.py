@@ -84,7 +84,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         r"""
         In serialization,
             1) will serialize the annotation sorted list as a normal list;
-            2) will not serialize the indexes
+            2) will not serialize the indices
         """
         state = super(DataPack, self).__getstate__()
         state['annotations'] = list(state['annotations'])

@@ -296,7 +296,7 @@ class BaseGroup(Entry, Generic[EntryType]):
             if not isinstance(member, self.MemberType):
                 raise TypeError(
                     f"The members of {type(self)} should be "
-                    f"instances of {self.MemberType}, but get {type(member)}")
+                    f"instances of {self.MemberType}, but got {type(member)}")
 
             self._members.add(member.tid)
 
