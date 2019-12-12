@@ -4,7 +4,7 @@ import shutil
 import os
 import numpy as np
 
-from forte.indexers import EmbeddingBasedIndexer
+from forte.indexers import EmbeddingBasedIndexer, ElasticSearchIndexer
 
 
 class TestEmbeddingBasedIndexer(unittest.TestCase):
@@ -60,3 +60,36 @@ class TestEmbeddingBasedIndexer(unittest.TestCase):
                 self.assertTrue(
                     np.all(actual_results[i][j] ==
                            new_index._index.reconstruct(int(t[0]))))
+
+
+class TestElasticSearchIndexer(unittest.TestCase):
+    r"""Tests Elastic Indexer."""
+
+    def setUp(self):
+        self.indexer = ElasticSearchIndexer(
+            hparams={"index_name": "test_index"})
+
+    def tearDown(self):
+        self.indexer.elasticsearch.indices.delete(
+            index=self.indexer.hparams.index_name, ignore=[400, 404])
+
+    def test_add(self):
+        document = {"key": "This document is created to test "
+                           "ElasticSearchIndexer"}
+        self.indexer.add(document, refresh="wait_for")
+        retrieved_document = self.indexer.search(
+            query={"query": {"match": {"key": "ElasticSearchIndexer"}},
+                   "_source": ["key"]})
+        hits = retrieved_document["hits"]["hits"]
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]["_source"], document)
+
+    def test_add_bulk(self):
+        document = {"key": "This document is created to test "
+                           "ElasticSearchIndexer"}
+        self.indexer.add_bulk([document], refresh="wait_for")
+        retrieved_document = self.indexer.search(
+            query={"query": {"match_all": {}}})
+        hits = retrieved_document["hits"]["hits"]
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]["_source"], document)

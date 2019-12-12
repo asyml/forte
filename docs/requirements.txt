@@ -22,3 +22,6 @@ faiss-cpu
 typed_astunparse~=2.1.4
 typed_ast~=1.4.0
 jsonschema
+
+# elasticsearch
+elasticsearch

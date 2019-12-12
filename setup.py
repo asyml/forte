@@ -37,7 +37,7 @@ setuptools.setup(
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'ir': ['faiss>=1.5.3']
+        'ir': ['faiss>=1.5.3', 'elasticsearch']
     },
     package_data={
     },
