@@ -57,8 +57,9 @@ class ElasticSearchProcessor(MultiPackProcessor):
         hits = results["hits"]["hits"]
         packs = {}
         for idx, hit in enumerate(hits):
-            pack = DataPack()
             document = hit["_source"]
+            first_query.update_passage({document["doc_id"]: hit["_score"]})
+            pack = DataPack(doc_id=document["doc_id"])
             content = document[self.config.field]
             # TODO: add the BM score and the labels for retrieved documents
             # which will be used by the reranker

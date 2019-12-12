@@ -1,5 +1,5 @@
 import texar.torch as tx
-from forte.indexers import ElasticSearchIndexer
+
 from forte.data.readers import CorpusReader
 from forte.processors import ElasticSearchIndexProcessor
 from forte.pipeline import Pipeline
@@ -8,11 +8,15 @@ if __name__ == "__main__":
     nlp = Pipeline()
     nlp.set_reader(CorpusReader())
     config = tx.HParams({
-        "batch_size": 1000000,
-        "field": "content",
+        "batch_size": 100000,
+        "fields": ["doc_id", "content"],
         "indexer": {
             "name": "ElasticSearchIndexer",
-            "hparams": ElasticSearchIndexer.default_hparams(),
+            "hparams": {
+                "index_name": "elastic_indexer2",
+                "hosts": "localhost:9200",
+                "algorithm": "bm25"
+            },
             "other_kwargs": {
                 "request_timeout": 60,
                 "refresh": False
@@ -22,8 +26,6 @@ if __name__ == "__main__":
     nlp.add_processor(ElasticSearchIndexProcessor(), config=config)
     nlp.initialize()
 
-    count = 0
-    for pack in nlp.process_dataset("."):
-        if count > 0 and count % 10000 == 0:
-            print(f"Completed {count} packs")
-        count += 1
+    for idx, pack in enumerate(nlp.process_dataset(".")):
+        if idx + 1 > 0 and (idx + 1) % 100000 == 0:
+            print(f"Completed {idx+1} packs")

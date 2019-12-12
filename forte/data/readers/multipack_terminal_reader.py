@@ -65,7 +65,9 @@ class MultiPackTerminalReader(MultiPackReader):
                 yield data
             except EOFError:
                 print()
-                break
+                import pdb
+                pdb.set_trace()
+                raise StopIteration
 
     def _parse_pack(self, data_source: str) -> Iterator[MultiPack]:
         """

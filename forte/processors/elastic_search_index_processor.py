@@ -47,7 +47,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
 
             {
                 "batch_size": 128,
-                "field": "content",
+                "fields": "content",
                 "indexer": {
                     "name": "ElasticSearchIndexer",
                     "hparams": ElasticSearchIndexer.default_hparams(),
@@ -63,7 +63,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         `"batch_size"`: int
             Number of examples that will be bulk added to Elasticsearch index
 
-        `"field"`: str
+        `"fields"`: str, list
             Field name that will be used as a key while indexing the document
 
         `"indexer"`: dict
@@ -82,7 +82,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         """
         return {
             **IndexProcessor.default_hparams(),
-            "field": "content",
+            "fields": ["doc_id", "content"],
             "indexer": {
                 "name": "ElasticSearchIndexer",
                 "hparams": ElasticSearchIndexer.default_hparams(),
@@ -94,6 +94,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         }
 
     def _bulk_process(self):
-        documents = [{self.config.field: document} for document in
-                     self.documents]
+        documents = [{self.config.fields[0]: document[0],
+                      self.config.fields[1]: document[1]}
+                     for document in self.documents]
         self.indexer.add_bulk(documents, **self.config.indexer.other_kwargs)

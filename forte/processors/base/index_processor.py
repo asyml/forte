@@ -13,7 +13,7 @@
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
 from abc import ABC
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 
 from texar.torch import HParams
 from forte.common import Resources
@@ -30,7 +30,7 @@ class IndexProcessor(BaseProcessor[DataPack], ABC):
     # pylint: disable=useless-super-delegation
     def __init__(self) -> None:
         super().__init__()
-        self.documents: List[str] = []
+        self.documents: List[Tuple[str, str]] = []
 
     def initialize(self, resources: Resources, configs: HParams):
         self.resources = resources
@@ -49,7 +49,7 @@ class IndexProcessor(BaseProcessor[DataPack], ABC):
         raise NotImplementedError
 
     def _process(self, input_pack: DataPack):
-        self.documents.append(input_pack.text)
+        self.documents.append((input_pack.meta.doc_id, input_pack.text))
 
         if len(self.documents) == self.config.batch_size:
             self._bulk_process()

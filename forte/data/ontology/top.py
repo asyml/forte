@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type, Any
+from typing import Optional, Set, Tuple, Type, Any, Dict
 import numpy as np
 
 from forte.common.exception import IncompleteEntryError
@@ -455,9 +455,13 @@ class Query(Generic):
             models) representing the query.
     """
 
-    def __init__(self, pack: PackType, value):
+    def __init__(self, pack: PackType, value: Optional[Embedding] = None):
         super().__init__(pack)
         self.value: Embedding = value
+        self.passages: Dict[str, float] = {}
+
+    def update_passage(self, pid_to_score: Dict[str, float]):
+        self.passages.update(pid_to_score)
 
 
 SinglePackEntries = (Link, Group, Annotation)
