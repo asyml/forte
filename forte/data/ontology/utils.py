@@ -1,8 +1,102 @@
 """
     Utility functions for ontology generation.
 """
+import os
+from importlib import util as import_util
+from pathlib import Path
+from pydoc import locate
+from typing import Optional, List
 import json
 import jsonschema
+
+
+def get_user_objects_from_module(module_str: str,
+                                 custom_dirs: Optional[str] = None):
+    """
+    Args:
+        module_str: Module in the form of string, package.module.
+        custom_dirs: custom directories to search from if `module_str` not a
+        part of imported modules.
+
+    Returns: A list of objects present in the module `module_str`,
+             None is module not found
+
+    """
+    module = locate(module_str)
+    if module is not None and hasattr(module, '__all__'):
+        return module.__all__  # type: ignore
+    objects: List[str] = []
+    if custom_dirs is not None:
+        module_file = module_str.replace('.', '/') + '.py'
+        for dir_ in custom_dirs:
+            filepath = os.path.join(dir_, module_file)
+            try:
+                spec = import_util.spec_from_file_location(module_str,
+                                                           filepath)
+                module = import_util.module_from_spec(spec)
+                spec.loader.exec_module(module)  # type: ignore
+                objects = module.__all__  # type: ignore
+            except (FileNotFoundError, AttributeError):
+                continue
+    return objects
+
+
+def search_in_dirs(file, dirs_paths):
+    """
+    Args:
+        file: File to be searched for
+        dirs_paths: Directory Paths in which the `file` is to be searched
+
+    Returns: Resolved filename if the `file` is found in `dir_paths`,
+    else `None`
+
+    """
+    for _dir in dirs_paths:
+        if not os.path.isabs(file):
+            file = os.path.join(_dir, file)
+        file = str(Path(file).resolve())
+
+        for dir_path in Path(_dir).glob("**/*"):
+            resolved_path = str(dir_path.resolve())
+            if file == resolved_path:
+                return resolved_path
+    return None
+
+
+def get_top_level_dirs(path: Optional[str]):
+    """
+    Args:
+        path: Path for which the directories at depth==1 are to be returned
+    Returns:
+        Directories at depth==1 for `path`.
+    """
+    if path is None or not os.path.exists(path):
+        return []
+    return [item for item in os.listdir(path)
+            if os.path.isdir(os.path.join(path, item))]
+
+
+def split_file_path(path: str):
+    """
+    Args:
+        path: Path to be split
+
+    Returns: list containing path components
+    Examples:
+        >>> split_file_path('forte/data/ontology/file.py')
+        ['forte', 'data', 'ontology', 'file.py']
+        >>> split_file_path('/home/file.py')
+        ['', 'home', 'file.py']
+    """
+    path_split = []
+    prev_dir, curr_dir = None, (str(Path(path)), '')
+    while prev_dir != curr_dir:
+        prev_dir = curr_dir
+        if curr_dir[-1].strip():
+            path_split.append(curr_dir[-1])
+        curr_dir = os.path.split(curr_dir[0])
+    path_split += [''] if path.startswith('/') else []
+    return path_split[::-1]
 
 
 def validate_json_schema(input_filepath: str, validation_filepath: str):
