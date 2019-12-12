@@ -24,7 +24,7 @@ Nguyen, Tri, et al. "MS MARCO: A Human-Generated MAchine Reading
 COmprehension Dataset." (2016).
 """
 import os
-from typing import Iterator, List, Tuple, Optional
+from typing import Iterator, Tuple
 
 from texar.torch import HParams
 
