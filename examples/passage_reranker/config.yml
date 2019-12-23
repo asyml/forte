@@ -2,7 +2,7 @@ reader:
   pack_name: "query"
 
 query_creator:
-  size: 10
+  size: 1000
   field: "content"
   query_pack_name: "query"
 
@@ -16,9 +16,17 @@ indexer:
     algorithm: "bm25"
 
 writer:
-  output_file: "./results_eval.tsv"
+  output_file: "output/results_eval.tsv"
 
 evaluator:
   pack_name: "query"
-  ground_truth_file: "collection_and_queries/query_doc_id.tsv"
-  output_file: "results_dev.tsv"
+  ground_truth_file: "data/collection_and_queries/query_doc_id.tsv"
+  output_file: "output/results_dev.tsv"
+
+reranker:
+  size: 10
+  pretrained_model_name: "bert-large-uncased"
+  cache_dir: "models"
+  query_pack_name: "query"
+  field: "content"
+  max_seq_length: 512

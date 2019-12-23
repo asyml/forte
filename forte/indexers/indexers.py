@@ -176,7 +176,7 @@ class ElasticSearchIndexer(BaseIndexer):
 
         """
         return {
-            "index_name": "elastic_indexer",
+            "index_name": "elastic_indexer2",
             "hosts": "localhost:9200",
             "algorithm": "bm25"
         }

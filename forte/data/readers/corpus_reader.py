@@ -53,7 +53,7 @@ class CorpusReader(PackReader):
         # pylint: disable = unused-argument, undefined-variable, no-self-use
         dir_path: str = args[0]
 
-        corpus_file_path = os.path.join(dir_path, 'collection.tsv')
+        corpus_file_path = os.path.join(dir_path, 'collection_small.tsv')
 
         with open(corpus_file_path, 'r') as file:
             for line in file:

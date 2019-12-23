@@ -1,0 +1,154 @@
+"""Produces pickle files and modifies data configuration file
+"""
+
+import importlib
+import logging
+import os
+import csv
+from typing import Any
+
+import texar.torch as tx
+from texar.torch.hyperparams import HParams
+
+
+class InputExample:
+    r"""A single training/test example for simple sequence classification."""
+
+    def __init__(self, guid, text_a, text_b=None, label=None):
+        r"""Constructs a InputExample.
+        Args:
+            guid: Unique id for the example.
+            text_a: string. The untokenized text of the first sequence.
+                For single sequence tasks, only this sequence must be specified.
+            text_b: (Optional) string. The untokenized text of the second
+                sequence. Only must be specified for sequence pair tasks.
+            label: (Optional) string. The label of the example. This should be
+                specified for train and dev examples, but not for test examples.
+        """
+        self.guid = guid
+        self.text_a = text_a
+        self.text_b = text_b
+        self.label = label
+
+
+class InputFeatures:
+    r"""A single set of features of data."""
+
+    def __init__(self, input_ids, input_mask, segment_ids, label_id):
+        self.input_ids = input_ids
+        self.input_mask = input_mask
+        self.segment_ids = segment_ids
+        self.label_id = label_id
+
+
+class DataProcessor:
+    r"""Base class for data converters for sequence classification data sets."""
+
+    def get_train_examples(self, data_dir):
+        r"""Gets a collection of `InputExample`s for the train set."""
+        raise NotImplementedError()
+
+    def get_dev_examples(self, data_dir):
+        r"""Gets a collection of `InputExample`s for the dev set."""
+        raise NotImplementedError()
+
+    def get_test_examples(self, data_dir):
+        r"""Gets a collection of `InputExample`s for prediction."""
+        raise NotImplementedError()
+
+    def get_labels(self):
+        r"""Gets the list of labels for this data set."""
+        raise NotImplementedError()
+
+    @classmethod
+    def _read_tsv(cls, input_file, quotechar=None):
+        r"""Reads a tab separated value file."""
+        with open(input_file, "r") as f:
+            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+            lines = []
+            for line in reader:
+                lines.append(line)
+        return lines
+
+
+class QueryDocumentBERTProcessor(DataProcessor):
+    r"""Processor for Query-Document BERT reranker."""
+
+    def __init__(self):
+        self.corpus = ""
+
+    def get_train_examples(self, data_dir):
+        r"""See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    def get_dev_examples(self, data_dir):
+        r"""See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev_matched.tsv")),
+            "dev_matched")
+
+    def get_test_examples(self, data_dir):
+        r"""See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "test_matched.tsv")),
+            "test")
+
+    def get_labels(self):
+        r"""See base class."""
+        return ["contradiction", "entailment", "neutral"]
+
+    @staticmethod
+    def _create_examples(lines, set_type):
+        r"""Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            guid = f"{set_type}-{tx.utils.compat_as_text(line[0])}"
+            text_a = tx.utils.compat_as_text(line[8])
+            text_b = tx.utils.compat_as_text(line[9])
+            examples.append(InputExample(guid=guid, text_a=text_a,
+                                         text_b=text_b, label=label))
+        return examples
+
+
+class PrepareRerankingData():
+    def __init__(self, configs: HParams):
+        self.config = configs
+        pretrained_model_name = self.config.pretrained_model_name
+        self.max_seq_length = self.config.max_seq_length
+        self.input_dir = os.path.join(os.path.dirname(__file__), "data",
+                                      "collectionandqueries")
+        self.output_dir = os.path.join(os.path.dirname(__file__),
+                                       "data", pretrained_model_name)
+        self.num_classes = self.config.num_classes
+
+    def get_data(self):
+        tx.utils.maybe_create_dir(self.output_dir)
+
+        processors = {
+            "COLA": data_utils.ColaProcessor,
+            "MNLI": data_utils.MnliProcessor,
+            "MRPC": data_utils.MrpcProcessor,
+            "XNLI": data_utils.XnliProcessor,
+            'SST': data_utils.SSTProcessor
+        }
+        processor = processors[args.task]()
+
+        num_classes = len(processor.get_labels())
+        num_train_data = len(processor.get_train_examples(data_dir))
+        logging.info("num_classes: %d; num_train_data: %d",
+                     num_classes, num_train_data)
+
+        config_data: Any = importlib.import_module(args.config_data)
+
+        tokenizer = tx.data.BERTTokenizer(
+            pretrained_model_name=args.pretrained_model_name)
+
+        # Produces pickled files
+        data_utils.prepare_record_data(
+            processor=processor,
+            tokenizer=tokenizer,
+            data_dir=data_dir,
+            max_seq_length=args.max_seq_length,
+            output_dir=output_dir,
+            feature_types=config_data.feature_types)

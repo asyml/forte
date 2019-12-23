@@ -1,3 +1,5 @@
+import os
+
 import texar.torch as tx
 
 from forte.data.readers import CorpusReader
@@ -26,6 +28,9 @@ if __name__ == "__main__":
     nlp.add_processor(ElasticSearchIndexProcessor(), config=config)
     nlp.initialize()
 
-    for idx, pack in enumerate(nlp.process_dataset(".")):
+    data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data",
+                             "collectionandqueries")
+
+    for idx, pack in enumerate(nlp.process_dataset(data_path)):
         if idx + 1 > 0 and (idx + 1) % 100000 == 0:
             print(f"Completed {idx+1} packs")
