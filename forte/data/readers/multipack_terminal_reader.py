@@ -24,7 +24,7 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
 
-from ft.onto.base_ontology import Utterance
+from ft.onto.base_ontology import Document, Utterance
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +92,9 @@ class MultiPackTerminalReader(MultiPackReader):
         pack = DataPack()
         utterance = Utterance(pack, 0, len(data_source))
         pack.add_entry(utterance)
+
+        document = Document(pack, 0, len(data_source))
+        pack.add_entry(document)
 
         pack.set_text(data_source, replace_func=self.text_replace_operation)
         multi_pack.update_pack({self.config.pack_name: pack})
