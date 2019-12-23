@@ -70,7 +70,8 @@ class FineTunedBERTClassifier(BERTClassifier, PretrainedBERTMixin):
         self.pretrained_model_name = hparams['pretrained_model_name'] \
             if pretrained_model_name is None else pretrained_model_name
 
-        self.cache_dir = hparams['cache_dir'] if cache_dir is None else cache_dir
+        rel_dir = hparams['cache_dir'] if cache_dir is None else cache_dir
+        self.cache_dir = os.path.join(os.path.dirname(__file__), rel_dir)
 
         if self.pretrained_model_name is None or self.cache_dir is None:
             raise ValueError("Pre-trained model name and directory should"
@@ -86,7 +87,6 @@ class FineTunedBERTClassifier(BERTClassifier, PretrainedBERTMixin):
         if 'prefix' not in super_params:
             super_params["prefix"] = '_encoder.encoder.'
         self._hparams = HParams(pretrained_model_hparams, super_params)
-        a = 1
 
     def _init_from_checkpoint(self, pretrained_model_name: str,
                               cache_dir: str, **kwargs):

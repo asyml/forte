@@ -40,21 +40,28 @@ class RerankingProcessor(MultiPackProcessor):
         self.resources = resources
         self.config = HParams(configs, self.default_hparams())
         FineTunedBERTClassifier._ENCODER_CLASS = FineTunedBERTEncoder
+
+        cache_dir = os.path.join(os.path.dirname(__file__),
+                                 self.config.cache_dir)
+
+        self.device = torch.device('cuda:0') \
+            if torch.cuda.is_available() else torch.device('cpu')
+
         self.model = FineTunedBERTClassifier(
             pretrained_model_name=self.config.pretrained_model_name,
-            cache_dir=self.config.cache_dir,
-            hparams=self.config)
+            cache_dir=cache_dir,
+            hparams=self.config).to(self.device)
+
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,
-            cache_dir=self.config.cache_dir,
-            hparams=None
-        )
+            cache_dir=cache_dir,
+            hparams=None)
 
     @staticmethod
     def default_hparams() -> Dict[str, Any]:
         pretrained_model_name = "bert-large-uncased"
         return {
-            "size": 10,
+            "size": 5,
             "query_pack_name": "query",
             "field": "content",
             "pretrained_model_name": pretrained_model_name,
@@ -80,7 +87,7 @@ class RerankingProcessor(MultiPackProcessor):
 
             # BERT Inference
             input_ids, segment_ids, input_mask = [
-                torch.LongTensor(item).unsqueeze(0)
+                torch.LongTensor(item).unsqueeze(0).to(self.device)
                 for item in self.tokenizer.encode_text(
                     query_text, document_text, max_len)]
 
@@ -93,4 +100,5 @@ class RerankingProcessor(MultiPackProcessor):
             query_entry.update_passage({doc_id: score})
             packs[doc_id] = pack
 
-        input_pack.update_pack(packs)
+        # input_pack.update_pack(packs)
+        # a = 1

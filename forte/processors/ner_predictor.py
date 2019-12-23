@@ -112,9 +112,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                     self.ner_alphabet.size(), self.config_model)
 
                 if os.path.exists(path):
-                    with open(path, "rb") as f:
-                        weights = pickle.load(f)
-                        model.load_state_dict(weights)
+                    weights = torch.load(path)
+                    model.load_state_dict(weights)
                 return model
 
             self.resource.load(keys={"model": load_model}, path=resource_path)

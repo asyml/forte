@@ -1,3 +1,4 @@
+
 # Copyright 2019 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from pathlib import Path
 import pickle
 from typing import Union, Dict, List, Callable, Optional, Any
@@ -95,8 +97,13 @@ class Resources:
         """
 
         # TODO: use a default save directory like default_save_dir() if None
+        # import pdb
+        # pdb.set_trace()
         if path is None:
             path = "./"
+
+        dirname = os.path.dirname(__file__)
+        path = os.path.join(dirname, path) if not os.path.isabs(path) else path
 
         if isinstance(keys, List):
             for key in keys:
