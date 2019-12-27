@@ -11,10 +11,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from forte.processors.base.base_processor import *
-from forte.processors.base.batch_processor import *
-from forte.processors.base.pack_processor import *
-from forte.processors.base.query_processor import *
-from forte.processors.base.index_processor import *
-from forte.processors.base.reranking_processor import *
+from forte.models.bert_ngyugen2019.bert import *

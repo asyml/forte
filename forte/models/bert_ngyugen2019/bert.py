@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Utils of BERT Modules.
+Extendiong texar BERT model to use the pretrained model trained on MS-MARCO
+passage reranking task. For the model details, refer to -
+https://arxiv.org/abs/1901.04085
 """
 import os
 from typing import Optional
@@ -20,7 +22,6 @@ from typing import Optional
 import torch
 
 from texar.torch.modules.pretrained import PretrainedBERTMixin
-from texar.torch.modules.pretrained.pretrained_base import PretrainedMixin
 from texar.torch.modules.encoders import BERTEncoder
 from texar.torch.modules.classifiers import BERTClassifier
 from texar.torch.hyperparams import HParams
@@ -42,7 +43,6 @@ class FineTunedBERTClassifier(BERTClassifier, PretrainedBERTMixin):
         super().__init__()
 
         self.init_pretrained_weights(prefix=self._hparams.prefix)
-
 
     def default_hparams(self):
         params = super().default_hparams()

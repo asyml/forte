@@ -20,31 +20,28 @@ import torch
 from texar.torch.hyperparams import HParams
 from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 
+from forte.data import DataPack
 from forte.common.resources import Resources
-from forte.data import DataPack, MultiPack
-from forte.data.ontology import Query
-from forte.processors.base import MultiPackProcessor
-
-from ft.onto.base_ontology import Document
-
-from bert import FineTunedBERTClassifier, FineTunedBERTEncoder
+from forte.processors.base import RerankingProcessor
+from forte.models.bert_ngyugen2019 import (
+    FineTunedBERTClassifier, FineTunedBERTEncoder)
 
 __all__ = [
-    "RerankingProcessor"
+    "BERTBasedRerankingProcessor"
 ]
 
 
-class RerankingProcessor(MultiPackProcessor):
+class BERTBasedRerankingProcessor(RerankingProcessor):
 
     def initialize(self, resources: Resources, configs: HParams):
-        self.resources = resources
-        self.config = HParams(configs, self.default_hparams())
+        super(BERTRerankingProcessor, self).initialize(resources, configs)
+
         FineTunedBERTClassifier._ENCODER_CLASS = FineTunedBERTEncoder
 
         cache_dir = os.path.join(os.path.dirname(__file__),
                                  self.config.cache_dir)
 
-        self.device = torch.device('cuda:0') \
+        self.device = torch.device('cuda') \
             if torch.cuda.is_available() else torch.device('cpu')
 
         self.model = FineTunedBERTClassifier(
@@ -69,36 +66,21 @@ class RerankingProcessor(MultiPackProcessor):
             "max_seq_length": 512
         }
 
-    def _process(self, input_pack: MultiPack):
+    def get_matching_score(self, query_pack: DataPack, document_pack: DataPack):
         max_len = self.config.max_seq_length
-        query_pack_name = self.config.query_pack_name
 
-        query_pack = input_pack.get_pack(self.config.query_pack_name)
-        query_entry = list(query_pack.get_entries(Query))[0]
         query_text = query_pack.text
 
-        packs = {}
-        for doc_id in input_pack.pack_names:
-            if doc_id == query_pack_name:
-                continue
+        document_text = document_pack.text
 
-            pack = input_pack.get_pack(doc_id)
-            document_text = pack.text
+        input_ids, segment_ids, input_mask = [
+            torch.LongTensor(item).unsqueeze(0).to(self.device)
+            for item in self.tokenizer.encode_text(
+                query_text, document_text, max_len)]
 
-            # BERT Inference
-            input_ids, segment_ids, input_mask = [
-                torch.LongTensor(item).unsqueeze(0).to(self.device)
-                for item in self.tokenizer.encode_text(
-                    query_text, document_text, max_len)]
+        seq_length = (input_mask == 1).sum(dim=-1)
+        logits, _ = self.model(input_ids, seq_length, segment_ids)
+        preds = torch.nn.functional.softmax(torch.Tensor(logits), dim=1)
 
-            seq_length = (input_mask == 1).sum(dim=-1)
-            logits, _ = self.model(input_ids, seq_length, segment_ids)
-            preds = torch.nn.functional.softmax(torch.Tensor(logits), dim=1)
-
-            score = preds.detach().tolist()[0][1]
-
-            query_entry.update_passage({doc_id: score})
-            packs[doc_id] = pack
-
-        # input_pack.update_pack(packs)
-        # a = 1
+        score = preds.detach().tolist()[0][1]
+        return score
