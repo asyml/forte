@@ -1,6 +1,10 @@
 # pylint: disable-all
 # flake8: noqa
-"""
+
+""" This script is adopted from
+
+https://github.com/microsoft/MSMARCO-Passage-Ranking/blob/master/ms_marco_eval.py
+
 This module computes evaluation metrics for MSMARCO dataset on the ranking task.
 Command line:
 python msmarco_eval_ranking.py <path_to_reference_file> <path_to_candidate_file>
@@ -8,6 +12,7 @@ Creation Date : 06/12/2018
 Last Modified : 1/21/2019
 Authors : Daniel Campos <dacamp@microsoft.com>, Rutger van Haasteren <ruvanh@microsoft.com>
 """
+
 import sys
 import statistics
 
