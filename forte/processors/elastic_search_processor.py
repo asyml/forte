@@ -51,7 +51,20 @@ class ElasticSearchProcessor(MultiPackProcessor):
         }
 
     def _process(self, input_pack: MultiPack):
+        r"""Searches ElasticSearch indexer to fetch documents for a query. This
+        query should be contained in the input multipack with name
+        `self.config.query_pack_name`.
+
+        This method adds new packs to `input_pack` containing the retrieved
+        results. Each result is added as a `ft.onto.base_ontology.Document`.
+
+        Args:
+             input_pack: A multipack containing query as a pack.
+        """
         query_pack = input_pack.get_pack(self.config.query_pack_name)
+
+        # ElasticSearchQueryCreator adds a Query entry to query pack. We now
+        # fetch it as the first element.
         first_query = list(query_pack.get_entries(Query))[0]
         results = self.index.search(first_query.value)
         hits = results["hits"]["hits"]
@@ -61,9 +74,6 @@ class ElasticSearchProcessor(MultiPackProcessor):
             first_query.update_passage({document["doc_id"]: hit["_score"]})
             pack = DataPack(doc_id=document["doc_id"])
             content = document[self.config.field]
-            # TODO: add the BM score and the labels for retrieved documents
-            # which will be used by the reranker
-            # Convert `Document` to `Passage`
             document = Document(pack=pack, begin=0, end=len(content))
             pack.add_entry(document)
             pack.set_text(content)

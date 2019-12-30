@@ -26,6 +26,11 @@ __all__ = [
 
 
 class IndexProcessor(BaseProcessor[DataPack], ABC):
+    r"""A  base processor for indexing documents into traditional indexers like
+    Elasticsearch and/or dense vector indexers like Faiss. Subclasses need to
+    implement :meth:`IndexProcessor::_bulk_process`.
+
+    """
 
     # pylint: disable=useless-super-delegation
     def __init__(self) -> None:

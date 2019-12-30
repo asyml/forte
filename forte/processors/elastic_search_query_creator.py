@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
-from typing import Dict, Any
+from typing import Any, Dict, Tuple
 
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.data import MultiPack
+from forte.data import DataPack, MultiPack
 from forte.processors.base import QueryProcessor
 
 __all__ = [
@@ -51,7 +51,8 @@ class ElasticSearchQueryCreator(QueryProcessor[MultiPack]):
             "query_pack_name": "query"
         }
 
-    def _process_query(self, input_pack: MultiPack):
+    def _process_query(self, input_pack: MultiPack) -> \
+            Tuple[DataPack, Dict[str, Any]]:
         query_pack = input_pack.get_pack(self.config.query_pack_name)
         query = self._build_query(text=query_pack.text)
         return query_pack, query
