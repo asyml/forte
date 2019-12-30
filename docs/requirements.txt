@@ -1,9 +1,9 @@
 sphinx
 sphinx-rtd-theme >= 0.2.4
 Pygments >= 2.1.1
-funcsigs
+funcsigs~=1.0.2
 recommonmark
-mypy_extensions
+mypy_extensions~=0.4.1
 sphinxcontrib-spelling
 
 pyyaml
@@ -20,3 +20,8 @@ faiss-cpu
 
 # elasticsearch
 elasticsearch
+
+# code generation
+typed_astunparse~=2.1.4
+typed_ast~=1.4.0
+jsonschema

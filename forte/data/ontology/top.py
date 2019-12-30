@@ -217,7 +217,7 @@ class Link(BaseLink):
             raise ValueError(f"Cannot get parent because link is not "
                              f"attached to any data pack.")
         if self._parent is None:
-            raise ValueError(f"The child of this entry is not set.")
+            raise ValueError(f"The parent of this entry is not set.")
         return self.pack.get_entry(self._parent)
 
     def get_child(self) -> Entry:
