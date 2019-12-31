@@ -39,7 +39,7 @@ class MSMarcoPassageReaderTest(unittest.TestCase):
                 key, value = tuple(line.split('\t', 1))
                 self.expected_content[key] = value
 
-    def test_corpus_reader(self):
+    def test_ms_marco_passage_reader(self):
         actual_content: Dict[str, str] = {}
         for data_pack in self.reader.iter(self.data_dir):
             self.assertIsInstance(data_pack, DataPack)
