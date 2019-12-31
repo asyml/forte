@@ -128,25 +128,27 @@ class ElasticSearchIndexer(BaseIndexer):
 
         bulk(self.elasticsearch, actions(), **kwargs)
 
-    def search(self, query: Dict[str, Any], index_name: Optional[str] = None) \
-            -> Dict[str, Any]:
+    def search(self, query: Dict[str, Any], index_name: Optional[str] = None,
+               **kwargs: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         r"""Search the index specified by ``index_name`` that matches the
         ``query``.
 
         Args:
-             query (dict): An elasticseach query which is issued to the indexer
+             query (dict): An elasticsearch query which is issued to the indexer
              index_name (str): Name of the index where documents are looked up.
                 If None, value will be picked from hparams.
+             kwargs (optional, dict) : Optional keyword arguments like
+                "size", "request_timeout" etc. that are passed to
+                Elasticsearch's bulk API. Please refer to
+                https://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.Elasticsearch.search
+                for the complete list of arguments.
 
         Returns:
             A dict containing the documents matching the query along with
             meta data of the search.
         """
         index_name = index_name if index_name else self.hparams.index_name
-        return self.elasticsearch.search(index=index_name, body=query)
-
-    def search_all(self, query: Dict[str, Any]):
-        pass
+        return self.elasticsearch.search(index=index_name, body=query, **kwargs)
 
     @property
     def hparams(self):

@@ -71,7 +71,7 @@ class ElasticSearchProcessor(MultiPackProcessor):
         packs = {}
         for idx, hit in enumerate(hits):
             document = hit["_source"]
-            first_query.update_passage({document["doc_id"]: hit["_score"]})
+            first_query.update_results({document["doc_id"]: hit["_score"]})
             pack = DataPack(doc_id=document["doc_id"])
             content = document[self.config.field]
             document = Document(pack=pack, begin=0, end=len(content))

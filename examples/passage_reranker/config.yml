@@ -15,9 +15,6 @@ indexer:
     hosts: "localhost:9200"
     algorithm: "bm25"
 
-writer:
-  output_file: "./results_eval.tsv"
-
 evaluator:
   pack_name: "query"
   ground_truth_file: "collection_and_queries/query_doc_id.tsv"

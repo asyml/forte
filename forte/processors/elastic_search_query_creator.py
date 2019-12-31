@@ -39,6 +39,16 @@ class ElasticSearchQueryCreator(QueryProcessor[MultiPack]):
         self.config = configs
 
     def _build_query(self, text: str) -> Dict[str, Any]:
+        r"""Constructs Elasticsearch query that will be consumed by
+        Elasticsearch processor.
+
+        Args:
+             text: str
+                A string which will be looked up for in the corpus under field
+                name `field`. `field` can be passed in a `config` during
+                :meth:`ElasticSearchQueryCreator::initialize`. If `config` does
+                not contain the key `field`, we will set it to "content"
+        """
         size = self.config.size or 1000
         field = self.config.field or "content"
         return {"query": {"match": {field: text}}, "size": size}

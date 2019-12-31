@@ -1,8 +1,13 @@
 """This module tests indexer module."""
+import time
 import unittest
+from ddt import ddt, data, unpack
 import shutil
 import os
 import numpy as np
+
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 
 from forte.indexers import EmbeddingBasedIndexer, ElasticSearchIndexer
 
@@ -62,6 +67,7 @@ class TestEmbeddingBasedIndexer(unittest.TestCase):
                            new_index._index.reconstruct(int(t[0]))))
 
 
+@ddt
 class TestElasticSearchIndexer(unittest.TestCase):
     r"""Tests Elastic Indexer."""
 
@@ -85,11 +91,37 @@ class TestElasticSearchIndexer(unittest.TestCase):
         self.assertEqual(hits[0]["_source"], document)
 
     def test_add_bulk(self):
-        document = {"key": "This document is created to test "
-                           "ElasticSearchIndexer"}
-        self.indexer.add_bulk([document], refresh="wait_for")
+        size = 10000
+        documents = set([f"This document {i} is created to test "
+                         f"ElasticSearchIndexer" for i in range(size)])
+        self.indexer.add_bulk([{"key": document} for document in documents],
+                              refresh="wait_for")
         retrieved_document = self.indexer.search(
-            query={"query": {"match_all": {}}})
+            query={"query": {"match_all": {}}},
+            index_name="test_index", size=size)
         hits = retrieved_document["hits"]["hits"]
-        self.assertEqual(len(hits), 1)
-        self.assertEqual(hits[0]["_source"], document)
+        self.assertEqual(len(hits), size)
+        results = set([hit["_source"]["key"] for hit in hits])
+        self.assertEqual(results, documents)
+
+    @data([100, 0.3], [500, 0.3], [1000, 0.3])
+    @unpack
+    def test_speed(self, size, epsilon):
+        es = Elasticsearch()
+        documents = [{"_index": "test_index_",
+                      "_type": "document",
+                      "key": f"This document {i} is created to test "
+                             f"ElasticSearchIndexer"} for i in range(size)]
+
+        start = time.time()
+        bulk(es, documents, refresh=False)
+        baseline = time.time() - start
+        es.indices.delete(index="test_index_", ignore=[400, 404])
+
+        documents = set([f"This document {i} is created to test "
+                         f"ElasticSearchIndexer" for i in range(size)])
+        start = time.time()
+        self.indexer.add_bulk([{"key": document} for document in documents],
+                              refresh=False)
+        forte_time = time.time() - start
+        self.assertLessEqual(forte_time, baseline + epsilon)
