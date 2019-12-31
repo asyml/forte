@@ -28,10 +28,11 @@ from typing import Iterator, Tuple
 
 from texar.torch import HParams
 
-from ft.onto.base_ontology import Document
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from forte.common.resources import Resources
+
+from ft.onto.base_ontology import Document
 
 __all__ = [
     "MSMarcoPassageReader"

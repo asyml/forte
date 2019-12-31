@@ -20,11 +20,11 @@ from typing import Dict
 
 from ft.onto.base_ontology import Document
 
-from forte.data.data_pack import DataPack
 from forte.data.readers import MSMarcoPassageReader
+from forte.data.data_pack import DataPack
 
 
-class CorpusReaderTest(unittest.TestCase):
+class MSMarcoPassageReaderTest(unittest.TestCase):
     def setUp(self):
         self.reader = MSMarcoPassageReader()
 
