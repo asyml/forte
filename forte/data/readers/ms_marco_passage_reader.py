@@ -34,14 +34,14 @@ from forte.data.readers.base_reader import PackReader
 from forte.common.resources import Resources
 
 __all__ = [
-    "CorpusReader"
+    "MSMarcoPassageReader"
 ]
 
 
-class CorpusReader(PackReader):
+class MSMarcoPassageReader(PackReader):
 
     def __init__(self):
-        super(CorpusReader, self).__init__()
+        super(MSMarcoPassageReader, self).__init__()
         self.configs = None
 
     def initialize(self, resources: Resources, configs: HParams):

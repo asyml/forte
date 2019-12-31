@@ -21,12 +21,12 @@ from typing import Dict
 from ft.onto.base_ontology import Document
 
 from forte.data.data_pack import DataPack
-from forte.data.readers.corpus_reader import CorpusReader
+from forte.data.readers import MSMarcoPassageReader
 
 
 class CorpusReaderTest(unittest.TestCase):
     def setUp(self):
-        self.reader = CorpusReader()
+        self.reader = MSMarcoPassageReader()
 
         self.data_dir = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
