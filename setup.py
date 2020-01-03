@@ -27,7 +27,8 @@ setuptools.setup(
         'funcsigs',
         'mypy_extensions',
         'typed_ast',
-        'jsonschema'
+        'jsonschema',
+        'faiss-cpu>=1.6.1'
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
@@ -36,8 +37,7 @@ setuptools.setup(
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
-        'wikipedia': ['rdflib'],
-        'indexer': ['faiss-cpu>=1.6.1'],
+        'wikipedia': ['rdflib']
     },
     package_data={
     },
