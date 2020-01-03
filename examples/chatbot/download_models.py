@@ -66,11 +66,11 @@ if __name__ == "__main__":
                        filenames=list(urls_to_file_names.values()))
 
     # download chatbot model
-    elif args.model_name.lower() == "chatbot_bert":
+    elif args.model_name.lower() == "chatbot-bert":
         maybe_download(urls=["https://drive.google.com/file/d/1_DbcrgJ_rRsX9k8i"
                              "9zVv7sDiTGrek9-p/view?usp=sharing"],
                        path=model_path,
                        filenames=["chatbot_model.ckpt"])
     else:
-        print(f"Incorrect 'model_name' {args.model_name}. Available values are "
-              f"'srl' and 'indexer' and 'chatbot_bert'.")
+        print(f"Incorrect 'model-name' {args.model_name}. Available values are "
+              f"'srl' and 'indexer' and 'chatbot-bert'.")
