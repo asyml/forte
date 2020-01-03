@@ -12,7 +12,7 @@ setuptools.setup(
     description="NLP pipeline",
     long_description=long_description,
     license='Apache License Version 2.0',
-    packages=setuptools.find_packages(include=['forte.*', 'ft.*', 'scripts.*']),
+    packages=setuptools.find_packages(exclude=["scripts", "examples"]),
     platforms='any',
 
     install_requires=[
@@ -37,7 +37,7 @@ setuptools.setup(
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'indexer': ['faiss>=1.5.3'],
+        'indexer': ['faiss-cpu>=1.6.1'],
     },
     package_data={
     },
