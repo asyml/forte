@@ -12,7 +12,7 @@ setuptools.setup(
     description="NLP pipeline",
     long_description=long_description,
     license='Apache License Version 2.0',
-    packages=setuptools.find_packages(include=['forte.*', 'ft.*', 'scripts.*']),
+    packages=setuptools.find_packages(exclude=["scripts", "examples"]),
     platforms='any',
 
     install_requires=[
@@ -27,7 +27,8 @@ setuptools.setup(
         'funcsigs',
         'mypy_extensions',
         'typed_ast',
-        'jsonschema'
+        'jsonschema',
+        'faiss-cpu>=1.6.1'
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
@@ -36,8 +37,7 @@ setuptools.setup(
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
-        'wikipedia': ['rdflib'],
-        'indexer': ['faiss>=1.5.3'],
+        'wikipedia': ['rdflib']
     },
     package_data={
     },
