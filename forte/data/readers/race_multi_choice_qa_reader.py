@@ -21,8 +21,8 @@ from typing import Iterator, Any, List
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.race_mutli_choice_qa_ontology import Article, Passage, \
-    Question, Option
+from ft.onto.race_mutli_choice_qa_ontology import (
+    Article, Passage, Question, Option)
 
 __all__ = [
     "RACEMultiChoiceQAReader",
