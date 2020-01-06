@@ -16,10 +16,11 @@ class ConllUDReaderTest(unittest.TestCase):
         """
         Reading the data into data_pack object to be used in the tests
         """
-        curr_dir = os.path.dirname(os.path.realpath(__file__))
+        conll_ud_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                    'data_samples/conll_ud')
         reader = ConllUDReader()
         self.data_packs: List[DataPack] = \
-            [data_pack for data_pack in reader.iter(curr_dir)]
+            [data_pack for data_pack in reader.iter(conll_ud_dir)]
         self.doc_ids = ["weblog-blogspot.com_nominations_20041117172713_ENG_"
                         "20041117_172713",
                         "weblog-blogspot.com_nominations_20041117172713_ENG_"
