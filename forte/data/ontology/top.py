@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type, Any
+from typing import Optional, Set, Tuple, Type, Any, Dict, Union
 import numpy as np
 
 from forte.common.exception import IncompleteEntryError
@@ -36,6 +36,8 @@ __all__ = [
     "SinglePackEntries",
     "MultiPackEntries",
 ]
+
+QueryType = Union[Dict[str, Any], np.ndarray]
 
 
 class Generic(Entry):
@@ -451,13 +453,29 @@ class Query(Generic):
 
     Args:
         pack (Data pack): Data pack reference to which this query will be added
-        value (numpy array or str): A vector or a string (in case of traditional
-            models) representing the query.
     """
 
-    def __init__(self, pack: PackType, value):
+    def __init__(self, pack: PackType):
         super().__init__(pack)
-        self.value: Embedding = value
+        self.value: QueryType = None
+        self.results: Dict[str, float] = {}
+
+    def set_value(self, value: QueryType):
+        r"""Sets the value of the query.
+
+        Args:
+            value (numpy array or str): A vector or a string (in case of
+            traditional models) representing the query.
+        """
+        self.value = value
+
+    def update_results(self, pid_to_score: Dict[str, float]):
+        r"""Updates the results for this query.
+
+        Args:
+             pid_to_score (dict): A dict containing pid -> score mapping
+        """
+        self.results.update(pid_to_score)
 
 
 SinglePackEntries = (Link, Group, Annotation)

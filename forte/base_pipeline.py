@@ -19,7 +19,7 @@ from typing import List, Dict, Iterator, Generic, Optional
 import yaml
 from texar.torch import HParams
 
-from forte.common.resources import Resources
+from forte.common import Evaluator, Resources
 from forte.data.base_pack import PackType
 from forte.data.readers import BaseReader
 from forte.data.selector import Selector, DummySelector
@@ -125,6 +125,9 @@ class BasePipeline(Generic[PackType]):
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
 
+        self._evaluator: Optional[Evaluator] = None
+        self._evaluator_config: Optional[HParams] = None
+
         if resource is None:
             self.resource = Resources()
         else:
@@ -162,6 +165,8 @@ class BasePipeline(Generic[PackType]):
     def initialize(self):
         self._reader.initialize(self.resource, self._reader_config)
         self.initialize_processors()
+        if self._evaluator:
+            self._evaluator.initialize(self.resource, self._evaluator_config)
 
     def initialize_processors(self):
         for processor, config in zip(self.processors, self.processor_configs):
@@ -191,6 +196,16 @@ class BasePipeline(Generic[PackType]):
             self._selectors.append(DummySelector())
         else:
             self._selectors.append(selector)
+
+    def set_evaluator(self, evaluator: Evaluator,
+                      config: Optional[HParams] = None):
+
+        if not isinstance(evaluator, Evaluator):
+            raise ValueError(f"Evaluator should be an instance of Evaluator. "
+                             f"Got {type(evaluator)}")
+
+        self._evaluator = evaluator
+        self._evaluator_config = config
 
     def process(self, *args, **kwargs) -> PackType:
         """
@@ -242,7 +257,7 @@ class BasePipeline(Generic[PackType]):
             break
 
         if len(first_pack) == 1:
-            results = [p for p in self.process_packs(iter(first_pack))]
+            results = [p for p in self._process_packs(iter(first_pack))]
             return results[0]
         else:
             raise ValueError("Input data source contains no packs.")
@@ -261,10 +276,12 @@ class BasePipeline(Generic[PackType]):
         #  user might expect this function will do all the processing, if
         #  this is called like `process_dataset(args)` instead of
         #  `for p in process_dataset(args)`, this will have no effect.
-        data_iter = self._reader.iter(*args, **kwargs)
-        return self.process_packs(data_iter)
 
-    def process_packs(
+        # try:
+        data_iter = self._reader.iter(*args, **kwargs)
+        return self._process_packs(data_iter)
+
+    def _process_packs(
             self, data_iter: Iterator[PackType]) -> Iterator[PackType]:
         """
         Process an iterator of data packs and return the  processed ones.
@@ -294,4 +311,17 @@ class BasePipeline(Generic[PackType]):
                 # means this job is done processing.
                 if not buf.queue_process(job):
                     if not job.is_poison:
+                        if self._evaluator:
+                            self._evaluator.consume_next(job.pack, job.pack)
                         yield job.pack
+                    else:
+                        self._reader.finish(self.resource)
+                        for processor in self.processors:
+                            processor.finish(self.resource)
+
+    def evaluate(self):
+        if self._evaluator:
+            return self._evaluator.get_result()
+        else:
+            raise ValueError("Pipeline has no evaluator. "
+                             "Cannot evaluate the results.")
