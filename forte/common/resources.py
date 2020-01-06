@@ -56,7 +56,7 @@ class Resources:
             output_dir = "./"
 
         if keys is None:
-            keys = self.resources.keys()
+            keys = list(self.resources.keys())
 
         if isinstance(keys, List):
             for key in keys:
