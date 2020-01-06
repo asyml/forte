@@ -15,18 +15,19 @@
 Defines the Evaluator interface and related functions.
 """
 from abc import abstractmethod
-from typing import Optional, Generic, Any
+from typing import Optional, Any
 
 from texar.torch import HParams
 
 from forte.data.base_pack import PackType
+from forte.pipeline_component import PipelineComponent
 
 __all__ = [
     "Evaluator",
 ]
 
 
-class Evaluator(Generic[PackType]):
+class Evaluator(PipelineComponent[PackType]):
     def __init__(self, config: Optional[HParams] = None):
         self.config: Optional[HParams] = config
 
