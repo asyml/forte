@@ -18,7 +18,7 @@ from forte.common.resources import Resources
 from forte.data import DataPack, MultiPack
 from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
-from forte.indexers import EmbeddingBasedIndexer
+from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
 
 from ft.onto.base_ontology import Document
 

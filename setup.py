@@ -27,8 +27,7 @@ setuptools.setup(
         'funcsigs',
         'mypy_extensions',
         'typed_ast',
-        'jsonschema',
-        'faiss-cpu>=1.6.1'
+        'jsonschema'
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
@@ -38,7 +37,7 @@ setuptools.setup(
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'ir': ['elasticsearch']
+        'ir': ['faiss-cpu>=1.6.1', 'elasticindexer']
     },
     package_data={
     },
