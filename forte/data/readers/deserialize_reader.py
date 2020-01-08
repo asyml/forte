@@ -34,7 +34,6 @@ class DeserializeReader(PackReader):
     # pylint: disable=no-self-use
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         data_packs: List[str] = args[0]
-        
         yield from data_packs
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
