@@ -9,7 +9,8 @@ import numpy as np
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
-from forte.indexers import EmbeddingBasedIndexer, ElasticSearchIndexer
+from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
+from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 
 class TestEmbeddingBasedIndexer(unittest.TestCase):

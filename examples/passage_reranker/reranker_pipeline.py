@@ -15,7 +15,10 @@
 import yaml
 
 import texar.torch as tx
-from forte.processors import ElasticSearchQueryCreator, ElasticSearchProcessor
+from forte.processors.elastic_search_query_creator import \
+    ElasticSearchQueryCreator
+from forte.processors.elastic_search_processor import \
+    ElasticSearchProcessor
 from forte.pipeline import Pipeline
 
 from reader import EvalReader

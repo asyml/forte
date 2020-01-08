@@ -20,7 +20,7 @@ from forte.common.resources import Resources
 from forte.data import DataPack, MultiPack
 from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
-from forte.indexers import ElasticSearchIndexer
+from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 from ft.onto.base_ontology import Document
 

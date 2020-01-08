@@ -20,8 +20,9 @@ from texar.torch import HParams
 from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
-from forte.processors import MicrosoftBingTranslator, \
-    BertBasedQueryCreator, SearchProcessor, SRLPredictor
+from forte.processors import MicrosoftBingTranslator, BertBasedQueryCreator, \
+    SRLPredictor
+from forte.processors.search_processor import SearchProcessor
 from forte.data.selector import NameMatchSelector
 from forte.processors.nltk_processors import \
     (NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)

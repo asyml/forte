@@ -18,7 +18,7 @@ from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.processors.base import IndexProcessor
-from forte.indexers import ElasticSearchIndexer
+from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte import utils
 
 __all__ = [
