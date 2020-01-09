@@ -59,8 +59,7 @@ class MultiPackTerminalReader(MultiPackReader):
         # strings.
         while True:
             try:
-                #data = input("Enter your query here: ")
-                data = "barack obama"
+                data = input("Enter your query here: ")
                 if len(data) == 0:
                     continue
                 yield data

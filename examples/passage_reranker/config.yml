@@ -1,3 +1,6 @@
+data:
+  relative_path: "data/collectionandqueries"
+
 reader:
   pack_name: "query"
 
@@ -21,9 +24,7 @@ NER:
     num_char_pad: 2
 
   config_model:
-
-    resource_dir: "/Users/mansi.gupta/workspace/forte_reranking/forte/forte/common/resources"
-
+    resource_dir: "examples/passage_reranker/resources"
     output_hidden_size: 128
     dropout_rate: 0.3
 
