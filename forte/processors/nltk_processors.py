@@ -62,7 +62,7 @@ class NLTKSentenceSegmenter(PackProcessor):
     """
     A wrapper of NLTK sentence tokenizer.
     """
-    # pylint: disable=no-self-use
+
     def _process(self, input_pack: DataPack):
         text = input_pack.text
         end_pos = 0

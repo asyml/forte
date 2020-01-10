@@ -50,7 +50,7 @@ class MSMarcoPassageReader(PackReader):
         self.configs = configs
 
     def _collect(self, *args, **kwargs) -> Iterator[Tuple[str, str]]:
-        # pylint: disable = unused-argument, undefined-variable, no-self-use
+        # pylint: disable = unused-argument, undefined-variable
         dir_path: str = args[0]
 
         corpus_file_path = os.path.join(dir_path, 'collection.tsv')
@@ -61,7 +61,6 @@ class MSMarcoPassageReader(PackReader):
                 yield doc_id, doc_content
 
     def _parse_pack(self, doc_info: Tuple[str, str]) -> Iterator[DataPack]:
-        # pylint: disable = no-self-use
         """
         Takes the `doc_info` returned by the `_collect` method and returns a
         `data_pack` that either contains entry of the type `Query`, or contains
@@ -81,7 +80,6 @@ class MSMarcoPassageReader(PackReader):
         yield data_pack
 
     def _cache_key_function(self, data_pack: DataPack) -> str:
-        # pylint: disable = no-self-use
         if data_pack.meta.doc_id is None:
             raise ValueError("Data pack does not have a document id.")
         return data_pack.meta.doc_id

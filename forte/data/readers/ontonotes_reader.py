@@ -115,7 +115,6 @@ class OntonotesReader(PackReader):
             if field not in seen_fields:
                 raise ValueError(f"'{field}' field is required")
 
-    # pylint: disable=no-self-use
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
         """
         Iterator over *.gold_conll files in the data_source
@@ -128,7 +127,6 @@ class OntonotesReader(PackReader):
         """
         return dataset_path_iterator(conll_directory, "gold_conll")
 
-    # pylint: disable=no-self-use
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 

@@ -35,11 +35,9 @@ class ProdigyReader(PackReader):
             ``iter()`` returns a list.
     """
 
-    # pylint: disable=no-self-use
     def _cache_key_function(self, data: dict) -> str:
         return data['meta']['id']
 
-    # pylint: disable=no-self-use
     def _collect(self,  # type: ignore
                  prodigy_annotation_file: str) -> Iterator[Any]:
         """
