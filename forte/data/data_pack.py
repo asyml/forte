@@ -117,7 +117,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         for a in self.generics:
             a.set_pack(self)
 
-    # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)
 

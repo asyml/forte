@@ -88,7 +88,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def define_context(self):
         self.context_type = Sentence
 
-    # pylint: disable=no-self-use
     def _define_input_info(self) -> DataRequest:
         input_info: DataRequest = {Token: []}
         return input_info

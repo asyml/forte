@@ -156,7 +156,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         raise NotImplementedError
 
-    # pylint: disable=unused-argument,no-self-use
+    # pylint: disable=unused-argument
     def text_replace_operation(self, text: str) -> ReplaceOperationsType:
         """
         Given the possibly noisy text, compute and return the

@@ -35,7 +35,6 @@ class RACEMultiChoiceQAReader(PackReader):
     dataset.
     """
 
-    # pylint: disable=no-self-use
     def _collect(self, json_directory) -> Iterator[Any]:  # type: ignore
         """
         Should be called with param `json_directory` which is a path to a folder
