@@ -52,22 +52,19 @@ class DummyRelationExtractor(BatchProcessor):
         self.batcher.initialize(configs.batcher)
 
     def define_batcher(self) -> ProcessingBatcher:
-        # pylint: disable=no-self-use
         return FixedSizeDataPackBatcher()
 
     def define_context(self) -> Type[Sentence]:
-        # pylint: disable=no-self-use
         return Sentence
 
     def _define_input_info(self) -> DataRequest:
-        # pylint: disable=no-self-use
         input_info: DataRequest = {
             Token: [],
             EntityMention: {"fields": ["ner_type", "tid"]}
         }
         return input_info
 
-    def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
+    def predict(self, data_batch: Dict):
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 
@@ -100,7 +97,6 @@ class DummyRelationExtractor(BatchProcessor):
         return pred
 
     def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
-        # pylint: disable=no-self-use
         """Add corresponding fields to data_pack"""
         if output_dict is None:
             return
@@ -134,20 +130,17 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         self.batcher.initialize(configs.batcher)
 
     def define_context(self) -> Type[Sentence]:
-        # pylint: disable=no-self-use
         return Sentence
 
     def _define_input_info(self) -> DataRequest:
-        # pylint: disable=no-self-use
         return {}
 
-    def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
+    def predict(self, data_batch: Dict):
         # track the number of times `predict` was called
         self.counter += 1
         return data_batch
 
     def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
-        # pylint: disable=no-self-use
         """Add corresponding fields to data_pack"""
         pass
 

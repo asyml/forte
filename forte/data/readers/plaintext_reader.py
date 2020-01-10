@@ -32,7 +32,6 @@ class PlainTextReader(PackReader):
     :class:`PlainTextReader` is designed to read in plain text dataset.
     """
 
-    # pylint: disable=no-self-use
     def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
         """
         Should be called with param `text_directory` which is a path to a folder
@@ -48,7 +47,7 @@ class PlainTextReader(PackReader):
     def _cache_key_function(self, text_file: str) -> str:
         return os.path.basename(text_file)
 
-    # pylint: disable=no-self-use,unused-argument
+    # pylint: disable=unused-argument
     def text_replace_operation(self, text: str):
         return []
 

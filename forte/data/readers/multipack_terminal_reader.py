@@ -45,11 +45,10 @@ class MultiPackTerminalReader(MultiPackReader):
         self.resource = resource
         self.config = configs
 
-    # pylint: disable=no-self-use,unused-argument
+    # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
 
-    # pylint: disable=no-self-use
     def _collect(self) -> Iterator[str]:  # type: ignore
         """
         data_strings should be of type `List[str]`

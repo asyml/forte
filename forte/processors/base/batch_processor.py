@@ -214,7 +214,6 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
 
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):
-    # pylint: disable=no-self-use
     def define_batcher(self) -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
 
@@ -239,6 +238,6 @@ class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
 
 
 class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):
-    # pylint: disable=no-self-use
+
     def define_batcher(self) -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
