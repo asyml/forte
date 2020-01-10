@@ -25,3 +25,4 @@ from forte.data.readers.multipack_terminal_reader import *
 from forte.data.readers.race_multi_choice_qa_reader import *
 from forte.data.readers.ms_marco_passage_reader import *
 from forte.data.readers.deserialize_reader import *
+from forte.data.readers.html_reader import *

@@ -64,6 +64,6 @@ class StringReader(PackReader):
         document = Document(pack, 0, len(data_source))
         pack.add_or_get_entry(document)
 
-        pack.set_text(data_source, replace_func=self.text_replace_operation)
+        self.set_text(pack, data_source)
 
         yield pack
