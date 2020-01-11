@@ -50,7 +50,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
     def __init__(self,
                  from_cache: bool = False,
-                 cache_directory: Optional[Path] = None,
+                 cache_directory: Optional[str] = None,
                  append_to_cache: bool = False):
         """
         Args:
@@ -197,7 +197,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     # write to the cache if _cache_directory specified
 
                     if self._cache_directory is not None:
-                        self.cache_data(collection, pack, not_first)
+                        self.cache_data(
+                            self._cache_directory, collection, pack, not_first)
 
                     if not isinstance(pack, self.pack_type):
                         raise ValueError(
@@ -225,6 +226,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         yield from self._lazy_iter(*args, **kwargs)
 
     def cache_data(self,
+                   cache_directory: Path,
                    collection: Any,
                    pack: PackType,
                    append: bool):
@@ -241,6 +243,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         :func:`serialize_instance`).
 
         Args:
+            cache_directory: The directory used to cache the data.
             collection: The collection to be read as a DataPack, this collection
             can be used here to create the cache key.
             pack: The data pack to be cached.
@@ -249,9 +252,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Returns:
 
         """
-        Path.mkdir(self._cache_directory, exist_ok=True)
+        Path.mkdir(cache_directory, exist_ok=True)
         cache_filename = os.path.join(
-            self._cache_directory,
+            cache_directory,
             self._get_cache_location(collection)
         )
 
