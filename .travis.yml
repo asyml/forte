@@ -1,5 +1,7 @@
-language: python
 sudo: required
+language: python
+dist: xenial  # Required for Python 3.7
+cache: pip
 
 python:
   - "3.6"
@@ -31,8 +33,7 @@ install:
   - pip install mypy>=0.730
   - pip install pytest==4.3.1
   # Install code coverage tools.
-  - pip install coverage
-  - pip install codecov
+  - pip install coverage codecov
 
 script:
   # linting
@@ -69,9 +70,7 @@ jobs:
         - rm -rf texar-pytorch
       script:
         - cd docs
-        - make html
         # build documents
-        - make html
         - sphinx-build -W -b html -d _build/doctrees . _build/html
         # check for typos
         - sphinx-build -W -b spelling -d _build/doctrees . _build/spelling

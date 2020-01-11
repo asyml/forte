@@ -68,7 +68,7 @@ confidence=
 disable=invalid-name,too-many-branches,too-many-statements,too-many-arguments,  # Unnecessarily strict checks
         too-many-instance-attributes,too-few-public-methods,too-many-locals,
         too-many-lines,too-many-return-statements,too-many-boolean-expressions,
-        too-many-nested-blocks,
+        too-many-nested-blocks,too-many-ancestors,
         fixme,
         no-else-return,no-else-raise,len-as-condition,unnecessary-pass,         # Not exactly good conventions
         bad-continuation,inconsistent-return-statements,stop-iteration-return,
@@ -76,7 +76,9 @@ disable=invalid-name,too-many-branches,too-many-statements,too-many-arguments,  
         no-name-in-module,unsubscriptable-object,import-error,
         access-member-before-definition,
         redefined-builtin,abstract-method,missing-docstring,                    # Too many false positives
-        duplicate-code,                                                         # Too many false positives (will be fixed in next release)
+        no-self-use,                                                            # (cannot ignore overridden methods)
+        unused-wildcard-import,                                                 # (https://github.com/rogalski/astroid/commit/82c6ef644a2efb77217a23d9b8a6cfb5caffb4ba)
+        duplicate-code,                                                         # (will be fixed in next release)
 
 
 [REPORTS]
@@ -274,7 +276,7 @@ init-import=no
 
 # A regular expression matching the name of dummy variables (i.e. expectedly
 # not used).
-dummy-variables-rgx=(_+[a-zA-Z0-9]*?$)|unused
+dummy-variables-rgx=(_+[a-zA-Z0-9]*?$)|dummy|unused
 
 # List of additional names supposed to be defined in builtins. Remember that
 # you should avoid to define new builtins when possible.
@@ -302,7 +304,8 @@ logging-modules=logging
 max-line-length=80
 
 # Regexp for a line that is allowed to be longer than the limit.
-ignore-long-lines=^\s*(# )?`?<?https?://\S+>?$
+# This regex matches URLs and link anchors.
+ignore-long-lines=^\s*((# )?`?<?https?://\S+>?|\.\. _`.*`:|`.*`_)$
 
 # Allow the body of an if to be on the same line as the test if there is no
 # else.

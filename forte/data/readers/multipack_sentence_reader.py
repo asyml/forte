@@ -49,11 +49,9 @@ class MultiPackSentenceReader(MultiPackReader):
         self.resource = resource
         self.config = configs
 
-    # pylint: disable=no-self-use
     def _collect(self, text_directory: str) -> Iterator[Any]:  # type: ignore
         return dataset_path_iterator(text_directory, '')
 
-    # pylint: disable=no-self-use
     def _cache_key_function(self, txt_path: str) -> str:
         return os.path.basename(txt_path)
 

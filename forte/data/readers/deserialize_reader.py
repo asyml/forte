@@ -22,7 +22,7 @@ from forte.data.readers.base_reader import PackReader
 
 class DeserializeReader(PackReader):
 
-    # pylint: disable=no-self-use,unused-argument
+    # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
 
@@ -31,7 +31,6 @@ class DeserializeReader(PackReader):
         self.resource = resource
         self.config = configs
 
-    # pylint: disable=no-self-use
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         data_packs: List[str] = args[0]
         yield from data_packs

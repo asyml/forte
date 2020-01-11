@@ -33,7 +33,7 @@ class CoNLL03Reader(PackReader):
     """
     :class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
     """
-    # pylint: disable=no-self-use
+
     def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
         """
         Iterator over conll files in the data_source

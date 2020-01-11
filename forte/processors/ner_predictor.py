@@ -63,11 +63,9 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.batch_size = 3
         self.batcher = self.define_batcher()
 
-    # pylint: disable=no-self-use
     def define_context(self) -> Type[Annotation]:
         return Sentence
 
-    # pylint: disable=no-self-use
     def _define_input_info(self) -> DataRequest:
         input_info: DataRequest = {
             Token: [],
@@ -172,7 +170,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
-    # pylint: disable=no-self-use
     def pack(self, data_pack: DataPack,
              output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
         """
