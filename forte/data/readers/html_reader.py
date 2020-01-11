@@ -229,3 +229,6 @@ class HTMLReader(StringReader):
         parser.feed(text)
 
         return parser.spans
+
+    def _cache_key_function(self, collection):
+        return str(hash(collection)) + '.txt'

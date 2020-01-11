@@ -55,10 +55,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         Args:
             from_cache (bool, optional): Decide whether to read from cache
-                if cache file exists. By default (``True``), the reader will
-                try to read an datapack from the first line of the caching file.
-                If ``False``, the reader will only read from the original file
-                and use the cache file path only for output.
+                if cache file exists. By default (``False``), the reader will
+                only read from the original file and use the cache file path
+                only for output. If ``True``, the reader will try to read a
+                datapack from the first line of the caching file.
             cache_directory (str, optional): The base directory to place the
                 path of the caching files. Each collection is contained in one
                 cached file, under this directory. The cached location for each
@@ -68,7 +68,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 if cache file already exists.  By default (``False``), we
                 will overwrite the existing caching file. If ``True``, we will
                 cache the datapack append to end of the caching file.
-    """
+        """
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
@@ -197,8 +197,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     # write to the cache if _cache_directory specified
 
                     if self._cache_directory is not None:
-                        self.cache_data(
-                            self._cache_directory, collection, pack, not_first)
+                        self.cache_data(collection, pack, not_first)
 
                     if not isinstance(pack, self.pack_type):
                         raise ValueError(
@@ -226,15 +225,14 @@ class BaseReader(PipelineComponent[PackType], ABC):
         yield from self._lazy_iter(*args, **kwargs)
 
     def cache_data(self,
-                   cache_directory: Path,
                    collection: Any,
                    pack: PackType,
                    append: bool):
         """
         Specify the path to the cache directory.
 
-        After you call this method, the dataset reader will use this
-        :attr:`cache_directory` to store a cache of :class:`BasePack` read
+        After you call this method, the dataset reader will use it's
+        cache_directory to store a cache of :class:`BasePack` read
         from every document passed to :func:`read`, serialized as one
         string-formatted :class:`BasePack`. If the cache file for a given
         ``file_path`` exists, we read the :class:`BasePack` from the cache
@@ -243,7 +241,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
         :func:`serialize_instance`).
 
         Args:
-            cache_directory: The directory used to cache the data.
             collection: The collection to be read as a DataPack, this collection
             can be used here to create the cache key.
             pack: The data pack to be cached.
@@ -252,9 +249,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Returns:
 
         """
-        Path.mkdir(cache_directory, exist_ok=True)
+        Path.mkdir(self._cache_directory, exist_ok=True)
         cache_filename = os.path.join(
-            cache_directory,
+            self._cache_directory,
             self._get_cache_location(collection)
         )
 

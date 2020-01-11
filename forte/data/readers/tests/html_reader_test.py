@@ -1,4 +1,5 @@
 import os
+import shutil
 import unittest
 from pathlib import Path
 from ddt import ddt, data
@@ -11,11 +12,19 @@ from forte.data.readers import HTMLReader
 @ddt
 class HTMLReaderPipelineTest(unittest.TestCase):
     def setUp(self):
-        self.reader = HTMLReader()
+        self._cache_directory = Path(os.path.join(os.getcwd(), "cache_html"))
+        self.reader = HTMLReader(cache_directory=self._cache_directory,
+                                 append_to_cache=True)
 
         self.pl1 = Pipeline()
-        self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))
-        self.pl1.set_reader(HTMLReader())
+        self.pl1.set_reader(self.reader)
+
+        self.pl2 = Pipeline()
+        self.pl2.set_reader(HTMLReader(from_cache=True,
+                                       cache_directory=self._cache_directory))
+
+    def tearDown(self):
+        shutil.rmtree(self._cache_directory)
 
     @data(
         ("<title>The Original Title </title>",
@@ -57,13 +66,12 @@ class HTMLReaderPipelineTest(unittest.TestCase):
     ''')
     )
     def test_reader(self, value):
+        # Also writes to cache so that we can read from cache directory
+        # during caching test
         html_input, expected_output = value
-        doc_exists = False
 
         for pack in self.pl1.process_dataset(html_input):
-            doc_exists = True
             self.assertEqual(expected_output, pack.text)
-        self.assertTrue(doc_exists)
 
     @data(
         ('<title>The Original Title </title>'),
@@ -140,6 +148,32 @@ class HTMLReaderPipelineTest(unittest.TestCase):
             # Retrieve original span
             original_span = pack.get_original_span(new_span, mode)
             self.assertEqual(expected_orig_span, original_span)
+
+    @data(
+        ["<title>The Original Title </title>",
+         "<!DOCTYPE html><html><title>Page Title</title><body><p>This is a "
+         "paragraph</p></body></html>"],
+        ["<html>Test1</html>", "<html>Test12</html>", "<html>Test3</html>"]
+    )
+    def test_reader_caching(self, value):
+        html_input = value
+
+        i = 0
+        for _ in self.pl1.process_dataset(html_input):
+            i = i + 1
+
+        num_files = len([f for f in os.listdir(self._cache_directory)
+                         if os.path.isfile(os.path.join(self._cache_directory,
+                                                        f))])
+
+        self.assertEqual(num_files, len(html_input))
+        self.assertEqual(i, len(html_input))
+
+        # Test Caching
+        j = 0
+        for _ in self.pl2.process_dataset(html_input):
+            j = j + 1
+        self.assertEqual(j, len(html_input))
 
 
 if __name__ == '__main__':
