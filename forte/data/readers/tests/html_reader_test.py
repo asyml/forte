@@ -156,24 +156,19 @@ class HTMLReaderPipelineTest(unittest.TestCase):
         ["<html>Test1</html>", "<html>Test12</html>", "<html>Test3</html>"]
     )
     def test_reader_caching(self, value):
-        html_input = value
+        count_orig = 0
+        for _ in self.pl1.process_dataset(value):
+            count_orig = count_orig + 1
 
-        i = 0
-        for _ in self.pl1.process_dataset(html_input):
-            i = i + 1
+        num_files = len(os.listdir(self._cache_directory))
 
-        num_files = len([f for f in os.listdir(self._cache_directory)
-                         if os.path.isfile(os.path.join(self._cache_directory,
-                                                        f))])
-
-        self.assertEqual(num_files, len(html_input))
-        self.assertEqual(i, len(html_input))
+        self.assertEqual(num_files, count_orig)
 
         # Test Caching
-        j = 0
-        for _ in self.pl2.process_dataset(html_input):
-            j = j + 1
-        self.assertEqual(j, len(html_input))
+        count_cached = 0
+        for _ in self.pl2.process_dataset(value):
+            count_cached = count_cached + 1
+        self.assertEqual(count_cached, count_orig)
 
 
 if __name__ == '__main__':
