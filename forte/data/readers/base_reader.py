@@ -198,7 +198,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
                     if self._cache_directory is not None:
                         self.cache_data(
-                            self._cache_directory, collection, pack, not_first)
+                            collection, pack, not_first)
 
                     if not isinstance(pack, self.pack_type):
                         raise ValueError(
@@ -226,7 +226,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
         yield from self._lazy_iter(*args, **kwargs)
 
     def cache_data(self,
-                   cache_directory: Path,
                    collection: Any,
                    pack: PackType,
                    append: bool):
@@ -243,7 +242,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
         :func:`serialize_instance`).
 
         Args:
-            cache_directory: The directory used to cache the data.
             collection: The collection to be read as a DataPack, this collection
             can be used here to create the cache key.
             pack: The data pack to be cached.
@@ -252,9 +250,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Returns:
 
         """
-        Path.mkdir(cache_directory, exist_ok=True)
+        if not self._cache_directory:
+            raise ValueError(f"Can not cache without a cache_directory!")
+
+        os.makedirs(self._cache_directory, exist_ok=True)
+
         cache_filename = os.path.join(
-            cache_directory,
+            self._cache_directory,
             self._get_cache_location(collection)
         )
 
