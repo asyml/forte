@@ -87,7 +87,7 @@ class ForteHTMLParser(HTMLParser):
 
     # We override the original goahead method and collect the information
     # we need to successfully remove tag information and retrieve the original
-    # document without any loss.
+    # html document without any loss.
     def goahead(self, end):
         rawdata = self.rawdata
         i = 0
