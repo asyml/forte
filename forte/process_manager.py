@@ -49,7 +49,58 @@ class ProcessManager:
 
     # pylint: disable=attribute-defined-outside-init
     def initialize_queues(self, pipeline_length: int):
+        r"""Initialize the queues and the related state variables to execute
+        the pipeline. Following variables are defined in this method
+
+        - pipeline_length (int): The length of the current pipeline being
+            executed
+
+        - queues (List[List[int]]): A list of queues which hold the jobs for
+            each processors. The size of this list is equal to pipeline
+            length
+
+        - current_queue_index (int): An index indicating which queue to
+            read the data from. A value of -1 indicates read from the reader.
+
+        - current_processor_index (int): An index indicating the
+            processor that executes the job
+
+        - unprocessed_queue_indices (List[int]): Each element of this list is
+            the index of the first UNPROCESSED element in the corresponding
+            queue. Length of this list equals the "pipeline_length".
+
+            If unprocessed_queue_indices = [0, 2]
+
+                - This means for the 1st queue, the first UNPROCESSED job is at
+                  index-0. All elements from indices [0, len(queue[0]) ) are
+                  UNPROCESSED.
+
+                - Similarly, for the 2nd queue, the first UNPROCESSED job is at
+                  index-2. All elements from indices [2, len(queue[1])) are
+                  UNPROCESSED
+
+        - processed_queue_indices (List [int]):  Each element of this list is
+            the index of the last PROCESSED element in the corresponding queue.
+            Length of this list equals the "pipeline_length".
+
+            If processed_queue_indices = [0, 2]
+
+                - This means for the 1st queue, the last PROCESSED job is at
+                  index-0. Only the first element in queue[0] is PROCESSED
+
+                - Similarly, for the 2nd queue, the last PROCESSED job is at
+                  index-2. All elements from indices [0, 2] are PROCESSED
+
+        Args:
+            pipeline_length (int): The length of the current pipeline being
+                executed
+
+        """
         if self.instance is not None:
+            # Definition of the following variables
+            #
+            # pipeline_length: The length of the current pipeline being executed
+            # queues:
             self.instance.pipeline_length = pipeline_length
             self.instance.queues = [[] for _ in range(pipeline_length)]
             self.instance.current_queue_index = -1
@@ -60,6 +111,11 @@ class ProcessManager:
             raise AttributeError("The process manager is not initialized.")
 
     def set_current_component(self, component_name: str):
+        r"""Set the current component
+
+        Args:
+             component_name (str): Current component name
+        """
         if self.instance is not None:
             self.instance.current_component = component_name
         else:

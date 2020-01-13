@@ -125,6 +125,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         if len(self.batcher.current_batch_sources) == 0:
             self.update_batcher_pool()
 
+        # update the status of the jobs. The jobs which were removed from
+        # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
         q_index = process_manager.current_queue_index
         u_index = process_manager.unprocessed_queue_indices[q_index]
         data_pool_length = len(self.batcher.data_pack_pool)
