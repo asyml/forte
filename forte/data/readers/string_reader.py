@@ -34,7 +34,7 @@ class StringReader(PackReader):
     """
     # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
-        return "cached_string_file"
+        return str(hash(collection)) + '.html'
 
     def _collect(self,  # type: ignore
                  string_data: Union[List[str], str]) -> Iterator[str]:
