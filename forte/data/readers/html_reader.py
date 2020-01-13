@@ -16,11 +16,15 @@ The reader that reads html data into Datapacks.
 """
 from html.parser import HTMLParser
 from html import unescape
+import os
 import re
+from typing import Iterator
 
 from forte.data.base import Span
-from forte.data.readers.string_reader import StringReader
-
+from forte.data.data_pack import DataPack
+from forte.data.io_utils import dataset_path_iterator
+from forte.data.readers.base_reader import PackReader
+from ft.onto.base_ontology import Document
 
 # Regular expressions used for parsing. Borrowed from
 # https://github.com/python/cpython/blob/3.6/Lib/html/parser.py
@@ -208,14 +212,86 @@ class ForteHTMLParser(HTMLParser):
         self.rawdata = rawdata[i:]
 
 
-class HTMLReader(StringReader):
+class HTMLReader(PackReader):
     """
     :class:`HTMLReader` is designed to read in list of html strings.
 
     It takes in list of html strings, cleans the HTML tags and stores the
     cleaned text in pack.
     """
-    # pylint: disable=no-self-use,unused-argument
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.init_with_fileloc = False
+        self.init_with_html = False
+
+    def _collect(self, content) -> Iterator[str]:  # type: ignore
+        """
+        Could be called with a directory, a particular file location or a list
+        of strings. If the string is an HTML string, it will be cleaned.
+
+        Args:
+            content: either a string, or list of string
+
+        Returns: Iterator over the content based on type of input
+
+        """
+        if isinstance(content, str):
+            # Check if directory
+            if os.path.isdir(content):
+                self.init_with_fileloc = True
+                # TODO: maybe extend it to .txt also if need be?
+                return dataset_path_iterator(content, ".html")
+            # If file path to a single file, just return the filepath
+            elif os.path.isfile(content):
+                def data_yielder(data):
+                    yield data
+                self.init_with_fileloc = True
+                return data_yielder(content)
+            else:  # Treat it as a string
+                content = [content]
+
+        if isinstance(content, list):  # Must be a list of strings now
+            self.init_with_html = True
+
+            def data_iterator(data):
+                for html_string in data:
+                    yield html_string
+            return data_iterator(content)
+
+        else:
+            raise TypeError(f"HTMLReader supports only strings and list of"
+                            f" strings, Please make sure your inputs are"
+                            f" correct!"
+                            f"Found {type(content)} instead!")
+
+    def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
+        """
+        Takes a string which could be either a filepath or html_content and
+        converts into a DataPack.
+
+        Args:
+            data_source: str that contains text of a document or a filepath
+
+        Returns: DataPack containing Document.
+        """
+        pack = DataPack()
+
+        # Check if data_source is a filepath
+        if self.init_with_fileloc:
+            with open(data_source, "r",
+                      encoding="utf8",
+                      errors='ignore') as file:
+                text = file.read()
+        # else, must be a string with actual data
+        else:
+            text = data_source
+
+        document = Document(pack, 0, len(text))
+        pack.add_or_get_entry(document)
+        self.set_text(pack, text)
+
+        yield pack
+
     def text_replace_operation(self, text: str):
         """Replace html tag locations with blank string.
 
@@ -231,4 +307,9 @@ class HTMLReader(StringReader):
         return parser.spans
 
     def _cache_key_function(self, collection):
-        return str(hash(collection)) + '.txt'
+        # check if collection is file or html string
+        if self.init_with_fileloc:
+            return os.path.basename(collection)
+        # If html string
+        else:
+            return str(hash(collection)) + '.html'

@@ -57,8 +57,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
             from_cache (bool, optional): Decide whether to read from cache
                 if cache file exists. By default (``False``), the reader will
                 only read from the original file and use the cache file path
-                only for output. If ``True``, the reader will try to read a
-                datapack from the first line of the caching file.
+                for caching, it will not read from the cache_directory.
+                If ``True``, the reader will try to read a datapack from the
+                caching file.
             cache_directory (str, optional): The base directory to place the
                 path of the caching files. Each collection is contained in one
                 cached file, under this directory. The cached location for each
@@ -242,8 +243,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
         :func:`serialize_instance`).
 
         Args:
-            collection: The collection to be read as a DataPack, this collection
-            can be used here to create the cache key.
+            collection: The collection is a piece of data from the
+            :func:`_collect`, to be read to produce DataPack(s). During caching,
+            a cache key is computed based on the data in this collection.
             pack: The data pack to be cached.
             append: Whether to allow appending to the cache.
 

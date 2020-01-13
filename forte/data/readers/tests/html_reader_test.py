@@ -6,6 +6,7 @@ from ddt import ddt, data
 
 from forte.pipeline import Pipeline
 from forte.data.base import Span
+from forte.data.data_pack import DataPack
 from forte.data.readers import HTMLReader
 
 
@@ -22,6 +23,10 @@ class HTMLReaderPipelineTest(unittest.TestCase):
         self.pl2 = Pipeline()
         self.pl2.set_reader(HTMLReader(from_cache=True,
                                        cache_directory=self._cache_directory))
+
+        self.data_dir = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'data_samples/html')
 
     def tearDown(self):
         shutil.rmtree(self._cache_directory)
@@ -157,7 +162,9 @@ class HTMLReaderPipelineTest(unittest.TestCase):
     )
     def test_reader_caching(self, value):
         count_orig = 0
-        for _ in self.pl1.process_dataset(value):
+        content = []
+        for pack in self.pl1.process_dataset(value):
+            content.append(pack.text)
             count_orig = count_orig + 1
 
         num_files = len(os.listdir(self._cache_directory))
@@ -166,9 +173,36 @@ class HTMLReaderPipelineTest(unittest.TestCase):
 
         # Test Caching
         count_cached = 0
-        for _ in self.pl2.process_dataset(value):
+        content_cached = []
+        for pack in self.pl2.process_dataset(value):
+            content_cached.append(pack.text)
             count_cached = count_cached + 1
+
         self.assertEqual(count_cached, count_orig)
+        self.assertEqual(content_cached, content)
+
+    def test_reader_with_dir(self):
+        for pack in self.pl1.process_dataset(self.data_dir):
+            self.assertIsInstance(pack, DataPack)
+
+    def test_reader_with_filepath(self):
+        filepath = os.path.join(self.data_dir, "test_recipe.html")
+        for pack in self.pl1.process_dataset(filepath):
+            self.assertIsInstance(pack, DataPack)
+
+    @data(
+        ["<title>The Original Title </title>",
+         "<!DOCTYPE html><html><title>Page Title</title><body><p>This is a "
+         "paragraph</p></body></html>"],
+        ["<html>Test1</html>", "<html>Test12</html>", "<html>Test3</html>"]
+    )
+    def test_reader_with_list(self, value):
+        count_orig = 0
+
+        for _ in self.pl1.process_dataset(value):
+            count_orig = count_orig + 1
+
+        self.assertEqual(count_orig, len(value))
 
 
 if __name__ == '__main__':
