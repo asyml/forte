@@ -291,12 +291,18 @@ class BasePipeline(Generic[PackType]):
         # is needed, the pipeline can directly request it from the reader instead
         # of looking at previous queues for UNPROCESSED jobs.
         #
+        # 5) When a processor receives a poison pack, it flushes all the
+        # remaining batches in its memory (this actually has no effect in
+        # PackProcessors) and moves the jobs including the poison pack to the
+        # next queue. If there is no next processor, the packs are yield.
+        #
+        # 6) The loop terminates when the last queue contains only a poison pack
         #
         # Here is the sample pipeline and its execution
         #
         # Assume 1 pack corresponds to a batch of size 1
         #
-        # After 1st step, reading from the reader,
+        # After 1st step (iteration), reading from the reader,
         #
         #            batch_size = 2                               batch_size = 2
         #  Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
@@ -309,7 +315,7 @@ class BasePipeline(Generic[PackType]):
         #
         # B1 needs another pack to process job J1
         #
-        # After 2nd step,
+        # After 2nd step (iteration),
         #
         #           batch_size = 2                               batch_size = 2
         # Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
@@ -322,7 +328,7 @@ class BasePipeline(Generic[PackType]):
         #
         # B1 processes both the packs, the jobs are moved to the next queue.
         #
-        # After 3rd step,
+        # After 3rd step (iteration),
         #
         #           batch_size = 2                               batch_size = 2
         # Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
@@ -337,7 +343,7 @@ class BasePipeline(Generic[PackType]):
         # J2 in the queue. Pipeline first processes this job before moving to the
         # next processor
         #
-        # After 4th step,
+        # After 4th step (iteration),
         #
         #           batch_size = 2                               batch_size = 2
         # Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
@@ -349,7 +355,7 @@ class BasePipeline(Generic[PackType]):
         #        |______________|       |__________________|     |_<J1>:UNPROCESSED_|
         #
         #
-        # After 5th step,
+        # After 5th step (iteration),
         #
         #           batch_size = 2                               batch_size = 2
         # Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
@@ -361,8 +367,6 @@ class BasePipeline(Generic[PackType]):
         #        |______________|       |__________________|     |__________________|
 
         buffer = ProcessBuffer(data_iter)
-
-        # import pdb
 
         if len(self.processors) == 0:
             yield from data_iter
@@ -385,8 +389,6 @@ class BasePipeline(Generic[PackType]):
                     process_manager.processed_queue_indices
                 next_queue_index = current_queue_index + 1
                 should_yield = next_queue_index >= pipeline_length
-
-                # pdb.set_trace()
 
                 if not unprocessed_job.is_poison:
 
