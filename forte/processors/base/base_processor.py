@@ -22,7 +22,7 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
-from forte.process_manager import ProcessManager
+from forte.process_manager import ProcessManager, ProcessJobStatus
 from forte.utils import get_full_module_name
 from forte.pipeline_component import PipelineComponent
 
@@ -64,6 +64,16 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         # Set the component for recording purpose.
         process_manager.set_current_component(self.component_name)
         self._process(input_pack)
+
+        # Change status for pack processors
+        q_index = process_manager.current_queue_index
+        u_index = process_manager.unprocessed_queue_indices[q_index]
+        current_queue = process_manager.current_queue
+
+        for job_i in current_queue[:u_index + 1]:
+
+            if job_i.status == ProcessJobStatus.UNPROCESSED:
+                job_i.set_status(ProcessJobStatus.PROCESSED)
 
     @abstractmethod
     def _process(self, input_pack: PackType):

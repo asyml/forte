@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+from enum import Enum
+from typing import List, Optional
 
 __all__ = [
-    "ProcessManager"
+    "ProcessManager",
+    "ProcessJobStatus"
 ]
+
+ProcessJobStatus = Enum("ProcessJobStatus", "UNPROCESSED QUEUED PROCESSED")
 
 
 class ProcessManager:
-    """
-    A pipeline level manager that manages global processing information, such
-    as the current running components.
-    """
+    r"""A pipeline level manager that manages global processing information,
+    such as the current running components."""
 
     # Note: hiding the real class creation and attributes here allow us to
     # create a singleton class. A singleton ProcessManager should be sufficient
@@ -32,6 +34,12 @@ class ProcessManager:
     class __ProcessManager:
         def __init__(self):
             self.current_component: str = '__default__'
+            self.pipeline_length: int
+            self.queues: List[List[int]]
+            self.current_queue_index: int
+            self.current_processor_index: int
+            self.unprocessed_queue_indices: List[int]
+            self.processed_queue_indices: List[int]
 
     instance: Optional[__ProcessManager] = None
 
@@ -39,11 +47,102 @@ class ProcessManager:
         if not ProcessManager.instance:
             ProcessManager.instance = ProcessManager.__ProcessManager()
 
+    # pylint: disable=attribute-defined-outside-init
+    def initialize_queues(self, pipeline_length: int):
+        if self.instance is not None:
+            self.instance.pipeline_length = pipeline_length
+            self.instance.queues = [[] for _ in range(pipeline_length)]
+            self.instance.current_queue_index = -1
+            self.instance.current_processor_index = 0
+            self.instance.unprocessed_queue_indices = [0] * pipeline_length
+            self.instance.processed_queue_indices = [-1] * pipeline_length
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
     def set_current_component(self, component_name: str):
         if self.instance is not None:
             self.instance.current_component = component_name
         else:
             raise AttributeError('The process manager is not initialized.')
+
+    def set_current_processor_index(self, processor_index: int):
+        if self.instance is not None:
+            if processor_index >= len(self.instance.queues):
+                raise ValueError(f"{processor_index} exceeds the pipeline "
+                                 f"range [0, {self.pipeline_length - 1}]")
+            self.instance.current_processor_index = processor_index
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    def set_current_queue_index(self, queue_index: int):
+        if self.instance is not None:
+            if queue_index >= len(self.instance.queues):
+                raise ValueError(f"{queue_index} exceeds the pipeline range "
+                                 f"[0, {self.pipeline_length - 1}]")
+            self.instance.current_queue_index = queue_index
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    @property
+    def current_processor_index(self):
+        if self.instance is not None:
+            return self.instance.current_processor_index
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    @property
+    def current_queue_index(self):
+        if self.instance is not None:
+            return self.instance.current_queue_index
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    @property
+    def unprocessed_queue_indices(self):
+        if self.instance is not None:
+            return self.instance.unprocessed_queue_indices
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    @property
+    def processed_queue_indices(self):
+        if self.instance is not None:
+            return self.instance.processed_queue_indices
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    @property
+    def current_queue(self):
+        if self.instance is not None:
+            return self.instance.queues[self.current_queue_index]
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    @property
+    def pipeline_length(self):
+        if self.instance is not None:
+            return self.instance.pipeline_length
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    def add_to_queue(self, queue_index, job):
+        if self.instance is not None:
+            if queue_index > len(self.instance.queues):
+                raise ValueError(f"Queue number {queue_index} exceeds queue "
+                                 f"size {len(self.instance.queues)}")
+            else:
+                # change the job status
+                job.set_status(ProcessJobStatus.UNPROCESSED)
+                self.instance.queues[queue_index].append(job)
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    def exhausted(self):
+        r"""Returns True only if the last element remaining in the last queue is
+         a poison pack."""
+
+        return len(self.instance.queues[self.pipeline_length - 1]) == 1 and \
+               self.instance.queues[self.pipeline_length - 1][0].is_poison
 
     @property
     def component(self):

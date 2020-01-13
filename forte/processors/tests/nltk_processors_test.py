@@ -13,6 +13,7 @@ class TestNLTKSentenceSegmenter(unittest.TestCase):
         self.nltk = Pipeline()
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
+        self.nltk.initialize()
 
     def test_segmenter(self):
         sentences = ["This tool is called Forte.",
@@ -31,6 +32,7 @@ class TestNLTKWordTokenizer(unittest.TestCase):
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
+        self.nltk.initialize()
 
     def test_tokenizer(self):
         sentences = ["This tool is called Forte.",
@@ -57,6 +59,7 @@ class TestNLTKPOSTagger(unittest.TestCase):
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
         self.nltk.add_processor(NLTKPOSTagger())
+        self.nltk.initialize()
 
     def test_pos_tagger(self):
         sentences = ["This tool is called Forte.",
