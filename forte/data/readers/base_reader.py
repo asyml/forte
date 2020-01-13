@@ -244,8 +244,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         Args:
             collection: The collection is a piece of data from the
-            :func:`_collect`, to be read to produce DataPack(s). During caching,
-            a cache key is computed based on the data in this collection.
+            _collect function, to be read to produce DataPack(s).
+            During caching, a cache key is computed based on the data in this
+            collection.
             pack: The data pack to be cached.
             append: Whether to allow appending to the cache.
 
