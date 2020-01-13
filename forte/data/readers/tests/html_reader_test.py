@@ -19,10 +19,12 @@ class HTMLReaderPipelineTest(unittest.TestCase):
 
         self.pl1 = Pipeline()
         self.pl1.set_reader(self.reader)
+        self.pl1.initialize()
 
         self.pl2 = Pipeline()
         self.pl2.set_reader(HTMLReader(from_cache=True,
                                        cache_directory=self._cache_directory))
+        self.pl2.initialize()
 
         self.data_dir = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),

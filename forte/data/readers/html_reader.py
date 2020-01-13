@@ -85,6 +85,9 @@ class ForteHTMLParser(HTMLParser):
     def collect_span(self, begin, end):
         self.spans.append((Span(begin, end), ''))
 
+    # We override the original goahead method and collect the information
+    # we need to successfully remove tag information and retrieve the original
+    # document without any loss.
     def goahead(self, end):
         rawdata = self.rawdata
         i = 0
