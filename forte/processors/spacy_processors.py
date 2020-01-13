@@ -74,27 +74,28 @@ class SpacyWordTokenizer(PackProcessor):
                 input_pack.add_or_get_entry(token)
 
 
-class SpacyTokenizer(PackProcessor):
+class SpacyPOSTagger(PackProcessor):
     """
-    A wrapper for spaCy POSTagger
+    A wrapper for spaCy POSTagger.
     """
     def __init__(self):
         super().__init__()
         self.token_component = None
 
     def _process(self, input_pack: DataPack):
-        for sentence in input_pack.get(Sentence):
-            token_entries = list(input_pack.get(entry_type=Token,
-                                                range_annotation=sentence,
-                                                component=self.token_component))
+        for sentence in input_pack.get(entry_type=Sentence,
+                                       component=self.sentence_component):
+            offset = sentence.span.begin
             try:
                 nlp = spacy.load("en_core_web_sm")
             except OSError:
                 from spacy.cli.download import download
                 download('en_core_web_sm')
                 nlp = spacy.load("en_core_web_sm")
-
-            token_texts = [token.text for token in token_entries]
-            taggings = pos_tag(token_texts)
-            for token, tag in zip(token_entries, taggings):
-                token.set_fields(pos=tag[1])
+            doc = nlp(sentence.text)
+            for word in doc:
+                begin_pos = sentence.text.find(word, end_pos)
+                end_pos = begin_pos + len(word)
+                token = Token(input_pack, begin_pos + offset, end_pos + offset)
+                token.set_fields(pos=word.tag_)
+                input_pack.add_or_get_entry(token)
