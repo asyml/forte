@@ -1,14 +1,18 @@
-"""This module tests NLTK processors."""
+"""
+Unit tests of NLTK processors.
+"""
+
 import unittest
 
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
-    NLTKWordTokenizer, NLTKPOSTagger
+    NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer
 from ft.onto.base_ontology import Token, Sentence
 
 
 class TestNLTKSentenceSegmenter(unittest.TestCase):
+
     def setUp(self):
         self.nltk = Pipeline()
         self.nltk.set_reader(StringReader())
@@ -26,6 +30,7 @@ class TestNLTKSentenceSegmenter(unittest.TestCase):
 
 
 class TestNLTKWordTokenizer(unittest.TestCase):
+
     def setUp(self):
         self.nltk = Pipeline()
         self.nltk.set_reader(StringReader())
@@ -51,6 +56,7 @@ class TestNLTKWordTokenizer(unittest.TestCase):
 
 
 class TestNLTKPOSTagger(unittest.TestCase):
+
     def setUp(self):
         self.nltk = Pipeline()
         self.nltk.set_reader(StringReader())
@@ -73,3 +79,35 @@ class TestNLTKPOSTagger(unittest.TestCase):
             for j, token in enumerate(
                     pack.get(entry_type=Token, range_annotation=sentence)):
                 self.assertEqual(token.pos, pos[i][j])
+
+
+class TestNLTKLemmatizer(unittest.TestCase):
+
+    def setUp(self):
+        self.nltk = Pipeline()
+        self.nltk.set_reader(StringReader())
+        self.nltk.add_processor(NLTKSentenceSegmenter())
+        self.nltk.add_processor(NLTKWordTokenizer())
+        self.nltk.add_processor(NLTKPOSTagger())
+        self.nltk.add_processor(NLTKLemmatizer())
+
+    def test_lemmatizer(self):
+        sentences = ["This tool is called Forte.",
+                     "The goal of this project to help you build NLP "
+                     "pipelines.",
+                     "NLP has never been made this easy before."]
+        tokens = [["This", "tool", "be", "call", "Forte", "."],
+                  ["The", "goal", "of", "this", "project", "to", "help", "you",
+                   "build", "NLP", "pipeline", "."],
+                  ["NLP", "have", "never", "be", "make", "this", "easy",
+                   "before", "."]]
+        document = ' '.join(sentences)
+        pack = self.nltk.process(document)
+        for i, sentence in enumerate(pack.get(Sentence)):
+            for j, token in enumerate(
+                    pack.get(entry_type=Token, range_annotation=sentence)):
+                self.assertEqual(token.lemma, tokens[i][j])
+
+
+if __name__ == "__main__":
+    unittest.main()
