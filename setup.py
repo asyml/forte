@@ -27,7 +27,8 @@ setuptools.setup(
         'funcsigs',
         'mypy_extensions',
         'typed_ast',
-        'jsonschema'
+        'jsonschema',
+        'spacy'
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
