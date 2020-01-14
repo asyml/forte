@@ -13,7 +13,7 @@ env:
 install:
   - pip install --upgrade pip
   - pip install --progress-bar off torch==$TORCH_VER
-  - pip install --progress-bar off .[ner,srl,txtgen,stanfordnlp,test,example,ir]
+  - pip install --progress-bar off .[ner,srl,txtgen,stanfordnlp,test,example,ir,spacy]
   # Install texar-pytorch.
   - git clone https://github.com/asyml/texar-pytorch.git
   - cd texar-pytorch

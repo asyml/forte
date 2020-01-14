@@ -43,7 +43,8 @@ setuptools.setup(
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'ir': ['faiss-cpu>=1.6.1', 'elasticsearch']
+        'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
+        'spacy': ['spacy']
     },
     package_data={
     },
