@@ -119,6 +119,8 @@ class TestNLTKNER(unittest.TestCase):
         self.nltk.add_processor(NLTKPOSTagger())
         self.nltk.add_processor(NLTKNER())
 
+        self.nltk.initialize()
+
     def test_ner(self):
         sentences = ["This tool is called Forte.",
                      "The goal of this project to help you build NLP "
