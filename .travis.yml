@@ -42,7 +42,7 @@ script:
   # type checking
   - mypy .
   # needed for test cases
-  - python -m nltk.downloader punkt averaged_perceptron_tagger
+  - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet
   - export PYTHONPATH=`pwd`
   # unit tests
   - pytest
