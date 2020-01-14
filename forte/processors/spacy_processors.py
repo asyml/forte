@@ -12,90 +12,94 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import spacy
+from typing import List
 
+import spacy
+from texar.torch import HParams
+
+from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Token, Sentence
 
 
-class SpacySentenceSegmenter(PackProcessor):
-    """
-    A wrapper of spaCy sentence segmenter.
-    """
+__all__ = [
+    "SpacyProcessor",
+]
 
-    def _process(self, input_pack: DataPack):
-        text = input_pack.text
-        end_pos = 0
+
+class SpacyProcessor(PackProcessor):
+    """
+    A wrapper for spaCy processors
+    """
+    def __init__(self):
+        super().__init__()
+        self.processors = ""
+        self.nlp = None
+        self.lang = 'en_core_web_sm'
+
+    def set_up(self):
         try:
-            nlp = spacy.load("en_core_web_sm")
+            self.nlp = spacy.load(self.lang)
         except OSError:
             from spacy.cli.download import download
-            download('en_core_web_sm')
-            nlp = spacy.load("en_core_web_sm")
+            download(self.lang)
+            self.nlp = spacy.load(self.lang)
 
-        paragraphs = [p for p in text.split('\n') if p]
-        for paragraph in paragraphs:
-            doc = nlp(paragraph)
-            for sent in doc.sents:
-                begin_pos = text.find(sent, end_pos)
-                end_pos = begin_pos + len(sent)
-                sentence_entry = Sentence(input_pack, begin_pos, end_pos)
-                input_pack.add_or_get_entry(sentence_entry)
+    # pylint: disable=unused-argument
+    def initialize(self, resource: Resources,
+                   configs: HParams):
+        self.processors = configs.processors
+        self.lang = configs.lang
+        self.set_up()
 
+    @staticmethod
+    def default_hparams():
+        """
+        This defines a basic Hparams structure for spaCy.
+        Returns:
 
-class SpacyWordTokenizer(PackProcessor):
-    """
-    A wrapper for spaCy word tokenizer
-    """
-    def __init__(self):
-        super().__init__()
-        self.sentence_component = None
-
-    def _process(self, input_pack: DataPack):
-
-        for sentence in input_pack.get(entry_type=Sentence,
-                                       component=self.sentence_component):
-            offset = sentence.span.begin
-
-            try:
-                nlp = spacy.load("en_core_web_sm")
-            except OSError:
-                from spacy.cli.download import download
-                download('en_core_web_sm')
-                nlp = spacy.load("en_core_web_sm")
-
-            doc = nlp(sentence.text)
-            for word in doc:
-                begin_pos = sentence.text.find(word, end_pos)
-                end_pos = begin_pos + len(word)
-                token = Token(input_pack, begin_pos + offset, end_pos + offset)
-                input_pack.add_or_get_entry(token)
-
-
-class SpacyPOSTagger(PackProcessor):
-    """
-    A wrapper for spaCy POSTagger.
-    """
-    def __init__(self):
-        super().__init__()
-        self.token_component = None
+        """
+        return {
+            'processors': 'tokenize, pos, lemma',
+            'lang': 'en_core_web_sm',
+            # Language code for the language to build the Pipeline
+            'use_gpu': False,
+        }
 
     def _process(self, input_pack: DataPack):
-        for sentence in input_pack.get(entry_type=Sentence,
-                                       component=self.sentence_component):
-            offset = sentence.span.begin
-            try:
-                nlp = spacy.load("en_core_web_sm")
-            except OSError:
-                from spacy.cli.download import download
-                download('en_core_web_sm')
-                nlp = spacy.load("en_core_web_sm")
-            doc = nlp(sentence.text)
-            for word in doc:
-                begin_pos = sentence.text.find(word, end_pos)
-                end_pos = begin_pos + len(word)
-                token = Token(input_pack, begin_pos + offset, end_pos + offset)
-                token.set_fields(pos=word.tag_)
-                input_pack.add_or_get_entry(token)
+        doc = input_pack.text
+        end_pos = 0
+
+        # sentence parsing
+        sentences = self.nlp(doc).sents
+
+        for sentence in sentences:
+            begin_pos = doc.find(sentence[0].text, end_pos)
+            end_pos = doc.find(sentence[-1].text, begin_pos) + len(
+                sentence[-1].text)
+            sentence_entry = Sentence(input_pack, begin_pos, end_pos)
+            input_pack.add_or_get_entry(sentence_entry)
+
+            tokens: List[Token] = []
+
+            if "tokenize" in self.processors:
+                offset = sentence_entry.span.begin
+                end_pos_word = 0
+
+                # Iterating through spaCy token objects
+                for word in sentence:
+                    begin_pos_word = sentence_entry.text.find(word.text,
+                                                              end_pos_word)
+                    end_pos_word = begin_pos_word + len(word.text)
+                    token = Token(input_pack, begin_pos_word + offset,
+                                  end_pos_word + offset)
+
+                    if "pos" in self.processors:
+                        token.set_fields(pos=word.tag_)
+
+                    if "lemma" in self.processors:
+                        token.set_fields(lemma=word.lemma_)
+
+                    tokens.append(token)
+                    input_pack.add_or_get_entry(token)
