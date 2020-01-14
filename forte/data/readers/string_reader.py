@@ -34,7 +34,7 @@ class StringReader(PackReader):
     """
     # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
-        return "cached_string_file"
+        return str(hash(collection)) + '.html'
 
     def _collect(self,  # type: ignore
                  string_data: Union[List[str], str]) -> Iterator[str]:
@@ -63,6 +63,6 @@ class StringReader(PackReader):
         document = Document(pack, 0, len(data_source))
         pack.add_or_get_entry(document)
 
-        pack.set_text(data_source, replace_func=self.text_replace_operation)
+        self.set_text(pack, data_source)
 
         yield pack

@@ -31,6 +31,9 @@ class Span:
         self.begin = begin
         self.end = end
 
+    def __repr__(self):
+        return f'({self.begin}, {self.end})'
+
     def __lt__(self, other):
         if self.begin == other.begin:
             return self.end < other.end
