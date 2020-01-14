@@ -7,7 +7,7 @@ import unittest
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
-    NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer
+    NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer, NLTKNER
 from ft.onto.base_ontology import Token, Sentence
 
 
@@ -107,6 +107,33 @@ class TestNLTKLemmatizer(unittest.TestCase):
             for j, token in enumerate(
                     pack.get(entry_type=Token, range_annotation=sentence)):
                 self.assertEqual(token.lemma, tokens[i][j])
+
+
+class TestNLTKNER(unittest.TestCase):
+
+    def setUp(self):
+        self.nltk = Pipeline()
+        self.nltk.set_reader(StringReader())
+        self.nltk.add_processor(NLTKSentenceSegmenter())
+        self.nltk.add_processor(NLTKWordTokenizer())
+        self.nltk.add_processor(NLTKPOSTagger())
+        self.nltk.add_processor(NLTKNER())
+
+    def test_ner(self):
+        sentences = ["This tool is called Forte.",
+                     "The goal of this project to help you build NLP "
+                     "pipelines.",
+                     "NLP has never been made this easy before."]
+        ners = [["", "", "", "", "", ""],
+                  ["", "", "", "", "", "", "", "",
+                   "", "ORGANIZATION", "", ""],
+                  ["ORGANIZATION", "", "", "", "", "", "", "", ""]]
+        document = ' '.join(sentences)
+        pack = self.nltk.process(document)
+        for i, sentence in enumerate(pack.get(Sentence)):
+            for j, token in enumerate(
+                    pack.get(entry_type=Token, range_annotation=sentence)):
+                self.assertEqual(token.ner, ners[i][j])
 
 
 if __name__ == "__main__":

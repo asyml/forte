@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nltk import word_tokenize, pos_tag, sent_tokenize
+from nltk import word_tokenize, pos_tag, sent_tokenize, ne_chunk
 from nltk.stem import WordNetLemmatizer
 
 from forte.data.data_pack import DataPack
@@ -25,6 +25,7 @@ __all__ = [
     "NLTKSentenceSegmenter",
     "NLTKWordTokenizer",
     "NLTKLemmatizer",
+    "NLTKNER",
 ]
 
 
@@ -111,3 +112,24 @@ class NLTKSentenceSegmenter(PackProcessor):
                 end_pos = begin_pos + len(sentence_text)
                 sentence_entry = Sentence(input_pack, begin_pos, end_pos)
                 input_pack.add_or_get_entry(sentence_entry)
+
+
+class NLTKNER(PackProcessor):
+    r"""A wrapper of NLTK NER.
+    """
+    def __init__(self):
+        super().__init__()
+        self.token_component = None
+
+    def _process(self, input_pack: DataPack):
+        for sentence in input_pack.get(Sentence):
+            token_entries = list(input_pack.get(entry_type=Token,
+                                                range_annotation=sentence,
+                                                component=self.token_component))
+            tokens = [(token.text, token.pos) for token in token_entries]
+            ne_tree = ne_chunk(tokens)
+
+            ners = [chunk.label() if hasattr(chunk, 'label') else ''
+                    for chunk in ne_tree]
+            for token, ner in zip(token_entries, ners):
+                token.set_fields(ner=ner)
