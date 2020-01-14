@@ -13,8 +13,12 @@
 # limitations under the License.
 
 from nltk import word_tokenize, pos_tag, sent_tokenize
+from nltk.chunk import tree2conlltags, RegexpParser
 from nltk.stem import WordNetLemmatizer
 
+from texar.torch import HParams
+
+from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Token, Sentence
@@ -25,6 +29,7 @@ __all__ = [
     "NLTKSentenceSegmenter",
     "NLTKWordTokenizer",
     "NLTKLemmatizer",
+    "NLTKChunker",
 ]
 
 
@@ -95,6 +100,37 @@ def penn2morphy(penntag: str) -> str:
         return morphy_tag[penntag[:2]]
     else:
         return 'n'
+
+
+class NLTKChunker(PackProcessor):
+    r"""A wrapper of NLTK chunker.
+    """
+    def __init__(self):
+        super().__init__()
+        self.chunker = None
+        self.token_component = None
+
+    def initialize(self, resource: Resources, configs: HParams):
+        self.chunker = RegexpParser(configs.pattern)
+
+    @staticmethod
+    def default_hparams():
+        r"""This defines a basic Hparams structure for NLTKChunker.
+        """
+        return {
+            'pattern': 'NP: {<DT>?<JJ>*<NN>}',
+        }
+
+    def _process(self, input_pack: DataPack):
+        for sentence in input_pack.get(Sentence):
+            token_entries = list(input_pack.get(entry_type=Token,
+                                                range_annotation=sentence,
+                                                component=self.token_component))
+            tokens = [(token.text, token.pos) for token in token_entries]
+            cs = self.chunker.parse(tokens)
+            iob_tagged = tree2conlltags(cs)
+            for token, iob_tag in zip(token_entries, iob_tagged):
+                token.set_fields(chunk=iob_tag[2])
 
 
 class NLTKSentenceSegmenter(PackProcessor):
