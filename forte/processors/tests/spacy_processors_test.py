@@ -68,27 +68,43 @@ class TestSpacyProcessor(unittest.TestCase):
                      "NLP has never been made this easy before."]
         document = ' '.join(sentences)
         pack = spacy.process(document)
-
+        tokens = [x for x in pack.annotations if
+                  isinstance(x, Token)]
         if "tokenize" in value:
-            tokens = [x.text for x in pack.annotations if isinstance(x, Token)]
+            exp_pos = ['DT', 'NN', 'VBZ', 'VBN', 'NNP', '.', 'DT', 'NN', 'IN',
+                       'DT', 'NN', 'TO', 'VB', 'PRP', 'VB', 'NNP', 'NNS', '.',
+                       'NNP', 'VBZ', 'RB', 'VBN', 'VBN', 'DT', 'JJ', 'RB', '.']
+
+            exp_lemma = ['this', 'tool', 'be', 'call', 'Forte', '.', 'the',
+                         'goal', 'of', 'this', 'project', 'to', 'help',
+                         '-PRON-', 'build', 'NLP', 'pipeline', '.', 'NLP',
+                         'have', 'never', 'be', 'make', 'this', 'easy',
+                         'before', '.']
+
+            tokens_text = [x.text for x in tokens]
+
             pos = [x.pos for x in pack.annotations if isinstance(x, Token)]
             lemma = [x.lemma for x in pack.annotations if isinstance(x, Token)]
-            document = document.replace('.', ' .')
-            self.assertEqual(tokens, document.split())
+            document_ = document.replace('.', ' .')
+            self.assertEqual(tokens_text, document_.split())
+
+            # Check token texts
+            for token, text in zip(tokens, tokens_text):
+                start, end = token.span.begin, token.span.end
+                self.assertEqual(document[start:end], text)
 
             if "pos" in value:
-                self.assertIsNotNone(pos)
+                self.assertListEqual(pos, exp_pos)
             else:
                 none_pos = [None] * len(pos)
                 self.assertListEqual(pos, none_pos)
 
             if "lemma" in value:
-                self.assertIsNotNone(lemma)
+                self.assertListEqual(lemma, exp_lemma)
             else:
                 none_lemma = [None] * len(lemma)
                 self.assertListEqual(lemma, none_lemma)
         else:
-            tokens = [x for x in pack.annotations if isinstance(x, Token)]
             self.assertListEqual(tokens, [])
 
 

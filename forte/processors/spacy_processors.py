@@ -15,6 +15,7 @@
 from typing import List
 
 import spacy
+from spacy.language import Language
 from texar.torch import HParams
 
 from forte.common.resources import Resources
@@ -34,9 +35,9 @@ class SpacyProcessor(PackProcessor):
     """
     def __init__(self):
         super().__init__()
-        self.processors = ""
-        self.nlp = None
-        self.lang = 'en_core_web_sm'
+        self.processors: str = ""
+        self.nlp: Language = None
+        self.lang: str = 'en_core_web_sm'
 
     def set_up(self):
         try:
@@ -69,31 +70,25 @@ class SpacyProcessor(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         doc = input_pack.text
-        end_pos = 0
 
         # sentence parsing
         sentences = self.nlp(doc).sents
 
         for sentence in sentences:
-            begin_pos = doc.find(sentence[0].text, end_pos)
-            end_pos = doc.find(sentence[-1].text, begin_pos) + len(
-                sentence[-1].text)
-            sentence_entry = Sentence(input_pack, begin_pos, end_pos)
-            input_pack.add_or_get_entry(sentence_entry)
+            sentence_entry = Sentence(input_pack,
+                                      sentence.start_char,
+                                      sentence.end_char)
+            input_pack.add_entry(sentence_entry)
 
             tokens: List[Token] = []
 
             if "tokenize" in self.processors:
-                offset = sentence_entry.span.begin
-                end_pos_word = 0
-
                 # Iterating through spaCy token objects
                 for word in sentence:
-                    begin_pos_word = sentence_entry.text.find(word.text,
-                                                              end_pos_word)
+                    begin_pos_word = word.idx
                     end_pos_word = begin_pos_word + len(word.text)
-                    token = Token(input_pack, begin_pos_word + offset,
-                                  end_pos_word + offset)
+                    token = Token(input_pack, begin_pos_word,
+                                  end_pos_word)
 
                     if "pos" in self.processors:
                         token.set_fields(pos=word.tag_)
@@ -102,4 +97,4 @@ class SpacyProcessor(PackProcessor):
                         token.set_fields(lemma=word.lemma_)
 
                     tokens.append(token)
-                    input_pack.add_or_get_entry(token)
+                    input_pack.add_entry(token)
