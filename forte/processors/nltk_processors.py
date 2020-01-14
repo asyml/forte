@@ -110,6 +110,7 @@ class NLTKChunker(PackProcessor):
         self.chunker = None
         self.token_component = None
 
+    # pylint: disable=unused-argument
     def initialize(self, resource: Resources, configs: HParams):
         self.chunker = RegexpParser(configs.pattern)
 
