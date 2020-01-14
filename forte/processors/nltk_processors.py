@@ -13,15 +13,23 @@
 # limitations under the License.
 
 from nltk import word_tokenize, pos_tag, sent_tokenize
+from nltk.stem import WordNetLemmatizer
 
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Token, Sentence
 
 
+__all__ = [
+    "NLTKPOSTagger",
+    "NLTKSentenceSegmenter",
+    "NLTKWordTokenizer",
+    "NLTKLemmatizer",
+]
+
+
 class NLTKWordTokenizer(PackProcessor):
-    """
-    A wrapper of NLTK word tokenizer.
+    r"""A wrapper of NLTK word tokenizer.
     """
     def __init__(self):
         super().__init__()
@@ -40,8 +48,7 @@ class NLTKWordTokenizer(PackProcessor):
 
 
 class NLTKPOSTagger(PackProcessor):
-    """
-    A wrapper of NLTK pos tagger.
+    r"""A wrapper of NLTK pos tagger.
     """
     def __init__(self):
         super().__init__()
@@ -58,11 +65,41 @@ class NLTKPOSTagger(PackProcessor):
                 token.set_fields(pos=tag[1])
 
 
-class NLTKSentenceSegmenter(PackProcessor):
+class NLTKLemmatizer(PackProcessor):
+    r"""A wrapper of NLTK lemmatizer.
     """
-    A wrapper of NLTK sentence tokenizer.
-    """
+    def __init__(self):
+        super().__init__()
+        self.token_component = None
+        self.lemmatizer = WordNetLemmatizer()
 
+    def _process(self, input_pack: DataPack):
+        for sentence in input_pack.get(Sentence):
+            token_entries = list(input_pack.get(entry_type=Token,
+                                                range_annotation=sentence,
+                                                component=self.token_component))
+            token_texts = [token.text for token in token_entries]
+            token_pos = [penn2morphy(token.pos)  # type: ignore
+                         for token in token_entries]
+            lemmas = [self.lemmatizer.lemmatize(token_texts[i], token_pos[i])
+                      for i in range(len(token_texts))]
+            for token, lemma in zip(token_entries, lemmas):
+                token.set_fields(lemma=lemma)
+
+
+def penn2morphy(penntag: str) -> str:
+    r"""Converts tags from Penn format to Morphy.
+    """
+    morphy_tag = {'NN': 'n', 'JJ': 'a', 'VB': 'v', 'RB': 'r'}
+    if penntag[:2] in morphy_tag:
+        return morphy_tag[penntag[:2]]
+    else:
+        return 'n'
+
+
+class NLTKSentenceSegmenter(PackProcessor):
+    r"""A wrapper of NLTK sentence tokenizer.
+    """
     def _process(self, input_pack: DataPack):
         text = input_pack.text
         end_pos = 0
