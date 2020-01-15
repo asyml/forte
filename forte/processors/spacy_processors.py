@@ -78,7 +78,7 @@ class SpacyProcessor(PackProcessor):
             sentence_entry = Sentence(input_pack,
                                       sentence.start_char,
                                       sentence.end_char)
-            input_pack.add_entry(sentence_entry)
+            input_pack.add_or_get_entry(sentence_entry)
 
             tokens: List[Token] = []
 
@@ -97,4 +97,4 @@ class SpacyProcessor(PackProcessor):
                         token.set_fields(lemma=word.lemma_)
 
                     tokens.append(token)
-                    input_pack.add_entry(token)
+                    input_pack.add_or_get_entry(token)
