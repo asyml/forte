@@ -80,8 +80,6 @@ class SpacyProcessor(PackProcessor):
                                       sentence.end_char)
             input_pack.add_or_get_entry(sentence_entry)
 
-            tokens: List[Token] = []
-
             if "tokenize" in self.processors:
                 # Iterating through spaCy token objects
                 for word in sentence:
@@ -96,5 +94,4 @@ class SpacyProcessor(PackProcessor):
                     if "lemma" in self.processors:
                         token.set_fields(lemma=word.lemma_)
 
-                    tokens.append(token)
                     input_pack.add_or_get_entry(token)
