@@ -1,128 +1,167 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-from forte.data import DataPack
-from forte.data.ontology import Annotation, Generic
-from ft.onto.base_ontology import Document
+# ***automatically_generated***
+# flake8: noqa
+# mypy: ignore-errors
+# pylint: skip-file
+"""
+Automatically generated file. Do not change manually.
+"""
+import forte.data.data_pack
+import forte.data.ontology.top
+import ft.onto
+import typing
 
 
-class WikiPage(Document):
-    def __init__(self, pack: DataPack, begin: int, end: int):
+__all__ = []
+
+
+__all__.extend('WikiBody')
+
+
+class WikiBody(forte.data.ontology.top.Annotation):
+    """
+    Entry defining a phrase in the document.
+    """
+
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._body: WikiBody
-        self._page_id: str
-        self._page_name: str
 
-    def set_page_id(self, pid: str):
-        self.set_fields(_page_id=pid)
+
+__all__.extend('WikiPage')
+
+
+class WikiPage(forte.data.ontology.top.Annotation):
+
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self._body: typing.Optional[ft.onto.wikipedia.WikiBody] = None
+        self._page_id: typing.Optional[str] = None
+        self._page_name: typing.Optional[str] = None
+
+    @property
+    def body(self):
+        return self._body
+
+    def set_body(self, body: typing.Optional[ft.onto.wikipedia.WikiBody]):
+        self.set_fields(_body=body.tid)
 
     @property
     def page_id(self):
         return self._page_id
 
-    def set_page_name(self, page_name: str):
-        self.set_fields(_page_name=page_name)
+    def set_page_id(self, page_id: typing.Optional[str]):
+        self.set_fields(_page_id=page_id)
 
+    @property
     def page_name(self):
         return self._page_name
 
+    def set_page_name(self, page_name: typing.Optional[str]):
+        self.set_fields(_page_name=page_name)
 
-# pylint: disable=useless-super-delegation
-class WikiBody(Annotation):
-    def __init__(self, pack: DataPack, begin: int, end: int):
+
+__all__.extend('WikiParagraph')
+
+
+class WikiParagraph(forte.data.ontology.top.Annotation):
+    """
+    a paragraph in the document.
+    """
+
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
 
 
-class WikiSection(Annotation):
-    def __init__(self, pack: DataPack, begin: int, end: int):
+__all__.extend('WikiTitle')
+
+
+class WikiTitle(forte.data.ontology.top.Annotation):
+    """
+    the title of the document.
+    """
+
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._is_intro: bool
-
-    def set_is_intro(self, is_intro: bool):
-        self.set_fields(_is_intro=is_intro)
-
-    @property
-    def is_intro(self):
-        return self._is_intro
 
 
-class WikiParagraph(Annotation):
-    pass
+__all__.extend('WikiAnchor')
 
 
-class WikiTitle(Annotation):
-    pass
+class WikiAnchor(forte.data.ontology.top.Annotation):
+    """
+    an anchor is a text field that link to other part of the document.
+    """
 
-
-class WikiAnchor(Annotation):
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._target_page_name: str
+        self._target_page_name: typing.Optional[str] = None
 
     @property
     def target_page_name(self):
         return self._target_page_name
 
-    def set_target_page_name(self, page_name: str):
-        self.set_fields(_target_page_name=page_name)
+    def set_target_page_name(self, target_page_name: typing.Optional[str]):
+        self.set_fields(_target_page_name=target_page_name)
 
 
-class WikiInfoBoxProperty(Generic):
-    def __init__(self, pack: DataPack):
+__all__.extend('WikiInfoBoxProperty')
+
+
+class WikiInfoBoxProperty(forte.data.ontology.top.Generic):
+    """
+    represents one info box in the property name space of the page.
+    """
+
+    def __init__(self, pack: forte.data.base_pack.PackType):
         super().__init__(pack)
-        self._key: str
-        self._value: str
+        self._key: typing.Optional[str] = None
+        self._value: typing.Optional[str] = None
 
     @property
     def key(self):
         return self._key
 
-    def set_key(self, key: str):
+    def set_key(self, key: typing.Optional[str]):
         self.set_fields(_key=key)
 
     @property
     def value(self):
         return self._value
 
-    def set_value(self, value: str):
+    def set_value(self, value: typing.Optional[str]):
         self.set_fields(_value=value)
 
 
-class WikiInfoBoxMapped(Generic):
-    def __init__(self, pack: DataPack):
+__all__.extend('WikiInfoBoxMapped')
+
+
+class WikiInfoBoxMapped(forte.data.ontology.top.Generic):
+    """
+    represents one info box in the mapped namespace of the page.
+    """
+
+    def __init__(self, pack: forte.data.base_pack.PackType):
         super().__init__(pack)
-        self._key: str
-        self._value: str
-        self._infobox_type: str
+        self._key: typing.Optional[str] = None
+        self._value: typing.Optional[str] = None
+        self._infobox_type: typing.Optional[str] = None
 
     @property
     def key(self):
         return self._key
 
-    def set_key(self, key: str):
+    def set_key(self, key: typing.Optional[str]):
         self.set_fields(_key=key)
 
     @property
     def value(self):
         return self._value
 
-    def set_value(self, value: str):
+    def set_value(self, value: typing.Optional[str]):
         self.set_fields(_value=value)
 
     @property
     def infobox_type(self):
         return self._infobox_type
 
-    def set_infobox_type(self, infobox_type: str):
+    def set_infobox_type(self, infobox_type: typing.Optional[str]):
         self.set_fields(_infobox_type=infobox_type)
