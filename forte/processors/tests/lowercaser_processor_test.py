@@ -1,4 +1,4 @@
-"""This module tests Stanford NLP processors."""
+"""This module tests LowerCaser processor."""
 import unittest
 
 from forte.pipeline import Pipeline
