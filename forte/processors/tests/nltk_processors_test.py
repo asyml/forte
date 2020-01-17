@@ -8,7 +8,7 @@ from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
     NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer, NLTKNER
-from ft.onto.base_ontology import Token, Sentence
+from ft.onto.base_ontology import Token, Sentence, EntityMention
 
 
 class TestNLTKSentenceSegmenter(unittest.TestCase):
@@ -122,20 +122,20 @@ class TestNLTKNER(unittest.TestCase):
         self.nltk.initialize()
 
     def test_ner(self):
-        sentences = ["This tool is called Forte.",
+        sentences = ["This tool is called New   York.",
                      "The goal of this project to help you build NLP "
                      "pipelines.",
                      "NLP has never been made this easy before."]
-        ners = [["", "", "", "", "", ""],
-                  ["", "", "", "", "", "", "", "",
-                   "", "ORGANIZATION", "", ""],
-                  ["ORGANIZATION", "", "", "", "", "", "", "", ""]]
         document = ' '.join(sentences)
         pack = self.nltk.process(document)
-        for i, sentence in enumerate(pack.get(Sentence)):
-            for j, token in enumerate(
-                    pack.get(entry_type=Token, range_annotation=sentence)):
-                self.assertEqual(token.ner, ners[i][j])
+
+        entities_text = [x.text for x in pack.annotations if
+                         isinstance(x, EntityMention)]
+        entities_type = [x.ner_type for x in pack.annotations if
+                         isinstance(x, EntityMention)]
+
+        self.assertEqual(entities_text, ['New   York', 'NLP', 'NLP'])
+        self.assertEqual(entities_type, ['GPE', 'ORGANIZATION', 'ORGANIZATION'])
 
 
 if __name__ == "__main__":

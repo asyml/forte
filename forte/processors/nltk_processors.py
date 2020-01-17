@@ -17,7 +17,7 @@ from nltk.stem import WordNetLemmatizer
 
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
-from ft.onto.base_ontology import Token, Sentence
+from ft.onto.base_ontology import EntityMention, Token, Sentence
 
 
 __all__ = [
@@ -129,7 +129,15 @@ class NLTKNER(PackProcessor):
             tokens = [(token.text, token.pos) for token in token_entries]
             ne_tree = ne_chunk(tokens)
 
-            ners = [chunk.label() if hasattr(chunk, 'label') else ''
-                    for chunk in ne_tree]
-            for token, ner in zip(token_entries, ners):
-                token.set_fields(ner=ner)
+            index = 0
+            for chunk in ne_tree:
+                if hasattr(chunk, 'label'):
+                    begin_pos = token_entries[index].span.begin
+                    end_pos = token_entries[index + len(chunk) - 1].span.end
+                    entity = EntityMention(input_pack, begin_pos, end_pos)
+                    kwargs_i = {"ner_type": chunk.label()}
+                    entity.set_fields(**kwargs_i)
+                    input_pack.add_or_get_entry(entity)
+                    index += len(chunk)
+                else:
+                    index += 1
