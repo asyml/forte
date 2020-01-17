@@ -129,10 +129,10 @@ class TestNLTKNER(unittest.TestCase):
         document = ' '.join(sentences)
         pack = self.nltk.process(document)
 
-        entities_text = [x.text for x in pack.annotations if
-                         isinstance(x, EntityMention)]
-        entities_type = [x.ner_type for x in pack.annotations if
-                         isinstance(x, EntityMention)]
+        entities_entries = list(pack.get(entry_type=EntityMention))
+
+        entities_text = [x.text for x in entities_entries]
+        entities_type = [x.ner_type for x in entities_entries]
 
         self.assertEqual(entities_text, ['New   York', 'NLP', 'NLP'])
         self.assertEqual(entities_type, ['GPE', 'ORGANIZATION', 'ORGANIZATION'])
