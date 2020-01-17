@@ -111,7 +111,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
                 if os.path.exists(path):
                     with open(path, "rb") as f:
-                        weights = pickle.load(f)
+                        weights = torch.load(f, map_location=self.device)
                         model.load_state_dict(weights)
                 return model
 
