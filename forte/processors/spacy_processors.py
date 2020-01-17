@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
 import spacy
 from spacy.language import Language
 from texar.torch import HParams
@@ -78,9 +76,7 @@ class SpacyProcessor(PackProcessor):
             sentence_entry = Sentence(input_pack,
                                       sentence.start_char,
                                       sentence.end_char)
-            input_pack.add_entry(sentence_entry)
-
-            tokens: List[Token] = []
+            input_pack.add_or_get_entry(sentence_entry)
 
             if "tokenize" in self.processors:
                 # Iterating through spaCy token objects
@@ -96,5 +92,4 @@ class SpacyProcessor(PackProcessor):
                     if "lemma" in self.processors:
                         token.set_fields(lemma=word.lemma_)
 
-                    tokens.append(token)
-                    input_pack.add_entry(token)
+                    input_pack.add_or_get_entry(token)
