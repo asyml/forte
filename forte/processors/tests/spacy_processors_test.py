@@ -7,7 +7,7 @@ from texar.torch import HParams
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.spacy_processors import SpacyProcessor
-from ft.onto.base_ontology import Token
+from ft.onto.base_ontology import Token, EntityMention
 
 
 @ddt
@@ -47,7 +47,9 @@ class TestSpacyProcessor(unittest.TestCase):
         "tokenize, pos, lemma",
         "tokenize, lemma",
         "lemma",
-        "lemma, pos"
+        "ner, tokenize, lemma, pos",
+        "ner",
+
     )
     def test_spacy_variation_pipeline(self, value):
         spacy = Pipeline()
@@ -106,6 +108,35 @@ class TestSpacyProcessor(unittest.TestCase):
                 self.assertListEqual(lemma, none_lemma)
         else:
             self.assertListEqual(tokens, [])
+
+        if "ner" in value:
+            entities_text = [x.text for x in pack.annotations if isinstance(x, EntityMention)]
+            entities_type = [x.ner_type for x in pack.annotations if
+                             isinstance(x, EntityMention)]
+
+            self.assertEqual(entities_text, ['Forte', 'NLP', 'NLP'])
+            self.assertEqual(entities_type, ['GPE', 'ORG', 'ORG'])
+
+    def test_neg_spacy_processor(self):
+        spacy = Pipeline()
+        spacy.set_reader(StringReader())
+
+        config = HParams({
+            "processors": 'ner',
+            "lang": "xx_ent_wiki_sm",
+            # Language code for the language to build the Pipeline
+            "use_gpu": False
+        }, SpacyProcessor.default_hparams())
+        spacy.add_processor(SpacyProcessor(), config=config)
+        spacy.initialize()
+
+        sentences = ["This tool is called Forte.",
+                     "The goal of this project to help you build NLP "
+                     "pipelines.",
+                     "NLP has never been made this easy before."]
+        document = ' '.join(sentences)
+        with self.assertRaises(ValueError):
+            _ = spacy.process(document)
 
 
 if __name__ == "__main__":
