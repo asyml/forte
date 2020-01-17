@@ -14,7 +14,7 @@
 """
 Utility functions
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from pydoc import locate
 import yaml
 
@@ -29,7 +29,7 @@ __all__ = [
 ]
 
 
-def get_full_module_name(o: object, lower: bool = False) -> str:
+def get_full_module_name(o, lower: bool = False) -> str:
     r"""Returns the full module and class name of an object ``o``. For example,
     for our :class:`OntonotesReader`, returns
     :class:'forte.data.readers.ontonotes_reader.OntonotesReader'.
@@ -53,7 +53,7 @@ def get_full_module_name(o: object, lower: bool = False) -> str:
         return name
 
 
-def get_class_name(o: object, lower: bool = False) -> str:
+def get_class_name(o, lower: bool = False) -> str:
     r"""Returns the class name of an object ``o``.
 
     Args:
@@ -72,7 +72,7 @@ def get_class_name(o: object, lower: bool = False) -> str:
 
 
 def get_class(class_name: str,
-              module_paths: Optional[List[str]] = None) -> object:
+              module_paths: Optional[List[str]] = None):
     r"""Returns the class based on class name.
 
     Args:
@@ -103,7 +103,7 @@ def get_class(class_name: str,
     return class_
 
 
-def get_qual_name(o: object, lower: bool = False) -> str:
+def get_qual_name(o, lower: bool = False) -> str:
     r"""Returns the qualified name of an object ``o``.
 
     Args:
@@ -123,8 +123,7 @@ def get_qual_name(o: object, lower: bool = False) -> str:
 
 def create_class_with_kwargs(class_name: str,
                              class_args: Dict,
-                             h_params: Optional[Dict] = None) -> \
-        Tuple[object, HParams]:
+                             h_params: Optional[Dict] = None):
     r"""Create class with the given arguments.
 
     Args:
