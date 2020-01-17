@@ -149,8 +149,8 @@ class TestNLTKChunker(unittest.TestCase):
         self.assertEqual(entities_text, ['This tool', 'The goal',
                                          'this project'])
         self.assertEqual(entities_type, ['NP', 'NP', 'NP'])
-        
-        
+
+
 class TestNLTKNER(unittest.TestCase):
 
     def setUp(self):
