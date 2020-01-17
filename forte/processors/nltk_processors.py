@@ -132,6 +132,8 @@ class NLTKNER(PackProcessor):
             index = 0
             for chunk in ne_tree:
                 if hasattr(chunk, 'label'):
+                    # For example:
+                    # chunk: Tree('GPE', [('New', 'NNP'), ('York', 'NNP')])
                     begin_pos = token_entries[index].span.begin
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     entity = EntityMention(input_pack, begin_pos, end_pos)
@@ -140,4 +142,6 @@ class NLTKNER(PackProcessor):
                     input_pack.add_or_get_entry(entity)
                     index += len(chunk)
                 else:
+                    # For example:
+                    # chunk: ('This', 'DT')
                     index += 1
