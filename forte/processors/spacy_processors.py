@@ -130,5 +130,6 @@ class SpacyProcessor(PackProcessor):
             self._process_parser(sentences, input_pack)
         except ValueError:
             raise ValueError(f"The provided language model does not support"
-                             f" SpaCy's parser pipeline. Please check input and"
-                             f" try again.")
+                             f" SpaCy's parser pipeline. Refer to "
+                             f"https://spacy.io/models/ for more information."
+                             f" Please check input and try again.")
