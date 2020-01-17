@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from nltk import word_tokenize, pos_tag, sent_tokenize
-from nltk.chunk import tree2conlltags, RegexpParser
+from nltk.chunk import RegexpParser
 from nltk.stem import WordNetLemmatizer
 
 from texar.torch import HParams
