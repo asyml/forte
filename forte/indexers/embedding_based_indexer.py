@@ -71,7 +71,7 @@ class EmbeddingBasedIndexer:
                                 self._hparams.device, faiss.get_num_gpus())
             config_class_name = \
                 self.INDEX_TYPE_TO_CONFIG.get(index_class.__name__)
-            config = utils.get_class(config_class_name,
+            config = utils.get_class(config_class_name,  # type: ignore
                                      module_paths=["faiss"])()
             config.device = gpu_id
             self._index = index_class(gpu_resource, dim, config)

@@ -1,4 +1,7 @@
-"""This module tests indexer module."""
+"""
+Unit tests for indexer module.
+"""
+
 import time
 import unittest
 from ddt import ddt, data, unpack
@@ -11,6 +14,7 @@ from elasticsearch.helpers import bulk
 
 from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
+from forte.utils.test import performance_test
 
 
 class TestEmbeddingBasedIndexer(unittest.TestCase):
@@ -105,6 +109,7 @@ class TestElasticSearchIndexer(unittest.TestCase):
         results = set([hit["_source"]["key"] for hit in hits])
         self.assertEqual(results, documents)
 
+    @performance_test
     @data([100, 0.3], [500, 0.3], [1000, 0.3])
     @unpack
     def test_speed(self, size, epsilon):
