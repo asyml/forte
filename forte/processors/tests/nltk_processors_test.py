@@ -10,7 +10,7 @@ from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
     NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer, NLTKChunker
-from ft.onto.base_ontology import Token, Sentence
+from ft.onto.base_ontology import Token, Sentence, Phrase
 
 
 class TestNLTKSentenceSegmenter(unittest.TestCase):
@@ -138,16 +138,17 @@ class TestNLTKChunker(unittest.TestCase):
                      "The goal of this project to help you build NLP "
                      "pipelines.",
                      "NLP has never been made this easy before."]
-        tokens = [["B-NP", "I-NP", "O", "O", "O", "O"],
-                  ["B-NP", "I-NP", "O", "B-NP", "I-NP", "O", "O", "O",
-                   "O", "O", "O", "O"],
-                  ["O", "O", "O", "O", "O", "O", "O", "O", "O"]]
         document = ' '.join(sentences)
         pack = self.nltk.process(document)
-        for i, sentence in enumerate(pack.get(Sentence)):
-            for j, token in enumerate(
-                    pack.get(entry_type=Token, range_annotation=sentence)):
-                self.assertEqual(token.chunk, tokens[i][j])
+
+        entities_text = [x.text for x in pack.annotations if
+                         isinstance(x, Phrase)]
+        entities_type = [x.phrase_type for x in pack.annotations if
+                         isinstance(x, Phrase)]
+
+        self.assertEqual(entities_text, ['This tool', 'The goal',
+                                         'this project'])
+        self.assertEqual(entities_type, ['NP', 'NP', 'NP'])
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
-from ft.onto.base_ontology import Token, Sentence
+from ft.onto.base_ontology import Token, Sentence, Phrase
 
 
 __all__ = [
@@ -129,9 +129,19 @@ class NLTKChunker(PackProcessor):
                                                 component=self.token_component))
             tokens = [(token.text, token.pos) for token in token_entries]
             cs = self.chunker.parse(tokens)
-            iob_tagged = tree2conlltags(cs)
-            for token, iob_tag in zip(token_entries, iob_tagged):
-                token.set_fields(chunk=iob_tag[2])
+
+            index = 0
+            for chunk in cs:
+                if hasattr(chunk, 'label'):
+                    begin_pos = token_entries[index].span.begin
+                    end_pos = token_entries[index + len(chunk) - 1].span.end
+                    phrase = Phrase(input_pack, begin_pos, end_pos)
+                    kwargs_i = {"phrase_type": chunk.label()}
+                    phrase.set_fields(**kwargs_i)
+                    input_pack.add_or_get_entry(phrase)
+                    index += len(chunk)
+                else:
+                    index += 1
 
 
 class NLTKSentenceSegmenter(PackProcessor):
