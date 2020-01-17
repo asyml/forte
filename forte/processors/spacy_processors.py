@@ -35,7 +35,7 @@ class SpacyProcessor(PackProcessor):
         super().__init__()
         self.processors: str = ""
         self.nlp: Language = None
-        self.lang_model: str = 'en_core_web_sm'
+        self.lang_model: str = ''
 
     def set_up(self):
         try:
