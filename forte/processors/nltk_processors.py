@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nltk import word_tokenize, pos_tag, sent_tokenize
+from nltk import word_tokenize, pos_tag, sent_tokenize, ne_chunk
 from nltk.chunk import RegexpParser
 from nltk.stem import WordNetLemmatizer
 
@@ -21,7 +21,7 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
-from ft.onto.base_ontology import Token, Sentence, Phrase
+from ft.onto.base_ontology import EntityMention, Token, Sentence, Phrase
 
 
 __all__ = [
@@ -30,6 +30,7 @@ __all__ = [
     "NLTKWordTokenizer",
     "NLTKLemmatizer",
     "NLTKChunker",
+    "NLTKNER",
 ]
 
 
@@ -162,3 +163,36 @@ class NLTKSentenceSegmenter(PackProcessor):
                 end_pos = begin_pos + len(sentence_text)
                 sentence_entry = Sentence(input_pack, begin_pos, end_pos)
                 input_pack.add_or_get_entry(sentence_entry)
+
+
+class NLTKNER(PackProcessor):
+    r"""A wrapper of NLTK NER.
+    """
+    def __init__(self):
+        super().__init__()
+        self.token_component = None
+
+    def _process(self, input_pack: DataPack):
+        for sentence in input_pack.get(Sentence):
+            token_entries = list(input_pack.get(entry_type=Token,
+                                                range_annotation=sentence,
+                                                component=self.token_component))
+            tokens = [(token.text, token.pos) for token in token_entries]
+            ne_tree = ne_chunk(tokens)
+
+            index = 0
+            for chunk in ne_tree:
+                if hasattr(chunk, 'label'):
+                    # For example:
+                    # chunk: Tree('GPE', [('New', 'NNP'), ('York', 'NNP')])
+                    begin_pos = token_entries[index].span.begin
+                    end_pos = token_entries[index + len(chunk) - 1].span.end
+                    entity = EntityMention(input_pack, begin_pos, end_pos)
+                    kwargs_i = {"ner_type": chunk.label()}
+                    entity.set_fields(**kwargs_i)
+                    input_pack.add_or_get_entry(entity)
+                    index += len(chunk)
+                else:
+                    # For example:
+                    # chunk: ('This', 'DT')
+                    index += 1

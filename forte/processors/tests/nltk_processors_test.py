@@ -9,8 +9,8 @@ from texar.torch import HParams
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
-    NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer, NLTKChunker
-from ft.onto.base_ontology import Token, Sentence, Phrase
+    NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer, NLTKChunker, NLTKNER
+from ft.onto.base_ontology import Token, Sentence, Phrase, EntityMention
 
 
 class TestNLTKSentenceSegmenter(unittest.TestCase):
@@ -149,6 +149,35 @@ class TestNLTKChunker(unittest.TestCase):
         self.assertEqual(entities_text, ['This tool', 'The goal',
                                          'this project'])
         self.assertEqual(entities_type, ['NP', 'NP', 'NP'])
+        
+        
+class TestNLTKNER(unittest.TestCase):
+
+    def setUp(self):
+        self.nltk = Pipeline()
+        self.nltk.set_reader(StringReader())
+        self.nltk.add_processor(NLTKSentenceSegmenter())
+        self.nltk.add_processor(NLTKWordTokenizer())
+        self.nltk.add_processor(NLTKPOSTagger())
+        self.nltk.add_processor(NLTKNER())
+
+        self.nltk.initialize()
+
+    def test_ner(self):
+        sentences = ["This tool is called New   York.",
+                     "The goal of this project to help you build NLP "
+                     "pipelines.",
+                     "NLP has never been made this easy before."]
+        document = ' '.join(sentences)
+        pack = self.nltk.process(document)
+
+        entities_entries = list(pack.get(entry_type=EntityMention))
+
+        entities_text = [x.text for x in entities_entries]
+        entities_type = [x.ner_type for x in entities_entries]
+
+        self.assertEqual(entities_text, ['New   York', 'NLP', 'NLP'])
+        self.assertEqual(entities_type, ['GPE', 'ORGANIZATION', 'ORGANIZATION'])
 
 
 if __name__ == "__main__":
