@@ -133,6 +133,8 @@ class NLTKChunker(PackProcessor):
             index = 0
             for chunk in cs:
                 if hasattr(chunk, 'label'):
+                    # For example:
+                    # chunk: Tree('NP', [('This', 'DT'), ('tool', 'NN')])
                     begin_pos = token_entries[index].span.begin
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     phrase = Phrase(input_pack, begin_pos, end_pos)
@@ -141,6 +143,8 @@ class NLTKChunker(PackProcessor):
                     input_pack.add_or_get_entry(phrase)
                     index += len(chunk)
                 else:
+                    # For example:
+                    # chunk: ('is', 'VBZ')
                     index += 1
 
 
