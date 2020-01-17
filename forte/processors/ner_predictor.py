@@ -15,7 +15,6 @@
 # pylint: disable=logging-fstring-interpolation
 import logging
 import os
-import pickle
 from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
