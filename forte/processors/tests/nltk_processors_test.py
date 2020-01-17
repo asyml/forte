@@ -141,10 +141,10 @@ class TestNLTKChunker(unittest.TestCase):
         document = ' '.join(sentences)
         pack = self.nltk.process(document)
 
-        entities_text = [x.text for x in pack.annotations if
-                         isinstance(x, Phrase)]
-        entities_type = [x.phrase_type for x in pack.annotations if
-                         isinstance(x, Phrase)]
+        phrase_entries = list(pack.get(entry_type=Phrase))
+
+        entities_text = [x.text for x in phrase_entries]
+        entities_type = [x.phrase_type for x in phrase_entries]
 
         self.assertEqual(entities_text, ['This tool', 'The goal',
                                          'this project'])
