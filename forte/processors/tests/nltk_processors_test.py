@@ -4,11 +4,13 @@ Unit tests of NLTK processors.
 
 import unittest
 
+from texar.torch import HParams
+
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
-    NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer, NLTKNER
-from ft.onto.base_ontology import Token, Sentence, EntityMention
+    NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer, NLTKChunker, NLTKNER
+from ft.onto.base_ontology import Token, Sentence, Phrase, EntityMention
 
 
 class TestNLTKSentenceSegmenter(unittest.TestCase):
@@ -17,6 +19,8 @@ class TestNLTKSentenceSegmenter(unittest.TestCase):
         self.nltk = Pipeline()
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
+
+        self.nltk.initialize()
 
     def test_segmenter(self):
         sentences = ["This tool is called Forte.",
@@ -36,6 +40,8 @@ class TestNLTKWordTokenizer(unittest.TestCase):
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
+
+        self.nltk.initialize()
 
     def test_tokenizer(self):
         sentences = ["This tool is called Forte.",
@@ -64,6 +70,8 @@ class TestNLTKPOSTagger(unittest.TestCase):
         self.nltk.add_processor(NLTKWordTokenizer())
         self.nltk.add_processor(NLTKPOSTagger())
 
+        self.nltk.initialize()
+
     def test_pos_tagger(self):
         sentences = ["This tool is called Forte.",
                      "The goal of this project to help you build NLP "
@@ -91,6 +99,8 @@ class TestNLTKLemmatizer(unittest.TestCase):
         self.nltk.add_processor(NLTKPOSTagger())
         self.nltk.add_processor(NLTKLemmatizer())
 
+        self.nltk.initialize()
+
     def test_lemmatizer(self):
         sentences = ["This tool is called Forte.",
                      "The goal of this project to help you build NLP "
@@ -107,6 +117,38 @@ class TestNLTKLemmatizer(unittest.TestCase):
             for j, token in enumerate(
                     pack.get(entry_type=Token, range_annotation=sentence)):
                 self.assertEqual(token.lemma, tokens[i][j])
+
+
+class TestNLTKChunker(unittest.TestCase):
+
+    def setUp(self):
+        self.nltk = Pipeline()
+        self.nltk.set_reader(StringReader())
+        self.nltk.add_processor(NLTKSentenceSegmenter())
+        self.nltk.add_processor(NLTKWordTokenizer())
+        self.nltk.add_processor(NLTKPOSTagger())
+        config = HParams({'pattern': 'NP: {<DT>?<JJ>*<NN>}'},
+                         NLTKChunker.default_hparams())
+        self.nltk.add_processor(NLTKChunker(), config=config)
+
+        self.nltk.initialize()
+
+    def test_chunker(self):
+        sentences = ["This tool is called Forte.",
+                     "The goal of this project to help you build NLP "
+                     "pipelines.",
+                     "NLP has never been made this easy before."]
+        document = ' '.join(sentences)
+        pack = self.nltk.process(document)
+
+        phrase_entries = list(pack.get(entry_type=Phrase))
+
+        entities_text = [x.text for x in phrase_entries]
+        entities_type = [x.phrase_type for x in phrase_entries]
+
+        self.assertEqual(entities_text, ['This tool', 'The goal',
+                                         'this project'])
+        self.assertEqual(entities_type, ['NP', 'NP', 'NP'])
 
 
 class TestNLTKNER(unittest.TestCase):
