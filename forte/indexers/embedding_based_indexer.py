@@ -17,9 +17,10 @@ import pickle
 from typing import Optional, List, Tuple, Dict, Union, Any
 import numpy as np
 
-import torch
-from texar.torch import HParams
 import faiss
+import torch
+
+from texar.torch import HParams
 
 from forte import utils
 
