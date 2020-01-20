@@ -35,7 +35,7 @@ import typed_astunparse as ast_unparse
 
 from forte.data.ontology import utils, top
 from forte.data.ontology.code_generation_util import (
-    BasicItem, CompositeItem, ClassAttributeItem, DefinitionItem, FileItem,
+    PrimitiveProperty, CompositeProperty, ClassAttributeProperty, DefinitionItem, FileItem,
     Property)
 
 
@@ -113,7 +113,7 @@ class OntologyCodeGenerator:
         # and their attributes (if any) in order to validate the attribute
         # types.
         self.allowed_types_tree: Dict[str, Set] = {}
-        for type_str in {*BasicItem.TYPES, *CompositeItem.TYPES}:
+        for type_str in {*PrimitiveProperty.TYPES, *CompositeProperty.TYPES}:
             self.allowed_types_tree[type_str] = set()
             self.ref_to_full_name[type_str] = type_str
 
@@ -217,7 +217,7 @@ class OntologyCodeGenerator:
 
                     # Unparsing the `__init__` args and normalising the string
                     args = ast_unparse.unparse(init_func.args).split(',', 1)
-                    args_str = args[1].strip()\
+                    args_str = args[1].strip() \
                         .replace('\n', '').replace('  ', '')
 
                     top_to_core_entries[imports[elem.name]] = elem_base_names
@@ -272,7 +272,7 @@ class OntologyCodeGenerator:
                         f"DirectoryAlreadyPresent: "
                         f"The directory with the name "
                         f"{existing_top_dir} is already present in "
-                        f"{destination_dir}. Merging into the "
+                        f"{destination_dir}. New files will be merge into the "
                         f"existing directory.")
 
             dir_util.copy_tree(self.tempdir, destination_dir)
@@ -283,7 +283,7 @@ class OntologyCodeGenerator:
     def parse_ontology(self, json_file_path: str,
                        destination_dir: str,
                        visited_paths: Optional[Dict[str, bool]] = None,
-                       rec_visited_paths: Optional[Dict[str, bool]] = None)\
+                       rec_visited_paths: Optional[Dict[str, bool]] = None) \
             -> List[str]:
         """
         Performs a topological traversal on the directed graph formed by the
@@ -293,6 +293,7 @@ class OntologyCodeGenerator:
         corresponding to the entries of `json_file_path`.
         Args:
             json_file_path: The current json config to be processed.
+            destination_dir:
             visited_paths: Keeps track of the json configs already processed.
             rec_visited_paths: Keeps track of the current recursion stack, to
             detect, and throw error if any cycles are present.
@@ -340,22 +341,23 @@ class OntologyCodeGenerator:
                     import_json_file, destination_dir,
                     visited_paths, rec_visited_paths))
 
-        # once the ontologies for all the imported files is generated, generate
+        # once the ontology for all the imported files is generated, generate
         # ontology of the current file
-        modules_to_import = self.parse_config(curr_dict, modules_to_import,
-                                              destination_dir)
+        modules_to_import = self.generate_from_schema(curr_dict, modules_to_import,
+                                                      destination_dir)
         rec_visited_paths[json_file_path] = False
         return modules_to_import
 
-    def parse_config(self, schema: Dict, modules_to_import: List[str],
-                     destination_dir: str) -> List[str]:
-        r"""
-        Generates ontology code for ontology dictionary extracted from a json
-        config. Appends entry code to the corresponding module. Creates a new
-        module file if module is generated for the first time.
+    def generate_from_schema(self, schema: Dict, modules_to_import: List[str],
+                             destination_dir: str) -> List[str]:
+        r""" Generates ontology code for a parsed schema extracted from a
+        json config. Appends entry code to the corresponding module. Creates a
+        new module file if module is generated for the first time.
+
         Args:
             schema: Ontology dictionary extracted from a json config.
             modules_to_import: Dependencies to be imported by generated modules.
+            destination_dir:
 
         Returns:
             Modules to be imported by dependencies of the current ontology.
@@ -577,7 +579,7 @@ class OntologyCodeGenerator:
         for class_att in class_attribute_names:
             if class_att in schema:
                 type_ = self.parse_type(schema[class_att])
-                class_att_items.append(ClassAttributeItem(class_att, type_,))
+                class_att_items.append(ClassAttributeProperty(class_att, type_, ))
 
         entry_item = DefinitionItem(name=ref_name,
                                     class_type=parent_entry,
@@ -617,13 +619,13 @@ class OntologyCodeGenerator:
 
         # TODO: Only supports array for now!
         # element type should be present in the validation tree
-        if type_str in CompositeItem.TYPES:
+        if type_str in CompositeProperty.TYPES:
             if "item_type" not in schema:
                 raise ValueError(f"ItemTypeNotFound: "
                                  f"Item type for the entry {entry_name} "
                                  f"of the attribute {name} not declared")
             item_type = schema["item_type"]
-            if item_type in CompositeItem.TYPES:
+            if item_type in CompositeProperty.TYPES:
                 raise ValueError(
                     f"ItemTypeCompositeError: "
                     f"Item type {item_type} for the entry {entry_name} of the"
@@ -640,9 +642,9 @@ class OntologyCodeGenerator:
                     f"Item type {item_type_norm} for the entry {entry_name} "
                     f"of the attribute {name} not declared in ontology")
 
-            return CompositeItem(name, type_, item_type, desc, default)
+            return CompositeProperty(name, type_, item_type, desc, default)
 
-        return BasicItem(name, type_, desc, default)
+        return PrimitiveProperty(name, type_, desc, default)
 
     def parse_attribute(self, entry_name, schema):
         name = schema["name"]
@@ -658,7 +660,7 @@ class OntologyCodeGenerator:
 
         # if default is of the type "type" which is already seen, parse_type
         default = self.parse_type(schema.get("default"))
-        return ClassAttributeItem(name, type_, desc, default)
+        return ClassAttributeProperty(name, type_, desc, default)
 
     def get_and_set_base_entry(self, entry_name: str, parent_entry: str) \
             -> str:

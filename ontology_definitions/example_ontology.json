@@ -1,0 +1,34 @@
+{
+    "name": "pet_shop_ontology",
+    "description": "An Ontology Used to manage the pet shop assets and pets",
+    "definitions": [
+        {
+            "entry_name": "ft.onto.pet_shop.Pet",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "description": "Pets in the shop.",
+            "attributes": [
+                {
+                    "name": "pet_type",
+                    "type": "str"
+                }
+            ]
+        },
+        {
+            "entry_name": "ft.onto.pet_shop.Owner",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "description": "Owner of pets.",
+            "attributes": [
+                {
+                    "name": "name",
+                    "type": "str"
+                },
+                {
+                    "name": "pets",
+                    "description": "List of pets one can have.",
+                    "type": "List",
+                    "item_type": "ft.onto.pet_shop.Pet"
+                }
+            ]
+        }
+    ]
+}
