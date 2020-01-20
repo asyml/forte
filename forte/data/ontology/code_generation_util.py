@@ -87,9 +87,11 @@ class Property(Item, ABC):
     def __init__(self,
                  name: str,
                  type_str: str,
+                 class_name: str,
                  description: Optional[str] = None,
                  default: Any = None):
         super().__init__(name, description)
+        self.class_name = class_name
         self.type_str = type_str
         self.default = default
 
@@ -107,15 +109,16 @@ class Property(Item, ABC):
         name = self.name
         lines = [("@property", 0),
                  (f"def {name}(self):", 0),
-                 (f"return self._{name}", 1),
+                 (f"return self.{name}", 1),
                  (empty_lines(0), 0),
-                 (f"def set_{name}(self, {name}: {self.to_type_str()}):", 0),
-                 (f"self.set_fields(_{name}={self.to_field_value()})", 1),
+                 (f"@{self.name}.setter", 0),
+                 (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                 (f"self.set_fields({name}={self.to_field_value()})", 1),
                  (empty_lines(0), 0)]
         return indent_code([indent_line(*line) for line in lines], level)
 
     def to_init_code(self, level: int) -> str:
-        return indent_line(f"self._{self.name}: {self.to_type_str()} = "
+        return indent_line(f"self.{self.name}: {self.to_type_str()} = "
                            f"{repr(self.default)}", level)
 
     def to_description(self, level: int) -> Optional[str]:
@@ -161,10 +164,11 @@ class CompositeProperty(Property):
     def __init__(self,
                  name: str,
                  type_str: str,
+                 class_name: str,
                  item_type: str,
                  description: Optional[str] = None,
                  default: Any = None):
-        super().__init__(name, type_str, description, default)
+        super().__init__(name, type_str, class_name, description, default)
         self.item_type = item_type
 
     def to_type_str(self) -> str:
@@ -202,8 +206,8 @@ class CompositeProperty(Property):
         return base_code + add_code
 
     def to_field_value(self):
-        item_value_str = PrimitiveProperty('item',
-                                           self.item_type).to_field_value()
+        item_value_str = PrimitiveProperty(
+            'item', self.item_type, self.class_name).to_field_value()
         return f"[{item_value_str} for item in {self.name}]"
 
 

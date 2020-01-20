@@ -721,9 +721,12 @@ class OntologyCodeGenerator:
                     f"Item type {item_type_norm} for the entry {entry_name} "
                     f"of the attribute {name} not declared in ontology")
 
-            return CompositeProperty(name, type_, item_type, desc, default)
+            return CompositeProperty(
+                name, type_, entry_name, item_type, description=desc,
+                default=default)
 
-        return PrimitiveProperty(name, type_, desc, default)
+        return PrimitiveProperty(name, type_, entry_name, description=desc,
+                                 default=default)
 
     def parse_attribute(self, entry_name, schema):
         name = schema["name"]

@@ -171,16 +171,18 @@ class ConllUDReader(PackReader):
                     else:
                         token.is_root = False
                         head = sent_tokens[token_comps["head"]][1]
-                        add_dependency(head, token, label,
-                                       "primary", data_pack)
+                        dependency = Dependency(data_pack, head, token)
+                        dependency.dep_label = label
+                        data_pack.add_or_get_entry(dependency)
 
                     # add enhanced dependencies
                     for dep in token_comps["enhanced_dependency_relations"]:
                         head_id, label = dep.split(":", 1)
                         if label != "root":
                             head = sent_tokens[head_id][1]
-                            add_dependency(head, token, label, "enhanced",
-                                           data_pack)
+                            # TODO: Use the new enhanced dependency
+                            # add_dependency(head, token, label, "enhanced",
+                            #                data_pack)
 
                 # add sentence
                 sent = Sentence(data_pack, doc_sent_begin, doc_offset - 1)
