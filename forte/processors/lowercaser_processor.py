@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.processors.machine_translation_processor import *
-from forte.processors.ner_predictor import *
-from forte.processors.srl_predictor import *
-from forte.processors.text_generation_processor import *
-from forte.processors.vocabulary_processor import *
-from forte.processors.bert_based_query_creator import *
-from forte.processors.lowercaser_processor import *
+from forte.data import DataPack
+from forte.processors.base import PackProcessor
+
+__all__ = [
+    "LowerCaserProcessor",
+]
+
+
+class LowerCaserProcessor(PackProcessor):
+
+    def _process(self, input_pack: DataPack):
+        input_pack.set_text(input_pack.text.lower())
