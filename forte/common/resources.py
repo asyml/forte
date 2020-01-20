@@ -13,9 +13,10 @@
 # limitations under the License.
 
 from pathlib import Path
-import pickle
 from typing import Union, Dict, List, Callable, Optional, Any
 from collections.abc import KeysView
+
+import pickle
 
 __all__ = [
     "Resources"
@@ -26,8 +27,8 @@ DeserializeDict = Dict[str, Callable[[Union[str, Path]], None]]
 
 
 class Resources:
-    r"""The Resources object is a global registry used in the pipeline. Objects
-    defined as ``Resources`` will be passed on to the processors in the
+    r"""The ``Resources`` object is a global registry used in the pipeline.
+    Objects defined as ``Resources`` will be passed on to the processors in the
     pipeline for initialization.
     """
 
@@ -37,16 +38,18 @@ class Resources:
 
     def save(self, keys: Optional[Union[List[str], SerializeDict]] = None,
              output_dir: Optional[str] = None):
-        r"""Save the resources specified by `keys` in binary format.
+        r"""Save the resources specified by ``keys`` in binary format.
 
         Args:
             keys (optional): list or dict
-                - If `keys` is a list, the objects corresponding to those keys
-                are saved
-                - If `keys` is a dict mapping from a key to a serialize
-                function, then the serialize function will be used to save the
-                object corresponding to that key
-                - If `keys` is None, all objects in this resource will be saved.
+
+                - If ``keys`` is a list, the objects corresponding to those keys
+                  are saved
+                - If ``keys`` is a dict mapping from a key to a serialize
+                  function, then the serialize function will be used to save the
+                  object corresponding to that key
+                - If ``keys`` is None, all objects in this resource will be
+                  saved.
             output_dir (optional): str
                 A directory specifying the location to save the resources.
         """
@@ -68,28 +71,37 @@ class Resources:
                 serializer(self.resources[key], Path(output_dir, f"{key}.pkl"))
 
     def keys(self) -> KeysView:
+        r"""Return all keys of the resources.
+        """
         return self.resources.keys()
 
     def get(self, key: str):
+        r"""Get the corresponding resource by specifying the key.
+        """
         return self.resources.get(key)
 
     def update(self, **kwargs):
+        r"""Update the resources.
+        """
         self.resources.update(**kwargs)
 
     def remove(self, key: str):
+        r"""Remove the corresponding resource by specifying the key.
+        """
         del self.resources[key]
 
     def load(self, keys: Union[List[str], DeserializeDict],
              path: Optional[str] = None):
-        r"""Load the resources specified by `keys`.
+        r"""Load the resources specified by ``keys``.
 
         Args:
             keys: list or dict
-                - If `keys` is a list, the objects corresponding to those keys
-                are loaded
-                - If `keys` is a dict mapping from a key to a deserialize
-                function, then the deserialize function will be used to load the
-                object corresponding to that key
+
+                - If ``keys`` is a list, the objects corresponding to those keys
+                  are loaded
+                - If ``keys`` is a dict mapping from a key to a deserialize
+                  function, then the deserialize function will be used to load
+                  the object corresponding to that key
             path (optional): str
                 A directory specifying the location to load the resources from.
         """
