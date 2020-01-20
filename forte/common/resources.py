@@ -42,6 +42,7 @@ class Resources:
 
         Args:
             keys (optional): list or dict
+
                 - If ``keys`` is a list, the objects corresponding to those keys
                   are saved
                 - If ``keys`` is a dict mapping from a key to a serialize
@@ -95,11 +96,12 @@ class Resources:
 
         Args:
             keys: list or dict
+
                 - If ``keys`` is a list, the objects corresponding to those keys
                   are loaded
                 - If ``keys`` is a dict mapping from a key to a deserialize
-                  function, then the deserialize function will be used to load the
-                  object corresponding to that key
+                  function, then the deserialize function will be used to load
+                  the object corresponding to that key
             path (optional): str
                 A directory specifying the location to load the resources from.
         """
