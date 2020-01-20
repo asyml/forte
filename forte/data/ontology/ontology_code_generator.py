@@ -19,24 +19,21 @@ import os
 import json
 import shutil
 import warnings
-
-import itertools as it
+import logging
 import tempfile
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 from distutils import dir_util
-
 from types import ModuleType
 from typing import Dict, List, Optional, Tuple, Set, no_type_check
-
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
 
 from forte.data.ontology import utils, top
 from forte.data.ontology.code_generation_util import (
-    PrimitiveProperty, CompositeProperty, ClassAttributeProperty, DefinitionItem, FileItem,
-    Property)
+    PrimitiveProperty, CompositeProperty, ClassAttributeProperty,
+    DefinitionItem, EntryWriter, Property)
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -46,6 +43,59 @@ from forte.data.ontology.code_generation_util import (
 #
 #
 # warnings.formatwarning = format_warning  # type: ignore
+
+def name_validation(name):
+    parts = name.split('.')
+    for part in parts:
+        if not part.isidentifier():
+            raise SyntaxError(f"'{part}' is not an valid identifier.")
+
+
+def analyze_packages(ontology_spec_path: str, packages: Set[str]):
+    r""" Analyze the package paths to make sure they are valid.
+
+    Args:
+        ontology_spec_path: The ontology specification path.
+        packages: The list of packages.
+
+    Returns: A list of the package paths, sorted by the package depth (
+        deepest first).
+
+    """
+    package_len = []
+    for p in packages:
+        parts = p.split('.')
+        package_len.append((len(parts), p))
+        try:
+            name_validation(p)
+        except ValueError:
+            logging.error(
+                f"Error analyzing package name at file [{ontology_spec_path}]")
+            raise
+
+    return [p for (p, l) in sorted(package_len)]
+
+
+def validate_entry(entry_name: str, sorted_packages: List[str]):
+    for package_name in sorted_packages:
+        if entry_name.startswith(package_name):
+            break
+    else:
+        # None of the package name matches.
+        raise ValueError(
+            f"Entry name [{entry_name}] does not start with any predefined "
+            f"packages, please define the packages in the ontology "
+            f"specification. Or you can use the default prefix 'ft.onto'."
+        )
+
+    entry_splits = entry_name.split('.')
+
+    if len(entry_splits) < 3:
+        raise ValueError(
+            f"We currently require each entry to contains at least 3 sections, "
+            f"which corresponds to the directory name, the file (module) name,"
+            f"the entry class name. There are only {len(entry_splits)} sections"
+            f"in [{entry_name}].")
 
 
 class OntologyCodeGenerator:
@@ -225,12 +275,12 @@ class OntologyCodeGenerator:
         return top_init_args, imports, top_to_core_entries
 
     def generate_ontology(self, base_json_file_path: str,
-                          destination_dir: Optional[str] = None,
+                          destination_dir: Optional[str] = os.getcwd(),
                           is_dry_run: bool = False) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file.
             Args:
-                base_json_file_path: The base json config file.
+                base_json_file_path: The base ontology specification file.
                 destination_dir: The folder in which config packages are to be
                 generated. If not provided, current working directory is used.
                 Ignored if `is_dry_run` is `True`.
@@ -257,8 +307,6 @@ class OntologyCodeGenerator:
 
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
-        destination_dir = os.getcwd() if destination_dir is None \
-            else destination_dir
         self.parse_ontology(base_json_file_path, destination_dir)
 
         # When everything is successfully completed, copy the contents of
@@ -314,12 +362,13 @@ class OntologyCodeGenerator:
         rec_visited_paths[json_file_path] = True
 
         with open(json_file_path, 'r') as f:
-            curr_str = f.read()
-        curr_dict = json.loads(curr_str)
+            spec_str = f.read()
+
+        spec_dict = json.loads(spec_str)
 
         # Extract imported json files and generate ontology for them.
-        json_imports: List = curr_dict.get("import_paths", [])
-        allowed_packages: List = curr_dict.get("additional_prefixes", [])
+        json_imports: List = spec_dict.get("import_paths", [])
+        allowed_packages: List = spec_dict.get("additional_prefixes", [])
 
         modules_to_import: List[str] = allowed_packages
 
@@ -343,18 +392,21 @@ class OntologyCodeGenerator:
 
         # once the ontology for all the imported files is generated, generate
         # ontology of the current file
-        modules_to_import = self.generate_from_schema(curr_dict, modules_to_import,
-                                                      destination_dir)
+        modules_to_import = self.generate_from_schema(
+            json_file_path, spec_dict, modules_to_import, destination_dir)
         rec_visited_paths[json_file_path] = False
         return modules_to_import
 
-    def generate_from_schema(self, schema: Dict, modules_to_import: List[str],
+    def generate_from_schema(self,
+                             ontology_spec_path: str,
+                             schema: Dict, modules_to_import: List[str],
                              destination_dir: str) -> List[str]:
         r""" Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
         new module file if module is generated for the first time.
 
         Args:
+            ontology_spec_path: The path of the ontology specification.
             schema: Ontology dictionary extracted from a json config.
             modules_to_import: Dependencies to be imported by generated modules.
             destination_dir:
@@ -366,22 +418,18 @@ class OntologyCodeGenerator:
 
         allowed_packages = set(schema.get("additional_prefixes", [])
                                + ["ft.onto"])
+        sorted_packages = analyze_packages(ontology_spec_path, allowed_packages)
 
-        modules_to_import += list(allowed_packages)
+        modules_to_import += sorted_packages
         new_modules_to_import = []
         for definition in entry_definitions:
             entry_name = definition["entry_name"]
+            validate_entry(entry_name, sorted_packages)
+
             entry_splits = entry_name.split('.')
-            filename, name = entry_name.split('.')[-2:]
+            filename, name = entry_splits[-2:]
             pkg = '.'.join(entry_splits[0: -2])
-            if len(entry_splits) < 4:
-                raise ValueError(f"EntryNameNotComplete: {entry_name} is not "
-                                 f"complete, please provide full package, "
-                                 f"module and class name.")
-            if pkg not in allowed_packages:
-                raise ValueError(f"EntryPackageConflict: Package name for "
-                                 f"{entry_name} conflicts with the provided "
-                                 f"prefixes.")
+
             self.ref_to_full_name[name] = entry_name
             self.ref_to_full_name[entry_name] = entry_name
             if entry_name in self.allowed_types_tree:
@@ -404,28 +452,16 @@ class OntologyCodeGenerator:
                 file_desc: str = 'Automatically generated file. ' \
                                  'Do not change manually.'
                 all_imports = self.required_imports + modules_to_import
-                file_item = FileItem(entry_item, entry_file, self.ignore_errors,
-                                     file_desc, all_imports)
 
-                # Path(entry_dir).mkdir(parents=True, exist_ok=True)
-                # Create entry sub-directories with .generated file if the
-                # subdirectory is created programmatically
-                # Peak if the folder exists at the destination directory
-                entry_dir_split = utils.split_file_path(entry_pkg_dir)
-                rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
-                for rel_dir_path in rel_dir_paths:
-                    temp_path = os.path.join(self.tempdir, rel_dir_path)
-                    dest_path = os.path.join(destination_dir, rel_dir_path)
-                    if not os.path.exists(temp_path):
-                        os.mkdir(temp_path)
-                    if not os.path.exists(dest_path):
-                        Path(os.path.join(temp_path, '.generated')).touch()
-
-                # Creating the file if it does not exist.
-                with open(entry_file, 'a+') as f:
-                    f.write(file_item.to_code(0))
+                entry_writer = EntryWriter(
+                    pkg, entry_item, entry_file, self.ignore_errors, file_desc,
+                    all_imports
+                )
+                entry_writer.write(self.tempdir, destination_dir, filename)
 
             except ValueError:
+                # TODO: I cannot find ValueError exception thrown in the
+                #  code above, why this exception here?
                 self.cleanup_generated_ontology(self.tempdir, is_forced=True)
                 raise
 
@@ -579,7 +615,8 @@ class OntologyCodeGenerator:
         for class_att in class_attribute_names:
             if class_att in schema:
                 type_ = self.parse_type(schema[class_att])
-                class_att_items.append(ClassAttributeProperty(class_att, type_, ))
+                class_att_items.append(
+                    ClassAttributeProperty(class_att, type_, ))
 
         entry_item = DefinitionItem(name=ref_name,
                                     class_type=parent_entry,

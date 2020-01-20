@@ -15,6 +15,10 @@ import os
 from abc import ABC
 from collections import OrderedDict
 from typing import Optional, Any, List
+import itertools as it
+from pathlib import Path
+
+from forte.data.ontology.utils import split_file_path
 
 
 class Config:
@@ -90,7 +94,7 @@ class Property(Item, ABC):
         self.type_str = type_str
         self.default = default
 
-    def to_property_access_functions(self, level):
+    def to_access_functions(self, level):
         """ Some functions to define how to access the property values, such
         as getters, setters, len, etc.
         Args:
@@ -161,10 +165,9 @@ class CompositeProperty(Property):
         super().__init__(name, type_str, description, default)
         self.item_type = item_type
 
-    def to_property_access_functions(self, level):
-        code = super(CompositeProperty, self).to_property_access_functions(
+    def to_access_functions(self, level):
+        code = super(CompositeProperty, self).to_access_functions(
             level)
-        l
 
     def to_field_value(self):
         item_value_str = PrimitiveProperty('item',
@@ -193,6 +196,8 @@ class DefinitionItem(Item):
         return indent_line(f"def __init__(self, {self.init_args}):", level)
 
     def to_code(self, level: int) -> str:
+        import pdb
+        pdb.set_trace()
         super_args = ', '.join([item.split(':')[0].strip()
                                 for item in self.init_args.split(',')])
         raw_desc = self.to_description(1)
@@ -210,7 +215,7 @@ class DefinitionItem(Item):
                   indent_line(f"super().__init__({super_args})", 2)]
         lines += [item.to_init_code(2) for item in self.properties]
         lines += [empty_lines(0)]
-        lines += [item.to_getter_setter_code(1) for item in self.properties]
+        lines += [item.to_access_functions(1) for item in self.properties]
 
         return indent_code(lines, level)
 
@@ -234,18 +239,60 @@ class DefinitionItem(Item):
         return indent_code([quotes] + descs + [quotes], level)
 
 
-class FileItem:
+class EntryWriter:
+    """
+    A writer to write entry definitions to a file.
+    """
+
     def __init__(self,
+                 package: str,
                  entry_item: DefinitionItem,
                  entry_file: str,
                  ignore_errors: Optional[List[str]],
                  description: Optional[str],
                  imports: Optional[List[str]]):
-        self.description = description
-        self.ignore_errors = [] if not ignore_errors else ignore_errors
-        self.imports = [] if not imports else list(set(imports))
-        self.entry_item = entry_item
-        self.entry_file_exists = os.path.exists(entry_file)
+
+        self.package = package
+        self.description: Optional[str] = description
+        self.ignore_errors: Optional[
+            List[str]] = [] if not ignore_errors else ignore_errors
+        self.imports: Optional[List[str]] = [] if not imports else list(
+            set(imports))
+        self.entry_item: DefinitionItem = entry_item
+        self.entry_file_exists: bool = os.path.exists(entry_file)
+
+    def write(self, tempdir: str, destination: str, filename: str):
+        """
+        Write the entry information to file.
+
+        Args:
+            tempdir: A temporary directory for writing intermediate files.
+            destination: The actual folder to place the generated code.
+            filename: File name of the generated code.
+
+        Returns:
+
+        """
+        # Create entry sub-directories with .generated file if the
+        # subdirectory is created programmatically
+        # Peak if the folder exists at the destination directory
+        entry_pkg_dir = self.package.replace('.', '/')
+        entry_dir_split = split_file_path(entry_pkg_dir)
+
+        rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
+        for rel_dir_path in rel_dir_paths:
+            temp_path = os.path.join(tempdir, rel_dir_path)
+            if not os.path.exists(temp_path):
+                os.mkdir(temp_path)
+
+            dest_path = os.path.join(destination, rel_dir_path)
+            if not os.path.exists(dest_path):
+                Path(os.path.join(temp_path, '.generated')).touch()
+
+        # Creating the file if it does not exist.
+        full_path = os.path.join(tempdir, entry_pkg_dir, filename) + '.py'
+        with open(full_path, 'a+') as f:
+            f.write(self.to_code(0))
 
     def to_code(self, level: int) -> str:
         lines: List[str] = []
@@ -262,7 +309,7 @@ class FileItem:
         return indent_code(lines, level)
 
     def to_import_code(self, level):
-        imports_set: OrderedDict[str] = {}
+        imports_set: OrderedDict[str] = OrderedDict()
         for import_ in sorted(self.imports):
             imports_set[f"import {import_}"] = None
         return indent_code(list(imports_set), level)

@@ -102,7 +102,7 @@ def main():
     create_parser.add_argument('--dest_path',
                                type=str,
                                required=False,
-                               default=None,
+                               default=os.getcwd(),
                                help='Destination directory provided by the user'
                                '. Only used when --no_dry_run is specified. The'
                                ' default directory is the current working '
