@@ -23,7 +23,11 @@ import importlib
 import warnings
 from ddt import ddt, data
 
-from forte.data.ontology import OntologyCodeGenerator
+from forte.data.ontology import OntologyCodeGenerator, \
+    DuplicatedAttributesWarning, TypeNotDeclaredException, \
+    ParentEntryNotDeclaredException, ImportOntologyNotFoundException, \
+    DuplicateEntriesWarning, DirectoryAlreadyPresentWarning, \
+    UnsupportedTypeException
 
 
 @ddt
@@ -41,20 +45,18 @@ class GenerateOntologyTest(unittest.TestCase):
             self.generator.cleanup_generated_ontology(self.dir_path,
                                                       is_forced=True)
 
-    @data(('example_ontology_config',
+    @data(('example_ontology',
            ['ft/onto/example_import_ontology', 'ft/onto/example_ontology']),
-          ('example_complex_ontology_config',
+          ('example_complex_ontology',
            ['ft/onto/example_complex_ontology']),
-          ('stanfordnlp_ontology',
-           ['ft/onto/stanfordnlp_ontology']),
-          ('example_multi_module_ontology_config',
+          ('example_multi_module_ontology',
            ['ft/onto/ft_module', 'custom/user/custom_module']))
     def test_generated_code(self, value):
         input_file_name, file_paths = value
         file_paths = sorted(file_paths)
 
         # read json and generate code in a file
-        json_file_path = get_config_path(f'../configs/{input_file_name}.json')
+        json_file_path = get_config_path(f'test_specs/{input_file_name}.json')
         folder_path = self.generator.generate_ontology(json_file_path,
                                                        is_dry_run=True)
         self.dir_path = folder_path
@@ -81,12 +83,13 @@ class GenerateOntologyTest(unittest.TestCase):
             expected_code_path = os.path.join(dir_path, f'{file_paths[i]}.py')
             with open(expected_code_path, 'r') as f:
                 expected_code = f.read()
+
             self.assertEqual(generated_code, expected_code)
 
     def test_dry_run_false(self):
         temp_dir = tempfile.mkdtemp()
         json_file_path = get_config_path(
-            "../configs/example_import_ontology_config.json")
+            "test_specs/example_import_ontology.json")
         temp_filename = get_temp_filename(json_file_path, temp_dir)
         self.generator.generate_ontology(temp_filename, temp_dir, False)
         folder_path = temp_dir
@@ -94,18 +97,18 @@ class GenerateOntologyTest(unittest.TestCase):
             self.assertTrue(name in os.listdir(folder_path))
             folder_path = os.path.join(folder_path, name)
 
-    @data((True, 'test_duplicate_entry.json', 'DuplicateEntryWarning'),
-          (True, 'test_duplicate_attribute.json', 'DuplicateAttributeWarning'),
-          (False, 'example_ontology_config.json', 'ImportOntologyNotFound'),
-          (False, 'test_invalid_parent.json', 'ParentEntryNotDeclared'),
-          (False, 'test_invalid_attribute.json', 'AttributeTypeNotDeclared'),
-          (False, 'test_invalid_item_type.json', 'ItemTypeNotDeclared'),
-          (False, 'test_no_item_type.json', 'ItemTypeNotFound'),
-          (False, 'test_composite_item_type.json', 'ItemTypeCompositeError'))
+    @data((True, 'test_duplicate_entry.json', DuplicateEntriesWarning),
+          (True, 'test_duplicate_attribute.json', DuplicatedAttributesWarning),
+          (False, 'example_ontology.json', ImportOntologyNotFoundException),
+          (False, 'test_invalid_parent.json', ParentEntryNotDeclaredException),
+          (False, 'test_invalid_attribute.json', TypeNotDeclaredException),
+          (False, 'test_nested_item_type.json', UnsupportedTypeException),
+          (False, 'test_no_item_type.json', TypeNotDeclaredException),
+          (False, 'test_unknown_item_type.json', TypeNotDeclaredException))
     def test_warnings_errors(self, value):
-        expected_warning, file, message = value
+        expected_warning, file, msg_type = value
         temp_dir = tempfile.mkdtemp()
-        dirname = '../configs' if file.startswith('example') else 'test_configs'
+        dirname = 'test_specs'
         filepath = os.path.join(dirname, file)
         json_file_name = get_config_path(filepath)
         temp_filename = get_temp_filename(json_file_name, temp_dir)
@@ -114,23 +117,24 @@ class GenerateOntologyTest(unittest.TestCase):
                 warnings.simplefilter("always")
                 self.generator.generate_ontology(temp_filename, is_dry_run=True)
                 self.assertEqual(len(w), 1)
-                self.assertTrue(message in str(w[0].message))
+                assert w[0].category, msg_type
         else:
-            with self.assertRaises(ValueError) as cm:
+            # TODO: make sure the exceptions are caught here
+            print(file)
+            with self.assertRaises(msg_type):
                 self.generator.generate_ontology(temp_filename, is_dry_run=True)
-                self.assertTrue(message in cm.exception.args[0])
 
     def test_directory_already_present(self):
         temp_dir = tempfile.mkdtemp()
         os.mkdir(os.path.join(temp_dir, "ft"))
         json_file_path = get_config_path(
-            "../configs/example_import_ontology_config.json")
+            "test_specs/example_import_ontology.json")
         temp_filename = get_temp_filename(json_file_path, temp_dir)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             self.generator.generate_ontology(temp_filename, temp_dir, False)
             self.assertEqual(len(w), 1)
-            self.assertTrue("DirectoryAlreadyPresent" in str(w[0].message))
+            assert w[0].category, DirectoryAlreadyPresentWarning
 
     def test_top_ontology_parsing_imports(self):
         temp_dir = tempfile.mkdtemp()
@@ -141,7 +145,8 @@ class GenerateOntologyTest(unittest.TestCase):
                             'import os.path as os_path\n'
                             'from os import path\n')
         temp_module = importlib.import_module('temp')
-        _, imports, _ = OntologyCodeGenerator.initialize_top_entries(temp_module)
+        _, imports, _ = OntologyCodeGenerator.initialize_top_entries(
+            temp_module)
         expected_imports = {"os.path": "os.path",
                             "os_path": "os.path",
                             "path": "os.path"}

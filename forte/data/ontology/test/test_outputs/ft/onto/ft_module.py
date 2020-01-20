@@ -5,7 +5,6 @@
 """
 Automatically generated file. Do not change manually.
 """
-import custom.user
 import forte.data.data_pack
 import forte.data.ontology.top
 import ft.onto
@@ -71,6 +70,15 @@ class Sentence(forte.data.ontology.top.Annotation):
 
     def set_tokens(self, tokens: typing.Optional[typing.List[ft.onto.ft_module.Token]]):
         self.set_fields(_tokens=[item.tid for item in tokens])
+
+    def num_tokens(self):
+        return len(self._tokens)
+
+    def clear_tokens(self):
+        self._tokens.clear()
+
+    def add_tokens(self, a_tokens: ft.onto.ft_module.Token):
+        self._tokens.append(a_tokens)
 
 
 __all__.extend('Document')

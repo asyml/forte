@@ -62,14 +62,23 @@ class Sentence(forte.data.ontology.top.Annotation):
 
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._tokens: typing.Optional[typing.List[ft.onto.example_complex_ontology.Token]] = None
+        self._key_tokens: typing.Optional[typing.List[ft.onto.example_complex_ontology.Token]] = None
 
     @property
-    def tokens(self):
-        return self._tokens
+    def key_tokens(self):
+        return self._key_tokens
 
-    def set_tokens(self, tokens: typing.Optional[typing.List[ft.onto.example_complex_ontology.Token]]):
-        self.set_fields(_tokens=[item.tid for item in tokens])
+    def set_key_tokens(self, key_tokens: typing.Optional[typing.List[ft.onto.example_complex_ontology.Token]]):
+        self.set_fields(_key_tokens=[item.tid for item in key_tokens])
+
+    def num_key_tokens(self):
+        return len(self._key_tokens)
+
+    def clear_key_tokens(self):
+        self._key_tokens.clear()
+
+    def add_key_tokens(self, a_key_tokens: ft.onto.example_complex_ontology.Token):
+        self._key_tokens.append(a_key_tokens)
 
 
 __all__.extend('Document')

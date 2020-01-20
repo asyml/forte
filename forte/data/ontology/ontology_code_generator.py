@@ -44,6 +44,46 @@ from forte.data.ontology.code_generation_util import (
 #
 # warnings.formatwarning = format_warning  # type: ignore
 
+class DuplicatedAttributesWarning(UserWarning):
+    pass
+
+
+class DirectoryAlreadyPresentWarning(UserWarning):
+    pass
+
+
+class DuplicateEntriesWarning(UserWarning):
+    pass
+
+
+class ImportOntologyNotFoundException(ValueError):
+    pass
+
+
+class ImportOntologyAlreadyGeneratedException(ValueError):
+    pass
+
+
+class ParentEntryNotDeclaredException(ValueError):
+    pass
+
+
+class TypeNotDeclaredException(ValueError):
+    pass
+
+
+class NoDefaultClassAttributeException(ValueError):
+    pass
+
+
+class UnsupportedTypeException(ValueError):
+    pass
+
+
+class InvalidIdentifierException(ValueError):
+    pass
+
+
 def name_validation(name):
     parts = name.split('.')
     for part in parts:
@@ -68,7 +108,7 @@ def analyze_packages(ontology_spec_path: str, packages: Set[str]):
         package_len.append((len(parts), p))
         try:
             name_validation(p)
-        except ValueError:
+        except InvalidIdentifierException:
             logging.error(
                 f"Error analyzing package name at file [{ontology_spec_path}]")
             raise
@@ -83,7 +123,7 @@ def validate_entry(entry_name: str, sorted_packages: List[str]) -> str:
             break
     else:
         # None of the package name matches.
-        raise ValueError(
+        raise InvalidIdentifierException(
             f"Entry name [{entry_name}] does not start with any predefined "
             f"packages, please define the packages in the ontology "
             f"specification. Or you can use the default prefix 'ft.onto'."
@@ -92,7 +132,7 @@ def validate_entry(entry_name: str, sorted_packages: List[str]) -> str:
     entry_splits = entry_name.split('.')
 
     if len(entry_splits) < 3:
-        raise ValueError(
+        raise InvalidIdentifierException(
             f"We currently require each entry to contains at least 3 levels, "
             f"which corresponds to the directory name, the file (module) name,"
             f"the entry class name. There are only {len(entry_splits)}"
@@ -319,11 +359,10 @@ class OntologyCodeGenerator:
             for existing_top_dir in utils.get_top_level_dirs(destination_dir):
                 if existing_top_dir in generated_top_dirs:
                     warnings.warn(
-                        f"DirectoryAlreadyPresent: "
                         f"The directory with the name "
                         f"{existing_top_dir} is already present in "
                         f"{destination_dir}. New files will be merge into the "
-                        f"existing directory.")
+                        f"existing directory.", DirectoryAlreadyPresentWarning)
 
             dir_util.copy_tree(self.tempdir, destination_dir)
 
@@ -377,15 +416,15 @@ class OntologyCodeGenerator:
             import_json_file = utils.search_in_dirs(import_file,
                                                     self.json_paths)
             if import_json_file is None:
-                raise ValueError(f"ImportOntologyNotFound: "
-                                 f"Ontology corresponding to {import_file} not "
-                                 f"found in the current directory or the "
-                                 f"directory of original json config.")
+                raise ImportOntologyNotFoundException(
+                    f"Ontology corresponding to {import_file} not "
+                    f"found in the current directory or the "
+                    f"directory of original json config.")
             if import_json_file in rec_visited_paths:
-                raise ValueError(f"ImportOntologyAlreadyGenerated: "
-                                 f"Ontology corresponding to {import_json_file}"
-                                 f" already generated, cycles not permitted, "
-                                 f"aborting")
+                raise ImportOntologyAlreadyGeneratedException(
+                    f"Ontology corresponding to {import_json_file}"
+                    f" already generated, cycles not permitted, "
+                    f"aborting")
             elif import_json_file not in visited_paths:
                 modules_to_import.extend(self.parse_ontology(
                     import_json_file, destination_dir,
@@ -439,9 +478,8 @@ class OntologyCodeGenerator:
             self.ref_to_full_name[entry_name] = entry_name
             if entry_name in self.allowed_types_tree:
                 warnings.warn(
-                    f"DuplicateEntryWarning: "
                     f"Class {entry_name} already present in the "
-                    f"ontology, will be overridden.")
+                    f"ontology, will be overridden.", DuplicateEntriesWarning)
             self.allowed_types_tree[entry_name] = set()
             entry_item, properties = self.parse_entry(
                 name, entry_name, definition)
@@ -476,10 +514,11 @@ class OntologyCodeGenerator:
             for property_name in properties:
                 if property_name in self.allowed_types_tree[class_name]:
                     warnings.warn(
-                        f"DuplicateAttributeWarning: "
                         f"Attribute type for the entry {class_name} and "
                         f"the attribute {property_name} already present in "
-                        f"the ontology, will be overridden")
+                        f"the ontology, will be overridden",
+                        DuplicatedAttributesWarning
+                    )
                 self.allowed_types_tree[class_name].add(property_name)
 
         return new_modules_to_import
@@ -592,10 +631,10 @@ class OntologyCodeGenerator:
 
         # validate if the entry parent is present in the tree
         if parent_entry not in self.allowed_types_tree:
-            raise ValueError(f"ParentEntryNotDeclared: "
-                             f"Cannot add {name} to the ontology as "
-                             f"it's parent entry {parent_entry} is not present "
-                             f"in the ontology.")
+            raise ParentEntryNotDeclaredException(
+                f"Cannot add {name} to the ontology as "
+                f"it's parent entry {parent_entry} is not present "
+                f"in the ontology.")
 
         base_entry: str = self.get_and_set_base_entry(name, parent_entry)
         init_args: str = self.top_init_args[base_entry]
@@ -650,10 +689,10 @@ class OntologyCodeGenerator:
 
         # schema type should be present in the validation tree
         if type_ not in self.allowed_types_tree:
-            raise ValueError(f"AttributeTypeNotDeclared: "
-                             f"Attribute type '{type_}' for the entry "
-                             f"'{entry_name}' and the schema '{name}' not "
-                             f"declared in the ontology")
+            raise TypeNotDeclaredException(
+                f"Attribute type '{type_}' for the entry "
+                f"'{entry_name}' and the schema '{name}' not "
+                f"declared in the ontology")
 
         desc = schema.get("description", None)
         default = schema.get("default", None)
@@ -662,11 +701,12 @@ class OntologyCodeGenerator:
         # element type should be present in the validation tree
         if type_str in CompositeProperty.TYPES:
             if "item_type" not in schema:
-                raise ValueError(f"Item type for the entry {entry_name} "
-                                 f"of the attribute {name} not declared")
+                raise TypeNotDeclaredException(
+                    f"Item type for the entry {entry_name} "
+                    f"of the attribute {name} not declared")
             item_type = schema["item_type"]
             if item_type in CompositeProperty.TYPES:
-                raise ValueError(
+                raise UnsupportedTypeException(
                     f"Item type {item_type} for the entry {entry_name} of the"
                     f"attribute {name} is a composite type, we do not support"
                     f"nested composite type.")
@@ -676,7 +716,7 @@ class OntologyCodeGenerator:
                     or self.ref_to_full_name.get(item_type_norm, '')
                     in self.allowed_types_tree
                     or item_type_norm == entry_name):
-                raise ValueError(
+                raise TypeNotDeclaredException(
                     f"Item type {item_type_norm} for the entry {entry_name} "
                     f"of the attribute {name} not declared in ontology")
 
@@ -692,9 +732,9 @@ class OntologyCodeGenerator:
         desc = schema.get("description", None)
 
         if "default" not in schema:
-            raise ValueError(f"NoDefaultClassAttribute: "
-                             f"No default value present for the class attribute"
-                             f" {name} for the entry {entry_name}.")
+            raise NoDefaultClassAttributeException(
+                f"No default value present for the class attribute"
+                f" {name} for the entry {entry_name}.")
 
         # if default is of the type "type" which is already seen, parse_type
         default = self.parse_type(schema.get("default"))

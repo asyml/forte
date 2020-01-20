@@ -37,12 +37,30 @@ class Word(ft.onto.example_import_ontology.Token):
     def set_string_features(self, string_features: typing.Optional[typing.List[str]]):
         self.set_fields(_string_features=[item for item in string_features])
 
+    def num_string_features(self):
+        return len(self._string_features)
+
+    def clear_string_features(self):
+        self._string_features.clear()
+
+    def add_string_features(self, a_string_features: str):
+        self._string_features.append(a_string_features)
+
     @property
     def word_forms(self):
         return self._word_forms
 
     def set_word_forms(self, word_forms: typing.Optional[typing.List[ft.onto.example_ontology.Word]]):
         self.set_fields(_word_forms=[item.tid for item in word_forms])
+
+    def num_word_forms(self):
+        return len(self._word_forms)
+
+    def clear_word_forms(self):
+        self._word_forms.clear()
+
+    def add_word_forms(self, a_word_forms: ft.onto.example_ontology.Word):
+        self._word_forms.append(a_word_forms)
 
 
 __all__.extend('WordLink')
@@ -66,3 +84,12 @@ class WordLink(forte.data.ontology.top.Link):
 
     def set_string_features(self, string_features: typing.Optional[typing.List[str]]):
         self.set_fields(_string_features=[item for item in string_features])
+
+    def num_string_features(self):
+        return len(self._string_features)
+
+    def clear_string_features(self):
+        self._string_features.clear()
+
+    def add_string_features(self, a_string_features: str):
+        self._string_features.append(a_string_features)

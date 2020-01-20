@@ -72,6 +72,7 @@ class Sentence(Annotation):
         begin (int): The offset of the first character in the sentence.
         end (int): The offset of the last character in the sentence + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -85,6 +86,7 @@ class Document(Annotation):
         begin (int): The offset of the first character in the document.
         end (int): The offset of the last character in the document + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -115,6 +117,7 @@ class PredicateArgument(Annotation):
         end (int): The offset of the last character in the predicate argument
             + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -131,6 +134,9 @@ class PredicateMention(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.predicate_lemma: str
+        self.framenet_id: str
+        self.is_verb: bool
 
 
 class PredicateLink(Link):
@@ -232,6 +238,7 @@ class Utterance(Annotation):
         end (int): The offset of the last character in the entity mention + 1.
 
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.seq_num: str

@@ -28,21 +28,20 @@ class JsonValidationTest(unittest.TestCase):
             os.path.join(dirname, '../validation_schema.json'))
 
     @data(
-        "../configs/example_ontology_config.json",
-        "../configs/example_import_ontology_config.json",
-        "../configs/example_multi_module_ontology_config.json",
-        "../configs/example_complex_ontology_config.json",
-        "../configs/stanfordnlp_ontology.json",
-        "test_configs/test_composite_item_type.json"
+        "test_specs/example_ontology.json",
+        "test_specs/example_import_ontology.json",
+        "test_specs/example_multi_module_ontology.json",
+        "test_specs/example_complex_ontology.json",
+        "test_specs/test_unknown_item_type.json"
     )
     def test_valid_json(self, input_filepath):
         input_filepath = os.path.join(os.path.dirname(__file__), input_filepath)
         utils.validate_json_schema(input_filepath, self.valid_filepath)
 
     @data(
-        ("test_configs/test_duplicate_attribute.json",
+        ("test_specs/test_duplicate_attribute.json",
          "non-unique elements"),
-        ("test_configs/test_additional_properties.json",
+        ("test_specs/test_additional_properties.json",
          "Additional properties are not allowed")
     )
     def test_invalid_json(self, value):

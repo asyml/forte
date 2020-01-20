@@ -200,9 +200,8 @@ class OntonotesReader(PackReader):
                         word_is_verbal_predicate = any(
                             "(V" in x for x in fields.predicate_labels)
                         kwargs_i = {
-                            "pred_lemma": fields.lemmatised_word,
-                            "pred_type": ("verb" if word_is_verbal_predicate
-                                          else "other")
+                            "predicate_lemma": fields.lemmatised_word,
+                            "is_verb": word_is_verbal_predicate
                         }
                         pred_mention = PredicateMention(
                             pack, word_begin, word_end)
