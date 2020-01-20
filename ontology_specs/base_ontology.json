@@ -35,6 +35,10 @@
         {
           "name": "is_root",
           "type": "bool"
+        },
+        {
+          "name": "ud_features",
+          "type": "Dict[str, List[str]]"
         }
       ]
     },
