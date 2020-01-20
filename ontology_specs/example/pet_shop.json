@@ -1,65 +1,68 @@
 {
-    "name": "pet_shop_ontology",
-    "additional_prefixes": ["awesome.pet.com", "internal"],
-    "description": "An Ontology Used to manage the pet shop assets and pets",
-    "definitions": [
+  "name": "pet_shop_ontology",
+  "additional_prefixes": [
+    "awesome.pet.com",
+    "internal"
+  ],
+  "description": "An Ontology Used to manage the pet shop assets and pets",
+  "definitions": [
+    {
+      "entry_name": "awesome.pet.com.Color",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "Annotation for color words.",
+      "attributes": [
         {
-            "entry_name": "awesome.pet.com.Color",
-            "parent_entry": "forte.data.ontology.top.Annotation",
-            "description": "Annotation for color words.",
-            "attributes": [
-                {
-                    "name": "color_name",
-                    "type": "str"
-                }
-            ]
-        },
-        {
-            "entry_name": "awesome.pet.com.Pet",
-            "parent_entry": "forte.data.ontology.top.Annotation",
-            "description": "Pets in the shop.",
-            "attributes": [
-                {
-                    "name": "pet_type",
-                    "type": "str"
-                },
-                {
-                    "name": "color",
-                    "type": "awesome.pet.com.Color"
-                }
-            ]
-        },
-        {
-            "entry_name": "awesome.pet.com.Owner",
-            "parent_entry": "forte.data.ontology.top.Annotation",
-            "description": "Owner of pets.",
-            "attributes": [
-                {
-                    "name": "name",
-                    "type": "str"
-                },
-                {
-                    "name": "pets",
-                    "description": "List of pets one can have.",
-                    "type": "List",
-                    "item_type": "awesome.pet.com.Pet"
-                }
-            ]
-        },
-        {
-            "entry_name": "awesome.pet.com.Revenue",
-            "parent_entry": "forte.data.ontology.top.Annotation",
-            "description": "Revenue records.",
-            "attributes": [
-                {
-                    "name": "amount",
-                    "type": "float"
-                },
-                {
-                    "name": "unit",
-                    "type": "str"
-                }
-            ]
+          "name": "color_name",
+          "type": "str"
         }
-    ]
+      ]
+    },
+    {
+      "entry_name": "awesome.pet.com.Pet",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "Pets in the shop.",
+      "attributes": [
+        {
+          "name": "pet_type",
+          "type": "str"
+        },
+        {
+          "name": "color",
+          "type": "awesome.pet.com.Color"
+        }
+      ]
+    },
+    {
+      "entry_name": "awesome.pet.com.Owner",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "Owner of pets.",
+      "attributes": [
+        {
+          "name": "name",
+          "type": "str"
+        },
+        {
+          "name": "pets",
+          "description": "List of pets one can have.",
+          "type": "List",
+          "item_type": "awesome.pet.com.Pet"
+        }
+      ]
+    },
+    {
+      "entry_name": "awesome.pet.com.Revenue",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "Revenue records.",
+      "attributes": [
+        {
+          "name": "amount",
+          "type": "float"
+        },
+        {
+          "name": "unit",
+          "type": "str"
+        }
+      ]
+    }
+  ]
 }

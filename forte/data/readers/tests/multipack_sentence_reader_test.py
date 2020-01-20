@@ -1,12 +1,11 @@
 import os
-import shutil
 import tempfile
 import unittest
 
 from ddt import ddt, data, unpack
 from texar.torch import HParams
 
-from forte.data.base import Span
+from forte.data import MultiPack
 from forte.data.readers import MultiPackSentenceReader
 from forte.pipeline import Pipeline
 
@@ -29,7 +28,8 @@ class MultiPackSentenceReaderTest(unittest.TestCase):
         with open(file_path, 'w') as f:
             f.write(text)
 
-        multipack = list(MultiPackSentenceReader().parse_pack(file_path))[0]
+        multipack = list(MultiPackSentenceReader().parse_pack(
+            (self.test_dir, file_path)))[0]
         input_pack = multipack.get_pack('input_src')
         self.assertEqual(len(multipack.packs), 2)
         self.assertEqual(multipack._pack_names, ['input_src', 'output_tgt'])
@@ -42,7 +42,7 @@ class MultiPackSentenceReaderTest(unittest.TestCase):
     @unpack
     def test_pipeline(self, texts):
         for idx, text in enumerate(texts):
-            file_path = os.path.join(self.test_dir, f"{idx+1}.txt")
+            file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
             with open(file_path, 'w') as f:
                 f.write(text)
 
@@ -53,7 +53,11 @@ class MultiPackSentenceReaderTest(unittest.TestCase):
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
         nlp.initialize()
 
-        for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
+        m_pack: MultiPack
+        for m_pack in nlp.process_dataset(self.test_dir):
+            # Recover the test sentence order from the doc id.
+            docid = m_pack.get_pack("input").meta.doc_id
+            idx = int(os.path.basename(docid).rstrip('.txt')) - 1
             self.assertEqual(m_pack._pack_names, ["input", "output"])
             self.assertEqual(m_pack.get_pack("input").text, texts[idx] + "\n")
 

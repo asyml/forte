@@ -1,5 +1,5 @@
 {
-  "ontology_name": "race_mutli_choice_qa_ontology",
+  "ontology_name": "base_ontology",
   "imports": [
     "forte.data.ontology.top",
     "forte.data.ontology.base_ontology"

@@ -17,7 +17,9 @@ from forte.processors.base.tests.dummy_pack_processor import DummyPackProcessor
 class OntonotesReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "forte/data/readers/tests/data_samples/ontonotes/00"
+        self.dataset_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'data_samples/ontonotes/00')
 
         self.nlp = Pipeline()
 
@@ -44,7 +46,9 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "forte/data/readers/tests/data_samples/conll03"
+        self.dataset_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'data_samples/conll03')
 
         self.nlp = Pipeline()
 
@@ -137,7 +141,7 @@ class ProdigyReaderTest(unittest.TestCase):
 class StringReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "forte/data/readers/tests/"
+        # self.dataset_path = "forte/data/readers/tests/"
 
         self.pl1 = Pipeline()
         self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))

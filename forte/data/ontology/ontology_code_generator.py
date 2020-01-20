@@ -491,8 +491,9 @@ class OntologyCodeGenerator:
                 entry_pkg_dir = pkg.replace('.', '/')
                 entry_dir: str = os.path.join(self.tempdir, entry_pkg_dir)
                 entry_file: str = f'{os.path.join(entry_dir, filename)}.py'
-                file_desc: str = 'Automatically generated file. ' \
-                                 'Do not change manually.'
+                file_desc: str = schema.get('description', '')
+                file_desc += '\n\nAutomatically generated file. ' \
+                             'Do not change manually.'
                 all_imports = self.required_imports + modules_to_import
 
                 entry_writer = EntryWriter(

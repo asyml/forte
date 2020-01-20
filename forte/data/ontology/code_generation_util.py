@@ -78,7 +78,9 @@ class Item:
     def to_description(self, level: int) -> Optional[str]:
         if self.description is not None:
             return indent_code([self.description], level)
-        return None
+        # Returning a empty string will generate a placeholder for
+        # the description.
+        return ''
 
 
 class Property(Item, ABC):
@@ -117,12 +119,12 @@ class Property(Item, ABC):
                            f"{repr(self.default)}", level)
 
     def to_description(self, level: int) -> Optional[str]:
+        desc = f"{self.name} ({self.to_type_str()})"
+
         if self.description is not None and self.description.strip() != '':
-            type_str = f'{self.to_type_str()}'
-            type_str = f' ({type_str})' if type_str.strip() != '' else type_str
-            return indent_line(f"{self.name}{type_str}: "
-                               f"{self.description}", level)
-        return None
+            desc += f"\t{self.description}"
+            return indent_line(desc, level)
+        return indent_line(desc, level)
 
     def to_field_value(self):
         raise NotImplementedError
@@ -252,19 +254,22 @@ class DefinitionItem(Item):
         item_descs = [item.to_description(0) for item in items]
         item_descs = [item for item in item_descs if item is not None]
         if len(item_descs) > 0:
-            item_descs = [indent_line(title, 1)] + \
-                         [indent_line(desc, 2) for desc in item_descs]
+            item_descs = [indent_line(title, 0)] + \
+                         [indent_line(desc, 1) for desc in item_descs]
         return item_descs
 
     def to_description(self, level: int) -> Optional[str]:
         class_desc = [] if self.description is None else [self.description]
-        item_descs = self.to_item_descs(self.properties, 'Args:')
-        att_descs = self.to_item_descs(self.class_attributes, 'Attr:')
-        descs = class_desc + item_descs + att_descs
+        item_descs = self.to_item_descs(self.properties, 'Attributes:')
+        att_descs = self.to_item_descs(self.class_attributes,
+                                       'Class Attributes:')
+        descs = class_desc + [empty_lines(0)] + item_descs + att_descs
         if len(descs) == 0:
             return ""
         quotes = indent_line('"""', 0)
-        return indent_code([quotes] + descs + [quotes], level)
+
+        return indent_code(
+            [quotes] + descs + [quotes], level)
 
 
 class EntryWriter:
