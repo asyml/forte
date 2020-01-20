@@ -126,7 +126,13 @@ class Entry(Generic[ContainerType]):
             #         f"class {get_full_module_name(self)} "
             #         f"has no attribute {field_name}"
             #     )
-            setattr(self, field_name, field_value)
+            if hasattr(self, field_name):
+                setattr(self, field_name, field_value)
+            else:
+                raise AttributeError(
+                    f"The entry type [{self.__class__}] does not have an "
+                    f"attribute: '{field_name}'.")
+
             if self.tid == -1:
                 # This means the entry is not part of any data pack yet, we
                 # remember the field modification for now.
