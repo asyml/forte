@@ -73,12 +73,13 @@ def analyze_packages(ontology_spec_path: str, packages: Set[str]):
                 f"Error analyzing package name at file [{ontology_spec_path}]")
             raise
 
-    return [p for (p, l) in sorted(package_len)]
+    return [p for (l, p) in sorted(package_len, reverse=True)]
 
 
-def validate_entry(entry_name: str, sorted_packages: List[str]):
+def validate_entry(entry_name: str, sorted_packages: List[str]) -> str:
     for package_name in sorted_packages:
         if entry_name.startswith(package_name):
+            matched_package = package_name
             break
     else:
         # None of the package name matches.
@@ -92,10 +93,11 @@ def validate_entry(entry_name: str, sorted_packages: List[str]):
 
     if len(entry_splits) < 3:
         raise ValueError(
-            f"We currently require each entry to contains at least 3 sections, "
+            f"We currently require each entry to contains at least 3 levels, "
             f"which corresponds to the directory name, the file (module) name,"
-            f"the entry class name. There are only {len(entry_splits)} sections"
-            f"in [{entry_name}].")
+            f"the entry class name. There are only {len(entry_splits)}"
+            f"levels in [{entry_name}].")
+    return matched_package
 
 
 class OntologyCodeGenerator:
@@ -368,9 +370,8 @@ class OntologyCodeGenerator:
 
         # Extract imported json files and generate ontology for them.
         json_imports: List = spec_dict.get("import_paths", [])
-        allowed_packages: List = spec_dict.get("additional_prefixes", [])
 
-        modules_to_import: List[str] = allowed_packages
+        modules_to_import: List[str] = []
 
         for import_file in json_imports:
             import_json_file = utils.search_in_dirs(import_file,
@@ -390,11 +391,12 @@ class OntologyCodeGenerator:
                     import_json_file, destination_dir,
                     visited_paths, rec_visited_paths))
 
-        # once the ontology for all the imported files is generated, generate
+        # Once the ontology for all the imported files is generated, generate
         # ontology of the current file
         modules_to_import = self.generate_from_schema(
             json_file_path, spec_dict, modules_to_import, destination_dir)
         rec_visited_paths[json_file_path] = False
+
         return modules_to_import
 
     def generate_from_schema(self,
@@ -418,13 +420,16 @@ class OntologyCodeGenerator:
 
         allowed_packages = set(schema.get("additional_prefixes", [])
                                + ["ft.onto"])
-        sorted_packages = analyze_packages(ontology_spec_path, allowed_packages)
+        sorted_prefixes = analyze_packages(ontology_spec_path, allowed_packages)
 
-        modules_to_import += sorted_packages
         new_modules_to_import = []
         for definition in entry_definitions:
             entry_name = definition["entry_name"]
-            validate_entry(entry_name, sorted_packages)
+
+            # Only prefixes that are actually used should be imported.
+            matched_pkg = validate_entry(entry_name, sorted_prefixes)
+            modules_to_import.append(matched_pkg)
+            new_modules_to_import.append(matched_pkg)
 
             entry_splits = entry_name.split('.')
             filename, name = entry_splits[-2:]
@@ -438,9 +443,8 @@ class OntologyCodeGenerator:
                     f"Class {entry_name} already present in the "
                     f"ontology, will be overridden.")
             self.allowed_types_tree[entry_name] = set()
-            entry_item, properties = self.parse_entry(name,
-                                                      entry_name,
-                                                      definition)
+            entry_item, properties = self.parse_entry(
+                name, entry_name, definition)
             module_name: str = f"{pkg}.{filename}"
             class_name: str = f"{module_name}.{name}"
 
@@ -658,16 +662,14 @@ class OntologyCodeGenerator:
         # element type should be present in the validation tree
         if type_str in CompositeProperty.TYPES:
             if "item_type" not in schema:
-                raise ValueError(f"ItemTypeNotFound: "
-                                 f"Item type for the entry {entry_name} "
+                raise ValueError(f"Item type for the entry {entry_name} "
                                  f"of the attribute {name} not declared")
             item_type = schema["item_type"]
             if item_type in CompositeProperty.TYPES:
                 raise ValueError(
-                    f"ItemTypeCompositeError: "
                     f"Item type {item_type} for the entry {entry_name} of the"
-                    f"attribute {name} is a composite type that is not"
-                    f"supported.")
+                    f"attribute {name} is a composite type, we do not support"
+                    f"nested composite type.")
             item_type = self.parse_type(item_type)
             item_type_norm = item_type.replace('"', '')
             if not (item_type_norm in self.allowed_types_tree
@@ -675,7 +677,6 @@ class OntologyCodeGenerator:
                     in self.allowed_types_tree
                     or item_type_norm == entry_name):
                 raise ValueError(
-                    f"ItemTypeNotDeclared: "
                     f"Item type {item_type_norm} for the entry {entry_name} "
                     f"of the attribute {name} not declared in ontology")
 

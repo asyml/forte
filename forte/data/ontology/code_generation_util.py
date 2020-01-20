@@ -80,9 +80,6 @@ class Item:
             return indent_code([self.description], level)
         return None
 
-    def to_code(self, level: int) -> str:
-        raise NotImplementedError
-
 
 class Property(Item, ABC):
     def __init__(self,
@@ -93,6 +90,9 @@ class Property(Item, ABC):
         super().__init__(name, description)
         self.type_str = type_str
         self.default = default
+
+    def to_type_str(self):
+        raise NotImplementedError
 
     def to_access_functions(self, level):
         """ Some functions to define how to access the property values, such
@@ -107,18 +107,18 @@ class Property(Item, ABC):
                  (f"def {name}(self):", 0),
                  (f"return self._{name}", 1),
                  (empty_lines(0), 0),
-                 (f"def set_{name}(self, {name}: {self.to_code(0)}):", 0),
+                 (f"def set_{name}(self, {name}: {self.to_type_str()}):", 0),
                  (f"self.set_fields(_{name}={self.to_field_value()})", 1),
                  (empty_lines(0), 0)]
         return indent_code([indent_line(*line) for line in lines], level)
 
     def to_init_code(self, level: int) -> str:
-        return indent_line(f"self._{self.name}: {self.to_code(0)} = "
+        return indent_line(f"self._{self.name}: {self.to_type_str()} = "
                            f"{repr(self.default)}", level)
 
     def to_description(self, level: int) -> Optional[str]:
         if self.description is not None and self.description.strip() != '':
-            type_str = f'{self.to_code(0)}'
+            type_str = f'{self.to_type_str()}'
             type_str = f' ({type_str})' if type_str.strip() != '' else type_str
             return indent_line(f"{self.name}{type_str}: "
                                f"{self.description}", level)
@@ -129,11 +129,11 @@ class Property(Item, ABC):
 
 
 class ClassAttributeProperty(Property):
-    def to_code(self, level: int = 0) -> str:
+    def to_type_str(self) -> str:
         return self.type_str
 
     def to_init_code(self, level: int) -> str:
-        type_code = f'{self.to_code(0)}'
+        type_code = f'{self.to_type_str()}'
         type_ = f': {type_code}' if type_code.strip() != '' else ''
         return indent_line(f"{self.name}{type_} = {self.default}", level)
 
@@ -144,7 +144,7 @@ class ClassAttributeProperty(Property):
 class PrimitiveProperty(Property):
     TYPES = {'int', 'float', 'str', 'bool'}
 
-    def to_code(self, level: int = 0) -> str:
+    def to_type_str(self) -> str:
         return f"typing.Optional[{self.type_str}]"
 
     def to_field_value(self):
@@ -165,9 +165,39 @@ class CompositeProperty(Property):
         super().__init__(name, type_str, description, default)
         self.item_type = item_type
 
+    def to_type_str(self) -> str:
+        return f"typing.Optional[{self.type_str}[{self.item_type}]]"
+
     def to_access_functions(self, level):
-        code = super(CompositeProperty, self).to_access_functions(
+        """ Generate access function to for composite types. This extend the
+        base function and add some composite specific types.
+        :param level:
+        :return:
+        """
+        base_code = super(CompositeProperty, self).to_access_functions(
             level)
+
+        name = self.name
+        lines = [
+            (empty_lines(0), 0),
+            (f"def num_{name}(self):", 0),
+            (f"return len(self._{name})", 1),
+            (empty_lines(0), 0),
+            (f"def clear_{name}(self):", 0),
+            (f"self._{name}.clear()", 1),
+            (empty_lines(0), 0),
+        ]
+
+        if self.type_str == 'typing.List':
+            lines.extend([
+                (f"def add_{name}(self, a_{name}: {self.item_type}):", 0),
+                (f"self._{name}.append(a_{name})", 1),
+                (empty_lines(0), 0),
+            ])
+
+        add_code = indent_code([indent_line(*line) for line in lines], level)
+
+        return base_code + add_code
 
     def to_field_value(self):
         item_value_str = PrimitiveProperty('item',
@@ -196,8 +226,6 @@ class DefinitionItem(Item):
         return indent_line(f"def __init__(self, {self.init_args}):", level)
 
     def to_code(self, level: int) -> str:
-        import pdb
-        pdb.set_trace()
         super_args = ', '.join([item.split(':')[0].strip()
                                 for item in self.init_args.split(',')])
         raw_desc = self.to_description(1)
