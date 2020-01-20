@@ -15,7 +15,6 @@
 # pylint: disable=logging-fstring-interpolation
 import logging
 import os
-import pickle
 from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
@@ -111,7 +110,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
                 if os.path.exists(path):
                     with open(path, "rb") as f:
-                        weights = pickle.load(f)
+                        weights = torch.load(f, map_location=self.device)
                         model.load_state_dict(weights)
                 return model
 
