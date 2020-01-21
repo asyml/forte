@@ -13,12 +13,126 @@
 # limitations under the License.
 import os
 from abc import ABC
-from collections import OrderedDict
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Dict, Set
 import itertools as it
 from pathlib import Path
+import pdb
 
 from forte.data.ontology.utils import split_file_path
+
+
+class ImportManager:
+    r"""A naive implementation that records import strings and imported names
+    to be used. Mainly used to avoid import name conflicts such as:
+       -- from user.module import token
+       -- from system.module import token
+    """
+
+    def __init__(self, module_name: str):
+        self.__module_name = module_name
+        self.__import_statements: List[str] = []
+        self.__imported_names: Dict[str, str] = {}
+        self.__short_name_pool: Set[str] = set()
+
+    def is_valid_name(self, class_name):
+        """
+        Check whether the class name can be used.
+        Args:
+            class_name: The name to be check.
+
+        Returns: True if the class_name can be used, which means it is either
+            imported or it is of a primitive type.
+
+        """
+        return class_name in PrimitiveProperty.TYPES or self.is_imported(
+            class_name)
+
+    def is_imported(self, class_name):
+        """
+        Check whether this `class_name` is already imported here in the module.
+        Args:
+            class_name: The name to be checked for importing.
+
+        Returns: True if the class_name is imported.
+
+        """
+        return class_name in self.__imported_names
+
+    def get_name_to_use(self, full_name):
+        return self.__imported_names[full_name]
+
+    def get_import_statements(self):
+        return sorted(self.__import_statements)
+
+    def create_import_statement(self, full_name: str, as_name: str,
+                                is_primitive: bool):
+        if not is_primitive:
+            parts = full_name.split('.')
+            class_name = parts[-1]
+
+            if len(parts) > 1:
+                module_name = '.'.join(parts[:-1])
+                if not module_name == self.__module_name:
+                    # No need to import classes in the same module
+                    if class_name == as_name:
+                        import_statement = f'from {module_name} ' \
+                                           f'import {class_name}'
+                    else:
+                        import_statement = f'from {module_name} ' \
+                                           f'import {class_name} as {as_name}'
+
+                    self.__import_statements.append(import_statement)
+            else:
+                if class_name == as_name:
+                    import_statement = f'import {class_name}'
+                else:
+                    import_statement = f'import {class_name} as {as_name}'
+                self.__import_statements.append(import_statement)
+
+    def __find_next_available(self, class_name) -> str:
+        counter = 0
+        while True:
+            as_name = f'{class_name}_{counter}'
+            counter += 1
+            if as_name not in self.__short_name_pool:
+                break
+        return as_name
+
+    def __assign_as_name(self, full_name) -> str:
+        class_name = full_name.split('.')[-1]
+        if class_name not in self.__short_name_pool:
+            self.__short_name_pool.add(class_name)
+            return class_name
+        else:
+            as_name = self.__find_next_available(class_name)
+            self.__short_name_pool.add(as_name)
+            return as_name
+
+    def add_object_to_import(self, full_name, is_primitive):
+        if full_name is 'List':
+            pdb.set_trace()
+
+        if full_name not in self.__imported_names:
+            if not is_primitive:
+                as_name = self.__assign_as_name(full_name)
+                self.__imported_names[full_name] = as_name
+                self.create_import_statement(full_name, as_name, is_primitive)
+            else:
+                self.__imported_names[full_name] = full_name
+                self.create_import_statement(full_name, '', is_primitive)
+
+
+class ImportManagerPool:
+    def __init__(self):
+        self.__managers: Dict[str, ImportManager] = {}
+
+    def get(self, module_name) -> ImportManager:
+        if module_name in self.__managers:
+            return self.__managers[module_name]
+        else:
+            nm = ImportManager(module_name)
+            self.__managers[module_name] = nm
+            return nm
 
 
 class Config:
@@ -160,7 +274,7 @@ class PrimitiveProperty(Property):
 
 
 class CompositeProperty(Property):
-    TYPES = {'List'}
+    TYPES = {'List': 'typing.List'}
 
     def __init__(self,
                  name: str,
@@ -288,7 +402,9 @@ class EntryWriter:
                  entry_file: str,
                  ignore_errors: Optional[List[str]],
                  description: Optional[str],
-                 imports: Optional[List[str]]):
+                 imports: Optional[List[str]],
+                 import_manager: ImportManager
+                 ):
 
         self.package = package
         self.description: Optional[str] = description
@@ -298,6 +414,7 @@ class EntryWriter:
             set(imports))
         self.entry_item: DefinitionItem = entry_item
         self.entry_file_exists: bool = os.path.exists(entry_file)
+        self.import_manager: ImportManager = import_manager
 
     def write(self, tempdir: str, destination: str, filename: str):
         """
@@ -347,7 +464,7 @@ class EntryWriter:
         return indent_code(lines, level)
 
     def to_import_code(self, level):
-        imports_set: OrderedDict[str] = OrderedDict()
+        all_imports = set(self.import_manager.get_import_statements())
         for import_ in sorted(self.imports):
-            imports_set[f"import {import_}"] = None
-        return indent_code(list(imports_set), level)
+            all_imports.add(f"import {import_}")
+        return indent_code(sorted(list(all_imports)), level)

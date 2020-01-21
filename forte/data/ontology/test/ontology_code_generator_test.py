@@ -58,8 +58,8 @@ class GenerateOntologyTest(unittest.TestCase):
 
         # read json and generate code in a file
         json_file_path = get_config_path(f'test_specs/{input_file_name}.json')
-        folder_path = self.generator.generate_ontology(json_file_path,
-                                                       is_dry_run=True)
+        folder_path = self.generator.generate(json_file_path,
+                                              is_dry_run=True)
         self.dir_path = folder_path
         # record code
         generated_files = []
@@ -92,7 +92,7 @@ class GenerateOntologyTest(unittest.TestCase):
         json_file_path = get_config_path(
             "test_specs/example_import_ontology.json")
         temp_filename = get_temp_filename(json_file_path, temp_dir)
-        self.generator.generate_ontology(temp_filename, temp_dir, False)
+        self.generator.generate(temp_filename, temp_dir, False)
         folder_path = temp_dir
         for name in ["ft", "onto", "example_import_ontology.py"]:
             self.assertTrue(name in os.listdir(folder_path))
@@ -116,14 +116,14 @@ class GenerateOntologyTest(unittest.TestCase):
         if expected_warning:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                self.generator.generate_ontology(temp_filename, is_dry_run=True)
+                self.generator.generate(temp_filename, is_dry_run=True)
                 self.assertEqual(len(w), 1)
                 assert w[0].category, msg_type
         else:
             # TODO: make sure the exceptions are caught here
             print(file)
             with self.assertRaises(msg_type):
-                self.generator.generate_ontology(temp_filename, is_dry_run=True)
+                self.generator.generate(temp_filename, is_dry_run=True)
 
     def test_directory_already_present(self):
         temp_dir = tempfile.mkdtemp()
@@ -133,7 +133,7 @@ class GenerateOntologyTest(unittest.TestCase):
         temp_filename = get_temp_filename(json_file_path, temp_dir)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            self.generator.generate_ontology(temp_filename, temp_dir, False)
+            self.generator.generate(temp_filename, temp_dir, False)
             self.assertEqual(len(w), 1)
             assert w[0].category, DirectoryAlreadyPresentWarning
 

@@ -37,9 +37,7 @@ def create(args_):
         args_.no_dry_run = False
 
     is_dry_run = not args_.no_dry_run
-    generated_folder = generator.generate_ontology(config_path,
-                                                   dest_path,
-                                                   is_dry_run)
+    generated_folder = generator.generate(config_path, dest_path, is_dry_run)
     log.info("Ontology generated in the directory %s.", generated_folder)
 
 

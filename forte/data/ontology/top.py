@@ -478,5 +478,5 @@ class Query(Generic):
         self.results.update(pid_to_score)
 
 
-SinglePackEntries = (Link, Group, Annotation)
-MultiPackEntries = (MultiPackLink, MultiPackGroup)
+SinglePackEntries = (Link, Group, Annotation, Generic)
+MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)

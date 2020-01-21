@@ -4,10 +4,8 @@
 # pylint: skip-file
 """
 
-
-Automatically generated file. Do not change manually.
+Automatically generated ontology base_ontology_new. Do not change manually.
 """
-import forte.data.data_pack
 import forte.data.ontology.top
 import ft.onto
 import typing
