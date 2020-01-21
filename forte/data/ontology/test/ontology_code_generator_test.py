@@ -23,11 +23,12 @@ import importlib
 import warnings
 from ddt import ddt, data
 
-from forte.data.ontology import OntologyCodeGenerator, \
-    DuplicatedAttributesWarning, TypeNotDeclaredException, \
-    ParentEntryNotDeclaredException, ImportOntologyNotFoundException, \
-    DuplicateEntriesWarning, DirectoryAlreadyPresentWarning, \
-    UnsupportedTypeException
+from forte.data.ontology.ontology_code_generator import (
+    OntologyCodeGenerator, DuplicatedAttributesWarning,
+    TypeNotDeclaredException, ParentEntryNotDeclaredException,
+    ImportOntologyNotFoundException, DuplicateEntriesWarning,
+    DirectoryAlreadyPresentWarning, UnsupportedTypeException
+)
 
 
 @ddt

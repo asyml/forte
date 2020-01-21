@@ -30,6 +30,7 @@ class Token(forte.data.ontology.top.Annotation):
         ner (typing.Optional[str])
         sense (typing.Optional[str])
         is_root (typing.Optional[bool])
+
     """
 
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
@@ -97,6 +98,35 @@ class Document(forte.data.ontology.top.Annotation):
     """
     A span based annotation `Document`, normally used to represent a document.
 
+
+    """
+
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+
+__all__.extend('Sentence')
+
+
+class Sentence(forte.data.ontology.top.Annotation):
+    """
+    A span based annotation `Sentence`, normally used to represent a sentence.
+
+
+    """
+
+    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+
+__all__.extend('Utterance')
+
+
+class Utterance(forte.data.ontology.top.Annotation):
+    """
+    A span based annotation `Utterance`, normally used to represent an utterance in dialogue.
+
+
     """
 
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
@@ -112,6 +142,7 @@ class PredicateArgument(forte.data.ontology.top.Annotation):
 
     Attributes:
         ner_type (typing.Optional[str])
+
     """
 
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
@@ -136,6 +167,7 @@ class EntityMention(forte.data.ontology.top.Annotation):
 
     Attributes:
         ner_type (typing.Optional[str])
+
     """
 
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
@@ -160,6 +192,7 @@ class PredicateMention(forte.data.ontology.top.Annotation):
 
     Attributes:
         ner_type (typing.Optional[str])
+
     """
 
     def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
@@ -175,30 +208,6 @@ class PredicateMention(forte.data.ontology.top.Annotation):
         self.set_fields(ner_type=ner_type)
 
 
-__all__.extend('RelationLink')
-
-
-class RelationLink(forte.data.ontology.top.Link):
-    """
-    A `Link` type entry which represent a relation.
-
-    Attributes:
-        rel_type (typing.Optional[str])	The type of the relation.
-    """
-
-    def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
-        super().__init__(pack, parent, child)
-        self.rel_type: typing.Optional[str] = None
-
-    @property
-    def rel_type(self):
-        return self.rel_type
-
-    @rel_type.setter
-    def rel_type(self, rel_type: typing.Optional[str]):
-        self.set_fields(rel_type=rel_type)
-
-
 __all__.extend('PredicateLink')
 
 
@@ -208,7 +217,10 @@ class PredicateLink(forte.data.ontology.top.Link):
 
     Attributes:
         arg_type (typing.Optional[str])	The predicate link type.
+
     """
+    parent_type = ft.onto.base_ontology.PredicateMention
+    child_type = ft.onto.base_ontology.PredicateArgument
 
     def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
         super().__init__(pack, parent, child)
@@ -232,7 +244,10 @@ class Dependency(forte.data.ontology.top.Link):
 
     Attributes:
         dep_label (typing.Optional[str])	The dependency label.
+
     """
+    parent_type = ft.onto.base_ontology.Token
+    child_type = ft.onto.base_ontology.Token
 
     def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
         super().__init__(pack, parent, child)
@@ -257,7 +272,10 @@ class EnhancedDependency(forte.data.ontology.top.Link):
 
     Attributes:
         dep_label (typing.Optional[str])	The enhanced dependency label in Universal Dependency.
+
     """
+    parent_type = ft.onto.base_ontology.Token
+    child_type = ft.onto.base_ontology.Token
 
     def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
         super().__init__(pack, parent, child)
@@ -272,6 +290,33 @@ class EnhancedDependency(forte.data.ontology.top.Link):
         self.set_fields(dep_label=dep_label)
 
 
+__all__.extend('RelationLink')
+
+
+class RelationLink(forte.data.ontology.top.Link):
+    """
+    A `Link` type entry which represent a relation.
+
+    Attributes:
+        rel_type (typing.Optional[str])	The type of the relation.
+
+    """
+    parent_type = ft.onto.base_ontology.EntityMention
+    child_type = ft.onto.base_ontology.EntityMention
+
+    def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
+        super().__init__(pack, parent, child)
+        self.rel_type: typing.Optional[str] = None
+
+    @property
+    def rel_type(self):
+        return self.rel_type
+
+    @rel_type.setter
+    def rel_type(self, rel_type: typing.Optional[str]):
+        self.set_fields(rel_type=rel_type)
+
+
 __all__.extend('CoreferenceGroup')
 
 
@@ -279,7 +324,9 @@ class CoreferenceGroup(forte.data.ontology.top.Group):
     """
     A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.
 
+
     """
+    member_type = ft.onto.base_ontology.EntityMention
 
     def __init__(self, pack: forte.data.container.EntryContainer, members: typing.Optional[typing.Set[forte.data.ontology.core.Entry]] = None):
         super().__init__(pack, members)

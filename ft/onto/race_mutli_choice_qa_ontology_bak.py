@@ -86,9 +86,3 @@ class Question(Annotation):
     @property
     def num_answers(self) -> int:
         return len(self._answers)
-
-
-# pylint: disable=useless-super-delegation
-class Article(Annotation):
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)

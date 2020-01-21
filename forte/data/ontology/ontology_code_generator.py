@@ -30,11 +30,10 @@ from typing import Dict, List, Optional, Tuple, Set, no_type_check
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
 
-from forte.data.ontology import utils, top
+from forte.data.ontology import top, utils
 from forte.data.ontology.code_generation_util import (
-    PrimitiveProperty, CompositeProperty, ClassAttributeProperty,
+    PrimitiveProperty, CompositeProperty, ClassTypeDefinition,
     DefinitionItem, EntryWriter, Property)
-
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
 #  the line of code to the user, which is undesired.
@@ -43,6 +42,23 @@ from forte.data.ontology.code_generation_util import (
 #
 #
 # warnings.formatwarning = format_warning  # type: ignore
+
+# Builtin and local imports required in the generated python modules.
+REQUIRED_IMPORTS: List[str] = [
+    'typing',
+    # 'ft.onto',
+    'forte.data.data_pack',
+]
+
+AUTO_GEN_SIGNATURE = '***automatically_generated***'
+
+# Special comments to be added to disable checking.
+IGNORE_ERRORS_LINES: List[str] = [
+    f'# {AUTO_GEN_SIGNATURE}',
+    '# flake8: noqa',
+    '# mypy: ignore-errors',
+    '# pylint: skip-file']
+
 
 class DuplicatedAttributesWarning(UserWarning):
     pass
@@ -153,7 +169,6 @@ class OntologyCodeGenerator:
         >>> destination_dir = OntologyCodeGenerator().generate_ontology(
         'test/example_ontology_config.json')
     """
-    AUTO_GEN_CONST = '***automatically_generated***'
 
     def __init__(self, json_dir_paths: Optional[List[str]] = None):
         """
@@ -168,21 +183,14 @@ class OntologyCodeGenerator:
         base_ontology_module: ModuleType = top
 
         # Builtin and local imports required in the generated python modules.
-        self.required_imports: List[str] = [
-            'typing',
-            'ft.onto',
-            'forte.data.data_pack',
-            base_ontology_module.__name__]
+        self.required_imports: List[str] = REQUIRED_IMPORTS
+        self.required_imports.append(base_ontology_module.__name__)
 
         # Special comments to be added to disable checking.
-        self.ignore_errors: List[str] = [
-            f'# {self.AUTO_GEN_CONST}',
-            '# flake8: noqa',
-            '# mypy: ignore-errors',
-            '# pylint: skip-file']
+        self.ignore_errors: List[str] = IGNORE_ERRORS_LINES
 
         self.core_base_keys = {"BaseLink": ["parent_type", "child_type"],
-                               "GroupLink": ["member_type"]}
+                               "BaseGroup": ["member_type"]}
 
         # Mapping from entries parsed from the `base_ontology_module`
         # (default is `top.py`), to their `__init__` arguments.
@@ -227,7 +235,7 @@ class OntologyCodeGenerator:
         (1) Imports the imports defined by the base file,
         (2) Imports the public API defined by by the base file in it's `__all__`
         attribute,
-        (3) Extracts the name and inheritence of the class definitions and
+        (3) Extracts the name and inheritance of the class definitions and
         populates `self.top_to_core_entries`,
         (4) Extracts `__init__` arguments of class definitions and populates
         `self.top_init_args`
@@ -246,6 +254,7 @@ class OntologyCodeGenerator:
         """
         top_init_args = {}
         top_to_core_entries = {}
+
         tree = ast.parse(open(base_ontology_module.__file__, 'r').read())
 
         imports = {}
@@ -277,6 +286,7 @@ class OntologyCodeGenerator:
                 if elem.bases is not None and len(elem.bases) > 0:
                     for elem_base in elem.bases:
                         while isinstance(elem_base, ast.Subscript):
+                            # TODO: Doesn't handle typed class well.
                             elem_base = elem_base.slice.value
                         elem_base_names.add(elem_base.id)
                 init_func = None
@@ -408,7 +418,7 @@ class OntologyCodeGenerator:
         spec_dict = json.loads(spec_str)
 
         # Extract imported json files and generate ontology for them.
-        json_imports: List = spec_dict.get("import_paths", [])
+        json_imports: List[str] = spec_dict.get("import_paths", [])
 
         modules_to_import: List[str] = []
 
@@ -589,7 +599,7 @@ class OntologyCodeGenerator:
                 with open(path, 'r') as f:
                     lines = f.readlines()
                     if len(lines) > 0:
-                        if lines[0].startswith(f'# {self.AUTO_GEN_CONST}'):
+                        if lines[0].startswith(f'# {AUTO_GEN_SIGNATURE}'):
                             is_empty = True
             if is_empty:
                 if delete_dir is not None:
@@ -654,13 +664,13 @@ class OntologyCodeGenerator:
 
         # TODO: Apply stricter checking on class attributes.
         # TODO: Test subtypes of Group.
-        class_att_items: List[Property] = []
+        class_att_items: List[ClassTypeDefinition] = []
 
         for class_att in class_attribute_names:
             if class_att in schema:
                 type_ = self.parse_type(schema[class_att])
                 class_att_items.append(
-                    ClassAttributeProperty(class_att, type_, ))
+                    ClassTypeDefinition(class_att, type_))
 
         entry_item = DefinitionItem(name=ref_name,
                                     class_type=parent_entry,
@@ -728,21 +738,21 @@ class OntologyCodeGenerator:
         return PrimitiveProperty(name, type_, description=desc,
                                  default=default)
 
-    def parse_attribute(self, entry_name, schema):
-        name = schema["name"]
-        type_str = schema.get("type", None)
-        type_ = '' if type_str is None else self.parse_type(type_str)
-
-        desc = schema.get("description", None)
-
-        if "default" not in schema:
-            raise NoDefaultClassAttributeException(
-                f"No default value present for the class attribute"
-                f" {name} for the entry {entry_name}.")
-
-        # if default is of the type "type" which is already seen, parse_type
-        default = self.parse_type(schema.get("default"))
-        return ClassAttributeProperty(name, type_, desc, default)
+    # def parse_attribute(self, entry_name, schema):
+    #     name = schema["name"]
+    #     type_str = schema.get("type", None)
+    #     type_ = '' if type_str is None else self.parse_type(type_str)
+    #
+    #     desc = schema.get("description", None)
+    #
+    #     if "default" not in schema:
+    #         raise NoDefaultClassAttributeException(
+    #             f"No default value present for the class attribute"
+    #             f" {name} for the entry {entry_name}.")
+    #
+    #     # if default is of the type "type" which is already seen, parse_type
+    #     default = self.parse_type(schema.get("default"))
+    #     return ClassTypeDefinition(name, type_, desc, default)
 
     def get_and_set_base_entry(self, entry_name: str, parent_entry: str) \
             -> str:

@@ -1,8 +1,7 @@
 {
   "ontology_name": "race_mutli_choice_qa_ontology",
-  "imports": [
-    "forte.data.ontology.top",
-    "forte.data.ontology.base_ontology"
+  "import_paths": [
+    "base_ontology.json"
   ],
   "definitions": [
     {

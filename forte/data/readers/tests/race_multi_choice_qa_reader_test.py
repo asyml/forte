@@ -5,7 +5,7 @@ from typing import Iterator
 
 from forte.data.readers import RACEMultiChoiceQAReader
 from forte.data.data_pack import DataPack
-from ft.onto.race_mutli_choice_qa_ontology_bak import Article, Question
+from ft.onto.race_mutli_choice_qa_ontology_bak import Document, Question
 
 
 class RACEMultiChoiceQAReaderTest(unittest.TestCase):
@@ -27,7 +27,7 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
             with open(file_path, "r", encoding="utf8", errors='ignore') as file:
                 expected = json.load(file)
 
-            articles = list(pack.get_entries(Article))
+            articles = list(pack.get_entries(Document))
             self.assertEqual(len(articles), 1)
             expected_article = expected['article']
             self.assertEqual(articles[0].text, expected_article)

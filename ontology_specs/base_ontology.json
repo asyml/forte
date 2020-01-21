@@ -1,12 +1,8 @@
 {
-  "ontology_name": "base_ontology_dev",
-  "imports": [
-    "forte.data.ontology.top",
-    "forte.data.ontology.base_ontology_dev_dev"
-  ],
+  "ontology_name": "base_ontology",
   "definitions": [
     {
-      "entry_name": "ft.onto.base_ontology_dev.Token",
+      "entry_name": "ft.onto.base_ontology.Token",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation :class:`Token`, used to represent a token or a word.",
       "attributes": [
@@ -35,20 +31,26 @@
         {
           "name": "is_root",
           "type": "bool"
-        },
-        {
-          "name": "ud_features",
-          "type": "Dict[str, List[str]]"
         }
       ]
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.Document",
+      "entry_name": "ft.onto.base_ontology.Document",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Document`, normally used to represent a document."
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.PredicateArgument",
+      "entry_name": "ft.onto.base_ontology.Sentence",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `Sentence`, normally used to represent a sentence."
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.Utterance",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `Utterance`, normally used to represent an utterance in dialogue."
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.PredicateArgument",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `PredicateArgument`, normally used to represent an argument of a predicate, can be linked to the predicate via the predicate link.",
       "attributes": [
@@ -59,7 +61,7 @@
       ]
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.EntityMention",
+      "entry_name": "ft.onto.base_ontology.EntityMention",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `EntityMention`, normally used to represent an Entity Mention in a piece of text.",
       "attributes": [
@@ -70,7 +72,7 @@
       ]
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.PredicateMention",
+      "entry_name": "ft.onto.base_ontology.PredicateMention",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `PredicateMention`, normally used to represent a predicate (normally verbs) in a piece of text.",
       "attributes": [
@@ -81,7 +83,7 @@
       ]
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.PredicateLink",
+      "entry_name": "ft.onto.base_ontology.PredicateLink",
       "parent_entry": "forte.data.ontology.top.Link",
       "description": "A `Link` type entry which represent a semantic role link between a predicate and its argument.",
       "attributes": [
@@ -90,10 +92,12 @@
           "type": "str",
           "description": "The predicate link type."
         }
-      ]
+      ],
+      "parent_type": "ft.onto.base_ontology.PredicateMention",
+      "child_type": "ft.onto.base_ontology.PredicateArgument"
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.Dependency",
+      "entry_name": "ft.onto.base_ontology.Dependency",
       "parent_entry": "forte.data.ontology.top.Link",
       "description": "A `Link` type entry which represent a syntactic dependency.",
       "attributes": [
@@ -102,10 +106,12 @@
           "type": "str",
           "description": "The dependency label."
         }
-      ]
+      ],
+      "parent_type": "ft.onto.base_ontology.Token",
+      "child_type": "ft.onto.base_ontology.Token"
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.EnhancedDependency",
+      "entry_name": "ft.onto.base_ontology.EnhancedDependency",
       "parent_entry": "forte.data.ontology.top.Link",
       "description": "A `Link` type entry which represent a enhanced dependency: \n https://universaldependencies.org/u/overview/enhanced-syntax.html",
       "attributes": [
@@ -114,10 +120,12 @@
           "type": "str",
           "description": "The enhanced dependency label in Universal Dependency."
         }
-      ]
+      ],
+      "parent_type": "ft.onto.base_ontology.Token",
+      "child_type": "ft.onto.base_ontology.Token"
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.RelationLink",
+      "entry_name": "ft.onto.base_ontology.RelationLink",
       "parent_entry": "forte.data.ontology.top.Link",
       "description": "A `Link` type entry which represent a relation.",
       "attributes": [
@@ -126,12 +134,15 @@
           "type": "str",
           "description": "The type of the relation."
         }
-      ]
+      ],
+      "parent_type": "ft.onto.base_ontology.EntityMention",
+      "child_type": "ft.onto.base_ontology.EntityMention"
     },
     {
-      "entry_name": "ft.onto.base_ontology_dev.CoreferenceGroup",
+      "entry_name": "ft.onto.base_ontology.CoreferenceGroup",
       "parent_entry": "forte.data.ontology.top.Group",
-      "description": "A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities."
+      "description": "A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.",
+      "member_type": "ft.onto.base_ontology.EntityMention"
     }
   ]
 }

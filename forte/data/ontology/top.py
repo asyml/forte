@@ -238,13 +238,13 @@ class Link(BaseLink):
 
 
 # pylint: disable=duplicate-bases
-class Group(BaseGroup[Entry]):
+class Group(BaseGroup):
     """
     Group is an entry that represent a group of other entries. For example,
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
     """
-    MemberType: Type[Entry] = Entry
+    MemberType: Any = Entry
 
     def __init__(
             self,

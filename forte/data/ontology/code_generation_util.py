@@ -49,7 +49,7 @@ def getter(name: str, level: int):
     lines = [
         ("@property", 0),
         (f"def {name}(self):", 0),
-        (f"return self._{name}", 1),
+        (f"return self.{name}", 1),
     ]
     return indent_code([indent_line(*line) for line in lines], level)
 
@@ -57,7 +57,7 @@ def getter(name: str, level: int):
 def setter(name: str, level: int):
     lines = [
         (f"def set_{name}(self):", 0),
-        (f"return self._{name}", 1),
+        (f"return self.{name}", 1),
     ]
     return indent_code([indent_line(*line) for line in lines], level)
 
@@ -131,14 +131,17 @@ class Property(Item, ABC):
         raise NotImplementedError
 
 
-class ClassAttributeProperty(Property):
-    def to_type_str(self) -> str:
-        return self.type_str
+class ClassTypeDefinition:
+    def __init__(self, name: str, type_str: str,
+                 description: Optional[str] = None):
+        self.name = name
+        self.type_str = type_str
+        self.description = description
 
-    def to_init_code(self, level: int) -> str:
-        type_code = f'{self.to_type_str()}'
-        type_ = f': {type_code}' if type_code.strip() != '' else ''
-        return indent_line(f"{self.name}{type_} = {self.default}", level)
+    def to_code(self, level: int) -> str:
+        # type_code = f'{self.to_type_str()}'
+        # type_ = f': {type_code}' if type_code.strip() != '' else ''
+        return indent_line(f"{self.name} = {self.type_str}", level)
 
     def to_field_value(self):
         pass
@@ -184,17 +187,17 @@ class CompositeProperty(Property):
         lines = [
             (empty_lines(0), 0),
             (f"def num_{name}(self):", 0),
-            (f"return len(self._{name})", 1),
+            (f"return len(self.{name})", 1),
             (empty_lines(0), 0),
             (f"def clear_{name}(self):", 0),
-            (f"self._{name}.clear()", 1),
+            (f"self.{name}.clear()", 1),
             (empty_lines(0), 0),
         ]
 
         if self.type_str == 'typing.List':
             lines.extend([
                 (f"def add_{name}(self, a_{name}: {self.item_type}):", 0),
-                (f"self._{name}.append(a_{name})", 1),
+                (f"self.{name}.append(a_{name})", 1),
                 (empty_lines(0), 0),
             ])
 
@@ -213,7 +216,7 @@ class DefinitionItem(Item):
                  class_type: str,
                  init_args: Optional[str] = None,
                  properties: Optional[List[Property]] = None,
-                 class_attributes: Optional[List[Property]] = None,
+                 class_attributes: Optional[List[ClassTypeDefinition]] = None,
                  description: Optional[str] = None):
         super().__init__(name, description)
         self.class_type = class_type
@@ -240,7 +243,7 @@ class DefinitionItem(Item):
             f"class {self.name}({self.class_type}):",
         ]
         lines += [desc] if desc.strip() else []
-        lines += [item.to_init_code(1) for item in self.class_attributes]
+        lines += [item.to_code(1) for item in self.class_attributes]
         lines += [empty_lines(0)]
         lines += [self.to_init_code(1),
                   indent_line(f"super().__init__({super_args})", 2)]
@@ -262,9 +265,10 @@ class DefinitionItem(Item):
     def to_description(self, level: int) -> Optional[str]:
         class_desc = [] if self.description is None else [self.description]
         item_descs = self.to_item_descs(self.properties, 'Attributes:')
-        att_descs = self.to_item_descs(self.class_attributes,
-                                       'Class Attributes:')
-        descs = class_desc + [empty_lines(0)] + item_descs + att_descs
+
+        # att_descs = self.to_item_descs(self.class_attributes,
+        #                                'Class Attributes:')
+        descs = class_desc + [empty_lines(0)] + item_descs + [empty_lines(0)]
         if len(descs) == 0:
             return ""
         quotes = indent_line('"""', 0)
