@@ -3,7 +3,7 @@ Unit tests for Pipeline.
 """
 # pylint: disable=no-self-use,unused-argument,useless-super-delegation
 import unittest
-from ddt import ddt, data
+from ddt import ddt, data, unpack
 import os
 from typing import Any, Dict, Iterator, Optional, Type
 
@@ -242,6 +242,72 @@ class PipelineTest(unittest.TestCase):
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[PACK][BATCH][PACK]")
+
+        # check that all packs are yielded
+        self.assertEqual(num_packs, reader.count)
+
+    @data((2, 3), (4, 5), (8, 9), (3, 2), (5, 4), (9, 8))
+    @unpack
+    def test_pipeline5(self, batch_size1, batch_size2):
+        # Tests a chain of Batch->Pack->Batch with different batch sizes.
+
+        nlp = Pipeline()
+        reader = SentenceReader()
+        nlp.set_reader(reader)
+        dummy1 = DummmyFixedSizeBatchProcessor()
+        config = HParams({"batcher": {"batch_size": batch_size1}},
+                         DummmyFixedSizeBatchProcessor.default_hparams())
+        nlp.add_processor(processor=dummy1, config=config)
+        dummy2 = DummyPackProcessor()
+        nlp.add_processor(processor=dummy2)
+        dummy3 = DummmyFixedSizeBatchProcessor()
+        config = HParams({"batcher": {"batch_size": batch_size2}},
+                         DummmyFixedSizeBatchProcessor.default_hparams())
+        nlp.add_processor(processor=dummy3, config=config)
+        nlp.initialize()
+        data_path = "forte/processors/base/tests/data_samples/" \
+                    "random_texts/0.txt"
+
+        num_packs = 0
+        for pack in nlp.process_dataset(data_path):
+            types = list(pack.get_entries_by_type(NewType))
+            num_packs += 1
+            self.assertEqual(len(types), 1)
+            self.assertEqual(types[0].value, "[BATCH][PACK][BATCH]")
+
+        # check that all packs are yielded
+        self.assertEqual(num_packs, reader.count)
+
+    @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
+    @unpack
+    def test_pipeline6(self, batch_size1, batch_size2, batch_size3):
+        # Tests a chain of Batch->Batch->Batch with different batch sizes.
+
+        nlp = Pipeline()
+        reader = SentenceReader()
+        nlp.set_reader(reader)
+        dummy1 = DummmyFixedSizeBatchProcessor()
+        config = HParams({"batcher": {"batch_size": batch_size1}},
+                         DummmyFixedSizeBatchProcessor.default_hparams())
+        nlp.add_processor(processor=dummy1, config=config)
+        dummy2 = DummmyFixedSizeBatchProcessor()
+        config = HParams({"batcher": {"batch_size": batch_size2}},
+                         DummmyFixedSizeBatchProcessor.default_hparams())
+        nlp.add_processor(processor=dummy2, config=config)
+        dummy3 = DummmyFixedSizeBatchProcessor()
+        config = HParams({"batcher": {"batch_size": batch_size3}},
+                         DummmyFixedSizeBatchProcessor.default_hparams())
+        nlp.add_processor(processor=dummy3, config=config)
+        nlp.initialize()
+        data_path = "forte/processors/base/tests/data_samples/" \
+                    "random_texts/0.txt"
+
+        num_packs = 0
+        for pack in nlp.process_dataset(data_path):
+            types = list(pack.get_entries_by_type(NewType))
+            num_packs += 1
+            self.assertEqual(len(types), 1)
+            self.assertEqual(types[0].value, "[BATCH][BATCH][BATCH]")
 
         # check that all packs are yielded
         self.assertEqual(num_packs, reader.count)

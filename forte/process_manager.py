@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import deque
 from enum import Enum
-from typing import List, Optional
+from typing import cast, Deque, List, Optional
 
 __all__ = [
     "ProcessManager",
@@ -35,7 +36,7 @@ class ProcessManager:
         def __init__(self):
             self.current_component: str = '__default__'
             self.pipeline_length: int
-            self.queues: List[List[int]]
+            self.queues: List[List[Deque[int]]]
             self.current_queue_index: int
             self.current_processor_index: int
             self.unprocessed_queue_indices: List[int]
@@ -97,12 +98,10 @@ class ProcessManager:
 
         """
         if self.instance is not None:
-            # Definition of the following variables
-            #
-            # pipeline_length: The length of the current pipeline being executed
-            # queues:
             self.instance.pipeline_length = pipeline_length
-            self.instance.queues = [[] for _ in range(pipeline_length)]
+            self.instance.queues = \
+                cast(List[List[Deque[int]]],
+                     [deque() for _ in range(pipeline_length)])
             self.instance.current_queue_index = -1
             self.instance.current_processor_index = 0
             self.instance.unprocessed_queue_indices = [0] * pipeline_length

@@ -14,6 +14,7 @@
 """
 The base class of processors
 """
+import itertools
 from abc import abstractmethod, ABC
 from typing import Optional
 
@@ -70,7 +71,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         u_index = process_manager.unprocessed_queue_indices[q_index]
         current_queue = process_manager.current_queue
 
-        for job_i in current_queue[:u_index + 1]:
+        for job_i in itertools.islice(current_queue, 0, u_index + 1):
 
             if job_i.status == ProcessJobStatus.UNPROCESSED:
                 job_i.set_status(ProcessJobStatus.PROCESSED)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import itertools
 from abc import abstractmethod
 from typing import List, Dict, Iterator, Generic, Optional
 
@@ -399,11 +400,11 @@ class BasePipeline(Generic[PackType]):
                         index = unprocessed_queue_indices[current_queue_index]
 
                         # check status of all the jobs up to "index"
-                        for job_i in current_queue[:index + 1]:
+                        for i, job_i in enumerate(
+                                itertools.islice(current_queue, 0, index + 1)):
 
                             if job_i.status == ProcessJobStatus.PROCESSED:
-                                processed_queue_indices[current_queue_index] \
-                                    += 1
+                                processed_queue_indices[current_queue_index] = i
 
                         # there are UNPROCESSED jobs in the queue
                         if index < len(current_queue) - 1:
@@ -426,8 +427,8 @@ class BasePipeline(Generic[PackType]):
                                 processed_queue_indices[current_queue_index]
 
                             # move or yield the pack
-                            for job_i in \
-                                    current_queue[:processed_queue_index + 1]:
+                            for job_i in list(
+                                    current_queue)[:processed_queue_index + 1]:
 
                                 if should_yield:
                                     yield job_i.pack
@@ -436,7 +437,7 @@ class BasePipeline(Generic[PackType]):
                                     process_manager.add_to_queue(
                                         queue_index=next_queue_index, job=job_i)
 
-                                current_queue.pop(0)
+                                current_queue.popleft()
 
                             # set the UNPROCESSED and PROCESSED indices
                             unprocessed_queue_indices[current_queue_index] \
@@ -478,7 +479,7 @@ class BasePipeline(Generic[PackType]):
                                     process_manager.add_to_queue(
                                         queue_index=next_queue_index, job=job_i)
 
-                                current_queue.pop(0)
+                                current_queue.popleft()
 
                             # set the UNPROCESSED index
                             # we do not use "processed_queue_indices" as the
@@ -524,7 +525,7 @@ class BasePipeline(Generic[PackType]):
                                 queue_index=next_queue_index, job=job)
 
                         if not job.is_poison:
-                            current_queue.pop(0)
+                            current_queue.popleft()
 
                     if not should_yield:
                         # set next processor and queue as current

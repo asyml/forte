@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
 from abc import abstractmethod, ABC
 from typing import Dict, Optional, Type
 
@@ -132,7 +133,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         data_pool_length = len(self.batcher.data_pack_pool)
         current_queue = process_manager.current_queue
 
-        for i, job_i in enumerate(current_queue):
+        for i, job_i in enumerate(
+                itertools.islice(current_queue, 0, u_index + 1)):
 
             if i <= u_index - data_pool_length:
                 job_i.set_status(ProcessJobStatus.PROCESSED)
