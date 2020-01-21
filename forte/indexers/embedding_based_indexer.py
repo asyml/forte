@@ -14,45 +14,22 @@
 import os
 import logging
 import pickle
-from abc import ABC
 from typing import Optional, List, Tuple, Dict, Union, Any
 import numpy as np
 
-import torch
-from texar.torch import HParams
 import faiss
+import torch
+
+from texar.torch import HParams
 
 from forte import utils
 
 __all__ = [
-    "ElasticSearchIndexer",
     "EmbeddingBasedIndexer"
 ]
 
 
-class BaseIndexer(ABC):
-    r"""Base indexer class. All indexer classes will inherit from this base
-    class."""
-
-    def __init__(self):
-        pass
-
-    def index(self):
-        raise NotImplementedError
-
-
-class ElasticSearchIndexer(BaseIndexer):
-    r"""Indexer class for Elastic Search."""
-
-    def __init__(self):
-        super().__init__()
-        pass
-
-    def index(self):
-        pass
-
-
-class EmbeddingBasedIndexer(BaseIndexer):
+class EmbeddingBasedIndexer:
     r"""This class is used for indexing documents represented as vectors. For
     example, each document can be passed through a neural embedding models and
     the vectors are indexed using this class.
@@ -95,7 +72,7 @@ class EmbeddingBasedIndexer(BaseIndexer):
                                 self._hparams.device, faiss.get_num_gpus())
             config_class_name = \
                 self.INDEX_TYPE_TO_CONFIG.get(index_class.__name__)
-            config = utils.get_class(config_class_name,
+            config = utils.get_class(config_class_name,  # type: ignore
                                      module_paths=["faiss"])()
             config.device = gpu_id
             self._index = index_class(gpu_resource, dim, config)
@@ -145,8 +122,9 @@ class EmbeddingBasedIndexer(BaseIndexer):
         Args:
             vectors (np.ndarray or torch.Tensor): A pytorch tensor or a numpy
                 array of shape ``[batch_size, *]``.
-            meta_data (optional dict): Meta data containing associated with the
-                vectors to be added.
+            meta_data (optional dict): Meta data associated with the vectors to
+                be added. Meta data can include the document contents of the
+                vectors.
         """
 
         if isinstance(vectors, torch.Tensor):

@@ -57,15 +57,12 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         self.define_context()
 
     def _define_input_info(self) -> DataRequest:
-        # pylint: disable=no-self-use
         return {}
 
     def define_context(self):
-        # pylint: disable=no-self-use
         self.context_type = Sentence
 
     def define_batcher(self) -> ProcessingBatcher:
-        # pylint: disable=no-self-use
         return FixedSizeMultiPackProcessingBatcher()
 
     def initialize(self, resource: Resources, configs: Optional[HParams]):

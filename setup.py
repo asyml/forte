@@ -1,18 +1,22 @@
+import sys
 import setuptools
 
 long_description = '''
 NLP pipeline project to facilitate the production usage of NLP techniques.
 '''
 
+if sys.version_info < (3, 6):
+    sys.exit('Python>=3.6 is required by Forte.')
+
 setuptools.setup(
     name="forte",
     version="0.0.1",
-    url="https://github.com/hunterhector/forte",
+    url="https://github.com/asyml/forte",
 
     description="NLP pipeline",
     long_description=long_description,
     license='Apache License Version 2.0',
-    packages=setuptools.find_packages(include=['forte.*', 'ft.*', 'scripts.*']),
+    packages=setuptools.find_packages(exclude=["scripts", "examples"]),
     platforms='any',
 
     install_requires=[
@@ -27,7 +31,9 @@ setuptools.setup(
         'funcsigs',
         'mypy_extensions',
         'typed_ast',
-        'jsonschema'
+        'jsonschema',
+        'texar',
+        'texar-pytorch',
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
@@ -37,7 +43,8 @@ setuptools.setup(
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
-        'indexer': ['faiss>=1.5.3'],
+        'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
+        'spacy': ['spacy']
     },
     package_data={
     },

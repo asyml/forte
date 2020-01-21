@@ -39,7 +39,6 @@ class DummySelector(Selector[InputPackType, InputPackType]):
     MultiPack
     """
 
-    # pylint: disable=no-self-use
     def select(self, pack: InputPackType) -> Iterator[InputPackType]:
         yield pack
 

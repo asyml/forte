@@ -97,8 +97,8 @@ class StandfordNLPProcessor(PackProcessor):
                     if "lemma" in self.processors:
                         token.set_fields(lemma=word.lemma)
 
+                    token = input_pack.add_or_get_entry(token)
                     tokens.append(token)
-                    input_pack.add_or_get_entry(token)
 
             # For each sentence, get the dependency relations among tokens
             if "depparse" in self.processors:

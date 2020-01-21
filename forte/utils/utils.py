@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Util functions
+Utility functions
 """
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from pydoc import locate
 import yaml
 
@@ -29,11 +29,17 @@ __all__ = [
 ]
 
 
-def get_full_module_name(o, lower=False):
-    """
-    Returns the full module and class name of an object o.
-    For example, for our :class: OntonotesReader, returns
-    'nlp.forte.data.readers.ontonotes_reader.OntonotesReader'.
+def get_full_module_name(o, lower: bool = False) -> str:
+    r"""Returns the full module and class name of an object ``o``. For example,
+    for our :class:`OntonotesReader`, returns
+    :class:'forte.data.readers.ontonotes_reader.OntonotesReader'.
+
+    Args:
+        o (object): An object class.
+        lower (bool): Whether to lowercase the full module and class name.
+
+    Returns:
+         The full module and class name.
     """
     if not isinstance(o, type):
         o = o.__class__
@@ -47,9 +53,15 @@ def get_full_module_name(o, lower=False):
         return name
 
 
-def get_class_name(o, lower=False):
-    """
-    Returns the class name of an object o.
+def get_class_name(o, lower: bool = False) -> str:
+    r"""Returns the class name of an object ``o``.
+
+    Args:
+        o (object): An object class.
+        lower (bool): Whether to lowercase the class name.
+
+    Returns:
+         The class name.
     """
     if not isinstance(o, type):
         o = o.__class__
@@ -59,14 +71,15 @@ def get_class_name(o, lower=False):
         return o.__name__
 
 
-def get_class(class_name, module_paths=None):
-    """Returns the class based on class name.
+def get_class(class_name: str,
+              module_paths: Optional[List[str]] = None):
+    r"""Returns the class based on class name.
 
     Args:
         class_name (str): Name or full path to the class.
         module_paths (list): Paths to candidate modules to search for the
             class. This is used if the class cannot be located solely based on
-            `class_name`. The first module in the list that contains the class
+            ``class_name``. The first module in the list that contains the class
             is used.
 
     Returns:
@@ -90,9 +103,15 @@ def get_class(class_name, module_paths=None):
     return class_
 
 
-def get_qual_name(o, lower=False):
-    """
-    Returns the qualified name of an object o.
+def get_qual_name(o, lower: bool = False) -> str:
+    r"""Returns the qualified name of an object ``o``.
+
+    Args:
+        o (object): An object class.
+        lower (bool): Whether to lowercase the qualified class name.
+
+    Returns:
+         The qualified class name.
     """
     if not isinstance(o, type):
         o = o.__class__
@@ -102,8 +121,19 @@ def get_qual_name(o, lower=False):
         return o.__qualname__
 
 
-def create_class_with_kwargs(
-        class_name: str, class_args: Dict, h_params: Optional[Dict] = None):
+def create_class_with_kwargs(class_name: str,
+                             class_args: Dict,
+                             h_params: Optional[Dict] = None):
+    r"""Create class with the given arguments.
+
+    Args:
+        class_name (str): Class name.
+        class_args (Dict): Class arguments.
+        h_params (Dict): Hyperparameters for the processor.
+
+    Returns:
+        The class object and the hyperparameters for the processor.
+    """
     cls = get_class(class_name)
     if not class_args:
         class_args = {}

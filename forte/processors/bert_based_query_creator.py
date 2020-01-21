@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
+from typing import Any, Dict, Tuple
 import pickle
 import numpy as np
 
@@ -21,7 +22,7 @@ from texar.torch.modules import BERTEncoder
 from texar.torch.data import BERTTokenizer
 
 from forte.common.resources import Resources
-from forte.data import MultiPack
+from forte.data import DataPack, MultiPack
 from forte.processors.base import QueryProcessor
 
 __all__ = [
@@ -84,8 +85,9 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
         query_vector = query_vector.cpu().numpy()
         return query_vector
 
-    def _process_query(self, input_pack: MultiPack):
-        query_pack = input_pack.get_pack(self.config.query_pack_name)
+    def _process_query(self, input_pack: MultiPack) \
+            -> Tuple[DataPack, Dict[str, Any]]:
+        query_pack: DataPack = input_pack.get_pack(self.config.query_pack_name)
         context = [query_pack.text]
 
         # use context to build the query

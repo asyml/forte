@@ -35,13 +35,12 @@ class ConllUDReader(PackReader):
     """
 
     def _cache_key_function(self, data_pack: Any) -> str:
-        # pylint: disable=no-self-use
         if data_pack.meta.doc_id is None:
             raise ValueError("data_pack does not have a document id")
         return data_pack.meta.doc_id
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
-        # pylint: disable = no-self-use, unused-argument
+        # pylint: disable = unused-argument
         """
         Iterator over conll files in the data_source
 
@@ -68,7 +67,6 @@ class ConllUDReader(PackReader):
                         doc_lines = []
 
     def _parse_pack(self, doc_lines) -> Iterator[DataPack]:
-        # pylint: disable=no-self-use
         token_comp_fields = ["id", "form", "lemma", "pos",
                              "ud_xpos", "ud_features", "head", "label",
                              "enhanced_dependency_relations", "ud_misc"]

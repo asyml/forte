@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from abc import ABC
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict, Any
 import numpy as np
 
 from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
 from forte.data.ontology import Query
 from forte.processors.base.pack_processor import BasePackProcessor
 
@@ -23,7 +24,7 @@ __all__ = [
     "QueryProcessor"
 ]
 
-QueryType = Union[str, np.ndarray]
+QueryType = Union[Dict[str, Any], np.ndarray]
 
 
 class QueryProcessor(BasePackProcessor[PackType], ABC):
@@ -44,7 +45,7 @@ class QueryProcessor(BasePackProcessor[PackType], ABC):
         raise NotImplementedError
 
     def _process_query(self, input_pack: PackType) \
-            -> Tuple[PackType, QueryType]:
+            -> Tuple[DataPack, QueryType]:
         r"""Subclasses of QueryProcessor should implement this method which
         takes in an `input_pack` and processes it to generate a query.
 
@@ -65,5 +66,6 @@ class QueryProcessor(BasePackProcessor[PackType], ABC):
 
     def _process(self, input_pack: PackType):
         query_pack, query_value = self._process_query(input_pack)
-        query = Query(pack=query_pack, value=query_value)
+        query = Query(pack=query_pack)
+        query.set_value(value=query_value)
         query_pack.add_entry(query)
