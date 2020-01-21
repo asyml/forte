@@ -219,8 +219,8 @@ class PredicateLink(forte.data.ontology.top.Link):
         arg_type (typing.Optional[str])	The predicate link type.
 
     """
-    parent_type = ft.onto.base_ontology.PredicateMention
-    child_type = ft.onto.base_ontology.PredicateArgument
+    ParentType = ft.onto.base_ontology_new.PredicateMention
+    ChildType = ft.onto.base_ontology_new.PredicateArgument
 
     def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
         super().__init__(pack, parent, child)
@@ -246,8 +246,8 @@ class Dependency(forte.data.ontology.top.Link):
         dep_label (typing.Optional[str])	The dependency label.
 
     """
-    parent_type = ft.onto.base_ontology.Token
-    child_type = ft.onto.base_ontology.Token
+    ParentType = ft.onto.base_ontology_new.Token
+    ChildType = ft.onto.base_ontology_new.Token
 
     def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
         super().__init__(pack, parent, child)
@@ -274,8 +274,8 @@ class EnhancedDependency(forte.data.ontology.top.Link):
         dep_label (typing.Optional[str])	The enhanced dependency label in Universal Dependency.
 
     """
-    parent_type = ft.onto.base_ontology.Token
-    child_type = ft.onto.base_ontology.Token
+    ParentType = ft.onto.base_ontology_new.Token
+    ChildType = ft.onto.base_ontology_new.Token
 
     def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
         super().__init__(pack, parent, child)
@@ -301,8 +301,8 @@ class RelationLink(forte.data.ontology.top.Link):
         rel_type (typing.Optional[str])	The type of the relation.
 
     """
-    parent_type = ft.onto.base_ontology.EntityMention
-    child_type = ft.onto.base_ontology.EntityMention
+    ParentType = ft.onto.base_ontology_new.EntityMention
+    ChildType = ft.onto.base_ontology_new.EntityMention
 
     def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
         super().__init__(pack, parent, child)
@@ -326,7 +326,7 @@ class CoreferenceGroup(forte.data.ontology.top.Group):
 
 
     """
-    member_type = ft.onto.base_ontology.EntityMention
+    MemberType = ft.onto.base_ontology_new.EntityMention
 
     def __init__(self, pack: forte.data.container.EntryContainer, members: typing.Optional[typing.Set[forte.data.ontology.core.Entry]] = None):
         super().__init__(pack, members)

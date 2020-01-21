@@ -50,6 +50,11 @@ REQUIRED_IMPORTS: List[str] = [
     'forte.data.data_pack',
 ]
 
+DEFAULT_CONSTRAINTS_KEYS = {
+    "BaseLink": {"parent_type": "ParentType", "child_type": "ChildType"},
+    "BaseGroup": {"member_type": "MemberType"}
+}
+
 AUTO_GEN_SIGNATURE = '***automatically_generated***'
 
 # Special comments to be added to disable checking.
@@ -188,9 +193,6 @@ class OntologyCodeGenerator:
 
         # Special comments to be added to disable checking.
         self.ignore_errors: List[str] = IGNORE_ERRORS_LINES
-
-        self.core_base_keys = {"BaseLink": ["parent_type", "child_type"],
-                               "BaseGroup": ["member_type"]}
 
         # Mapping from entries parsed from the `base_ontology_module`
         # (default is `top.py`), to their `__init__` arguments.
@@ -656,21 +658,20 @@ class OntologyCodeGenerator:
             property_names.append(prop_schema["name"])
             property_items.append(self.parse_property(name, prop_schema))
 
-        class_attribute_names: List[str] = []
+        entry_constraint_keys: Dict[str, str] = {}
         if any([item == "BaseLink" for item in core_bases]):
-            class_attribute_names = self.core_base_keys["BaseLink"]
+            entry_constraint_keys = DEFAULT_CONSTRAINTS_KEYS["BaseLink"]
         elif any([item == "BaseGroup" for item in core_bases]):
-            class_attribute_names = self.core_base_keys["BaseGroup"]
+            entry_constraint_keys = DEFAULT_CONSTRAINTS_KEYS["BaseGroup"]
 
         # TODO: Apply stricter checking on class attributes.
-        # TODO: Test subtypes of Group.
         class_att_items: List[ClassTypeDefinition] = []
 
-        for class_att in class_attribute_names:
-            if class_att in schema:
-                type_ = self.parse_type(schema[class_att])
+        for constraint_key, constraint_code in entry_constraint_keys.items():
+            if constraint_key in schema:
+                constraint_type_ = self.parse_type(schema[constraint_key])
                 class_att_items.append(
-                    ClassTypeDefinition(class_att, type_))
+                    ClassTypeDefinition(constraint_code, constraint_type_))
 
         entry_item = DefinitionItem(name=ref_name,
                                     class_type=parent_entry,
