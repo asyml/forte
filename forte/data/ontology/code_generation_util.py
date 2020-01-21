@@ -87,11 +87,9 @@ class Property(Item, ABC):
     def __init__(self,
                  name: str,
                  type_str: str,
-                 class_name: str,
                  description: Optional[str] = None,
                  default: Any = None):
         super().__init__(name, description)
-        self.class_name = class_name
         self.type_str = type_str
         self.default = default
 
@@ -164,11 +162,10 @@ class CompositeProperty(Property):
     def __init__(self,
                  name: str,
                  type_str: str,
-                 class_name: str,
                  item_type: str,
                  description: Optional[str] = None,
                  default: Any = None):
-        super().__init__(name, type_str, class_name, description, default)
+        super().__init__(name, type_str, description, default)
         self.item_type = item_type
 
     def to_type_str(self) -> str:
@@ -207,7 +204,7 @@ class CompositeProperty(Property):
 
     def to_field_value(self):
         item_value_str = PrimitiveProperty(
-            'item', self.item_type, self.class_name).to_field_value()
+            'item', self.item_type).to_field_value()
         return f"[{item_value_str} for item in {self.name}]"
 
 
