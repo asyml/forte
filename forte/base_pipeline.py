@@ -400,6 +400,7 @@ class BasePipeline(Generic[PackType]):
 
                 processor_index = process_manager.current_processor_index
                 processor = self.processors[processor_index]
+                selector = self._selectors[processor_index]
                 current_queue_index = process_manager.current_queue_index
                 current_queue = process_manager.current_queue
                 pipeline_length = process_manager.pipeline_length
@@ -412,104 +413,37 @@ class BasePipeline(Generic[PackType]):
 
                 if not unprocessed_job.is_poison:
 
-                    processor.process(unprocessed_job.pack)
+                    for pack in selector.select(unprocessed_job.pack):
 
-                    if isinstance(processor, BaseBatchProcessor):
+                        processor.process(pack)
 
-                        index = unprocessed_queue_indices[current_queue_index]
+                        if isinstance(processor, BaseBatchProcessor):
 
-                        # check status of all the jobs up to "index"
-                        for i, job_i in enumerate(
-                                itertools.islice(current_queue, 0, index + 1)):
+                            index = \
+                                unprocessed_queue_indices[current_queue_index]
 
-                            if job_i.status == ProcessJobStatus.PROCESSED:
-                                processed_queue_indices[current_queue_index] = i
+                            # check status of all the jobs up to "index"
+                            for i, job_i in enumerate(
+                                    itertools.islice(current_queue, 0,
+                                                     index + 1)):
 
-                        # there are UNPROCESSED jobs in the queue
-                        if index < len(current_queue) - 1:
-                            unprocessed_queue_indices[current_queue_index] += 1
+                                if job_i.status == ProcessJobStatus.PROCESSED:
+                                    processed_queue_indices[
+                                        current_queue_index] = i
 
-                        # Fetch more data from the data to process the first job
-                        elif processed_queue_indices[current_queue_index] == -1:
+                            # there are UNPROCESSED jobs in the queue
+                            if index < len(current_queue) - 1:
+                                unprocessed_queue_indices[current_queue_index] \
+                                    += 1
 
-                            unprocessed_queue_indices[current_queue_index] \
-                                = len(current_queue)
+                            # Fetch more data from the reader to process the
+                            # first job
+                            elif (processed_queue_indices[current_queue_index]
+                                  == -1):
 
-                            process_manager.set_current_processor_index(
-                                processor_index=0)
+                                unprocessed_queue_indices[current_queue_index] \
+                                    = len(current_queue)
 
-                            process_manager.set_current_queue_index(
-                                queue_index=-1)
-
-                        else:
-                            processed_queue_index = \
-                                processed_queue_indices[current_queue_index]
-
-                            # move or yield the pack
-                            for job_i in list(
-                                    current_queue)[:processed_queue_index + 1]:
-
-                                if should_yield:
-                                    yield job_i.pack
-
-                                else:
-                                    process_manager.add_to_queue(
-                                        queue_index=next_queue_index, job=job_i)
-
-                                current_queue.popleft()
-
-                            # set the UNPROCESSED and PROCESSED indices
-                            unprocessed_queue_indices[current_queue_index] \
-                                = len(current_queue)
-
-                            processed_queue_indices[current_queue_index] = -1
-
-                            if should_yield:
-                                process_manager.set_current_processor_index(
-                                    processor_index=0)
-
-                                process_manager.set_current_queue_index(
-                                    queue_index=-1)
-                            else:
-                                process_manager.set_current_processor_index(
-                                    processor_index=next_queue_index)
-                                process_manager.set_current_queue_index(
-                                    queue_index=next_queue_index)
-
-                    # For PackProcessor
-                    # - Process all the packs in the queue and move them to the
-                    # next queue
-                    else:
-
-                        index = unprocessed_queue_indices[current_queue_index]
-
-                        # there are UNPROCESSED jobs in the queue
-                        if index < len(current_queue) - 1:
-                            unprocessed_queue_indices[current_queue_index] += 1
-
-                        else:
-                            # current_queue is modified in this array
-                            for job_i in list(current_queue):
-
-                                if should_yield:
-                                    yield job_i.pack
-
-                                else:
-                                    process_manager.add_to_queue(
-                                        queue_index=next_queue_index, job=job_i)
-
-                                current_queue.popleft()
-
-                            # set the UNPROCESSED index
-                            # we do not use "processed_queue_indices" as the
-                            # jobs get PROCESSED whenever they are passed into a
-                            # PackProcessor
-                            unprocessed_queue_indices[current_queue_index] \
-                                = len(current_queue)
-
-                            # update the current queue and processor only when
-                            # all the jobs are processed in the current queue
-                            if should_yield:
                                 process_manager.set_current_processor_index(
                                     processor_index=0)
 
@@ -517,11 +451,99 @@ class BasePipeline(Generic[PackType]):
                                     queue_index=-1)
 
                             else:
-                                process_manager.set_current_processor_index(
-                                    processor_index=next_queue_index)
+                                processed_queue_index = \
+                                    processed_queue_indices[current_queue_index]
 
-                                process_manager.set_current_queue_index(
-                                    queue_index=next_queue_index)
+                                # move or yield the pack
+                                c_queue = list(current_queue)
+                                for job_i in \
+                                        c_queue[:processed_queue_index + 1]:
+
+                                    if should_yield:
+                                        if self._evaluator:
+                                            self._evaluator.consume_next(
+                                                job_i.pack, job_i.pack)
+                                        yield job_i.pack
+
+                                    else:
+                                        process_manager.add_to_queue(
+                                            queue_index=next_queue_index,
+                                            job=job_i)
+
+                                    current_queue.popleft()
+
+                                # set the UNPROCESSED and PROCESSED indices
+                                unprocessed_queue_indices[current_queue_index] \
+                                    = len(current_queue)
+
+                                processed_queue_indices[current_queue_index] \
+                                    = -1
+
+                                if should_yield:
+                                    process_manager.set_current_processor_index(
+                                        processor_index=0)
+
+                                    process_manager.set_current_queue_index(
+                                        queue_index=-1)
+                                else:
+                                    process_manager.set_current_processor_index(
+                                        processor_index=next_queue_index)
+                                    process_manager.set_current_queue_index(
+                                        queue_index=next_queue_index)
+
+                        # For PackProcessor
+                        # - Process all the packs in the queue and move them to
+                        # the next queue
+                        else:
+
+                            index = \
+                                unprocessed_queue_indices[current_queue_index]
+
+                            # there are UNPROCESSED jobs in the queue
+                            if index < len(current_queue) - 1:
+                                unprocessed_queue_indices[current_queue_index] \
+                                    += 1
+
+                            else:
+                                # current_queue is modified in this array
+                                for job_i in list(current_queue):
+
+                                    if should_yield:
+                                        if self._evaluator:
+                                            self._evaluator.consume_next(
+                                                job_i.pack, job_i.pack)
+                                        yield job_i.pack
+
+                                    else:
+                                        process_manager.add_to_queue(
+                                            queue_index=next_queue_index,
+                                            job=job_i)
+
+                                    current_queue.popleft()
+
+                                # set the UNPROCESSED index
+                                # we do not use "processed_queue_indices" as the
+                                # jobs get PROCESSED whenever they are passed
+                                # into a PackProcessor
+                                unprocessed_queue_indices[current_queue_index] \
+                                    = len(current_queue)
+
+                                # update the current queue and processor only
+                                # when all the jobs are processed in the current
+                                # queue
+                                if should_yield:
+                                    process_manager.set_current_processor_index(
+                                        processor_index=0)
+
+                                    process_manager.set_current_queue_index(
+                                        queue_index=-1)
+
+                                else:
+                                    process_manager.set_current_processor_index(
+                                        processor_index=next_queue_index)
+
+                                    process_manager.set_current_queue_index(
+                                        queue_index=next_queue_index)
 
                 else:
 
@@ -537,6 +559,8 @@ class BasePipeline(Generic[PackType]):
                                              "during execution.")
 
                         if not job.is_poison and should_yield:
+                            if self._evaluator:
+                                self._evaluator.consume_next(job.pack, job.pack)
                             yield job.pack
 
                         elif not should_yield:
