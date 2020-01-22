@@ -56,7 +56,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
         self.define_context()
 
-        self.batch_size = 4
         self.batcher = self.define_batcher()
 
         self.device = torch.device(
@@ -68,6 +67,10 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
         model_dir = configs.storage_path if configs is not None else None
         logger.info("restoring SRL model from %s", model_dir)
+
+        # initialize the batcher
+        if configs:
+            self.batcher.initialize(configs.batcher)
 
         self.word_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/word_vocab.english.txt"))
@@ -152,5 +155,8 @@ class SRLPredictor(FixedSizeBatchProcessor):
         """
         hparams_dict = {
             'storage_path': None,
+            "batcher": {
+                "batch_size": 4
+            }
         }
         return hparams_dict

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
 from abc import abstractmethod, ABC
 from typing import Dict, Optional, Type
 
@@ -25,6 +26,7 @@ from forte.data import slice_batch
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology.top import Annotation
 from forte.processors.base.base_processor import BaseProcessor
+from forte.process_manager import ProcessManager, ProcessJobStatus
 
 __all__ = [
     "BaseBatchProcessor",
@@ -33,6 +35,9 @@ __all__ = [
     "FixedSizeBatchProcessor",
     "FixedSizeMultiPackBatchProcessor"
 ]
+
+
+process_manager = ProcessManager()
 
 
 class BaseBatchProcessor(BaseProcessor[PackType], ABC):
@@ -117,14 +122,37 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             pred = self.predict(batch)
             self.pack_all(pred)
             self.update_batcher_pool(-1)
+
         if len(self.batcher.current_batch_sources) == 0:
             self.update_batcher_pool()
+
+        # update the status of the jobs. The jobs which were removed from
+        # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
+        q_index = process_manager.current_queue_index
+        u_index = process_manager.unprocessed_queue_indices[q_index]
+        data_pool_length = len(self.batcher.data_pack_pool)
+        current_queue = process_manager.current_queue
+
+        for i, job_i in enumerate(
+                itertools.islice(current_queue, 0, u_index + 1)):
+
+            if i <= u_index - data_pool_length:
+                job_i.set_status(ProcessJobStatus.PROCESSED)
+
+            else:
+                job_i.set_status(ProcessJobStatus.QUEUED)
 
     def flush(self):
         for batch in self.batcher.flush():
             pred = self.predict(batch)
             self.pack_all(pred)
             self.update_batcher_pool(-1)
+
+        current_queue = process_manager.current_queue
+
+        for job in current_queue:
+
+            job.set_status(ProcessJobStatus.PROCESSED)
 
     @abstractmethod
     def predict(self, data_batch: Dict) -> Dict:
