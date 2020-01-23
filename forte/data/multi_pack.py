@@ -22,7 +22,8 @@ from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
 from forte.data.index import BaseIndex
 from forte.data.ontology.top import (
-    Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries)
+    Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries,
+    MultiPackGeneric)
 from forte.data.ontology.core import Entry
 from forte.data.base import Span
 
@@ -61,6 +62,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         self.links: List[MultiPackLink] = []
         self.groups: List[MultiPackGroup] = []
+        self.generics: List[MultiPackGeneric] = []
 
         self.meta: MultiPackMeta = MultiPackMeta()
 
@@ -298,13 +300,16 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             The input entry itself
         """
         if isinstance(entry, MultiPackLink):
-            target: List[Any] = self.links
+            target: List[MultiPackLink] = self.links
         elif isinstance(entry, MultiPackGroup):
-            target = self.groups
+            target: List[MultiPackGroup] = self.groups
+        elif isinstance(entry, MultiPackGeneric):
+            target: List[MultiPackGeneric] = self.generics
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
+                f"should be an instance of MultiPackLink, MultiPackGroup, or "
+                f"MultiPackGeneric."
             )
 
         # add the entry to the target entry list

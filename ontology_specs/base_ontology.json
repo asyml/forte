@@ -41,7 +41,7 @@
     },
     {
       "entry_name": "ft.onto.base_ontology_new.SpecialDocument",
-      "parent_entry": "forte.data.ontology.top.Document"
+      "parent_entry": "ft.onto.base_ontology_new.Document"
     },
     {
       "entry_name": "ft.onto.base_ontology_new.Sentence",
