@@ -211,6 +211,8 @@ class HTMLReaderPipelineTest(unittest.TestCase):
         for pack in self.pl1.process_dataset(tmp_dir.name):
             self.assertIsInstance(pack, DataPack)
 
+        tmp_dir.cleanup()
+
     def test_reader_with_filepath(self):
         tmp_dir = tempfile.TemporaryDirectory()
         filepath = maybe_download('https://www.yahoo.com/',
@@ -218,6 +220,8 @@ class HTMLReaderPipelineTest(unittest.TestCase):
 
         for pack in self.pl1.process_dataset(filepath):
             self.assertIsInstance(pack, DataPack)
+
+        tmp_dir.cleanup()
 
     @data(
         ["<title>The Original Title </title>",
