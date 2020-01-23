@@ -48,7 +48,7 @@ def batch_instances(instances: List[Dict]):
 
 
 def merge_batches(batches: List[Dict]):
-    r"""Merge a list of or ``batches``."""
+    r"""Merge a list of ``batches``."""
     merged_batch: Dict = {}
     for batch in batches:
         for entry, fields in batch.items():
@@ -83,8 +83,8 @@ def slice_batch(batch, start, length):
 
 
 def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
-    r"""An iterator returning file_paths in a directory containing files of the
-    given datasets
+    r"""An iterator returning the file paths in a directory containing files of
+    the given datasets.
     """
     for root, _, files in os.walk(dir_path):
         for data_file in files:
@@ -98,23 +98,24 @@ def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
 def modify_text_and_track_ops(original_text: str,
                               replace_operations: ReplaceOperationsType) -> \
         Tuple[str, ReplaceOperationsType, List[Tuple[Span, Span]], int]:
-    r"""Modifies the original text using replace_operations provided by the user
-    to return modified text and other data required for tracking original text
+    r"""Modifies the original text using ``replace_operations`` provided by the
+    user to return modified text and other data required for tracking original
+    text.
 
     Args:
-        original_text: Text to be modified
+        original_text: Text to be modified.
         replace_operations: A list of spans and the corresponding replacement
-        string that the span in the original string is to be replaced with to
-        obtain the original string
+            string that the span in the original string is to be replaced with
+            to obtain the original string.
 
     Returns:
-        modified_text: Text after modification
+        modified_text: Text after modification.
         replace_back_operations: A list of spans and the corresponding
-        replacement string that the span in the modified string is to be
-        replaced with to obtain the original string
+            replacement string that the span in the modified string is to be
+            replaced with to obtain the original string.
         processed_original_spans: List of processed span and its corresponding
-        original span
-        orig_text_len: length of original text
+            original span.
+        orig_text_len: length of original text.
     """
     orig_text_len: int = len(original_text)
     mod_text: str = original_text

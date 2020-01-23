@@ -118,18 +118,26 @@ Batchers
 .. autoclass:: forte.data.batchers.ProcessingBatcher
     :members:
 
-io_utils
-==========
+Data Utilities
+===============
+
+:hidden:`maybe_download`
+----------------------------------
+.. autofunction:: forte.data.data_utils.maybe_download
 
 :hidden:`batch_instances`
 ----------------------------------
-.. autofunction:: forte.data.io_utils.batch_instances
+.. autofunction:: forte.data.data_utils_io.batch_instances
 
 :hidden:`merge_batches`
 ----------------------------------
-.. autofunction:: forte.data.io_utils.merge_batches
+.. autofunction:: forte.data.data_utils_io.merge_batches
 
 :hidden:`slice_batch`
 ----------------------------------
-.. autofunction:: forte.data.io_utils.slice_batch
+.. autofunction:: forte.data.data_utils_io.slice_batch
+
+:hidden:`dataset_path_iterator`
+----------------------------------
+.. autofunction:: forte.data.data_utils_io.dataset_path_iterator
 
