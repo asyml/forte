@@ -44,10 +44,6 @@ class HTMLReaderPipelineTest(unittest.TestCase):
                                        cache_directory=self._cache_directory))
         self.pl2.initialize()
 
-        self.data_dir = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            'data_samples/html')
-
     def tearDown(self):
         shutil.rmtree(self._cache_directory)
 
