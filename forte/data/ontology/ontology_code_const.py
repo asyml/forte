@@ -23,6 +23,10 @@ DEFAULT_PREFIX = "ft.onto"
 
 PRIMITIVE_SUPPORTED: Set[str] = {'int', 'float', 'str', 'bool'}
 
+SINGLE_COMPOSITES = {'List': 'typing.List'}
+
+COMPLEX_COMPOSITES = {'Dict': 'typing.Dict'}
+
 
 class SchemaKeywords:
     ontology_name = 'ontology_name'
@@ -38,6 +42,8 @@ class SchemaKeywords:
     child_type = 'child_type'
     default_value = 'default'
     element_type = 'item_type'
+    dict_key_type = 'key_type'
+    dict_value_type = 'value_type'
 
 
 def file_header(ontology_description, ontology_name):

@@ -22,7 +22,7 @@ import pdb
 from forte.data.ontology.code_generation_exceptions import \
     UnsupportedTypeException
 from forte.data.ontology.ontology_code_const import IGNORE_ERRORS_LINES, \
-    PRIMITIVE_SUPPORTED, Config
+    PRIMITIVE_SUPPORTED, Config, SINGLE_COMPOSITES, COMPLEX_COMPOSITES
 from forte.data.ontology.utils import split_file_path
 
 
@@ -53,8 +53,10 @@ class ImportManager:
             imported or it is of a primitive type.
 
         """
-        return class_name in PRIMITIVE_SUPPORTED or self.is_imported(
-            class_name)
+        return (class_name in PRIMITIVE_SUPPORTED or
+                class_name in SINGLE_COMPOSITES or
+                class_name in COMPLEX_COMPOSITES or
+                self.is_imported(class_name))
 
     def is_imported(self, class_name):
         """
@@ -70,15 +72,16 @@ class ImportManager:
         elif self.__root is None:
             return False
         else:
-            return self.__root.is_imported(class_name)
+            if self.__root.is_imported(class_name):
+                self.add_object_to_import(class_name)
+                return True
 
     def all_stored(self):
         return self.__imported_names.items()
 
     def get_name_to_use(self, full_name):
-        if (self.__root.is_imported(full_name) and
-                full_name not in self.__imported_names):
-            self.add_object_to_import(full_name)
+        if full_name in PRIMITIVE_SUPPORTED:
+            return full_name
 
         return self.__imported_names[full_name]
 
@@ -92,6 +95,7 @@ class ImportManager:
 
             if len(parts) > 1:
                 module_name = '.'.join(parts[:-1])
+
                 if (self.__module_name is None or
                         not module_name == self.__module_name):
                     # No need to import classes in the same module
@@ -130,10 +134,6 @@ class ImportManager:
             return as_name
 
     def add_object_to_import(self, full_name: str):
-        # TODO: Check composite type support
-        if full_name is 'List':
-            pdb.set_trace()
-
         if full_name not in self.__imported_names:
             if full_name in PRIMITIVE_SUPPORTED:
                 self.__imported_names[full_name] = full_name
@@ -216,12 +216,11 @@ class Item:
 
 class Property(Item, ABC):
     def __init__(self, import_manager: ImportManager,
-                 name: str, type_str: str,
-                 description: Optional[str] = None,
-                 default: Any = None):
+                 name: str, type_str: str, description: Optional[str] = None,
+                 default_val: Any = None):
         super().__init__(name, description)
         self.type_str = type_str
-        self.default = default
+        self.default_val = default_val
         self.import_manager: ImportManager = import_manager
 
     def to_type_str(self):
@@ -237,6 +236,9 @@ class Property(Item, ABC):
         """
         name = self.name
 
+        # TODO: set field is simple here, but we need to update the
+        #  serialization function to handle complex types.
+
         lines = [("@property", 0),
                  (f"def {name}(self):", 0),
                  (f"return self.{name}", 1),
@@ -249,7 +251,7 @@ class Property(Item, ABC):
 
     def to_init_code(self, level: int) -> str:
         return indent_line(f"self.{self.name}: {self.to_type_str()} = "
-                           f"{repr(self.default)}", level)
+                           f"{repr(self.default_val)}", level)
 
     def to_description(self, level: int) -> Optional[str]:
         desc = f"{self.name} ({self.to_type_str()})"
@@ -280,36 +282,126 @@ class ClassTypeDefinition:
 
 
 class PrimitiveProperty(Property):
+    def __init__(self, import_manager: ImportManager,
+                 name: str, type_str: str, description: Optional[str] = None,
+                 default_val: Any = None):
+        super(PrimitiveProperty, self).__init__(
+            import_manager, name, type_str, description, default_val)
+
+        # Primitive type will use optional in type string, so we add the
+        # optional here.
+        self.option_type = 'typing.Optional'
+        import_manager.add_object_to_import('typing.Optional')
+
     def to_type_str(self) -> str:
         if self.type_str not in PRIMITIVE_SUPPORTED:
             logging.error(f"{self.type_str} is not a supported primitive type.")
             raise UnsupportedTypeException
 
-        option_type = self.import_manager.get_name_to_use('typing.Optional')
+        option_type = self.import_manager.get_name_to_use(self.option_type)
         return f"{option_type}[{self.type_str}]"
 
     def to_field_value(self):
-        if self.type_str in PRIMITIVE_SUPPORTED:
-            return self.name
-        return f"{self.name}.tid"
+        # Field value should be simplified, the code gen should not does any
+        # deep functions.
+
+        # if self.type_str in PRIMITIVE_SUPPORTED:
+        #     return self.name
+        # return f"{self.name}.tid"
+
+        return self.name
+
+
+class DictProperty(Property):
+    def __init__(self,
+                 import_manager: ImportManager,
+                 name: str,
+                 key_type: str,
+                 value_type: str,
+                 description: Optional[str] = None,
+                 default_val: Any = None,
+                 self_ref: bool = False):
+        super().__init__(import_manager, name, 'typing.Dict',
+                         description=description,
+                         default_val=default_val)
+        self.key_type: str = key_type
+        self.value_type: str = value_type
+        self.self_ref: bool = self_ref
+
+    def to_type_str(self) -> str:
+        option_type = self.import_manager.get_name_to_use('typing.Optional')
+        composite_type = self.import_manager.get_name_to_use(self.type_str)
+
+        key_type = self.import_manager.get_name_to_use(self.key_type)
+        value_type = self.import_manager.get_name_to_use(self.value_type)
+
+        if self.self_ref:
+            value_type = '"' + value_type + '"'
+
+        return f"{option_type}[{composite_type}[{key_type}, {value_type}]]"
+
+    def to_field_value(self):
+        return self.name
+
+    def to_access_functions(self, level):
+        """ Generate access function to for Dict types. This extend the
+        base function and add some composite specific types.
+
+        :param level:
+        :return:
+        """
+        base_code = super(DictProperty, self).to_access_functions(level)
+
+        name = self.name
+        lines = [
+            ('', 0),
+            (f"def num_{name}(self):", 0),
+            (f"return len(self.{name})", 1),
+            ('', 0),
+            (f"def clear_{name}(self):", 0),
+            (f"self.{name}.clear()", 1),
+        ]
+
+        value_type = self.import_manager.get_name_to_use(self.value_type)
+        if self.self_ref:
+            value_type = '"' + value_type + '"'
+
+        lines.extend([
+            ('', 0),
+            (f"def add_{name}(self, "
+             f"key: {self.key_type}, value: {value_type}):", 0),
+            (f"self.{name}[key](value)", 1),
+        ])
+
+        add_code = indent_code([indent_line(*line) for line in lines], level)
+
+        return base_code + add_code
 
 
 class CompositeProperty(Property):
-    TYPES = {'List': 'typing.List'}
-
     def __init__(self,
                  import_manager: ImportManager,
                  name: str,
                  type_str: str,
                  item_type: str,
                  description: Optional[str] = None,
-                 default: Any = None):
-        super().__init__(import_manager, name, type_str, description, default)
-        self.item_type = item_type
+                 default_val: Any = None,
+                 self_ref: bool = False):
+        super().__init__(import_manager, name, type_str,
+                         description=description,
+                         default_val=default_val)
+        self.item_type: str = item_type
+        self.self_ref: bool = self_ref
 
     def to_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use('typing.Optional')
-        return f"{option_type}[{self.type_str}[{self.item_type}]]"
+        composite_type = self.import_manager.get_name_to_use(self.type_str)
+        item_type = self.import_manager.get_name_to_use(self.item_type)
+
+        if self.self_ref:
+            item_type = '"' + item_type + '"'
+
+        return f"{option_type}[{composite_type}[{item_type}]]"
 
     def to_access_functions(self, level):
         """ Generate access function to for composite types. This extend the
@@ -322,6 +414,7 @@ class CompositeProperty(Property):
 
         name = self.name
         lines = [
+            ('', 0),
             (f"def num_{name}(self):", 0),
             (f"return len(self.{name})", 1),
             ('', 0),
@@ -330,10 +423,14 @@ class CompositeProperty(Property):
         ]
 
         if self.type_str == 'typing.List':
+            item_type = self.import_manager.get_name_to_use(self.item_type)
+            if self.self_ref:
+                item_type = '"' + item_type + '"'
+
             lines.extend([
-                (f"def add_{name}(self, a_{name}: {self.item_type}):", 0),
-                (f"self.{name}.append(a_{name})", 1),
                 ('', 0),
+                (f"def add_{name}(self, a_{name}: {item_type}):", 0),
+                (f"self.{name}.append(a_{name})", 1),
             ])
 
         add_code = indent_code([indent_line(*line) for line in lines], level)
@@ -341,9 +438,13 @@ class CompositeProperty(Property):
         return base_code + add_code
 
     def to_field_value(self):
-        item_value_str = PrimitiveProperty(
-            'item', self.item_type).to_field_value()
-        return f"[{item_value_str} for item in {self.name}]"
+        item_value_str = PrimitiveProperty(self.import_manager, 'item',
+                                           self.item_type).to_field_value()
+        # print('field vale')
+        # print(item_value_str)
+        # print(f"[{item_value_str} for item in {self.name}]")
+        # return f"[{item_value_str} for item in {self.name}]"
+        return self.name
 
 
 class DefinitionItem(Item):
@@ -500,9 +601,9 @@ class ModuleWriter:
         return indent_code(lines, level)
 
     def to_import_code(self, level):
-        all_imports = set(
-            self.import_managers.get(self.module_name).get_import_statements())
-        return indent_code(sorted(list(all_imports)), level)
+        return indent_code(
+            self.import_managers.get(self.module_name).get_import_statements(),
+            level)
 
 
 class ModuleWriterPool:

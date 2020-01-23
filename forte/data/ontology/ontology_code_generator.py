@@ -42,11 +42,12 @@ from forte.data.ontology.code_generation_exceptions import \
 from forte.data.ontology.code_generation_objects import (
     PrimitiveProperty, CompositeProperty, ClassTypeDefinition,
     DefinitionItem, Property, ImportManagerPool,
-    EntryName, ModuleWriterPool)
+    EntryName, ModuleWriterPool, ImportManager, DictProperty)
 # Builtin and local imports required in the generated python modules.
 from forte.data.ontology.ontology_code_const import REQUIRED_IMPORTS, \
     DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE, DEFAULT_PREFIX, \
-    SchemaKeywords, file_header, hardcoded_pack_map, PRIMITIVE_SUPPORTED
+    SchemaKeywords, file_header, hardcoded_pack_map, PRIMITIVE_SUPPORTED, \
+    SINGLE_COMPOSITES, COMPLEX_COMPOSITES
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -131,6 +132,14 @@ def as_init_str(init_args):
     return args[1].strip().replace('  ', '')
 
 
+def is_composite_type(item_type: str):
+    return item_type in SINGLE_COMPOSITES or item_type == 'Dict'
+
+
+def valid_composite_key(item_type: str):
+    return item_type == 'int' or item_type == 'str'
+
+
 class OntologyCodeGenerator:
     r"""Class to generate python ontology given ontology config in json format
     Salient Features -
@@ -183,8 +192,16 @@ class OntologyCodeGenerator:
 
         # Populate the two dictionaries above.
         # TODO: Handle the imports from root, such as typing.
-        # TODO: Change the init to `from` format.
         self.initialize_top_entries(base_ontology_module)
+
+        # A few basic type to support.
+        self.import_managers.root.add_object_to_import('typing.Optional')
+
+        for type_class in COMPLEX_COMPOSITES.values():
+            self.import_managers.root.add_object_to_import(type_class)
+
+        for type_class in SINGLE_COMPOSITES.values():
+            self.import_managers.root.add_object_to_import(type_class)
 
         # Mapping from user-defined entries to their ancestor entry present in
         # `self.top_init_args`.
@@ -201,9 +218,9 @@ class OntologyCodeGenerator:
             self.allowed_types_tree[type_str] = set()
             # self.import_manager.add_object_to_import(type_str, True)
 
-        for type_name, type_str in CompositeProperty.TYPES.items():
-            self.allowed_types_tree[type_str] = set()
-            # self.import_manager.add_object_to_import(type_str, False)
+        # for type_name, type_str in CompositeProperty.TYPES.items():
+        #     self.allowed_types_tree[type_str] = set()
+        # self.import_manager.add_object_to_import(type_str, False)
 
         # Directories to be examined to find json files for user-defined config
         # imports.
@@ -371,7 +388,11 @@ class OntologyCodeGenerator:
 
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
-        self.parse_ontology_spec(spec_path, destination_dir)
+        try:
+            self.parse_ontology_spec(spec_path, destination_dir)
+        except OntologySpecError:
+            logging.error(f"Error at parsing [{spec_path}]")
+            raise
 
         # Now generate all data.
 
@@ -379,9 +400,12 @@ class OntologyCodeGenerator:
         # generation is completed and verified.
         tempdir = tempfile.mkdtemp()
 
+        print('*********** finish parsing start writing')
+        print('working on ', spec_path)
         for writer in self.module_writers.writers():
             print('writing ', writer.module_name)
             writer.write(tempdir, destination_dir)
+            print('Done writing.')
 
         # When everything is successfully completed, copy the contents of
         # `self.tempdir` to the provided folder.
@@ -403,8 +427,8 @@ class OntologyCodeGenerator:
     def parse_ontology_spec(self, json_file_path: str,
                             destination_dir: str,
                             visited_paths: Optional[Dict[str, bool]] = None,
-                            rec_visited_paths: Optional[Dict[str, bool]] = None) \
-            -> List[str]:
+                            rec_visited_paths: Optional[Dict[str, bool]] = None
+                            ) -> List[str]:
         """
         Performs a topological traversal on the directed graph formed by the
         imported json configs. While processing each config, it first generates
@@ -461,28 +485,25 @@ class OntologyCodeGenerator:
                     import_json_file, destination_dir,
                     visited_paths, rec_visited_paths))
 
+        # The modules from the imported specs will be added to the manager.
+        for spec_module in spec_importable_modules:
+            self.import_managers.root.add_object_to_import(spec_module)
+
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
-        try:
-            spec_importable_modules = self.parse_schema(
-                spec_dict, spec_importable_modules)
-        except OntologySpecError:
-            logging.error(f"Error at parsing [{json_file_path}]")
-            raise
+        self.parse_schema(spec_dict, spec_importable_modules)
 
         rec_visited_paths[json_file_path] = False
 
         return spec_importable_modules
 
-    def parse_schema(self, schema: Dict, modules_to_import: List[str],
-                     ) -> List[str]:
+    def parse_schema(self, schema: Dict, modules_to_import: List[str]):
         r""" Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
         new module file if module is generated for the first time.
 
         Args:
             schema: Ontology dictionary extracted from a json config.
-            modules_to_import: Dependencies to be imported by generated modules.
 
         Returns:
             Modules to be imported by dependencies of the current ontology.
@@ -498,14 +519,13 @@ class OntologyCodeGenerator:
             schema.get(SchemaKeywords.ontology_name, "")
         )
 
-        new_modules_to_import = []
+        # new_modules_to_import = []
         for definition in entry_definitions:
             raw_entry_name = definition[SchemaKeywords.entry_name]
 
             # Only prefixes that are actually used should be imported.
             matched_pkg = validate_entry(raw_entry_name, sorted_prefixes)
-            modules_to_import.append(matched_pkg)
-            new_modules_to_import.append(matched_pkg)
+            # new_modules_to_import.append(matched_pkg)
 
             if raw_entry_name in self.allowed_types_tree:
                 warnings.warn(
@@ -515,8 +535,8 @@ class OntologyCodeGenerator:
 
             # Get various name of this entry.
             en = EntryName(raw_entry_name)
-            entry_writer = self.module_writers.get(en.module_name)
-            entry_writer.set_description(file_desc)
+            module_writer = self.module_writers.get(en.module_name)
+            module_writer.set_description(file_desc)
 
             # Add the entry definition to the import managers.
             self.import_managers.get(en.module_name).add_object_to_import(
@@ -525,10 +545,11 @@ class OntologyCodeGenerator:
 
             entry_item, properties = self.parse_entry(en, definition)
 
-            entry_writer.add_entry(en, entry_item)
+            # Add the entry item to the writer.
+            module_writer.add_entry(en, entry_item)
 
             # Modules to be imported by the dependencies.
-            new_modules_to_import.append(en.module_name)
+            modules_to_import.append(en.class_name)
 
             # Adding entry attributes to the allowed types for validation.
             for property_name in properties:
@@ -541,8 +562,6 @@ class OntologyCodeGenerator:
                     )
                 self.allowed_types_tree[en.class_name].add(
                     property_name)
-
-        return new_modules_to_import
 
     def cleanup_generated_ontology(self, path, is_forced=False) -> \
             Tuple[bool, Optional[str]]:
@@ -638,8 +657,9 @@ class OntologyCodeGenerator:
                 arg_ann = arg.annotation
                 while isinstance(arg_ann, ast.Subscript):
                     # Handling the type name for cases like Optional[X]
-                    arg_ann.value.id = this_manager.get_name_to_use(
-                        arg_ann.value.id)
+                    if this_manager.is_imported(arg_ann.value.id):
+                        arg_ann.value.id = this_manager.get_name_to_use(
+                            arg_ann.value.id)
                     arg_ann = arg_ann.slice.value
 
                 if this_manager.is_imported(arg_ann.id):
@@ -727,6 +747,103 @@ class OntologyCodeGenerator:
 
         return entry_item, property_names
 
+    def parse_dict(
+            self, manager: ImportManager, schema: Dict, entry_name: EntryName,
+            att_name: str, att_type: str, desc: str):
+        if (SchemaKeywords.dict_key_type not in schema
+                or SchemaKeywords.dict_value_type not in schema):
+            raise TypeNotDeclaredException(
+                f"Item type for the entry {entry_name.name} "
+                f"of the attribute {att_name} not declared. This attribute is "
+                f"a composite type: {att_type}, it should have a "
+                f"{SchemaKeywords.element_type} and "
+                f"{SchemaKeywords.dict_value_type}.")
+
+        key_type = schema[SchemaKeywords.dict_key_type]
+        if not valid_composite_key(key_type):
+            raise UnsupportedTypeException(
+                f"Key type {key_type} for entry {entry_name.name}'s "
+                f"attribute {att_name} is not supported, we only support a "
+                f"limited set of keys.")
+
+        value_type = schema[SchemaKeywords.dict_value_type]
+        if is_composite_type(value_type):
+            # Case of nested.
+            raise UnsupportedTypeException(
+                f"Item type {value_type} for entry {entry_name.name}'s "
+                f"attribute {att_name} is a composite type, we do not support "
+                f"nested composite type.")
+
+        if not manager.is_known_name(value_type):
+            # Case of unknown.
+            raise TypeNotDeclaredException(
+                f"Item type {value_type} for the entry "
+                f"{entry_name.name} of the attribute {att_name} "
+                f"not declared in ontology.")
+
+        # Make sure the import of these related types are handled.
+        full_type = COMPLEX_COMPOSITES['Dict']
+        manager.add_object_to_import(full_type)
+        manager.add_object_to_import(value_type)
+
+        self_ref = entry_name.class_name == value_type
+
+        default_val = None
+
+        if att_type == 'List':
+            default_val = []
+        elif att_type == 'Set':
+            default_val = set()
+
+        return DictProperty(
+            manager, att_name, key_type, value_type, description=desc,
+            default_val=default_val, self_ref=self_ref)
+
+    def parse_single_composite(
+            self, manager: ImportManager, schema: Dict, entry_name: EntryName,
+            att_name: str, att_type: str, desc: str) -> CompositeProperty:
+        if SchemaKeywords.element_type not in schema:
+            raise TypeNotDeclaredException(
+                f"Item type for the entry {entry_name.name} "
+                f"of the attribute {att_name} not declared. This attribute is "
+                f"a composite type: {att_type}, it should have a "
+                f"{SchemaKeywords.element_type}.")
+
+        item_type = schema[SchemaKeywords.element_type]
+        if is_composite_type(item_type):
+            # Case of nested.
+            raise UnsupportedTypeException(
+                f"Item type {item_type} for entry {entry_name.name}'s "
+                f"attribute {att_name} is a composite type, we do not support "
+                f"nested composite type.")
+
+        if not manager.is_known_name(item_type):
+            # Case of unknown.
+            raise TypeNotDeclaredException(
+                f"Item type {item_type} for the entry "
+                f"{entry_name.name} of the attribute {att_name} "
+                f"not declared in ontology.")
+
+        full_type = SINGLE_COMPOSITES[att_type]
+
+        # Make sure the import of these related types are handled.
+        manager.add_object_to_import(full_type)
+        manager.add_object_to_import(item_type)
+
+        self_ref = entry_name.class_name == item_type
+        print('add list, ', entry_name.class_name, item_type)
+
+        default_val = None
+
+        if att_type == 'List':
+            default_val = []
+        elif att_type == 'Set':
+            default_val = set()
+
+        return CompositeProperty(
+            manager, att_name, full_type, item_type, description=desc,
+            default_val=default_val, self_ref=self_ref)
+
     def parse_property(self, entry_name: EntryName, schema: Dict) -> Property:
         """
         Parses instance and class properties defined in an entry schema and
@@ -738,52 +855,34 @@ class OntologyCodeGenerator:
         Returns: An object of class `code_generation_util.FileItem` containing
          the generated code.
         """
-        name = schema[SchemaKeywords.attribute_name]
-        type_str = schema[SchemaKeywords.attribute_type]
+        att_name = schema[SchemaKeywords.attribute_name]
+        att_type = schema[SchemaKeywords.attribute_type]
+
+        manager: ImportManager = self.import_managers.get(
+            entry_name.module_name)
 
         # schema type should be present in the validation tree
-        if type_str not in self.allowed_types_tree:
+        if not manager.is_known_name(att_type):
             raise TypeNotDeclaredException(
-                f"Attribute type '{type_str}' for the entry "
-                f"'{entry_name.name}' and the schema '{name}' not "
+                f"Attribute type '{att_type}' for the entry "
+                f"'{entry_name.name}' of the attribute '{att_name}' not "
                 f"declared in the ontology")
 
         desc = schema.get(SchemaKeywords.description, None)
-        default = schema.get(SchemaKeywords.default_value, None)
-
-        this_manager = self.import_managers.get(entry_name.module_name)
+        default_val = schema.get(SchemaKeywords.default_value, None)
 
         # TODO: Only supports array for now!
         # element type should be present in the validation tree
-        if type_str in CompositeProperty.TYPES:
-            if "item_type" not in schema:
-                raise TypeNotDeclaredException(
-                    f"Item type for the entry {entry_name.name} "
-                    f"of the attribute {name} not declared")
-            item_type = schema[SchemaKeywords.element_type]
-            if item_type in CompositeProperty.TYPES:
-                raise UnsupportedTypeException(
-                    f"Item type {item_type} for entry {entry_name.name}'s "
-                    f"attribute {name} is a composite type, we do not support "
-                    f"nested composite type.")
-
-            item_type_norm = item_type.replace('"', '')
-
-            if not (item_type_norm in self.allowed_types_tree
-                    or item_type in self.allowed_types_tree
-                    or item_type_norm == entry_name):
-                raise TypeNotDeclaredException(
-                    f"Item type {item_type_norm} for the entry {entry_name} "
-                    f"of the attribute {name} not declared in ontology")
-
-            return CompositeProperty(
-                this_manager, name, type_str, item_type, description=desc,
-                default=default)
-
-        # The primitive property will use a "Optional" in typing.
-        this_manager.add_object_to_import('typing.Optional')
-        return PrimitiveProperty(this_manager, name, type_str, description=desc,
-                                 default=default)
+        if att_type in SINGLE_COMPOSITES:
+            return self.parse_single_composite(
+                manager, schema, entry_name, att_name, att_type, desc)
+        elif att_type == 'Dict':
+            return self.parse_dict(
+                manager, schema, entry_name, att_name, att_type, desc)
+        else:
+            return PrimitiveProperty(
+                manager, att_name, att_type, description=desc,
+                default_val=default_val)
 
     def find_base_entry(self, this_entry: str, parent_entry: str) \
             -> str:
