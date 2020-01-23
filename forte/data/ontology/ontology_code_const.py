@@ -9,6 +9,9 @@ REQUIRED_IMPORTS: List[str] = [
     # 'ft.onto',
     # 'forte.data.data_pack',
 ]
+
+TOP_MOST_CLASS = 'forte.data.ontology.top.Entry'
+
 DEFAULT_CONSTRAINTS_KEYS = {
     "BaseLink": {"parent_type": "ParentType", "child_type": "ChildType"},
     "BaseGroup": {"member_type": "MemberType"}

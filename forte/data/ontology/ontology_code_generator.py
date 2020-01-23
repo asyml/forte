@@ -38,7 +38,7 @@ from forte.data.ontology.code_generation_exceptions import \
     ImportOntologyNotFoundException, ImportOntologyAlreadyGeneratedException, \
     ParentEntryNotDeclaredException, TypeNotDeclaredException, \
     UnsupportedTypeException, InvalidIdentifierException, \
-    DuplicatedAttributesWarning
+    DuplicatedAttributesWarning, ParentEntryNotSupportedException
 from forte.data.ontology.code_generation_objects import (
     PrimitiveProperty, CompositeProperty, ClassTypeDefinition,
     DefinitionItem, Property, ImportManagerPool,
@@ -181,14 +181,20 @@ class OntologyCodeGenerator:
         # Mapping from entries parsed from the `base_ontology_module`
         # (default is `forte.data.ontology.top.py`), to their
         # `__init__` arguments.
-        self.top_init_args_strs: Dict[str, str] = {}
+        # self.top_init_args_strs: Dict[str, str] = {}
+        self.root_base_entrys: Set[str] = set()
 
         # Map from the full class name, to the list contains objects of
         # <typed_ast._ast3.arg>, which are the init arguments.
         self.top_init_args: Dict[str, Any] = {}
 
-        # Mapping from entries in `base_ontology_module` to their ancestors
+        # Mapping from user extendable entries to their ancestors
         self.top_to_core_entries: Dict[str, Set[str]] = {}
+
+        # Mapping from user-defined entries to a set of base ancestor entries.
+        # these base entries are the top level entries where user can
+        # initialize, so they wil be part of the generated class's __init__
+        self.base_entry_lookup: Dict[str, str] = {}
 
         # Populate the two dictionaries above.
         # TODO: Handle the imports from root, such as typing.
@@ -202,10 +208,6 @@ class OntologyCodeGenerator:
 
         for type_class in SINGLE_COMPOSITES.values():
             self.import_managers.root.add_object_to_import(type_class)
-
-        # Mapping from user-defined entries to their ancestor entry present in
-        # `self.top_init_args`.
-        self.user_to_base_entry: Dict[str, str] = {}
 
         # Mapping from the full class name to the ref string to be used here.
         # self.full_ref_to_import: Dict[str, str] = {}
@@ -247,7 +249,7 @@ class OntologyCodeGenerator:
             Mapping from a class name defined in `base_ontology_module`
         to the `__init__` arguments.
             Mapping from import names defined in `base_ontology_module` to
-        import full name
+        import full name.
             Mapping from import names defined in `base_ontology_module` to
         base names defined in `core.py`.
         """
@@ -341,12 +343,10 @@ class OntologyCodeGenerator:
                     args_str = args[1].strip().replace(
                         '\n', '').replace('  ', '')
 
-                    self.top_to_core_entries[
-                        full_names[elem.name]] = elem_base_names
-                    self.top_init_args_strs[full_names[elem.name]] = args_str
-                    self.top_init_args[
-                        full_names[elem.name]
-                    ] = init_func.args
+                    full_ele_name = full_names[elem.name]
+                    self.top_to_core_entries[full_ele_name] = elem_base_names
+                    self.base_entry_lookup[full_ele_name] = full_ele_name
+                    self.top_init_args[full_ele_name] = init_func.args
 
     def generate(self, spec_path: str,
                  destination_dir: Optional[str] = os.getcwd(),
@@ -666,9 +666,7 @@ class OntologyCodeGenerator:
                     # Handling the type name for arguments.
                     arg_ann.id = this_manager.get_name_to_use(arg_ann.id)
 
-    def construct_init(self, entry_name: EntryName, parent_entry: str):
-        base_entry: str = self.find_base_entry(entry_name.class_name,
-                                               parent_entry)
+    def construct_init(self, entry_name: EntryName, base_entry: str):
         base_init_args = self.top_init_args[base_entry]
         custom_init_args = copy.deepcopy(base_init_args)
         self.replace_annotation(entry_name, custom_init_args)
@@ -676,8 +674,7 @@ class OntologyCodeGenerator:
 
         return custom_init_args_str
 
-    def parse_entry(self,
-                    entry_name: EntryName,
+    def parse_entry(self, entry_name: EntryName,
                     schema: Dict) -> Tuple[DefinitionItem, List[str]]:
         """
         Args:
@@ -693,12 +690,19 @@ class OntologyCodeGenerator:
         base_entry: str = self.find_base_entry(entry_name.class_name,
                                                parent_entry)
 
+        if base_entry is None or base_entry not in self.top_init_args:
+            raise ParentEntryNotSupportedException(
+                f"Cannot add {entry_name.class_name} to the ontology as "
+                f"it's parent entry {parent_entry} is not supported. This is "
+                f"likely that the entries are not inheriting the allowed types."
+            )
+
         # Take the property definitions of this entry.
         properties: List[Dict] = schema.get(SchemaKeywords.attributes, [])
 
         this_manager = self.import_managers.get(entry_name.module_name)
-        # validate if the entry parent is present in the tree
-        # print('parsing entry', entry_name.class_name)
+
+        # Validate if the entry parent is presented.
         if not this_manager.is_known_name(parent_entry):
             raise ParentEntryNotDeclaredException(
                 f"Cannot add {entry_name.class_name} to the ontology as "
@@ -735,7 +739,7 @@ class OntologyCodeGenerator:
                     ClassTypeDefinition(constraint_code,
                                         constraint_type_use_name))
 
-        custom_init_arg_str: str = self.construct_init(entry_name, parent_entry)
+        custom_init_arg_str: str = self.construct_init(entry_name, base_entry)
 
         entry_item = DefinitionItem(
             name=entry_name.name,
@@ -831,7 +835,6 @@ class OntologyCodeGenerator:
         manager.add_object_to_import(item_type)
 
         self_ref = entry_name.class_name == item_type
-        print('add list, ', entry_name.class_name, item_type)
 
         default_val = None
 
@@ -884,10 +887,9 @@ class OntologyCodeGenerator:
                 manager, att_name, att_type, description=desc,
                 default_val=default_val)
 
-    def find_base_entry(self, this_entry: str, parent_entry: str) \
-            -> str:
+    def find_base_entry(self, this_entry: str, parent_entry: str) -> str:
         """ Find the `base_entry`. As a side effect, it will populate the
-        internal state `self.user_to_base_entry`. The base will be one of the
+        internal state `self.base_entry_lookup`. The base will be one of the
         predefined base entry group in the top ontology, which are:
          ["Link", "Annotation", "Group", "Generic", "MultiPackLink",
          "MultiPackGroup", "MultiPackGeneric"]
@@ -907,9 +909,13 @@ class OntologyCodeGenerator:
             `Word` inherits `Token` inherits `Annotation`.
             The base_entry for both `Word` and `Token` should be `Annotation`.
         """
-        if parent_entry in self.top_init_args_strs:
+        if parent_entry in self.top_init_args:
+            # The top init args contains the objects in the top.py.
             base_entry: str = parent_entry
         else:
-            base_entry = self.user_to_base_entry[parent_entry]
-        self.user_to_base_entry[this_entry] = base_entry
+            base_entry = self.base_entry_lookup.get(parent_entry, None)
+
+        if base_entry is not None:
+            self.base_entry_lookup[this_entry] = base_entry
+
         return base_entry

@@ -26,6 +26,10 @@ class ParentEntryNotDeclaredException(OntologySpecError):
     pass
 
 
+class ParentEntryNotSupportedException(OntologySpecError):
+    pass
+
+
 class TypeNotDeclaredException(OntologySpecError):
     pass
 

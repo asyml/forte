@@ -17,7 +17,8 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
-from typing import Iterable, Optional, Set, Type, Hashable, TypeVar, Generic
+from typing import Iterable, Optional, Set, Type, Hashable, TypeVar, Generic, \
+    List, Dict
 
 from forte.data.container import ContainerType
 
@@ -105,6 +106,20 @@ class Entry(Generic[ContainerType]):
     def set_pack(self, pack: ContainerType):
         self.__pack = pack
 
+    def __set_field(self, field_name, field_value):
+        # TODO: Based on the type of the field value, determine how to store.
+        if isinstance(field_value, List):
+            pass
+        elif isinstance(field_value, Dict):
+            pass
+        elif isinstance(field_value, Set):
+            pass
+        elif (isinstance(field_value, str) or
+              isinstance(field_value, int) or
+              isinstance(field_value, float) or
+              isinstance(field_value, bool)):
+            pass
+
     def set_fields(self, **kwargs):
         """
         Set the entry fields from the kwargs.
@@ -121,11 +136,6 @@ class Entry(Generic[ContainerType]):
             # TODO: This is wrong, absence of attribute is treated the same as
             #  the attribute being None. We need to really identify
             #  whether the field exists to disallow users adding unknown fields.
-            # if not hasattr(self, field_name):
-            #     raise AttributeError(
-            #         f"class {get_full_module_name(self)} "
-            #         f"has no attribute {field_name}"
-            #     )
             if hasattr(self, field_name):
                 setattr(self, field_name, field_value)
             else:
