@@ -11,12 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Type annotation helpers.
+"""
+import os
+from typing import Dict, List, Sequence, Tuple, TypeVar, Union
 
-from forte.data import ontology
-from forte.data import readers
-from forte.data.base_pack import *
-from forte.data.data_pack import *
-from forte.data.datasets import *
-from forte.data.data_utils_io import *
-from forte.data.multi_pack import *
-from forte.data.container import *
+__all__ = [
+    'MaybeTuple',
+    'MaybeList',
+    'MaybeSeq',
+    'MaybeDict',
+    'PathLike',
+]
+
+T = TypeVar('T')
+MaybeTuple = Union[T, Tuple[T, ...]]
+MaybeList = Union[T, List[T]]
+MaybeSeq = Union[T, Sequence[T]]
+MaybeDict = Union[T, Dict[str, T]]
+PathLike = TypeVar('PathLike', str, os.PathLike)

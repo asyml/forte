@@ -26,7 +26,7 @@ from forte.data.base import Span
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generic, Query)
-from forte.data import io_utils
+from forte.data import data_utils_io
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         (
             self._text, self.replace_back_operations,
             self.processed_original_spans, self.orig_text_len
-        ) = io_utils.modify_text_and_track_ops(text, span_ops)
+        ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
 
     def get_original_text(self):
         r"""Get original unmodified text from the :class:`DataPack` object.
@@ -159,7 +159,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             Original text after applying the `replace_back_operations` of
             :class:`DataPack` object to the modified text
         """
-        original_text, _, _, _ = io_utils.modify_text_and_track_ops(
+        original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
             self._text, self.replace_back_operations)
         return original_text
 

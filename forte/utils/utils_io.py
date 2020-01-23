@@ -11,12 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Utility functions related to input/output.
+"""
+import os
 
-from forte.data import ontology
-from forte.data import readers
-from forte.data.base_pack import *
-from forte.data.data_pack import *
-from forte.data.datasets import *
-from forte.data.data_utils_io import *
-from forte.data.multi_pack import *
-from forte.data.container import *
+__all__ = [
+    "maybe_create_dir",
+]
+
+
+def maybe_create_dir(dirname: str) -> bool:
+    r"""Creates directory if it does not exist.
+
+    Args:
+        dirname (str): Path to the directory.
+
+    Returns:
+        bool: Whether a new directory is created.
+    """
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+        return True
+    return False
