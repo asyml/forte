@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Utility functions related to data processing input/output.
+"""
 import os
 from typing import Dict, List, Iterator, Any, Tuple
 
@@ -23,7 +25,6 @@ __all__ = [
     "merge_batches",
     "slice_batch",
     "dataset_path_iterator",
-    "ensure_dir",
 ]
 
 
@@ -152,17 +153,3 @@ def modify_text_and_track_ops(original_text: str,
 
     return (mod_text, replace_back_operations, sorted(processed_original_spans),
             orig_text_len)
-
-
-def ensure_dir(doc_path: str):
-    r"""Ensure the directory for writing this file exists
-
-    Args:
-        doc_path: The doc path that is going to be written to.
-
-    Returns:
-
-    """
-    parent = os.path.dirname(doc_path)
-    if not os.path.exists(parent):
-        os.makedirs(parent)

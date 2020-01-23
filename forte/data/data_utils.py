@@ -31,9 +31,6 @@ __all__ = [
 ]
 
 
-Py3 = sys.version_info[0] == 3
-
-
 # TODO: Remove these once pylint supports function stubs.
 # pylint: disable=unused-argument,function-redefined,missing-docstring
 
