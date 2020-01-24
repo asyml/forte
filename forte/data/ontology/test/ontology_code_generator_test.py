@@ -27,11 +27,12 @@ from forte.data.ontology.code_generation_objects import ImportManager
 from forte.data.ontology.ontology_code_generator import (
     OntologyCodeGenerator
 )
-from forte.data.ontology.code_generation_exceptions import \
-    DirectoryAlreadyPresentWarning, DuplicateEntriesWarning, \
-    ImportOntologyNotFoundException, ParentEntryNotDeclaredException, \
-    TypeNotDeclaredException, UnsupportedTypeException, \
+from forte.data.ontology.code_generation_exceptions import (
+    DirectoryAlreadyPresentWarning, DuplicateEntriesWarning,
+    ImportOntologyNotFoundException,
+    TypeNotDeclaredException, UnsupportedTypeException,
     DuplicatedAttributesWarning, ParentEntryNotSupportedException
+)
 
 
 @ddt

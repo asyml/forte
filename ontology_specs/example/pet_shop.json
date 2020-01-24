@@ -63,6 +63,24 @@
           "type": "str"
         }
       ]
+    },
+    {
+      "entry_name": "awesome.pet.com.Records",
+      "parent_entry":  "forte.data.ontology.top.Generic",
+      "attributes": [
+        {
+          "name": "revenue_records",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "awesome.pet.com.Revenue"
+        },
+        {
+          "name": "record_dates",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "int"
+        }
+      ]
     }
   ]
 }

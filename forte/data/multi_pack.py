@@ -326,6 +326,40 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"There is no entry with tid '{tid}'' in this datapack")
         return entry
 
+    def delete_entry(self, entry: EntryType):
+        r"""Delete an :class:`~forte.data.ontology.top.Entry` object from the
+         :class:`MultiPack`.
+
+        Args:
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+                object to be deleted from the pack.
+
+        """
+        if isinstance(entry, MultiPackLink):
+            target = self.links
+        elif isinstance(entry, MultiPackGroup):
+            target = self.groups
+        elif isinstance(entry, MultiPackGeneric):
+            target = self.generics
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(entry)}. A valid entry "
+                f"should be an instance of Annotation, Link, or Group."
+            )
+
+        begin = 0
+        for i, e in enumerate(target[begin:]):
+            if e.tid == entry.tid:
+                target.pop(i + begin)
+                break
+
+        # update basic index
+        self.index.remove_entry(entry)
+
+        # set other index invalid
+        self.index.turn_link_index_switch(on=False)
+        self.index.turn_group_index_switch(on=False)
+
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackLink)

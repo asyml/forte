@@ -146,10 +146,7 @@ class ImportManager:
                 f'more objects.')
 
         if full_name not in self.__imported_names:
-            if full_name in PRIMITIVE_SUPPORTED:
-                self.__imported_names[full_name] = full_name
-                self.create_import_statement(full_name, '')
-            else:
+            if full_name not in PRIMITIVE_SUPPORTED:
                 as_name = self.__assign_as_name(full_name)
                 self.__imported_names[full_name] = as_name
                 self.create_import_statement(full_name, as_name)
@@ -250,20 +247,7 @@ class Property(Item, ABC):
 
         Returns: The access code generated for this property
         """
-        name = self.name
-
-        # TODO: set field is simple here, but we need to update the
-        #  serialization function to handle complex types.
-
-        lines = [("@property", 0),
-                 (f"def {name}(self):", 0),
-                 (f"return self.{name}", 1),
-                 ('', 0),
-                 (f"@{self.name}.setter", 0),
-                 (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
-                 (f"self.set_fields({name}={self.to_field_value()})", 1),
-                 ]
-        return indent_code([indent_line(*line) for line in lines], level)
+        raise NotImplementedError
 
     def to_init_code(self, level: int) -> str:
         return indent_line(f"self.{self.name}: {self.to_type_str()} = "
@@ -298,6 +282,7 @@ class ClassTypeDefinition:
 
 
 class PrimitiveProperty(Property):
+
     def __init__(self, import_manager: ImportManager,
                  name: str, type_str: str, description: Optional[str] = None,
                  default_val: Any = None):
@@ -309,18 +294,41 @@ class PrimitiveProperty(Property):
         self.option_type = 'typing.Optional'
         import_manager.add_object_to_import('typing.Optional')
 
-    def to_type_str(self) -> str:
-        if self.type_str not in PRIMITIVE_SUPPORTED:
-            logging.error(f"{self.type_str} is not a supported primitive type.")
-            raise UnsupportedTypeException
+        self.is_forte_type = import_manager.is_imported(type_str)
 
+    def to_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use(self.option_type)
-        return f"{option_type}[{self.type_str}]"
+        if self.is_forte_type:
+            return f"{option_type}[int]"
+        else:
+            return f"{option_type}[{self.type_str}]"
+
+    def to_access_functions(self, level):
+        name = self.name
+
+        if self.is_forte_type:
+            lines = [
+                ("@property", 0),
+                (f"def {name}(self):", 0),
+                (f"return self.__pack.get_entry(self.{name})", 1),
+                ('', 0),
+                (f"@{self.name}.setter", 0),
+                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"self.set_fields({name}=self.__pack.add_entry_({name}))", 1),
+            ]
+        else:
+            lines = [
+                ("@property", 0),
+                (f"def {name}(self):", 0),
+                (f"return self.{name}", 1),
+                ('', 0),
+                (f"@{self.name}.setter", 0),
+                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"self.set_fields({name}={self.to_field_value()})", 1),
+            ]
+        return indent_code([indent_line(*line) for line in lines], level)
 
     def to_field_value(self):
-        # Field value should be simplified, the code gen should not does any
-        # deep functions.
-
         # if self.type_str in PRIMITIVE_SUPPORTED:
         #     return self.name
         # return f"{self.name}.tid"
@@ -344,6 +352,8 @@ class DictProperty(Property):
         self.value_type: str = value_type
         self.self_ref: bool = self_ref
 
+        self.value_is_forte_type = import_manager.is_imported(self.value_type)
+
     def to_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use('typing.Optional')
         composite_type = self.import_manager.get_name_to_use(self.type_str)
@@ -354,7 +364,10 @@ class DictProperty(Property):
         if self.self_ref:
             value_type = '"' + value_type + '"'
 
-        return f"{option_type}[{composite_type}[{key_type}, {value_type}]]"
+        if self.value_is_forte_type:
+            return f"{option_type}[{composite_type}[{key_type}, int]]"
+        else:
+            return f"{option_type}[{composite_type}[{key_type}, {value_type}]]"
 
     def to_field_value(self):
         return self.name
@@ -366,35 +379,83 @@ class DictProperty(Property):
         :param level:
         :return:
         """
-        base_code = super(DictProperty, self).to_access_functions(level)
-
         name = self.name
-        lines = [
-            ('', 0),
-            (f"def num_{name}(self):", 0),
-            (f"return len(self.{name})", 1),
-            ('', 0),
-            (f"def clear_{name}(self):", 0),
-            (f"self.{name}.clear()", 1),
-        ]
-
+        key_type = self.import_manager.get_name_to_use(self.key_type)
         value_type = self.import_manager.get_name_to_use(self.value_type)
+
         if self.self_ref:
             value_type = '"' + value_type + '"'
 
-        lines.extend([
+        lines = [
+            # Construct getter.
+            ("@property", 0),
+            (f"def {name}(self):", 0),
+            (f"return self.{name}", 1),
             ('', 0),
-            (f"def add_{name}(self, "
-             f"key: {self.key_type}, value: {value_type}):", 0),
-            (f"self.{name}[key](value)", 1),
+        ]
+
+        # Construct setter.
+        if self.value_is_forte_type:
+            lines.extend([
+                (f"@{self.name}.setter", 0),
+                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"self.set_fields("
+                 f"{name}="
+                 f"dict([(k, self.__pack.add_entry_(v)) "
+                 f"for k, v in {name}.items()]))", 1),
+                ('', 0),
+            ])
+        else:
+            lines.extend([
+                (f"@{self.name}.setter", 0),
+                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"self.set_fields("
+                 f"{name}={name})", 1),
+                ('', 0),
+            ])
+
+        # Construct counter.
+        lines.extend([
+            (f"def num_{name}(self):", 0),
+            (f"return len(self.{name})", 1),
+            ('', 0),
         ])
 
-        add_code = indent_code([indent_line(*line) for line in lines], level)
+        # Construct clear (deletion).
+        if self.value_is_forte_type:
+            lines.extend([
+                (f"def clear_{name}(self):", 0),
+                (f"[self.__pack.delete_entry("
+                 f"self.__pack.get_entry(tid)) for tid in self.{name}.values()]",
+                 1),
+                (f"self.{name}.clear()", 1),
+            ])
+        else:
+            lines.extend([
+                (f"def clear_{name}(self):", 0),
+                (f"self.{name}.clear()", 1),
+            ])
 
-        return base_code + add_code
+        # Construct appender.
+        if self.value_is_forte_type:
+            lines.extend([
+                ('', 0),
+                (f"def add_{name}(self, key: {key_type}, value: {value_type}):",
+                 0),
+                (f"self.{name}[key].add(self.__pack.add_entry_(value))", 1),
+            ])
+        else:
+            lines.extend([
+                ('', 0),
+                (f"def add_{name}(self, key: {key_type}, value: {value_type}):",
+                 0),
+                (f"self.{name}[key].add(value)", 1),
+            ])
+
+        return indent_code([indent_line(*line) for line in lines], level)
 
 
-class CompositeProperty(Property):
+class ListProperty(Property):
     def __init__(self,
                  import_manager: ImportManager,
                  name: str,
@@ -407,6 +468,10 @@ class CompositeProperty(Property):
                          description=description,
                          default_val=default_val)
         self.item_type: str = item_type
+        self.is_forte_type = import_manager.is_imported(self.item_type)
+
+        # self_ref would probably not happen, because we are using int for
+        # entry types.
         self.self_ref: bool = self_ref
 
     def to_type_str(self) -> str:
@@ -417,7 +482,10 @@ class CompositeProperty(Property):
         if self.self_ref:
             item_type = '"' + item_type + '"'
 
-        return f"{option_type}[{composite_type}[{item_type}]]"
+        if self.is_forte_type:
+            return f"{option_type}[{composite_type}[int]]"
+        else:
+            return f"{option_type}[{composite_type}[{item_type}]]"
 
     def to_access_functions(self, level):
         """ Generate access function to for composite types. This extend the
@@ -425,33 +493,74 @@ class CompositeProperty(Property):
         :param level:
         :return:
         """
-        base_code = super(CompositeProperty, self).to_access_functions(
-            level)
-
         name = self.name
         lines = [
+            # Construct getter.
+            ("@property", 0),
+            (f"def {name}(self):", 0),
+            (f"return self.{name}", 1),
             ('', 0),
+        ]
+
+        # Construct setter.
+        if self.is_forte_type:
+            lines.extend([
+                (f"@{self.name}.setter", 0),
+                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"self.set_fields("
+                 f"{name}="
+                 f"[self.__pack.add_entry_(obj) for obj in {name}])", 1),
+                ('', 0),
+            ])
+        else:
+            lines.extend([
+                (f"@{self.name}.setter", 0),
+                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"self.set_fields("
+                 f"{name}={name})", 1),
+                ('', 0),
+            ])
+
+        # Construct counter.
+        lines.extend([
             (f"def num_{name}(self):", 0),
             (f"return len(self.{name})", 1),
             ('', 0),
-            (f"def clear_{name}(self):", 0),
-            (f"self.{name}.clear()", 1),
-        ]
+        ])
 
-        if self.type_str == 'typing.List':
-            item_type = self.import_manager.get_name_to_use(self.item_type)
-            if self.self_ref:
-                item_type = '"' + item_type + '"'
+        # Construct clear (deletion).
+        if self.is_forte_type:
+            lines.extend([
+                (f"def clear_{name}(self):", 0),
+                (f"[self.__pack.delete_entry("
+                 f"self.__pack.get_entry(tid)) for tid in self.{name}]", 1),
+                (f"self.{name}.clear()", 1),
+            ])
+        else:
+            lines.extend([
+                (f"def clear_{name}(self):", 0),
+                (f"self.{name}.clear()", 1),
+            ])
 
+        # Construct appender.
+        item_type = self.import_manager.get_name_to_use(self.item_type)
+        if self.self_ref:
+            item_type = '"' + item_type + '"'
+
+        if self.is_forte_type:
+            lines.extend([
+                ('', 0),
+                (f"def add_{name}(self, a_{name}: {item_type}):", 0),
+                (f"self.{name}.append(self.__pack.add_entry_(a_{name}))", 1),
+            ])
+        else:
             lines.extend([
                 ('', 0),
                 (f"def add_{name}(self, a_{name}: {item_type}):", 0),
                 (f"self.{name}.append(a_{name})", 1),
             ])
 
-        add_code = indent_code([indent_line(*line) for line in lines], level)
-
-        return base_code + add_code
+        return indent_code([indent_line(*line) for line in lines], level)
 
     def to_field_value(self):
         # item_value_str = PrimitiveProperty(self.import_manager, 'item',
@@ -594,6 +703,7 @@ class ModuleWriter:
             # Write header.
             f.write(self.to_header(0))
             for entry_name, entry_item in self.entries:
+                print('writing ', entry_name.class_name)
                 f.write(entry_item.to_code(0))
 
     def to_header(self, level: int) -> str:

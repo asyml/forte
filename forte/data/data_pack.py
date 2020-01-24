@@ -381,6 +381,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             target = self.links
         elif isinstance(entry, Group):
             target = self.groups
+        elif isinstance(entry, Generic):
+            target = self.generics
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "

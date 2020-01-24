@@ -40,7 +40,7 @@ from forte.data.ontology.code_generation_exceptions import \
     UnsupportedTypeException, InvalidIdentifierException, \
     DuplicatedAttributesWarning, ParentEntryNotSupportedException
 from forte.data.ontology.code_generation_objects import (
-    PrimitiveProperty, CompositeProperty, ClassTypeDefinition,
+    PrimitiveProperty, ListProperty, ClassTypeDefinition,
     DefinitionItem, Property, ImportManagerPool,
     EntryName, ModuleWriterPool, ImportManager, DictProperty)
 # Builtin and local imports required in the generated python modules.
@@ -660,12 +660,27 @@ class OntologyCodeGenerator:
         filename, entry class entry_name, generated entry code and entry
         attribute names.
         """
+        this_manager = self.import_managers.get(entry_name.module_name)
+
         # Determine the parent entry of this entry.
         parent_entry: str = schema[SchemaKeywords.parent_entry]
+
+        if not this_manager.is_imported(parent_entry):
+            raise ParentEntryNotDeclaredException(
+                f"The parent entry {parent_entry} is not declared. Please"
+                f"check the specification."
+            )
+
         base_entry: str = self.find_base_entry(entry_name.class_name,
                                                parent_entry)
 
-        if base_entry is None or base_entry not in self.top_init_args:
+        if base_entry is None:
+            raise OntologySpecError(
+                f"Cannot find the base entry for entry "
+                f"{entry_name.class_name} and {parent_entry}"
+            )
+
+        if base_entry not in self.top_init_args:
             raise ParentEntryNotSupportedException(
                 f"Cannot add {entry_name.class_name} to the ontology as "
                 f"it's parent entry {parent_entry} is not supported. This is "
@@ -730,10 +745,10 @@ class OntologyCodeGenerator:
         if (SchemaKeywords.dict_key_type not in schema
                 or SchemaKeywords.dict_value_type not in schema):
             raise TypeNotDeclaredException(
-                f"Item type for the entry {entry_name.name} "
-                f"of the attribute {att_name} not declared. This attribute is "
+                f"Item type of the attribute {att_name} for the entry "
+                f" {entry_name.class_name} not declared. This attribute is "
                 f"a composite type: {att_type}, it should have a "
-                f"{SchemaKeywords.element_type} and "
+                f"{SchemaKeywords.dict_key_type} and "
                 f"{SchemaKeywords.dict_value_type}.")
 
         key_type = schema[SchemaKeywords.dict_key_type]
@@ -765,12 +780,7 @@ class OntologyCodeGenerator:
 
         self_ref = entry_name.class_name == value_type
 
-        default_val = None
-
-        if att_type == 'List':
-            default_val = []
-        elif att_type == 'Set':
-            default_val = set()
+        default_val = {}
 
         return DictProperty(
             manager, att_name, key_type, value_type, description=desc,
@@ -778,11 +788,11 @@ class OntologyCodeGenerator:
 
     def parse_single_composite(
             self, manager: ImportManager, schema: Dict, entry_name: EntryName,
-            att_name: str, att_type: str, desc: str) -> CompositeProperty:
+            att_name: str, att_type: str, desc: str) -> ListProperty:
         if SchemaKeywords.element_type not in schema:
             raise TypeNotDeclaredException(
-                f"Item type for the entry {entry_name.name} "
-                f"of the attribute {att_name} not declared. This attribute is "
+                f"Item type for the attribute {att_name} of the entry "
+                f"[{entry_name.class_name}] not declared. This attribute is "
                 f"a composite type: {att_type}, it should have a "
                 f"{SchemaKeywords.element_type}.")
 
@@ -809,16 +819,13 @@ class OntologyCodeGenerator:
 
         self_ref = entry_name.class_name == item_type
 
-        default_val = None
-
         if att_type == 'List':
-            default_val = []
-        elif att_type == 'Set':
-            default_val = set()
-
-        return CompositeProperty(
-            manager, att_name, full_type, item_type, description=desc,
-            default_val=default_val, self_ref=self_ref)
+            return ListProperty(
+                manager, att_name, full_type, item_type, description=desc,
+                default_val=[], self_ref=self_ref)
+        else:
+            raise UnsupportedTypeException(
+                f"{att_type} is not a supported composite type.")
 
     def parse_property(self, entry_name: EntryName, schema: Dict) -> Property:
         """
