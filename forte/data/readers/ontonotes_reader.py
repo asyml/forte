@@ -22,7 +22,7 @@ from typing import (Any, DefaultDict, Iterator, List, NamedTuple, Optional,
 from forte.data.data_pack import DataPack
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import (
+from ft.onto.base_ontology_new import (
     CoreferenceGroup, Document, EntityMention, PredicateArgument, PredicateLink,
     PredicateMention, Sentence, Token)
 

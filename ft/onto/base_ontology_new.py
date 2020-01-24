@@ -57,11 +57,11 @@ class Token(Annotation):
         self.is_root: Optional[bool] = None
 
     @property
-    def pos(self):
+    def a_pos(self):
         return self.pos
 
-    @pos.setter
-    def pos(self, pos: Optional[str]):
+    @a_pos.setter
+    def a_pos(self, pos: Optional[str]):
         self.set_fields(pos=pos)
 
     @property
@@ -154,12 +154,16 @@ class PredicateArgument(Annotation):
 
     Attributes:
         ner_type (Optional[str])
+        predicate_lemma (Optional[str])
+        is_verb (Optional[bool])
 
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.ner_type: Optional[str] = None
+        self.predicate_lemma: Optional[str] = None
+        self.is_verb: Optional[bool] = None
 
     @property
     def ner_type(self):
@@ -168,6 +172,22 @@ class PredicateArgument(Annotation):
     @ner_type.setter
     def ner_type(self, ner_type: Optional[str]):
         self.set_fields(ner_type=ner_type)
+
+    @property
+    def predicate_lemma(self):
+        return self.predicate_lemma
+
+    @predicate_lemma.setter
+    def predicate_lemma(self, predicate_lemma: Optional[str]):
+        self.set_fields(predicate_lemma=predicate_lemma)
+
+    @property
+    def is_verb(self):
+        return self.is_verb
+
+    @is_verb.setter
+    def is_verb(self, is_verb: Optional[bool]):
+        self.set_fields(is_verb=is_verb)
 
 
 class EntityMention(Annotation):

@@ -61,6 +61,14 @@
         {
           "name": "ner_type",
           "type": "str"
+        },
+        {
+          "name": "predicate_lemma",
+          "type": "str"
+        },
+        {
+          "name": "is_verb",
+          "type": "bool"
         }
       ]
     },

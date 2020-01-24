@@ -40,7 +40,7 @@ from forte.data.ontology.code_generation_exceptions import \
     UnsupportedTypeException, InvalidIdentifierException, \
     DuplicatedAttributesWarning, ParentEntryNotSupportedException
 from forte.data.ontology.code_generation_objects import (
-    PrimitiveProperty, ListProperty, ClassTypeDefinition,
+    NonCompositeProperty, ListProperty, ClassTypeDefinition,
     DefinitionItem, Property, ImportManagerPool,
     EntryName, ModuleWriterPool, ImportManager, DictProperty)
 # Builtin and local imports required in the generated python modules.
@@ -387,11 +387,11 @@ class OntologyCodeGenerator:
         # Starting from here, we won't add any more modules to import.
         self.import_managers.fix_all_modules()
 
-        print('working on ', spec_path)
+        logging.info('Working on ', spec_path)
         for writer in self.module_writers.writers():
-            print('writing ', writer.module_name)
+            logging.info('Writing module: ' + writer.module_name)
             writer.write(tempdir, destination_dir)
-            print('Done writing.')
+            logging.info('Done writing.')
 
         # When everything is successfully completed, copy the contents of
         # `self.tempdir` to the provided folder.
@@ -863,7 +863,7 @@ class OntologyCodeGenerator:
             return self.parse_dict(
                 manager, schema, entry_name, att_name, att_type, desc)
         else:
-            return PrimitiveProperty(
+            return NonCompositeProperty(
                 manager, att_name, att_type, description=desc,
                 default_val=default_val)
 

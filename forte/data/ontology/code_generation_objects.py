@@ -204,6 +204,28 @@ def indent_code(code_lines: List[str], level: int = 0, ending='\n') -> str:
         [indent_line(line, level) for line in lines]) + ending
 
 
+def getter(name, field_name):
+    # Construct getter.
+    return [
+        ("@property", 0),
+        (f"def {name}(self):", 0),
+        (f"return self.{field_name}", 1),
+        ('', 0),
+    ]
+
+
+def change_get_state(name, field_name, level):
+    return [
+        (f"state['{name}'] = self.{field_name}", level)
+    ]
+
+
+def change_set_state(name, field_name, level):
+    return [
+        (f"self.{field_name} = state.get('{name}', None) ", level)
+    ]
+
+
 class EntryName:
     def __init__(self, entry_name: str):
         entry_splits = entry_name.split('.')
@@ -218,6 +240,10 @@ class Item:
     def __init__(self, name: str, description: Optional[str]):
         self.name: str = name
         self.description: Optional[str] = description
+
+    @property
+    def field_name(self):
+        return '_' + self.name
 
     def to_description(self, level: int) -> Optional[str]:
         if self.description is not None:
@@ -249,12 +275,18 @@ class Property(Item, ABC):
         """
         raise NotImplementedError
 
+    def to_getstate(self, level):
+        return change_get_state(self.name, self.field_name, level)
+
+    def to_setstate(self, level):
+        return change_set_state(self.name, self.field_name, level)
+
     def to_init_code(self, level: int) -> str:
-        return indent_line(f"self.{self.name}: {self.to_type_str()} = "
+        return indent_line(f"self.{self.field_name}: {self.to_type_str()} = "
                            f"{repr(self.default_val)}", level)
 
     def to_description(self, level: int) -> Optional[str]:
-        desc = f"{self.name} ({self.to_type_str()})"
+        desc = f"{self.field_name} ({self.to_type_str()})"
 
         if self.description is not None and self.description.strip() != '':
             desc += f"\t{self.description}"
@@ -281,12 +313,11 @@ class ClassTypeDefinition:
         pass
 
 
-class PrimitiveProperty(Property):
-
+class NonCompositeProperty(Property):
     def __init__(self, import_manager: ImportManager,
                  name: str, type_str: str, description: Optional[str] = None,
                  default_val: Any = None):
-        super(PrimitiveProperty, self).__init__(
+        super(NonCompositeProperty, self).__init__(
             import_manager, name, type_str, description, default_val)
 
         # Primitive type will use optional in type string, so we add the
@@ -307,32 +338,28 @@ class PrimitiveProperty(Property):
         name = self.name
 
         if self.is_forte_type:
+            type_to_use = self.import_manager.get_name_to_use(self.type_str)
             lines = [
                 ("@property", 0),
                 (f"def {name}(self):", 0),
                 (f"return self.__pack.get_entry(self.{name})", 1),
                 ('', 0),
                 (f"@{self.name}.setter", 0),
-                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
-                (f"self.set_fields({name}=self.__pack.add_entry_({name}))", 1),
+                (f"def {name}(self, {name}: {type_to_use}):", 0),
+                (f"self.set_fields({self.field_name}="
+                 f"self.__pack.add_entry({name}))", 1),
             ]
         else:
-            lines = [
-                ("@property", 0),
-                (f"def {name}(self):", 0),
-                (f"return self.{name}", 1),
-                ('', 0),
+            lines = getter(name, self.field_name)
+            lines.extend([
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
-                (f"self.set_fields({name}={self.to_field_value()})", 1),
-            ]
+                (f"self.set_fields({self.field_name}"
+                 f"={self.to_field_value()})", 1),
+            ])
         return indent_code([indent_line(*line) for line in lines], level)
 
     def to_field_value(self):
-        # if self.type_str in PRIMITIVE_SUPPORTED:
-        #     return self.name
-        # return f"{self.name}.tid"
-
         return self.name
 
 
@@ -386,13 +413,7 @@ class DictProperty(Property):
         if self.self_ref:
             value_type = '"' + value_type + '"'
 
-        lines = [
-            # Construct getter.
-            ("@property", 0),
-            (f"def {name}(self):", 0),
-            (f"return self.{name}", 1),
-            ('', 0),
-        ]
+        lines = getter(name, self.field_name)
 
         # Construct setter.
         if self.value_is_forte_type:
@@ -400,7 +421,7 @@ class DictProperty(Property):
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
                 (f"self.set_fields("
-                 f"{name}="
+                 f"{self.field_name}="
                  f"dict([(k, self.__pack.add_entry_(v)) "
                  f"for k, v in {name}.items()]))", 1),
                 ('', 0),
@@ -410,14 +431,14 @@ class DictProperty(Property):
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
                 (f"self.set_fields("
-                 f"{name}={name})", 1),
+                 f"{self.field_name}={name})", 1),
                 ('', 0),
             ])
 
         # Construct counter.
         lines.extend([
             (f"def num_{name}(self):", 0),
-            (f"return len(self.{name})", 1),
+            (f"return len(self.{self.field_name})", 1),
             ('', 0),
         ])
 
@@ -428,12 +449,12 @@ class DictProperty(Property):
                 (f"[self.__pack.delete_entry("
                  f"self.__pack.get_entry(tid)) for tid in self.{name}.values()]",
                  1),
-                (f"self.{name}.clear()", 1),
+                (f"self.{self.field_name}.clear()", 1),
             ])
         else:
             lines.extend([
                 (f"def clear_{name}(self):", 0),
-                (f"self.{name}.clear()", 1),
+                (f"self.{self.field_name}.clear()", 1),
             ])
 
         # Construct appender.
@@ -442,14 +463,15 @@ class DictProperty(Property):
                 ('', 0),
                 (f"def add_{name}(self, key: {key_type}, value: {value_type}):",
                  0),
-                (f"self.{name}[key].add(self.__pack.add_entry_(value))", 1),
+                (f"self.{self.field_name}[key] = self.__pack.add_entry_(value)",
+                 1),
             ])
         else:
             lines.extend([
                 ('', 0),
                 (f"def add_{name}(self, key: {key_type}, value: {value_type}):",
                  0),
-                (f"self.{name}[key].add(value)", 1),
+                (f"self.{name}[key] = value", 1),
             ])
 
         return indent_code([indent_line(*line) for line in lines], level)
@@ -494,13 +516,7 @@ class ListProperty(Property):
         :return:
         """
         name = self.name
-        lines = [
-            # Construct getter.
-            ("@property", 0),
-            (f"def {name}(self):", 0),
-            (f"return self.{name}", 1),
-            ('', 0),
-        ]
+        lines = getter(name, self.field_name)
 
         # Construct setter.
         if self.is_forte_type:
@@ -508,7 +524,7 @@ class ListProperty(Property):
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
                 (f"self.set_fields("
-                 f"{name}="
+                 f"{self.field_name}="
                  f"[self.__pack.add_entry_(obj) for obj in {name}])", 1),
                 ('', 0),
             ])
@@ -517,14 +533,14 @@ class ListProperty(Property):
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
                 (f"self.set_fields("
-                 f"{name}={name})", 1),
+                 f"{self.field_name}={name})", 1),
                 ('', 0),
             ])
 
         # Construct counter.
         lines.extend([
             (f"def num_{name}(self):", 0),
-            (f"return len(self.{name})", 1),
+            (f"return len(self.{self.field_name})", 1),
             ('', 0),
         ])
 
@@ -533,13 +549,14 @@ class ListProperty(Property):
             lines.extend([
                 (f"def clear_{name}(self):", 0),
                 (f"[self.__pack.delete_entry("
-                 f"self.__pack.get_entry(tid)) for tid in self.{name}]", 1),
-                (f"self.{name}.clear()", 1),
+                 f"self.__pack.get_entry(tid)) "
+                 f"for tid in self.{self.field_name}]", 1),
+                (f"self.{self.field_name}.clear()", 1),
             ])
         else:
             lines.extend([
                 (f"def clear_{name}(self):", 0),
-                (f"self.{name}.clear()", 1),
+                (f"self.{self.field_name}.clear()", 1),
             ])
 
         # Construct appender.
@@ -551,13 +568,14 @@ class ListProperty(Property):
             lines.extend([
                 ('', 0),
                 (f"def add_{name}(self, a_{name}: {item_type}):", 0),
-                (f"self.{name}.append(self.__pack.add_entry_(a_{name}))", 1),
+                (f"self.{self.field_name}.append("
+                 f"self.__pack.add_entry_(a_{name}))", 1),
             ])
         else:
             lines.extend([
                 ('', 0),
                 (f"def add_{name}(self, a_{name}: {item_type}):", 0),
-                (f"self.{name}.append(a_{name})", 1),
+                (f"self.{self.field_name}.append(a_{name})", 1),
             ])
 
         return indent_code([indent_line(*line) for line in lines], level)
@@ -592,6 +610,28 @@ class DefinitionItem(Item):
     def to_init_code(self, level: int) -> str:
         return indent_line(f"def __init__(self, {self.init_args}):", level)
 
+    def to_get_state_code(self, level: int) -> str:
+        lines = [
+            ("def __getstate__(self): ", 0),
+            ("state = super().__getstate__()", 1),
+        ]
+
+        for p in self.properties:
+            lines.extend(p.to_getstate(1))
+        lines.append(("return state", 1))
+        return indent_code([indent_line(*line) for line in lines], level)
+
+    def to_set_state_code(self, level: int) -> str:
+        lines = [
+            ("def __setstate__(self, state): ", 0),
+            ("state = super().__setstate__(state)", 1),
+        ]
+
+        for p in self.properties:
+            lines.extend(p.to_setstate(1))
+
+        return indent_code([indent_line(*line) for line in lines], level)
+
     def to_code(self, level: int) -> str:
         super_args = ', '.join([item.split(':')[0].strip()
                                 for item in self.init_args.split(',')])
@@ -608,6 +648,8 @@ class DefinitionItem(Item):
                   indent_line(f"super().__init__({super_args})", 2)]
         lines += [item.to_init_code(2) for item in self.properties]
         lines += ['']
+        lines += [self.to_get_state_code(1)]
+        lines += [self.to_set_state_code(1)]
         lines += [item.to_access_functions(1) for item in self.properties]
         return indent_code(lines, level, '')
 
@@ -624,8 +666,6 @@ class DefinitionItem(Item):
         class_desc = [] if self.description is None else [self.description]
         item_descs = self.to_item_descs(self.properties, 'Attributes:')
 
-        # att_descs = self.to_item_descs(self.class_attributes,
-        #                                'Class Attributes:')
         descs = class_desc + [''] + item_descs + ['']
         if len(descs) == 0:
             return ""
@@ -703,7 +743,7 @@ class ModuleWriter:
             # Write header.
             f.write(self.to_header(0))
             for entry_name, entry_item in self.entries:
-                print('writing ', entry_name.class_name)
+                logging.info('Writing class: ' + entry_name.class_name)
                 f.write(entry_item.to_code(0))
 
     def to_header(self, level: int) -> str:

@@ -49,6 +49,7 @@ class MultiPackMeta(BaseMeta):
         super().__init__()
 
 
+# TODO: operations for multi pack is far less complete comparing to data pack.
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     r"""A :class:`MultiPack' contains multiple DataPacks and a collection of
     cross-pack entries (links, and groups)
@@ -96,6 +97,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def subentry(self, pack_index: int, entry: Entry):
         return SubEntry(self, pack_index, entry.tid)
+
+    def get_subentry(self, subentry: SubEntry):
+        return self.packs[subentry.pack_index].get_entry(subentry.entry_id)
 
     def get_span_text(self, span: Span):
         raise ValueError(
@@ -162,6 +166,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def get_pack(self, name: str):
         return self._packs[self.__name_index[name]]
+
+    def iter_groups(self):
+        yield from self.groups
 
     def get_single_pack_data(
             self,
@@ -247,31 +254,34 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         pass
 
-    def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        r"""Try to add an :class:`Entry` object to the :class:`Multipack`
-        object. If a same entry already exists, will return the existing entry
-        instead of adding the new one. Note that we regard two entries to be
-        same if their :meth:`eq` have the same return value, and users could
-        override :meth:`eq` in their custom entry classes.
+    def __add_entry_with_check(self, entry: EntryType,
+                               allow_duplicate: bool = True) -> EntryType:
+        r"""Internal method to add an :class:`Entry` object to the
+        :class:`MultiPack` object.
 
         Args:
             entry (Entry): An :class:`Entry` object to be added to the datapack.
+            allow_duplicate (bool): Whether we allow duplicate in the datapack.
 
         Returns:
-            If a same entry already exists, returns the existing
-            entry. Otherwise, return the (input) entry just added.
+            The input entry itself
         """
         if isinstance(entry, MultiPackLink):
-            target: List[Any] = self.links
+            target = self.links
         elif isinstance(entry, MultiPackGroup):
             target = self.groups
+        elif isinstance(entry, MultiPackGeneric):
+            target = self.generics
         else:
             raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
+                f"Invalid entry type {type(entry)} for Multipack. A valid "
+                f"entry should be an instance of MultiPackLink, MultiPackGroup"
+                f", or MultiPackGeneric."
             )
 
-        if entry not in target:
+        add_new = allow_duplicate or (entry not in target)
+
+        if add_new:
             self.record_entry(entry)
 
             target.append(entry)
@@ -286,7 +296,24 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 self.index.update_group_index([entry])
 
             return entry
-        return target[target.index(entry)]
+        else:
+            return target[target.index(entry)]
+
+    def add_or_get_entry(self, entry: EntryType) -> EntryType:
+        r"""Try to add an :class:`Entry` object to the :class:`Multipack`
+        object. If a same entry already exists, will return the existing entry
+        instead of adding the new one. Note that we regard two entries to be
+        same if their :meth:`eq` have the same return value, and users could
+        override :meth:`eq` in their custom entry classes.
+
+        Args:
+            entry (Entry): An :class:`Entry` object to be added to the datapack.
+
+        Returns:
+            If a same entry already exists, returns the existing
+            entry. Otherwise, return the (input) entry just added.
+        """
+        return self.__add_entry_with_check(entry, False)
 
     def add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
@@ -299,24 +326,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             The input entry itself
         """
-        if isinstance(entry, MultiPackLink):
-            target: List[MultiPackLink] = self.links
-        elif isinstance(entry, MultiPackGroup):
-            target: List[MultiPackGroup] = self.groups
-        elif isinstance(entry, MultiPackGeneric):
-            target: List[MultiPackGeneric] = self.generics
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of MultiPackLink, MultiPackGroup, or "
-                f"MultiPackGeneric."
-            )
-
-        # add the entry to the target entry list
-        entry.set_tid()
-        self.add_entry_creation_record(entry.tid)
-        target.append(entry)
-        return entry
+        return self.__add_entry_with_check(entry, True)
 
     def get_entry(self, tid: int) -> EntryType:
         r"""Look up the entry_index with key ``tid``."""
