@@ -10,6 +10,10 @@ class DuplicateEntriesWarning(OntologyGenerationWarning):
     pass
 
 
+class DuplicatedAttributesWarning(OntologyGenerationWarning):
+    pass
+
+
 class OntologySpecError(ValueError):
     pass
 
@@ -46,5 +50,5 @@ class InvalidIdentifierException(ValueError):
     pass
 
 
-class DuplicatedAttributesWarning(OntologyGenerationWarning):
+class CodeGenerationException(BaseException):
     pass

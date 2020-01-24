@@ -23,6 +23,7 @@ import importlib
 import warnings
 from ddt import ddt, data
 
+from forte.data.ontology.code_generation_objects import ImportManager
 from forte.data.ontology.ontology_code_generator import (
     OntologyCodeGenerator
 )
@@ -148,12 +149,21 @@ class GenerateOntologyTest(unittest.TestCase):
                             'import os.path as os_path\n'
                             'from os import path\n')
         temp_module = importlib.import_module('temp')
-        _, imports, _ = OntologyCodeGenerator.initialize_top_entries(
-            temp_module)
-        expected_imports = {"os.path": "os.path",
-                            "os_path": "os.path",
-                            "path": "os.path"}
-        self.assertDictEqual(imports, expected_imports)
+
+        manager = ImportManager(None, None)
+
+        gen = OntologyCodeGenerator()
+        gen.initialize_top_entries(manager, temp_module)
+
+        imports = manager.get_import_statements()
+
+        # expected_imports = ["import os.path",
+        #                     "import os.path as os_path",
+        #                     "from os import path"]
+
+        expected_imports = ["from os import path"]
+
+        self.assertListEqual(imports, expected_imports)
 
 
 def get_config_path(filename):

@@ -3,93 +3,122 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated file. Do not change manually.
+
+
+Automatically generated ontology . Do not change manually.
 """
-import forte.data.data_pack
-import forte.data.ontology.top
-import ft.onto
-import ft.onto.example_import_ontology
-import typing
+
+from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Link
+from ft.onto.example_import_ontology import Token
+from typing import Dict
+from typing import List
+from typing import Optional
 
 
-__all__ = []
+__all__ = [
+    "Word",
+    "WordLink",
+]
 
 
-__all__.extend('Word')
-
-
-class Word(ft.onto.example_import_ontology.Token):
-    """
-        Args:
-            string_features (typing.Optional[typing.List[str]]): To demonstrate the composite type, List.
-            word_forms (typing.Optional[typing.List[ft.onto.example_ontology.Word]]): To demonstrate that an attribute can have the entry it is contained in as it's type or item_type.
+class Word(Token):
     """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+    Attributes:
+        string_features (Optional[List[str]])	To demonstrate the composite type, List.
+        word_forms (Optional[List["Word"]])	To demonstrate that an attribute can have the entry it is contained in as it's type or item_type.
+        token_ranks (Optional[Dict[int, "Word"]])
+
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._string_features: typing.Optional[typing.List[str]] = None
-        self._word_forms: typing.Optional[typing.List[ft.onto.example_ontology.Word]] = None
+        self.string_features: Optional[List[str]] = []
+        self.word_forms: Optional[List["Word"]] = []
+        self.token_ranks: Optional[Dict[int, "Word"]] = None
 
     @property
     def string_features(self):
-        return self._string_features
+        return self.string_features
 
-    def set_string_features(self, string_features: typing.Optional[typing.List[str]]):
-        self.set_fields(_string_features=[item for item in string_features])
+    @string_features.setter
+    def string_features(self, string_features: Optional[List[str]]):
+        self.set_fields(string_features=string_features)
 
     def num_string_features(self):
-        return len(self._string_features)
+        return len(self.string_features)
 
     def clear_string_features(self):
-        self._string_features.clear()
+        self.string_features.clear()
 
     def add_string_features(self, a_string_features: str):
-        self._string_features.append(a_string_features)
+        self.string_features.append(a_string_features)
 
     @property
     def word_forms(self):
-        return self._word_forms
+        return self.word_forms
 
-    def set_word_forms(self, word_forms: typing.Optional[typing.List[ft.onto.example_ontology.Word]]):
-        self.set_fields(_word_forms=[item.tid for item in word_forms])
+    @word_forms.setter
+    def word_forms(self, word_forms: Optional[List["Word"]]):
+        self.set_fields(word_forms=word_forms)
 
     def num_word_forms(self):
-        return len(self._word_forms)
+        return len(self.word_forms)
 
     def clear_word_forms(self):
-        self._word_forms.clear()
+        self.word_forms.clear()
 
-    def add_word_forms(self, a_word_forms: ft.onto.example_ontology.Word):
-        self._word_forms.append(a_word_forms)
+    def add_word_forms(self, a_word_forms: "Word"):
+        self.word_forms.append(a_word_forms)
+
+    @property
+    def token_ranks(self):
+        return self.token_ranks
+
+    @token_ranks.setter
+    def token_ranks(self, token_ranks: Optional[Dict[int, "Word"]]):
+        self.set_fields(token_ranks=token_ranks)
+
+    def num_token_ranks(self):
+        return len(self.token_ranks)
+
+    def clear_token_ranks(self):
+        self.token_ranks.clear()
+
+    def add_token_ranks(self, key: int, value: "Word"):
+        self.token_ranks[key](value)
 
 
-__all__.extend('WordLink')
-
-
-class WordLink(forte.data.ontology.top.Link):
+class WordLink(Link):
     """
-        Args:
-            string_features (typing.Optional[typing.List[str]]): To demonstrate the composite type, List.
-    """
-    parent_type: ft.onto.example_ontology.Word = None
-    child_type: ft.onto.example_ontology.Word = None
 
-    def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
+    Attributes:
+        string_features (Optional[List[str]])	To demonstrate the composite type, List.
+
+    """
+
+    ParentType = Word
+
+    ChildType = Word
+
+    def __init__(self, pack: DataPack, parent: Optional[DataPack] = None, child: Optional[DataPack] = None):
         super().__init__(pack, parent, child)
-        self._string_features: typing.Optional[typing.List[str]] = None
+        self.string_features: Optional[List[str]] = []
 
     @property
     def string_features(self):
-        return self._string_features
+        return self.string_features
 
-    def set_string_features(self, string_features: typing.Optional[typing.List[str]]):
-        self.set_fields(_string_features=[item for item in string_features])
+    @string_features.setter
+    def string_features(self, string_features: Optional[List[str]]):
+        self.set_fields(string_features=string_features)
 
     def num_string_features(self):
-        return len(self._string_features)
+        return len(self.string_features)
 
     def clear_string_features(self):
-        self._string_features.clear()
+        self.string_features.clear()
 
     def add_string_features(self, a_string_features: str):
-        self._string_features.append(a_string_features)
+        self.string_features.append(a_string_features)

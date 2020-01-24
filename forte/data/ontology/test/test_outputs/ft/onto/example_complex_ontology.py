@@ -3,105 +3,133 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated file. Do not change manually.
+
+
+Automatically generated ontology . Do not change manually.
 """
-import forte.data.data_pack
-import forte.data.ontology.top
-import ft.onto
-import typing
+
+from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Annotation
+from forte.data.ontology.top import Link
+from typing import List
+from typing import Optional
 
 
-__all__ = []
+__all__ = [
+    "Token",
+    "Sentence",
+    "Document",
+    "Dependency",
+]
 
 
-__all__.extend('Token')
+class Token(Annotation):
+    """
 
+    Attributes:
+        lemma (Optional[str])
+        is_verb (Optional[bool])
+        num_chars (Optional[int])
+        score (Optional[float])
 
-class Token(forte.data.ontology.top.Annotation):
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._lemma: typing.Optional[str] = None
-        self._is_verb: typing.Optional[bool] = None
-        self._num_chars: typing.Optional[int] = None
-        self._score: typing.Optional[float] = None
+        self.lemma: Optional[str] = None
+        self.is_verb: Optional[bool] = None
+        self.num_chars: Optional[int] = None
+        self.score: Optional[float] = None
 
     @property
     def lemma(self):
-        return self._lemma
+        return self.lemma
 
-    def set_lemma(self, lemma: typing.Optional[str]):
-        self.set_fields(_lemma=lemma)
+    @lemma.setter
+    def lemma(self, lemma: Optional[str]):
+        self.set_fields(lemma=lemma)
 
     @property
     def is_verb(self):
-        return self._is_verb
+        return self.is_verb
 
-    def set_is_verb(self, is_verb: typing.Optional[bool]):
-        self.set_fields(_is_verb=is_verb)
+    @is_verb.setter
+    def is_verb(self, is_verb: Optional[bool]):
+        self.set_fields(is_verb=is_verb)
 
     @property
     def num_chars(self):
-        return self._num_chars
+        return self.num_chars
 
-    def set_num_chars(self, num_chars: typing.Optional[int]):
-        self.set_fields(_num_chars=num_chars)
+    @num_chars.setter
+    def num_chars(self, num_chars: Optional[int]):
+        self.set_fields(num_chars=num_chars)
 
     @property
     def score(self):
-        return self._score
+        return self.score
 
-    def set_score(self, score: typing.Optional[float]):
-        self.set_fields(_score=score)
-
-
-__all__.extend('Sentence')
+    @score.setter
+    def score(self, score: Optional[float]):
+        self.set_fields(score=score)
 
 
-class Sentence(forte.data.ontology.top.Annotation):
+class Sentence(Annotation):
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+    Attributes:
+        key_tokens (Optional[List[Token]])
+
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._key_tokens: typing.Optional[typing.List[ft.onto.example_complex_ontology.Token]] = None
+        self.key_tokens: Optional[List[Token]] = []
 
     @property
     def key_tokens(self):
-        return self._key_tokens
+        return self.key_tokens
 
-    def set_key_tokens(self, key_tokens: typing.Optional[typing.List[ft.onto.example_complex_ontology.Token]]):
-        self.set_fields(_key_tokens=[item.tid for item in key_tokens])
+    @key_tokens.setter
+    def key_tokens(self, key_tokens: Optional[List[Token]]):
+        self.set_fields(key_tokens=key_tokens)
 
     def num_key_tokens(self):
-        return len(self._key_tokens)
+        return len(self.key_tokens)
 
     def clear_key_tokens(self):
-        self._key_tokens.clear()
+        self.key_tokens.clear()
 
-    def add_key_tokens(self, a_key_tokens: ft.onto.example_complex_ontology.Token):
-        self._key_tokens.append(a_key_tokens)
-
-
-__all__.extend('Document')
+    def add_key_tokens(self, a_key_tokens: Token):
+        self.key_tokens.append(a_key_tokens)
 
 
-class Document(forte.data.ontology.top.Annotation):
+class Document(Annotation):
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
 
-__all__.extend('Dependency')
+class Dependency(Link):
+    """
 
+    Attributes:
+        rel_type (Optional[str])
 
-class Dependency(forte.data.ontology.top.Link):
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
+    def __init__(self, pack: DataPack, parent: Optional[DataPack] = None, child: Optional[DataPack] = None):
         super().__init__(pack, parent, child)
-        self._rel_type: typing.Optional[str] = None
+        self.rel_type: Optional[str] = None
 
     @property
     def rel_type(self):
-        return self._rel_type
+        return self.rel_type
 
-    def set_rel_type(self, rel_type: typing.Optional[str]):
-        self.set_fields(_rel_type=rel_type)
+    @rel_type.setter
+    def rel_type(self, rel_type: Optional[str]):
+        self.set_fields(rel_type=rel_type)

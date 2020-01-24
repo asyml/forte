@@ -20,7 +20,7 @@ from pathlib import Path
 import pdb
 
 from forte.data.ontology.code_generation_exceptions import \
-    UnsupportedTypeException
+    UnsupportedTypeException, CodeGenerationException
 from forte.data.ontology.ontology_code_const import IGNORE_ERRORS_LINES, \
     PRIMITIVE_SUPPORTED, Config, SINGLE_COMPOSITES, COMPLEX_COMPOSITES
 from forte.data.ontology.utils import split_file_path
@@ -40,6 +40,10 @@ class ImportManager:
         self.__import_statements: List[str] = []
         self.__imported_names: Dict[str, str] = {}
         self.__short_name_pool: Set[str] = set()
+        self.__fix_modules = False
+
+    def fix_modules(self):
+        self.__fix_modules = True
 
     def is_known_name(self, class_name):
         """
@@ -72,7 +76,7 @@ class ImportManager:
         elif self.__root is None:
             return False
         else:
-            if self.__root.is_imported(class_name):
+            if self.__root.is_imported(class_name) and not self.__fix_modules:
                 self.add_object_to_import(class_name)
                 return True
 
@@ -83,7 +87,8 @@ class ImportManager:
         if full_name in PRIMITIVE_SUPPORTED:
             return full_name
 
-        return self.__imported_names[full_name]
+        if self.is_imported(full_name):
+            return self.__imported_names[full_name]
 
     def get_import_statements(self):
         return sorted(self.__import_statements)
@@ -134,6 +139,12 @@ class ImportManager:
             return as_name
 
     def add_object_to_import(self, full_name: str):
+        if self.__fix_modules:
+            # After fix the module, we should not add objects for import.
+            raise CodeGenerationException(
+                f'The module [{self.__module_name}] is fixed, cannot add '
+                f'more objects.')
+
         if full_name not in self.__imported_names:
             if full_name in PRIMITIVE_SUPPORTED:
                 self.__imported_names[full_name] = full_name
@@ -166,6 +177,11 @@ class ImportManagerPool:
             nm = ImportManager(self.__root_manager, module_name)
             self.__managers[module_name] = nm
             return nm
+
+    def fix_all_modules(self):
+        self.__root_manager.fix_modules()
+        for im in self.__managers.values():
+            im.fix_modules()
 
 
 def indent(level: int) -> str:
@@ -438,8 +454,8 @@ class CompositeProperty(Property):
         return base_code + add_code
 
     def to_field_value(self):
-        item_value_str = PrimitiveProperty(self.import_manager, 'item',
-                                           self.item_type).to_field_value()
+        # item_value_str = PrimitiveProperty(self.import_manager, 'item',
+        #                                    self.item_type).to_field_value()
         # print('field vale')
         # print(item_value_str)
         # print(f"[{item_value_str} for item in {self.name}]")

@@ -3,32 +3,42 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated file. Do not change manually.
+
+
+Automatically generated ontology . Do not change manually.
 """
-import custom.user
-import forte.data.data_pack
-import forte.data.ontology.top
-import ft.onto
-import typing
+
+from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Link
+from ft.onto.ft_module import Token
+from typing import Optional
 
 
-__all__ = []
+__all__ = [
+    "Dependency",
+]
 
 
-__all__.extend('Dependency')
+class Dependency(Link):
+    """
 
+    Attributes:
+        rel_type (Optional[str])
 
-class Dependency(forte.data.ontology.top.Link):
-    parent_type: ft.onto.ft_module.Token = None
-    child_type: ft.onto.ft_module.Token = None
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, parent: typing.Optional[forte.data.ontology.core.Entry] = None, child: typing.Optional[forte.data.ontology.core.Entry] = None):
+    ParentType = Token
+
+    ChildType = Token
+
+    def __init__(self, pack: DataPack, parent: Optional[DataPack] = None, child: Optional[DataPack] = None):
         super().__init__(pack, parent, child)
-        self._rel_type: typing.Optional[str] = None
+        self.rel_type: Optional[str] = None
 
     @property
     def rel_type(self):
-        return self._rel_type
+        return self.rel_type
 
-    def set_rel_type(self, rel_type: typing.Optional[str]):
-        self.set_fields(_rel_type=rel_type)
+    @rel_type.setter
+    def rel_type(self, rel_type: Optional[str]):
+        self.set_fields(rel_type=rel_type)

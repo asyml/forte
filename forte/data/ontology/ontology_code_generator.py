@@ -196,9 +196,10 @@ class OntologyCodeGenerator:
         # initialize, so they wil be part of the generated class's __init__
         self.base_entry_lookup: Dict[str, str] = {}
 
-        # Populate the two dictionaries above.
-        # TODO: Handle the imports from root, such as typing.
-        self.initialize_top_entries(base_ontology_module)
+        # Populate the two dictionaries above. And make the classes in the base
+        # ontology awared by the root manager.
+        self.initialize_top_entries(self.import_managers.root,
+                                    base_ontology_module)
 
         # A few basic type to support.
         self.import_managers.root.add_object_to_import('typing.Optional')
@@ -218,11 +219,6 @@ class OntologyCodeGenerator:
         self.allowed_types_tree: Dict[str, Set] = {}
         for type_str in {*PRIMITIVE_SUPPORTED}:
             self.allowed_types_tree[type_str] = set()
-            # self.import_manager.add_object_to_import(type_str, True)
-
-        # for type_name, type_str in CompositeProperty.TYPES.items():
-        #     self.allowed_types_tree[type_str] = set()
-        # self.import_manager.add_object_to_import(type_str, False)
 
         # Directories to be examined to find json files for user-defined config
         # imports.
@@ -230,12 +226,14 @@ class OntologyCodeGenerator:
             if json_dir_paths is None else json_dir_paths
 
     @no_type_check
-    def initialize_top_entries(self, base_ontology_module: ModuleType):
+    def initialize_top_entries(self, manager: ImportManager,
+                               base_ontology_module: ModuleType):
         """
         Parses the file corresponding to `base_ontology_module` -
         (1) Imports the imports defined by the base file,
-        (2) Imports the public API defined by by the base file in it's `__all__`
-        attribute,
+        (2) Imports the public API defined by the base file in it's `__all__`
+        attribute. The imports are added to the import manager.
+
         (3) Extracts the name and inheritance of the class definitions and
         populates `self.top_to_core_entries`,
         (4) Extracts `__init__` arguments of class definitions and populates
@@ -243,21 +241,16 @@ class OntologyCodeGenerator:
         (5) Includes type annotations for the `__init__` arguments.
 
         Args:
+            manager: The import manager to be populated
             base_ontology_module: File path of the module to be parsed.
 
         Returns:
-            Mapping from a class name defined in `base_ontology_module`
-        to the `__init__` arguments.
-            Mapping from import names defined in `base_ontology_module` to
-        import full name.
-            Mapping from import names defined in `base_ontology_module` to
-        base names defined in `core.py`.
         """
         tree = ast.parse(open(base_ontology_module.__file__, 'r').read())
         base_module_name = base_ontology_module.__name__
 
+        # Record a map from the import name to the full name.
         full_names = {}
-        root_manager = self.import_managers.root
 
         for elem in tree.body:
             # Adding all the imports.
@@ -266,13 +259,13 @@ class OntologyCodeGenerator:
                     as_name = import_.asname
                     import_name = import_.name if as_name is None else as_name
                     full_names[import_name] = import_.name
-                    root_manager.add_object_to_import(import_.name)
+                    manager.add_object_to_import(import_.name)
 
             if isinstance(elem, ast.ImportFrom):
                 for import_ in elem.names:
                     full_names[import_.name] = f"{elem.module}.{import_.name}"
                     full_name = f"{elem.module}.{import_.name}"
-                    root_manager.add_object_to_import(full_name)
+                    manager.add_object_to_import(full_name)
 
             # Adding all the module objects defined in `__all__` to imports.
             if isinstance(elem, ast.Assign) and len(elem.targets) > 0:
@@ -284,7 +277,7 @@ class OntologyCodeGenerator:
 
                     for name in elem.value.elts:
                         full_class_name = f"{base_module_name}.{name.s}"
-                        root_manager.add_object_to_import(full_class_name)
+                        manager.add_object_to_import(full_class_name)
 
             # Adding `__init__` arguments for each class
             if isinstance(elem, ast.ClassDef):
@@ -332,16 +325,7 @@ class OntologyCodeGenerator:
                                 else:
                                     arg_ann.id = pack_type
 
-                                root_manager.add_object_to_import(arg_ann.id)
-
-                        # No need to replace this, the object is modified in
-                        # place.
-                        # init_func.args.args[i] = arg
-
-                    # Unparsing the `__init__` args and normalising the string
-                    args = ast_unparse.unparse(init_func.args).split(',', 1)
-                    args_str = args[1].strip().replace(
-                        '\n', '').replace('  ', '')
+                                manager.add_object_to_import(arg_ann.id)
 
                     full_ele_name = full_names[elem.name]
                     self.top_to_core_entries[full_ele_name] = elem_base_names
@@ -377,14 +361,14 @@ class OntologyCodeGenerator:
 
         # TODO: validate the JSON paths here.
 
-        # TODO: This section does the required imports, maybe useless.
-        # Adding the imported objects to the allowed types.
-        for import_module in self.required_imports:
-            for obj_str in utils.get_user_objects_from_module(import_module):
-                full_obj_str = f"{import_module}.{obj_str}"
-                self.allowed_types_tree[full_obj_str] = set()
-                # self.import_manager.add_object_to_import(full_obj_str, False)
-                # self.full_ref_to_import[obj_str] = full_obj_str
+        # # TODO: This section does the required imports, maybe useless.
+        # # Adding the imported objects to the allowed types.
+        # for import_module in self.required_imports:
+        #     for obj_str in utils.get_user_objects_from_module(import_module):
+        #         full_obj_str = f"{import_module}.{obj_str}"
+        #         self.allowed_types_tree[full_obj_str] = set()
+        #         # self.import_manager.add_object_to_import(full_obj_str, False)
+        #         # self.full_ref_to_import[obj_str] = full_obj_str
 
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
@@ -400,7 +384,9 @@ class OntologyCodeGenerator:
         # generation is completed and verified.
         tempdir = tempfile.mkdtemp()
 
-        print('*********** finish parsing start writing')
+        # Starting from here, we won't add any more modules to import.
+        self.import_managers.fix_all_modules()
+
         print('working on ', spec_path)
         for writer in self.module_writers.writers():
             print('writing ', writer.module_name)
@@ -428,7 +414,7 @@ class OntologyCodeGenerator:
                             destination_dir: str,
                             visited_paths: Optional[Dict[str, bool]] = None,
                             rec_visited_paths: Optional[Dict[str, bool]] = None
-                            ) -> List[str]:
+                            ):
         """
         Performs a topological traversal on the directed graph formed by the
         imported json configs. While processing each config, it first generates
@@ -443,8 +429,7 @@ class OntologyCodeGenerator:
             detect, and throw error if any cycles are present.
             with the base ontology config, else, False.
 
-        Returns: Modules to be imported by the generated python files
-        corresponding to the entries defined in json config imports.
+        Returns:
         """
         # Initialize the visited dicts when the function is called for the
         # first time.
@@ -481,23 +466,17 @@ class OntologyCodeGenerator:
                     f" already generated, cycles not permitted, "
                     f"aborting")
             elif import_json_file not in visited_paths:
-                spec_importable_modules.extend(self.parse_ontology_spec(
+                self.parse_ontology_spec(
                     import_json_file, destination_dir,
-                    visited_paths, rec_visited_paths))
-
-        # The modules from the imported specs will be added to the manager.
-        for spec_module in spec_importable_modules:
-            self.import_managers.root.add_object_to_import(spec_module)
+                    visited_paths, rec_visited_paths)
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
-        self.parse_schema(spec_dict, spec_importable_modules)
+        self.parse_schema(spec_dict)
 
         rec_visited_paths[json_file_path] = False
 
-        return spec_importable_modules
-
-    def parse_schema(self, schema: Dict, modules_to_import: List[str]):
+    def parse_schema(self, schema: Dict):
         r""" Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
         new module file if module is generated for the first time.
@@ -522,9 +501,7 @@ class OntologyCodeGenerator:
         # new_modules_to_import = []
         for definition in entry_definitions:
             raw_entry_name = definition[SchemaKeywords.entry_name]
-
-            # Only prefixes that are actually used should be imported.
-            matched_pkg = validate_entry(raw_entry_name, sorted_prefixes)
+            validate_entry(raw_entry_name, sorted_prefixes)
             # new_modules_to_import.append(matched_pkg)
 
             if raw_entry_name in self.allowed_types_tree:
@@ -539,17 +516,17 @@ class OntologyCodeGenerator:
             module_writer.set_description(file_desc)
 
             # Add the entry definition to the import managers.
-            self.import_managers.get(en.module_name).add_object_to_import(
-                raw_entry_name)
-            # Add the module writer.
-
-            entry_item, properties = self.parse_entry(en, definition)
+            # This time adding to the root manager so everyone can access it
+            #  if needed, but they will only appear in the import list when
+            #  requested.
+            self.import_managers.root.add_object_to_import(raw_entry_name)
 
             # Add the entry item to the writer.
+            entry_item, properties = self.parse_entry(en, definition)
             module_writer.add_entry(en, entry_item)
 
             # Modules to be imported by the dependencies.
-            modules_to_import.append(en.class_name)
+            # modules_to_import.append(en.class_name)
 
             # Adding entry attributes to the allowed types for validation.
             for property_name in properties:
@@ -657,14 +634,12 @@ class OntologyCodeGenerator:
                 arg_ann = arg.annotation
                 while isinstance(arg_ann, ast.Subscript):
                     # Handling the type name for cases like Optional[X]
-                    if this_manager.is_imported(arg_ann.value.id):
-                        arg_ann.value.id = this_manager.get_name_to_use(
-                            arg_ann.value.id)
+                    arg_ann.value.id = this_manager.get_name_to_use(
+                        arg_ann.value.id)
                     arg_ann = arg_ann.slice.value
 
-                if this_manager.is_imported(arg_ann.id):
-                    # Handling the type name for arguments.
-                    arg_ann.id = this_manager.get_name_to_use(arg_ann.id)
+                # Handling the type name for arguments.
+                arg_ann.id = this_manager.get_name_to_use(arg_ann.id)
 
     def construct_init(self, entry_name: EntryName, base_entry: str):
         base_init_args = self.top_init_args[base_entry]
@@ -709,9 +684,7 @@ class OntologyCodeGenerator:
                 f"it's parent entry {parent_entry} is not present "
                 f"in the ontology.")
 
-        parent_entry_use_name = parent_entry
-        if this_manager.is_imported(parent_entry):
-            parent_entry_use_name = this_manager.get_name_to_use(parent_entry)
+        parent_entry_use_name = this_manager.get_name_to_use(parent_entry)
 
         property_items, property_names = [], []
         for prop_schema in properties:

@@ -3,88 +3,110 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated file. Do not change manually.
+
+
+Automatically generated ontology . Do not change manually.
 """
-import forte.data.data_pack
-import forte.data.ontology.top
-import ft.onto
-import typing
+
+from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Annotation
+from typing import List
+from typing import Optional
 
 
-__all__ = []
+__all__ = [
+    "Token",
+    "Sentence",
+    "Document",
+]
 
 
-__all__.extend('Token')
+class Token(Annotation):
+    """
 
+    Attributes:
+        lemma (Optional[str])
+        is_verb (Optional[bool])
+        num_chars (Optional[int])
+        score (Optional[float])
 
-class Token(forte.data.ontology.top.Annotation):
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._lemma: typing.Optional[str] = None
-        self._is_verb: typing.Optional[bool] = None
-        self._num_chars: typing.Optional[int] = None
-        self._score: typing.Optional[float] = None
+        self.lemma: Optional[str] = None
+        self.is_verb: Optional[bool] = None
+        self.num_chars: Optional[int] = None
+        self.score: Optional[float] = None
 
     @property
     def lemma(self):
-        return self._lemma
+        return self.lemma
 
-    def set_lemma(self, lemma: typing.Optional[str]):
-        self.set_fields(_lemma=lemma)
+    @lemma.setter
+    def lemma(self, lemma: Optional[str]):
+        self.set_fields(lemma=lemma)
 
     @property
     def is_verb(self):
-        return self._is_verb
+        return self.is_verb
 
-    def set_is_verb(self, is_verb: typing.Optional[bool]):
-        self.set_fields(_is_verb=is_verb)
+    @is_verb.setter
+    def is_verb(self, is_verb: Optional[bool]):
+        self.set_fields(is_verb=is_verb)
 
     @property
     def num_chars(self):
-        return self._num_chars
+        return self.num_chars
 
-    def set_num_chars(self, num_chars: typing.Optional[int]):
-        self.set_fields(_num_chars=num_chars)
+    @num_chars.setter
+    def num_chars(self, num_chars: Optional[int]):
+        self.set_fields(num_chars=num_chars)
 
     @property
     def score(self):
-        return self._score
+        return self.score
 
-    def set_score(self, score: typing.Optional[float]):
-        self.set_fields(_score=score)
-
-
-__all__.extend('Sentence')
+    @score.setter
+    def score(self, score: Optional[float]):
+        self.set_fields(score=score)
 
 
-class Sentence(forte.data.ontology.top.Annotation):
+class Sentence(Annotation):
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+    Attributes:
+        tokens (Optional[List[Token]])
+
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._tokens: typing.Optional[typing.List[ft.onto.ft_module.Token]] = None
+        self.tokens: Optional[List[Token]] = []
 
     @property
     def tokens(self):
-        return self._tokens
+        return self.tokens
 
-    def set_tokens(self, tokens: typing.Optional[typing.List[ft.onto.ft_module.Token]]):
-        self.set_fields(_tokens=[item.tid for item in tokens])
+    @tokens.setter
+    def tokens(self, tokens: Optional[List[Token]]):
+        self.set_fields(tokens=tokens)
 
     def num_tokens(self):
-        return len(self._tokens)
+        return len(self.tokens)
 
     def clear_tokens(self):
-        self._tokens.clear()
+        self.tokens.clear()
 
-    def add_tokens(self, a_tokens: ft.onto.ft_module.Token):
-        self._tokens.append(a_tokens)
-
-
-__all__.extend('Document')
+    def add_tokens(self, a_tokens: Token):
+        self.tokens.append(a_tokens)
 
 
-class Document(forte.data.ontology.top.Annotation):
+class Document(Annotation):
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
