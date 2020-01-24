@@ -21,8 +21,6 @@ class TestNLTKSentenceSegmenter(unittest.TestCase):
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.initialize()
 
-        self.nltk.initialize()
-
     def test_segmenter(self):
         sentences = ["This tool is called Forte.",
                      "The goal of this project to help you build NLP "
@@ -41,8 +39,6 @@ class TestNLTKWordTokenizer(unittest.TestCase):
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
-        self.nltk.initialize()
-
         self.nltk.initialize()
 
     def test_tokenizer(self):
@@ -73,8 +69,6 @@ class TestNLTKPOSTagger(unittest.TestCase):
         self.nltk.add_processor(NLTKPOSTagger())
         self.nltk.initialize()
 
-        self.nltk.initialize()
-
     def test_pos_tagger(self):
         sentences = ["This tool is called Forte.",
                      "The goal of this project to help you build NLP "
@@ -101,7 +95,6 @@ class TestNLTKLemmatizer(unittest.TestCase):
         self.nltk.add_processor(NLTKWordTokenizer())
         self.nltk.add_processor(NLTKPOSTagger())
         self.nltk.add_processor(NLTKLemmatizer())
-
         self.nltk.initialize()
 
     def test_lemmatizer(self):
@@ -133,7 +126,6 @@ class TestNLTKChunker(unittest.TestCase):
         config = HParams({'pattern': 'NP: {<DT>?<JJ>*<NN>}'},
                          NLTKChunker.default_hparams())
         self.nltk.add_processor(NLTKChunker(), config=config)
-
         self.nltk.initialize()
 
     def test_chunker(self):
@@ -163,7 +155,6 @@ class TestNLTKNER(unittest.TestCase):
         self.nltk.add_processor(NLTKWordTokenizer())
         self.nltk.add_processor(NLTKPOSTagger())
         self.nltk.add_processor(NLTKNER())
-
         self.nltk.initialize()
 
     def test_ner(self):
