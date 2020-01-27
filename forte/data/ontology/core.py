@@ -91,10 +91,13 @@ class Entry(Generic[ContainerType]):
         state["_embedding"] = np.array(state["_embedding"])
         self.__dict__.update(state)
 
+    # using property decorator
+    # a getter function for self._embedding
     @property
     def embedding(self):
         return self._embedding
 
+    # a setter function for self._embedding
     @embedding.setter
     def embedding(self, embed):
         self._embedding = np.array(embed)
