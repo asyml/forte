@@ -50,6 +50,10 @@ class Entry(Generic[ContainerType]):
     There will be some associated attributes for each entry, which can be
     set via :meth:`set_fields` and retrieved via :meth:`get_field`.
 
+    Attributes:
+        self.embedding: The embedding vectors (numpy array of floats) of this
+            entry.
+
     Args:
         pack: Each entry should be associated with one pack upon creation.
     """
