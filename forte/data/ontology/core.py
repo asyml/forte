@@ -59,7 +59,7 @@ class Entry(Generic[ContainerType]):
 
         self._tid: int = -1
 
-        self.embedding: np.ndarray = np.empty(0)
+        self._embedding: np.ndarray = np.empty(0)
 
         # The Entry should have a reference to the data pack, and the data pack
         # need to store the entries. In order to resolve the cyclic references,
@@ -79,7 +79,7 @@ class Entry(Generic[ContainerType]):
         remained in an entry.
         """
         state = self.__dict__.copy()
-        state["embedding"] = self.embedding.tolist()
+        state["_embedding"] = self._embedding.tolist()
         state.pop('_Entry__pack')
         state.pop('_Entry__field_modified')
         return state
@@ -88,8 +88,16 @@ class Entry(Generic[ContainerType]):
         # Recover the internal __field_modified dict for the entry.
         # NOTE: the __pack will be set via set_pack from the Pack side.
         self.__dict__['_Entry__field_modified'] = set()
-        state["embedding"] = np.array(state["embedding"])
+        state["_embedding"] = np.array(state["_embedding"])
         self.__dict__.update(state)
+
+    @property
+    def embedding(self):
+        return self._embedding
+
+    @embedding.setter
+    def embedding(self, embed):
+        self._embedding = np.array(embed)
 
     @property
     def tid(self) -> int:
