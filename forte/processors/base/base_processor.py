@@ -23,9 +23,9 @@ from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
-from forte.process_manager import ProcessManager, ProcessJobStatus
-from forte.utils import get_full_module_name
+from forte.utils.utils import get_full_module_name
 from forte.pipeline_component import PipelineComponent
+from forte.process_manager import ProcessManager, ProcessJobStatus
 
 __all__ = [
     "BaseProcessor",
@@ -67,7 +67,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         current_queue = process_manager.current_queue
 
         for job_i in itertools.islice(current_queue, 0, u_index + 1):
-
             if job_i.status == ProcessJobStatus.UNPROCESSED:
                 job_i.set_status(ProcessJobStatus.PROCESSED)
 
@@ -79,7 +78,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         some side-effect such as writing data into the disk.
 
         Args:
-            input_pack:
+            input_pack: The input datapack.
         """
         raise NotImplementedError
 
