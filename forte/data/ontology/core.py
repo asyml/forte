@@ -79,6 +79,7 @@ class Entry(Generic[ContainerType]):
         remained in an entry.
         """
         state = self.__dict__.copy()
+        # During serialization, convert the numpy array as a list.
         state["_embedding"] = self._embedding.tolist()
         state.pop('_Entry__pack')
         state.pop('_Entry__field_modified')
@@ -88,6 +89,7 @@ class Entry(Generic[ContainerType]):
         # Recover the internal __field_modified dict for the entry.
         # NOTE: the __pack will be set via set_pack from the Pack side.
         self.__dict__['_Entry__field_modified'] = set()
+        # During de-serialization, convert the list back to numpy array.
         state["_embedding"] = np.array(state["_embedding"])
         self.__dict__.update(state)
 
@@ -95,11 +97,19 @@ class Entry(Generic[ContainerType]):
     # a getter function for self._embedding
     @property
     def embedding(self):
+        r"""Get the embedding vectors (numpy array of floats) of the entry.
+        """
         return self._embedding
 
     # a setter function for self._embedding
     @embedding.setter
     def embedding(self, embed):
+        r"""Set the embedding vectors of the entry.
+
+        Args:
+            embed: The embedding vectors which can be numpy array of floats or
+                list of floats.
+        """
         self._embedding = np.array(embed)
 
     @property
