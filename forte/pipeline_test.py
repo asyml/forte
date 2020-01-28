@@ -89,7 +89,7 @@ class MultiPackSentenceReader(MultiPackReader):
     def text_replace_operation(self, text: str):
         return []
 
-    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:  # type: ignore
         with open(file_path, "r", encoding="utf8") as doc:
             for line in doc:
                 m_pack = MultiPack()
@@ -102,7 +102,7 @@ class MultiPackSentenceReader(MultiPackReader):
                 pack.set_text(line)
                 self.count += 1
                 m_pack.update_pack({"pack": pack})
-                yield m_pack
+                yield m_pack  # type: ignore
 
 
 class DummyPackProcessor(PackProcessor):
@@ -116,7 +116,7 @@ class DummyPackProcessor(PackProcessor):
             entry = NewType(pack=input_pack, value="[PACK]")
             input_pack.add_entry(entry)
         else:
-            entry = entries[0]
+            entry = entries[0]  # type: ignore
             entry.value += "[PACK]"
 
 
@@ -128,7 +128,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         self.batcher = self.define_batcher()
 
     def initialize(self, resource: Resources, configs: Optional[HParams]):
-        self.batcher.initialize(configs.batcher)
+        self.batcher.initialize(configs.batcher)  # type: ignore
 
     def define_context(self) -> Type[Sentence]:
         return Sentence
@@ -145,7 +145,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
             entry = NewType(pack=data_pack, value="[BATCH]")
             data_pack.add_entry(entry)
         else:
-            entry = entries[0]
+            entry = entries[0]  # type: ignore
             entry.value += "[BATCH]"
 
     @staticmethod
