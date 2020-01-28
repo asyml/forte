@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Processors that handle query
+"""
 from abc import ABC
 from typing import Union, Tuple, Dict, Any
 import numpy as np

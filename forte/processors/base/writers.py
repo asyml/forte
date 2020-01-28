@@ -15,7 +15,6 @@
 Writers are simply processors with the side-effect to write to the disk.
 This file provide some basic writer implementations.
 """
-
 import gzip
 import logging
 import os
@@ -54,21 +53,16 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
 
     @abstractmethod
     def sub_output_path(self, pack: PackType) -> str:
-        """
-        Allow defining output path using the information of the pack.
+        r"""Allow defining output path using the information of the pack.
+
         Args:
-            pack:
-
-        Returns:
-
+            pack: The input datapack.
         """
         raise NotImplementedError
 
     @staticmethod
     def default_hparams():
-        """
-        This defines a basic Hparams structure
-        :return:
+        r"""This defines a basic ``Hparams`` structure.
         """
         return {
             'output_dir': None,
