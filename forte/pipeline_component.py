@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Pipeline component module
+"""
 from typing import Generic
 
 from texar.torch import HParams
@@ -32,8 +34,6 @@ class PipelineComponent(Generic[PackType]):
                 shareable resources here, for example, the vocabulary.
             configs (HParams): The configuration passed in to set up this
                 component.
-
-        Returns:
         """
         pass
 
@@ -45,9 +45,6 @@ class PipelineComponent(Generic[PackType]):
         The component can also add objects to the resources.
 
         Args:
-            resource (Resources): A global resource registry.
-
-        Returns:
-
+            resource (Resources): A global resource registry
         """
         pass
