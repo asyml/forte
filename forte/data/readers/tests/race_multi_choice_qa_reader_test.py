@@ -9,8 +9,7 @@ from ft.onto.race_mutli_choice_qa_ontology import Article, Question
 
 class RACEMultiChoiceQAReaderTest(unittest.TestCase):
     def setUp(self):
-        self.dataset_path = \
-            "forte/data/readers/tests/data_samples/race_multi_choice_qa"
+        self.dataset_path = "data_samples/race_multi_choice_qa"
 
     def test_reader_no_replace_test(self):
         # Read with no replacements

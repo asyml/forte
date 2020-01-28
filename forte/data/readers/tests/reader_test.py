@@ -17,7 +17,7 @@ from forte.processors.base.tests.dummy_pack_processor import DummyPackProcessor
 class OntonotesReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "forte/data/readers/tests/data_samples/ontonotes/00"
+        self.dataset_path = "data_samples/ontonotes/00"
 
         self.nlp = Pipeline()
 

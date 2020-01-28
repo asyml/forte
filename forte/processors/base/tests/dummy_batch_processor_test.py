@@ -38,8 +38,7 @@ class DummyProcessorTest(unittest.TestCase):
         self.nlp.add_processor(dummy, config=config)
         self.nlp.initialize()
 
-        self.data_path = \
-            "forte/processors/base/tests/data_samples/ontonotes/00/"
+        self.data_path = "data_samples/ontonotes/00/"
 
     def test_processor(self):
         pack = self.nlp.process(self.data_path)
@@ -90,8 +89,7 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
         nlp.add_processor(dummy2, config=config)
 
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts"
+        data_path = "data_samples/random_texts"
         pack = nlp.process(data_path)
         sent_len = len(list(pack.get(Sentence)))
 
