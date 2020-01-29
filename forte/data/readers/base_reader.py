@@ -75,6 +75,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
 
+    @staticmethod
+    def default_configs():
+        return {}
+
     @property
     def pack_type(self):
         raise NotImplementedError

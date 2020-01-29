@@ -136,8 +136,7 @@ class TestNLTKChunker(unittest.TestCase):
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
         self.nltk.add_processor(NLTKPOSTagger())
-        config = HParams({'pattern': 'NP: {<DT>?<JJ>*<NN>}'},
-                         NLTKChunker.default_hparams())
+        config = {'pattern': 'NP: {<DT>?<JJ>*<NN>}'}
         self.nltk.add_processor(NLTKChunker(), config=config)
         self.nltk.initialize()
 

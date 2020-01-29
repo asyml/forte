@@ -116,7 +116,7 @@ class NLTKChunker(PackProcessor):
         self.chunker = RegexpParser(configs.pattern)
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         r"""This defines a basic Hparams structure for NLTKChunker.
         """
         return {

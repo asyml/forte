@@ -11,21 +11,29 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Base class for Pipeline module.
+"""
 
 import logging
 import itertools
+
 from abc import abstractmethod
-from typing import List, Dict, Iterator, Generic, Optional
+from typing import Any, Dict, Generic, Iterator, List, Optional, Union
 
 import yaml
+
 from texar.torch import HParams
 
-from forte.process_manager import ProcessManager, ProcessJobStatus
-from forte.common import Evaluator, Resources
+from forte.common.evaluation import Evaluator
+from forte.common.resources import Resources
+from forte.data.readers.base_reader import BaseReader
 from forte.data.base_pack import PackType
-from forte.data.readers import BaseReader
 from forte.data.selector import Selector, DummySelector
-from forte.processors.base import BaseProcessor, BaseBatchProcessor
+from forte.processors.base.base_processor import BaseProcessor
+from forte.processors.base.batch_processor import BaseBatchProcessor
+from forte.process_manager import ProcessManager, ProcessJobStatus
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +45,8 @@ process_manager = ProcessManager()
 
 
 class ProcessJob:
-    def __init__(self, pack: Optional[PackType],
-                 is_poison: bool):
+
+    def __init__(self, pack: Optional[PackType], is_poison: bool):
         self.__pack: Optional[PackType] = pack
         self.__is_poison: bool = is_poison
         self.__status = ProcessJobStatus.UNPROCESSED
@@ -96,11 +104,10 @@ class ProcessBuffer:
 
 
 class BasePipeline(Generic[PackType]):
-    """
-        This controls the main inference flow of the system. A pipeline is
-        consisted of a set of Components (readers and processors). The data
-        flows in the pipeline as data packs, and each component will use or
-        add information to the data packs.
+    r"""This controls the main inference flow of the system. A pipeline is
+    consisted of a set of Components (readers and processors). The data flows
+    in the pipeline as data packs, and each component will use or add
+    information to the data packs.
     """
 
     def __init__(self, resource: Optional[Resources] = None):
@@ -122,31 +129,24 @@ class BasePipeline(Generic[PackType]):
             self.resource = resource
 
     def init_from_config_path(self, config_path):
-        """
-        Read the configs from the given path ``config_path``
+        r"""Read the configurations from the given path ``config_path``
         and build the pipeline with the config.
 
         Args:
             config_path: A string of the configuration path, which is
-            is a YAML file that specify the structure and parameters of the
-            pipeline.
-
-        Returns:
-
+                is a YAML file that specify the structure and parameters of the
+                pipeline.
         """
         configs = yaml.safe_load(open(config_path))
         self.init_from_config(configs)
 
     @abstractmethod
     def init_from_config(self, configs: Dict):
-        """
-        Initialized the pipeline (ontology and processors) from given configs
+        r"""Initialized the pipeline (ontology and processors) from the
+        given configurations.
 
         Args:
             configs: The configs used to initialize the pipeline.
-
-        Returns:
-
         """
         raise NotImplementedError
 
@@ -162,8 +162,14 @@ class BasePipeline(Generic[PackType]):
         for processor, config in zip(self.processors, self.processor_configs):
             processor.initialize(self.resource, config)
 
-    def set_reader(self, reader: BaseReader, config: Optional[HParams] = None):
+    def set_reader(self, reader: BaseReader,
+                   config: Optional[Union[HParams, Dict[str, Any]]] = None):
         self._reader = reader
+
+        if config is None:
+            config = reader.default_configs()
+        config = HParams(config, reader.default_configs())
+
         self._reader_config = config
 
     @property
@@ -175,11 +181,16 @@ class BasePipeline(Generic[PackType]):
         return self._configs
 
     def add_processor(self, processor: BaseProcessor,
-                      config: Optional[HParams] = None,
+                      config: Optional[Union[HParams, Dict[str, Any]]] = None,
                       selector: Optional[Selector] = None):
         self._processors_index[processor.component_name] = len(self.processors)
 
         self._processors.append(processor)
+
+        if config is None:
+            config = processor.default_configs()
+        config = HParams(config, processor.default_configs())
+
         self.processor_configs.append(config)
 
         if selector is None:
@@ -198,30 +209,22 @@ class BasePipeline(Generic[PackType]):
         self._evaluator_config = config
 
     def process(self, *args, **kwargs) -> PackType:
-        """
-        Alias for process_one.
+        r"""Alias for :meth:`process_one`.
 
         Args:
             args: The positional arguments used to get the initial data.
             kwargs: The keyword arguments used to get the initial data.
-
-        Returns:
-
         """
         return self.process_one(*args, **kwargs)
 
     def run(self, *args, **kwargs):
-        """
-        Run the whole pipeline and ignore all returned DataPack. This is used
-        when the users are relying on the side effect of the processors (e.g.
-        a process that will write Packs to disk).
+        r"""Run the whole pipeline and ignore all returned DataPack. This is
+        used when the users are relying on the side effect of the processors
+        (e.g. a process that will write Packs to disk).
 
         Args:
             args: The positional arguments used to get the initial data.
             kwargs: The keyword arguments used to get the initial data.
-
-        Returns:
-
         """
         for _ in self.process_dataset(*args, **kwargs):
             # Process the whole dataset ignoring the return values.
@@ -229,8 +232,7 @@ class BasePipeline(Generic[PackType]):
             pass
 
     def process_one(self, *args, **kwargs) -> PackType:
-        """
-        Process one single data pack. This is done by only reading and
+        r"""Process one single data pack. This is done by only reading and
         processing the first pack in the reader.
 
         Args:
@@ -253,14 +255,9 @@ class BasePipeline(Generic[PackType]):
             raise ValueError("Input data source contains no packs.")
 
     def process_dataset(self, *args, **kwargs) -> Iterator[PackType]:
-        """
-        Process the documents in the data source(s) and return an
+        r"""Process the documents in the data source(s) and return an
         iterator or list of DataPacks. The arguments are directly passed
         to the reader to take data from the source.
-
-        Args:
-            *args:
-            **kwargs:
         """
         # TODO: This is a generator, but the name may be confusing since the
         #  user might expect this function will do all the processing. If

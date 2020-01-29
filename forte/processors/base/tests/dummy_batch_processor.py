@@ -112,7 +112,7 @@ class DummyRelationExtractor(BatchProcessor):
                 data_pack.add_or_get_entry(link)
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {
             "batcher": {"batch_size": 10}
         }
@@ -143,7 +143,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         pass
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {
             "batcher": {"batch_size": 10}
         }
