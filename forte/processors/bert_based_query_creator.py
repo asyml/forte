@@ -61,7 +61,8 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
 
         self.encoder.to(self.device)
 
-    def default_configs(self) -> Dict[str, Any]:
+    @staticmethod
+    def default_configs() -> Dict[str, Any]:
         return {
             "model": {
                 "name": "bert-base-uncased"
