@@ -33,21 +33,16 @@ class DummyProcessorTest(unittest.TestCase):
         self.nlp = Pipeline()
         self.nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
-        config = HParams({"batcher": {"batch_size": 5}},
-                         dummy.default_hparams())
+        config = {"batcher": {"batch_size": 5}}
         self.nlp.add_processor(dummy, config=config)
         self.nlp.initialize()
 
-        self.data_path = \
-            "forte/processors/base/tests/data_samples/ontonotes/00/"
+        self.data_path = "data_samples/ontonotes/00/"
 
     def test_processor(self):
         pack = self.nlp.process(self.data_path)
-
         relations = list(pack.get_entries(RelationLink))
-
         assert (len(relations) > 0)
-
         for relation in relations:
             self.assertEqual(relation.get_field("rel_type"), "dummy_relation")
 
@@ -60,8 +55,7 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
         nlp = Pipeline()
         nlp.set_reader(StringReader())
         dummy = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         dummy.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(NLTKSentenceSegmenter())
         nlp.add_processor(dummy, config=config)
         nlp.initialize()
@@ -80,18 +74,15 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
         nlp.set_reader(PlainTextReader())
         dummy1 = DummmyFixedSizeBatchProcessor()
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(NLTKSentenceSegmenter())
 
         nlp.add_processor(dummy1, config=config)
-        config = HParams({"batcher": {"batch_size": 2 * batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 2 * batch_size}}
         nlp.add_processor(dummy2, config=config)
 
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts"
+        data_path = "data_samples/random_texts"
         pack = nlp.process(data_path)
         sent_len = len(list(pack.get(Sentence)))
 

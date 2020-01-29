@@ -1,4 +1,19 @@
-"""This module tests spaCy processors."""
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Unit tests for spaCy processors.
+"""
 import unittest
 from ddt import ddt, data
 
@@ -16,12 +31,12 @@ class TestSpacyProcessor(unittest.TestCase):
         self.spacy = Pipeline()
         self.spacy.set_reader(StringReader())
 
-        config = HParams({
+        config = {
             "processors": "tokenize",
             "lang": "en_core_web_sm",
             # Language code for the language to build the Pipeline
             "use_gpu": False
-        }, SpacyProcessor.default_hparams())
+        }
         self.spacy.add_processor(SpacyProcessor(), config=config)
         self.spacy.initialize()
 
@@ -55,12 +70,12 @@ class TestSpacyProcessor(unittest.TestCase):
         spacy = Pipeline()
         spacy.set_reader(StringReader())
 
-        config = HParams({
+        config = {
             "processors": value,
             "lang": "en_core_web_sm",
             # Language code for the language to build the Pipeline
             "use_gpu": False
-        }, SpacyProcessor.default_hparams())
+        }
         spacy.add_processor(SpacyProcessor(), config=config)
         spacy.initialize()
 
@@ -121,12 +136,12 @@ class TestSpacyProcessor(unittest.TestCase):
         spacy = Pipeline()
         spacy.set_reader(StringReader())
 
-        config = HParams({
+        config = {
             "processors": 'ner',
             "lang": "xx_ent_wiki_sm",
             # Language code for the language to build the Pipeline
             "use_gpu": False
-        }, SpacyProcessor.default_hparams())
+        }
         spacy.add_processor(SpacyProcessor(), config=config)
         spacy.initialize()
 

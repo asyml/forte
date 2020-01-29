@@ -1,15 +1,29 @@
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Unit tests for Pipeline.
 """
-# pylint: disable=no-self-use,unused-argument,useless-super-delegation
-import unittest
-from ddt import ddt, data, unpack
+
 import os
+import unittest
+
+from ddt import ddt, data, unpack
 from typing import Any, Dict, Iterator, Optional, Type
 
 from texar.torch import HParams
 
-from forte.common import Resources
+from forte.common.resources import Resources
 from forte.data.readers import PackReader, MultiPackReader, OntonotesReader
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -19,7 +33,7 @@ from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from forte.processors.base.tests.dummy_batch_processor import \
     DummyRelationExtractor
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Token, Sentence, RelationLink
+from ft.onto.base_ontology import Token, Sentence
 
 
 class NewType(Generic):
@@ -47,16 +61,11 @@ class SentenceReader(PackReader):
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         with open(file_path, "r", encoding="utf8") as doc:
-
             for line in doc:
-
                 pack = DataPack(doc_id=file_path)
-
                 line = line.strip()
-
                 if len(line) == 0:
                     continue
-
                 sent = Sentence(pack, 0, len(line))
                 pack.add_entry(sent)
                 pack.set_text(line)
@@ -80,25 +89,20 @@ class MultiPackSentenceReader(MultiPackReader):
     def text_replace_operation(self, text: str):
         return []
 
-    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
+    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:  # type: ignore
         with open(file_path, "r", encoding="utf8") as doc:
-
             for line in doc:
-
                 m_pack = MultiPack()
                 pack = DataPack(doc_id=file_path)
-
                 line = line.strip()
-
                 if len(line) == 0:
                     continue
-
                 sent = Sentence(pack, 0, len(line))
                 pack.add_entry(sent)
                 pack.set_text(line)
                 self.count += 1
                 m_pack.update_pack({"pack": pack})
-                yield m_pack
+                yield m_pack  # type: ignore
 
 
 class DummyPackProcessor(PackProcessor):
@@ -112,7 +116,7 @@ class DummyPackProcessor(PackProcessor):
             entry = NewType(pack=input_pack, value="[PACK]")
             input_pack.add_entry(entry)
         else:
-            entry = entries[0]
+            entry = entries[0]  # type: ignore
             entry.value += "[PACK]"
 
 
@@ -124,7 +128,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         self.batcher = self.define_batcher()
 
     def initialize(self, resource: Resources, configs: Optional[HParams]):
-        self.batcher.initialize(configs.batcher)
+        self.batcher.initialize(configs.batcher)  # type: ignore
 
     def define_context(self) -> Type[Sentence]:
         return Sentence
@@ -141,11 +145,11 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
             entry = NewType(pack=data_pack, value="[BATCH]")
             data_pack.add_entry(entry)
         else:
-            entry = entries[0]
+            entry = entries[0]  # type: ignore
             entry.value += "[BATCH]"
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {
             "batcher": {"batch_size": 4}
         }
@@ -160,13 +164,11 @@ class PipelineTest(unittest.TestCase):
         nlp = Pipeline()
         nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
-        config = HParams({"batcher": {"batch_size": 5}},
-                         dummy.default_hparams())
+        config = {"batcher": {"batch_size": 5}}
         nlp.add_processor(dummy, config=config)
         nlp.initialize()
 
-        dataset_path = \
-            "forte/tests/data_samples/ontonotes_sample_dataset/00"
+        dataset_path = "data_samples/ontonotes/00"
 
         # get processed pack from dataset
         for pack in nlp.process_dataset(dataset_path):
@@ -188,8 +190,7 @@ class PipelineTest(unittest.TestCase):
         dummy = DummyPackProcessor()
         nlp.add_processor(dummy)
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
             types = list(pack.get_entries_by_type(NewType))
@@ -207,12 +208,10 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": 4}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 4}}
         nlp.add_processor(processor=dummy, config=config)
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
             types = list(pack.get_entries_by_type(NewType))
@@ -231,18 +230,15 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(processor=dummy1, config=config)
         dummy2 = DummyPackProcessor()
         nlp.add_processor(processor=dummy2)
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": 2 * batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 2 * batch_size}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -265,15 +261,13 @@ class PipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy1)
 
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(processor=dummy2, config=config)
 
         dummy3 = DummyPackProcessor()
-        nlp.add_processor(processor=dummy3, config=config)
+        nlp.add_processor(processor=dummy3)
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -294,18 +288,15 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config)
         dummy2 = DummyPackProcessor()
         nlp.add_processor(processor=dummy2)
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -326,20 +317,16 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config)
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy2, config=config)
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size3}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -360,22 +347,18 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config)
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy2, config=config)
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size3}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config)
         dummy4 = DummyPackProcessor()
         nlp.add_processor(processor=dummy4)
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -397,13 +380,11 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp = Pipeline()
         nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
-        config = HParams({"batcher": {"batch_size": 5}},
-                         dummy.default_hparams())
+        config = {"batcher": {"batch_size": 5}}
         nlp.add_processor(dummy, config=config)
         nlp.initialize()
 
-        dataset_path = \
-            "forte/tests/data_samples/ontonotes_sample_dataset/00"
+        dataset_path = "data_samples/ontonotes/00"
 
         # get processed pack from dataset
         for pack in nlp.process_dataset(dataset_path):
@@ -425,8 +406,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         dummy = DummyPackProcessor()
         nlp.add_processor(dummy, selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
             types = list(pack.get_pack("pack").get_entries_by_type(NewType))
@@ -444,13 +424,11 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": 4}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 4}}
         nlp.add_processor(processor=dummy, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
             types = list(pack.get_pack("pack").get_entries_by_type(NewType))
@@ -469,20 +447,17 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(processor=dummy1, config=config,
                           selector=FirstPackSelector())
         dummy2 = DummyPackProcessor()
         nlp.add_processor(processor=dummy2, selector=FirstPackSelector())
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": 2 * batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 2 * batch_size}}
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -505,17 +480,15 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy1, selector=FirstPackSelector())
 
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(processor=dummy2, config=config,
                           selector=FirstPackSelector())
 
         dummy3 = DummyPackProcessor()
-        nlp.add_processor(processor=dummy3, config=config,
+        nlp.add_processor(processor=dummy3,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -536,21 +509,18 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config,
                           selector=FirstPackSelector())
         dummy2 = DummyPackProcessor()
         nlp.add_processor(processor=dummy2,
                           selector=FirstPackSelector())
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -571,23 +541,19 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config,
                           selector=FirstPackSelector())
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy2, config=config,
                           selector=FirstPackSelector())
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size3}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -608,25 +574,21 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config,
                           selector=FirstPackSelector())
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy2, config=config,
                           selector=FirstPackSelector())
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size3}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         dummy4 = DummyPackProcessor()
         nlp.add_processor(processor=dummy4, selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "forte/processors/base/tests/data_samples/" \
-                    "random_texts/0.txt"
+        data_path = "data_samples/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):

@@ -61,6 +61,19 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
 
         self.encoder.to(self.device)
 
+    @staticmethod
+    def default_configs() -> Dict[str, Any]:
+        return {
+            "model": {
+                "name": "bert-base-uncased"
+            },
+            "tokenizer": {
+                "name": "bert-base-uncased"
+            },
+            "max_seq_length": 128,
+            "query_pack_name": "query"
+        }
+
     @torch.no_grad()
     def get_embeddings(self, inputs, sequence_length, segment_ids):
         output, _ = self.encoder(inputs=inputs,

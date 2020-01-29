@@ -42,7 +42,7 @@ class MultiPackSentenceReader(MultiPackReader):
 
     def __init__(self) -> None:
         super().__init__()
-        self.config = HParams(None, self.default_hparams())
+        self.config = HParams(None, self.default_configs())
 
     # pylint: disable=attribute-defined-outside-init
     def initialize(self, resource: Resources, configs: HParams) -> None:
@@ -93,7 +93,7 @@ class MultiPackSentenceReader(MultiPackReader):
             yield m_pack
 
     @staticmethod
-    def default_hparams() -> Dict[str, str]:
+    def default_configs() -> Dict[str, str]:
         r"""Returns a dictionary of hyperparameters with default values.
 
         .. code-block:: python
