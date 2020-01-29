@@ -14,7 +14,7 @@
 """
 Unit tests for Pipeline.
 """
-# pylint: disable=no-self-use,unused-argument,useless-super-delegation
+
 import os
 import unittest
 
@@ -23,7 +23,7 @@ from typing import Any, Dict, Iterator, Optional, Type
 
 from texar.torch import HParams
 
-from forte.common import Resources
+from forte.common.resources import Resources
 from forte.data.readers import PackReader, MultiPackReader, OntonotesReader
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -149,7 +149,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
             entry.value += "[BATCH]"
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {
             "batcher": {"batch_size": 4}
         }
@@ -164,8 +164,7 @@ class PipelineTest(unittest.TestCase):
         nlp = Pipeline()
         nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
-        config = HParams({"batcher": {"batch_size": 5}},
-                         dummy.default_hparams())
+        config = {"batcher": {"batch_size": 5}}
         nlp.add_processor(dummy, config=config)
         nlp.initialize()
 
@@ -209,8 +208,7 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": 4}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 4}}
         nlp.add_processor(processor=dummy, config=config)
         nlp.initialize()
         data_path = "data_samples/random_texts/0.txt"
@@ -232,14 +230,12 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(processor=dummy1, config=config)
         dummy2 = DummyPackProcessor()
         nlp.add_processor(processor=dummy2)
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": 2 * batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 2 * batch_size}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
         data_path = "data_samples/random_texts/0.txt"
@@ -265,12 +261,11 @@ class PipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy1)
 
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(processor=dummy2, config=config)
 
         dummy3 = DummyPackProcessor()
-        nlp.add_processor(processor=dummy3, config=config)
+        nlp.add_processor(processor=dummy3)
         nlp.initialize()
         data_path = "data_samples/random_texts/0.txt"
 
@@ -293,14 +288,12 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config)
         dummy2 = DummyPackProcessor()
         nlp.add_processor(processor=dummy2)
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
         data_path = "data_samples/random_texts/0.txt"
@@ -324,16 +317,13 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config)
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy2, config=config)
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size3}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
         data_path = "data_samples/random_texts/0.txt"
@@ -357,16 +347,13 @@ class PipelineTest(unittest.TestCase):
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config)
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy2, config=config)
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size3}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config)
         dummy4 = DummyPackProcessor()
         nlp.add_processor(processor=dummy4)
@@ -393,8 +380,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp = Pipeline()
         nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
-        config = HParams({"batcher": {"batch_size": 5}},
-                         dummy.default_hparams())
+        config = {"batcher": {"batch_size": 5}}
         nlp.add_processor(dummy, config=config)
         nlp.initialize()
 
@@ -438,8 +424,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": 4}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 4}}
         nlp.add_processor(processor=dummy, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
@@ -462,15 +447,13 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(processor=dummy1, config=config,
                           selector=FirstPackSelector())
         dummy2 = DummyPackProcessor()
         nlp.add_processor(processor=dummy2, selector=FirstPackSelector())
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": 2 * batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": 2 * batch_size}}
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
@@ -497,13 +480,12 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy1, selector=FirstPackSelector())
 
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(processor=dummy2, config=config,
                           selector=FirstPackSelector())
 
         dummy3 = DummyPackProcessor()
-        nlp.add_processor(processor=dummy3, config=config,
+        nlp.add_processor(processor=dummy3,
                           selector=FirstPackSelector())
         nlp.initialize()
         data_path = "data_samples/random_texts/0.txt"
@@ -527,16 +509,14 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config,
                           selector=FirstPackSelector())
         dummy2 = DummyPackProcessor()
         nlp.add_processor(processor=dummy2,
                           selector=FirstPackSelector())
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
@@ -561,18 +541,15 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config,
                           selector=FirstPackSelector())
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy2, config=config,
                           selector=FirstPackSelector())
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size3}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
@@ -597,18 +574,15 @@ class MultiPackPipelineTest(unittest.TestCase):
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size1}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size1}}
         nlp.add_processor(processor=dummy1, config=config,
                           selector=FirstPackSelector())
         dummy2 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size2}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy2, config=config,
                           selector=FirstPackSelector())
         dummy3 = DummmyFixedSizeBatchProcessor()
-        config = HParams({"batcher": {"batch_size": batch_size3}},
-                         DummmyFixedSizeBatchProcessor.default_hparams())
+        config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         dummy4 = DummyPackProcessor()

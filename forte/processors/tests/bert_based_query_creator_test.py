@@ -48,14 +48,13 @@ class TestBertBasedQueryCreator(unittest.TestCase):
                 f.write(text)
 
         nlp = Pipeline()
-        reader_config = HParams({"input_pack_name": "query",
-                                 "output_pack_name": "output"},
-                                MultiPackSentenceReader.default_hparams())
+        reader_config = {"input_pack_name": "query",
+                         "output_pack_name": "output"}
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
-        config = HParams({"model": {"name": "bert-base-uncased"},
-                          "tokenizer": {"name": "bert-base-uncased"},
-                          "max_seq_length": 128,
-                          "query_pack_name": "query"}, None)
+        config = {"model": {"name": "bert-base-uncased"},
+                  "tokenizer": {"name": "bert-base-uncased"},
+                  "max_seq_length": 128,
+                  "query_pack_name": "query"}
         nlp.add_processor(BertBasedQueryCreator(), config=config)
 
         nlp.initialize()

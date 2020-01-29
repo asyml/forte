@@ -61,9 +61,8 @@ class MultiPackSentenceReaderTest(unittest.TestCase):
                 f.write(text)
 
         nlp = Pipeline()
-        reader_config = HParams({"input_pack_name": "input",
-                                 "output_pack_name": "output"},
-                                MultiPackSentenceReader.default_hparams())
+        reader_config = {"input_pack_name": "input",
+                         "output_pack_name": "output"}
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
         nlp.initialize()
 
