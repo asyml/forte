@@ -14,15 +14,13 @@
 """
 Unit tests for the download utility of Forte
 """
-import logging
 from pathlib import Path
+
 import os
 import shutil
 import unittest
 
 from forte.data import data_utils
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 class DataUtilsTest(unittest.TestCase):
