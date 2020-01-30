@@ -15,7 +15,7 @@
 Defines the Evaluator interface and related functions.
 """
 from abc import abstractmethod
-from typing import Optional, Any
+from typing import Any, Optional
 
 from texar.torch import HParams
 

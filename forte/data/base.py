@@ -14,6 +14,10 @@
 
 from functools import total_ordering
 
+__all__ = [
+    "Span",
+]
+
 
 @total_ordering
 class Span:
