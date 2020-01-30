@@ -85,6 +85,13 @@ class ProcessBuffer:
                 raise StopIteration
             try:
                 job_pack = next(self.__data_iter)
+
+                pipeline = process_manager.current_pipeline
+
+                if pipeline.evaluator:
+                    gold_copy = job_pack.view()
+                    pipeline.add_gold_packs({job_pack: gold_copy})
+
                 job = ProcessJob(job_pack, False)
                 process_manager.add_to_queue(queue_index=0, job=job)
                 process_manager.set_current_queue_index(queue_index=0)
@@ -123,6 +130,9 @@ class BasePipeline(Generic[PackType]):
         self._evaluator: Optional[Evaluator] = None
         self._evaluator_config: Optional[HParams] = None
 
+        # needed for evaluator
+        self._predict_to_gold: Dict[PackType, PackType] = {}
+
         if resource is None:
             self.resource = Resources()
         else:
@@ -158,6 +168,8 @@ class BasePipeline(Generic[PackType]):
         if self._evaluator:
             self._evaluator.initialize(self.resource, self._evaluator_config)
 
+        process_manager.set_current_pipeline(self)
+
     def initialize_processors(self):
         for processor, config in zip(self.processors, self.processor_configs):
             processor.initialize(self.resource, config)
@@ -179,6 +191,10 @@ class BasePipeline(Generic[PackType]):
     @property
     def processor_configs(self):
         return self._configs
+
+    @property
+    def evaluator(self):
+        return self._evaluator
 
     def add_processor(self, processor: BaseProcessor,
                       config: Optional[Union[HParams, Dict[str, Any]]] = None,
@@ -207,6 +223,9 @@ class BasePipeline(Generic[PackType]):
 
         self._evaluator = evaluator
         self._evaluator_config = config
+
+    def add_gold_packs(self, pack):
+        self._predict_to_gold.update(pack)
 
     def process(self, *args, **kwargs) -> PackType:
         r"""Alias for :meth:`process_one`.
@@ -459,7 +478,9 @@ class BasePipeline(Generic[PackType]):
                                     if should_yield:
                                         if self._evaluator:
                                             self._evaluator.consume_next(
-                                                job_i.pack, job_i.pack)
+                                                job_i.pack,
+                                                self._predict_to_gold[job_i.pack])
+                                            del self._predict_to_gold[job_i.pack]
                                         yield job_i.pack
 
                                     else:
@@ -508,7 +529,9 @@ class BasePipeline(Generic[PackType]):
                                     if should_yield:
                                         if self._evaluator:
                                             self._evaluator.consume_next(
-                                                job_i.pack, job_i.pack)
+                                                job_i.pack,
+                                                self._predict_to_gold[job_i.pack])
+                                            del self._predict_to_gold[job_i.pack]
                                         yield job_i.pack
 
                                     else:
@@ -557,7 +580,9 @@ class BasePipeline(Generic[PackType]):
 
                         if not job.is_poison and should_yield:
                             if self._evaluator:
-                                self._evaluator.consume_next(job.pack, job.pack)
+                                self._evaluator.consume_next(
+                                    job.pack, self._predict_to_gold[job.pack])
+                                del self._predict_to_gold[job.pack]
                             yield job.pack
 
                         elif not should_yield:

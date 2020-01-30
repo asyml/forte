@@ -109,6 +109,17 @@ class ProcessManager:
         else:
             raise AttributeError("The process manager is not initialized.")
 
+    def set_current_pipeline(self, pipeline):
+        r"""Set the current pipeline.
+
+        Args:
+            pipeline (Pipeline): The current pipeline to be executed
+        """
+        if self.instance is not None:
+            self.instance.current_pipeline = pipeline
+        else:
+            raise AttributeError('The process manager is not initialized.')
+
     def set_current_component(self, component_name: str):
         r"""Set the current component
 
@@ -135,6 +146,13 @@ class ProcessManager:
                 raise ValueError(f"{queue_index} exceeds the pipeline range "
                                  f"[0, {self.pipeline_length - 1}]")
             self.instance.current_queue_index = queue_index
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    @property
+    def current_pipeline(self):
+        if self.instance is not None:
+            return self.instance.current_pipeline
         else:
             raise AttributeError("The process manager is not initialized.")
 
