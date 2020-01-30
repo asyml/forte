@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from forte.data import DataPack
-from forte.data.ontology import Annotation, Generic
+from forte.data.ontology import Annotation, Generics
 from ft.onto.base_ontology import Document
 
 
@@ -78,7 +78,7 @@ class WikiAnchor(Annotation):
         self.set_fields(_target_page_name=page_name)
 
 
-class WikiInfoBoxProperty(Generic):
+class WikiInfoBoxProperty(Generics):
     def __init__(self, pack: DataPack):
         super().__init__(pack)
         self._key: str
@@ -99,7 +99,7 @@ class WikiInfoBoxProperty(Generic):
         self.set_fields(_value=value)
 
 
-class WikiInfoBoxMapped(Generic):
+class WikiInfoBoxMapped(Generics):
     def __init__(self, pack: DataPack):
         super().__init__(pack)
         self._key: str
