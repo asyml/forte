@@ -21,7 +21,7 @@ from forte.common.exception import IncompleteEntryError
 from forte.data.container import EntryContainer
 from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base_pack import PackType
-from forte.data.base import Span
+from forte.data.span import Span
 
 __all__ = [
     "Generics",

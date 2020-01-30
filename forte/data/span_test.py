@@ -11,20 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Unit test for Span.
+"""
 
-from typing import Dict, List, Tuple, Type, Union
+import unittest
 
 from forte.data.span import Span
-from forte.data.ontology.core import Entry, EntryType, GroupType, LinkType
 
-__all__ = [
-    "EntryType",
-    "GroupType",
-    "LinkType",
-    "ReplaceOperationsType",
-    "DataRequest",
-]
 
-ReplaceOperationsType = List[Tuple[Span, str]]
+class SpanTest(unittest.TestCase):
 
-DataRequest = Dict[Type[Entry], Union[Dict, List]]
+    def test_span(self):
+        span1 = Span(1, 2)
+        span2 = Span(1, 2)
+        self.assertEqual(span1, span2)
+
+        span1 = Span(1, 2)
+        span2 = Span(1, 3)
+        self.assertLess(span1, span2)
+
+        span1 = Span(1, 2)
+        span2 = Span(2, 3)
+        self.assertLess(span1, span2)
+
+
+if __name__ == '__main__':
+    unittest.main()

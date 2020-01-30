@@ -22,7 +22,7 @@ from sortedcontainers import SortedList
 from forte.common.types import EntryType, ReplaceOperationsType, DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generics, Query)

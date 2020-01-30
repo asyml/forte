@@ -20,7 +20,7 @@ import tempfile
 import unittest
 from ddt import ddt, data
 
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.readers import PlainTextReader
 
 

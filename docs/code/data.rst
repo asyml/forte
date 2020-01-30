@@ -9,7 +9,7 @@ Ontology
 
 base
 ----------
-.. autoclass:: forte.data.base.Span
+.. autoclass:: forte.data.span.Span
     :members:
 
 core

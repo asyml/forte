@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
-from typing import Union, Dict, List, Callable, Optional, Any
 from collections.abc import KeysView
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import pickle
 
@@ -114,7 +114,6 @@ class Resources:
             for key in keys:
                 with open(Path(path, f"{key}.pkl"), "rb") as f:
                     self.resources[key] = pickle.load(f)
-
         else:
             for key, deserializer in keys.items():
                 self.resources[key] = deserializer(Path(path, f"{key}.pkl"))

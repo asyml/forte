@@ -56,3 +56,7 @@ class ResourcesTest(unittest.TestCase):
         new_resources.load(keys=keys, path=self.output_dir)
 
         self.assertEqual(new_resources.resources, self.resources.resources)
+
+
+if __name__ == '__main__':
+    unittest.main()
