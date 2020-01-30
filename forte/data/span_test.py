@@ -17,7 +17,7 @@ Unit test for Span.
 
 import unittest
 
-from forte.data.base import Span
+from forte.data.span import Span
 
 
 class SpanTest(unittest.TestCase):

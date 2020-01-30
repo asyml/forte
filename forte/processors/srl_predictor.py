@@ -20,7 +20,7 @@ import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.common.resources import Resources
 from forte.common.types import DataRequest
