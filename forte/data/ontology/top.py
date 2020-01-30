@@ -24,7 +24,7 @@ from forte.data.base_pack import PackType
 from forte.data.base import Span
 
 __all__ = [
-    "Generic",
+    "Generics",
     "Annotation",
     "Group",
     "Link",
@@ -40,9 +40,9 @@ __all__ = [
 QueryType = Union[Dict[str, Any], np.ndarray]
 
 
-class Generic(Entry):
+class Generics(Entry):
     def __init__(self, pack: PackType):
-        super(Generic, self).__init__(pack=pack)
+        super().__init__(pack=pack)
 
 
 @total_ordering
@@ -372,7 +372,7 @@ class MultiPackGroup(BaseGroup[SubEntry]):
         super().__init__(pack, members)
 
 
-class Query(Generic):
+class Query(Generics):
     r"""An entry type representing queries for information retrieval tasks.
 
     Args:

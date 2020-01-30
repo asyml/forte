@@ -25,7 +25,7 @@ from forte.data.index import BaseIndex
 from forte.data.base import Span
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import (
-    Annotation, Link, Group, SinglePackEntries, Generic, Query)
+    Annotation, Link, Group, SinglePackEntries, Generics, Query)
 from forte.data import data_utils_io
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
-        self.generics: List[Generic] = []
+        self.generics: List[Generics] = []
 
         self.replace_back_operations: ReplaceOperationsType = []
         self.processed_original_spans: List[Tuple[Span, Span]] = []
