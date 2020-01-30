@@ -18,7 +18,7 @@
         },
         {
             "entry_name": "ft.onto.test_ontology.Token",
-            "parent_entry": "forte.data.ontology.top.Generic",
+            "parent_entry": "forte.data.ontology.top.Generics",
             "attributes":
             [
                 {
