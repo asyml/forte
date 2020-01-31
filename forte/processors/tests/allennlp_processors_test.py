@@ -29,10 +29,10 @@ class TestAllenNLPProcessor(unittest.TestCase):
                 ['NNP', 'VBZ', 'RB', 'VBN', 'VBN', 'DT', 'JJ', 'RB', '.'],
             ],
             'universal_dependencies': [
-                ['DET', 'NOUN', 'VERB', 'VERB', 'PROPN', 'PUNCT'],
+                ['DET', 'NOUN', 'AUX', 'VERB', 'PROPN', 'PUNCT'],
                 ['DET', 'NOUN', 'ADP', 'DET', 'NOUN', 'PART', 'VERB', 'PRON',
                  'VERB', 'PROPN', 'NOUN', 'PUNCT'],
-                ['PROPN', 'VERB', 'ADV', 'VERB', 'VERB', 'DET', 'ADJ', 'ADV',
+                ['PROPN', 'AUX', 'ADV', 'AUX', 'VERB', 'DET', 'ADJ', 'ADV',
                  'PUNCT'],
             ],
         }
