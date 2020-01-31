@@ -38,7 +38,7 @@ MODEL2URL = {
 
 class AllenNLPProcessor(PackProcessor):
 
-    # pylint: disable=unused-argument
+    # pylint: disable=attribute-defined-outside-init,unused-argument
     def initialize(self, resource: Resources, configs: HParams):
         self.processors = configs.processors
         if self.processors is None or self.processors == "":
