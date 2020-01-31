@@ -16,6 +16,5 @@ from forte.processors.machine_translation_processor import *
 from forte.processors.ner_predictor import *
 from forte.processors.srl_predictor import *
 from forte.processors.text_generation_processor import *
-from forte.processors.vocabulary_processor import *
 from forte.processors.bert_based_query_creator import *
 from forte.processors.lowercaser_processor import *
