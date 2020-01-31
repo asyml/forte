@@ -18,7 +18,7 @@ import unittest
 
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors.lowercaser_processor import LowerCaserProcessor
+from forte.processors import LowerCaserProcessor
 
 
 class TestLowerCaserProcessor(unittest.TestCase):

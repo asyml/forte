@@ -387,6 +387,10 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"should be an instance of Annotation, Link, or Group."
             )
 
+        if not isinstance(entry, Link):
+            logger.warning("Deleting an annotation or a group doesn't "
+                           "guarantee deletion of the associated links.")
+
         for i, e in enumerate(target[begin:]):
             if e.tid == entry.tid:
                 target.pop(i + begin)
