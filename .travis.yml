@@ -47,7 +47,7 @@ script:
   # unit tests
   - pytest -s forte/processors/tests/allennlp_processors_test.py
   # test coverage
-  - coverage run -m pytest
+  # - coverage run -m pytest
 
 after_success:
   - codecov
