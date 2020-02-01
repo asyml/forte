@@ -47,6 +47,8 @@ perfect tool for data inspection, component swapping and result sharing.
    pipeline.</figcaption>
 </figure>
 
+-----------------
+
 <figure class="image">
    <img src="./docs/_static/img/forte_results.png"><br><br>
    <figcaption>Forte stores results in data packs and use the ontology to represent task logic
