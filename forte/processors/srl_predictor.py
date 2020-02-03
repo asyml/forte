@@ -76,7 +76,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
             os.path.join(model_dir, "embeddings/word_vocab.english.txt"))
         self.char_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/char_vocab.english.txt"))
-        model_hparams = LabeledSpanGraphNetwork.default_hparams()
+        model_hparams = LabeledSpanGraphNetwork.default_configs()
         model_hparams["context_embeddings"]["path"] = os.path.join(
             model_dir, model_hparams["context_embeddings"]["path"])
         model_hparams["head_embeddings"]["path"] = os.path.join(

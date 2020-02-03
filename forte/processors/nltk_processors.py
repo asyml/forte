@@ -117,7 +117,7 @@ class NLTKChunker(PackProcessor):
 
     @staticmethod
     def default_configs():
-        r"""This defines a basic Hparams structure for NLTKChunker.
+        r"""This defines a basic config structure for NLTKChunker.
         """
         return {
             'pattern': 'NP: {<DT>?<JJ>*<NN>}',

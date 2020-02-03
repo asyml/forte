@@ -151,7 +151,7 @@ def create_class_with_kwargs(class_name: str,
     p_params.update(filebased_hparams)
 
     p_params.update(h_params.get("overwrite_configs", {}))
-    default_processor_hparams = cls.default_hparams()
+    default_processor_hparams = cls.default_configs()
 
     processor_hparams = HParams(p_params,
                                 default_processor_hparams)
