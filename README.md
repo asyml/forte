@@ -7,40 +7,51 @@
 [![Build Status](https://travis-ci.org/asyml/forte.svg?branch=master)](https://travis-ci.org/asyml/forte)
 [![Documentation Status](https://readthedocs.org/projects/asyml-forte/badge/?version=latest)](https://asyml-forte.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/asyml/forte/blob/master/LICENSE)
+[![codecov](https://codecov.io/gh/asyml/forte/branch/master/graph/badge.svg)](https://codecov.io/gh/asyml/forte)
 
 
-**Forte** is a and versatile composable toolkit for Natural Language Processing. It covers 
-a wide spectrum of tasks ranging from Information Retrieval to Generation and Analysis. Forte 
-provides a platform to assemble state-of-the-art NLP and ML technologies in a pipelined fashion. 
-It is extremely simple to build a pipeline using tools like SpaCy, NLTK etc on Forte 
-(Please refer our [examples](./examples) for more details).
-These abstractions provide better separation between data, model and tasks and also loose-coupling 
-between different components of the pipeline. Along with general machine learning, Forte provides 
-a strong support for deep learning. With these features, Forte provides a platform to build 
-customized modules to solve complex Natural Language problems.
+**Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task 
+interaction, adaptable data-models interfaces and many more. It provides a platform to assemble
+state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide 
+spectrum of tasks ranging from Information Retrieval, Natural Langauge Understanding to Natural 
+Language Genration.  
 
+With Forte, It is extremely simple to build an intergrated system that can search documents, 
+analyze and extract information and generate language all in one place. This allows the developer
+to fully utilize and combine the strength and results from each step, and allow the system to 
+make fully informed decision at the end of the pipeline.  
+
+While it is quite easy to combine arbitrary 3rd party tools (Check out these [examples](./examples)!),
+Forte also brings technology to you by supporting deep learnign via Texar, and by providing a convenient
+model data interface that allows user to cast tasks to models.
 
 ## Core Design Principles
 
-* **Composable**: Forte follows a structure which allows users to decompose a problem 
-into data, models and tasks. The tasks can further be divided into sub-tasks. A complex use case 
+The core design principle of Forte is the abstraction of NLP concepts and machine learning models, 
+which provides better separation between data, model and tasks, but enables interactions
+between different components of the pipeline. Based on this, we make Forte:
+
+* **Composable**: Forte help users to decompose a problem into *data*, *models* and *tasks*. 
+The tasks can further be divided into sub-tasks. A complex use case 
 can be solved by composing heterogeneous modules via straightforward python APIs or declarative 
 configuration files. The components (e.g. models or tasks) in the pipeline can be flexibly 
 swapped in and out, as long as the API contracts are matched. The approach greatly improves module 
 reusability, enables fast development and makes the library flexible for user need.
    
-* **Generalization for Extensibility**: Forte promotes generalization to support not only a wide 
+* **Generalizable and Extensibile**: Forte promotes generalization to support not only a wide 
 range of NLP tasks, but also extensible for new tasks or new domains. In particular, Forte 
-provides an extensible type system that helps users define ontologies according to their tasks. 
-Users have to simply specify the type declaratively through JSON files. Our Code Generation tool 
+provides the *Ontology* system that helps users define types according to their tasks. 
+Users can simply specify the type declaratively through JSON files. Our Code Generation tool 
 will automatically generate python files ready to be used into your project. Check out our 
 [Ontology Generation documentation](./docs/ontology_generation.md) for more details.
 
-* **Transparent and Universal**: Central to Forte's composable architecture is a universal data 
+* **Transparent Data Flow**: Central to Forte's composable architecture is a universal data 
 format that supports seamless data flow between different steps. Forte advocates a transparent 
 data flow to facilitate flexible process intervention and simple pipeline control. Combined with 
 the general data format, Forte makes a perfect tool for data inspection, component swapping and 
-result sharing.
+result sharing. This is particularly helpful during team collaborations!
+
+-----------------
 
 <figure class="image">
    <img src="./docs/_static/img/forte_arch.png"><br><br>
@@ -55,6 +66,8 @@ result sharing.
    <figcaption>Forte stores results in data packs and use the ontology to represent task logic
    </figcaption>
 </figure>
+
+-----------------
 
 ## Package Overview
 
@@ -140,6 +153,7 @@ pip install .
 
 * [Examples](./examples)
 * [Documentation](https://asyml-forte.readthedocs.io/)
+* And we are working one some interesting [tutorials](https://github.com/asyml/forte/wiki)
 
 ### Reference
 
