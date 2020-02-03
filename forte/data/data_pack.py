@@ -375,6 +375,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         begin = 0
 
         if isinstance(entry, Annotation):
+            logger.warning("Please note that deleting an annotation doesn't "
+                           "guarantee deletion of all the associated links and "
+                           "groups. Please delete them manually to avoid any "
+                           "unexpected behavior.")
             target = self.annotations
             begin = target.bisect_left(entry)
         elif isinstance(entry, Link):
@@ -386,10 +390,6 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"Invalid entry type {type(entry)}. A valid entry "
                 f"should be an instance of Annotation, Link, or Group."
             )
-
-        if not isinstance(entry, Link):
-            logger.warning("Deleting an annotation or a group doesn't "
-                           "guarantee deletion of the associated links.")
 
         for i, e in enumerate(target[begin:]):
             if e.tid == entry.tid:

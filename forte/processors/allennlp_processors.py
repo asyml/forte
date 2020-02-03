@@ -52,37 +52,49 @@ class AllenNLPProcessor(PackProcessor):
         self.overwrite_entries = configs.overwrite_entries
         self.allow_parallel_entries = configs.allow_parallel_entries
         if self.overwrite_entries:
-            logger.warning("`overwrite_entries` is set to True. Deleting an "
-                           "annotation doesn't guarantee deletion of all the "
-                           "associated links.")
+            logger.warning("`overwrite_entries` is set to True, this means "
+                           "that the entries of the same type as produced by "
+                           "this processor will be overwritten if found.")
             if self.allow_parallel_entries:
-                logger.warning('Both `overwrite_entries` and '
-                               '`allow_parallel_entries` are True, all '
-                               'existing conflicting entries will be deleted.')
+                logger.warning('Both `overwrite_entries` (whether to overwrite '
+                               'the entries of the same type as produced by '
+                               'this processor) and '
+                               '`allow_parallel_entries` (whether to allow '
+                               'similar new entries when they already exist) '
+                               'are True, all existing conflicting entries '
+                               'will be deleted.')
         else:
             if not self.allow_parallel_entries:
-                logger.warning('Both `overwrite_entries` and '
-                               '`allow_parallel_entries` are False, '
-                               'processor will only run if there are no '
-                               'existing conflicting entries.')
+                logger.warning('Both `overwrite_entries` (whether to overwrite '
+                               'the entries of the same type as produced by '
+                               'this processor) and '
+                               '`allow_parallel_entries` (whether to allow '
+                               'similar new entries when they already exist) '
+                               'are False, processor will only run if there '
+                               'are no existing conflicting entries.')
 
     @staticmethod
     def default_configs():
         """
-        This defines a basic Hparams structure for AllenNLP.
-        :return:
+        This defines a basic config structure for AllenNLP.
+        :return: A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            - processors: defines what operations to be done on the sentence,
+                default value is "tokenize,pos,depparse" which performs all the
+                three operations
+            - output_format: format of the POS tags and dependency parsing,
+                default value is "universal_dependencies"
+            - overwrite_entries: whether to overwrite the entries of the same
+                type as produced by this processor, default value is False
+            - allow_parallel_entries: whether to allow similar new entries when
+                they already exist, e.g. allowing new tokens with same spans,
+                used only when `overwrite_entries` is False
         """
         return {
             'processors': "tokenize,pos,depparse",
-            # format of the POS tags and dependency parsing
             'output_format': "universal_dependencies",
-            # whether to overwrite the entries of the same Type as produced by
-            # this processor
-            'overwrite_entries': True,
-            # whether to allow similar new entries when they already exist, e.g.
-            # allowing new tokens with same spans, used only when
-            # `overwrite_entries` is False
-            'allow_parallel_entries': False
+            'overwrite_entries': False,
+            'allow_parallel_entries': True
         }
 
     def _process(self, input_pack: DataPack):
