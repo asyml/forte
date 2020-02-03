@@ -4,7 +4,7 @@ from ddt import ddt, data, unpack
 
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors import AllenNLPProcessor
+from forte.processors.allennlp_processors import AllenNLPProcessor
 from forte.processors.spacy_processors import SpacyProcessor
 from ft.onto.base_ontology import Sentence, Token, Dependency
 from forte.common import ProcessorConfigError
@@ -45,11 +45,11 @@ class TestAllenNLPProcessor(unittest.TestCase):
                  'advmod', 'punct'],
             ],
             'universal_dependencies': [
-                ['det', 'nsubj', 'root', 'ccomp', 'xcomp', 'punct'],
+                ['det', 'nsubj:pass', 'aux:pass', 'root', 'xcomp', 'punct'],
                 ['det', 'root', 'case', 'det', 'nmod', 'mark', 'acl', 'obj',
                  'xcomp', 'compound', 'obj', 'punct'],
-                ['nsubj', 'root', 'advmod', 'ccomp', 'ccomp', 'det', 'obj',
-                 'advmod', 'punct'],
+                ['nsubj:pass', 'aux', 'advmod', 'aux:pass', 'root', 'det',
+                 'obj', 'advmod', 'punct'],
             ]
 
         }
