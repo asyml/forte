@@ -17,8 +17,6 @@ Unit tests for NLTK processors.
 
 import unittest
 
-from texar.torch import HParams
-
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \

@@ -54,7 +54,7 @@ class ElasticSearchQueryCreator(QueryProcessor[MultiPack]):
         return {"query": {"match": {field: text}}, "size": size}
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         return {
             "size": 1000,
             "field": "content",

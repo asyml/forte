@@ -148,9 +148,9 @@ class SRLPredictor(FixedSizeBatchProcessor):
                     data_pack.add_or_get_entry(link)
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         """
-        This defines a basic Hparams structure
+        This defines a basic config structure
         :return:
         """
         hparams_dict = {

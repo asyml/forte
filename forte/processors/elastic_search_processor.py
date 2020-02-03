@@ -43,7 +43,7 @@ class ElasticSearchProcessor(MultiPackProcessor):
         self.index = ElasticSearchIndexer(hparams=self.config.index_config)
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         return {
             "query_pack_name": "query",
             "index_config": ElasticSearchIndexer.default_hparams(),
