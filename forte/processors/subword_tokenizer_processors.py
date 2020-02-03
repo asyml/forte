@@ -49,13 +49,17 @@ class BERTTokenizer(PackProcessor):
                     word = word[2:]
                     begin_pos = end_pos
                     end_pos = begin_pos + len(word)
+                    startswithhash = True
                 else:
                     begin_pos = sentence.text.find(word, end_pos)
                     if begin_pos == -1:
                         begin_pos = sentence.text.lower().find(word, end_pos)
                     end_pos = begin_pos + len(word)
+                    startswithhash = False
                 subword = Subword(input_pack, begin_pos + offset,
                                   end_pos + offset)
+                if startswithhash:
+                    subword.startswithhash = True
                 input_pack.add_or_get_entry(subword)
 
     @staticmethod

@@ -44,6 +44,14 @@ class Subword(Annotation):
     """
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.startswithhash = False
+
+    @property
+    def text(self):
+        if self.startswithhash:
+            return "##" + super().text
+        else:
+            return super().text
 
 
 class Token(Annotation):

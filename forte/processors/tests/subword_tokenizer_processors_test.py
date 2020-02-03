@@ -19,6 +19,7 @@ import unittest
 
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
+from forte.processors.lowercaser_processor import LowerCaserProcessor
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
 from forte.processors.subword_tokenizer_processors import BERTTokenizer
 from forte.utils.test import pretrained_test
@@ -30,6 +31,7 @@ class TestBERTTokenizer(unittest.TestCase):
     def setUp(self):
         self.pipeline = Pipeline()
         self.pipeline.set_reader(StringReader())
+        self.pipeline.add_processor(LowerCaserProcessor())
         self.pipeline.add_processor(NLTKSentenceSegmenter())
         self.pipeline.add_processor(BERTTokenizer())
         self.pipeline.initialize()
@@ -40,11 +42,11 @@ class TestBERTTokenizer(unittest.TestCase):
                      "The goal of this project to help you build NLP "
                      "pipelines.",
                      "NLP has never been made this easy before."]
-        subwords = [["This", "tool", "is", "called", "Forte", "."],
-                    ["The", "goal", "of", "this", "project", "to", "help",
-                     "you", "build", "NL", "P", "pipeline", "s", "."],
-                    ["NL", "P", "has", "never", "been", "made", "this", "easy",
-                     "before", "."]]
+        subwords = [["this", "tool", "is", "called", "forte", "."],
+                    ["the", "goal", "of", "this", "project", "to", "help",
+                     "you", "build", "nl", "##p", "pipeline", "##s", "."],
+                    ["nl", "##p", "has", "never", "been", "made", "this",
+                     "easy", "before", "."]]
         document = ' '.join(sentences)
         pack = self.pipeline.process(document)
         for i, sentence in enumerate(pack.get(Sentence)):
