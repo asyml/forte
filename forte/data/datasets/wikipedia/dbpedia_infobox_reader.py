@@ -138,9 +138,9 @@ class DBpediaInfoBoxReader(PackReader):
         pass
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         """
-        This defines a basic Hparams structure
+        This defines a basic config structure
         :return:
         """
         return {
