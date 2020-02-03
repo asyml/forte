@@ -21,6 +21,7 @@ from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
 from forte.processors.subword_tokenizer_processors import BERTTokenizer
+from forte.utils.test import pretrained_test
 from ft.onto.base_ontology import Subword, Sentence
 
 
@@ -33,6 +34,7 @@ class TestBERTTokenizer(unittest.TestCase):
         self.pipeline.add_processor(BERTTokenizer())
         self.pipeline.initialize()
 
+    @pretrained_test
     def test_tokenizer(self):
         sentences = ["This tool is called Forte.",
                      "The goal of this project to help you build NLP "
