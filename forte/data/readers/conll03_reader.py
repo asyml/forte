@@ -114,5 +114,5 @@ class CoNLL03Reader(PackReader):
         yield pack
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {}

@@ -20,13 +20,11 @@ import tempfile
 import shutil
 
 from ddt import ddt, data, unpack
-from texar.torch import HParams
 
 from forte.pipeline import Pipeline
 from forte.processors import BertBasedQueryCreator
 from forte.data.readers import MultiPackSentenceReader
 from forte.data.ontology import Query
-from ft.onto.base_ontology import Token, Sentence
 
 
 @ddt
