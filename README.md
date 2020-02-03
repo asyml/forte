@@ -9,37 +9,38 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/asyml/forte/blob/master/LICENSE)
 
 
-**Forte** is a flexible composable system designed for Text processing, providing integrated 
-architecture support for a wide spectrum of tasks, from Information Retrieval to tasks in Natural 
-Language Processing (including text analysis and language generation). Empowered by principled 
-abstraction and design principles, Forte provides a platform to gather cutting-edge NLP and ML 
-technologies in a composable manner. We will demonstrate that such abstraction enables better data, 
-model and task separation, but provides stronger inter-task interactions at the same time. 
-In addition, Forte provides strong support of deep learning and general machine learning. With 
-these features, Forte help users to efficiently build customized modules and easily incorporate 
-existing technologies to solve complex text processing problems.
+**Forte** is a and versatile composable toolkit for Natural Language Processing. It covers 
+a wide spectrum of tasks ranging from Information Retrieval to Generation and Analysis. Forte 
+provides a platform to assemble state-of-the-art NLP and ML technologies in a pipelined fashion. 
+It is extremely simple to build a pipeline using tools like SpaCy, NLTK etc on Forte 
+(Please refer our [examples](./examples) for more details).
+These abstractions provide better separation between data, model and tasks and also loose-coupling 
+between different components of the pipeline. Along with general machine learning, Forte provides 
+a strong support for deep learning. With these features, Forte provides a platform to build 
+customized modules to solve complex Natural Language problems.
 
 
 ## Core Design Principles
 
-* **Composing via Contracts**: Forte has adopted a highly modularized structure in order to 
-decompose  data, models and tasks, as well as separate the tasks into sub-steps. A complex use 
-case can be solved by composing heterogeneous modules via straightforward python APIs or 
-declarative configuration files. The components (e.g. models or tasks) in the pipeline can be 
-flexibly swapped in and out, as long as the API contracts are matched. The approach greatly 
-improves module reusability, enables fast development and makes the library flexible for user need.
+* **Composable**: Forte follows a structure which allows users to decompose a problem 
+into data, models and tasks. The tasks can further be divided into sub-tasks. A complex use case 
+can be solved by composing heterogeneous modules via straightforward python APIs or declarative 
+configuration files. The components (e.g. models or tasks) in the pipeline can be flexibly 
+swapped in and out, as long as the API contracts are matched. The approach greatly improves module 
+reusability, enables fast development and makes the library flexible for user need.
    
 * **Generalization for Extensibility**: Forte promotes generalization to support not only a wide 
-range of NLP tasks, but also extensible for new tasks or new domains. Task logic is reflected 
-through the Ontology system, that defines a general structure to represent NLP data structures. 
-The ontology system enables appropriate APIs at varying abstraction level, and can be flexibly 
-extended so specific domain knowledge can be injected.
+range of NLP tasks, but also extensible for new tasks or new domains. In particular, Forte 
+provides an extensible type system that helps users define ontologies according to their tasks. 
+Users have to simply specify the type declaratively through JSON files. Our Code Generation tool 
+will automatically generate python files ready to be used into your project. Check out our 
+[Ontology Generation documentation](./docs/ontology_generation.md) for more details.
 
-* **Transparent and Universal**: Forte supports a full pipeline of many different stages in text 
-processing. This is achieved by designing a universal data format to support seamless data flow in 
-between the steps. Forte advocates a transparent data flow to facilitate flexible process 
-intervention and simple pipeline control. Combined with the general data format, Forte makes a 
-perfect tool for data inspection, component swapping and result sharing.
+* **Transparent and Universal**: Central to Forte's composable architecture is a universal data 
+format that supports seamless data flow between different steps. Forte advocates a transparent 
+data flow to facilitate flexible process intervention and simple pipeline control. Combined with 
+the general data format, Forte makes a perfect tool for data inspection, component swapping and 
+result sharing.
 
 <figure class="image">
    <img src="./docs/_static/img/forte_arch.png"><br><br>
@@ -55,87 +56,67 @@ perfect tool for data inspection, component swapping and result sharing.
    </figcaption>
 </figure>
 
+## Package Overview
+
+<table>
+<tr>
+    <td><b> forte </b></td>
+    <td> an open-source toolkit for NLP  </td>
+</tr>
+<tr>
+    <td><b> forte.data.readers </b></td>
+    <td> a data module for reading different formats of text data like CoNLL, Ontonotes etc 
+    </td>
+</tr>
+<tr>
+    <td><b> forte.processors </b></td>
+    <td> a collection of processors for building NLP pipelines </td>
+</tr>
+<tr>
+    <td><b> forte.trainer </b></td>
+    <td> a collection of modules for training different NLP tasks </td>
+</tr>
+<tr>
+    <td><b> ft.onto.base_ontology </b></td>
+    <td> a module containing basic ontologies like Token, Sentence, Document etc </td>
+</tr>
+</table>
+
 ### Library API example
 
-A code example that builds and runs a Chatbot pipeline
+A simple code example that runs Named Entity Recognizer
 
 ```python
 import yaml
 
-from termcolor import colored
 from texar.torch import HParams
 
-from forte.data.readers import MultiPackTerminalReader
-from forte.common.resources import Resources
 from forte.pipeline import Pipeline
-from forte.processors import MicrosoftBingTranslator, BertBasedQueryCreator, \
-    SRLPredictor
-from forte.processors.search_processor import SearchProcessor
-from forte.data.selector import NameMatchSelector
-from forte.processors.nltk_processors import \
-    (NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
+from forte.data.readers import CoNLL03Reader
+from forte.processors import CoNLLNERPredictor
+from ft.onto.base_ontology import Token, Sentence, EntityMention
 
-from ft.onto.base_ontology import PredicateLink, Sentence
+config_data = yaml.safe_load(open("config_data.yml", "r"))
+config_model = yaml.safe_load(open("config_model.yml", "r"))
+
+config = HParams({}, default_hparams=None)
+config.add_hparam('config_data', config_data)
+config.add_hparam('config_model', config_model)
 
 
-config = yaml.safe_load(open("config.yml", "r"))
-config = HParams(config, default_hparams=None)
+pl = Pipeline()
+pl.set_reader(CoNLL03Reader())
+pl.add_processor(CoNLLNERPredictor(), config=config)
 
-resource = Resources()
-query_pipeline = Pipeline(resource=resource)
-query_pipeline.set_reader(
-    reader=MultiPackTerminalReader(), config=config.reader)
+pl.initialize()
 
-query_pipeline.add_processor(
-    processor=MicrosoftBingTranslator(), config=config.translator)
-query_pipeline.add_processor(
-    processor=BertBasedQueryCreator(), config=config.query_creator)
-query_pipeline.add_processor(
-    processor=SearchProcessor(), config=config.indexer)
-query_pipeline.add_processor(
-    processor=NLTKSentenceSegmenter(),
-    selector=NameMatchSelector(
-        select_name=config.indexer.response_pack_name[0]))
-query_pipeline.add_processor(
-    processor=NLTKWordTokenizer(),
-    selector=NameMatchSelector(
-        select_name=config.indexer.response_pack_name[0]))
-query_pipeline.add_processor(
-    processor=NLTKPOSTagger(),
-    selector=NameMatchSelector(
-        select_name=config.indexer.response_pack_name[0]))
-query_pipeline.add_processor(
-    processor=SRLPredictor(), config=config.SRL,
-    selector=NameMatchSelector(
-        select_name=config.indexer.response_pack_name[0]))
-query_pipeline.add_processor(
-    processor=MicrosoftBingTranslator(), config=config.back_translator)
-
-query_pipeline.initialize()
-
-for m_pack in query_pipeline.process_dataset():
-
-    english_pack = m_pack.get_pack("pack")
-    print(colored("English Translation of the query: ", "green"),
-          english_pack.text, "\n")
-    pack = m_pack.get_pack(config.indexer.response_pack_name[0])
-    print(colored("Retrieved Document", "green"), pack.text, "\n")
-    print(colored("German Translation", "green"),
-          m_pack.get_pack("response").text, "\n")
-          
-    for sentence in pack.get(Sentence):
-        sent_text = sentence.text
-        print(colored("Sentence:", 'red'), sent_text, "\n")
-    
-        print(colored("Semantic role labels:", 'red'))
-        for link in pack.get(PredicateLink, sentence):
-            parent = link.get_parent()
-            child = link.get_child()
-            print(f"  - \"{child.text}\" is role {link.arg_type} of "
-                  f"predicate \"{parent.text}\"")
-        print()
-    
-        input(colored("Press ENTER to continue...\n", 'green'))
+for pack in pl.process_dataset(config.config_data.test_path):
+    for pred_sentence in pack.get_data(context_type=Sentence, request={Token: {"fields": ["ner"]}}):
+        print("============================")
+        print(pred_sentence["context"])
+        print("The entities are...")
+        print(pred_sentence["Token"]["ner"])
+        print("============================")
 
 ```
 
