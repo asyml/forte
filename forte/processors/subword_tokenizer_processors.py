@@ -35,6 +35,7 @@ class BERTTokenizer(PackProcessor):
         self.tokenizer = None
         self.sentence_component = None
 
+    # pylint: disable=unused-argument
     def initialize(self, resource: Resources, configs: HParams):
         self.tokenizer = tx.data.BERTTokenizer(
             pretrained_model_name=configs.pretrained_model_name)
