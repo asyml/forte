@@ -45,9 +45,9 @@ script:
   - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker words
   - export PYTHONPATH=`pwd`
   # unit tests
-  - pytest -s forte/processors/tests/allennlp_processors_test.py
+  - pytest
   # test coverage
-#  - coverage run -m pytest
+  - coverage run -m pytest
 
 after_success:
   - codecov
