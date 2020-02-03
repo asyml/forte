@@ -55,7 +55,7 @@ class SpacyProcessor(PackProcessor):
     @staticmethod
     def default_configs():
         """
-        This defines a basic Hparams structure for spaCy.
+        This defines a basic config structure for spaCy.
         Returns:
 
         """

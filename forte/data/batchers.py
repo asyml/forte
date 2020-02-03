@@ -131,11 +131,11 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def __init__(self, cross_pack=True):
         super().__init__(cross_pack)
         self.batch_is_full = False
-        default_config = HParams(None, self.default_hparams())
+        default_config = HParams(None, self.default_configs())
         self.batch_size = default_config.batch_size
 
     def initialize(self, config: HParams):
-        config_ = HParams(config, self.default_hparams())
+        config_ = HParams(config, self.default_configs())
         self.batch_size = config_.batch_size
         self.batch_is_full = False
 
@@ -171,7 +171,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             yield (batch, len(instances))
 
     @staticmethod
-    def default_hparams() -> Dict:
+    def default_configs() -> Dict:
         return {
             'batch_size': 10
         }
@@ -196,7 +196,7 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
         super().__init__(cross_pack)
         self.batch_is_full = False
 
-        default_config = HParams(None, self.default_hparams())
+        default_config = HParams(None, self.default_configs())
         self.input_pack_name = default_config.input_pack_name
         self.batch_size = default_config.batch_size
         self.initialize(default_config)
@@ -245,7 +245,7 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             yield (batch, len(instances))
 
     @staticmethod
-    def default_hparams() -> Dict:
+    def default_configs() -> Dict:
         return {
             'batch_size': 10,
             'input_pack_name': 'source'

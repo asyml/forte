@@ -122,7 +122,7 @@ class CustomBiLSTM(tx.modules.EncoderBase):
         self.dropout = nn.Dropout(self._hparams.dropout)
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         return {
             "input_dim": 200,
             "hidden_dim": 200,
@@ -167,7 +167,7 @@ class CharCNN(tx.ModuleBase):
         self._max_filter_width = max(self._hparams.filter_widths)
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         return {
             "char_embed_size": 8,
             "filter_widths": [3, 4, 5],
@@ -303,7 +303,7 @@ class MLP(tx.ModuleBase):
         self.layers = nn.Sequential(*layers)
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         return {
             "input_size": 300,
             "num_layers": 2,
@@ -330,7 +330,7 @@ class ConcatInputMLP(tx.ModuleBase):
         self.mlp = MLP(mlp_hparams)
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         return {
             "input_sizes": [150, 150],
             "num_layers": 2,
