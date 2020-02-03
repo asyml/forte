@@ -19,6 +19,7 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology import Entry, Annotation, Link, Group
 
 __all__ = [
+    "Subword",
     "Token",
     "Sentence",
     "Document",
@@ -31,6 +32,18 @@ __all__ = [
     "Dependency",
     "RelationLink"
 ]
+
+
+class Subword(Annotation):
+    r"""A span based annotation :class:`Subword`.
+
+    Args:
+        pack (DataPack): The data pack this subword belongs to.
+        begin (int): The offset of the first character in the subword.
+        end (int): The offset of the last character in the subword + 1.
+    """
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 class Token(Annotation):
