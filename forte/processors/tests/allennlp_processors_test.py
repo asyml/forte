@@ -142,6 +142,24 @@ class TestAllenNLPProcessor(unittest.TestCase):
             else:
                 self._check_results(pack, processors, output_format)
 
+    @data(
+        "This tool is called Forte tool.",
+        "NLP NLP NLP NLP.",
+        "AllenNLP does NLP.",
+    )
+    def test_allennlp_processor_with_repeating_words(self, sentence):
+        processors = "tokenize"
+        nlp = self._create_pipeline({
+            'processors': processors
+        })
+        self.document = sentence
+        self.tokens = [sentence.replace('.', ' .').split()]
+        pack = nlp.process(self.document)
+
+        output_format = AllenNLPProcessor.default_configs()['output_format']
+
+        self._check_results(pack, processors, output_format)
+
     def _check_results(self, pack, processors, output_format):
         # checking the whole datapack text
         self.assertEqual(pack.text, self.document)
