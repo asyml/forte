@@ -375,6 +375,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         begin = 0
 
         if isinstance(entry, Annotation):
+            logger.warning("Please note that deleting an annotation doesn't "
+                           "guarantee deletion of all the associated links and "
+                           "groups. Please delete them manually to avoid any "
+                           "unexpected behavior.")
             target = self.annotations
             begin = target.bisect_left(entry)
         elif isinstance(entry, Link):
