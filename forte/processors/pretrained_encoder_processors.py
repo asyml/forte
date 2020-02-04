@@ -19,6 +19,7 @@ import texar.torch as tx
 from texar.torch import HParams
 
 from forte.common.resources import Resources
+from forte.data.ontology.top import Annotation
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from forte.utils.utils import get_class
@@ -68,8 +69,10 @@ class PretrainedEncoder(PackProcessor):
         else:
             raise ValueError("Unrecognized pre-trained model name.")
 
-        self.entry_type = get_class(configs.entry_type,
-                                    ['ft.onto.base_ontology'])
+        self.entry_type = get_class(configs.entry_type)
+        if not isinstance(self.entry_type, Annotation) and \
+                not issubclass(self.entry_type, Annotation):
+            raise ValueError("entry_type must be annotation type.")
 
     def _process(self, input_pack: DataPack):
         for entry in input_pack.get(entry_type=self.entry_type):
@@ -89,5 +92,5 @@ class PretrainedEncoder(PackProcessor):
         """
         return {
             'pretrained_model_name': 'bert-base-uncased',
-            'entry_type': 'Sentence',
+            'entry_type': 'ft.onto.base_ontology.Sentence',
         }

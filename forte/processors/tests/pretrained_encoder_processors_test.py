@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for pretrained embedders.
+Unit tests for pretrained encoders.
 """
 
 import unittest
@@ -25,7 +25,7 @@ from forte.utils.test import pretrained_test
 from ft.onto.base_ontology import Sentence
 
 
-class TestBERTEmbedder(unittest.TestCase):
+class TestPretrainedEncoder(unittest.TestCase):
 
     def setUp(self):
         self.pipeline = Pipeline()
@@ -35,7 +35,7 @@ class TestBERTEmbedder(unittest.TestCase):
         self.pipeline.initialize()
 
     @pretrained_test
-    def test_embedder(self):
+    def test_encoder(self):
         sentences = ["This tool is called Forte.",
                      "The goal of this project to help you build NLP "
                      "pipelines.",
