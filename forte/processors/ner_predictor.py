@@ -15,6 +15,7 @@
 # pylint: disable=logging-fstring-interpolation
 import logging
 import os
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
@@ -379,7 +380,10 @@ class CoNLLNEREvaluator(Evaluator):
                                          refer_pack=refer_pack,
                                          refer_request=refer_getdata_args,
                                          output_filename=self.output_file)
-        os.system(f"./conll03eval.v2 < {self.output_file} > {self.score_file}")
+        eval_script = \
+            Path(os.path.abspath(__file__)).parents[1] / \
+            "utils/eval_scripts/conll03eval.v2"
+        os.system(f"{eval_script} < {self.output_file} > {self.score_file}")
         with open(self.score_file, "r") as fin:
             fin.readline()
             line = fin.readline()
