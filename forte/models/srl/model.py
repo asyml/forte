@@ -140,7 +140,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             })
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         return {
             "filter_widths": [3, 4, 5],
             "filter_size": 50,

@@ -29,7 +29,7 @@ class ElasticSearchIndexer:
 
     def __init__(self, hparams: Optional[Union[Dict, HParams]] = None):
         super().__init__()
-        self._hparams = HParams(hparams, self.default_hparams())
+        self._hparams = HParams(hparams, self.default_configs())
         self.elasticsearch = Elasticsearch(hosts=self._hparams.hosts)
 
     def index(self, document: Dict[str, Any], index_name: Optional[str] = None,
@@ -138,7 +138,7 @@ class ElasticSearchIndexer:
         return self._hparams
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         r"""Returns a dictionary of default hyperparameters.
 
         .. code-block:: python

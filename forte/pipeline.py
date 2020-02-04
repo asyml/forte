@@ -85,7 +85,7 @@ class Pipeline(BasePipeline[DataPack]):
                     else:
                         overwrite_hparams = {}
                     hparams.update(overwrite_hparams)
-                default_processor_hparams = p_class.default_hparams()
+                default_processor_hparams = p_class.default_configs()
 
                 processor_hparams = HParams(hparams,
                                             default_processor_hparams)
