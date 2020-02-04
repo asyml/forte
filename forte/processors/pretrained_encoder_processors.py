@@ -88,7 +88,7 @@ class PretrainedEncoder(PackProcessor):
 
     @staticmethod
     def default_configs():
-        r"""This default configurations for :class:`BERTTokenizer`.
+        r"""This default configurations for :class:`PretrainedEncoder`.
         """
         return {
             'pretrained_model_name': 'bert-base-uncased',
