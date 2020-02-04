@@ -23,6 +23,7 @@ __all__ = [
     "Sentence",
     "Document",
     "EntityMention",
+    "LinkedMention",
     "Phrase",
     "PredicateArgument",
     "PredicateMention",
@@ -103,6 +104,38 @@ class EntityMention(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.ner_type: Optional[str] = None
+
+
+class LinkedMention(Annotation):
+    """
+    A span based annotation :class:`LinkedMention`.
+
+    Args:
+        pack (DataPack): The data pack this token belongs to.
+        begin (int): The offset of the first character in the entity mention.
+        end (int): The offset of the last character in the entity mention + 1.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.linked_kb_ids: Optional[Dict[str, float]] = None
+        self.kb: Optional[str] = None
+
+    @property
+    def linked_kb_ids(self):
+        return self.linked_kb_ids
+
+    @linked_kb_ids.setter
+    def linked_kb_ids(self, linked_kb_ids: Optional[Dict[str, float]]):
+        self.set_fields(linked_kb_ids=linked_kb_ids)
+
+    @property
+    def kb(self):
+        return self.kb
+
+    @kb.setter
+    def kb(self, kb: Optional[str]):
+        self.set_fields(kb=kb)
 
 
 class Phrase(Annotation):
