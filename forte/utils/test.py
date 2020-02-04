@@ -20,6 +20,7 @@ import unittest
 
 __all__ = [
     "performance_test",
+    "pretrained_test",
 ]
 
 
@@ -31,3 +32,6 @@ def define_skip_condition(flag: str, explanation: str):
 
 performance_test = define_skip_condition(
     'TEST_PERFORMANCE', "Test the performance of Forte modules.")
+
+pretrained_test = define_skip_condition(
+    'TEST_PRETRAINED', "Test requires loading pre-trained checkpoints.")
