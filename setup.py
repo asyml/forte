@@ -37,14 +37,15 @@ setuptools.setup(
     ],
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
-        'srl': ['mypy-extensions', 'allennlp'],
+        'srl': ['mypy-extensions'],
         'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
-        'spacy': ['spacy']
+        'spacy': ['spacy'],
+        'allennlp': ['allennlp']
     },
     package_data={
     },
