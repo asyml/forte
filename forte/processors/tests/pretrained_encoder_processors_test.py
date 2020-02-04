@@ -20,7 +20,7 @@ import unittest
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
-from forte.processors.pretrained_embedder_processors import BERTEmbedder
+from forte.processors.pretrained_encoder_processors import PretrainedEncoder
 from forte.utils.test import pretrained_test
 from ft.onto.base_ontology import Sentence
 
@@ -31,7 +31,7 @@ class TestBERTEmbedder(unittest.TestCase):
         self.pipeline = Pipeline()
         self.pipeline.set_reader(StringReader())
         self.pipeline.add_processor(NLTKSentenceSegmenter())
-        self.pipeline.add_processor(BERTEmbedder())
+        self.pipeline.add_processor(PretrainedEncoder())
         self.pipeline.initialize()
 
     @pretrained_test
