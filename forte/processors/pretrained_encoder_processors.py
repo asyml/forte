@@ -33,43 +33,90 @@ __all__ = [
 class PretrainedEncoder(PackProcessor):
     r"""A wrapper of Texar pre-trained encoders.
 
-    This processor will compute the embedding vectors of the corresponding
-    annotations (determined by the user) by using the pre-trained encoders.
+    This processor will compute the embedding vectors for entries of type
+    ``Annotation`` using pre-trained models. The user can specify the
+    pre-trained model type and the annotation class name via configuration.
+    For the full list of pre-trained models supported, see
+    :meth:`default_config` for more details. The processor will add embedding
+    vector for all entries matching the specified entry type. The resulting
+    vector can be accessed by the embedding field of the annotations.
     """
     def __init__(self):
         super().__init__()
         self.tokenizer = None
         self.encoder = None
         self.entry_type = None
+        self.name2tokenizer = {
+            'bert-base-uncased': tx.data.BERTTokenizer,
+            'bert-large-uncased': tx.data.BERTTokenizer,
+            'bert-base-cased': tx.data.BERTTokenizer,
+            'bert-large-cased': tx.data.BERTTokenizer,
+            'bert-base-multilingual-uncased': tx.data.BERTTokenizer,
+            'bert-base-multilingual-cased': tx.data.BERTTokenizer,
+            'bert-base-chinese': tx.data.BERTTokenizer,
+            'biobert-v1.0-pmc': tx.data.BERTTokenizer,
+            'biobert-v1.0-pubmed-pmc': tx.data.BERTTokenizer,
+            'biobert-v1.0-pubmed': tx.data.BERTTokenizer,
+            'biobert-v1.1-pubmed': tx.data.BERTTokenizer,
+            'scibert-scivocab-uncased': tx.data.BERTTokenizer,
+            'scibert-scivocab-cased': tx.data.BERTTokenizer,
+            'scibert-basevocab-uncased': tx.data.BERTTokenizer,
+            'scibert-basevocab-cased': tx.data.BERTTokenizer,
+            'gpt2-small': tx.data.GPT2Tokenizer,
+            'gpt2-medium': tx.data.GPT2Tokenizer,
+            'gpt2-large': tx.data.GPT2Tokenizer,
+            'gpt2-xl': tx.data.GPT2Tokenizer,
+            'roberta-base': tx.data.RoBERTaTokenizer,
+            'roberta-large': tx.data.RoBERTaTokenizer,
+            'T5-Small': tx.data.T5Tokenizer,
+            'T5-Base': tx.data.T5Tokenizer,
+            'T5-Large': tx.data.T5Tokenizer,
+            'T5-3B': tx.data.T5Tokenizer,
+            'T5-11B': tx.data.T5Tokenizer,
+            'xlnet-based-cased': tx.data.XLNetTokenizer,
+            'xlnet-large-cased': tx.data.XLNetTokenizer,
+        }
+        self.name2encoder = {
+            'bert-base-uncased': tx.modules.BERTEncoder,
+            'bert-large-uncased': tx.modules.BERTEncoder,
+            'bert-base-cased': tx.modules.BERTEncoder,
+            'bert-large-cased': tx.modules.BERTEncoder,
+            'bert-base-multilingual-uncased': tx.modules.BERTEncoder,
+            'bert-base-multilingual-cased': tx.modules.BERTEncoder,
+            'bert-base-chinese': tx.modules.BERTEncoder,
+            'biobert-v1.0-pmc': tx.modules.BERTEncoder,
+            'biobert-v1.0-pubmed-pmc': tx.modules.BERTEncoder,
+            'biobert-v1.0-pubmed': tx.modules.BERTEncoder,
+            'biobert-v1.1-pubmed': tx.modules.BERTEncoder,
+            'scibert-scivocab-uncased': tx.modules.BERTEncoder,
+            'scibert-scivocab-cased': tx.modules.BERTEncoder,
+            'scibert-basevocab-uncased': tx.modules.BERTEncoder,
+            'scibert-basevocab-cased': tx.modules.BERTEncoder,
+            'gpt2-small': tx.modules.GPT2Encoder,
+            'gpt2-medium': tx.modules.GPT2Encoder,
+            'gpt2-large': tx.modules.GPT2Encoder,
+            'gpt2-xl': tx.modules.GPT2Encoder,
+            'roberta-base': tx.modules.RoBERTaEncoder,
+            'roberta-large': tx.modules.RoBERTaEncoder,
+            'T5-Small': tx.modules.T5Encoder,
+            'T5-Base': tx.modules.T5Encoder,
+            'T5-Large': tx.modules.T5Encoder,
+            'T5-3B': tx.modules.T5Encoder,
+            'T5-11B': tx.modules.T5Encoder,
+            'xlnet-based-cased': tx.modules.XLNetEncoder,
+            'xlnet-large-cased': tx.modules.XLNetEncoder,
+        }
+
+    def available_checkpoints(self):
+        return list(self.name2tokenizer.keys())
 
     # pylint: disable=unused-argument
     def initialize(self, resource: Resources, configs: HParams):
-        if configs.pretrained_model_name.startswith('bert') or \
-                configs.pretrained_model_name.startswith('biobert') or \
-                configs.pretrained_model_name.startswith('scibert'):
-            self.tokenizer = tx.data.BERTTokenizer(
-                pretrained_model_name=configs.pretrained_model_name)
-            self.encoder = tx.modules.BERTEncoder(
-                pretrained_model_name=configs.pretrained_model_name)
-        elif configs.pretrained_model_name.startswith('gpt2'):
-            self.tokenizer = tx.data.GPT2Tokenizer(
-                pretrained_model_name=configs.pretrained_model_name)
-            self.encoder = tx.modules.GPT2Encoder(
-                pretrained_model_name=configs.pretrained_model_name)
-        elif configs.pretrained_model_name.startswith('roberta'):
-            self.tokenizer = tx.data.RoBERTaTokenizer(
-                pretrained_model_name=configs.pretrained_model_name)
-            self.encoder = tx.modules.RoBERTaEncoder(
-                pretrained_model_name=configs.pretrained_model_name)
-        elif configs.pretrained_model_name.startswith('T5'):
-            self.tokenizer = tx.data.T5Tokenizer(
-                pretrained_model_name=configs.pretrained_model_name)
-            self.encoder = tx.modules.T5Encoder(
-                pretrained_model_name=configs.pretrained_model_name)
-        elif configs.pretrained_model_name.startswith('xlnet'):
-            self.tokenizer = tx.data.XLNetTokenizer(
-                pretrained_model_name=configs.pretrained_model_name)
-            self.encoder = tx.modules.XLNetEncoder(
+        if configs.pretrained_model_name in self.name2tokenizer:
+            self.tokenizer = \
+                self.name2tokenizer[configs.pretrained_model_name](
+                    pretrained_model_name=configs.pretrained_model_name)
+            self.encoder = self.name2encoder[configs.pretrained_model_name](
                 pretrained_model_name=configs.pretrained_model_name)
         else:
             raise ValueError("Unrecognized pre-trained model name.")
