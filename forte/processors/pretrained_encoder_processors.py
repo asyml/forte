@@ -188,7 +188,7 @@ class PretrainedEncoder(PackProcessor):
               The T5 model examines factors relevant for leveraging transfer
               learning at scale from pure unsupervised pre-training to
               supervised tasks. It is discussed in much detail in
-              `Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer`
+              `Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer`_
               from Google.
 
               The available T5 models are as follows:
@@ -229,6 +229,9 @@ class PretrainedEncoder(PackProcessor):
 
         .. _`RoBERTa: A Robustly Optimized BERT Pretraining Approach`:
             https://arxiv.org/abs/1907.11692
+
+        .. _`Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer`:
+            https://arxiv.org/abs/1910.10683
 
         .. _`XLNet: Generalized Autoregressive Pretraining for Language Understanding`:
             http://arxiv.org/abs/1906.08237
