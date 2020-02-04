@@ -383,7 +383,8 @@ class CoNLLNEREvaluator(Evaluator):
         eval_script = \
             Path(os.path.abspath(__file__)).parents[1] / \
             "utils/eval_scripts/conll03eval.v2"
-        os.system(f"{eval_script} < {self.output_file} > {self.score_file}")
+        os.system(f"perl {eval_script} < {self.output_file} > "
+                  f"{self.score_file}")
         with open(self.score_file, "r") as fin:
             fin.readline()
             line = fin.readline()
