@@ -22,7 +22,6 @@ from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from forte.utils.utils import get_class
-from ft.onto.base_ontology import Sentence
 
 
 __all__ = [
