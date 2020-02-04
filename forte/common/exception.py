@@ -19,6 +19,7 @@ __all__ = [
     "PackIndexError",
     "IncompleteEntryError",
     "EntryNotFoundError",
+    "ProcessorConfigError",
 ]
 
 
@@ -38,4 +39,10 @@ class IncompleteEntryError(Exception):
 class EntryNotFoundError(ValueError):
     r"""Raise this error when the entry is not found in the data pack.
     """
+    pass
+
+
+class ProcessorConfigError(ValueError):
+    r"""Raise this error when the there is a problem with the processor config.
+        """
     pass
