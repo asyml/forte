@@ -17,6 +17,7 @@ setuptools.setup(
     long_description=long_description,
     license='Apache License Version 2.0',
     packages=setuptools.find_packages(exclude=["scripts", "examples"]),
+    include_package_data=True,
     platforms='any',
 
     install_requires=[
@@ -46,8 +47,6 @@ setuptools.setup(
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
         'spacy': ['spacy'],
         'allennlp': ['allennlp']
-    },
-    package_data={
     },
     entry_points={
           'console_scripts': [
