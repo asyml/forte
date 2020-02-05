@@ -25,8 +25,6 @@ __all__ = [
 
 
 class DummyPackProcessor(PackProcessor):
-    def __init__(self):  # pylint: disable=useless-super-delegation
-        super().__init__()
 
     def _process(self, input_pack: DataPack):
         pass

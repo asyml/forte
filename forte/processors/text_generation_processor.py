@@ -225,7 +225,7 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         return words, lengths
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {
             'max_decoding_length': 128,
             'temperature': 0.7,

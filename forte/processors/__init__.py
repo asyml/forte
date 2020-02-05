@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from forte.processors.attribute_masking_processor import *
 from forte.processors.machine_translation_processor import *
 from forte.processors.ner_predictor import *
 from forte.processors.srl_predictor import *

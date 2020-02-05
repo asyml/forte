@@ -15,7 +15,6 @@
 Writers are simply processors with the side-effect to write to the disk.
 This file provide some basic writer implementations.
 """
-
 import gzip
 import logging
 import os
@@ -25,8 +24,8 @@ from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
-from forte.data.io_utils import ensure_dir
 from forte.processors.base.base_processor import BaseProcessor
+from forte.utils.utils_io import maybe_create_dir
 
 logger = logging.getLogger(__name__)
 
@@ -54,21 +53,16 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
 
     @abstractmethod
     def sub_output_path(self, pack: PackType) -> str:
-        """
-        Allow defining output path using the information of the pack.
+        r"""Allow defining output path using the information of the pack.
+
         Args:
-            pack:
-
-        Returns:
-
+            pack: The input datapack.
         """
         raise NotImplementedError
 
     @staticmethod
-    def default_hparams():
-        """
-        This defines a basic Hparams structure
-        :return:
+    def default_configs():
+        r"""This defines a basic ``Hparams`` structure.
         """
         return {
             'output_dir': None,
@@ -81,8 +75,8 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
             raise ValueError(
                 "No concrete path provided from sub_output_path.")
 
+        maybe_create_dir(self.root_output_dir)
         p = os.path.join(self.root_output_dir, sub_path)
-        ensure_dir(p)
 
         if self.zip_pack:
             with gzip.open(p + '.gz', 'wt') as out:

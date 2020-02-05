@@ -11,24 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Forte defined exceptions.
+"""
+
+__all__ = [
+    "PackIndexError",
+    "IncompleteEntryError",
+    "EntryNotFoundError",
+    "ProcessorConfigError",
+]
 
 
 class PackIndexError(Exception):
-    """
-    Raise this error when there is a problem accessing the indexes pack data.
+    r"""Raise this error when there is a problem accessing the indexes pack
+    data.
     """
     pass
 
 
 class IncompleteEntryError(Exception):
-    """
-    Raise this error when the entry is not complete.
+    r"""Raise this error when the entry is not complete.
     """
     pass
 
 
 class EntryNotFoundError(ValueError):
+    r"""Raise this error when the entry is not found in the data pack.
     """
-    Raise this error when the entry is not found in the data pack.
-    """
+    pass
+
+
+class ProcessorConfigError(ValueError):
+    r"""Raise this error when the there is a problem with the processor config.
+        """
     pass

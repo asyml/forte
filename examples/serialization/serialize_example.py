@@ -36,7 +36,7 @@ nlp.add_processor(DocIdJsonPackWriter(), HParams(
     {
         'output_dir': '.'
     },
-    DocIdJsonPackWriter.default_hparams(),
+    DocIdJsonPackWriter.default_configs(),
 ))
 
 nlp.initialize()

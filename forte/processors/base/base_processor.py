@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-The base class of processors
+Base class for processors.
 """
+
+import itertools
+
 from abc import abstractmethod, ABC
-from typing import Optional
+from typing import Any, Dict
 
-from texar.torch import HParams
-
-from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
-from forte.process_manager import ProcessManager
-from forte.utils import get_full_module_name
+from forte.utils.utils import get_full_module_name
 from forte.pipeline_component import PipelineComponent
+from forte.process_manager import ProcessManager, ProcessJobStatus
 
 __all__ = [
     "BaseProcessor",
@@ -34,41 +34,37 @@ process_manager = ProcessManager()
 
 
 class BaseProcessor(PipelineComponent[PackType], ABC):
-    r"""The basic processor class. To be inherited by all kinds of processors
-    such as trainer, predictor and evaluator.
+    r"""Base class inherited by all kinds of processors such as trainer,
+    predictor and evaluator.
     """
 
     def __init__(self):
         self.component_name = get_full_module_name(self)
         self.selector = DummySelector()
 
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
-        r"""The pipeline will call the initialize method at the start of a
-        processing. The processor will be initialized with ``configs``,
-        and register global resources into ``resource``. The implementation
-        should set up the states of the processor.
-
-        Args:
-            resource: A global resource register. User can register
-                shareable resources here, for example, the vocabulary.
-            configs: The configuration passed in to set up this processor.
-        """
-        pass
-
     def process(self, input_pack: PackType):
         # Set the component for recording purpose.
         process_manager.set_current_component(self.component_name)
         self._process(input_pack)
 
+        # Change status for pack processors
+        q_index = process_manager.current_queue_index
+        u_index = process_manager.unprocessed_queue_indices[q_index]
+        current_queue = process_manager.current_queue
+
+        for job_i in itertools.islice(current_queue, 0, u_index + 1):
+            if job_i.status == ProcessJobStatus.UNPROCESSED:
+                job_i.set_status(ProcessJobStatus.PROCESSED)
+
     @abstractmethod
     def _process(self, input_pack: PackType):
-        r"""The main function of the processor should be implemented here. The
-        implementation of this function should process the ``input_pack``, and
-        conduct operations such as adding entries into the pack, or produce
-        some side-effect such as writing data into the disk.
+        r"""The main function of the processor. The implementation should
+        process the ``input_pack``, and conduct operations such as adding
+        entries into the pack, or produce some side-effect such as writing
+        data into the disk.
 
         Args:
-            input_pack:
+            input_pack: The input datapack.
         """
         raise NotImplementedError
 
@@ -78,8 +74,10 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         pass
 
     @staticmethod
-    def default_hparams():
-        r"""This defines a basic Hparams structure.
+    def default_configs() -> Dict[str, Any]:
+        r"""Returns a `dict` of configurations of the processor with default
+        values. Used to replace the missing values of input `configs` during
+        pipeline construction.
         """
         return {
             'selector': {

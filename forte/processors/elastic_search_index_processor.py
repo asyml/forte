@@ -40,7 +40,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         self.indexer = cls(hparams=self.config.indexer.hparams)
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         r"""Returns a dictionary of default hyperparameters.
 
         .. code-block:: python
@@ -50,7 +50,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
                 "fields": "content",
                 "indexer": {
                     "name": "ElasticSearchIndexer",
-                    "hparams": ElasticSearchIndexer.default_hparams(),
+                    "hparams": ElasticSearchIndexer.default_configs(),
                     "kwargs": {
                         "request_timeout": 10,
                         "refresh": False
@@ -81,11 +81,11 @@ class ElasticSearchIndexProcessor(IndexProcessor):
 
         """
         return {
-            **IndexProcessor.default_hparams(),
+            **IndexProcessor.default_configs(),
             "fields": ["doc_id", "content"],
             "indexer": {
                 "name": "ElasticSearchIndexer",
-                "hparams": ElasticSearchIndexer.default_hparams(),
+                "hparams": ElasticSearchIndexer.default_configs(),
                 "other_kwargs": {
                     "request_timeout": 10,
                     "refresh": False

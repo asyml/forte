@@ -23,8 +23,8 @@ import csv
 import os
 from typing import List, Iterator, Dict, Tuple
 
-from texar.torch import HParams
 from smart_open import open
+from texar.torch import HParams
 import rdflib
 
 from forte import Resources, logging
@@ -138,9 +138,9 @@ class DBpediaInfoBoxReader(PackReader):
         pass
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         """
-        This defines a basic Hparams structure
+        This defines a basic config structure
         :return:
         """
         return {

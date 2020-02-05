@@ -20,7 +20,7 @@ from typing import Any, Iterator, Dict
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.io_utils import dataset_path_iterator
+from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
@@ -42,7 +42,7 @@ class MultiPackSentenceReader(MultiPackReader):
 
     def __init__(self) -> None:
         super().__init__()
-        self.config = HParams(None, self.default_hparams())
+        self.config = HParams(None, self.default_configs())
 
     # pylint: disable=attribute-defined-outside-init
     def initialize(self, resource: Resources, configs: HParams) -> None:
@@ -93,7 +93,7 @@ class MultiPackSentenceReader(MultiPackReader):
             yield m_pack
 
     @staticmethod
-    def default_hparams() -> Dict[str, str]:
+    def default_configs() -> Dict[str, str]:
         r"""Returns a dictionary of hyperparameters with default values.
 
         .. code-block:: python

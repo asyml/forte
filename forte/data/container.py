@@ -15,7 +15,7 @@
 from abc import abstractmethod
 from typing import TypeVar, Generic, Dict, Set, Tuple
 
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.process_manager import ProcessManager
 
 E = TypeVar('E')

@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=attribute-defined-outside-init
+"""
+Index processor
+"""
 from abc import ABC
 from typing import Dict, Any, List, Tuple
 
@@ -37,12 +39,13 @@ class IndexProcessor(BaseProcessor[DataPack], ABC):
         super().__init__()
         self.documents: List[Tuple[str, str]] = []
 
+    # pylint: disable=attribute-defined-outside-init
     def initialize(self, resources: Resources, configs: HParams):
         self.resources = resources
         self.config = configs
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
+    def default_configs() -> Dict[str, Any]:
         return {
             "batch_size": 128
         }

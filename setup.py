@@ -17,6 +17,7 @@ setuptools.setup(
     long_description=long_description,
     license='Apache License Version 2.0',
     packages=setuptools.find_packages(exclude=["scripts", "examples"]),
+    include_package_data=True,
     platforms='any',
 
     install_requires=[
@@ -44,9 +45,8 @@ setuptools.setup(
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
-        'spacy': ['spacy']
-    },
-    package_data={
+        'spacy': ['spacy'],
+        'allennlp': ['allennlp']
     },
     entry_points={
           'console_scripts': [

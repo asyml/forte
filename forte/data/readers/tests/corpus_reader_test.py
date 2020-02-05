@@ -28,9 +28,7 @@ class CorpusReaderTest(unittest.TestCase):
     def setUp(self):
         self.reader = CorpusReader()
 
-        self.data_dir = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            'data_samples/ms_marco_passage_retrieval')
+        self.data_dir = 'data_samples/ms_marco_passage_retrieval'
 
         corpus_file = os.path.join(self.data_dir, 'collection.tsv')
         self.expected_content = {}

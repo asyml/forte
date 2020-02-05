@@ -20,9 +20,9 @@ import os
 import re
 from typing import Iterator
 
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.data_pack import DataPack
-from forte.data.io_utils import dataset_path_iterator
+from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
 from ft.onto.base_ontology import Document
 

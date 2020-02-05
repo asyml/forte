@@ -1,12 +1,30 @@
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Unit tests for HTMLReader
+"""
 import os
 import shutil
+import tempfile
 import unittest
 from pathlib import Path
 from ddt import ddt, data
 
 from forte.pipeline import Pipeline
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.data_pack import DataPack
+from forte.data.data_utils import maybe_download
 from forte.data.readers import HTMLReader
 
 
@@ -25,10 +43,6 @@ class HTMLReaderPipelineTest(unittest.TestCase):
         self.pl2.set_reader(HTMLReader(from_cache=True,
                                        cache_directory=self._cache_directory))
         self.pl2.initialize()
-
-        self.data_dir = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            'data_samples/html')
 
     def tearDown(self):
         shutil.rmtree(self._cache_directory)
@@ -184,13 +198,26 @@ class HTMLReaderPipelineTest(unittest.TestCase):
         self.assertEqual(content_cached, content)
 
     def test_reader_with_dir(self):
-        for pack in self.pl1.process_dataset(self.data_dir):
+        tmp_dir = tempfile.TemporaryDirectory()
+        maybe_download('https://en.wikipedia.org/wiki/Machine_learning',
+                       tmp_dir.name, 'test_wikipedia.html')
+        maybe_download('https://www.yahoo.com/',
+                       tmp_dir.name, 'test_yahoo.html')
+
+        for pack in self.pl1.process_dataset(tmp_dir.name):
             self.assertIsInstance(pack, DataPack)
 
+        tmp_dir.cleanup()
+
     def test_reader_with_filepath(self):
-        filepath = os.path.join(self.data_dir, "test_recipe.html")
+        tmp_dir = tempfile.TemporaryDirectory()
+        filepath = maybe_download('https://www.yahoo.com/',
+                                  tmp_dir.name, 'test_yahoo.html')
+
         for pack in self.pl1.process_dataset(filepath):
             self.assertIsInstance(pack, DataPack)
+
+        tmp_dir.cleanup()
 
     @data(
         ["<title>The Original Title </title>",
