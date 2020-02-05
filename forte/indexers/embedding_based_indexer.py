@@ -50,7 +50,7 @@ class EmbeddingBasedIndexer:
     def __init__(self, hparams: Optional[Union[Dict, HParams]] = None):
         super().__init__()
         self._hparams = HParams(hparams=hparams,
-                                default_hparams=self.default_hparams())
+                                default_hparams=self.default_configs())
         self._meta_data: Dict[int, str] = {}
 
         index_type = self._hparams.index_type
@@ -82,8 +82,8 @@ class EmbeddingBasedIndexer:
             self._index = index_class(dim)
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
-        r"""Returns a dictionary of default hyperparameters.
+    def default_configs() -> Dict[str, Any]:
+        r"""Returns a dictionary of default configs.
 
         .. code-block:: python
 

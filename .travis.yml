@@ -44,9 +44,7 @@ script:
   # needed for test cases
   - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker words
   - export PYTHONPATH=`pwd`
-  # unit tests
-  - pytest
-  # test coverage
+  # unit tests & test coverage
   - coverage run -m pytest
 
 after_success:
