@@ -76,7 +76,7 @@ class Sentence(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._sentiment: Optional[Dict[str, float]] = None
+        self._sentiment: Dict[str, float] = {}
 
     @property
     def sentiment(self):
