@@ -20,7 +20,7 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
         for pack in pl.process_dataset("data_samples/conll03/"):
             entries = pack.get_entries_by_type(Token)
             for entry in entries:
-                self.assertIsNotNone(entry.get_field("ner"))
+                self.assertIsNotNone(entry.ner)
 
     def test_attribute_masker(self):
         pl = Pipeline()
@@ -37,4 +37,4 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
         for pack in pl.process_dataset("data_samples/conll03/"):
             entries = pack.get_entries_by_type(Token)
             for entry in entries:
-                self.assertIsNone(entry.get_field("ner"))
+                self.assertIsNone(entry.ner)
