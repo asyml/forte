@@ -27,10 +27,6 @@ __all__ = [
 
 class AttributeMasker(PackProcessor):
 
-    # pylint: disable=useless-super-delegation
-    def __init__(self):
-        super().__init__()
-
     # pylint: disable=attribute-defined-outside-init
     def initialize(self, _: Resources, config: HParams):
         self.fields = config.kwargs

@@ -20,7 +20,7 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
         for pack in pl.process_dataset("data_samples/conll03/"):
             entries = pack.get_entries_by_type(Token)
             for entry in entries:
-                self.assertIsNotNone(entry.ner)
+                self.assertIsNotNone(entry.get_field("ner"))
 
     def test_attribute_masker(self):
         pl = Pipeline()
@@ -31,11 +31,10 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
             }
         }
 
-        config = HParams(config, AttributeMasker.default_configs())
         pl.add_processor(processor=AttributeMasker(), config=config)
         pl.initialize()
 
         for pack in pl.process_dataset("data_samples/conll03/"):
             entries = pack.get_entries_by_type(Token)
             for entry in entries:
-                self.assertIsNone(entry.ner)
+                self.assertIsNone(entry.get_field("ner"))
