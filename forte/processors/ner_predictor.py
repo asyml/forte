@@ -287,9 +287,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
     # TODO: change this to manageable size
     @staticmethod
     def default_configs():
-        r"""
-        Default config for NER Predictor
-        """
+        r"""Default config for NER Predictor"""
+
         return {
             "config_data": {
                 "train_path": "",

@@ -18,7 +18,7 @@ import os
 from typing import Dict, List, Iterator, Any, Tuple
 
 from forte.common.types import ReplaceOperationsType
-from forte.data.base import Span
+from forte.data.span import Span
 
 __all__ = [
     "batch_instances",

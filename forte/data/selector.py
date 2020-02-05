@@ -15,15 +15,26 @@
 This defines some selector interface used as glue to combine
 DataPack/multiPack processors and Pipeline.
 """
-import re
 from typing import Generic, Iterator, TypeVar
 
-from forte.data import BasePack
-from forte.data import DataPack
-from forte.data import MultiPack
+import re
+
+from forte.data.base_pack import BasePack
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 
 InputPackType = TypeVar('InputPackType', bound=BasePack)
 OutputPackType = TypeVar('OutputPackType', bound=BasePack)
+
+__all__ = [
+    "Selector",
+    "DummySelector",
+    "SinglePackSelector",
+    "NameMatchSelector",
+    "RegexNameMatchSelector",
+    "FirstPackSelector",
+    "AllPackSelector",
+]
 
 
 class Selector(Generic[InputPackType, OutputPackType]):
@@ -35,8 +46,8 @@ class Selector(Generic[InputPackType, OutputPackType]):
 
 
 class DummySelector(Selector[InputPackType, InputPackType]):
-    r"""Do nothing, return the data pack itself, which can be either DataPack or
-    MultiPack
+    r"""Do nothing, return the data pack itself, which can be either
+    :class:`DataPack` or :class:`MultiPack`.
     """
 
     def select(self, pack: InputPackType) -> Iterator[InputPackType]:
@@ -44,12 +55,15 @@ class DummySelector(Selector[InputPackType, InputPackType]):
 
 
 class SinglePackSelector(Selector[MultiPack, DataPack]):
+
     def select(self, pack: MultiPack) -> Iterator[DataPack]:
         raise NotImplementedError
 
 
 class NameMatchSelector(SinglePackSelector):
-    r"""Select a DataPack from a MultiPack with specified name"""
+    r"""Select a :class:`DataPack` from a :class:`MultiPack` with specified
+    name.
+    """
 
     def __init__(self, select_name: str):
         super().__init__()
@@ -69,8 +83,7 @@ class NameMatchSelector(SinglePackSelector):
 
 
 class RegexNameMatchSelector(SinglePackSelector):
-    r"""
-    Select a DataPack from a MultiPack using a regex.
+    r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex.
     """
     def __init__(self, select_name: str):
         super().__init__()
@@ -80,7 +93,6 @@ class RegexNameMatchSelector(SinglePackSelector):
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
             raise ValueError("Multi-pack is empty")
-
         else:
             for name, pack in m_pack.iter_packs():
                 if re.match(self.select_name, name):
@@ -88,7 +100,7 @@ class RegexNameMatchSelector(SinglePackSelector):
 
 
 class FirstPackSelector(SinglePackSelector):
-    r"""Select the first entry from the multi-pack and yield it.
+    r"""Select the first entry from :class:`MultiPack` and yield it.
     """
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
@@ -100,7 +112,7 @@ class FirstPackSelector(SinglePackSelector):
 
 
 class AllPackSelector(SinglePackSelector):
-    r"""Select all the packs from the multi-pack and yield them
+    r"""Select all the packs from :class:`MultiPack` and yield them.
     """
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:

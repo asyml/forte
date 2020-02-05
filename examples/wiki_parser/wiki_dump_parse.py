@@ -125,7 +125,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
             'nif_page_structure': nif_page_structure,
             'nif_text_links': nif_text_links,
         },
-        DBpediaWikiReader.default_hparams()
+        DBpediaWikiReader.default_configs()
     ))
 
     nif_pl.add_processor(WikiArticleWriter(), config=HParams(
@@ -133,7 +133,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
             'output_dir': raw_pack_dir,
             'zip_pack': True,
         },
-        WikiArticleWriter.default_hparams()
+        WikiArticleWriter.default_configs()
     ))
 
     nif_pl.initialize()
@@ -151,7 +151,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
             'mapping_objects': mapping_objects,
             'reading_log': os.path.join(output_path, 'infobox.log')
         },
-        DBpediaInfoBoxReader.default_hparams()
+        DBpediaInfoBoxReader.default_configs()
     ))
 
     ib_pl.add_processor(WikiArticleWriter(), config=HParams(
@@ -159,7 +159,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
             'output_dir': os.path.join(output_path, 'nif_info_box'),
             'zip_pack': True,
         },
-        WikiArticleWriter.default_hparams()
+        WikiArticleWriter.default_configs()
     ))
 
     # Now we run the info box pipeline.

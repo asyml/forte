@@ -22,7 +22,7 @@ from pathlib import Path
 from ddt import ddt, data
 
 from forte.pipeline import Pipeline
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.data.data_utils import maybe_download
 from forte.data.readers import HTMLReader

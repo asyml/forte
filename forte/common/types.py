@@ -14,7 +14,7 @@
 
 from typing import Dict, List, Tuple, Type, Union
 
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.ontology.core import Entry, EntryType, GroupType, LinkType
 
 __all__ = [

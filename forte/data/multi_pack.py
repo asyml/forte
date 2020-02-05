@@ -24,7 +24,7 @@ from forte.data.index import BaseIndex
 from forte.data.ontology.top import (
     Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries)
 from forte.data.ontology.core import Entry
-from forte.data.base import Span
+from forte.data.span import Span
 
 logger = logging.getLogger(__name__)
 

@@ -14,15 +14,11 @@
 """
 Unit tests for Selector
 """
-import logging
-import os
 import unittest
 
 from forte.data import DataPack, MultiPack
 from forte.data.selector import NameMatchSelector, RegexNameMatchSelector, \
     FirstPackSelector, AllPackSelector
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 class SelectorTest(unittest.TestCase):
@@ -62,3 +58,7 @@ class SelectorTest(unittest.TestCase):
         doc_ids = ["1", "2", "Three"]
         for doc_id, pack in zip(doc_ids, packs):
             self.assertEqual(doc_id, pack.meta.doc_id)
+
+
+if __name__ == '__main__':
+    unittest.main()

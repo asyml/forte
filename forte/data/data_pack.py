@@ -22,10 +22,10 @@ from sortedcontainers import SortedList
 from forte.common.types import EntryType, ReplaceOperationsType, DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import (
-    Annotation, Link, Group, SinglePackEntries, Generic, Query)
+    Annotation, Link, Group, SinglePackEntries, Generics, Query)
 from forte.data import data_utils_io
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.annotations: SortedList[Annotation] = SortedList()
         self.links: List[Link] = []
         self.groups: List[Group] = []
-        self.generics: List[Generic] = []
+        self.generics: List[Generics] = []
 
         self.replace_back_operations: ReplaceOperationsType = []
         self.processed_original_spans: List[Tuple[Span, Span]] = []
@@ -375,6 +375,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         begin = 0
 
         if isinstance(entry, Annotation):
+            logger.warning("Please note that deleting an annotation doesn't "
+                           "guarantee deletion of all the associated links and "
+                           "groups. Please delete them manually to avoid any "
+                           "unexpected behavior.")
             target = self.annotations
             begin = target.bisect_left(entry)
         elif isinstance(entry, Link):

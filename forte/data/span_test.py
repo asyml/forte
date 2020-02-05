@@ -12,26 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Utils for unit tests.
+Unit test for Span.
 """
 
-import os
 import unittest
 
-__all__ = [
-    "performance_test",
-    "pretrained_test",
-]
+from forte.data.span import Span
 
 
-def define_skip_condition(flag: str, explanation: str):
-    return unittest.skipUnless(
-        os.environ.get(flag, 0) or os.environ.get('TEST_ALL', 0),
-        explanation + f" Set `{flag}=1` or `TEST_ALL=1` to run.")
+class SpanTest(unittest.TestCase):
+
+    def test_span(self):
+        span1 = Span(1, 2)
+        span2 = Span(1, 2)
+        self.assertEqual(span1, span2)
+
+        span1 = Span(1, 2)
+        span2 = Span(1, 3)
+        self.assertLess(span1, span2)
+
+        span1 = Span(1, 2)
+        span2 = Span(2, 3)
+        self.assertLess(span1, span2)
 
 
-performance_test = define_skip_condition(
-    'TEST_PERFORMANCE', "Test the performance of Forte modules.")
-
-pretrained_test = define_skip_condition(
-    'TEST_PRETRAINED', "Test requires loading pre-trained checkpoints.")
+if __name__ == '__main__':
+    unittest.main()
