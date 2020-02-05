@@ -1,4 +1,4 @@
-"""This module tests Query Creator processor."""
+"""This module tests Attribute Masking processor."""
 import unittest
 import os
 

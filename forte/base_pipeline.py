@@ -46,13 +46,20 @@ process_manager = ProcessManager()
 
 class ProcessJob:
 
+    counter = itertools.count(0)
+
     def __init__(self, pack: Optional[PackType], is_poison: bool):
         self.__pack: Optional[PackType] = pack
         self.__is_poison: bool = is_poison
         self.__status = ProcessJobStatus.UNPROCESSED
+        self.__id = next(ProcessJob.counter)
 
     def set_status(self, status):
         self.__status = status
+
+    @property
+    def id(self):
+        return self.__id
 
     @property
     def pack(self) -> PackType:
@@ -85,14 +92,13 @@ class ProcessBuffer:
                 raise StopIteration
             try:
                 job_pack = next(self.__data_iter)
+                job = ProcessJob(job_pack, False)
 
                 pipeline = process_manager.current_pipeline
-
                 if pipeline.evaluator:
                     gold_copy = job_pack.view()
-                    pipeline.add_gold_packs({job_pack: gold_copy})
+                    pipeline.add_gold_packs({job.id: gold_copy})
 
-                job = ProcessJob(job_pack, False)
                 process_manager.add_to_queue(queue_index=0, job=job)
                 process_manager.set_current_queue_index(queue_index=0)
                 process_manager.set_current_processor_index(processor_index=0)
@@ -131,7 +137,7 @@ class BasePipeline(Generic[PackType]):
         self._evaluator_config: Optional[HParams] = None
 
         # needed for evaluator
-        self._predict_to_gold: Dict[PackType, PackType] = {}
+        self._predict_to_gold: Dict[int, PackType] = {}
 
         if resource is None:
             self.resource = Resources()
@@ -225,6 +231,13 @@ class BasePipeline(Generic[PackType]):
         self._evaluator_config = config
 
     def add_gold_packs(self, pack):
+        r"""Add gold packs to the dictionary. This dictionary is used by the
+        evaluator while calling `consume_next(...)`
+
+        Args:
+            pack (Dict): A key, value pair containing job.id -> gold_pack
+                mapping
+        """
         self._predict_to_gold.update(pack)
 
     def process(self, *args, **kwargs) -> PackType:
@@ -479,8 +492,8 @@ class BasePipeline(Generic[PackType]):
                                         if self._evaluator:
                                             self._evaluator.consume_next(
                                                 job_i.pack,
-                                                self._predict_to_gold[job_i.pack])
-                                            del self._predict_to_gold[job_i.pack]
+                                                self._predict_to_gold[job_i.id])
+                                            del self._predict_to_gold[job_i.id]
                                         yield job_i.pack
 
                                     else:
@@ -530,8 +543,8 @@ class BasePipeline(Generic[PackType]):
                                         if self._evaluator:
                                             self._evaluator.consume_next(
                                                 job_i.pack,
-                                                self._predict_to_gold[job_i.pack])
-                                            del self._predict_to_gold[job_i.pack]
+                                                self._predict_to_gold[job_i.id])
+                                            del self._predict_to_gold[job_i.id]
                                         yield job_i.pack
 
                                     else:
@@ -581,8 +594,8 @@ class BasePipeline(Generic[PackType]):
                         if not job.is_poison and should_yield:
                             if self._evaluator:
                                 self._evaluator.consume_next(
-                                    job.pack, self._predict_to_gold[job.pack])
-                                del self._predict_to_gold[job.pack]
+                                    job.pack, self._predict_to_gold[job.id])
+                                del self._predict_to_gold[job.id]
                             yield job.pack
 
                         elif not should_yield:
