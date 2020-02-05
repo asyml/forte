@@ -16,7 +16,7 @@ __all__ = [
     "VaderSentimentProcessor",
 ]
 
-from texar.tf import HParams
+from texar.torch import HParams
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from forte import Resources
