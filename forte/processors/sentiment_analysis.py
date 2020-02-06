@@ -50,6 +50,7 @@ class VaderSentimentProcessor(PackProcessor):
         self.analyzer = SentimentIntensityAnalyzer()
 
     def initialize(self, resource: Resources, configs: HParams):
+        # pylint: disable=unused-argument
         self.sentence_component = configs.get('sentence_component')
 
     def _process(self, input_pack: DataPack):
