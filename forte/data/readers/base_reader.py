@@ -21,6 +21,8 @@ from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
+import jsonpickle
+
 from forte.common.resources import Resources
 from forte.common.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
@@ -252,7 +254,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         logger.info("reading from cache file %s", cache_filename)
         with cache_filename.open("r") as cache_file:
             for line in cache_file:
-                pack = self.deserialize_instance(line.strip())
+                pack = jsonpickle.decode(line.strip())
                 if not isinstance(pack, self.pack_type):
                     raise TypeError(f"Pack deserialized from {cache_filename} "
                                     f"is {type(pack)},"

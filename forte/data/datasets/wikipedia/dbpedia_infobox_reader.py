@@ -23,10 +23,11 @@ import csv
 import os
 from typing import List, Iterator, Dict, Tuple
 
+import jsonpickle
+import rdflib
+
 from smart_open import open
 from texar.torch import HParams
-import rdflib
-import jsonpickle
 
 from forte import Resources, logging
 from forte.data import DataPack
