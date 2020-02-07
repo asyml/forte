@@ -29,8 +29,7 @@ __all__ = [
 
 
 class ConllUDReader(PackReader):
-    """
-    :class:`conllUReader` is designed to read in the Universal Dependencies
+    r""":class:`conllUReader` is designed to read in the Universal Dependencies
     2.4 dataset.
     """
 
@@ -41,8 +40,7 @@ class ConllUDReader(PackReader):
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument
-        """
-        Iterator over conll files in the data_source
+        r"""Iterator over conll files in the data_source.
 
         Args:
             args: args[0] is the directory to the conllu files.
