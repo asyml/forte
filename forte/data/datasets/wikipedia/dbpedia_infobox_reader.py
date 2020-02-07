@@ -26,6 +26,7 @@ from typing import List, Iterator, Dict, Tuple
 from smart_open import open
 from texar.torch import HParams
 import rdflib
+import jsonpickle
 
 from forte import Resources, logging
 from forte.data import DataPack
@@ -123,7 +124,7 @@ class DBpediaInfoBoxReader(PackReader):
 
             if os.path.exists(pack_path):
                 with open(pack_path) as pack_file:
-                    pack = self.deserialize_instance(pack_file.read())
+                    pack = jsonpickle.decode(pack_file.read())
 
                     add_info_boxes(pack, info_box_data['literals'], 'literal')
                     add_info_boxes(pack, info_box_data['objects'], 'object')

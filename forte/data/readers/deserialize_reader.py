@@ -14,6 +14,8 @@
 
 from typing import Iterator, List
 
+import jsonpickle
+
 from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -36,4 +38,4 @@ class DeserializeReader(PackReader):
         yield from data_packs
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
-        yield self.deserialize_instance(data_source)
+        yield jsonpickle.decode(data_source)
