@@ -16,9 +16,10 @@ Base reader type to be inherited by all readers.
 """
 import logging
 import os
+
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Iterator, Optional, Any
+from typing import Any, Iterator, Optional
 
 import jsonpickle
 
@@ -29,12 +30,12 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.pipeline_component import PipelineComponent
 from forte.process_manager import ProcessManager
-from forte.utils import get_full_module_name
+from forte.utils.utils import get_full_module_name
 
 __all__ = [
     "BaseReader",
     "PackReader",
-    'MultiPackReader'
+    'MultiPackReader',
 ]
 
 logger = logging.getLogger(__name__)
@@ -43,33 +44,31 @@ process_manager = ProcessManager()
 
 
 class BaseReader(PipelineComponent[PackType], ABC):
-    """
-        The basic data reader class.
-        To be inherited by all data readers.
+    r"""The basic data reader class. To be inherited by all data readers.
+
+    Args:
+        from_cache (bool, optional): Decide whether to read from cache
+            if cache file exists. By default (``False``), the reader will
+            only read from the original file and use the cache file path
+            for caching, it will not read from the ``cache_directory``.
+            If ``True``, the reader will try to read a datapack from the
+            caching file.
+        cache_directory (str, optional): The base directory to place the
+            path of the caching files. Each collection is contained in one
+            cached file, under this directory. The cached location for each
+            collection is computed by :meth:`_cache_key_function`. Note:
+            A collection is the data returned by :meth:`_collect`.
+        append_to_cache (bool, optional): Decide whether to append write
+            if cache file already exists.  By default (``False``), we
+            will overwrite the existing caching file. If ``True``, we will
+            cache the datapack append to end of the caching file.
     """
 
     def __init__(self,
                  from_cache: bool = False,
                  cache_directory: Optional[str] = None,
                  append_to_cache: bool = False):
-        """
-        Args:
-            from_cache (bool, optional): Decide whether to read from cache
-                if cache file exists. By default (``False``), the reader will
-                only read from the original file and use the cache file path
-                for caching, it will not read from the cache_directory.
-                If ``True``, the reader will try to read a datapack from the
-                caching file.
-            cache_directory (str, optional): The base directory to place the
-                path of the caching files. Each collection is contained in one
-                cached file, under this directory. The cached location for each
-                collection is computed by :meth:`_cache_key_function`. Note:
-                A collection is the data returned by :meth:`_collect`.
-            append_to_cache (bool, optional): Decide whether to append write
-                if cache file already exists.  By default (``False``), we
-                will overwrite the existing caching file. If ``True``, we will
-                cache the datapack append to end of the caching file.
-        """
+
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
@@ -77,7 +76,19 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
     @staticmethod
     def default_configs():
-        return {}
+        r"""Returns a `dict` of configurations of the reader with default
+        values. Used to replace the missing values of input `configs`
+        during pipeline construction.
+
+        .. code-block:: python
+
+            {
+                "name": "reader"
+            }
+        """
+        return {
+            'name': 'reader'
+        }
 
     @property
     def pack_type(self):
