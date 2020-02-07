@@ -1,7 +1,7 @@
 To cite Forte, please refer to the following unpublished manuscript at this moment.
 
 @unpublished{Liu2020,
-author = {Liu, Zhengzhong and Bukkittu, Avinash and Gupta, Mansi and Gao, Pengzhi and Singhavi, Swapnil and Ahmed, Atif and Wei, Wei and Hu1, Zecong and Shi, Haoran and Xing, Eric P. and Hu, Zhiting},
+author = {Liu, Zhengzhong and Bukkittu, Avinash and Gupta, Mansi and Gao, Pengzhi and Singhavi, Swapnil and Ahmed, Atif and Wei, Wei and Hu, Zecong and Shi, Haoran and Xing, Eric P. and Hu, Zhiting},
 title = {{Forte: Composing Diverse NLP tools For Text Retrieval, Analysis and Generation}},
 year = {2020}
 }
