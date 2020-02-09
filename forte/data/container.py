@@ -11,12 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Forte Container module.
+"""
 
 from abc import abstractmethod
-from typing import TypeVar, Generic, Dict, Set, Tuple
+from typing import Dict, Generic, Set, Tuple, TypeVar
 
 from forte.data.span import Span
 from forte.process_manager import ProcessManager
+
+__all__ = [
+    "IdManager",
+    "EntryContainer",
+]
 
 E = TypeVar('E')
 L = TypeVar('L')
@@ -54,13 +62,12 @@ class EntryContainer(Generic[E, L, G]):
 
     def __getstate__(self):
         r"""In serialization:
-            - We create a special field for serialization information
-            - we don't serialize the IdManager object directly, instead we save
-            the max count in the serialization information dict.
+            - We create a special field for serialization information.
+            - we don't serialize the :class:`IdManager` directly, instead we
+              save the max count in the serialization information dictionary.
         """
         state = self.__dict__.copy()
         state['serialization'] = {}
-        # TODO: need test cases here.
         state['serialization']['next_id'] = \
             self._id_manager.current_id_counter()
         state.pop('_id_manager')
@@ -68,7 +75,7 @@ class EntryContainer(Generic[E, L, G]):
 
     def __setstate__(self, state):
         r"""In deserialization,
-            - The IdManager is recreated from the id count.
+            - The :class:`IdManager` is recreated from the id count.
         """
         self._id_manager = IdManager(state['serialization']['next_id'])
         self.__dict__.update(state)
@@ -76,7 +83,6 @@ class EntryContainer(Generic[E, L, G]):
 
     def add_entry_creation_record(self, entry_id: int):
         c = process_manager.component
-
         try:
             self.creation_records[c].add(entry_id)
         except KeyError:
@@ -98,8 +104,6 @@ class EntryContainer(Generic[E, L, G]):
 
         Args:
             item: The entry itself.
-
-        Returns:
         """
         raise NotImplementedError
 
