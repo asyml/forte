@@ -48,3 +48,7 @@ class CorpusReaderTest(unittest.TestCase):
             actual_content[data_pack.meta.doc_id] = doc_entry.text
 
         self.assertDictEqual(actual_content, self.expected_content)
+
+
+if __name__ == '__main__':
+    unittest.main()

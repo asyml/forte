@@ -29,8 +29,7 @@ __all__ = [
 
 
 class StringReader(PackReader):
-    """
-    :class:`StringReader` is designed to read in a list of string variables.
+    r""":class:`StringReader` is designed to read in a list of string variables.
     """
     # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
@@ -38,9 +37,8 @@ class StringReader(PackReader):
 
     def _collect(self,  # type: ignore
                  string_data: Union[List[str], str]) -> Iterator[str]:
-        """
-        data_strings should be of type `List[str]`
-        which is the list of raw text strings to iterate over
+        r"""``string`_data` should be of type `List[str]`,
+        which is the list of raw text strings to iterate over.
         """
         # This allows the user to pass in either one single string or a list of
         # strings.
@@ -50,13 +48,12 @@ class StringReader(PackReader):
             yield data
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
-        """
-        Takes a raw string and converts into a DataPack
+        r"""Takes a raw string and converts into a :class:`DataPack`.
 
         Args:
-            data_source: str that contains text of a document
+            data_source: str that contains text of a document.
 
-        Returns: DataPack containing Document.
+        Returns: :class:`DataPack` containing Document.
         """
         pack = DataPack()
 

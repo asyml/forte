@@ -61,12 +61,14 @@ class CorpusReader(PackReader):
                 yield doc_id, doc_content
 
     def _parse_pack(self, doc_info: Tuple[str, str]) -> Iterator[DataPack]:
-        """
-        Takes the `doc_info` returned by the `_collect` method and returns a
+        r"""Takes the `doc_info` returned by the `_collect` method and returns a
         `data_pack` that either contains entry of the type `Query`, or contains
         an entry of the type Document.
-        :param doc_info: document info to be populated in the data_pack
-        :return: query or document data_pack
+
+        Args:
+            doc_info: document info to be populated in the data_pack.
+
+        Returns: query or document data_pack.
         """
         data_pack: DataPack = DataPack()
 
