@@ -25,6 +25,7 @@ from forte.data.data_pack import DataPack
 
 
 class MSMarcoPassageReaderTest(unittest.TestCase):
+
     def setUp(self):
         self.reader = MSMarcoPassageReader()
 
@@ -48,3 +49,7 @@ class MSMarcoPassageReaderTest(unittest.TestCase):
             actual_content[data_pack.meta.doc_id] = doc_entry.text
 
         self.assertDictEqual(actual_content, self.expected_content)
+
+
+if __name__ == "__main__":
+    unittest.main()
