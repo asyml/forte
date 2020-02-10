@@ -15,7 +15,6 @@
 import subprocess
 import sys
 from importlib import import_module
-from distutils.util import strtobool
 import logging
 
 from scispacy.umls_linking import UmlsEntityLinker
@@ -36,8 +35,6 @@ __all__ = [
 
 BASE_URL_STRING = 'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/'
 
-# install('https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz')
-
 
 class ScispaCyUMLSEntityLinker(PackProcessor):
     """
@@ -53,16 +50,23 @@ class ScispaCyUMLSEntityLinker(PackProcessor):
         self.allow_parallel_entries: bool = True
 
     def create_url(self):
-        return BASE_URL_STRING + f'v/{self.model_version}/{self.model_name}' \
+        return BASE_URL_STRING + f'v{self.model_version}/{self.model_name}' \
             f'-{self.model_version}.tar.gz'
 
     @staticmethod
     def install(package):
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        """ Install given scispacy model.
+        """
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", package])
 
     def set_up(self):
-        self.install(self.create_url())
-        scispacy_model = import_module(self.model_name)
+        try:
+            scispacy_model = import_module(self.model_name)
+        except ModuleNotFoundError:
+            print("Downloading scispaCy model.. This might take some time.")
+            self.install(self.create_url())
+            scispacy_model = import_module(self.model_name)
+        print("scispaCy model loaded..")
         self.nlp = scispacy_model.load()
         linker = UmlsEntityLinker(resolve_abbreviations=self.resolve_abbr)
         self.nlp.add_pipe(linker)
@@ -97,10 +101,7 @@ class ScispaCyUMLSEntityLinker(PackProcessor):
                                'are False, processor will only run if there '
                                'are no existing conflicting entries.')
 
-        try:
-            self.resolve_abbr = strtobool(configs.resolve_abbreviations)
-        except ValueError:
-            self.resolve_abbr = False
+        self.resolve_abbr = configs.resolve_abbreviations
         self.set_up()
 
     @staticmethod
@@ -127,12 +128,12 @@ class ScispaCyUMLSEntityLinker(PackProcessor):
         for entity in processed_doc.ents:
             linked_entity = LinkedMention(input_pack, entity.start_char,
                                           entity.end_char)
-            linked_entity.kb('UMLS')
+            linked_entity.kb = 'UMLS'
             cand_entities = {}
             for umls_ent in entity._.umls_ents:
                 cand_entities[umls_ent[0]] = umls_ent[1]  # K = CUI, V = score
 
-            linked_entity.linked_kb_ids(cand_entities)
+            linked_entity.linked_kb_ids = cand_entities
             input_pack.add_entry(linked_entity)
 
     def _process_existing_entries(self, input_pack):
