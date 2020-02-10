@@ -14,8 +14,6 @@
 
 from typing import Iterator, List
 
-import jsonpickle
-
 from texar.torch import HParams
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
