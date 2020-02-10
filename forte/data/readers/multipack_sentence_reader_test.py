@@ -19,7 +19,6 @@ import tempfile
 import unittest
 
 from ddt import ddt, data, unpack
-from texar.torch import HParams
 
 from forte.data.readers import MultiPackSentenceReader
 from forte.pipeline import Pipeline

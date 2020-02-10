@@ -30,13 +30,11 @@ __all__ = [
 
 
 class CoNLL03Reader(PackReader):
-    """
-    :class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
+    r""":class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
     """
 
     def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
-        """
-        Iterator over conll files in the data_source
+        r"""Iterator over conll files in the data_source.
 
         Args:
             conll_directory: directory to the conll files.

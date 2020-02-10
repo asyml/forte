@@ -28,10 +28,9 @@ from typing import Iterator, Tuple
 
 from texar.torch import HParams
 
+from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from forte.common.resources import Resources
-
 from ft.onto.base_ontology import Document
 
 __all__ = [
@@ -61,12 +60,14 @@ class MSMarcoPassageReader(PackReader):
                 yield doc_id, doc_content
 
     def _parse_pack(self, doc_info: Tuple[str, str]) -> Iterator[DataPack]:
-        """
-        Takes the `doc_info` returned by the `_collect` method and returns a
+        r"""Takes the `doc_info` returned by the `_collect` method and returns a
         `data_pack` that either contains entry of the type `Query`, or contains
         an entry of the type Document.
-        :param doc_info: document info to be populated in the data_pack
-        :return: query or document data_pack
+
+        Args:
+            doc_info: document info to be populated in the data_pack.
+
+        Returns: query or document data_pack.
         """
         data_pack: DataPack = DataPack()
 
