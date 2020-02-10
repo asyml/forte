@@ -14,7 +14,7 @@
 
 from collections import deque
 from enum import Enum
-from typing import cast, Deque, List, Optional
+from typing import Deque, List, Optional
 
 __all__ = [
     "ProcessManager",
@@ -36,7 +36,7 @@ class ProcessManager:
         def __init__(self):
             self.current_component: str = '__default__'
             self.pipeline_length: int
-            self.queues: List[List[Deque[int]]]
+            self.queues: List[Deque[int]]
             self.current_queue_index: int
             self.current_processor_index: int
             self.unprocessed_queue_indices: List[int]
@@ -56,7 +56,7 @@ class ProcessManager:
         - pipeline_length (int): The length of the current pipeline being
             executed
 
-        - queues (List[List[int]]): A list of queues which hold the jobs for
+        - queues (List[Deque[int]]): A list of queues which hold the jobs for
             each processors. The size of this list is equal to pipeline
             length
 
@@ -99,15 +99,31 @@ class ProcessManager:
         """
         if self.instance is not None:
             self.instance.pipeline_length = pipeline_length
-            self.instance.queues = \
-                cast(List[List[Deque[int]]],
-                     [deque() for _ in range(pipeline_length)])
+            self.instance.queues = [deque() for _ in range(pipeline_length)]
             self.instance.current_queue_index = -1
             self.instance.current_processor_index = 0
             self.instance.unprocessed_queue_indices = [0] * pipeline_length
             self.instance.processed_queue_indices = [-1] * pipeline_length
         else:
             raise AttributeError("The process manager is not initialized.")
+
+    def set_current_pipeline(self, pipeline):
+        r"""Set the current pipeline.
+
+        Args:
+            pipeline (Pipeline): The current pipeline to be executed
+        """
+        # In the current design, :class:`ProcessManager` holds all the state
+        # variables related to a pipeline. As an extension,
+        # :class:`ProcessManager` also holds the reference to the current
+        # pipeline being executed. This will be useful in places where any class
+        # needs to access the pipeline through :class:`ProcessManager`. As a
+        # concrete example, take a look at
+        # :class:`forte.base_pipeline.ProcessBuffer`
+        if self.instance is not None:
+            self.instance.current_pipeline = pipeline
+        else:
+            raise AttributeError('The process manager is not initialized.')
 
     def set_current_component(self, component_name: str):
         r"""Set the current component
@@ -135,6 +151,13 @@ class ProcessManager:
                 raise ValueError(f"{queue_index} exceeds the pipeline range "
                                  f"[0, {self.pipeline_length - 1}]")
             self.instance.current_queue_index = queue_index
+        else:
+            raise AttributeError("The process manager is not initialized.")
+
+    @property
+    def current_pipeline(self):
+        if self.instance is not None:
+            return self.instance.current_pipeline
         else:
             raise AttributeError("The process manager is not initialized.")
 

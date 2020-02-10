@@ -74,8 +74,21 @@ class Sentence(Annotation):
         begin (int): The offset of the first character in the sentence.
         end (int): The offset of the last character in the sentence + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self._sentiment: Dict[str, float] = {}
+
+    @property
+    def sentiment(self):
+        return self._sentiment
+
+    @sentiment.setter
+    def sentiment(self, scores: Dict[str, float]):
+        self._sentiment = scores
+
+    def add_sentiment(self, key: str, value: float):
+        self._sentiment[key] = value
 
 
 class Document(Annotation):
@@ -87,6 +100,7 @@ class Document(Annotation):
         begin (int): The offset of the first character in the document.
         end (int): The offset of the last character in the document + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -164,6 +178,7 @@ class PredicateArgument(Annotation):
         end (int): The offset of the last character in the predicate argument
             + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -281,6 +296,7 @@ class Utterance(Annotation):
         end (int): The offset of the last character in the entity mention + 1.
 
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.seq_num: str

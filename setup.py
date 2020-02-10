@@ -17,6 +17,7 @@ setuptools.setup(
     long_description=long_description,
     license='Apache License Version 2.0',
     packages=setuptools.find_packages(exclude=["scripts", "examples"]),
+    include_package_data=True,
     platforms='any',
 
     install_requires=[
@@ -38,15 +39,15 @@ setuptools.setup(
     extras_require={
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions', 'allennlp'],
+        'sentiment': ['vaderSentiment'],
         'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
-        'spacy': ['spacy']
-    },
-    package_data={
+        'spacy': ['spacy'],
+        'allennlp': ['allennlp']
     },
     entry_points={
           'console_scripts': [

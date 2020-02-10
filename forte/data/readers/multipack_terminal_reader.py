@@ -50,10 +50,6 @@ class MultiPackTerminalReader(MultiPackReader):
         return "cached_string_file"
 
     def _collect(self) -> Iterator[str]:  # type: ignore
-        """
-        data_strings should be of type `List[str]`
-        which is the list of raw text strings to iterate over
-        """
         # This allows the user to pass in either one single string or a list of
         # strings.
         while True:
@@ -67,14 +63,12 @@ class MultiPackTerminalReader(MultiPackReader):
                 break
 
     def _parse_pack(self, data_source: str) -> Iterator[MultiPack]:
-        """
-        Takes a raw string and converts into a MultiPack
+        r"""Takes a raw string and converts into a MultiPack.
 
         Args:
-            data_source: str that contains text of a document
+            data_source: str that contains text of a document.
 
-        Returns: MultiPack containing a datapack for the current query
-
+        Returns: MultiPack containing a datapack for the current query.
         """
 
         multi_pack = MultiPack()
