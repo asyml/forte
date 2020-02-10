@@ -38,4 +38,4 @@ class DeserializeReader(PackReader):
         yield from data_packs
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
-        yield jsonpickle.decode(data_source)
+        yield DataPack.deserialize(data_source)

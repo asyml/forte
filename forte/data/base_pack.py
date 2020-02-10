@@ -130,6 +130,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         r"""Serializes a pack to a string."""
         return jsonpickle.encode(self, unpicklable=True)
 
+    @classmethod
+    def deserialize(cls, string: str):
+        r"""Deserialize a pack from a string.
+        """
+        return jsonpickle.decode(string)
+
     def view(self):
         return copy.deepcopy(self)
 
