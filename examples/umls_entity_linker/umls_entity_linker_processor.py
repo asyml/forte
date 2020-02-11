@@ -17,9 +17,9 @@ import sys
 from importlib import import_module
 import logging
 
-from scispacy.umls_linking import UmlsEntityLinker
 from spacy.language import Language
 from texar.torch import HParams
+from scispacy.umls_linking import UmlsEntityLinker
 
 from forte.common import ProcessorConfigError
 from forte.common.resources import Resources
