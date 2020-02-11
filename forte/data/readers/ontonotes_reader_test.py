@@ -17,13 +17,21 @@ Unit tests for OntonotesReader.
 
 import unittest
 
-from ft.onto.base_ontology import Token, Sentence
-from forte.data.readers import OntonotesReader
+from forte.data.data_pack import DataPack
+from forte.data.readers.ontonotes_reader import OntonotesReader
+from forte.processors.base.pack_processor import PackProcessor
 from forte.pipeline import Pipeline
-from forte.processors.base.tests.dummy_pack_processor import DummyPackProcessor
+from ft.onto.base_ontology import Token, Sentence
+
+
+class DummyPackProcessor(PackProcessor):
+
+    def _process(self, input_pack: DataPack):
+        pass
 
 
 class OntonotesReaderPipelineTest(unittest.TestCase):
+
     def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "data_samples/ontonotes/00"
