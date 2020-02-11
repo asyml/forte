@@ -17,8 +17,6 @@ Unit tests for dummy processor.
 import unittest
 from ddt import ddt, data
 
-from texar.torch import HParams
-
 from forte.data.readers import OntonotesReader, StringReader, PlainTextReader
 from forte.pipeline import Pipeline
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
