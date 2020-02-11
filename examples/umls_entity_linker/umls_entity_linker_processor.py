@@ -57,7 +57,8 @@ class ScispaCyUMLSEntityLinker(PackProcessor):
     def install(package):
         """ Install given scispacy model.
         """
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", package])
+        subprocess.check_call([sys.executable, "-m",
+                               "pip", "install", "-q", package])
 
     def set_up(self):
         try:
@@ -76,7 +77,8 @@ class ScispaCyUMLSEntityLinker(PackProcessor):
                    configs: HParams):
         self.model_name = configs.model_name or \
                           self.default_configs()['model_name']
-        self.model_version = configs.model_version or self.default_configs()['model_version']
+        self.model_version = configs.model_version or\
+                             self.default_configs()['model_version']
         self.overwrite_entries = configs.overwrite_entries
         self.allow_parallel_entries = configs.allow_parallel_entries
         if self.overwrite_entries:
@@ -149,11 +151,4 @@ class ScispaCyUMLSEntityLinker(PackProcessor):
             else:
                 # delete existing tokens and dependencies
                 for entry in input_pack.get(LinkedMention):
-                        input_pack.delete_entry(entry)
-
-
-
-
-
-
-
+                    input_pack.delete_entry(entry)
