@@ -76,7 +76,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
     @staticmethod
     def default_configs() -> Dict[str, Any]:
         r"""Returns a `dict` of configurations of the processor with default
-        values. Used to replace the missing values of input `configs` during
+        values. Used to replace the missing values of input ``configs`` during
         pipeline construction.
         """
         return {

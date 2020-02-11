@@ -17,13 +17,21 @@ Unit tests for CoNLL03Reader.
 
 import unittest
 
-from ft.onto.base_ontology import Token, Sentence
-from forte.data.readers import CoNLL03Reader
+from forte.data.data_pack import DataPack
+from forte.data.readers.conll03_reader import CoNLL03Reader
+from forte.processors.base.pack_processor import PackProcessor
 from forte.pipeline import Pipeline
-from forte.processors.base.tests.dummy_pack_processor import DummyPackProcessor
+from ft.onto.base_ontology import Token, Sentence
+
+
+class DummyPackProcessor(PackProcessor):
+
+    def _process(self, input_pack: DataPack):
+        pass
 
 
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
+
     def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "data_samples/conll03"

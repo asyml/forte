@@ -19,10 +19,9 @@ import unittest
 
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
-    NLTKWordTokenizer, NLTKPOSTagger, NLTKLemmatizer, NLTKChunker, NLTKNER
+from forte.processors.nltk_processors import NLTKSentenceSegmenter
 from forte.processors.sentiment_analysis import VaderSentimentProcessor
-from ft.onto.base_ontology import Token, Sentence, Phrase, EntityMention
+from ft.onto.base_ontology import Sentence
 
 
 class TestVaderSentiment(unittest.TestCase):
