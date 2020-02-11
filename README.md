@@ -11,18 +11,18 @@
 
 
 **Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task 
-interaction, adaptable data-models interfaces and many more. It provides a platform to assemble
+interaction, adaptable data-model interfaces and many more. It provides a platform to assemble
 state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide 
-spectrum of tasks ranging from Information Retrieval, Natural Langauge Understanding to Natural 
-Language Genration.  
+spectrum of tasks ranging from Information Retrieval, Natural Language Understanding to Natural 
+Language Generation.  
 
-With Forte, It is extremely simple to build an intergrated system that can search documents, 
+With Forte, it is extremely simple to build an integrated system that can search documents, 
 analyze and extract information and generate language all in one place. This allows the developer
 to fully utilize and combine the strength and results from each step, and allow the system to 
 make fully informed decision at the end of the pipeline.  
 
 While it is quite easy to combine arbitrary 3rd party tools (Check out these [examples](./examples)!),
-Forte also brings technology to you by supporting deep learnign via Texar, and by providing a convenient
+Forte also brings technology to you by supporting deep learning via Texar, and by providing a convenient
 model data interface that allows user to cast tasks to models.
 
 ## Core Design Principles
@@ -38,7 +38,7 @@ configuration files. The components (e.g. models or tasks) in the pipeline can b
 swapped in and out, as long as the API contracts are matched. The approach greatly improves module 
 reusability, enables fast development and makes the library flexible for user need.
    
-* **Generalizable and Extensibile**: Forte promotes generalization to support not only a wide 
+* **Generalizable and Extensible**: Forte promotes generalization to support not only a wide 
 range of NLP tasks, but also extensible for new tasks or new domains. In particular, Forte 
 provides the *Ontology* system that helps users define types according to their tasks. 
 Users can simply specify the type declaratively through JSON files. Our Code Generation tool 
