@@ -31,12 +31,12 @@ The core design principle of Forte is the abstraction of NLP concepts and machin
 which provides better separation between data, model and tasks, but enables interactions
 between different components of the pipeline. Based on this, we make Forte:
 
-* **Composable**: Forte help users to decompose a problem into *data*, *models* and *tasks*. 
+* **Composable**: Forte helps users to decompose a problem into *data*, *models* and *tasks*. 
 The tasks can further be divided into sub-tasks. A complex use case 
 can be solved by composing heterogeneous modules via straightforward python APIs or declarative 
 configuration files. The components (e.g. models or tasks) in the pipeline can be flexibly 
 swapped in and out, as long as the API contracts are matched. The approach greatly improves module 
-reusability, enables fast development and makes the library flexible for user need.
+reusability, enables fast development and makes the library flexible for user needs.
    
 * **Generalizable and Extensible**: Forte promotes generalization to support not only a wide 
 range of NLP tasks, but also extensible for new tasks or new domains. In particular, Forte 
