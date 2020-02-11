@@ -32,7 +32,6 @@ setuptools.setup(
         'mypy_extensions',
         'typed_ast',
         'jsonschema',
-        'texar',
         'texar-pytorch',
     ],
     extras_require={
