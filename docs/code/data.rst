@@ -90,14 +90,9 @@ Readers
 .. autoclass:: forte.data.readers.base_reader.PackReader
     :members:
 
-:hidden:`StringReader`
-------------------------
-.. autoclass:: forte.data.readers.string_reader.StringReader
-    :members:
-
-:hidden:`PlainTextReader`
+:hidden:`MultiPackReader`
 --------------------------
-.. autoclass:: forte.data.readers.plaintext_reader.PlainTextReader
+.. autoclass:: forte.data.readers.base_reader.MultiPackReader
     :members:
 
 :hidden:`CoNLL03Reader`
@@ -105,9 +100,64 @@ Readers
 .. autoclass:: forte.data.readers.conll03_reader.CoNLL03Reader
     :members:
 
+:hidden:`ConllUDReader`
+------------------------
+.. autoclass:: forte.data.readers.conllu_ud_reader.ConllUDReader
+    :members:
+
+:hidden:`CorpusReader`
+------------------------
+.. autoclass:: forte.data.readers.corpus_reader.CorpusReader
+    :members:
+
+:hidden:`DeserializeReader`
+----------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.DeserializeReader
+    :members:
+
+:hidden:`HTMLReader`
+----------------------------
+.. autoclass:: forte.data.readers.html_reader.HTMLReader
+    :members:
+
+:hidden:`MSMarcoPassageReader`
+-------------------------------
+.. autoclass:: forte.data.readers.ms_marco_passage_reader.MSMarcoPassageReader
+    :members:
+
+:hidden:`MultiPackSentenceReader`
+----------------------------------
+.. autoclass:: forte.data.readers.multipack_sentence_reader.MultiPackSentenceReader
+    :members:
+
+:hidden:`MultiPackTerminalReader`
+----------------------------------
+.. autoclass:: forte.data.readers.multipack_terminal_reader.MultiPackTerminalReader
+    :members:
+
 :hidden:`OntonotesReader`
 --------------------------
 .. autoclass:: forte.data.readers.ontonotes_reader.OntonotesReader
+    :members:
+
+:hidden:`PlainTextReader`
+--------------------------
+.. autoclass:: forte.data.readers.plaintext_reader.PlainTextReader
+    :members:
+
+:hidden:`ProdigyReader`
+--------------------------
+.. autoclass:: forte.data.readers.prodigy_reader.ProdigyReader
+    :members:
+
+:hidden:`RACEMultiChoiceQAReader`
+----------------------------------
+.. autoclass:: forte.data.readers.race_multi_choice_qa_reader.RACEMultiChoiceQAReader
+    :members:
+
+:hidden:`StringReader`
+------------------------
+.. autoclass:: forte.data.readers.string_reader.StringReader
     :members:
 
 Batchers
