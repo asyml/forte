@@ -9,7 +9,6 @@ sphinxcontrib-spelling
 pyyaml
 jsonpickle
 sortedcontainers
-texar
 texar-pytorch
 
 # PyTorch installation for ReadTheDocs
