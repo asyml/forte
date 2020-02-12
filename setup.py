@@ -23,7 +23,6 @@ setuptools.setup(
     install_requires=[
         'sortedcontainers',
         'numpy',
-        'nltk',
         'jsonpickle',
         'pyyaml',
         'deprecation',
@@ -33,10 +32,10 @@ setuptools.setup(
         'mypy_extensions',
         'typed_ast',
         'jsonschema',
-        'texar',
         'texar-pytorch',
     ],
     extras_require={
+        'nltk': ['nltk'],
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions', 'allennlp'],
         'sentiment': ['vaderSentiment'],

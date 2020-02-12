@@ -10,5 +10,4 @@ funcsigs~=1.0.2
 mypy_extensions~=0.4.1
 typed_ast~=1.4.0
 jsonschema
-texar
 texar-pytorch
