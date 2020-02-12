@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-    Tests for the module forte.data.ontology.ontology_code_generator
+Tests for the module forte.data.ontology.ontology_code_generator
 """
 import os
 import sys
@@ -54,7 +54,7 @@ class GenerateOntologyTest(unittest.TestCase):
         file_paths = sorted(file_paths)
 
         # read json and generate code in a file
-        json_file_path = get_config_path(f'../configs/{input_file_name}.json')
+        json_file_path = f'data_samples/ontology/configs/{input_file_name}.json'
         folder_path = self.generator.generate_ontology(json_file_path,
                                                        is_dry_run=True)
         self.dir_path = folder_path
@@ -70,8 +70,7 @@ class GenerateOntologyTest(unittest.TestCase):
 
         self.assertCountEqual(generated_files, exp_files)
 
-        dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                'test_outputs')
+        dir_path = "data_samples/ontology/test/test_outputs"
 
         for i, generated_file in enumerate(generated_files):
             with open(generated_file, 'r') as f:
@@ -85,8 +84,8 @@ class GenerateOntologyTest(unittest.TestCase):
 
     def test_dry_run_false(self):
         temp_dir = tempfile.mkdtemp()
-        json_file_path = get_config_path(
-            "../configs/example_import_ontology_config.json")
+        json_file_path = \
+            "data_samples/ontology/configs/example_import_ontology_config.json"
         temp_filename = get_temp_filename(json_file_path, temp_dir)
         self.generator.generate_ontology(temp_filename, temp_dir, False)
         folder_path = temp_dir
@@ -105,9 +104,11 @@ class GenerateOntologyTest(unittest.TestCase):
     def test_warnings_errors(self, value):
         expected_warning, file, message = value
         temp_dir = tempfile.mkdtemp()
-        dirname = '../configs' if file.startswith('example') else 'test_configs'
+        dirname = 'data_samples/ontology/configs' \
+            if file.startswith('example') else \
+            'data_samples/ontology/test/test_configs'
         filepath = os.path.join(dirname, file)
-        json_file_name = get_config_path(filepath)
+        json_file_name = filepath
         temp_filename = get_temp_filename(json_file_name, temp_dir)
         if expected_warning:
             with warnings.catch_warnings(record=True) as w:
@@ -123,8 +124,8 @@ class GenerateOntologyTest(unittest.TestCase):
     def test_directory_already_present(self):
         temp_dir = tempfile.mkdtemp()
         os.mkdir(os.path.join(temp_dir, "ft"))
-        json_file_path = get_config_path(
-            "../configs/example_import_ontology_config.json")
+        json_file_path = "data_samples/ontology/configs/" \
+                         "example_import_ontology_config.json"
         temp_filename = get_temp_filename(json_file_path, temp_dir)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -141,7 +142,8 @@ class GenerateOntologyTest(unittest.TestCase):
                             'import os.path as os_path\n'
                             'from os import path\n')
         temp_module = importlib.import_module('temp')
-        _, imports, _ = OntologyCodeGenerator.initialize_top_entries(temp_module)
+        _, imports, _ = OntologyCodeGenerator.initialize_top_entries(
+            temp_module)
         expected_imports = {"os.path": "os.path",
                             "os_path": "os.path",
                             "path": "os.path"}
