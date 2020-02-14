@@ -18,12 +18,13 @@
         },
         {
           "name": "word_forms",
-          "description": "To demonstrate that an attribute can have the entry it is contained in as it's type or item_type.",
+          "description": "To demonstrate that an attribute can be a List of other entries.",
           "type": "List",
           "item_type": "ft.onto.example_ontology.Word"
         },
         {
           "name": "token_ranks",
+          "description": "To demonstrate that an attribute can be a Dict, and the values can be other entries.",
           "type": "Dict",
           "key_type": "int",
           "value_type": "ft.onto.example_ontology.Word"

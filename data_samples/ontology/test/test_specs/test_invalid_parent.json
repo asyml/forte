@@ -3,7 +3,7 @@
     "definitions": [
         {
             "entry_name": "ft.onto.test_ontology.Token",
-            "parent_entry": "forte.data.ontology.top.Annotation",
+            "parent_entry": "forte.data.ontology.core.Entry",
             "description": "Base parent token entry",
             "attributes": [
                 {
@@ -12,17 +12,6 @@
                 },
                 {
                     "name": "lemma",
-                    "type": "str"
-                }
-            ]
-        },
-        {
-            "entry_name": "ft.onto.test_ontology.Token",
-            "parent_entry": "forte.data.ontology.top.Generic",
-            "attributes":
-            [
-                {
-                    "name":"pos_type",
                     "type": "str"
                 }
             ]
