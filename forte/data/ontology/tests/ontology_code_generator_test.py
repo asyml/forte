@@ -14,24 +14,26 @@
 """
     Tests for the module forte.data.ontology.ontology_code_generator
 """
+import importlib
 import os
 import sys
-import pathlib
-import unittest
 import tempfile
-import importlib
+import unittest
 import warnings
+
+import jsonschema
 from ddt import ddt, data
 
-from forte.data.ontology.code_generation_objects import ImportManager
-from forte.data.ontology.ontology_code_generator import (
-    OntologyCodeGenerator
-)
+from forte.data.ontology import utils
 from forte.data.ontology.code_generation_exceptions import (
     DirectoryAlreadyPresentWarning, DuplicateEntriesWarning,
     ImportOntologyNotFoundException,
     TypeNotDeclaredException, UnsupportedTypeException,
     DuplicatedAttributesWarning, ParentEntryNotSupportedException
+)
+from forte.data.ontology.code_generation_objects import ImportManager
+from forte.data.ontology.ontology_code_generator import (
+    OntologyCodeGenerator
 )
 
 
@@ -40,6 +42,14 @@ class GenerateOntologyTest(unittest.TestCase):
     def setUp(self):
         self.generator = OntologyCodeGenerator()
         self.dir_path = None
+
+        dirname = os.path.dirname(__file__)
+        self.valid_filepath = os.path.normpath(
+            os.path.join(dirname, '../validation_schema.json'))
+        self.spec_dir = os.path.join(
+            dirname, "../../../../data_samples/ontology/test/test_specs/")
+        self.test_output = os.path.join(
+            dirname, "../../../../data_samples/ontology/test/test_outputs/")
 
     def tearDown(self):
         """
@@ -61,7 +71,7 @@ class GenerateOntologyTest(unittest.TestCase):
         file_paths = sorted(file_paths)
 
         # read json and generate code in a file
-        json_file_path = get_config_path(f'test_specs/{input_file_name}.json')
+        json_file_path = os.path.join(self.spec_dir, f'{input_file_name}.json')
         folder_path = self.generator.generate(json_file_path,
                                               is_dry_run=True)
         self.dir_path = folder_path
@@ -77,15 +87,13 @@ class GenerateOntologyTest(unittest.TestCase):
 
         self.assertCountEqual(generated_files, exp_files)
 
-        dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                'test_outputs')
-
         for i, generated_file in enumerate(generated_files):
             with open(generated_file, 'r') as f:
                 generated_code = f.read()
 
             # assert if generated code matches with the expected code
-            expected_code_path = os.path.join(dir_path, f'{file_paths[i]}.py')
+            expected_code_path = os.path.join(self.test_output,
+                                              f'{file_paths[i]}.py')
             with open(expected_code_path, 'r') as f:
                 expected_code = f.read()
 
@@ -93,8 +101,8 @@ class GenerateOntologyTest(unittest.TestCase):
 
     def test_dry_run_false(self):
         temp_dir = tempfile.mkdtemp()
-        json_file_path = get_config_path(
-            "test_specs/example_import_ontology.json")
+        json_file_path = os.path.join(
+            self.spec_dir, "example_import_ontology.json")
         temp_filename = get_temp_filename(json_file_path, temp_dir)
         self.generator.generate(temp_filename, temp_dir, False)
         folder_path = temp_dir
@@ -113,9 +121,7 @@ class GenerateOntologyTest(unittest.TestCase):
     def test_warnings_errors(self, value):
         expected_warning, file, msg_type = value
         temp_dir = tempfile.mkdtemp()
-        dirname = 'test_specs'
-        filepath = os.path.join(dirname, file)
-        json_file_name = get_config_path(filepath)
+        json_file_name = os.path.join(self.spec_dir, file)
         temp_filename = get_temp_filename(json_file_name, temp_dir)
         if expected_warning:
             with warnings.catch_warnings(record=True) as w:
@@ -132,8 +138,8 @@ class GenerateOntologyTest(unittest.TestCase):
     def test_directory_already_present(self):
         temp_dir = tempfile.mkdtemp()
         os.mkdir(os.path.join(temp_dir, "ft"))
-        json_file_path = get_config_path(
-            "test_specs/example_import_ontology.json")
+        json_file_path = os.path.join(
+            self.spec_dir, "example_import_ontology.json")
         temp_filename = get_temp_filename(json_file_path, temp_dir)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -166,11 +172,29 @@ class GenerateOntologyTest(unittest.TestCase):
 
         self.assertListEqual(imports, expected_imports)
 
+    @data(
+        "example_ontology.json",
+        "example_import_ontology.json",
+        "example_multi_module_ontology.json",
+        "example_complex_ontology.json",
+        "test_unknown_item_type.json"
+    )
+    def test_valid_json(self, input_filepath):
+        input_filepath = os.path.join(self.spec_dir, input_filepath)
+        utils.validate_json_schema(input_filepath, self.valid_filepath)
 
-def get_config_path(filename):
-    return str(pathlib.Path(os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        f'{filename}')).resolve())
+    @data(
+        ("test_duplicate_attribute.json",
+         "non-unique elements"),
+        ("test_additional_properties.json",
+         "Additional properties are not allowed")
+    )
+    def test_invalid_json(self, value):
+        input_filepath, error_msg = value
+        input_filepath = os.path.join(self.spec_dir, input_filepath)
+        with self.assertRaises(jsonschema.exceptions.ValidationError) as cm:
+            utils.validate_json_schema(input_filepath, self.valid_filepath)
+        self.assertTrue(error_msg in cm.exception.args[0])
 
 
 def get_temp_filename(json_file_path, temp_dir):

@@ -1,7 +1,8 @@
 import os
 from typing import List, Set
 
-from forte.data import DataPack, MultiPack
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.data.ontology import top
 
 REQUIRED_IMPORTS: List[str] = [
@@ -10,7 +11,8 @@ REQUIRED_IMPORTS: List[str] = [
     # 'forte.data.data_pack',
 ]
 
-TOP_MOST_CLASS = 'forte.data.ontology.top.Entry'
+TOP_MOST_CLASS = 'forte.data.ontology.core.Entry'
+TOP_MOST_MODULE_NAME = 'forte.data.ontology.core'
 
 DEFAULT_CONSTRAINTS_KEYS = {
     "BaseLink": {"parent_type": "ParentType", "child_type": "ChildType"},

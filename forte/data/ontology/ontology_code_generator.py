@@ -47,7 +47,7 @@ from forte.data.ontology.code_generation_objects import (
 from forte.data.ontology.ontology_code_const import REQUIRED_IMPORTS, \
     DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE, DEFAULT_PREFIX, \
     SchemaKeywords, file_header, hardcoded_pack_map, PRIMITIVE_SUPPORTED, \
-    SINGLE_COMPOSITES, COMPLEX_COMPOSITES
+    SINGLE_COMPOSITES, COMPLEX_COMPOSITES, TOP_MOST_MODULE_NAME
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -387,9 +387,9 @@ class OntologyCodeGenerator:
         # Starting from here, we won't add any more modules to import.
         self.import_managers.fix_all_modules()
 
-        logging.info('Working on ', spec_path)
+        logging.info('Working on %s', spec_path)
         for writer in self.module_writers.writers():
-            logging.info('Writing module: ' + writer.module_name)
+            logging.info('Writing module: %s' + writer.module_name)
             writer.write(tempdir, destination_dir)
             logging.info('Done writing.')
 
@@ -399,11 +399,11 @@ class OntologyCodeGenerator:
             generated_top_dirs = set(utils.get_top_level_dirs(tempdir))
             for existing_top_dir in utils.get_top_level_dirs(destination_dir):
                 if existing_top_dir in generated_top_dirs:
-                    warnings.warn(
+                    logging.warning(
                         f"The directory with the name "
                         f"{existing_top_dir} is already present in "
                         f"{destination_dir}. New files will be merge into the "
-                        f"existing directory.", DirectoryAlreadyPresentWarning)
+                        f"existing directory.")
 
             dir_util.copy_tree(tempdir, destination_dir)
 
@@ -665,10 +665,19 @@ class OntologyCodeGenerator:
         # Determine the parent entry of this entry.
         parent_entry: str = schema[SchemaKeywords.parent_entry]
 
+        if parent_entry.startswith(TOP_MOST_MODULE_NAME):
+            raise ParentEntryNotSupportedException(
+                f"The parent entry {parent_entry} cannot be directly inherited,"
+                f" please inherit a type from {top.__name__} or your own"
+                f" ontology."
+            )
+
         if not this_manager.is_imported(parent_entry):
             raise ParentEntryNotDeclaredException(
-                f"The parent entry {parent_entry} is not declared. Please"
-                f"check the specification."
+                f"The parent entry {parent_entry} is not declared. It is "
+                f"neither in the base entries nor in custom entries. "
+                f"Please check them ontology specification, and make sure the "
+                f"entry is defined before this."
             )
 
         base_entry: str = self.find_base_entry(entry_name.class_name,
@@ -854,7 +863,6 @@ class OntologyCodeGenerator:
         desc = schema.get(SchemaKeywords.description, None)
         default_val = schema.get(SchemaKeywords.default_value, None)
 
-        # TODO: Only supports array for now!
         # element type should be present in the validation tree
         if att_type in SINGLE_COMPOSITES:
             return self.parse_single_composite(

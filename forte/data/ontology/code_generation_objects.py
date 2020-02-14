@@ -11,16 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import itertools as it
 import logging
 import os
 from abc import ABC
-from typing import Optional, Any, List, Dict, Set, Tuple
-import itertools as it
 from pathlib import Path
-import pdb
+from typing import Optional, Any, List, Dict, Set, Tuple
 
 from forte.data.ontology.code_generation_exceptions import \
-    UnsupportedTypeException, CodeGenerationException
+    CodeGenerationException
 from forte.data.ontology.ontology_code_const import IGNORE_ERRORS_LINES, \
     PRIMITIVE_SUPPORTED, Config, SINGLE_COMPOSITES, COMPLEX_COMPOSITES
 from forte.data.ontology.utils import split_file_path
@@ -243,7 +242,7 @@ class Item:
 
     @property
     def field_name(self):
-        return '_' + self.name
+        return self.name
 
     def to_description(self, level: int) -> Optional[str]:
         if self.description is not None:
@@ -276,10 +275,16 @@ class Property(Item, ABC):
         raise NotImplementedError
 
     def to_getstate(self, level):
-        return change_get_state(self.name, self.field_name, level)
+        # return change_get_state(self.name, self.field_name, level)
+        return [
+            (f"state['{self.name}'] = self.{self.field_name}", level)
+        ]
 
     def to_setstate(self, level):
-        return change_set_state(self.name, self.field_name, level)
+        # return change_set_state(self.name, self.field_name, level)
+        return [
+            (f"self.{self.field_name} = state.get('{self.name}', None) ", level)
+        ]
 
     def to_init_code(self, level: int) -> str:
         return indent_line(f"self.{self.field_name}: {self.to_type_str()} = "

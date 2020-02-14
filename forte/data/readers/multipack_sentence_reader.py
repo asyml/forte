@@ -20,7 +20,7 @@ from typing import Any, Iterator, Dict, Tuple
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.io_utils import dataset_path_iterator_with_base
+from forte.data.data_utils_io import dataset_path_iterator_with_base
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
