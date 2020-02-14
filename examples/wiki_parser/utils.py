@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-A utility class containing useful functions for users to interact with the data
-packs.
+Utility functions.
 """
 from typing import Type
 
@@ -21,11 +20,15 @@ from forte.data import DataPack
 from forte.data.ontology.core import EntryType
 from forte.common.exception import EntryNotFoundError
 
+__all__ = [
+    "get_single",
+]
+
 
 def get_single(pack: DataPack, entry_type: Type[EntryType]) -> EntryType:
-    """Take a single entry of type :attr:`entry_type` from the provided data
+    r"""Take a single entry of type :attr:`entry_type` from the provided data
     pack. This is useful when the target entry type normally appears only one
-    time in the DataPack for e.g., a Document entry.
+    time in the :class:`DataPack` for e.g., a Document entry.
 
     Args:
         pack: The provided data pack to take entries from.
@@ -33,7 +36,6 @@ def get_single(pack: DataPack, entry_type: Type[EntryType]) -> EntryType:
 
     Returns:
         A single data entry.
-
     """
     for a in pack.get(entry_type):
         return a

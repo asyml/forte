@@ -32,7 +32,7 @@ __all__ = [
 
 
 class OntonotesReader(PackReader):
-    """:class:`OntonotesReader` is designed to read in the English OntoNotes
+    r""":class:`OntonotesReader` is designed to read in the English OntoNotes
     v5.0 data in the datasets used by the CoNLL 2011/2012 shared tasks. To use
     this Reader, you must follow the instructions provided `here (v12 release):
     <http://cemantix.org/data/ontonotes.html>`_:, which will allow you to
@@ -116,14 +116,12 @@ class OntonotesReader(PackReader):
                 raise ValueError(f"'{field}' field is required")
 
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
-        """
-        Iterator over *.gold_conll files in the data_source
+        r"""Iterator over *.gold_conll files in the data_source
 
         Args:
             conll_directory:  path to the directory containing the files.
 
         Returns: Iterator over files with gold_conll path.
-
         """
         return dataset_path_iterator(conll_directory, "gold_conll")
 

@@ -24,6 +24,7 @@ from ft.onto.race_mutli_choice_qa_ontology import Article, Question
 
 
 class RACEMultiChoiceQAReaderTest(unittest.TestCase):
+
     def setUp(self):
         self.dataset_path = "data_samples/race_multi_choice_qa"
 

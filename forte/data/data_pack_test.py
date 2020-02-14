@@ -15,10 +15,8 @@
 Unit tests for ner_data pack related operations.
 """
 import logging
-import os
 import unittest
 
-import forte
 from ft.onto.base_ontology import (
     Token, Sentence, Document, EntityMention, PredicateArgument, PredicateLink,
     PredicateMention)

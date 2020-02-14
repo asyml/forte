@@ -14,7 +14,7 @@
 """
 Tests for conllU reader
 """
-import os
+
 import unittest
 
 from typing import List
@@ -93,7 +93,7 @@ def get_dependency_tree_root(link, data_pack):
     Returns:
 
     """
-    #    TODO: make it robust enough to handle cycles for enhanced dependencies
+    # TODO: make it robust enough to handle cycles for enhanced dependencies
     token = link.get_parent()
     if token.is_root:
         return token
