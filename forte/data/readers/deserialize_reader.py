@@ -36,4 +36,4 @@ class DeserializeReader(PackReader):
         yield from data_packs
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
-        yield self.deserialize_instance(data_source)
+        yield DataPack.deserialize(data_source)

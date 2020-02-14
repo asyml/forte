@@ -13,7 +13,7 @@ env:
 install:
   - pip install --upgrade pip
   - pip install --progress-bar off torch==$TORCH_VER
-  - pip install --progress-bar off .[ner,srl,txtgen,stanfordnlp,test,example,ir,spacy]
+  - pip install --progress-bar off .[nltk,ner,srl,txtgen,stanfordnlp,test,example,ir,spacy,sentiment]
   # Install texar-pytorch.
   - git clone https://github.com/asyml/texar-pytorch.git
   - cd texar-pytorch
@@ -42,11 +42,9 @@ script:
   # type checking
   - mypy .
   # needed for test cases
-  - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet
+  - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker words
   - export PYTHONPATH=`pwd`
-  # unit tests
-  - pytest
-  # test coverage
+  # unit tests & test coverage
   - coverage run -m pytest
 
 after_success:

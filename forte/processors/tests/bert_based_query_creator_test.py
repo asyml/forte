@@ -1,17 +1,30 @@
-"""This module tests Query Creator processor."""
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Unit tests for Query Creator processor.
+"""
 import unittest
 import os
 import tempfile
 import shutil
 
 from ddt import ddt, data, unpack
-from texar.torch import HParams
 
 from forte.pipeline import Pipeline
 from forte.processors import BertBasedQueryCreator
 from forte.data.readers import MultiPackSentenceReader
 from forte.data.ontology import Query
-from ft.onto.base_ontology import Token, Sentence
 
 
 @ddt
@@ -33,14 +46,13 @@ class TestBertBasedQueryCreator(unittest.TestCase):
                 f.write(text)
 
         nlp = Pipeline()
-        reader_config = HParams({"input_pack_name": "query",
-                                 "output_pack_name": "output"},
-                                MultiPackSentenceReader.default_hparams())
+        reader_config = {"input_pack_name": "query",
+                         "output_pack_name": "output"}
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
-        config = HParams({"model": {"name": "bert-base-uncased"},
-                          "tokenizer": {"name": "bert-base-uncased"},
-                          "max_seq_length": 128,
-                          "query_pack_name": "query"}, None)
+        config = {"model": {"name": "bert-base-uncased"},
+                  "tokenizer": {"name": "bert-base-uncased"},
+                  "max_seq_length": 128,
+                  "query_pack_name": "query"}
         nlp.add_processor(BertBasedQueryCreator(), config=config)
 
         nlp.initialize()

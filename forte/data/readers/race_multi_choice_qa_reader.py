@@ -16,10 +16,11 @@ The reader that reads RACE multi choice QA data into Datapacks.
 """
 import os
 import json
-from typing import Iterator, Any, List
+
+from typing import Any, Iterator, List
 
 from forte.data.data_pack import DataPack
-from forte.data.io_utils import dataset_path_iterator
+from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
 from ft.onto.race_mutli_choice_qa_ontology_bak import (
     Document, Passage, Question, Option)
@@ -30,20 +31,18 @@ __all__ = [
 
 
 class RACEMultiChoiceQAReader(PackReader):
-    """
-    :class:`RACEMultiChoiceQAReader` is designed to read in RACE multi choice qa
-    dataset.
+    r""":class:`RACEMultiChoiceQAReader` is designed to read in RACE multi
+    choice qa dataset.
     """
 
     def _collect(self, json_directory) -> Iterator[Any]:  # type: ignore
-        """
-        Should be called with param `json_directory` which is a path to a folder
-        containing json files.
+        r"""Should be called with param ``json_directory`` which is a path to a
+        folder containing json files.
+
         Args:
             json_directory: directory containing the json files.
 
         Returns: Iterator over paths to .json files
-
         """
         return dataset_path_iterator(json_directory, "")
 

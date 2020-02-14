@@ -20,6 +20,8 @@ from abc import abstractmethod, ABC
 from typing import Iterable, Optional, Set, Type, Hashable, TypeVar, Generic, \
     List, Dict
 
+import numpy as np
+
 from forte.data.container import ContainerType
 
 __all__ = [
@@ -33,28 +35,36 @@ __all__ = [
 
 
 class Entry(Generic[ContainerType]):
-    """
-        The base class inherited by all NLP entries. This is the main data type
-        for all in-text NLP analysis results. The main sub-types are
-        ``Annotation``, ``Link`` and ``Group``.
-        An :class:`forte.data.ontology.top.Annotation` object represents a
-        span in text.
-        A :class:`forte.data.ontology.top.Link` object represents a binary
-        link relation between two entries.
-        A :class:`forte.data.ontology.top.Group` object represents a
-        collection of multiple entries.
+    r"""The base class inherited by all NLP entries. This is the main data type
+    for all in-text NLP analysis results. The main sub-types are
+    ``Annotation``, ``Link`` and ``Group``.
 
-        There will be some associated attributes for each entry, which can be
-        set via :meth:`set_fields` and retrieved via :meth:`get_field`.
+    An :class:`forte.data.ontology.top.Annotation` object represents a
+    span in text.
 
-        Args:
-            pack: Each entry should be associated with one pack upon creation.
+    A :class:`forte.data.ontology.top.Link` object represents a binary
+    link relation between two entries.
+
+    A :class:`forte.data.ontology.top.Group` object represents a
+    collection of multiple entries.
+
+    There will be some associated attributes for each entry, which can be
+    set via :meth:`set_fields` and retrieved via :meth:`get_field`.
+
+    Attributes:
+        self.embedding: The embedding vectors (numpy array of floats) of this
+            entry.
+
+    Args:
+        pack: Each entry should be associated with one pack upon creation.
     """
 
     def __init__(self, pack: ContainerType):
         super(Entry, self).__init__()
 
         self._tid: int = -1
+
+        self._embedding: np.ndarray = np.empty(0)
 
         # The Entry should have a reference to the data pack, and the data pack
         # need to store the entries. In order to resolve the cyclic references,
@@ -66,15 +76,16 @@ class Entry(Generic[ContainerType]):
         pack.validate(self)
 
     def __getstate__(self):
-        """
-        In serialization:
-         - The pack is not serialize, and it will be set by the container.
+        r"""In serialization, the pack is not serialize, and it will be set
+        by the container.
 
         This also implies that it is not advised to serialize an entry on its
-        own, without the Container as the context, there is little semantics
+        own, without the ``Container`` as the context, there is little semantics
         remained in an entry.
         """
         state = self.__dict__.copy()
+        # During serialization, convert the numpy array as a list.
+        state["_embedding"] = self._embedding.tolist()
         state.pop('_Entry__pack')
         state.pop('_Entry__field_modified')
         return state
@@ -83,15 +94,35 @@ class Entry(Generic[ContainerType]):
         # Recover the internal __field_modified dict for the entry.
         # NOTE: the __pack will be set via set_pack from the Pack side.
         self.__dict__['_Entry__field_modified'] = set()
+        # During de-serialization, convert the list back to numpy array.
+        state["_embedding"] = np.array(state["_embedding"])
         self.__dict__.update(state)
+
+    # using property decorator
+    # a getter function for self._embedding
+    @property
+    def embedding(self):
+        r"""Get the embedding vectors (numpy array of floats) of the entry.
+        """
+        return self._embedding
+
+    # a setter function for self._embedding
+    @embedding.setter
+    def embedding(self, embed):
+        r"""Set the embedding vectors of the entry.
+
+        Args:
+            embed: The embedding vectors which can be numpy array of floats or
+                list of floats.
+        """
+        self._embedding = np.array(embed)
 
     @property
     def tid(self) -> int:
         return self._tid
 
     def set_tid(self):
-        """
-        Set the entry id with the auto-increment manager
+        r"""Set the entry id with the auto-increment manager.
         """
         # self._tid = f"{get_full_module_name(self)}.{tid}"
         self._tid = self.pack.get_next_id()
@@ -121,16 +152,12 @@ class Entry(Generic[ContainerType]):
             pass
 
     def set_fields(self, **kwargs):
-        """
-        Set the entry fields from the kwargs.
+        r"""Set the entry fields from the kwargs.
 
         Args:
             **kwargs: A set of key word arguments used to set the value. A key
             must be correspond to a field name of this entry, and a value must
             match the field's type.
-
-        Returns:
-
         """
         for field_name, field_value in kwargs.items():
             # TODO: This is wrong, absence of attribute is treated the same as
@@ -161,8 +188,7 @@ class Entry(Generic[ContainerType]):
         return getattr(self, field_name)
 
     def __eq__(self, other):
-        """
-        The eq function for :class:`Entry` objects.
+        r"""The eq function for :class:`Entry` objects.
         To be implemented in each subclass.
         """
         if other is None:
@@ -171,8 +197,7 @@ class Entry(Generic[ContainerType]):
         return (type(self), self._tid) == (type(other), other.tid)
 
     def __hash__(self) -> int:
-        """
-        The hash function for :class:`Entry` objects.
+        r"""The hash function for :class:`Entry` objects.
         To be implemented in each subclass.
         """
         return hash((type(self), self._tid))
@@ -201,51 +226,41 @@ class BaseLink(Entry, ABC):
 
     @abstractmethod
     def set_parent(self, parent: Entry):
-        """
-        This will set the `parent` of the current instance with given Entry
+        r"""This will set the `parent` of the current instance with given Entry
         The parent is saved internally by its pack specific index key.
 
         Args:
             parent: The parent entry.
-
-        Returns:
-
         """
         raise NotImplementedError
 
     @abstractmethod
     def set_child(self, child: Entry):
-        """
-        This will set the `child` of the current instance with given Entry
+        r"""This will set the `child` of the current instance with given Entry
         The child is saved internally by its pack specific index key.
 
         Args:
             child: The child entry
-
-        Returns:
-
         """
         raise NotImplementedError
 
     @abstractmethod
     def get_parent(self) -> Entry:
-        """
-        Get the parent entry of the link.
+        r"""Get the parent entry of the link.
 
         Returns:
              An instance of :class:`Entry` that is the child of the link
-             from the given DataPack
+             from the given :class:`DataPack`.
         """
         raise NotImplementedError
 
     @abstractmethod
     def get_child(self) -> Entry:
-        """
-        Get the child entry of the link.
+        r"""Get the child entry of the link.
 
         Returns:
              An instance of :class:`Entry` that is the child of the link
-             from the given DataPack
+             from the given :class:`DataPack`.
         """
         raise NotImplementedError
 
@@ -264,13 +279,12 @@ class BaseLink(Entry, ABC):
 
 
 class BaseGroup(Entry, Generic[EntryType]):
-    """
-    Group is an entry that represent a group of other entries. For example,
+    r"""Group is an entry that represent a group of other entries. For example,
     a "coreference group" is a group of coreferential entities. Each group will
     store a set of members, no duplications allowed.
 
-    This is the BaseGroup interface. Specific member constraints are defined
-    in the inherited classes.
+    This is the :class:`BaseGroup` interface. Specific member constraints are
+    defined in the inherited classes.
     """
     MemberType: Type[EntryType]
 
@@ -287,26 +301,18 @@ class BaseGroup(Entry, Generic[EntryType]):
             self.add_members(members)
 
     def add_member(self, member: EntryType):
-        """
-        Add one entry to the group.
+        r"""Add one entry to the group.
 
         Args:
-            member:
-
-        Returns:
-
+            member: One member to be added to the group.
         """
         self.add_members([member])
 
     def add_members(self, members: Iterable[EntryType]):
-        """
-        Add members to the group.
+        r"""Add members to the group.
 
         Args:
             members: An iterator of members to be added to the group.
-
-        Returns:
-
         """
         for member in members:
             if not isinstance(member, self.MemberType):
@@ -318,16 +324,13 @@ class BaseGroup(Entry, Generic[EntryType]):
 
     @property
     def members(self):
-        """
-        A list of member tids. To get the member objects, call
+        r"""A list of member tids. To get the member objects, call
         :meth:`get_members` instead.
-        :return:
         """
         return self._members
 
     def __hash__(self):
-        """
-        The hash function of :class:`Group`.
+        r"""The hash function of :class:`Group`.
 
         Users can define their own hash function by themselves but this must
         be consistent to :meth:`eq`.
@@ -335,11 +338,9 @@ class BaseGroup(Entry, Generic[EntryType]):
         return hash((type(self), tuple(self.members)))
 
     def __eq__(self, other):
-        """
-        The eq function of :class:`Group`.
-        By default, :class:`Group` objects are regarded as the same if
-        they have the same type, members, and are generated by the same
-        component.
+        r"""The eq function of :class:`Group`. By default, :class:`Group`
+        objects are regarded as the same if they have the same type, members,
+        and are generated by the same component.
 
         Users can define their own eq function by themselves but this must
         be consistent to :meth:`hash`.
@@ -349,8 +350,7 @@ class BaseGroup(Entry, Generic[EntryType]):
         return (type(self), self.members) == (type(other), other.members)
 
     def get_members(self):
-        """
-        Get the member entries in the group.
+        r"""Get the member entries in the group.
 
         Returns:
              An set of instances of :class:`Entry` that are the members of the

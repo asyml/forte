@@ -17,9 +17,10 @@ import pickle
 from typing import Optional, List, Tuple, Dict, Union, Any
 import numpy as np
 
-import torch
-from texar.torch import HParams
 import faiss
+import torch
+
+from texar.torch import HParams
 
 from forte import utils
 
@@ -49,7 +50,7 @@ class EmbeddingBasedIndexer:
     def __init__(self, hparams: Optional[Union[Dict, HParams]] = None):
         super().__init__()
         self._hparams = HParams(hparams=hparams,
-                                default_hparams=self.default_hparams())
+                                default_hparams=self.default_configs())
         self._meta_data: Dict[int, str] = {}
 
         index_type = self._hparams.index_type
@@ -71,7 +72,7 @@ class EmbeddingBasedIndexer:
                                 self._hparams.device, faiss.get_num_gpus())
             config_class_name = \
                 self.INDEX_TYPE_TO_CONFIG.get(index_class.__name__)
-            config = utils.get_class(config_class_name,
+            config = utils.get_class(config_class_name,  # type: ignore
                                      module_paths=["faiss"])()
             config.device = gpu_id
             self._index = index_class(gpu_resource, dim, config)
@@ -81,8 +82,8 @@ class EmbeddingBasedIndexer:
             self._index = index_class(dim)
 
     @staticmethod
-    def default_hparams() -> Dict[str, Any]:
-        r"""Returns a dictionary of default hyperparameters.
+    def default_configs() -> Dict[str, Any]:
+        r"""Returns a dictionary of default configs.
 
         .. code-block:: python
 

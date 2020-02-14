@@ -18,8 +18,10 @@ into data_pack format
 """
 from typing import Iterator, Dict, Tuple, Any
 
-from ft.onto.base_ontology import Document, Sentence, Token, Dependency, \
+from ft.onto.base_ontology import Document, Sentence, Token, Dependency,\
     EnhancedDependency
+from forte.data.data_utils_io import dataset_path_iterator
+
 from forte.data.io_utils import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
@@ -30,8 +32,7 @@ __all__ = [
 
 
 class ConllUDReader(PackReader):
-    """
-    :class:`conllUReader` is designed to read in the Universal Dependencies
+    r""":class:`conllUReader` is designed to read in the Universal Dependencies
     2.4 dataset.
     """
 
@@ -42,8 +43,7 @@ class ConllUDReader(PackReader):
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument
-        """
-        Iterator over conll files in the data_source
+        r"""Iterator over conll files in the data_source.
 
         Args:
             args: args[0] is the directory to the conllu files.

@@ -23,6 +23,7 @@ __all__ = [
     "Sentence",
     "Document",
     "EntityMention",
+    "Phrase",
     "PredicateArgument",
     "PredicateMention",
     "PredicateLink",
@@ -75,6 +76,18 @@ class Sentence(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self._sentiment: Dict[str, float] = {}
+
+    @property
+    def sentiment(self):
+        return self._sentiment
+
+    @sentiment.setter
+    def sentiment(self, scores: Dict[str, float]):
+        self._sentiment = scores
+
+    def add_sentiment(self, key: str, value: float):
+        self._sentiment[key] = value
 
 
 class Document(Annotation):
@@ -104,6 +117,21 @@ class EntityMention(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.ner_type: Optional[str] = None
+
+
+class Phrase(Annotation):
+    """
+    A span based annotation :class:`Phrase`.
+
+    Args:
+        pack (DataPack): The data pack this token belongs to.
+        begin (int): The offset of the first character in the phrase.
+        end (int): The offset of the last character in the phrase + 1.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.phrase_type: Optional[str] = None
 
 
 class PredicateArgument(Annotation):

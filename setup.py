@@ -17,12 +17,12 @@ setuptools.setup(
     long_description=long_description,
     license='Apache License Version 2.0',
     packages=setuptools.find_packages(exclude=["scripts", "examples"]),
+    include_package_data=True,
     platforms='any',
 
     install_requires=[
         'sortedcontainers',
         'numpy',
-        'nltk',
         'jsonpickle',
         'pyyaml',
         'deprecation',
@@ -32,21 +32,21 @@ setuptools.setup(
         'mypy_extensions',
         'typed_ast',
         'jsonschema',
-        'texar',
         'texar-pytorch',
     ],
     extras_require={
+        'nltk': ['nltk'],
         'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
         'srl': ['mypy-extensions', 'allennlp'],
+        'sentiment': ['vaderSentiment'],
         'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
         'test': ['ddt', 'jsonschema'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
-        'spacy': ['spacy']
-    },
-    package_data={
+        'spacy': ['spacy'],
+        'allennlp': ['allennlp']
     },
     entry_points={
           'console_scripts': [

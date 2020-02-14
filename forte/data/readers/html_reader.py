@@ -20,9 +20,9 @@ import os
 import re
 from typing import Iterator
 
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.data_pack import DataPack
-from forte.data.io_utils import dataset_path_iterator
+from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
 from ft.onto.base_ontology import Document
 
@@ -75,8 +75,7 @@ __all__ = [
 
 
 class ForteHTMLParser(HTMLParser):
-    """Parser that stores spans that HTMLReader can use.
-
+    r"""Parser that stores spans that HTMLReader can use.
     """
     def __init__(self):
         super().__init__()
@@ -216,8 +215,7 @@ class ForteHTMLParser(HTMLParser):
 
 
 class HTMLReader(PackReader):
-    """
-    :class:`HTMLReader` is designed to read in list of html strings.
+    r""":class:`HTMLReader` is designed to read in list of html strings.
 
     It takes in list of html strings, cleans the HTML tags and stores the
     cleaned text in pack.
@@ -228,15 +226,13 @@ class HTMLReader(PackReader):
         self.init_with_html = False
 
     def _collect(self, content) -> Iterator[str]:  # type: ignore
-        """
-        Could be called with a directory, a particular file location or a list
-        of strings. If the string is an HTML string, it will be cleaned.
+        r"""Could be called with a directory, a particular file location or a
+        list of strings. If the string is an HTML string, it will be cleaned.
 
         Args:
             content: either a string, or list of string
 
         Returns: Iterator over the content based on type of input
-
         """
         if isinstance(content, str):
             # Check if directory
@@ -268,8 +264,7 @@ class HTMLReader(PackReader):
                             f"Found {type(content)} instead!")
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
-        """
-        Takes a string which could be either a filepath or html_content and
+        r"""Takes a string which could be either a filepath or html_content and
         converts into a DataPack.
 
         Args:
@@ -296,7 +291,7 @@ class HTMLReader(PackReader):
         yield pack
 
     def text_replace_operation(self, text: str):
-        """Replace html tag locations with blank string.
+        r"""Replace html tag locations with blank string.
 
         Args:
             text: The original html text to be cleaned.

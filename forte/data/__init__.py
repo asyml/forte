@@ -17,6 +17,6 @@ from forte.data import readers
 from forte.data.base_pack import *
 from forte.data.data_pack import *
 from forte.data.datasets import *
-from forte.data.io_utils import *
+from forte.data.data_utils_io import *
 from forte.data.multi_pack import *
 from forte.data.container import *

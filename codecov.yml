@@ -5,3 +5,7 @@ coverage:
         threshold: 1%
 
     patch: false
+
+ignore:
+  - "examples/"
+  - "data_samples/"

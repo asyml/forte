@@ -20,7 +20,7 @@ import os
 from typing import Iterator, Any
 
 from forte.data.data_pack import DataPack
-from forte.data.io_utils import dataset_path_iterator
+from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
 from ft.onto.base_ontology import Token, Sentence, Document
 
@@ -30,13 +30,11 @@ __all__ = [
 
 
 class CoNLL03Reader(PackReader):
-    """
-    :class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
+    r""":class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
     """
 
     def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
-        """
-        Iterator over conll files in the data_source
+        r"""Iterator over conll files in the data_source.
 
         Args:
             conll_directory: directory to the conll files.
@@ -114,5 +112,5 @@ class CoNLL03Reader(PackReader):
         yield pack
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {}
