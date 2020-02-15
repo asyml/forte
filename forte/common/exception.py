@@ -43,6 +43,7 @@ class EntryNotFoundError(ValueError):
 
 
 class ProcessorConfigError(ValueError):
-    r"""Raise this error when the there is a problem with the processor config.
-        """
+    r"""Raise this error when the there is a problem with the processor
+    configuration.
+    """
     pass

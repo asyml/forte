@@ -34,7 +34,7 @@ import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
 
 from forte.data.ontology import utils, top
-from forte.data.ontology.code_generation_util import (
+from forte.data.ontology.ontology_code_generator_utils import (
     BasicItem, CompositeItem, ClassAttributeItem, DefinitionItem, FileItem,
     Property)
 
