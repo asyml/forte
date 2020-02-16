@@ -261,7 +261,7 @@ class Property(Item, ABC):
         self.default_val = default_val
         self.import_manager: ImportManager = import_manager
 
-    def to_type_str(self):
+    def internal_type_str(self):
         raise NotImplementedError
 
     def to_access_functions(self, level):
@@ -287,11 +287,12 @@ class Property(Item, ABC):
         ]
 
     def to_init_code(self, level: int) -> str:
-        return indent_line(f"self.{self.field_name}: {self.to_type_str()} = "
+        return indent_line(f"self.{self.field_name}: "
+                           f"{self.internal_type_str()} = "
                            f"{repr(self.default_val)}", level)
 
     def to_description(self, level: int) -> Optional[str]:
-        desc = f"{self.field_name} ({self.to_type_str()})"
+        desc = f"{self.field_name} ({self.internal_type_str()})"
 
         if self.description is not None and self.description.strip() != '':
             desc += f"\t{self.description}"
@@ -332,7 +333,7 @@ class NonCompositeProperty(Property):
 
         self.is_forte_type = import_manager.is_imported(type_str)
 
-    def to_type_str(self) -> str:
+    def internal_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use(self.option_type)
         if self.is_forte_type:
             return f"{option_type}[int]"
@@ -358,7 +359,7 @@ class NonCompositeProperty(Property):
             lines = getter(name, self.field_name)
             lines.extend([
                 (f"@{self.name}.setter", 0),
-                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"def {name}(self, {name}: {self.internal_type_str()}):", 0),
                 (f"self.set_fields({self.field_name}"
                  f"={self.to_field_value()})", 1),
             ])
@@ -386,7 +387,15 @@ class DictProperty(Property):
 
         self.value_is_forte_type = import_manager.is_imported(self.value_type)
 
-    def to_type_str(self) -> str:
+    def internal_type_str(self) -> str:
+        option_type = self.import_manager.get_name_to_use('typing.Optional')
+        composite_type = self.import_manager.get_name_to_use(self.type_str)
+
+        key_type = self.import_manager.get_name_to_use(self.key_type)
+        value_type = self.import_manager.get_name_to_use(self.value_type)
+        return f"{option_type}[{composite_type}[{key_type}, int]]"
+
+    def access_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use('typing.Optional')
         composite_type = self.import_manager.get_name_to_use(self.type_str)
 
@@ -395,11 +404,7 @@ class DictProperty(Property):
 
         if self.self_ref:
             value_type = '"' + value_type + '"'
-
-        if self.value_is_forte_type:
-            return f"{option_type}[{composite_type}[{key_type}, int]]"
-        else:
-            return f"{option_type}[{composite_type}[{key_type}, {value_type}]]"
+        return f"{option_type}[{composite_type}[{key_type}, {value_type}]]"
 
     def to_field_value(self):
         return self.name
@@ -424,7 +429,7 @@ class DictProperty(Property):
         if self.value_is_forte_type:
             lines.extend([
                 (f"@{self.name}.setter", 0),
-                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
                 (f"self.set_fields("
                  f"{self.field_name}="
                  f"dict([(k, self.__pack.add_entry_(v)) "
@@ -434,7 +439,7 @@ class DictProperty(Property):
         else:
             lines.extend([
                 (f"@{self.name}.setter", 0),
-                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
                 (f"self.set_fields("
                  f"{self.field_name}={name})", 1),
                 ('', 0),
@@ -501,7 +506,12 @@ class ListProperty(Property):
         # entry types.
         self.self_ref: bool = self_ref
 
-    def to_type_str(self) -> str:
+    def internal_type_str(self) -> str:
+        option_type = self.import_manager.get_name_to_use('typing.Optional')
+        composite_type = self.import_manager.get_name_to_use(self.type_str)
+        return f"{option_type}[{composite_type}[int]]"
+
+    def access_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use('typing.Optional')
         composite_type = self.import_manager.get_name_to_use(self.type_str)
         item_type = self.import_manager.get_name_to_use(self.item_type)
@@ -509,10 +519,7 @@ class ListProperty(Property):
         if self.self_ref:
             item_type = '"' + item_type + '"'
 
-        if self.is_forte_type:
-            return f"{option_type}[{composite_type}[int]]"
-        else:
-            return f"{option_type}[{composite_type}[{item_type}]]"
+        return f"{option_type}[{composite_type}[{item_type}]]"
 
     def to_access_functions(self, level):
         """ Generate access function to for composite types. This extend the
@@ -527,7 +534,7 @@ class ListProperty(Property):
         if self.is_forte_type:
             lines.extend([
                 (f"@{self.name}.setter", 0),
-                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
                 (f"self.set_fields("
                  f"{self.field_name}="
                  f"[self.__pack.add_entry_(obj) for obj in {name}])", 1),
@@ -536,7 +543,7 @@ class ListProperty(Property):
         else:
             lines.extend([
                 (f"@{self.name}.setter", 0),
-                (f"def {name}(self, {name}: {self.to_type_str()}):", 0),
+                (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
                 (f"self.set_fields("
                  f"{self.field_name}={name})", 1),
                 ('', 0),

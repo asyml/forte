@@ -34,7 +34,7 @@ import typed_astunparse as ast_unparse
 
 from forte.data.ontology import top, utils
 from forte.data.ontology.code_generation_exceptions import \
-    DirectoryAlreadyPresentWarning, DuplicateEntriesWarning, OntologySpecError, \
+    DuplicateEntriesWarning, OntologySpecError, \
     ImportOntologyNotFoundException, ImportOntologyAlreadyGeneratedException, \
     ParentEntryNotDeclaredException, TypeNotDeclaredException, \
     UnsupportedTypeException, InvalidIdentifierException, \
