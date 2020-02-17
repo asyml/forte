@@ -56,12 +56,31 @@ class Token(Annotation):
         self.sense: Optional[str] = None
         self.is_root: Optional[bool] = None
 
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['pos'] = self.pos
+        state['ud_xpos'] = self.ud_xpos
+        state['lemma'] = self.lemma
+        state['ner'] = self.ner
+        state['sense'] = self.sense
+        state['is_root'] = self.is_root
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.pos = state.get('pos', None) 
+        self.ud_xpos = state.get('ud_xpos', None) 
+        self.lemma = state.get('lemma', None) 
+        self.ner = state.get('ner', None) 
+        self.sense = state.get('sense', None) 
+        self.is_root = state.get('is_root', None) 
+
     @property
-    def a_pos(self):
+    def pos(self):
         return self.pos
 
-    @a_pos.setter
-    def a_pos(self, pos: Optional[str]):
+    @pos.setter
+    def pos(self, pos: Optional[str]):
         self.set_fields(pos=pos)
 
     @property
@@ -115,6 +134,13 @@ class Document(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
+    def __getstate__(self): 
+        state = super().__getstate__()
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+
 
 class SpecialDocument(Document):
     """
@@ -124,6 +150,13 @@ class SpecialDocument(Document):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
 
 
 class Sentence(Annotation):
@@ -136,6 +169,13 @@ class Sentence(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
+    def __getstate__(self): 
+        state = super().__getstate__()
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+
 
 class Utterance(Annotation):
     """
@@ -146,6 +186,13 @@ class Utterance(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
 
 
 class PredicateArgument(Annotation):
@@ -164,6 +211,19 @@ class PredicateArgument(Annotation):
         self.ner_type: Optional[str] = None
         self.predicate_lemma: Optional[str] = None
         self.is_verb: Optional[bool] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['ner_type'] = self.ner_type
+        state['predicate_lemma'] = self.predicate_lemma
+        state['is_verb'] = self.is_verb
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.ner_type = state.get('ner_type', None) 
+        self.predicate_lemma = state.get('predicate_lemma', None) 
+        self.is_verb = state.get('is_verb', None) 
 
     @property
     def ner_type(self):
@@ -203,6 +263,15 @@ class EntityMention(Annotation):
         super().__init__(pack, begin, end)
         self.ner_type: Optional[str] = None
 
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['ner_type'] = self.ner_type
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.ner_type = state.get('ner_type', None) 
+
     @property
     def ner_type(self):
         return self.ner_type
@@ -224,6 +293,15 @@ class PredicateMention(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.ner_type: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['ner_type'] = self.ner_type
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.ner_type = state.get('ner_type', None) 
 
     @property
     def ner_type(self):
@@ -251,6 +329,15 @@ class PredicateLink(Link):
         super().__init__(pack, parent, child)
         self.arg_type: Optional[str] = None
 
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['arg_type'] = self.arg_type
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.arg_type = state.get('arg_type', None) 
+
     @property
     def arg_type(self):
         return self.arg_type
@@ -276,6 +363,15 @@ class Dependency(Link):
     def __init__(self, pack: DataPack, parent: Optional[DataPack] = None, child: Optional[DataPack] = None):
         super().__init__(pack, parent, child)
         self.dep_label: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['dep_label'] = self.dep_label
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.dep_label = state.get('dep_label', None) 
 
     @property
     def dep_label(self):
@@ -304,6 +400,15 @@ class EnhancedDependency(Link):
         super().__init__(pack, parent, child)
         self.dep_label: Optional[str] = None
 
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['dep_label'] = self.dep_label
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.dep_label = state.get('dep_label', None) 
+
     @property
     def dep_label(self):
         return self.dep_label
@@ -330,6 +435,15 @@ class RelationLink(Link):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None
 
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['rel_type'] = self.rel_type
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.rel_type = state.get('rel_type', None) 
+
     @property
     def rel_type(self):
         return self.rel_type
@@ -346,7 +460,12 @@ class CoreferenceGroup(Group):
 
     """
 
-    MemberType = EntityMention
-
     def __init__(self, pack: DataPack, members: Optional[Set[DataPack]] = None):
         super().__init__(pack, members)
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)

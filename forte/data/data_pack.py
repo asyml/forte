@@ -385,7 +385,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             target = self.links
         elif isinstance(entry, Group):
             target = self.groups
-        elif isinstance(entry, Generic):
+        elif isinstance(entry, Generics):
             target = self.generics
         else:
             raise ValueError(
