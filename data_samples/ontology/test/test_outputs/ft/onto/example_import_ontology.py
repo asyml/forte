@@ -34,6 +34,17 @@ class Token(Annotation):
         self.pos: Optional[str] = None
         self.lemma: Optional[str] = None
 
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['pos'] = self.pos
+        state['lemma'] = self.lemma
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.pos = state.get('pos', None) 
+        self.lemma = state.get('lemma', None) 
+
     @property
     def pos(self):
         return self.pos
@@ -62,6 +73,15 @@ class EntityMention(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.entity_type: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['entity_type'] = self.entity_type
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self.entity_type = state.get('entity_type', None) 
 
     @property
     def entity_type(self):

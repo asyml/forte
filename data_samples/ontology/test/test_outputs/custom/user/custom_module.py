@@ -23,7 +23,7 @@ class Dependency(Link):
     """
 
     Attributes:
-        _rel_type (Optional[str])
+        rel_type (Optional[str])
 
     """
 
@@ -33,21 +33,21 @@ class Dependency(Link):
 
     def __init__(self, pack: DataPack, parent: Optional[DataPack] = None, child: Optional[DataPack] = None):
         super().__init__(pack, parent, child)
-        self._rel_type: Optional[str] = None
+        self.rel_type: Optional[str] = None
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['rel_type'] = self._rel_type
+        state['rel_type'] = self.rel_type
         return state
 
     def __setstate__(self, state): 
         state = super().__setstate__(state)
-        self._rel_type = state.get('rel_type', None) 
+        self.rel_type = state.get('rel_type', None) 
 
     @property
     def rel_type(self):
-        return self._rel_type
+        return self.rel_type
 
     @rel_type.setter
     def rel_type(self, rel_type: Optional[str]):
-        self.set_fields(_rel_type=rel_type)
+        self.set_fields(rel_type=rel_type)

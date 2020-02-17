@@ -93,7 +93,7 @@ class Sentence(Annotation):
     """
 
     Attributes:
-        key_tokens (Optional[List[Token]])
+        key_tokens (Optional[List[int]])
 
     """
 
@@ -108,7 +108,7 @@ class Sentence(Annotation):
 
     def __setstate__(self, state): 
         state = super().__setstate__(state)
-        self.key_tokens = state.get('key_tokens', None) 
+        self.key_tokens = state.get('key_tokens', []) 
 
     @property
     def key_tokens(self):

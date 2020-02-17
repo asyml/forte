@@ -283,7 +283,8 @@ class Property(Item, ABC):
     def to_setstate(self, level):
         # return change_set_state(self.name, self.field_name, level)
         return [
-            (f"self.{self.field_name} = state.get('{self.name}', None) ", level)
+            (f"self.{self.field_name} = "
+             f"state.get('{self.name}', {self.default_val}) ", level)
         ]
 
     def to_init_code(self, level: int) -> str:
