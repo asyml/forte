@@ -23,6 +23,7 @@ import warnings
 
 import jsonschema
 from ddt import ddt, data
+from testfixtures import LogCapture, log_capture
 
 from forte.data.ontology import utils
 from forte.data.ontology.code_generation_exceptions import (
@@ -130,22 +131,24 @@ class GenerateOntologyTest(unittest.TestCase):
                 self.assertEqual(len(w), 1)
                 assert w[0].category, msg_type
         else:
-            # TODO: make sure the exceptions are caught here
-            print(file)
             with self.assertRaises(msg_type):
                 self.generator.generate(temp_filename, is_dry_run=True)
 
+    @log_capture()
     def test_directory_already_present(self):
         temp_dir = tempfile.mkdtemp()
         os.mkdir(os.path.join(temp_dir, "ft"))
         json_file_path = os.path.join(
             self.spec_dir, "example_import_ontology.json")
         temp_filename = get_temp_filename(json_file_path, temp_dir)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+
+        with LogCapture() as l:
             self.generator.generate(temp_filename, temp_dir, False)
-            self.assertEqual(len(w), 1)
-            assert w[0].category, DirectoryAlreadyPresentWarning
+            l.check_present(
+                ('root', 'WARNING',
+                 f'The directory with the name ft is already present in '
+                 f'{temp_dir}. New files will be merge into the existing '
+                 f'directory.'))
 
     def test_top_ontology_parsing_imports(self):
         temp_dir = tempfile.mkdtemp()
