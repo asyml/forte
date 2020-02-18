@@ -29,6 +29,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
 
+import typed_ast
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
 
@@ -337,7 +338,7 @@ class OntologyCodeGenerator:
                     self.top_init_args[full_ele_name] = init_func.args
 
     def generate(self, spec_path: str,
-                 destination_dir: Optional[str] = os.getcwd(),
+                 destination_dir: str = os.getcwd(),
                  is_dry_run: bool = False) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to
@@ -635,11 +636,17 @@ class OntologyCodeGenerator:
         for arg in func_args.args:
             if arg.annotation is not None:
                 arg_ann = arg.annotation
+                # Handling the type name for cases like Optional[X]
                 while isinstance(arg_ann, ast.Subscript):
-                    # Handling the type name for cases like Optional[X]
-                    arg_ann.value.id = this_manager.get_name_to_use(
-                        arg_ann.value.id)
-                    arg_ann = arg_ann.slice.value
+                    # The types for arg_ann and so on are in typed_ast._ast3,
+                    # these types are protected hence hard to be used here.
+
+                    short_ann_name: str = arg_ann.value.id  # type: ignore
+                    full_ann_name: str = this_manager.get_name_to_use(
+                        short_ann_name)
+
+                    arg_ann.value.id = full_ann_name  # type: ignore
+                    arg_ann = arg_ann.slice.value  # type: ignore
 
                 # Handling the type name for arguments.
                 arg_ann.id = this_manager.get_name_to_use(arg_ann.id)
@@ -683,8 +690,8 @@ class OntologyCodeGenerator:
                 f"entry is defined before this."
             )
 
-        base_entry: str = self.find_base_entry(entry_name.class_name,
-                                               parent_entry)
+        base_entry: Optional[str] = self.find_base_entry(
+            entry_name.class_name, parent_entry)
 
         if base_entry is None:
             raise OntologySpecError(
@@ -790,7 +797,7 @@ class OntologyCodeGenerator:
 
         self_ref = entry_name.class_name == value_type
 
-        default_val = {}
+        default_val: Dict = {}
 
         return DictProperty(
             manager, att_name, key_type, value_type, description=desc,
@@ -876,7 +883,8 @@ class OntologyCodeGenerator:
                 manager, att_name, att_type, description=desc,
                 default_val=default_val)
 
-    def find_base_entry(self, this_entry: str, parent_entry: str) -> str:
+    def find_base_entry(
+            self, this_entry: str, parent_entry: str) -> Optional[str]:
         """ Find the `base_entry`. As a side effect, it will populate the
         internal state `self.base_entry_lookup`. The base will be one of the
         predefined base entry group in the top ontology, which are:
@@ -898,9 +906,10 @@ class OntologyCodeGenerator:
             `Word` inherits `Token` inherits `Annotation`.
             The base_entry for both `Word` and `Token` should be `Annotation`.
         """
+        base_entry: Optional[str]
         if parent_entry in self.top_init_args:
             # The top init args contains the objects in the top.py.
-            base_entry: str = parent_entry
+            base_entry = parent_entry
         else:
             base_entry = self.base_entry_lookup.get(parent_entry, None)
 

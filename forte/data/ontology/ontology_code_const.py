@@ -69,6 +69,7 @@ MULTI_PACK_CLASSES = [class_name(clazz) for clazz in top.MultiPackEntries]
 
 PACK_TYPE_CLASS_NAME = class_name(PackType)
 
+
 def hardcoded_pack_map(clazz):
     if clazz in SINGLE_PACK_CLASSES:
         return class_name(DataPack)
