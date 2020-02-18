@@ -242,7 +242,7 @@ class Item:
 
     @property
     def field_name(self):
-        return self.name
+        return '_' + self.name
 
     def to_description(self, level: int) -> Optional[str]:
         if self.description is not None:
@@ -275,17 +275,10 @@ class Property(Item, ABC):
         raise NotImplementedError
 
     def to_getstate(self, level):
-        # return change_get_state(self.name, self.field_name, level)
-        return [
-            (f"state['{self.name}'] = self.{self.field_name}", level)
-        ]
+        return change_get_state(self.name, self.field_name, level)
 
     def to_setstate(self, level):
-        # return change_set_state(self.name, self.field_name, level)
-        return [
-            (f"self.{self.field_name} = "
-             f"state.get('{self.name}', {self.default_val}) ", level)
-        ]
+        return change_set_state(self.name, self.field_name, level)
 
     def to_init_code(self, level: int) -> str:
         return indent_line(f"self.{self.field_name}: "

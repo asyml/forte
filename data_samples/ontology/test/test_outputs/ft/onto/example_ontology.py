@@ -8,7 +8,8 @@
 Automatically generated ontology . Do not change manually.
 """
 
-from forte.data.data_pack import DataPack
+from forte.data.base_pack import PackType
+from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Link
 from ft.onto.example_import_ontology import Token
 from typing import Dict
@@ -26,90 +27,90 @@ class Word(Token):
     """
 
     Attributes:
-        string_features (Optional[List[int]])	To demonstrate the composite type, List.
-        word_forms (Optional[List[int]])	To demonstrate that an attribute can be a List of other entries.
-        token_ranks (Optional[Dict[int, int]])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
+        _string_features (Optional[List[int]])	To demonstrate the composite type, List.
+        _word_forms (Optional[List[int]])	To demonstrate that an attribute can be a List of other entries.
+        _token_ranks (Optional[Dict[int, int]])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
 
     """
 
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.string_features: Optional[List[int]] = []
-        self.word_forms: Optional[List[int]] = []
-        self.token_ranks: Optional[Dict[int, int]] = {}
+        self._string_features: Optional[List[int]] = []
+        self._word_forms: Optional[List[int]] = []
+        self._token_ranks: Optional[Dict[int, int]] = {}
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['string_features'] = self.string_features
-        state['word_forms'] = self.word_forms
-        state['token_ranks'] = self.token_ranks
+        state['string_features'] = self._string_features
+        state['word_forms'] = self._word_forms
+        state['token_ranks'] = self._token_ranks
         return state
 
     def __setstate__(self, state): 
         state = super().__setstate__(state)
-        self.string_features = state.get('string_features', []) 
-        self.word_forms = state.get('word_forms', []) 
-        self.token_ranks = state.get('token_ranks', {}) 
+        self._string_features = state.get('string_features', None) 
+        self._word_forms = state.get('word_forms', None) 
+        self._token_ranks = state.get('token_ranks', None) 
 
     @property
     def string_features(self):
-        return self.string_features
+        return self._string_features
 
     @string_features.setter
     def string_features(self, string_features: Optional[List[str]]):
-        self.set_fields(string_features=string_features)
+        self.set_fields(_string_features=string_features)
 
     def num_string_features(self):
-        return len(self.string_features)
+        return len(self._string_features)
 
     def clear_string_features(self):
-        self.string_features.clear()
+        self._string_features.clear()
 
     def add_string_features(self, a_string_features: str):
-        self.string_features.append(a_string_features)
+        self._string_features.append(a_string_features)
 
     @property
     def word_forms(self):
-        return self.word_forms
+        return self._word_forms
 
     @word_forms.setter
     def word_forms(self, word_forms: Optional[List["Word"]]):
-        self.set_fields(word_forms=[self.__pack.add_entry_(obj) for obj in word_forms])
+        self.set_fields(_word_forms=[self.__pack.add_entry_(obj) for obj in word_forms])
 
     def num_word_forms(self):
-        return len(self.word_forms)
+        return len(self._word_forms)
 
     def clear_word_forms(self):
-        [self.__pack.delete_entry(self.__pack.get_entry(tid)) for tid in self.word_forms]
-        self.word_forms.clear()
+        [self.__pack.delete_entry(self.__pack.get_entry(tid)) for tid in self._word_forms]
+        self._word_forms.clear()
 
     def add_word_forms(self, a_word_forms: "Word"):
-        self.word_forms.append(self.__pack.add_entry_(a_word_forms))
+        self._word_forms.append(self.__pack.add_entry_(a_word_forms))
 
     @property
     def token_ranks(self):
-        return self.token_ranks
+        return self._token_ranks
 
     @token_ranks.setter
     def token_ranks(self, token_ranks: Optional[Dict[int, "Word"]]):
-        self.set_fields(token_ranks=dict([(k, self.__pack.add_entry_(v)) for k, v in token_ranks.items()]))
+        self.set_fields(_token_ranks=dict([(k, self.__pack.add_entry_(v)) for k, v in token_ranks.items()]))
 
     def num_token_ranks(self):
-        return len(self.token_ranks)
+        return len(self._token_ranks)
 
     def clear_token_ranks(self):
         [self.__pack.delete_entry(self.__pack.get_entry(tid)) for tid in self.token_ranks.values()]
-        self.token_ranks.clear()
+        self._token_ranks.clear()
 
     def add_token_ranks(self, key: int, value: "Word"):
-        self.token_ranks[key] = self.__pack.add_entry_(value)
+        self._token_ranks[key] = self.__pack.add_entry_(value)
 
 
 class WordLink(Link):
     """
 
     Attributes:
-        string_features (Optional[List[int]])	To demonstrate the composite type, List.
+        _string_features (Optional[List[int]])	To demonstrate the composite type, List.
 
     """
 
@@ -117,32 +118,32 @@ class WordLink(Link):
 
     ChildType = Word
 
-    def __init__(self, pack: DataPack, parent: Optional[DataPack] = None, child: Optional[DataPack] = None):
+    def __init__(self, pack: PackType, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
-        self.string_features: Optional[List[int]] = []
+        self._string_features: Optional[List[int]] = []
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['string_features'] = self.string_features
+        state['string_features'] = self._string_features
         return state
 
     def __setstate__(self, state): 
         state = super().__setstate__(state)
-        self.string_features = state.get('string_features', []) 
+        self._string_features = state.get('string_features', None) 
 
     @property
     def string_features(self):
-        return self.string_features
+        return self._string_features
 
     @string_features.setter
     def string_features(self, string_features: Optional[List[str]]):
-        self.set_fields(string_features=string_features)
+        self.set_fields(_string_features=string_features)
 
     def num_string_features(self):
-        return len(self.string_features)
+        return len(self._string_features)
 
     def clear_string_features(self):
-        self.string_features.clear()
+        self._string_features.clear()
 
     def add_string_features(self, a_string_features: str):
-        self.string_features.append(a_string_features)
+        self._string_features.append(a_string_features)

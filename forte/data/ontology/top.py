@@ -403,4 +403,4 @@ class Query(Generics):
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics)
-MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)
+MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric, SubEntry)

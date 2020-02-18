@@ -316,15 +316,9 @@ class OntologyCodeGenerator:
                                     arg_ann.value.id = full_names[module]
                                 arg_ann = arg_ann.slice.value
                             module = arg_ann.id
-                            if module is not None and module in full_names:
-                                pack_type = hardcoded_pack_map(
-                                    full_names[elem.name])
-                                if pack_type is None:
-                                    # Set the annotation id to the full name.
-                                    arg_ann.id = full_names[module]
-                                else:
-                                    arg_ann.id = pack_type
 
+                            if module is not None and module in full_names:
+                                arg_ann.id = full_names[module]
                                 manager.add_object_to_import(arg_ann.id)
 
                     full_ele_name = full_names[elem.name]
@@ -646,7 +640,6 @@ class OntologyCodeGenerator:
         custom_init_args = copy.deepcopy(base_init_args)
         self.replace_annotation(entry_name, custom_init_args)
         custom_init_args_str = as_init_str(custom_init_args)
-
         return custom_init_args_str
 
     def parse_entry(self, entry_name: EntryName,
@@ -724,18 +717,16 @@ class OntologyCodeGenerator:
         elif any([item == "BaseGroup" for item in core_bases]):
             entry_constraint_keys = DEFAULT_CONSTRAINTS_KEYS["BaseGroup"]
 
-        # TODO: Apply stricter checking on class attributes.
         class_att_items: List[ClassTypeDefinition] = []
-
-        for constraint_key, constraint_code in entry_constraint_keys.items():
-            if constraint_key in schema:
-                constraint_type_ = schema[constraint_key]
-                constraint_type_use_name = this_manager.get_name_to_use(
+        for schema_key, class_key in entry_constraint_keys.items():
+            if schema_key in schema:
+                constraint_type_ = schema[schema_key]
+                constraint_type_name = this_manager.get_name_to_use(
                     constraint_type_)
                 class_att_items.append(
-                    ClassTypeDefinition(constraint_code,
-                                        constraint_type_use_name))
+                    ClassTypeDefinition(class_key, constraint_type_name))
 
+        # TODO: Can assign better object type to Link and Group objects
         custom_init_arg_str: str = self.construct_init(entry_name, base_entry)
 
         entry_item = DefinitionItem(

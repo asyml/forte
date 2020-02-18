@@ -8,7 +8,7 @@
 Automatically generated ontology . Do not change manually.
 """
 
-from forte.data.data_pack import DataPack
+from forte.data.base_pack import PackType
 from forte.data.ontology.top import Annotation
 from typing import Optional
 
@@ -24,69 +24,69 @@ class Token(Annotation):
     Base parent token entry
 
     Attributes:
-        pos (Optional[str])
-        lemma (Optional[str])
+        _pos (Optional[str])
+        _lemma (Optional[str])
 
     """
 
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.pos: Optional[str] = None
-        self.lemma: Optional[str] = None
+        self._pos: Optional[str] = None
+        self._lemma: Optional[str] = None
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['pos'] = self.pos
-        state['lemma'] = self.lemma
+        state['pos'] = self._pos
+        state['lemma'] = self._lemma
         return state
 
     def __setstate__(self, state): 
         state = super().__setstate__(state)
-        self.pos = state.get('pos', None) 
-        self.lemma = state.get('lemma', None) 
+        self._pos = state.get('pos', None) 
+        self._lemma = state.get('lemma', None) 
 
     @property
     def pos(self):
-        return self.pos
+        return self._pos
 
     @pos.setter
     def pos(self, pos: Optional[str]):
-        self.set_fields(pos=pos)
+        self.set_fields(_pos=pos)
 
     @property
     def lemma(self):
-        return self.lemma
+        return self._lemma
 
     @lemma.setter
     def lemma(self, lemma: Optional[str]):
-        self.set_fields(lemma=lemma)
+        self.set_fields(_lemma=lemma)
 
 
 class EntityMention(Annotation):
     """
 
     Attributes:
-        entity_type (Optional[str])
+        _entity_type (Optional[str])
 
     """
 
-    def __init__(self, pack: DataPack, begin: int, end: int):
+    def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.entity_type: Optional[str] = None
+        self._entity_type: Optional[str] = None
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['entity_type'] = self.entity_type
+        state['entity_type'] = self._entity_type
         return state
 
     def __setstate__(self, state): 
         state = super().__setstate__(state)
-        self.entity_type = state.get('entity_type', None) 
+        self._entity_type = state.get('entity_type', None) 
 
     @property
     def entity_type(self):
-        return self.entity_type
+        return self._entity_type
 
     @entity_type.setter
     def entity_type(self, entity_type: Optional[str]):
-        self.set_fields(entity_type=entity_type)
+        self.set_fields(_entity_type=entity_type)
