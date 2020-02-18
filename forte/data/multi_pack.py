@@ -24,7 +24,7 @@ from forte.data.index import BaseIndex
 from forte.data.ontology.top import (
     Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries)
 from forte.data.ontology.core import Entry
-from forte.data.base import Span
+from forte.data.span import Span
 
 logger = logging.getLogger(__name__)
 
@@ -89,14 +89,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for a in self.groups:
             a.set_pack(self)
 
-    # pylint: disable=no-self-use
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 
     def subentry(self, pack_index: int, entry: Entry):
         return SubEntry(self, pack_index, entry.tid)
 
-    def get_span_text(self, span: Span):  # pylint: disable=no-self-use
+    def get_span_text(self, span: Span):
         raise ValueError(
             "MultiPack objects do not contain text, please refer to a "
             "specific data pack to get text.")

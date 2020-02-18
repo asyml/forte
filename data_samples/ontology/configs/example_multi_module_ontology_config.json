@@ -1,0 +1,57 @@
+{
+  "name": "example_multi_module_ontology",
+  "additional_prefixes": [
+    "custom.user"
+  ],
+  "definitions": [
+    {
+      "entry_name": "ft.onto.ft_module.Token",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": [
+        {
+          "name": "lemma",
+          "type": "str"
+        },
+        {
+          "name": "is_verb",
+          "type": "bool"
+        },
+        {
+          "name": "num_chars",
+          "type": "int"
+        },
+        {
+          "name": "score",
+          "type": "float"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.ft_module.Sentence",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": [
+        {
+          "name": "tokens",
+          "type": "List",
+          "item_type": "ft.onto.ft_module.Token"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.ft_module.Document",
+      "parent_entry": "forte.data.ontology.top.Annotation"
+    },
+    {
+      "entry_name": "custom.user.custom_module.Dependency",
+      "parent_entry": "forte.data.ontology.top.Link",
+      "attributes": [
+        {
+          "name": "rel_type",
+          "type": "str"
+        }
+      ],
+      "parent_type": "ft.onto.ft_module.Token",
+      "child_type": "ft.onto.ft_module.Token"
+    }
+  ]
+}

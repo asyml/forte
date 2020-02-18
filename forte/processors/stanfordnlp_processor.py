@@ -47,9 +47,9 @@ class StandfordNLPProcessor(PackProcessor):
                                         models_dir=self.MODELS_DIR)
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         """
-        This defines a basic Hparams structure for StanfordNLP.
+        This defines a basic config structure for StanfordNLP.
         :return:
         """
         return {
@@ -97,8 +97,8 @@ class StandfordNLPProcessor(PackProcessor):
                     if "lemma" in self.processors:
                         token.set_fields(lemma=word.lemma)
 
+                    token = input_pack.add_or_get_entry(token)
                     tokens.append(token)
-                    input_pack.add_or_get_entry(token)
 
             # For each sentence, get the dependency relations among tokens
             if "depparse" in self.processors:

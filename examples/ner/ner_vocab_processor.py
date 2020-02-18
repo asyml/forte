@@ -73,6 +73,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         self.chunk_cnt: Counter = Counter()
         self.ner_cnt: Counter = Counter()
 
+    # pylint: disable=unused-argument
     def initialize(self, resource: Resources, configs: HParams):
         self.min_frequency = configs.min_frequency
         self.normalize_digit = configs.normalize_digit

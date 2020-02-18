@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Processors that process pack.
+"""
 from abc import ABC
 
 from forte.data.base_pack import PackType
@@ -27,23 +29,21 @@ __all__ = [
 
 
 class BasePackProcessor(BaseProcessor[PackType], ABC):
-    """
-    The base class of processors that process one pack sequentially. If you are
-    looking for batching (that might happen across packs, refer to
-    BaseBatchProcessor.
+    r"""The base class of processors that process one pack sequentially. If you
+    are looking for batching (that might happen across packs, refer to
+    :class:`BaseBatchProcessor`.
     """
     pass
 
 
 class PackProcessor(BasePackProcessor[DataPack], ABC):
-    """
-    The base class of processors that process one :class:`DataPack` each time.
+    r"""The base class of processors that process one :class:`DataPack` each
+    time.
     """
     pass
 
 
 class MultiPackProcessor(BasePackProcessor[MultiPack], ABC):
-    """
-    The base class of processors that process MultiPack each time
+    r"""The base class of processors that process :class:`MultiPack` each time.
     """
     pass

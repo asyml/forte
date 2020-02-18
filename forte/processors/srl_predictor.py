@@ -20,7 +20,7 @@ import torch
 import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
-from forte.data.base import Span
+from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.common.resources import Resources
 from forte.common.types import DataRequest
@@ -56,7 +56,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
         self.define_context()
 
-        self.batch_size = 4
         self.batcher = self.define_batcher()
 
         self.device = torch.device(
@@ -69,11 +68,15 @@ class SRLPredictor(FixedSizeBatchProcessor):
         model_dir = configs.storage_path if configs is not None else None
         logger.info("restoring SRL model from %s", model_dir)
 
+        # initialize the batcher
+        if configs:
+            self.batcher.initialize(configs.batcher)
+
         self.word_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/word_vocab.english.txt"))
         self.char_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/char_vocab.english.txt"))
-        model_hparams = LabeledSpanGraphNetwork.default_hparams()
+        model_hparams = LabeledSpanGraphNetwork.default_configs()
         model_hparams["context_embeddings"]["path"] = os.path.join(
             model_dir, model_hparams["context_embeddings"]["path"])
         model_hparams["head_embeddings"]["path"] = os.path.join(
@@ -88,7 +91,6 @@ class SRLPredictor(FixedSizeBatchProcessor):
     def define_context(self):
         self.context_type = Sentence
 
-    # pylint: disable=no-self-use
     def _define_input_info(self) -> DataRequest:
         input_info: DataRequest = {Token: []}
         return input_info
@@ -146,12 +148,15 @@ class SRLPredictor(FixedSizeBatchProcessor):
                     data_pack.add_or_get_entry(link)
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         """
-        This defines a basic Hparams structure
+        This defines a basic config structure
         :return:
         """
         hparams_dict = {
             'storage_path': None,
+            "batcher": {
+                "batch_size": 4
+            }
         }
         return hparams_dict

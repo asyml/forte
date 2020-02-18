@@ -15,7 +15,7 @@
 # pylint: disable=logging-fstring-interpolation
 import logging
 import os
-import pickle
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
@@ -63,11 +63,9 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.batch_size = 3
         self.batcher = self.define_batcher()
 
-    # pylint: disable=no-self-use
     def define_context(self) -> Type[Annotation]:
         return Sentence
 
-    # pylint: disable=no-self-use
     def _define_input_info(self) -> DataRequest:
         input_info: DataRequest = {
             Token: [],
@@ -113,7 +111,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
                 if os.path.exists(path):
                     with open(path, "rb") as f:
-                        weights = pickle.load(f)
+                        weights = torch.load(f, map_location=self.device)
                         model.load_state_dict(weights)
                 return model
 
@@ -172,7 +170,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         logger.info(f"Restoring NER model from {self.config_model.model_path}")
         self.model.load_state_dict(ckpt["model"])
 
-    # pylint: disable=no-self-use
     def pack(self, data_pack: DataPack,
              output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
         """
@@ -190,7 +187,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
             for j in range(len(output_dict["Token"]["tid"][i])):
                 tid: int = output_dict["Token"]["tid"][i][j]  # type: ignore
 
-                orig_token: Token = data_pack.get_entry(tid)  # type: ignore # pylint: disable=line-too-long
+                orig_token: Token = data_pack.get_entry(tid)  # type: ignore
                 ner_tag: str = output_dict["Token"]["ner"][i][j]
 
                 orig_token.set_fields(ner=ner_tag)
@@ -287,16 +284,66 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         return words, chars, masks, lengths
 
+    # TODO: change this to manageable size
     @staticmethod
-    def default_hparams():
-        """
-        This defines a basic Hparams structure
-        :return:
-        """
-        hparams_dict = {
-            'storage_path': None,
+    def default_configs():
+        r"""Default config for NER Predictor"""
+
+        return {
+            "config_data": {
+                "train_path": "",
+                "val_path": "",
+                "test_path": "",
+                "num_epochs": 200,
+                "batch_size_tokens": 512,
+                "test_batch_size": 16,
+                "max_char_length": 45,
+                "num_char_pad": 2
+            },
+            "config_model": {
+                "output_hidden_size": 128,
+                "dropout_rate": 0.3,
+                "word_emb": {
+                    "dim": 100
+                },
+                "char_emb": {
+                    "dim": 30,
+                    "initializer": {
+                        "type": "normal_"
+                    }
+                },
+                "char_cnn_conv": {
+                    "in_channels": 30,
+                    "out_channels": 30,
+                    "kernel_size": 3,
+                    "padding": 2
+                },
+                "bilstm_sentence_encoder": {
+                    "rnn_cell_fw": {
+                        "input_size": 130,
+                        "type": "LSTMCell",
+                        "kwargs": {
+                            "num_units": 128
+                        }
+                    },
+                    "rnn_cell_share_config": "yes",
+                    "output_layer_fw": {
+                        "num_layers": 0
+                    },
+                    "output_layer_share_config": "yes"
+                },
+                "learning_rate": 0.01,
+                "momentum": 0.9,
+                "decay_interval": 1,
+                "decay_rate": 0.05,
+                "random_seed": 1234,
+                "initializer": {
+                    "type": "xavier_uniform_"
+                },
+                "model_path": "",
+                "resource_dir": ""
+            }
         }
-        return hparams_dict
 
 
 class CoNLLNEREvaluator(Evaluator):
@@ -332,7 +379,11 @@ class CoNLLNEREvaluator(Evaluator):
                                          refer_pack=refer_pack,
                                          refer_request=refer_getdata_args,
                                          output_filename=self.output_file)
-        os.system(f"./conll03eval.v2 < {self.output_file} > {self.score_file}")
+        eval_script = \
+            Path(os.path.abspath(__file__)).parents[1] / \
+            "utils/eval_scripts/conll03eval.v2"
+        os.system(f"perl {eval_script} < {self.output_file} > "
+                  f"{self.score_file}")
         with open(self.score_file, "r") as fin:
             fin.readline()
             line = fin.readline()

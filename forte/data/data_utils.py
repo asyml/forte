@@ -1,3 +1,16 @@
+# Copyright 2019 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Various utilities specific to data processing.
 """
@@ -7,31 +20,19 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
-from typing import List, Optional, TypeVar, overload
+from typing import List, Optional, overload
 
-PathLike = TypeVar('PathLike', str, os.PathLike)
+from forte.utils.types import PathLike
+from forte.utils.utils_io import maybe_create_dir
+
 
 __all__ = [
     "maybe_download"
 ]
 
+
+# TODO: Remove these once pylint supports function stubs.
 # pylint: disable=unused-argument,function-redefined,missing-docstring
-
-
-def maybe_create_dir(dirname: str) -> bool:
-    r"""Creates directory if it does not exist.
-
-    Args:
-        dirname (str): Path to the directory.
-
-    Returns:
-        bool: Whether a new directory is created.
-    """
-    if not os.path.isdir(dirname):
-        os.makedirs(dirname)
-        return True
-    return False
-
 
 @overload
 def maybe_download(urls: List[str], path: PathLike,
@@ -131,6 +132,9 @@ def _download(url: str, filename: str, path: str) -> str:
 def _extract_google_drive_file_id(url: str) -> str:
     # id is between `/d/` and '/'
     url_suffix = url[url.find('/d/') + 3:]
+    if url_suffix.find('/') == -1:
+        # if there's no trailing '/'
+        return url_suffix
     file_id = url_suffix[:url_suffix.find('/')]
     return file_id
 

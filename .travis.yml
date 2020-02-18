@@ -1,5 +1,7 @@
-language: python
 sudo: required
+language: python
+dist: xenial  # Required for Python 3.7
+cache: pip
 
 python:
   - "3.6"
@@ -11,13 +13,19 @@ env:
 install:
   - pip install --upgrade pip
   - pip install --progress-bar off torch==$TORCH_VER
-  - pip install --progress-bar off .[ner,srl,txtgen,stanfordnlp,test,example,ir,indexer]
+  - pip install --progress-bar off .[nltk,ner,srl,txtgen,stanfordnlp,test,example,ir,spacy,sentiment]
   # Install texar-pytorch.
   - git clone https://github.com/asyml/texar-pytorch.git
   - cd texar-pytorch
   - pip install --progress-bar off .
   - cd ..
   - rm -rf texar-pytorch
+  # Install Elasticsearch indexer
+  - wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.4.2-linux-x86_64.tar.gz
+  - tar -zxf elasticsearch-7.4.2-linux-x86_64.tar.gz
+  - rm -rf elasticsearch-7.4.2-linux-x86_64.tar.gz
+  # start Elasticserver before pytest
+  - elasticsearch-7.4.2/bin/elasticsearch -d
   # Install faiss-cpu for coverage
   - pip install faiss-cpu
   # Install test tools.
@@ -25,20 +33,18 @@ install:
   - pip install mypy>=0.730
   - pip install pytest==4.3.1
   # Install code coverage tools.
-  - pip install coverage
-  - pip install codecov
+  - pip install coverage codecov
 
 script:
   # linting
-  - pylint forte/ examples/ ft/
-  - flake8 forte/ examples/ ft/
+  - pylint forte/ examples/ ft/ scripts/
+  - flake8 forte/ examples/ ft/ scripts/
   # type checking
   - mypy .
   # needed for test cases
-  - python -m nltk.downloader punkt averaged_perceptron_tagger
-  # unit tests
-  - pytest
-  # test coverage
+  - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker words
+  - export PYTHONPATH=`pwd`
+  # unit tests & test coverage
   - coverage run -m pytest
 
 after_success:

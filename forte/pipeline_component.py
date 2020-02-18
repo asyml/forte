@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Pipeline component module.
+"""
 from typing import Generic
 
 from texar.torch import HParams
@@ -21,6 +23,7 @@ from forte.data.base_pack import PackType
 
 
 class PipelineComponent(Generic[PackType]):
+
     def initialize(self, resource: Resources, configs: HParams):
         r"""The pipeline will call the initialize method at the start of a
         processing. The processor and reader will be initialized with
@@ -32,22 +35,16 @@ class PipelineComponent(Generic[PackType]):
                 shareable resources here, for example, the vocabulary.
             configs (HParams): The configuration passed in to set up this
                 component.
-
-        Returns:
         """
         pass
 
     def finish(self, resource: Resources):
         r"""The pipeline will call this function at the end of the pipeline to
         notify all the components. The user can implement this function to
-        release resources used by this component.
-
-        The component can also add objects to the resources.
+        release resources used by this component. The component can also add
+        objects to the resources.
 
         Args:
             resource (Resources): A global resource registry.
-
-        Returns:
-
         """
         pass

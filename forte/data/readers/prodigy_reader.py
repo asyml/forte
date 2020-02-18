@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The reader that reads prodigy text data with annotations into Datapacks."""
+"""
+The reader that reads prodigy text data with annotations into Datapacks.
+"""
 
 import json
-from typing import Iterator, Any
+from typing import Any, Iterator
 
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
@@ -26,49 +28,37 @@ __all__ = [
 
 
 class ProdigyReader(PackReader):
-    """:class:`ProdigyTextReader` is designed to read in Prodigy output text
-    Args:
-        lazy (bool, optional): The reading strategy used when reading a
-            dataset containing multiple documents. If this is true,
-            ``iter()`` will return an object whose ``__iter__``
-            method reloads the dataset each time it's called. Otherwise,
-            ``iter()`` returns a list.
+    r""":class:`ProdigyTextReader` is designed to read in Prodigy output text.
     """
 
-    # pylint: disable=no-self-use
     def _cache_key_function(self, data: dict) -> str:
         return data['meta']['id']
 
-    # pylint: disable=no-self-use
     def _collect(self,  # type: ignore
                  prodigy_annotation_file: str) -> Iterator[Any]:
-        """
-        Collects from Prodigy file path and returns an iterator
-        of Prodigy annotation data. The elements in the iterator
-        correspond to each line in the prodigy file.
-        One element is expected to be parsed as one DataPack.
+        r"""Collects from Prodigy file path and returns an iterator of Prodigy
+        annotation data. The elements in the iterator correspond to each line
+        in the prodigy file. One element is expected to be parsed as one
+        DataPack.
 
         Args:
-            prodigy_annotation_file:  a Prodigy file path.
+            prodigy_annotation_file: A Prodigy file path.
 
         Returns: Iterator of each line in the prodigy file.
-
         """
         with open(prodigy_annotation_file) as f:
             for line in f:
                 yield json.loads(line)
 
     def _parse_pack(self, data: dict) -> Iterator[DataPack]:
-        """
-        Extracts information from input `data` of one document
-        output from Prodigy Annotator including the text,
-        tokens and its annotations into a DataPack.
+        r"""Extracts information from input `data` of one document output from
+        Prodigy Annotator including the text, tokens and its annotations into a
+        DataPack.
 
         Args:
             data: a dict that contains information for one document.
 
         Returns: DataPack containing information extracted from `data`.
-
         """
         pack = DataPack()
         text = data['text']

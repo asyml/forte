@@ -34,9 +34,7 @@ __all__ = [
 
 
 class MultiPackTerminalReader(MultiPackReader):
-    r"""
-    A reader designed to read text from the terminal
-    """
+    r"""A reader designed to read text from the terminal."""
 
     # pylint: disable=useless-super-delegation
     def __init__(self):
@@ -45,17 +43,13 @@ class MultiPackTerminalReader(MultiPackReader):
     # pylint: disable=unused-argument
     def initialize(self, resource: Resources, configs: HParams):
         self.resource = resource
+        self.config = configs
 
-    # pylint: disable=no-self-use,unused-argument
+    # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
 
-    # pylint: disable=no-self-use
     def _collect(self) -> Iterator[str]:  # type: ignore
-        """
-        data_strings should be of type `List[str]`
-        which is the list of raw text strings to iterate over
-        """
         # This allows the user to pass in either one single string or a list of
         # strings.
         while True:
@@ -69,13 +63,12 @@ class MultiPackTerminalReader(MultiPackReader):
                 break
 
     def _parse_pack(self, data_source: str) -> Iterator[MultiPack]:
-        """
-        Takes a raw string and converts into a MultiPack
+        r"""Takes a raw string and converts into a MultiPack.
 
         Args:
-            data_source: str that contains text of a document
+            data_source: str that contains text of a document.
 
-        Returns: MultiPack containing a datapack for the current query
+        Returns: MultiPack containing a datapack for the current query.
         """
 
         multi_pack = MultiPack()
@@ -91,9 +84,9 @@ class MultiPackTerminalReader(MultiPackReader):
 
         pack = DataPack()
         utterance = Utterance(pack, 0, len(data_source))
-        pack.add_or_get_entry(utterance)
+        pack.add_entry(utterance)
 
         pack.set_text(data_source, replace_func=self.text_replace_operation)
-        multi_pack.update_pack({"query": pack})
+        multi_pack.update_pack({self.config.pack_name: pack})
 
         yield multi_pack

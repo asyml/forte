@@ -14,23 +14,22 @@
 """
 This class defines the basic ontology supported by our system
 """
-from typing import Optional, Dict, List, Set, Any
+from typing import Optional, Dict, List, Set, Type
 from forte.data.data_pack import DataPack
-from forte.data.ontology import Entry, Annotation, Link, Group, Generic
+from forte.data.ontology import Entry, Annotation, Link, Group
 
 __all__ = [
     "Token",
     "Sentence",
-    "Passage",
     "Document",
     "EntityMention",
+    "Phrase",
     "PredicateArgument",
     "PredicateMention",
     "PredicateLink",
     "CoreferenceGroup",
     "Dependency",
-    "RelationLink",
-    "Query"
+    "RelationLink"
 ]
 
 
@@ -48,21 +47,21 @@ class Token(Annotation):
         https://universaldependencies.org/format.html
         lemma (str): Lemma or stem of word form.
         is_root (bool): If the token is a root of, say, dependency tree.
-        ud_misc (Dict[str, List[str]]): Miscellaneous features. Used in
+        ud_misc (Dict[str, List[str]]): Miscellaneous ud_features. Used in
         CoNLL-U Format. Refer https://universaldependencies.org/format.html
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.pos: str
-        self.ud_xpos: str
-        self.lemma: str
-        self.chunk: str
-        self.ner: str
-        self.sense: str
-        self.is_root: bool
-        self.features: Dict[str, List[str]]
-        self.ud_misc: Dict[str, List[str]]
+        self.pos: Optional[str] = None
+        self.ud_xpos: Optional[str] = None
+        self.lemma: Optional[str] = None
+        self.chunk: Optional[str] = None
+        self.ner: Optional[str] = None
+        self.sense: Optional[str] = None
+        self.is_root: Optional[bool] = None
+        self.ud_features: Optional[Dict[str, List[str]]] = None
+        self.ud_misc: Optional[Dict[str, List[str]]] = None
 
 
 class Sentence(Annotation):
@@ -74,21 +73,21 @@ class Sentence(Annotation):
         begin (int): The offset of the first character in the sentence.
         end (int): The offset of the last character in the sentence + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self._sentiment: Dict[str, float] = {}
 
+    @property
+    def sentiment(self):
+        return self._sentiment
 
-class Passage(Annotation):
-    """
-    A span based annotation :class:`Passage`.
+    @sentiment.setter
+    def sentiment(self, scores: Dict[str, float]):
+        self._sentiment = scores
 
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the sentence.
-        end (int): The offset of the last character in the sentence + 1.
-    """
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
+    def add_sentiment(self, key: str, value: float):
+        self._sentiment[key] = value
 
 
 class Document(Annotation):
@@ -100,6 +99,7 @@ class Document(Annotation):
         begin (int): The offset of the first character in the document.
         end (int): The offset of the last character in the document + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -119,6 +119,21 @@ class EntityMention(Annotation):
         self.ner_type: Optional[str] = None
 
 
+class Phrase(Annotation):
+    """
+    A span based annotation :class:`Phrase`.
+
+    Args:
+        pack (DataPack): The data pack this token belongs to.
+        begin (int): The offset of the first character in the phrase.
+        end (int): The offset of the last character in the phrase + 1.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.phrase_type: Optional[str] = None
+
+
 class PredicateArgument(Annotation):
     """
     A span based annotation :class:`PredicateArgument`.
@@ -130,6 +145,7 @@ class PredicateArgument(Annotation):
         end (int): The offset of the last character in the predicate argument
             + 1.
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -209,9 +225,9 @@ class Dependency(Link):
                  parent: Optional[Token] = None,
                  child: Optional[Token] = None):
         super().__init__(pack, parent, child)
-        self.dep_label = None
-        self.rel_type: str
-        self.dep_type: str
+        self.dep_label: Optional[str] = None
+        self.rel_type: Optional[Type] = None
+        self.dep_type: Optional[Type] = None
 
 
 class RelationLink(Link):
@@ -235,25 +251,8 @@ class RelationLink(Link):
             parent: Optional[EntityMention] = None,
             child: Optional[EntityMention] = None):
         super().__init__(pack, parent, child)
-        self.rel_type = None
+        self.rel_type: Optional[Type] = None
 
-
-class Query(Generic):
-    r""" A generic query type to be used for Information Retrieval applications.
-    The query can be of any type - a string, array or a tensor.
-
-    Args:
-        pack (DataPack): The data pack this query belongs to.
-
-    Attr:
-        query: (Any): Query to be searched against.
-        doc_ids (Optional[Dict[str, str]]): Document labels pertaining to the
-        query mapped to the list of corresponding document ids.
-    """
-    def __init__(self, pack: DataPack):
-        super().__init__(pack)
-        self.query: Any = None
-        self.doc_ids: Optional[Dict[str, List[str]]] = None
 
 class Utterance(Annotation):
     r"""An annotation based entry useful for dialogue.
@@ -264,6 +263,7 @@ class Utterance(Annotation):
         end (int): The offset of the last character in the entity mention + 1.
 
     """
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.seq_num: str

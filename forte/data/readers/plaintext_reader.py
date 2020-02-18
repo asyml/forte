@@ -15,10 +15,10 @@
 The reader that reads plain text data into Datapacks.
 """
 import os
-from typing import Iterator, Any
+from typing import Any, Iterator
 
 from forte.data.data_pack import DataPack
-from forte.data.io_utils import dataset_path_iterator
+from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
 from ft.onto.base_ontology import Document
 
@@ -28,27 +28,24 @@ __all__ = [
 
 
 class PlainTextReader(PackReader):
-    """
-    :class:`PlainTextReader` is designed to read in plain text dataset.
+    r""":class:`PlainTextReader` is designed to read in plain text dataset.
     """
 
-    # pylint: disable=no-self-use
     def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
-        """
-        Should be called with param `text_directory` which is a path to a folder
-        containing txt files.
+        r"""Should be called with param ``text_directory`` which is a path to a
+        folder containing txt files.
+
         Args:
             text_directory: text directory containing the files.
 
         Returns: Iterator over paths to .txt files
-
         """
         return dataset_path_iterator(text_directory, ".txt")
 
     def _cache_key_function(self, text_file: str) -> str:
         return os.path.basename(text_file)
 
-    # pylint: disable=no-self-use,unused-argument
+    # pylint: disable=unused-argument
     def text_replace_operation(self, text: str):
         return []
 

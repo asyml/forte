@@ -15,7 +15,6 @@
 This file contains examples of batch processor implementations, which basically
 create entries arbitrarily. The processors here are useful as placeholders and
 test cases.
-
 """
 from typing import Dict, Optional, Type
 
@@ -26,13 +25,12 @@ from forte.common import Resources
 from forte.data.data_pack import DataPack
 from forte.common.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
-from forte.processors.base import BatchProcessor, FixedSizeBatchProcessor, \
-    FixedSizeMultiPackBatchProcessor
-from ft.onto.base_ontology import Document, Token, Sentence, EntityMention, \
-    RelationLink
+from forte.processors.base import BatchProcessor, FixedSizeBatchProcessor
+from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
 __all__ = [
     "DummyRelationExtractor",
+    "DummmyFixedSizeBatchProcessor",
 ]
 
 
@@ -52,22 +50,19 @@ class DummyRelationExtractor(BatchProcessor):
         self.batcher.initialize(configs.batcher)
 
     def define_batcher(self) -> ProcessingBatcher:
-        # pylint: disable=no-self-use
         return FixedSizeDataPackBatcher()
 
     def define_context(self) -> Type[Sentence]:
-        # pylint: disable=no-self-use
         return Sentence
 
     def _define_input_info(self) -> DataRequest:
-        # pylint: disable=no-self-use
         input_info: DataRequest = {
             Token: [],
             EntityMention: {"fields": ["ner_type", "tid"]}
         }
         return input_info
 
-    def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
+    def predict(self, data_batch: Dict):
         entities_span = data_batch["EntityMention"]["span"]
         entities_tid = data_batch["EntityMention"]["tid"]
 
@@ -100,8 +95,7 @@ class DummyRelationExtractor(BatchProcessor):
         return pred
 
     def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
-        # pylint: disable=no-self-use
-        """Add corresponding fields to data_pack"""
+        r"""Add corresponding fields to data_pack"""
         if output_dict is None:
             return
 
@@ -118,7 +112,7 @@ class DummyRelationExtractor(BatchProcessor):
                 data_pack.add_or_get_entry(link)
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {
             "batcher": {"batch_size": 10}
         }
@@ -134,25 +128,22 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         self.batcher.initialize(configs.batcher)
 
     def define_context(self) -> Type[Sentence]:
-        # pylint: disable=no-self-use
         return Sentence
 
     def _define_input_info(self) -> DataRequest:
-        # pylint: disable=no-self-use
         return {}
 
-    def predict(self, data_batch: Dict):  # pylint: disable=no-self-use
+    def predict(self, data_batch: Dict):
         # track the number of times `predict` was called
         self.counter += 1
         return data_batch
 
     def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
-        # pylint: disable=no-self-use
-        """Add corresponding fields to data_pack"""
+        r"""Add corresponding fields to data_pack"""
         pass
 
     @staticmethod
-    def default_hparams():
+    def default_configs():
         return {
             "batcher": {"batch_size": 10}
         }

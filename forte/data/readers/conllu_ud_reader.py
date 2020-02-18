@@ -19,7 +19,7 @@ into data_pack format
 from typing import Iterator, Dict, Tuple, Any
 
 from ft.onto.base_ontology import Document, Sentence, Token, Dependency
-from forte.data.io_utils import dataset_path_iterator
+from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 
@@ -29,21 +29,18 @@ __all__ = [
 
 
 class ConllUDReader(PackReader):
-    """
-    :class:`conllUReader` is designed to read in the Universal Dependencies
+    r""":class:`conllUReader` is designed to read in the Universal Dependencies
     2.4 dataset.
     """
 
     def _cache_key_function(self, data_pack: Any) -> str:
-        # pylint: disable=no-self-use
         if data_pack.meta.doc_id is None:
             raise ValueError("data_pack does not have a document id")
         return data_pack.meta.doc_id
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
-        # pylint: disable = no-self-use, unused-argument
-        """
-        Iterator over conll files in the data_source
+        # pylint: disable = unused-argument
+        r"""Iterator over conll files in the data_source.
 
         Args:
             args: args[0] is the directory to the conllu files.
@@ -68,18 +65,17 @@ class ConllUDReader(PackReader):
                         doc_lines = []
 
     def _parse_pack(self, doc_lines) -> Iterator[DataPack]:
-        # pylint: disable=no-self-use
         token_comp_fields = ["id", "form", "lemma", "pos",
-                             "ud_xpos", "features", "head", "label",
+                             "ud_xpos", "ud_features", "head", "label",
                              "enhanced_dependency_relations", "ud_misc"]
 
-        token_multi_fields = ["features", "ud_misc",
+        token_multi_fields = ["ud_features", "ud_misc",
                               "enhanced_dependency_relations"]
 
-        token_feature_fields = ["features", "ud_misc"]
+        token_feature_fields = ["ud_features", "ud_misc"]
 
         token_entry_fields = ["lemma", "pos", "ud_xpos",
-                              "features", "ud_misc"]
+                              "ud_features", "ud_misc"]
 
         data_pack: DataPack = DataPack()
         doc_sent_begin: int = 0

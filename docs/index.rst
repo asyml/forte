@@ -10,6 +10,7 @@ Welcome to Forte's documentation!
    :maxdepth: 2
 
    examples.md
+   ontology_generation.md
 
 API
 ====
@@ -17,6 +18,7 @@ API
 .. toctree::
    :maxdepth: 2
 
+   code/common.rst
    code/data.rst
    code/pipeline.rst
    code/processors.rst
