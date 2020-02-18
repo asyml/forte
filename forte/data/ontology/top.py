@@ -225,7 +225,7 @@ class Group(BaseGroup[Entry]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             members: Optional[Set[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)

@@ -49,6 +49,8 @@ class MultiPackMeta(BaseMeta):
         super().__init__()
 
 
+# pylint: disable=too-many-public-methods
+
 # TODO: operations for multi pack is far less complete comparing to data pack.
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     r"""A :class:`MultiPack' contains multiple DataPacks and a collection of

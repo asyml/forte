@@ -8,7 +8,7 @@
 Automatically generated ontology . Do not change manually.
 """
 
-from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Link
 from ft.onto.ft_module import Token
@@ -32,7 +32,7 @@ class Dependency(Link):
 
     ChildType = Token
 
-    def __init__(self, pack: PackType, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self._rel_type: Optional[str] = None
 

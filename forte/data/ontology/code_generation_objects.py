@@ -387,7 +387,7 @@ class DictProperty(Property):
 
         key_type = self.import_manager.get_name_to_use(self.key_type)
         value_type = self.import_manager.get_name_to_use(self.value_type)
-        return f"{option_type}[{composite_type}[{key_type}, int]]"
+        return f"{option_type}[{composite_type}[{key_type}, {value_type}]]"
 
     def access_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use('typing.Optional')
@@ -451,7 +451,8 @@ class DictProperty(Property):
             lines.extend([
                 (f"def clear_{name}(self):", 0),
                 (f"[self.__pack.delete_entry("
-                 f"self.__pack.get_entry(tid)) for tid in self.{name}.values()]",
+                 f"self.__pack.get_entry(tid)) "
+                 f"for tid in self.{name}.values()]",
                  1),
                 (f"self.{self.field_name}.clear()", 1),
             ])
@@ -749,7 +750,7 @@ class ModuleWriter:
             # Write header.
             f.write(self.to_header(0))
             for entry_name, entry_item in self.entries:
-                logging.info('Writing class: ' + entry_name.class_name)
+                logging.info('Writing class: %s', entry_name.class_name)
                 f.write(entry_item.to_code(0))
 
     def to_header(self, level: int) -> str:

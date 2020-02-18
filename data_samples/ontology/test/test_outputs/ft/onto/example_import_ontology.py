@@ -8,7 +8,7 @@
 Automatically generated ontology . Do not change manually.
 """
 
-from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation
 from typing import Optional
 
@@ -29,7 +29,7 @@ class Token(Annotation):
 
     """
 
-    def __init__(self, pack: PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._pos: Optional[str] = None
         self._lemma: Optional[str] = None
@@ -70,7 +70,7 @@ class EntityMention(Annotation):
 
     """
 
-    def __init__(self, pack: PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._entity_type: Optional[str] = None
 

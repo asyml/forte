@@ -46,8 +46,9 @@ from forte.data.ontology.code_generation_objects import (
 # Builtin and local imports required in the generated python modules.
 from forte.data.ontology.ontology_code_const import REQUIRED_IMPORTS, \
     DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE, DEFAULT_PREFIX, \
-    SchemaKeywords, file_header, hardcoded_pack_map, PRIMITIVE_SUPPORTED, \
-    SINGLE_COMPOSITES, COMPLEX_COMPOSITES, TOP_MOST_MODULE_NAME
+    SchemaKeywords, file_header, PRIMITIVE_SUPPORTED, \
+    SINGLE_COMPOSITES, COMPLEX_COMPOSITES, TOP_MOST_MODULE_NAME, \
+    PACK_TYPE_CLASS_NAME, hardcoded_pack_map
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -87,8 +88,8 @@ def analyze_packages(packages: Set[str]):
             name_validation(p)
         except InvalidIdentifierException:
             logging.error(
-                f"Error analyzing package name: '{p}' is "
-                f"not a valid package name")
+                "Error analyzing package name: '%s' is "
+                "not a valid package name", p)
             raise
 
     return [p for (l, p) in sorted(package_len, reverse=True)]
@@ -137,7 +138,7 @@ def is_composite_type(item_type: str):
 
 
 def valid_composite_key(item_type: str):
-    return item_type == 'int' or item_type == 'str'
+    return item_type in ('int', 'str')
 
 
 class OntologyCodeGenerator:
@@ -304,9 +305,11 @@ class OntologyCodeGenerator:
                         f" {elem.name} of the module "
                         f"{base_ontology_module}.")
                 else:
+                    full_ele_name = full_names[elem.name]
+
                     # Assuming no variable args and keyword only args present in
                     # the base ontology module
-                    for i, arg in enumerate(init_func.args.args):
+                    for arg in init_func.args.args:
                         # Parsing the nested list of arg annotations
                         if arg.annotation is not None:
                             arg_ann = arg.annotation
@@ -321,7 +324,14 @@ class OntologyCodeGenerator:
                                 arg_ann.id = full_names[module]
                                 manager.add_object_to_import(arg_ann.id)
 
-                    full_ele_name = full_names[elem.name]
+                                # Convert from PackType to more concrete pack
+                                # type, such as DataPack or MultiPack.
+                                if arg_ann.id == PACK_TYPE_CLASS_NAME:
+                                    pack_class = hardcoded_pack_map(
+                                        full_ele_name)
+                                    manager.add_object_to_import(pack_class)
+                                    arg_ann.id = pack_class
+
                     self.top_to_core_entries[full_ele_name] = elem_base_names
                     self.base_entry_lookup[full_ele_name] = full_ele_name
                     self.top_init_args[full_ele_name] = init_func.args
@@ -361,7 +371,8 @@ class OntologyCodeGenerator:
         #     for obj_str in utils.get_user_objects_from_module(import_module):
         #         full_obj_str = f"{import_module}.{obj_str}"
         #         self.allowed_types_tree[full_obj_str] = set()
-        #         # self.import_manager.add_object_to_import(full_obj_str, False)
+        #         # self.import_manager.add_object_to_import(
+        #            full_obj_str, False)
         #         # self.full_ref_to_import[obj_str] = full_obj_str
 
         # Generate ontology classes for the input json config and the configs
@@ -369,7 +380,7 @@ class OntologyCodeGenerator:
         try:
             self.parse_ontology_spec(spec_path, destination_dir)
         except OntologySpecError:
-            logging.error(f"Error at parsing [{spec_path}]")
+            logging.error("Error at parsing [%s]", spec_path)
             raise
 
         # Now generate all data.
@@ -394,10 +405,11 @@ class OntologyCodeGenerator:
             for existing_top_dir in utils.get_top_level_dirs(destination_dir):
                 if existing_top_dir in generated_top_dirs:
                     logging.warning(
-                        f"The directory with the name "
-                        f"{existing_top_dir} is already present in "
-                        f"{destination_dir}. New files will be merge into the "
-                        f"existing directory.")
+                        "The directory with the name "
+                        "%s is already present in "
+                        "%s. New files will be merge into the "
+                        "existing directory.", existing_top_dir,
+                        destination_dir)
 
             dir_util.copy_tree(tempdir, destination_dir)
 
@@ -442,9 +454,6 @@ class OntologyCodeGenerator:
 
         # Extract imported json files and generate ontology for them.
         json_imports: List[str] = spec_dict.get("import_paths", [])
-
-        # Store the modules contained in the specifications.
-        spec_importable_modules: List[str] = []
 
         for import_file in json_imports:
             import_json_file = utils.search_in_dirs(import_file,
@@ -623,7 +632,7 @@ class OntologyCodeGenerator:
 
     def replace_annotation(self, entry_name: EntryName, func_args):
         this_manager = self.import_managers.get(entry_name.module_name)
-        for i, arg in enumerate(func_args.args):
+        for arg in func_args.args:
             if arg.annotation is not None:
                 arg_ann = arg.annotation
                 while isinstance(arg_ann, ast.Subscript):
@@ -638,6 +647,7 @@ class OntologyCodeGenerator:
     def construct_init(self, entry_name: EntryName, base_entry: str):
         base_init_args = self.top_init_args[base_entry]
         custom_init_args = copy.deepcopy(base_init_args)
+
         self.replace_annotation(entry_name, custom_init_args)
         custom_init_args_str = as_init_str(custom_init_args)
         return custom_init_args_str

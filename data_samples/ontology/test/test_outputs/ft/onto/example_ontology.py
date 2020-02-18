@@ -8,7 +8,7 @@
 Automatically generated ontology . Do not change manually.
 """
 
-from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Link
 from ft.onto.example_import_ontology import Token
@@ -29,15 +29,15 @@ class Word(Token):
     Attributes:
         _string_features (Optional[List[int]])	To demonstrate the composite type, List.
         _word_forms (Optional[List[int]])	To demonstrate that an attribute can be a List of other entries.
-        _token_ranks (Optional[Dict[int, int]])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
+        _token_ranks (Optional[Dict[int, Word]])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
 
     """
 
-    def __init__(self, pack: PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._string_features: Optional[List[int]] = []
         self._word_forms: Optional[List[int]] = []
-        self._token_ranks: Optional[Dict[int, int]] = {}
+        self._token_ranks: Optional[Dict[int, Word]] = {}
 
     def __getstate__(self): 
         state = super().__getstate__()
@@ -118,7 +118,7 @@ class WordLink(Link):
 
     ChildType = Word
 
-    def __init__(self, pack: PackType, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self._string_features: Optional[List[int]] = []
 

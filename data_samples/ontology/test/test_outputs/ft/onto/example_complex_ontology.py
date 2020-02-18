@@ -8,7 +8,7 @@
 Automatically generated ontology . Do not change manually.
 """
 
-from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
 from forte.data.ontology.top import Link
@@ -35,7 +35,7 @@ class Token(Annotation):
 
     """
 
-    def __init__(self, pack: PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._lemma: Optional[str] = None
         self._is_verb: Optional[bool] = None
@@ -98,7 +98,7 @@ class Sentence(Annotation):
 
     """
 
-    def __init__(self, pack: PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._key_tokens: Optional[List[int]] = []
 
@@ -136,7 +136,7 @@ class Document(Annotation):
 
     """
 
-    def __init__(self, pack: PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
     def __getstate__(self): 
@@ -155,7 +155,7 @@ class Dependency(Link):
 
     """
 
-    def __init__(self, pack: PackType, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self._rel_type: Optional[str] = None
 

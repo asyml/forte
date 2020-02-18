@@ -1,6 +1,7 @@
 import os
 from typing import List, Set
 
+from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import top
@@ -66,6 +67,7 @@ def class_name(clazz):
 SINGLE_PACK_CLASSES = [class_name(clazz) for clazz in top.SinglePackEntries]
 MULTI_PACK_CLASSES = [class_name(clazz) for clazz in top.MultiPackEntries]
 
+PACK_TYPE_CLASS_NAME = class_name(PackType)
 
 def hardcoded_pack_map(clazz):
     if clazz in SINGLE_PACK_CLASSES:
@@ -73,7 +75,8 @@ def hardcoded_pack_map(clazz):
     elif clazz in MULTI_PACK_CLASSES:
         return class_name(MultiPack)
     else:
-        return None
+        # When not found, return the default.
+        return PACK_TYPE_CLASS_NAME
 
 
 class Config:

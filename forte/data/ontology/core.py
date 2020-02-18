@@ -17,8 +17,7 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
-from typing import Iterable, Optional, Set, Type, Hashable, TypeVar, Generic, \
-    List, Dict
+from typing import Iterable, Optional, Set, Type, Hashable, TypeVar, Generic
 
 import numpy as np
 
@@ -136,20 +135,6 @@ class Entry(Generic[ContainerType]):
 
     def set_pack(self, pack: ContainerType):
         self.__pack = pack
-
-    def __set_field(self, field_name, field_value):
-        # TODO: Based on the type of the field value, determine how to store.
-        if isinstance(field_value, List):
-            pass
-        elif isinstance(field_value, Dict):
-            pass
-        elif isinstance(field_value, Set):
-            pass
-        elif (isinstance(field_value, str) or
-              isinstance(field_value, int) or
-              isinstance(field_value, float) or
-              isinstance(field_value, bool)):
-            pass
 
     def set_fields(self, **kwargs):
         r"""Set the entry fields from the kwargs.
