@@ -334,12 +334,13 @@ class DataPack(BasePack[Entry, Link, Group]):
             target = self.links
         elif isinstance(entry, Group):
             target = self.groups
-        else:
+        elif isinstance(entry, Generics):
             target = self.generics
-            # raise ValueError(
-            #     f"Invalid entry type {type(entry)}. A valid entry "
-            #     f"should be an instance of Annotation, Link, or Group."
-            # )
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(entry)}. A valid entry "
+                f"should be an instance of Annotation, Link, Group of Generics."
+            )
 
         add_new = allow_duplicate or (entry not in target)
 

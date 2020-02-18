@@ -271,9 +271,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if isinstance(entry, MultiPackLink):
             target = self.links
         elif isinstance(entry, MultiPackGroup):
-            target = self.groups
+            target = self.groups  # type: ignore
         elif isinstance(entry, MultiPackGeneric):
-            target = self.generics
+            target = self.generics  # type: ignore
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)} for Multipack. A valid "
@@ -286,7 +286,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if add_new:
             self.record_entry(entry)
 
-            target.append(entry)
+            target.append(entry)  # type: ignore
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
@@ -299,7 +299,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
             return entry
         else:
-            return target[target.index(entry)]
+            return target[target.index(entry)]  # type: ignore
 
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         r"""Try to add an :class:`Entry` object to the :class:`Multipack`
@@ -350,9 +350,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if isinstance(entry, MultiPackLink):
             target = self.links
         elif isinstance(entry, MultiPackGroup):
-            target = self.groups
+            target = self.groups  # type: ignore
         elif isinstance(entry, MultiPackGeneric):
-            target = self.generics
+            target = self.generics  # type: ignore
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
