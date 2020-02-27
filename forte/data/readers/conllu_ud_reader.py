@@ -18,8 +18,7 @@ into data_pack format
 """
 from typing import Iterator, Dict, Tuple, Any
 
-from ft.onto.base_ontology import Document, Sentence, Token, Dependency,\
-    EnhancedDependency
+from ft.onto.base_ontology import Document, Sentence, Token, Dependency, EnhancedDependency
 
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
@@ -51,7 +50,6 @@ class ConllUDReader(PackReader):
         Returns: data packs obtained from each document from each conllu file.
         """
         conll_dir_path = args[0]
-
         file_paths = dataset_path_iterator(conll_dir_path, "conllu")
         for file_path in file_paths:
             with open(file_path, "r", encoding="utf8") as file:

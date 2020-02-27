@@ -27,11 +27,11 @@ IGNORE_ERRORS_LINES: List[str] = [
     '# pylint: skip-file']
 DEFAULT_PREFIX = "ft.onto"
 
-PRIMITIVE_SUPPORTED: Set[str] = {'int', 'float', 'str', 'bool'}
+SUPPORTED_PRIMITIVES = {'int', 'float', 'str', 'bool'}
+NON_COMPOSITES = {key: key for key in SUPPORTED_PRIMITIVES}
+COMPOSITES = {'List': 'typing.List', 'Dict': 'typing.Dict'}
 
-SINGLE_COMPOSITES = {'List': 'typing.List'}
-
-COMPLEX_COMPOSITES = {'Dict': 'typing.Dict'}
+ALL_INBUILT_TYPES = set(list(NON_COMPOSITES.keys()) + list(COMPOSITES.keys()))
 
 
 class SchemaKeywords:
@@ -52,9 +52,11 @@ class SchemaKeywords:
     dict_value_type = 'value_type'
 
 
-def file_header(ontology_description, ontology_name):
+def file_header(desc_str, ontology_name):
+    desc_str = "" if desc_str is None else desc_str.strip()
+    desc_str = desc_str + "\n" if desc_str else ""
     return (
-        f'{ontology_description}\n\n'
+        f'{desc_str}'
         f'Automatically generated ontology {ontology_name}. '
         f'Do not change manually.'
     )

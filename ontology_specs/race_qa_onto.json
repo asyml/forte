@@ -5,8 +5,12 @@
   ],
   "definitions": [
     {
+      "entry_name": "ft.onto.race_mutli_choice_qa_ontology.RaceDocument",
+      "parent_entry": "ft.onto.base_ontology.Document"
+    },
+    {
       "entry_name": "ft.onto.race_mutli_choice_qa_ontology.Passage",
-      "parent_entry": "ft.onto.base_ontology_new.Document",
+      "parent_entry": "ft.onto.base_ontology.Document",
       "attributes": [
         {
           "name": "passage_id",
@@ -16,9 +20,7 @@
     },
     {
       "entry_name": "ft.onto.race_mutli_choice_qa_ontology.Option",
-      "parent_entry": "forte.data.ontology.top.Annotation",
-      "attributes": [
-      ]
+      "parent_entry": "forte.data.ontology.top.Annotation"
     },
     {
       "entry_name": "ft.onto.race_mutli_choice_qa_ontology.Question",
