@@ -29,27 +29,26 @@ from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
 
-import typed_ast
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
 
 from forte.data.ontology import top, utils
-from forte.data.ontology.code_generation_exceptions import \
-    DuplicateEntriesWarning, OntologySpecError, \
-    ImportOntologyNotFoundException, ImportOntologyAlreadyGeneratedException, \
-    ParentEntryNotDeclaredException, TypeNotDeclaredException, \
-    UnsupportedTypeException, InvalidIdentifierException, \
-    DuplicatedAttributesWarning, ParentEntryNotSupportedException
+from forte.data.ontology.code_generation_exceptions import (
+    DuplicateEntriesWarning, OntologySpecError,
+    ImportOntologyNotFoundException, ImportOntologyAlreadyGeneratedException,
+    ParentEntryNotDeclaredException, TypeNotDeclaredException,
+    UnsupportedTypeException, InvalidIdentifierException,
+    DuplicatedAttributesWarning, ParentEntryNotSupportedException)
 from forte.data.ontology.code_generation_objects import (
     NonCompositeProperty, ListProperty, ClassTypeDefinition,
-    DefinitionItem, Property, ImportManagerPool,
+    EntryDefinition, Property, ImportManagerPool,
     EntryName, ModuleWriterPool, ImportManager, DictProperty)
 # Builtin and local imports required in the generated python modules.
-from forte.data.ontology.ontology_code_const import REQUIRED_IMPORTS, \
-    DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE, DEFAULT_PREFIX, \
-    SchemaKeywords, file_header, PRIMITIVE_SUPPORTED, \
-    SINGLE_COMPOSITES, COMPLEX_COMPOSITES, TOP_MOST_MODULE_NAME, \
-    PACK_TYPE_CLASS_NAME, hardcoded_pack_map
+from forte.data.ontology.ontology_code_const import (
+    REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
+    DEFAULT_PREFIX, SchemaKeywords, file_header, NON_COMPOSITES, COMPOSITES,
+    ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
+    hardcoded_pack_map)
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -135,7 +134,7 @@ def as_init_str(init_args):
 
 
 def is_composite_type(item_type: str):
-    return item_type in SINGLE_COMPOSITES or item_type == 'Dict'
+    return item_type in COMPOSITES
 
 
 def valid_composite_key(item_type: str):
@@ -157,7 +156,6 @@ class OntologyCodeGenerator:
 
     def __init__(self, json_dir_paths: Optional[List[str]] = None):
         """
-
         Args:
             json_dir_paths: Additional user provided paths to search the
             imported json configs from. By default paths provided in the json
@@ -184,7 +182,7 @@ class OntologyCodeGenerator:
         # (default is `forte.data.ontology.top.py`), to their
         # `__init__` arguments.
         # self.top_init_args_strs: Dict[str, str] = {}
-        self.root_base_entrys: Set[str] = set()
+        self.root_base_entries: Set[str] = set()
 
         # Map from the full class name, to the list contains objects of
         # <typed_ast._ast3.arg>, which are the init arguments.
@@ -199,17 +197,17 @@ class OntologyCodeGenerator:
         self.base_entry_lookup: Dict[str, str] = {}
 
         # Populate the two dictionaries above. And make the classes in the base
-        # ontology awared by the root manager.
+        # ontology aware to the root manager.
         self.initialize_top_entries(self.import_managers.root,
                                     base_ontology_module)
 
         # A few basic type to support.
         self.import_managers.root.add_object_to_import('typing.Optional')
 
-        for type_class in COMPLEX_COMPOSITES.values():
+        for type_class in NON_COMPOSITES.values():
             self.import_managers.root.add_object_to_import(type_class)
 
-        for type_class in SINGLE_COMPOSITES.values():
+        for type_class in COMPOSITES.values():
             self.import_managers.root.add_object_to_import(type_class)
 
         # Mapping from the full class name to the ref string to be used here.
@@ -219,7 +217,7 @@ class OntologyCodeGenerator:
         # and their attributes (if any) in order to validate the attribute
         # types.
         self.allowed_types_tree: Dict[str, Set] = {}
-        for type_str in {*PRIMITIVE_SUPPORTED}:
+        for type_str in ALL_INBUILT_TYPES:
             self.allowed_types_tree[type_str] = set()
 
         # Directories to be examined to find json files for user-defined config
@@ -498,7 +496,7 @@ class OntologyCodeGenerator:
         sorted_prefixes = analyze_packages(allowed_packages)
 
         file_desc = file_header(
-            schema.get(SchemaKeywords.description, ''),
+            schema.get(SchemaKeywords.description, ""),
             schema.get(SchemaKeywords.ontology_name, "")
         )
 
@@ -660,7 +658,7 @@ class OntologyCodeGenerator:
         return custom_init_args_str
 
     def parse_entry(self, entry_name: EntryName,
-                    schema: Dict) -> Tuple[DefinitionItem, List[str]]:
+                    schema: Dict) -> Tuple[EntryDefinition, List[str]]:
         """
         Args:
             entry_name: Object holds various name form of the entry.
@@ -746,7 +744,7 @@ class OntologyCodeGenerator:
         # TODO: Can assign better object type to Link and Group objects
         custom_init_arg_str: str = self.construct_init(entry_name, base_entry)
 
-        entry_item = DefinitionItem(
+        entry_item = EntryDefinition(
             name=entry_name.name,
             class_type=parent_entry_use_name,
             init_args=custom_init_arg_str,
@@ -791,7 +789,7 @@ class OntologyCodeGenerator:
                 f"not declared in ontology.")
 
         # Make sure the import of these related types are handled.
-        full_type = COMPLEX_COMPOSITES['Dict']
+        full_type = COMPOSITES['Dict']
         manager.add_object_to_import(full_type)
         manager.add_object_to_import(value_type)
 
@@ -803,7 +801,7 @@ class OntologyCodeGenerator:
             manager, att_name, key_type, value_type, description=desc,
             default_val=default_val, self_ref=self_ref)
 
-    def parse_single_composite(
+    def parse_list(
             self, manager: ImportManager, schema: Dict, entry_name: EntryName,
             att_name: str, att_type: str, desc: str) -> ListProperty:
         if SchemaKeywords.element_type not in schema:
@@ -828,7 +826,7 @@ class OntologyCodeGenerator:
                 f"{entry_name.name} of the attribute {att_name} "
                 f"not declared in ontology.")
 
-        full_type = SINGLE_COMPOSITES[att_type]
+        full_type = COMPOSITES[att_type]
 
         # Make sure the import of these related types are handled.
         manager.add_object_to_import(full_type)
@@ -836,13 +834,19 @@ class OntologyCodeGenerator:
 
         self_ref = entry_name.class_name == item_type
 
-        if att_type == 'List':
-            return ListProperty(
-                manager, att_name, full_type, item_type, description=desc,
-                default_val=[], self_ref=self_ref)
-        else:
-            raise UnsupportedTypeException(
-                f"{att_type} is not a supported composite type.")
+        return ListProperty(
+            manager, att_name, full_type, item_type, description=desc,
+            default_val=[], self_ref=self_ref)
+
+    def parse_non_composite(
+            self, manager: ImportManager, att_name: str, att_type: str,
+            desc: str, default_val: str) -> NonCompositeProperty:
+
+        manager.add_object_to_import('typing.Optional')
+
+        return NonCompositeProperty(
+            manager, att_name, att_type, description=desc,
+            default_val=default_val)
 
     def parse_property(self, entry_name: EntryName, schema: Dict) -> Property:
         """
@@ -862,6 +866,7 @@ class OntologyCodeGenerator:
             entry_name.module_name)
 
         # schema type should be present in the validation tree
+        # TODO: Remove this hack
         if not manager.is_known_name(att_type):
             raise TypeNotDeclaredException(
                 f"Attribute type '{att_type}' for the entry "
@@ -872,16 +877,19 @@ class OntologyCodeGenerator:
         default_val = schema.get(SchemaKeywords.default_value, None)
 
         # element type should be present in the validation tree
-        if att_type in SINGLE_COMPOSITES:
-            return self.parse_single_composite(
-                manager, schema, entry_name, att_name, att_type, desc)
-        elif att_type == 'Dict':
-            return self.parse_dict(
-                manager, schema, entry_name, att_name, att_type, desc)
-        else:
-            return NonCompositeProperty(
-                manager, att_name, att_type, description=desc,
-                default_val=default_val)
+        if att_type in COMPOSITES:
+            if att_type == 'List':
+                return self.parse_list(
+                    manager, schema, entry_name, att_name, att_type, desc)
+            elif att_type == 'Dict':
+                return self.parse_dict(
+                    manager, schema, entry_name, att_name, att_type, desc)
+        elif att_type in NON_COMPOSITES or manager.is_imported(att_type):
+            return self.parse_non_composite(
+                manager, att_name, att_type, desc, default_val)
+
+        raise UnsupportedTypeException(
+            f"{att_type} is not a supported type.")
 
     def find_base_entry(
             self, this_entry: str, parent_entry: str) -> Optional[str]:
