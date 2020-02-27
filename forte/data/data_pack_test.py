@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for ner_data pack related operations.
+Unit tests for data pack related operations.
 """
 import logging
 import unittest
@@ -76,6 +76,12 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(instances[0]["PredicateLink"]), 4)
         self.assertEqual(len(instances[0]["Token"]), 5)
         self.assertEqual(len(instances[0]["EntityMention"]), 3)
+
+        # case 6: test delete entry
+        num_sent = len([self.data_pack.get(Sentence)])
+        first_sent = [self.data_pack.get(Sentence)][0]
+        self.data_pack.delete_entry(first_sent)
+        self.assertEqual(len([self.data_pack.get_data(Sentence)]), num_sent - 1)
 
 
 if __name__ == '__main__':

@@ -28,11 +28,11 @@ def get_user_objects_from_module(module_str: str,
     """
     Args:
         module_str: Module in the form of string, package.module.
-        custom_dirs: custom directories to search from if `module_str` not a
-        part of imported modules.
+        custom_dirs: custom directories to search from if `module_str` is not a
+          part of imported modules.
 
     Returns: A list of objects present in the module `module_str`,
-             None is module not found
+             None if module not found
 
     """
     module = locate(module_str)

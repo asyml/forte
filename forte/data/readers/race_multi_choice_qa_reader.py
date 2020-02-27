@@ -22,8 +22,8 @@ from typing import Any, Iterator, List
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.race_mutli_choice_qa_ontology import (
-    Article, Passage, Question, Option)
+from ft.onto.race_mutli_choice_qa_ontology_bak import (
+    Document, Passage, Question, Option)
 
 __all__ = [
     "RACEMultiChoiceQAReader",
@@ -64,7 +64,7 @@ class RACEMultiChoiceQAReader(PackReader):
             pack = DataPack()
             text: str = dataset['article']
             article_end = len(text)
-            article = Article(pack, 0, article_end)
+            article = Document(pack, 0, article_end)
             pack.add_entry(article)
             offset = article_end + 1
 

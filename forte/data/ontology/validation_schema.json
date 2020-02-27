@@ -77,30 +77,67 @@
                   "type": "string"
                 },
                 "item_type": {
-                  "description": "Item type if attribute type is composable",
+                  "description": "Item type for the case of List attributes",
+                  "type": "string"
+                },
+                "key_type": {
+                  "description": "Item type for the case of Dict attributes",
+                  "type": "string"
+                },
+                "value_type": {
+                  "description": "Item type for the case of Dice attributes",
                   "type": "string"
                 }
               },
-              "if": {
-                "properties": {
-                  "name": {
-                    "enum": ["List"]
-                  }
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "properties": {
+                        "name": {
+                          "enum": [
+                            "List"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "type",
+                        "item_type"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "properties": {
+                        "name": {
+                          "enum": [
+                            "Dict"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "type",
+                        "key_type",
+                        "value_type"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "required": [
+                        "name",
+                        "type"
+                      ]
+                    }
+                  ]
                 }
-              },
-              "then": {
-                "required": [
-                "name",
-                "type",
-                "item_type"
               ]
-              },
-              "else": {
-                "required": [
-                "name",
-                "type"
-              ]
-              }
             }
           },
           "parent_type": {

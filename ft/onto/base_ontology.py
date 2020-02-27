@@ -162,6 +162,9 @@ class PredicateMention(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.predicate_lemma: str
+        self.framenet_id: str
+        self.is_verb: bool
 
 
 class PredicateLink(Link):
@@ -226,8 +229,25 @@ class Dependency(Link):
                  child: Optional[Token] = None):
         super().__init__(pack, parent, child)
         self.dep_label: Optional[str] = None
-        self.rel_type: Optional[Type] = None
-        self.dep_type: Optional[Type] = None
+
+
+class EnhancedDependency(Link):
+    """
+    A :class:`Link` type entry which represent a enhanced dependency :
+    https://universaldependencies.org/u/overview/enhanced-syntax.html
+    """
+    ParentType = Token
+    """The entry type of the parent node of :class:`Dependency`."""
+
+    ChildType = Token
+    """The entry type of the child node of :class:`Dependency`."""
+
+    def __init__(self,
+                 pack: DataPack,
+                 parent: Optional[Token] = None,
+                 child: Optional[Token] = None):
+        super().__init__(pack, parent, child)
+        self.dep_label: Optional[str] = None
 
 
 class RelationLink(Link):

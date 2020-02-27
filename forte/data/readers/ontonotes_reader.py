@@ -22,7 +22,7 @@ from typing import (Any, DefaultDict, Iterator, List, NamedTuple, Optional,
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import (
+from ft.onto.base_ontology_new import (
     CoreferenceGroup, Document, EntityMention, PredicateArgument, PredicateLink,
     PredicateMention, Sentence, Token)
 
@@ -198,9 +198,8 @@ class OntonotesReader(PackReader):
                         word_is_verbal_predicate = any(
                             "(V" in x for x in fields.predicate_labels)
                         kwargs_i = {
-                            "pred_lemma": fields.lemmatised_word,
-                            "pred_type": ("verb" if word_is_verbal_predicate
-                                          else "other")
+                            "predicate_lemma": fields.lemmatised_word,
+                            "is_verb": word_is_verbal_predicate
                         }
                         pred_mention = PredicateMention(
                             pack, word_begin, word_end)

@@ -1,12 +1,62 @@
 # Ontology Configuration #
 
-Welcome! Forte uses _Ontologies_ to allow interaction between different NLP 
-concepts. The ontologies are, simply put, a description of concepts and how they 
-relate to each other. 
+Welcome! Forte uses allows one to define relations between the annotations, 
+ using _Ontologies_. This allows we have rich interaction between different NLP 
+concepts.
 
 Forte allows you to define the ontology of your project 
 in JSON format. The JSON ontology is then converted to Python classes 
 automatically using the Forte Ontology Generation feature.
+
+### A simple ontology config ###
+Let us consider a simple ontology for documents of a pet shop. Let's we want to 
+know which text talks about the `Pet`s, and which text talks about `Customer`s.
+```json
+{
+    "name": "pet_shop_ontology",
+    "description": "An Ontology Used to manage the pet shop assets and pets",
+    "definitions": [
+        {
+            "entry_name": "ft.onto.pet_shop.Pet",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "description": "Pets in the shop.",
+            "attributes": [
+                {
+                    "name": "pet_type",
+                    "type": "str"
+                }
+            ]
+        },
+        {
+            "entry_name": "ft.onto.pet_shop.Customer",
+            "parent_entry": "forte.data.ontology.top.Annotation",
+            "description": "Owner of pets.",
+            "attributes": [
+                {
+                    "name": "name",
+                    "type": "str"
+                },
+                {
+                    "name": "pets",
+                    "description": "List of pets the customer have.",
+                    "type": "List",
+                    "item_type": "ft.onto.pet_shop.Pet"
+                }
+            ]
+        }
+    ]
+}
+```
+
+At Forte's root directory, try run the following command:
+```shell script
+generate_ontology create --config ontology_definitions/example_ontology.json --dest_path .
+```
+You should be able to see the generated code for this Pet Shop ontology.
+
+
+
+
 
 This _Ontology Configuration_ tutorial teaches how to:
 * Define a simple ontology config for your NLP project using JSON.
@@ -32,7 +82,7 @@ associated with an entry, like, `pos_tag` for the entry `Token`.
 in the module `forte.data.ontology.base.top`. All user-defined entries should extend one of 
 the top entries. 
  
-<!--We plan to deprecate base_ontology.py?-->
+<!--We plan to deprecate base_ontology_bak.py?-->
 We provide a set of commonly used entries in the module ``forte.data.ontology.base_ontology.py``. 
 Those entries could be reused directly and need not be redefined in the ontology config by the user.
  

@@ -18,7 +18,9 @@ into data_pack format
 """
 from typing import Iterator, Dict, Tuple, Any
 
-from ft.onto.base_ontology import Document, Sentence, Token, Dependency
+from ft.onto.base_ontology import Document, Sentence, Token, Dependency,\
+    EnhancedDependency
+
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
@@ -145,23 +147,6 @@ class ConllUDReader(PackReader):
                 for token_id in sent_tokens:
                     token_comps, token = sent_tokens[token_id]
 
-                    def add_dependency(dep_parent, dep_child, dep_label,
-                                       dep_type, data_pack_):
-                        """Adds dependency to a data_pack
-                        Args:
-                            dep_parent: dependency parent token
-                            dep_child: dependency child token
-                            dep_label: dependency label
-                            dep_type: "primary" or "enhanced" dependency
-                            data_pack_: data_pack to which the
-                            dependency is to be added
-                        """
-                        dependency = Dependency(
-                            data_pack, dep_parent, dep_child)
-                        dependency.dep_label = dep_label
-                        dependency.type = dep_type
-                        data_pack_.add_or_get_entry(dependency)
-
                     # add primary dependency
                     label = token_comps["label"]
                     if label == "root":
@@ -169,16 +154,19 @@ class ConllUDReader(PackReader):
                     else:
                         token.is_root = False
                         head = sent_tokens[token_comps["head"]][1]
-                        add_dependency(head, token, label,
-                                       "primary", data_pack)
+                        dependency = Dependency(data_pack, head, token)
+                        dependency.dep_label = label
+                        data_pack.add_or_get_entry(dependency)
 
                     # add enhanced dependencies
                     for dep in token_comps["enhanced_dependency_relations"]:
                         head_id, label = dep.split(":", 1)
                         if label != "root":
                             head = sent_tokens[head_id][1]
-                            add_dependency(head, token, label, "enhanced",
-                                           data_pack)
+                            dependency = EnhancedDependency(data_pack, head,
+                                                            token)
+                            dependency.dep_label = label
+                            data_pack.add_or_get_entry(dependency)
 
                 # add sentence
                 sent = Sentence(data_pack, doc_sent_begin, doc_offset - 1)

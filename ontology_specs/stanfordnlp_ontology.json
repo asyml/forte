@@ -26,13 +26,7 @@
     {
       "entry_name": "ft.onto.stanfordnlp_ontology.Sentence",
       "parent_entry": "forte.data.ontology.top.Annotation",
-      "attributes": [
-        {
-          "name": "tokens",
-          "type": "List",
-          "item_type": "ft.onto.stanfordnlp_ontology.Token"
-        }
-      ]
+      "attributes": []
     },
     {
       "entry_name": "ft.onto.stanfordnlp_ontology.Document",

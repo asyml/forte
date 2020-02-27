@@ -28,7 +28,7 @@
       "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {
-          "name": "tokens",
+          "name": "key_tokens",
           "type": "List",
           "item_type": "ft.onto.example_complex_ontology.Token"
         }
