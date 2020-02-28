@@ -1,0 +1,42 @@
+{
+  "ontology_name": "race_mutli_choice_qa_ontology",
+  "import_paths": [
+    "base_ontology.json"
+  ],
+  "definitions": [
+    {
+      "entry_name": "ft.onto.race_mutli_choice_qa_ontology.RaceDocument",
+      "parent_entry": "ft.onto.base_ontology.Document"
+    },
+    {
+      "entry_name": "ft.onto.race_mutli_choice_qa_ontology.Passage",
+      "parent_entry": "ft.onto.base_ontology.Document",
+      "attributes": [
+        {
+          "name": "passage_id",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.race_mutli_choice_qa_ontology.Option",
+      "parent_entry": "forte.data.ontology.top.Annotation"
+    },
+    {
+      "entry_name": "ft.onto.race_mutli_choice_qa_ontology.Question",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": [
+        {
+          "name": "options",
+          "type": "List",
+          "item_type": "ft.onto.race_mutli_choice_qa_ontology.Option"
+        },
+        {
+          "name": "answers",
+          "type": "List",
+          "item_type": "int"
+        }
+      ]
+    }
+  ]
+}

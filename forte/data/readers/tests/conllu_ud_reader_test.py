@@ -15,6 +15,7 @@
 Tests for conllU reader
 """
 
+import os
 import unittest
 
 from typing import List
@@ -29,7 +30,10 @@ class ConllUDReaderTest(unittest.TestCase):
         """
         Reading the data into data_pack object to be used in the tests
         """
-        conll_ud_dir = 'data_samples/conll_ud'
+        file_dir_path = os.path.dirname(__file__)
+        conll_ud_dir = os.path.abspath(os.path.join(file_dir_path,
+                                                    *([os.pardir]*4),
+                                                    'data_samples/conll_ud'))
         reader = ConllUDReader()
         self.data_packs: List[DataPack] = \
             [data_pack for data_pack in reader.iter(conll_ud_dir)]

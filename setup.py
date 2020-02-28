@@ -41,7 +41,7 @@ setuptools.setup(
         'sentiment': ['vaderSentiment'],
         'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
-        'test': ['ddt', 'jsonschema'],
+        'test': ['ddt', 'testfixtures'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],

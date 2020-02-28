@@ -225,7 +225,7 @@ class Group(BaseGroup[Entry]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             members: Optional[Set[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)
@@ -402,5 +402,5 @@ class Query(Generics):
         self.results.update(pid_to_score)
 
 
-SinglePackEntries = (Link, Group, Annotation)
-MultiPackEntries = (MultiPackLink, MultiPackGroup)
+SinglePackEntries = (Link, Group, Annotation, Generics)
+MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric, SubEntry)

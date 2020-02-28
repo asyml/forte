@@ -16,17 +16,21 @@ Unit tests for RACEMultiChoiceQAReader.
 """
 import json
 import unittest
+import os
 from typing import Iterator
 
 from forte.data.readers import RACEMultiChoiceQAReader
 from forte.data.data_pack import DataPack
-from ft.onto.race_mutli_choice_qa_ontology import Article, Question
+from ft.onto.race_mutli_choice_qa_ontology import RaceDocument, Question
 
 
 class RACEMultiChoiceQAReaderTest(unittest.TestCase):
 
     def setUp(self):
-        self.dataset_path = "data_samples/race_multi_choice_qa"
+        self.dataset_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            *([os.path.pardir]*4),
+            'data_samples/race_multi_choice_qa'))
 
     def test_reader_no_replace_test(self):
         # Read with no replacements
@@ -41,7 +45,7 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
             with open(file_path, "r", encoding="utf8", errors='ignore') as file:
                 expected = json.load(file)
 
-            articles = list(pack.get_entries(Article))
+            articles = list(pack.get_entries(RaceDocument))
             self.assertEqual(len(articles), 1)
             expected_article = expected['article']
             self.assertEqual(articles[0].text, expected_article)
@@ -58,7 +62,7 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
                 self.assertEqual(question.answers, expected_answers)
                 expected_text += '\n' + expected_question
 
-                for oid, option in enumerate(question.get_options()):
+                for oid, option in enumerate(question.options):
                     expected_option = expected['options'][qid][oid]
                     self.assertEqual(option.text, expected_option)
                     expected_text += '\n' + expected_option

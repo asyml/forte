@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for ner_data pack related operations.
+Unit tests for data pack related operations.
 """
+import os
 import logging
 import unittest
 
@@ -29,7 +30,11 @@ class DataPackTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.reader = OntonotesReader()
-        data_path = "data_samples/ontonotes/00/abc_0059.gold_conll"
+        data_rel_path = "data_samples/ontonotes/00/abc_0059.gold_conll"
+        file_dir_path = os.path.dirname(__file__)
+        data_path = os.path.abspath(os.path.join(file_dir_path,
+                                    *([os.pardir] * 3),
+                                    data_rel_path))
         self.data_pack = list(self.reader.parse_pack(data_path))[0]
 
     def test_get_data(self):
@@ -76,6 +81,13 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(instances[0]["PredicateLink"]), 4)
         self.assertEqual(len(instances[0]["Token"]), 5)
         self.assertEqual(len(instances[0]["EntityMention"]), 3)
+
+        # case 6: test delete entry
+        sentences = list(self.data_pack.get(Sentence))
+        num_sent = len(sentences)
+        first_sent = sentences[0]
+        self.data_pack.delete_entry(first_sent)
+        self.assertEqual(len(list(self.data_pack.get_data(Sentence))), num_sent - 1)
 
 
 if __name__ == '__main__':

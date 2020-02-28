@@ -3,57 +3,90 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated file. Do not change manually.
+
+
+Automatically generated ontology . Do not change manually.
 """
-import forte.data.data_pack
-import forte.data.ontology.top
-import ft.onto
-import typing
+
+from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Annotation
+from typing import Optional
 
 
-__all__ = []
+__all__ = [
+    "Token",
+    "EntityMention",
+]
 
 
-__all__.extend('Token')
-
-
-class Token(forte.data.ontology.top.Annotation):
+class Token(Annotation):
     """
     Base parent token entry
+
+    Attributes:
+        _pos (Optional[str])
+        _lemma (Optional[str])
+
     """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._pos: typing.Optional[str] = None
-        self._lemma: typing.Optional[str] = None
+        self._pos: Optional[str] = None
+        self._lemma: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['pos'] = self._pos
+        state['lemma'] = self._lemma
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self._pos = state.get('pos', None) 
+        self._lemma = state.get('lemma', None) 
 
     @property
     def pos(self):
         return self._pos
 
-    def set_pos(self, pos: typing.Optional[str]):
+    @pos.setter
+    def pos(self, pos: Optional[str]):
         self.set_fields(_pos=pos)
 
     @property
     def lemma(self):
         return self._lemma
 
-    def set_lemma(self, lemma: typing.Optional[str]):
+    @lemma.setter
+    def lemma(self, lemma: Optional[str]):
         self.set_fields(_lemma=lemma)
 
 
-__all__.extend('EntityMention')
+class EntityMention(Annotation):
+    """
 
+    Attributes:
+        _entity_type (Optional[str])
 
-class EntityMention(forte.data.ontology.top.Annotation):
+    """
 
-    def __init__(self, pack: forte.data.base_pack.PackType, begin: int, end: int):
+    def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._entity_type: typing.Optional[str] = None
+        self._entity_type: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['entity_type'] = self._entity_type
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self._entity_type = state.get('entity_type', None) 
 
     @property
     def entity_type(self):
         return self._entity_type
 
-    def set_entity_type(self, entity_type: typing.Optional[str]):
+    @entity_type.setter
+    def entity_type(self, entity_type: Optional[str]):
         self.set_fields(_entity_type=entity_type)
