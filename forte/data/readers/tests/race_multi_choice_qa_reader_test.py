@@ -21,7 +21,7 @@ from typing import Iterator
 
 from forte.data.readers import RACEMultiChoiceQAReader
 from forte.data.data_pack import DataPack
-from ft.onto.race_mutli_choice_qa_ontology import RaceDocument, Question
+from ft.onto.race_multi_choice_qa_ontology import RaceDocument, Question
 
 
 class RACEMultiChoiceQAReaderTest(unittest.TestCase):
@@ -29,7 +29,7 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
     def setUp(self):
         self.dataset_path = os.path.abspath(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            *([os.path.pardir]*4),
+            *([os.path.pardir] * 4),
             'data_samples/race_multi_choice_qa'))
 
     def test_reader_no_replace_test(self):

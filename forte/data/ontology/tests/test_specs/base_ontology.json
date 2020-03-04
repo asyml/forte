@@ -71,12 +71,6 @@
         {
           "name": "part_id",
           "type": "int"
-        },
-        {
-          "name": "sentiment",
-          "type": "Dict",
-          "key_type": "str",
-          "value_type": "float"
         }
       ]
     },

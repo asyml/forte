@@ -3,8 +3,6 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-
-
 Automatically generated ontology . Do not change manually.
 """
 
@@ -22,13 +20,10 @@ __all__ = [
 class Token(Annotation):
     """
     Base parent token entry
-
     Attributes:
         _pos (Optional[str])
         _lemma (Optional[str])
-
     """
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._pos: Optional[str] = None
@@ -64,12 +59,9 @@ class Token(Annotation):
 
 class EntityMention(Annotation):
     """
-
     Attributes:
         _entity_type (Optional[str])
-
     """
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._entity_type: Optional[str] = None

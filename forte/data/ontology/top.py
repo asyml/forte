@@ -18,7 +18,6 @@ from typing import Optional, Set, Tuple, Type, Any, Dict, Union
 import numpy as np
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.container import EntryContainer
 from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base_pack import PackType
 from forte.data.span import Span

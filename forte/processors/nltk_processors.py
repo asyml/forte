@@ -85,8 +85,7 @@ class NLTKLemmatizer(PackProcessor):
                                                 range_annotation=sentence,
                                                 component=self.token_component))
             token_texts = [token.text for token in token_entries]
-            token_pos = [penn2morphy(token.pos)  # type: ignore
-                         for token in token_entries]
+            token_pos = [penn2morphy(token.pos) for token in token_entries]
             lemmas = [self.lemmatizer.lemmatize(token_texts[i], token_pos[i])
                       for i in range(len(token_texts))]
             for token, lemma in zip(token_entries, lemmas):

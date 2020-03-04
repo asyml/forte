@@ -45,7 +45,7 @@ setuptools.setup(
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
-        'spacy': ['spacy'],
+        'spacy': ['spacy>=2.2.3'],
         'allennlp': ['allennlp']
     },
     entry_points={

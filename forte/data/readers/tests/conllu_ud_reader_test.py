@@ -32,7 +32,7 @@ class ConllUDReaderTest(unittest.TestCase):
         """
         file_dir_path = os.path.dirname(__file__)
         conll_ud_dir = os.path.abspath(os.path.join(file_dir_path,
-                                                    *([os.pardir]*4),
+                                                    *([os.pardir] * 4),
                                                     'data_samples/conll_ud'))
         reader = ConllUDReader()
         self.data_packs: List[DataPack] = \

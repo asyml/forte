@@ -193,6 +193,8 @@ def indent_code(code_lines: List[str], level: int = 0,
     lines = []
 
     for code in code_lines:
+        if code is None:
+            continue
         if code == '':
             lines.append('')
         else:
@@ -644,7 +646,10 @@ class EntryDefinition(Item):
     def to_init_code(self, level: int) -> str:
         return indent_line(f"def __init__(self, {self.init_args}):", level)
 
-    def to_get_state_code(self, level: int) -> str:
+    def to_get_state_code(self, level: int) -> Optional[str]:
+        if len(self.properties) == 0:
+            return None
+
         lines = [
             ("def __getstate__(self): ", 0),
             ("state = super().__getstate__()", 1),
@@ -655,15 +660,16 @@ class EntryDefinition(Item):
         lines.append(("return state", 1))
         return indent_code([indent_line(*line) for line in lines], level)
 
-    def to_set_state_code(self, level: int) -> str:
+    def to_set_state_code(self, level: int) -> Optional[str]:
+        if len(self.properties) == 0:
+            return None
+
         lines = [
             ("def __setstate__(self, state): ", 0),
             ("state = super().__setstate__(state)", 1),
         ]
-
         for p in self.properties:
             lines.extend(p.to_setstate(1))
-
         return indent_code([indent_line(*line) for line in lines], level)
 
     def to_code(self, level: int) -> str:

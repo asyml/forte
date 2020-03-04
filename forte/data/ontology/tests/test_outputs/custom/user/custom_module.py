@@ -3,8 +3,6 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-
-
 Automatically generated ontology . Do not change manually.
 """
 
@@ -22,12 +20,9 @@ __all__ = [
 
 class Dependency(Link):
     """
-
     Attributes:
         _rel_type (Optional[str])
-
     """
-
     ParentType = Token
 
     ChildType = Token

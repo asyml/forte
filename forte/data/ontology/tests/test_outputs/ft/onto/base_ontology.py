@@ -185,24 +185,10 @@ class Document(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
-    def __getstate__(self): 
-        state = super().__getstate__()
-        return state
-
-    def __setstate__(self, state): 
-        state = super().__setstate__(state)
-
 
 class SpecialDocument(Document):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-
-    def __getstate__(self): 
-        state = super().__getstate__()
-        return state
-
-    def __setstate__(self, state): 
-        state = super().__setstate__(state)
 
 
 class Sentence(Annotation):
@@ -211,26 +197,22 @@ class Sentence(Annotation):
     Attributes:
         _speaker (Optional[str])
         _part_id (Optional[int])
-        _sentiment (Optional[Dict[str, float]])
     """
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._speaker: Optional[str] = None
         self._part_id: Optional[int] = None
-        self._sentiment: Optional[Dict[str, float]] = {}
 
     def __getstate__(self): 
         state = super().__getstate__()
         state['speaker'] = self._speaker
         state['part_id'] = self._part_id
-        state['sentiment'] = self._sentiment
         return state
 
     def __setstate__(self, state): 
         state = super().__setstate__(state)
         self._speaker = state.get('speaker', None) 
         self._part_id = state.get('part_id', None) 
-        self._sentiment = state.get('sentiment', None) 
 
     @property
     def speaker(self):
@@ -247,24 +229,6 @@ class Sentence(Annotation):
     @part_id.setter
     def part_id(self, part_id: Optional[int]):
         self.set_fields(_part_id=part_id)
-
-    @property
-    def sentiment(self):
-        return self._sentiment
-
-    @sentiment.setter
-    def sentiment(self, sentiment: Optional[Dict[str, float]]):
-        sentiment = {} if sentiment is None else sentiment
-        self.set_fields(_sentiment=sentiment)
-
-    def num_sentiment(self):
-        return len(self._sentiment)
-
-    def clear_sentiment(self):
-        self._sentiment.clear()
-
-    def add_sentiment(self, key: str, value: float):
-        self.sentiment[key] = value
 
 
 class Phrase(Annotation):
@@ -301,13 +265,6 @@ class Utterance(Annotation):
     """
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-
-    def __getstate__(self): 
-        state = super().__getstate__()
-        return state
-
-    def __setstate__(self, state): 
-        state = super().__setstate__(state)
 
 
 class PredicateArgument(Annotation):
@@ -589,10 +546,3 @@ class CoreferenceGroup(Group):
     """
     def __init__(self, pack: DataPack, members: Optional[Set[Entry]] = None):
         super().__init__(pack, members)
-
-    def __getstate__(self): 
-        state = super().__getstate__()
-        return state
-
-    def __setstate__(self, state): 
-        state = super().__setstate__(state)

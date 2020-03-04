@@ -1,5 +1,5 @@
 import os
-from typing import List, Set
+from typing import List
 
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
