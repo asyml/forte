@@ -88,24 +88,10 @@ class Sentence(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
-    def __getstate__(self): 
-        state = super().__getstate__()
-        return state
-
-    def __setstate__(self, state): 
-        state = super().__setstate__(state)
-
 
 class Document(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-
-    def __getstate__(self): 
-        state = super().__getstate__()
-        return state
-
-    def __setstate__(self, state): 
-        state = super().__setstate__(state)
 
 
 class Dependency(Link):
