@@ -56,10 +56,6 @@
       "description": "A span based annotation `Document`, normally used to represent a document."
     },
     {
-      "entry_name": "ft.onto.base_ontology.SpecialDocument",
-      "parent_entry": "ft.onto.base_ontology.Document"
-    },
-    {
       "entry_name": "ft.onto.base_ontology.Sentence",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Sentence`, normally used to represent a sentence.",

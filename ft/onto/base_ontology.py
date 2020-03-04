@@ -19,7 +19,6 @@ from typing import Set
 __all__ = [
     "Token",
     "Document",
-    "SpecialDocument",
     "Sentence",
     "Phrase",
     "Utterance",
@@ -182,11 +181,6 @@ class Document(Annotation):
     """
     A span based annotation `Document`, normally used to represent a document.
     """
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
-
-
-class SpecialDocument(Document):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
