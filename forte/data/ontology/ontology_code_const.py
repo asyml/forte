@@ -5,6 +5,7 @@ from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import top
+from forte.data.ontology import utils
 
 REQUIRED_IMPORTS: List[str] = [
     'typing',
@@ -69,7 +70,14 @@ def class_name(clazz):
 SINGLE_PACK_CLASSES = [class_name(clazz) for clazz in top.SinglePackEntries]
 MULTI_PACK_CLASSES = [class_name(clazz) for clazz in top.MultiPackEntries]
 
-PACK_TYPE_CLASS_NAME = class_name(PackType)
+major_version, minor_version = utils.get_python_version()
+if major_version >= 3 and minor_version >= 6:
+    PACK_TYPE_CLASS_NAME = class_name(PackType)
+else:
+    # bug in python < 3.7
+    # returns    => typing.TypeVar('').__module__ == 'typing' (wrong)
+    # instead of => typing.TypeVar('').__module__ == 'forte.data.base_pack'
+    PACK_TYPE_CLASS_NAME = 'forte.data.base_pack'
 
 
 def hardcoded_pack_map(clazz):
