@@ -20,8 +20,9 @@ from typing import Optional, Any, List, Dict, Set, Tuple
 
 from forte.data.ontology.code_generation_exceptions import \
     CodeGenerationException
-from forte.data.ontology.ontology_code_const import IGNORE_ERRORS_LINES, \
-    PRIMITIVE_SUPPORTED, Config, SINGLE_COMPOSITES, COMPLEX_COMPOSITES
+from forte.data.ontology.ontology_code_const import (
+    IGNORE_ERRORS_LINES, SUPPORTED_PRIMITIVES, NON_COMPOSITES, COMPOSITES,
+    Config)
 from forte.data.ontology.utils import split_file_path
 
 
@@ -56,9 +57,8 @@ class ImportManager:
             imported or it is of a primitive type.
 
         """
-        return (class_name in PRIMITIVE_SUPPORTED or
-                class_name in SINGLE_COMPOSITES or
-                class_name in COMPLEX_COMPOSITES or
+        return (class_name in NON_COMPOSITES or
+                class_name in COMPOSITES or
                 self.is_imported(class_name))
 
     def is_imported(self, class_name):
@@ -83,7 +83,7 @@ class ImportManager:
         return self.__imported_names.items()
 
     def get_name_to_use(self, full_name):
-        if full_name in PRIMITIVE_SUPPORTED:
+        if full_name in SUPPORTED_PRIMITIVES:
             return full_name
 
         if self.is_imported(full_name):
@@ -93,7 +93,7 @@ class ImportManager:
         return sorted(self.__import_statements)
 
     def create_import_statement(self, full_name: str, as_name: str):
-        if full_name not in PRIMITIVE_SUPPORTED:
+        if full_name not in NON_COMPOSITES:
             parts = full_name.split('.')
             class_name = parts[-1]
 
@@ -139,13 +139,13 @@ class ImportManager:
 
     def add_object_to_import(self, full_name: str):
         if self.__fix_modules:
-            # After fix the module, we should not add objects for import.
+            # After fixing the modules, we should not add objects for import.
             raise CodeGenerationException(
                 f'The module [{self.__module_name}] is fixed, cannot add '
                 f'more objects.')
 
         if full_name not in self.__imported_names:
-            if full_name not in PRIMITIVE_SUPPORTED:
+            if full_name not in SUPPORTED_PRIMITIVES:
                 as_name = self.__assign_as_name(full_name)
                 self.__imported_names[full_name] = as_name
                 self.create_import_statement(full_name, as_name)
@@ -188,28 +188,48 @@ def indent_line(line: str, level: int) -> str:
     return f"{indent(level)}{line}" if line else ''
 
 
-def indent_code(code_lines: List[str], level: int = 0, ending='\n') -> str:
+def indent_code(code_lines: List[Optional[str]], level: int = 0,
+                is_line_break: bool = True) -> str:
     lines = []
 
     for code in code_lines:
+        if code is None:
+            continue
         if code == '':
             lines.append('')
         else:
             lines.extend(
                 code.split(Config.line_break) if code is not None else []
             )
-
+    ending = '\n' if is_line_break else ''
     return Config.line_break.join(
         [indent_line(line, level) for line in lines]) + ending
 
 
-def getter(name, field_name):
+def getter(name, field_name, is_forte_type=False, composite_type=None):
     # Construct getter.
+    return_str = f"self.{field_name}"
+    if is_forte_type:
+        composite_type = 'None' if composite_type is None else composite_type
+
+        tid_str_map = {'None': f"self.{field_name}",
+                       'List': 'tid',
+                       'Dict': f'self.{field_name}[key]'}
+
+        tid_str = f"{tid_str_map[composite_type]}"
+        entry_str = f"self.pack.get_entry({tid_str})"
+
+        ret_str_map = {
+            'None': f"{entry_str} if {tid_str} is not None else None",
+            'List': f"[{entry_str} for tid in self.{field_name}]",
+            'Dict': f"{{{entry_str} for key in self.{field_name}}}"
+        }
+        return_str = ret_str_map[composite_type]
     return [
         ("@property", 0),
         (f"def {name}(self):", 0),
-        (f"return self.{field_name}", 1),
-        ('', 0),
+        (f"return {return_str}", 1),
+        ('', 0)
     ]
 
 
@@ -323,34 +343,33 @@ class NonCompositeProperty(Property):
         # Primitive type will use optional in type string, so we add the
         # optional here.
         self.option_type = 'typing.Optional'
-        import_manager.add_object_to_import('typing.Optional')
+        import_manager.add_object_to_import(self.option_type)
 
         self.is_forte_type = import_manager.is_imported(type_str)
 
     def internal_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use(self.option_type)
-        if self.is_forte_type:
-            return f"{option_type}[int]"
-        else:
-            return f"{option_type}[{self.type_str}]"
+        type_str = 'int' if self.is_forte_type else self.type_str
+        return f"{option_type}[{type_str}]"
 
     def to_access_functions(self, level):
         name = self.name
 
+        # Construct getter.
+        lines = getter(name, self.field_name, self.is_forte_type)
+
+        # Construct setter.
         if self.is_forte_type:
-            type_to_use = self.import_manager.get_name_to_use(self.type_str)
-            lines = [
-                ("@property", 0),
-                (f"def {name}(self):", 0),
-                (f"return self.__pack.get_entry(self.{name})", 1),
-                ('', 0),
+            option_type = self.import_manager.get_name_to_use(self.option_type)
+            type_str = self.import_manager.get_name_to_use(self.type_str)
+            lines.extend([
                 (f"@{self.name}.setter", 0),
-                (f"def {name}(self, {name}: {type_to_use}):", 0),
-                (f"self.set_fields({self.field_name}="
-                 f"self.__pack.add_entry({name}))", 1),
-            ]
+                (f"def {name}(self, {name}: {option_type}[{type_str}]):", 0),
+                (f"value = self.pack.add_entry({name}) "
+                 f"if {name} is not None else None", 1),
+                (f"self.set_fields({self.field_name}=value)", 1),
+            ])
         else:
-            lines = getter(name, self.field_name)
             lines.extend([
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.internal_type_str()}):", 0),
@@ -387,6 +406,7 @@ class DictProperty(Property):
 
         key_type = self.import_manager.get_name_to_use(self.key_type)
         value_type = self.import_manager.get_name_to_use(self.value_type)
+        value_type = 'int' if self.value_is_forte_type else value_type
         return f"{option_type}[{composite_type}[{key_type}, {value_type}]]"
 
     def access_type_str(self) -> str:
@@ -417,16 +437,18 @@ class DictProperty(Property):
         if self.self_ref:
             value_type = '"' + value_type + '"'
 
-        lines = getter(name, self.field_name)
+        # Construct getter.
+        lines = getter(name, self.field_name, self.value_is_forte_type, 'Dict')
 
         # Construct setter.
         if self.value_is_forte_type:
             lines.extend([
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
+                (f"{name} = {{}} if {name} is None else {name}", 1),
                 (f"self.set_fields("
                  f"{self.field_name}="
-                 f"dict([(k, self.__pack.add_entry_(v)) "
+                 f"dict([(k, self.pack.add_entry_(v)) "
                  f"for k, v in {name}.items()]))", 1),
                 ('', 0),
             ])
@@ -434,6 +456,7 @@ class DictProperty(Property):
             lines.extend([
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
+                (f"{name} = {{}} if {name} is None else {name}", 1),
                 (f"self.set_fields("
                  f"{self.field_name}={name})", 1),
                 ('', 0),
@@ -450,8 +473,8 @@ class DictProperty(Property):
         if self.value_is_forte_type:
             lines.extend([
                 (f"def clear_{name}(self):", 0),
-                (f"[self.__pack.delete_entry("
-                 f"self.__pack.get_entry(tid)) "
+                (f"[self.pack.delete_entry("
+                 f"self.pack.get_entry(tid)) "
                  f"for tid in self.{name}.values()]",
                  1),
                 (f"self.{self.field_name}.clear()", 1),
@@ -468,7 +491,7 @@ class DictProperty(Property):
                 ('', 0),
                 (f"def add_{name}(self, key: {key_type}, value: {value_type}):",
                  0),
-                (f"self.{self.field_name}[key] = self.__pack.add_entry_(value)",
+                (f"self.{self.field_name}[key] = self.pack.add_entry_(value)",
                  1),
             ])
         else:
@@ -495,7 +518,7 @@ class ListProperty(Property):
                          description=description,
                          default_val=default_val)
         self.item_type: str = item_type
-        self.is_forte_type = import_manager.is_imported(self.item_type)
+        self.item_is_forte_type = import_manager.is_imported(self.item_type)
 
         # self_ref would probably not happen, because we are using int for
         # entry types.
@@ -504,7 +527,9 @@ class ListProperty(Property):
     def internal_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use('typing.Optional')
         composite_type = self.import_manager.get_name_to_use(self.type_str)
-        return f"{option_type}[{composite_type}[int]]"
+        item_type = self.import_manager.get_name_to_use(self.item_type)
+        type_str = 'int' if self.item_is_forte_type else item_type
+        return f"{option_type}[{composite_type}[{type_str}]]"
 
     def access_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use('typing.Optional')
@@ -523,22 +548,26 @@ class ListProperty(Property):
         :return:
         """
         name = self.name
-        lines = getter(name, self.field_name)
+
+        # Construct getter
+        lines = getter(name, self.field_name, self.item_is_forte_type, 'List')
 
         # Construct setter.
-        if self.is_forte_type:
+        if self.item_is_forte_type:
             lines.extend([
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
+                (f"{name} = [] if {name} is None else {name}", 1),
                 (f"self.set_fields("
                  f"{self.field_name}="
-                 f"[self.__pack.add_entry_(obj) for obj in {name}])", 1),
+                 f"[self.pack.add_entry_(obj) for obj in {name}])", 1),
                 ('', 0),
             ])
         else:
             lines.extend([
                 (f"@{self.name}.setter", 0),
                 (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
+                (f"{name} = [] if {name} is None else {name}", 1),
                 (f"self.set_fields("
                  f"{self.field_name}={name})", 1),
                 ('', 0),
@@ -552,11 +581,11 @@ class ListProperty(Property):
         ])
 
         # Construct clear (deletion).
-        if self.is_forte_type:
+        if self.item_is_forte_type:
             lines.extend([
                 (f"def clear_{name}(self):", 0),
-                (f"[self.__pack.delete_entry("
-                 f"self.__pack.get_entry(tid)) "
+                (f"[self.pack.delete_entry("
+                 f"self.pack.get_entry(tid)) "
                  f"for tid in self.{self.field_name}]", 1),
                 (f"self.{self.field_name}.clear()", 1),
             ])
@@ -571,12 +600,12 @@ class ListProperty(Property):
         if self.self_ref:
             item_type = '"' + item_type + '"'
 
-        if self.is_forte_type:
+        if self.item_is_forte_type:
             lines.extend([
                 ('', 0),
                 (f"def add_{name}(self, a_{name}: {item_type}):", 0),
                 (f"self.{self.field_name}.append("
-                 f"self.__pack.add_entry_(a_{name}))", 1),
+                 f"self.pack.add_entry_(a_{name}))", 1),
             ])
         else:
             lines.extend([
@@ -597,7 +626,7 @@ class ListProperty(Property):
         return self.name
 
 
-class DefinitionItem(Item):
+class EntryDefinition(Item):
     def __init__(self, name: str,
                  class_type: str,
                  init_args: Optional[str] = None,
@@ -617,7 +646,10 @@ class DefinitionItem(Item):
     def to_init_code(self, level: int) -> str:
         return indent_line(f"def __init__(self, {self.init_args}):", level)
 
-    def to_get_state_code(self, level: int) -> str:
+    def to_get_state_code(self, level: int) -> Optional[str]:
+        if len(self.properties) == 0:
+            return None
+
         lines = [
             ("def __getstate__(self): ", 0),
             ("state = super().__getstate__()", 1),
@@ -628,15 +660,16 @@ class DefinitionItem(Item):
         lines.append(("return state", 1))
         return indent_code([indent_line(*line) for line in lines], level)
 
-    def to_set_state_code(self, level: int) -> str:
+    def to_set_state_code(self, level: int) -> Optional[str]:
+        if len(self.properties) == 0:
+            return None
+
         lines = [
             ("def __setstate__(self, state): ", 0),
             ("state = super().__setstate__(state)", 1),
         ]
-
         for p in self.properties:
             lines.extend(p.to_setstate(1))
-
         return indent_code([indent_line(*line) for line in lines], level)
 
     def to_code(self, level: int) -> str:
@@ -644,7 +677,7 @@ class DefinitionItem(Item):
                                 for item in self.init_args.split(',')])
         raw_desc = self.to_description(1)
         desc: str = '' if raw_desc is None else raw_desc
-        lines = [
+        lines: List[Optional[str]] = [
             '',
             '',
             f"class {self.name}({self.class_type}):",
@@ -658,7 +691,7 @@ class DefinitionItem(Item):
         lines += [self.to_get_state_code(1)]
         lines += [self.to_set_state_code(1)]
         lines += [item.to_access_functions(1) for item in self.properties]
-        return indent_code(lines, level, '')
+        return indent_code(lines, level, False)
 
     @staticmethod
     def to_item_descs(items, title):
@@ -670,16 +703,14 @@ class DefinitionItem(Item):
         return item_descs
 
     def to_description(self, level: int) -> Optional[str]:
-        class_desc = [] if self.description is None else [self.description]
+        class_desc = [] if self.description is None else [self.description + '']
         item_descs = self.to_item_descs(self.properties, 'Attributes:')
 
-        descs = class_desc + [''] + item_descs + ['']
+        descs = class_desc + item_descs
         if len(descs) == 0:
             return ""
         quotes = indent_line('"""', 0)
-
-        return indent_code(
-            [quotes] + descs + [quotes], level)
+        return indent_code([quotes] + descs + [quotes], level, False)
 
 
 class ModuleWriter:
@@ -692,7 +723,7 @@ class ModuleWriter:
         self.module_name = module_name
         self.description: Optional[str] = None
         self.import_managers: ImportManagerPool = import_managers
-        self.entries: List[Tuple[EntryName, DefinitionItem]] = []
+        self.entries: List[Tuple[EntryName, EntryDefinition]] = []
 
         pkg, self.file_name = self.module_name.rsplit('.', 1)
         self.pkg_dir = pkg.replace('.', '/')
@@ -700,7 +731,7 @@ class ModuleWriter:
     def set_description(self, description: str):
         self.description = description
 
-    def add_entry(self, entry_name: EntryName, entry_item: DefinitionItem):
+    def add_entry(self, entry_name: EntryName, entry_item: EntryDefinition):
         self.entries.append((entry_name, entry_item))
 
     def make_module_dirs(self, tempdir: str, destination: str):
@@ -756,7 +787,7 @@ class ModuleWriter:
     def to_header(self, level: int) -> str:
         all_first_line = indent_line('__all__ = [', 0)
         all_mid_lines = indent_code(
-            [f'"{en.name}",' for en, ei in self.entries], 1, '')
+            [f'"{en.name}",' for en, ei in self.entries], 1, False)
         all_last_line = indent_line(']', 0)
 
         lines = [self.to_description(0),

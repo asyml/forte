@@ -44,13 +44,11 @@ class GenerateOntologyTest(unittest.TestCase):
         self.generator = OntologyCodeGenerator()
         self.dir_path = None
 
-        dirname = os.path.dirname(__file__)
+        curr_dir = os.path.dirname(__file__)
         self.valid_filepath = os.path.normpath(
-            os.path.join(dirname, '../validation_schema.json'))
-        self.spec_dir = os.path.join(
-            dirname, "../../../../data_samples/ontology/test/test_specs/")
-        self.test_output = os.path.join(
-            dirname, "../../../../data_samples/ontology/test/test_outputs/")
+            os.path.join(curr_dir, '../validation_schema.json'))
+        self.spec_dir = os.path.join(curr_dir, "test_specs/")
+        self.test_output = os.path.join(curr_dir, "test_outputs/")
 
     def tearDown(self):
         """
@@ -61,12 +59,14 @@ class GenerateOntologyTest(unittest.TestCase):
             self.generator.cleanup_generated_ontology(self.dir_path,
                                                       is_forced=True)
 
-    @data(('example_ontology',
-           ['ft/onto/example_import_ontology', 'ft/onto/example_ontology']),
-          ('example_complex_ontology',
-           ['ft/onto/example_complex_ontology']),
-          ('example_multi_module_ontology',
-           ['ft/onto/ft_module', 'custom/user/custom_module']))
+    @data(
+        ('example_ontology', ['ft/onto/example_import_ontology',
+                              'ft/onto/example_ontology']),
+        ('example_complex_ontology', ['ft/onto/example_complex_ontology']),
+        ('example_multi_module_ontology', ['ft/onto/ft_module',
+                                           'custom/user/custom_module']),
+        ('race_qa_onto', ['ft/onto/base_ontology',
+                          'ft/onto/race_multi_choice_qa_ontology']))
     def test_generated_code(self, value):
         input_file_name, file_paths = value
         file_paths = sorted(file_paths)

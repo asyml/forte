@@ -3,8 +3,6 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-
-
 Automatically generated ontology . Do not change manually.
 """
 
@@ -26,15 +24,12 @@ __all__ = [
 
 class Token(Annotation):
     """
-
     Attributes:
         _lemma (Optional[str])
         _is_verb (Optional[bool])
         _num_chars (Optional[int])
         _score (Optional[float])
-
     """
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._lemma: Optional[str] = None
@@ -92,12 +87,9 @@ class Token(Annotation):
 
 class Sentence(Annotation):
     """
-
     Attributes:
         _key_tokens (Optional[List[int]])
-
     """
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._key_tokens: Optional[List[int]] = []
@@ -113,48 +105,34 @@ class Sentence(Annotation):
 
     @property
     def key_tokens(self):
-        return self._key_tokens
+        return [self.pack.get_entry(tid) for tid in self._key_tokens]
 
     @key_tokens.setter
     def key_tokens(self, key_tokens: Optional[List[Token]]):
-        self.set_fields(_key_tokens=[self.__pack.add_entry_(obj) for obj in key_tokens])
+        key_tokens = [] if key_tokens is None else key_tokens
+        self.set_fields(_key_tokens=[self.pack.add_entry_(obj) for obj in key_tokens])
 
     def num_key_tokens(self):
         return len(self._key_tokens)
 
     def clear_key_tokens(self):
-        [self.__pack.delete_entry(self.__pack.get_entry(tid)) for tid in self._key_tokens]
+        [self.pack.delete_entry(self.pack.get_entry(tid)) for tid in self._key_tokens]
         self._key_tokens.clear()
 
     def add_key_tokens(self, a_key_tokens: Token):
-        self._key_tokens.append(self.__pack.add_entry_(a_key_tokens))
+        self._key_tokens.append(self.pack.add_entry_(a_key_tokens))
 
 
 class Document(Annotation):
-    """
-
-
-    """
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-
-    def __getstate__(self): 
-        state = super().__getstate__()
-        return state
-
-    def __setstate__(self, state): 
-        state = super().__setstate__(state)
 
 
 class Dependency(Link):
     """
-
     Attributes:
         _rel_type (Optional[str])
-
     """
-
     def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self._rel_type: Optional[str] = None

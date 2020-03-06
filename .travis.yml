@@ -36,6 +36,8 @@ install:
   - pip install coverage codecov
 
 script:
+  # generating ontology from ontology_specs
+  - ./scripts/build_ontology_specs.sh
   # linting
   - pylint forte/ examples/ ft/ scripts/
   - flake8 forte/ examples/ ft/ scripts/

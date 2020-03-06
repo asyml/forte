@@ -67,9 +67,9 @@ class OntologyGenerationParser(argparse.ArgumentParser):
 
 
 def main():
-    create_example = "python generate_ontology.py create --spec " \
+    create_example = "generate_ontology create --spec " \
                      "ontology_specs/example/pet_shop.json"
-    clean_example = "python generate_ontology.py clean --dir generated-files"
+    clean_example = "generate_ontology clean --dir generated-files"
 
     file_description = '\n'.join([
         "Utility to automatically generate or create Python classes given"
