@@ -463,7 +463,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 fields are returned by default; for all link types, `"child"`
                 and `"parent"` fields are returned by default.
             skip_k (int): Will skip the first `skip_k` instances and generate
-                data from the `offset` + 1 th instance.
+                data from the (`offset` + 1)th instance.
 
         Returns:
             A data generator, which generates one piece of data (a dict
