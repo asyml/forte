@@ -71,13 +71,13 @@ SINGLE_PACK_CLASSES = [class_name(clazz) for clazz in top.SinglePackEntries]
 MULTI_PACK_CLASSES = [class_name(clazz) for clazz in top.MultiPackEntries]
 
 major_version, minor_version = utils.get_python_version()
-if major_version >= 3 and minor_version >= 6:
+if major_version >= 3 and minor_version >= 7:
     PACK_TYPE_CLASS_NAME = class_name(PackType)
 else:
     # bug in python < 3.7
     # returns    => typing.TypeVar('').__module__ == 'typing' (wrong)
     # instead of => typing.TypeVar('').__module__ == 'forte.data.base_pack'
-    PACK_TYPE_CLASS_NAME = 'forte.data.base_pack'
+    PACK_TYPE_CLASS_NAME = 'forte.data.base_pack.PackType'
 
 
 def hardcoded_pack_map(clazz):

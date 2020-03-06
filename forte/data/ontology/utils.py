@@ -130,6 +130,7 @@ def validate_json_schema(input_filepath: str, validation_filepath: str):
         input_schema = json.loads(input_json_file.read())
     jsonschema.Draft6Validator(validation_schema).validate(input_schema)
 
+
 def get_python_version() -> Tuple[int, int]:
     """
     :return: Python major and minor version at runtime
