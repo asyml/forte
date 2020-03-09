@@ -17,7 +17,7 @@ Utility functions related to data processing input/output.
 import os
 from typing import Dict, List, Iterator, Any, Tuple
 
-from forte.common.types import ReplaceOperationsType
+from forte.data.types import ReplaceOperationsType
 from forte.data.span import Span
 
 __all__ = [

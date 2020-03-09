@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.data.readers.base_reader import *
 from forte.data.readers.conll03_reader import *
 from forte.data.readers.conllu_ud_reader import *
 from forte.data.readers.corpus_reader import *

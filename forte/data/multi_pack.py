@@ -17,7 +17,8 @@ import logging
 from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
                     Tuple)
 
-from forte.common.types import EntryType, DataRequest
+from forte.data.ontology.core import EntryType
+from forte.data.types import DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
 from forte.data.index import BaseIndex

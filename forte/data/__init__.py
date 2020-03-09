@@ -12,11 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.data import ontology
-from forte.data import readers
-from forte.data.base_pack import *
-from forte.data.data_pack import *
 from forte.data.datasets import *
 from forte.data.data_utils_io import *
-from forte.data.multi_pack import *
-from forte.data.container import *

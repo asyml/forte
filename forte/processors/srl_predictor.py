@@ -23,7 +23,7 @@ from texar.torch.hyperparams import HParams
 from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.common.resources import Resources
-from forte.common.types import DataRequest
+from forte.data.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 from ft.onto.base_ontology import (

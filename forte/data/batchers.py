@@ -20,7 +20,7 @@ from texar.torch import HParams
 
 from forte.data.base_pack import PackType
 from forte.data import DataPack, MultiPack
-from forte.common.types import DataRequest
+from forte.data.types import DataRequest
 from forte.data.data_utils_io import merge_batches, batch_instances
 from forte.data.ontology import Entry, Annotation
 

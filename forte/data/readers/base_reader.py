@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Iterator, Optional
 
 from forte.common.resources import Resources
-from forte.common.types import ReplaceOperationsType
+from forte.data.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
