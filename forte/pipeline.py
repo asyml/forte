@@ -19,7 +19,8 @@ import yaml
 from texar.torch.hyperparams import HParams
 
 from forte.base_pipeline import BasePipeline
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.utils import get_class, create_class_with_kwargs
 
 logger = logging.getLogger(__name__)

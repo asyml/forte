@@ -28,8 +28,9 @@ from texar.torch import HParams
 
 import rdflib
 
-from forte import Resources, logging
-from forte.data import DataPack
+import logging
+from forte.common import Resources
+from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader,
     print_progress, print_notice)
@@ -44,8 +45,8 @@ def add_property(pack: DataPack, statements: List):
         slot_name = v.toPython()
         slot_value = get_resource_name(o)
         info_box = WikiInfoBoxProperty(pack)
-        info_box.set_key(slot_name)
-        info_box.set_value(slot_value)
+        info_box.key = slot_name
+        info_box.value = slot_value
         pack.add_entry(info_box)
 
 
@@ -53,9 +54,9 @@ def add_info_boxes(pack: DataPack, info_box_statements: List,
                    info_type: str):
     for _, v, o in info_box_statements:
         info_box = WikiInfoBoxMapped(pack)
-        info_box.set_key(v.toPython())
-        info_box.set_value(get_resource_name(o))
-        info_box.set_infobox_type(info_type)
+        info_box.key = v.toPython()
+        info_box.value = get_resource_name(o)
+        info_box.infobox_type = info_type
         pack.add_entry(info_box)
 
 

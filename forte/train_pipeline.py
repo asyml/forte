@@ -21,7 +21,7 @@ from texar.torch import HParams
 from forte.pipeline import Pipeline
 from forte.evaluation.base.base_evaluator import Evaluator
 from forte.common.resources import Resources
-from forte.data.readers import BaseReader
+from forte.data.readers.base_reader import BaseReader
 from forte.processors.base import BaseProcessor
 from forte.trainer.base import BaseTrainer
 

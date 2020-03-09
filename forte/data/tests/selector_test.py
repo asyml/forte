@@ -16,7 +16,8 @@ Unit tests for Selector
 """
 import unittest
 
-from forte.data import DataPack, MultiPack
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.data.selector import NameMatchSelector, RegexNameMatchSelector, \
     FirstPackSelector, AllPackSelector
 

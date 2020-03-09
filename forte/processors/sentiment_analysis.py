@@ -19,8 +19,8 @@ __all__ = [
 from texar.torch import HParams
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-from forte import Resources
-from forte.data import DataPack
+from forte.common import Resources
+from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Sentence
 

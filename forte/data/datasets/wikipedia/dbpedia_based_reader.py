@@ -25,8 +25,8 @@ from typing import Any, Iterator, Dict, List, DefaultDict, Tuple
 from texar.torch import HParams
 import rdflib
 
-from forte import Resources
-from forte.data import DataPack
+from forte.common import Resources
+from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
     get_resource_name, get_resource_fragment,
@@ -151,8 +151,8 @@ class DBpediaWikiReader(PackReader):
         pack.set_text(full_text)
         page = WikiPage(pack, 0, len(full_text))
         pack.add_entry(page)
-        page.set_page_id(str_data['oldid'])
-        page.set_page_name(doc_name)
+        page.page_id = str_data['oldid']
+        page.page_name = doc_name
 
         if len(node_data['struct']) > 0:
             add_struct(pack, node_data['struct'])
