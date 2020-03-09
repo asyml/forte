@@ -21,8 +21,8 @@ from forte.processors.elastic_search_processor import \
     ElasticSearchProcessor
 from forte.pipeline import Pipeline
 
-from reader import EvalReader
-from ms_marco_evaluator import MSMarcoEvaluator
+from examples.passage_reranker.reader import EvalReader
+from examples.passage_reranker.ms_marco_evaluator import MSMarcoEvaluator
 
 if __name__ == "__main__":
     config = yaml.safe_load(open("config.yml", "r"))

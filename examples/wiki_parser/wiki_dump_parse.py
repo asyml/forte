@@ -34,8 +34,6 @@ from forte.pipeline import Pipeline
 from forte.processors.base.writers import JsonPackWriter
 from ft.onto.wikipedia import WikiPage
 
-from utils import get_single
-
 __all__ = [
     'WikiArticleWriter',
 ]
@@ -62,7 +60,7 @@ class WikiArticleWriter(JsonPackWriter[DataPack]):
 
     def sub_output_path(self, pack: DataPack) -> str:
         sub_dir = str(int(self.article_count / 2000)).zfill(5)
-        pid = get_single(pack, WikiPage).page_id
+        pid = pack.get_single(WikiPage).page_id
         doc_name = f'doc_{self.article_count}' if pid is None else pid
 
         return os.path.join(sub_dir, doc_name + '.json')
