@@ -20,7 +20,7 @@ import torch
 from texar.torch import HParams
 
 from forte.common import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.models.ner.utils import load_glove_embedding, normalize_digit_word
 from forte.processors import Alphabet
 from forte.processors import VocabularyProcessor

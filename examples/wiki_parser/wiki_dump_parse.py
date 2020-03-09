@@ -25,7 +25,7 @@ from typing import TextIO, Any, Dict
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import load_redirects
 from forte.data.datasets.wikipedia.dbpedia_based_reader import DBpediaWikiReader
 from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \

@@ -17,7 +17,7 @@ from texar.torch import HParams
 
 from forte.evaluation.base import Evaluator
 from forte.common import Resources
-from forte.data import MultiPack
+from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Query
 
 from examples.passage_reranker.eval_script import compute_metrics_from_files
