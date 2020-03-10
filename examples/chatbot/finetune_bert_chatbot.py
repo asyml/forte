@@ -18,11 +18,11 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
-import texar.torch as tx
 import torch
 import torch.nn.functional as F
-from sklearn.metrics.pairwise import paired_cosine_distances
 from torch import nn
+from sklearn.metrics.pairwise import paired_cosine_distances
+import texar.torch as tx
 
 from examples.chatbot import config_data
 
