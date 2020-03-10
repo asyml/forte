@@ -27,7 +27,7 @@ from testfixtures import LogCapture, log_capture
 
 from forte.data.ontology import utils
 from forte.data.ontology.code_generation_exceptions import (
-    DirectoryAlreadyPresentWarning, DuplicateEntriesWarning,
+    DuplicateEntriesWarning,
     ImportOntologyNotFoundException,
     TypeNotDeclaredException, UnsupportedTypeException,
     DuplicatedAttributesWarning, ParentEntryNotSupportedException
@@ -45,8 +45,7 @@ class GenerateOntologyTest(unittest.TestCase):
         self.dir_path = None
 
         curr_dir = os.path.dirname(__file__)
-        self.valid_filepath = os.path.normpath(
-            os.path.join(curr_dir, '../validation_schema.json'))
+        self.valid_filepath = 'forte/data/ontology/validation_schema.json'
         self.spec_dir = os.path.join(curr_dir, "test_specs/")
         self.test_output = os.path.join(curr_dir, "test_outputs/")
 
