@@ -19,16 +19,15 @@ This will use the following datasets from DBpedia:
         -- mappingbased_objects_en.tql.bz2
         -- infobox_properties_wkd_uris_en.tql.bz2
 """
-import csv
 import os
 from typing import List, Iterator, Dict, Tuple
+import logging
 
+import csv
 from smart_open import open
+import rdflib
 from texar.torch import HParams
 
-import rdflib
-
-import logging
 from forte.common import Resources
 from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
@@ -50,13 +49,11 @@ def add_property(pack: DataPack, statements: List):
         pack.add_entry(info_box)
 
 
-def add_info_boxes(pack: DataPack, info_box_statements: List,
-                   info_type: str):
+def add_info_boxes(pack: DataPack, info_box_statements: List):
     for _, v, o in info_box_statements:
         info_box = WikiInfoBoxMapped(pack)
         info_box.key = v.toPython()
         info_box.value = get_resource_name(o)
-        info_box.infobox_type = info_type
         pack.add_entry(info_box)
 
 
@@ -127,8 +124,8 @@ class DBpediaInfoBoxReader(PackReader):
                 with open(pack_path) as pack_file:
                     pack = DataPack.deserialize(pack_file.read())
 
-                    add_info_boxes(pack, info_box_data['literals'], 'literal')
-                    add_info_boxes(pack, info_box_data['objects'], 'object')
+                    add_info_boxes(pack, info_box_data['literals'])
+                    add_info_boxes(pack, info_box_data['objects'])
                     add_property(pack, info_box_data['properties'])
                     yield pack
         else:

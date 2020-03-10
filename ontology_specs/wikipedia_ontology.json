@@ -13,7 +13,7 @@
           "type": "str"
         },
         {
-          "name": "part_name",
+          "name": "page_name",
           "type": "str"
         }
       ]

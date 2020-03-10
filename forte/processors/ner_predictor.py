@@ -341,5 +341,3 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 "resource_dir": ""
             }
         }
-
-

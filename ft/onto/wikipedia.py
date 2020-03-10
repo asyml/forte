@@ -28,23 +28,23 @@ class WikiPage(Annotation):
     """
     Attributes:
         _page_id (Optional[str])
-        _part_name (Optional[str])
+        _page_name (Optional[str])
     """
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._page_id: Optional[str] = None
-        self._part_name: Optional[str] = None
+        self._page_name: Optional[str] = None
 
     def __getstate__(self): 
         state = super().__getstate__()
         state['page_id'] = self._page_id
-        state['part_name'] = self._part_name
+        state['page_name'] = self._page_name
         return state
 
     def __setstate__(self, state): 
         state = super().__setstate__(state)
         self._page_id = state.get('page_id', None) 
-        self._part_name = state.get('part_name', None) 
+        self._page_name = state.get('page_name', None) 
 
     @property
     def page_id(self):
@@ -55,12 +55,12 @@ class WikiPage(Annotation):
         self.set_fields(_page_id=page_id)
 
     @property
-    def part_name(self):
-        return self._part_name
+    def page_name(self):
+        return self._page_name
 
-    @part_name.setter
-    def part_name(self, part_name: Optional[str]):
-        self.set_fields(_part_name=part_name)
+    @page_name.setter
+    def page_name(self, page_name: Optional[str]):
+        self.set_fields(_page_name=page_name)
 
 
 class WikiBody(Annotation):
