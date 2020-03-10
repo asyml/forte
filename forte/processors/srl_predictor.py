@@ -85,7 +85,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
         self.model.eval()
 
     def define_context(self):
-        self.context_type = Sentence
+        return Sentence
 
     def _define_input_info(self) -> DataRequest:
         input_info: DataRequest = {Token: []}

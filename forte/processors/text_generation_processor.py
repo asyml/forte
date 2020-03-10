@@ -58,7 +58,7 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         return {}
 
     def define_context(self):
-        self.context_type = Sentence
+        return Sentence
 
     def define_batcher(self) -> ProcessingBatcher:
         return FixedSizeMultiPackProcessingBatcher()
