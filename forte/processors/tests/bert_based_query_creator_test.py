@@ -22,7 +22,7 @@ import shutil
 from ddt import ddt, data, unpack
 
 from forte.pipeline import Pipeline
-from forte.processors import BertBasedQueryCreator
+from forte.processors.ir import BertBasedQueryCreator
 from forte.data.readers import MultiPackSentenceReader
 from forte.data.ontology import Query
 

@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.processors.attribute_masking_processor import *
-from forte.processors.machine_translation_processor import *
-from forte.processors.ner_predictor import *
-from forte.processors.srl_predictor import *
-from forte.processors.text_generation_processor import *
-from forte.processors.vocabulary_processor import *
+# This package contains Information Retrieval Processors, to use processor in
+# this package, run the 'ir' option in setup.py
+
+from forte.processors.ir.bert_based_query_creator import *
+from forte.processors.ir.elastic_search_query_creator import *
+from forte.processors.ir.elastic_search_index_processor import *
+from forte.processors.ir.elastic_search_processor import *
+from forte.processors.ir.search_processor import *

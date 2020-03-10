@@ -23,9 +23,9 @@ import os
 from typing import List, Iterator, Dict, Tuple
 import logging
 
+import csv
 from smart_open import open
 from texar.torch import HParams
-import csv
 import rdflib
 
 from forte.common import Resources
