@@ -104,10 +104,12 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     # Load redirects.
     logging.info("Loading redirects")
     redirect_pickle = os.path.join(output_path, 'redirects.pickle')
+
+    redirect_map: Dict[str, str]
     if os.path.exists(redirect_pickle):
-        redirect_map: Dict[str, str] = pickle.load(open(redirect_pickle, 'rb'))
+        redirect_map = pickle.load(open(redirect_pickle, 'rb'))
     else:
-        redirect_map: Dict[str, str] = load_redirects(redirects)
+        redirect_map = load_redirects(redirects)
         with open(redirect_pickle, 'wb') as pickle_f:
             pickle.dump(redirect_map, pickle_f)
     logging.info("Done loading.")

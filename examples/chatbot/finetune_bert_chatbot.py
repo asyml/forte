@@ -26,17 +26,14 @@ from torch import nn
 import torch.nn.functional as F
 
 import texar.torch as tx
+from examples.chatbot import config_data
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_dir", default="data/",
                     help="Data directory to read the files from")
 parser.add_argument("--output_dir", default="model/",
                     help="Output directory to write the pickled files")
-parser.add_argument("--config_data", default="config_data",
-                    help="File to read the config from")
 args = parser.parse_args()
-
-config_data = importlib.import_module(args.config_data)
 
 
 def get_lr_multiplier(step: int, total_steps: int, warmup_steps: int) -> float:
@@ -131,7 +128,7 @@ if __name__ == "__main__":
         opt_params, betas=(0.9, 0.999), eps=1e-6, lr=static_lr)
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(
-        optim, functools.partial(get_lr_multiplier,
+        optim, functools.partial(get_lr_multiplier,  # type: ignore
                                  total_steps=num_train_steps,
                                  warmup_steps=num_warmup_steps))
 
@@ -145,6 +142,7 @@ if __name__ == "__main__":
     data_iterator = tx.data.DataIterator(
         {"train": train_dataset, "eval": eval_dataset, "test": test_dataset})
 
+
     def _compute_loss(logits, labels):
         r"""Compute loss.
         """
@@ -152,6 +150,7 @@ if __name__ == "__main__":
         loss = F.cross_entropy(logits.view(-1, chatbot_bert.num_classes),
                                labels.view(-1), reduction='mean')
         return loss
+
 
     def _train_epoch():
         r"""Trains on the training set, and evaluates on the dev set
@@ -186,6 +185,7 @@ if __name__ == "__main__":
             eval_steps = config_data.eval_steps
             if eval_steps > 0 and step % eval_steps == 0:
                 _eval_epoch(dataset="eval")
+
 
     @torch.no_grad()
     def _eval_epoch(dataset="eval"):
@@ -226,6 +226,7 @@ if __name__ == "__main__":
               f"Accuracy based on Cosine Similarity: {cosine_accuracy},"
               f"Accuracy based on logits: {avg_rec.avg(0)},"
               f"nsamples: {nsamples}")
+
 
     for _ in range(config_data.max_train_epoch):
         print("Finetuning BERT for chatbot...")

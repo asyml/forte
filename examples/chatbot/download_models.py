@@ -14,6 +14,7 @@
 import argparse
 from collections import OrderedDict
 from pathlib import Path
+import os
 
 from forte.data.data_utils import maybe_download
 
@@ -39,15 +40,19 @@ if __name__ == "__main__":
 
         urls_to_file_names = OrderedDict({
             "https://drive.google.com/file/d/102YRcdXqDFLOjToR7L-3XYcU-yqcKAO8/"
-            "view?usp=sharing": embedding_path / "char_vocab.english.txt",
+            "view?usp=sharing": os.path.join(str(embedding_path),
+                                             "char_vocab.english.txt"),
             "https://drive.google.com/file/d/1hgwmUBk8Mb3iZYiHi1UpCpPFOCfOQLLB/"
-            "view?usp=sharing": embedding_path / "glove.840B.300d.05.filtered",
+            "view?usp=sharing": os.path.join(str(embedding_path),
+                                             "glove.840B.300d.05.filtered"),
             "https://drive.google.com/file/d/1H4PZhJhGoFBqrSMRPufjJ-9zwROw8hAK/"
-            "view?usp=sharing": embedding_path / "glove_50_300_2.filtered",
+            "view?usp=sharing": os.path.join(str(embedding_path),
+                                             "glove_50_300_2.filtered"),
             "https://drive.google.com/file/d/1uoA5EnZMWl5m5DMevGcI7UjiXxQRlD9W/"
-            "view?usp=sharing": embedding_path / "word_vocab.english.txt",
+            "view?usp=sharing": os.path.join(str(embedding_path),
+                                             "word_vocab.english.txt"),
             "https://drive.google.com/file/d/1UZc8x-mhdXg7Rtt6FSBDlEoJb_nHxDAQ/"
-            "view?usp=sharing": pretrained_path / "model.pt"
+            "view?usp=sharing": os.path.join(str(pretrained_path), "model.pt")
         })
         maybe_download(urls=list(urls_to_file_names.keys()),
                        path=model_path,
