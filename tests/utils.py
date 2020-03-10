@@ -23,6 +23,8 @@ __all__ = [
     "pretrained_test",
 ]
 
+from typing import Any, Callable
+
 
 def define_skip_condition(flag: str, explanation: str):
     return unittest.skipUnless(
@@ -33,5 +35,5 @@ def define_skip_condition(flag: str, explanation: str):
 performance_test = define_skip_condition(
     'TEST_PERFORMANCE', "Test the performance of Forte modules.")
 
-pretrained_test = define_skip_condition(
+pretrained_test: Callable[[Any], Any] = define_skip_condition(
     'TEST_PRETRAINED', "Test requires loading pre-trained checkpoints.")

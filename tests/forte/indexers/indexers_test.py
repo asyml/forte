@@ -27,7 +27,7 @@ from elasticsearch.helpers import bulk
 
 from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
-from forte.utils.test import performance_test
+from tests.utils import performance_test
 
 
 class TestEmbeddingBasedIndexer(unittest.TestCase):
