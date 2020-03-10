@@ -30,7 +30,7 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
 from forte.data.selector import FirstPackSelector
 from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
-from forte.processors.base.tests.dummy_batch_processor import \
+from tests.dummy_batch_processor import \
     DummyRelationExtractor
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Token, Sentence

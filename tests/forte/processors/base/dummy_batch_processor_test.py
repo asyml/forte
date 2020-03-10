@@ -20,7 +20,7 @@ from ddt import ddt, data
 from forte.data.readers import OntonotesReader, StringReader, PlainTextReader
 from forte.pipeline import Pipeline
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
-from forte.processors.base.tests.dummy_batch_processor import \
+from tests.dummy_batch_processor import \
     DummyRelationExtractor, DummmyFixedSizeBatchProcessor
 from ft.onto.base_ontology import RelationLink, Sentence
 
