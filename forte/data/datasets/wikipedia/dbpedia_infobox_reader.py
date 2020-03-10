@@ -23,10 +23,10 @@ import os
 from typing import List, Iterator, Dict, Tuple
 import logging
 
-import csv
 from smart_open import open
-import rdflib
 from texar.torch import HParams
+import csv
+import rdflib
 
 from forte.common import Resources
 from forte.data.data_pack import DataPack
