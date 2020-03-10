@@ -53,17 +53,13 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
     def __init__(self):
         super().__init__()
-
-        self.define_context()
-
-        self.batcher = self.define_batcher()
-
         self.device = torch.device(
             torch.cuda.current_device() if torch.cuda.is_available() else 'cpu')
 
     def initialize(self,
-                   _: Resources,
+                   resources: Resources,
                    configs: Optional[HParams]):
+        super().initialize(resources, configs)
 
         model_dir = configs.storage_path if configs is not None else None
         logger.info("restoring SRL model from %s", model_dir)
@@ -140,8 +136,8 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
                 for arg_span, label in arg_result:
                     arg = data_pack.add_or_get_entry(PredicateArgument(
-                            data_pack, arg_span.begin, arg_span.end
-                        )
+                        data_pack, arg_span.begin, arg_span.end
+                    )
                     )
                     link = PredicateLink(data_pack, pred, arg)
                     link.set_fields(arg_type=label)

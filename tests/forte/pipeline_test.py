@@ -128,10 +128,6 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
     def __init__(self) -> None:
         super().__init__()
         self.counter = 0
-        self.batcher = self.define_batcher()
-
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
-        self.batcher.initialize(configs.batcher)  # type: ignore
 
     def define_context(self) -> Type[Sentence]:
         return Sentence

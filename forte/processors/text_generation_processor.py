@@ -53,7 +53,6 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         self.top_k = None
         self.top_p = None
         self.device = None
-        self.define_context()
 
     def _define_input_info(self) -> DataRequest:
         return {}
