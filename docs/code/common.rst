@@ -4,12 +4,6 @@
 Common
 *******
 
-Evaluation
-==========
-
-.. autoclass:: forte.common.Evaluator
-    :members:
-
 Exceptions
 ==========
 
