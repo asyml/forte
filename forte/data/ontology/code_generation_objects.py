@@ -424,11 +424,10 @@ class DictProperty(Property):
         return self.name
 
     def to_access_functions(self, level):
-        """ Generate access function to for Dict types. This extend the
-        base function and add some composite specific types.
-
-        :param level:
-        :return:
+        r"""Generate access function to for Dict types. This extend the base
+        function and add some composite specific types.
+        Args:
+            level: Indent level
         """
         name = self.name
         key_type = self.import_manager.get_name_to_use(self.key_type)
@@ -803,7 +802,8 @@ class ModuleWriter:
 
     def to_description(self, level):
         quotes = '"""'
-        lines = get_ignore_error_lines(self.source_file) + [quotes, self.description, quotes]
+        lines = get_ignore_error_lines(self.source_file) + \
+                [quotes, self.description, quotes]
         return indent_code(lines, level)
 
     def to_import_code(self, level):

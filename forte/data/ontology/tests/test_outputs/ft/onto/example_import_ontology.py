@@ -1,4 +1,5 @@
 # ***automatically_generated***
+# ***source json:forte/data/ontology/tests/test_specs/example_import_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file

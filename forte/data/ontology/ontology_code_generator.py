@@ -423,15 +423,14 @@ class OntologyCodeGenerator:
                             visited_paths: Optional[Dict[str, bool]] = None,
                             rec_visited_paths: Optional[Dict[str, bool]] = None
                             ):
-        """
-        Performs a topological traversal on the directed graph formed by the
+        r"""Performs a topological traversal on the directed graph formed by the
         imported json configs. While processing each config, it first generates
         the classes corresponding to the entries of the imported configs, then
         imports the generated python classes to generate the classes
         corresponding to the entries of `json_file_path`.
         Args:
             json_file_path: The current json config to be processed.
-            destination_dir: Directory in which the generated module will 
+            destination_dir: Directory in which the generated module will
             be located
             forte_json_file: Path of the json config relative to Forte
             installation directory, in case the imported ontology is a
@@ -440,7 +439,6 @@ class OntologyCodeGenerator:
             rec_visited_paths: Keeps track of the current recursion stack, to
             detect, and throw error if any cycles are present.
             with the base ontology config, else, False.
-
         Returns:
         """
         # Initialize the visited dicts when the function is called for the
@@ -462,27 +460,32 @@ class OntologyCodeGenerator:
         json_imports: List[str] = spec_dict.get("import_paths", [])
 
         # Get location of installed forte
-        forte_origin = importlib.util.find_spec('forte').origin
-        installed_forte_dir = os.path.dirname(os.path.dirname(forte_origin))
+        forte_spec = importlib.util.find_spec('forte')
+        installed_forte_dir = None
+        if forte_spec is not None and forte_spec.origin is not None:
+            forte_origin = forte_spec.origin
+            installed_forte_dir = os.path.dirname(os.path.dirname(forte_origin))
+            self.json_paths.append(installed_forte_dir)
 
         for user_import in json_imports:
             installed_json_file = None
-            is_package = '.' in user_import and '/' not in user_import
+            is_package = not user_import.endswith('.json')
             if is_package:
                 # Check installed modules
                 try:
-                    import_origin = importlib.util.find_spec(user_import).origin
+                    import_spec = importlib.util.find_spec(user_import)
+                    if import_spec is None or import_spec.origin is None:
+                        raise FileNotFoundError
 
-                    delimiters = '# ', SOURCE_JSON_PFX, SOURCE_JSON_SFX
-                    regex = '|'.join(map(re.escape, delimiters))
-                    reqd_line = open(import_origin, 'r').readlines()[1]
-                    installed_json_file = list(filter(
-                        None, re.split(regex, reqd_line)))[0]
+                    with open(import_spec.origin, 'r') as imported_onto:
+                        delimiters = '# ', SOURCE_JSON_PFX, SOURCE_JSON_SFX
+                        regex = '|'.join(map(re.escape, delimiters))
+                        reqd_line = imported_onto.readlines()[1]
+                        installed_json_file = list(filter(
+                            None, re.split(regex, reqd_line)))[0]
 
                     schema_to_import = installed_json_file
-
-                    self.json_paths.append(installed_forte_dir)
-                except (AttributeError, IndexError, FileNotFoundError) as err:
+                except (FileNotFoundError, IndexError):
                     raise ImportOntologyNotFoundException(
                         f"Ontology corresponding to package {user_import} not "
                         f"found to be installed.")
@@ -519,7 +522,8 @@ class OntologyCodeGenerator:
         curr_forte_dir = str(Path(os.path.join(os.path.dirname(__file__),
                                                *([os.pardir] * 3))).resolve())
 
-        if os.path.samefile(curr_forte_dir, installed_forte_dir):
+        if installed_forte_dir is not None and \
+                os.path.samefile(curr_forte_dir, installed_forte_dir):
             forte_json_file = os.path.relpath(forte_json_file, curr_forte_dir)
         self.parse_schema(spec_dict, forte_json_file, is_installed)
 
@@ -563,24 +567,24 @@ class OntologyCodeGenerator:
                     f"ontology, will be overridden.", DuplicateEntriesWarning)
             self.allowed_types_tree[raw_entry_name] = set()
 
-            # Get various name of this entry.
-            en = EntryName(raw_entry_name)
-            entry_item, properties = self.parse_entry(en, definition)
-
-            if not is_installed:
-                # Get or set module writer if the ontology is not already
-                # installed
-                module_writer = self.module_writers.get(en.module_name)
-                module_writer.set_description(file_desc)
-                module_writer.source_file = source_json_file
-                # Add entry item to the writer.
-                module_writer.add_entry(en, entry_item)
-
             # Add the entry definition to the import managers.
             # This time adding to the root manager so everyone can access it
             # if needed, but they will only appear in the import list when
             # requested.
             self.import_managers.root.add_object_to_import(raw_entry_name)
+
+            # Get various name of this entry.
+            en = EntryName(raw_entry_name)
+            entry_item, properties = self.parse_entry(en, definition)
+
+            # Get or set module writer only if the ontology is not already
+            # installed
+            if not is_installed:
+                module_writer = self.module_writers.get(en.module_name)
+                module_writer.set_description(file_desc)
+                module_writer.source_file = source_json_file
+                # Add entry item to the writer.
+                module_writer.add_entry(en, entry_item)
 
             # Modules to be imported by the dependencies.
             # modules_to_import.append(en.class_name)
@@ -694,7 +698,7 @@ class OntologyCodeGenerator:
                     # The types for arg_ann and so on are in typed_ast._ast3,
                     # these types are protected hence hard to be used here.
 
-                    short_ann_name: str = arg_ann.value.id
+                    short_ann_name = arg_ann.value.id  # type: ignore
                     full_ann_name: str = this_manager.get_name_to_use(
                         short_ann_name)
 
@@ -764,7 +768,7 @@ class OntologyCodeGenerator:
 
         this_manager = self.import_managers.get(entry_name.module_name)
 
-        # Validate if the entry parent is presented.
+        # Validate if the parent entry is present.
         if not this_manager.is_known_name(parent_entry):
             raise ParentEntryNotDeclaredException(
                 f"Cannot add {entry_name.class_name} to the ontology as "
