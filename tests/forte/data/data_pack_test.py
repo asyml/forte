@@ -33,8 +33,8 @@ class DataPackTest(unittest.TestCase):
         data_rel_path = "data_samples/ontonotes/00/abc_0059.gold_conll"
         file_dir_path = os.path.dirname(__file__)
         data_path = os.path.abspath(os.path.join(file_dir_path,
-                                    *([os.pardir] * 3),
-                                    data_rel_path))
+                                                 *([os.pardir] * 3),
+                                                 data_rel_path))
         self.data_pack = list(self.reader.parse_pack(data_path))[0]
 
     def test_get_data(self):
@@ -69,6 +69,10 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0]["offset"], 0)
 
+        # case 3.1: test get single
+        document: Document = self.data_pack.get_single(Document)
+        self.assertEqual(document.text, instances[0]['context'])
+
         # case 4: test offset out of index
         instances = list(self.data_pack.get_data(Sentence, skip_k=10))
         self.assertEqual(len(instances), 0)
@@ -87,7 +91,8 @@ class DataPackTest(unittest.TestCase):
         num_sent = len(sentences)
         first_sent = sentences[0]
         self.data_pack.delete_entry(first_sent)
-        self.assertEqual(len(list(self.data_pack.get_data(Sentence))), num_sent - 1)
+        self.assertEqual(len(list(self.data_pack.get_data(Sentence))),
+                         num_sent - 1)
 
 
 if __name__ == '__main__':

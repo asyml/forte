@@ -21,11 +21,10 @@ import texar.torch as tx
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.data import MultiPack
-from forte.data import MultiPackLink
+from forte.data.multi_pack import MultiPack, MultiPackLink
 from forte.data.batchers import (
     ProcessingBatcher, FixedSizeMultiPackProcessingBatcher)
-from forte.common.types import DataRequest
+from forte.data.types import DataRequest
 from forte.processors.base.batch_processor import MultiPackBatchProcessor
 from ft.onto.base_ontology import Sentence
 

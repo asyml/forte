@@ -49,7 +49,7 @@ know which text talks about the `Pet`s, and which text talks about `Customer`s.
 ```
 
 At Forte's root directory, try run the following command:
-```shell script
+```shell
 generate_ontology create --config ontology_definitions/example_ontology.json --dest_path .
 ```
 You should be able to see the generated code for this Pet Shop ontology.

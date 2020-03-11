@@ -4,7 +4,8 @@ Unit tests for multi pack related operations.
 import logging
 import unittest
 
-from forte.data import MultiPack, DataPack, MultiPackLink
+from forte.data.multi_pack import MultiPack, MultiPackLink
+from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from ft.onto.base_ontology import (
     Token)

@@ -24,10 +24,10 @@ from typing import Any, Dict, Iterator, Optional, Type
 from texar.torch import HParams
 
 from forte.common.resources import Resources
-from forte.data.readers import PackReader, MultiPackReader, OntonotesReader
+from forte.data.readers.base_reader import PackReader, MultiPackReader
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology import Generics
+from forte.data.ontology.top import Generics
 from forte.data.selector import FirstPackSelector
 from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from forte.processors.base.tests.dummy_batch_processor import \
@@ -38,6 +38,7 @@ from ft.onto.base_ontology import Token, Sentence
 
 class NewType(Generics):
     """A dummy generic type to check the correctness of pipeline execution."""
+
     def __init__(self, pack, value):
         super().__init__(pack)
         self.value = value
@@ -159,6 +160,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
 class PipelineTest(unittest.TestCase):
 
     def test_process_next(self):
+        from forte.data.readers import OntonotesReader
 
         # Define and config the Pipeline
         nlp = Pipeline()
@@ -375,6 +377,7 @@ class PipelineTest(unittest.TestCase):
 class MultiPackPipelineTest(unittest.TestCase):
 
     def test_process_next(self):
+        from forte.data.readers import OntonotesReader
 
         # Define and config the Pipeline
         nlp = Pipeline()

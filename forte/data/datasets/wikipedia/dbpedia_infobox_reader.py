@@ -19,17 +19,17 @@ This will use the following datasets from DBpedia:
         -- mappingbased_objects_en.tql.bz2
         -- infobox_properties_wkd_uris_en.tql.bz2
 """
-import csv
 import os
 from typing import List, Iterator, Dict, Tuple
+import logging
 
+import csv
 from smart_open import open
 from texar.torch import HParams
-
 import rdflib
 
-from forte import Resources, logging
-from forte.data import DataPack
+from forte.common import Resources
+from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader,
     print_progress, print_notice)
@@ -44,18 +44,16 @@ def add_property(pack: DataPack, statements: List):
         slot_name = v.toPython()
         slot_value = get_resource_name(o)
         info_box = WikiInfoBoxProperty(pack)
-        info_box.set_key(slot_name)
-        info_box.set_value(slot_value)
+        info_box.key = slot_name
+        info_box.value = slot_value
         pack.add_entry(info_box)
 
 
-def add_info_boxes(pack: DataPack, info_box_statements: List,
-                   info_type: str):
+def add_info_boxes(pack: DataPack, info_box_statements: List):
     for _, v, o in info_box_statements:
         info_box = WikiInfoBoxMapped(pack)
-        info_box.set_key(v.toPython())
-        info_box.set_value(get_resource_name(o))
-        info_box.set_infobox_type(info_type)
+        info_box.key = v.toPython()
+        info_box.value = get_resource_name(o)
         pack.add_entry(info_box)
 
 
@@ -126,8 +124,8 @@ class DBpediaInfoBoxReader(PackReader):
                 with open(pack_path) as pack_file:
                     pack = DataPack.deserialize(pack_file.read())
 
-                    add_info_boxes(pack, info_box_data['literals'], 'literal')
-                    add_info_boxes(pack, info_box_data['objects'], 'object')
+                    add_info_boxes(pack, info_box_data['literals'])
+                    add_info_boxes(pack, info_box_data['objects'])
                     add_property(pack, info_box_data['properties'])
                     yield pack
         else:

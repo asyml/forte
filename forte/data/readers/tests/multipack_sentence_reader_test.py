@@ -20,7 +20,7 @@ import unittest
 
 from ddt import ddt, data, unpack
 
-from forte.data import MultiPack
+from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackSentenceReader
 from forte.pipeline import Pipeline
 

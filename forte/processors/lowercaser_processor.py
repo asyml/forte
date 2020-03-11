@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 
 __all__ = [

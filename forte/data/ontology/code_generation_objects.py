@@ -188,7 +188,7 @@ def indent_line(line: str, level: int) -> str:
     return f"{indent(level)}{line}" if line else ''
 
 
-def indent_code(code_lines: List[str], level: int = 0,
+def indent_code(code_lines: List[Optional[str]], level: int = 0,
                 is_line_break: bool = True) -> str:
     lines = []
 
@@ -677,7 +677,7 @@ class EntryDefinition(Item):
                                 for item in self.init_args.split(',')])
         raw_desc = self.to_description(1)
         desc: str = '' if raw_desc is None else raw_desc
-        lines = [
+        lines: List[Optional[str]] = [
             '',
             '',
             f"class {self.name}({self.class_type}):",

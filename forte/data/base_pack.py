@@ -19,7 +19,7 @@ from typing import List, Optional, Set, Type, TypeVar, Union
 
 import jsonpickle
 
-from forte.common.types import EntryType, LinkType, GroupType
+from forte.data.ontology.core import EntryType, GroupType, LinkType
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry

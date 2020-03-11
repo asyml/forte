@@ -3,7 +3,7 @@
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated ontology race_mutli_choice_qa_ontology. Do not change manually.
+Automatically generated ontology race_multi_choice_qa_ontology. Do not change manually.
 """
 
 from forte.data.data_pack import DataPack
@@ -24,13 +24,6 @@ __all__ = [
 class RaceDocument(Document):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-
-    def __getstate__(self): 
-        state = super().__getstate__()
-        return state
-
-    def __setstate__(self, state): 
-        state = super().__setstate__(state)
 
 
 class Passage(Document):
