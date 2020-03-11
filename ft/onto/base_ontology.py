@@ -1,4 +1,5 @@
 # ***automatically_generated***
+# ***source json:forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
