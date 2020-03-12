@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -ev
-ONTOLOGY_SPECS_DIR=ontology_specs
+
+export PYTHONPATH=$PYTHONPATH:`pwd`
+ONTOLOGY_SPECS_DIR=forte/ontology_specs
 
 pip install --upgrade pip
 pip install --progress-bar off .

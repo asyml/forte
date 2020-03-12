@@ -1,6 +1,8 @@
 import os
 from typing import List
 
+from string import Template
+
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -21,11 +23,21 @@ DEFAULT_CONSTRAINTS_KEYS = {
     "BaseGroup": {"member_type": "MemberType"}
 }
 AUTO_GEN_SIGNATURE = '***automatically_generated***'
-IGNORE_ERRORS_LINES: List[str] = [
-    f'# {AUTO_GEN_SIGNATURE}',
-    '# flake8: noqa',
-    '# mypy: ignore-errors',
-    '# pylint: skip-file']
+SOURCE_JSON_PFX = "***source json:"
+SOURCE_JSON_SFX = "***"
+SOURCE_JSON_TEMP = Template(f"{SOURCE_JSON_PFX}$file_path{SOURCE_JSON_SFX}")
+
+
+def get_ignore_error_lines(json_filepath: str) -> List[str]:
+    source_json_sign = SOURCE_JSON_TEMP.substitute(file_path=json_filepath)
+    return [
+        f'# {AUTO_GEN_SIGNATURE}',
+        f'# {source_json_sign}',
+        '# flake8: noqa',
+        '# mypy: ignore-errors',
+        '# pylint: skip-file']
+
+
 DEFAULT_PREFIX = "ft.onto"
 
 SUPPORTED_PRIMITIVES = {'int', 'float', 'str', 'bool'}
