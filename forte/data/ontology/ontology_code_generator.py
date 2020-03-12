@@ -19,9 +19,11 @@ import copy
 import json
 import logging
 import os
+import re
 import shutil
 import tempfile
 import warnings
+import importlib
 from collections import defaultdict
 from datetime import datetime
 from distutils import dir_util
@@ -48,7 +50,7 @@ from forte.data.ontology.ontology_code_const import (
     REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
     DEFAULT_PREFIX, SchemaKeywords, file_header, NON_COMPOSITES, COMPOSITES,
     ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
-    hardcoded_pack_map)
+    hardcoded_pack_map, SOURCE_JSON_PFX, SOURCE_JSON_SFX)
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -161,13 +163,13 @@ class OntologyCodeGenerator:
             imported json configs from. By default paths provided in the json
             configs and the current working directory would be searched.
         """
-        # The entries of the `self.base_ontology_module` serve as ancestors of
+        # The entries of the `self.top_ontology_module` serve as ancestors of
         # the user-defined entries.
-        base_ontology_module: ModuleType = top
+        top_ontology_module: ModuleType = top
 
         # Builtin and local imports required in the generated python modules.
         self.required_imports: List[str] = REQUIRED_IMPORTS
-        self.required_imports.append(base_ontology_module.__name__)
+        self.required_imports.append(top_ontology_module.__name__)
 
         # A collection of import managers: each manager is responsible for
         # controlling the imports of one module. The key of the collection is
@@ -178,7 +180,7 @@ class OntologyCodeGenerator:
         self.module_writers: ModuleWriterPool = ModuleWriterPool(
             self.import_managers)
 
-        # Mapping from entries parsed from the `base_ontology_module`
+        # Mapping from entries parsed from the `top_ontology_module`
         # (default is `forte.data.ontology.top.py`), to their
         # `__init__` arguments.
         # self.top_init_args_strs: Dict[str, str] = {}
@@ -199,7 +201,7 @@ class OntologyCodeGenerator:
         # Populate the two dictionaries above. And make the classes in the base
         # ontology aware to the root manager.
         self.initialize_top_entries(self.import_managers.root,
-                                    base_ontology_module)
+                                    top_ontology_module)
 
         # A few basic type to support.
         self.import_managers.root.add_object_to_import('typing.Optional')
@@ -417,23 +419,26 @@ class OntologyCodeGenerator:
 
     def parse_ontology_spec(self, json_file_path: str,
                             destination_dir: str,
+                            forte_json_file: Optional[str] = None,
                             visited_paths: Optional[Dict[str, bool]] = None,
                             rec_visited_paths: Optional[Dict[str, bool]] = None
                             ):
-        """
-        Performs a topological traversal on the directed graph formed by the
+        r"""Performs a topological traversal on the directed graph formed by the
         imported json configs. While processing each config, it first generates
         the classes corresponding to the entries of the imported configs, then
         imports the generated python classes to generate the classes
         corresponding to the entries of `json_file_path`.
         Args:
             json_file_path: The current json config to be processed.
-            destination_dir:
+            destination_dir: Directory in which the generated module will
+            be located
+            forte_json_file: Path of the json config relative to Forte
+            installation directory, in case the imported ontology is a
+            Forte ontology, else None
             visited_paths: Keeps track of the json configs already processed.
             rec_visited_paths: Keeps track of the current recursion stack, to
             detect, and throw error if any cycles are present.
             with the base ontology config, else, False.
-
         Returns:
         """
         # Initialize the visited dicts when the function is called for the
@@ -454,14 +459,48 @@ class OntologyCodeGenerator:
         # Extract imported json files and generate ontology for them.
         json_imports: List[str] = spec_dict.get("import_paths", [])
 
-        for import_file in json_imports:
-            import_json_file = utils.search_in_dirs(import_file,
+        # Get location of installed forte
+        forte_spec = importlib.util.find_spec('forte')
+        installed_forte_dir = None
+        if forte_spec is not None and forte_spec.origin is not None:
+            forte_origin = forte_spec.origin
+            installed_forte_dir = os.path.dirname(os.path.dirname(forte_origin))
+            self.json_paths.append(installed_forte_dir)
+
+        for user_import in json_imports:
+            installed_json_file = None
+            is_package = not user_import.endswith('.json')
+            if is_package:
+                # Check installed modules
+                try:
+                    import_spec = importlib.util.find_spec(user_import)
+                    if import_spec is None or import_spec.origin is None:
+                        raise FileNotFoundError
+
+                    with open(import_spec.origin, 'r') as imported_onto:
+                        delimiters = '# ', SOURCE_JSON_PFX, SOURCE_JSON_SFX
+                        regex = '|'.join(map(re.escape, delimiters))
+                        reqd_line = imported_onto.readlines()[1]
+                        installed_json_file = list(filter(
+                            None, re.split(regex, reqd_line)))[0]
+
+                    schema_to_import = installed_json_file
+                except (FileNotFoundError, IndexError):
+                    raise ImportOntologyNotFoundException(
+                        f"Ontology corresponding to package {user_import} not "
+                        f"found to be installed.")
+            else:
+                schema_to_import = user_import
+            # Check for installed ontology source file or json_file in user
+            # provided directories
+            import_json_file = utils.search_in_dirs(schema_to_import,
                                                     self.json_paths)
             if import_json_file is None:
                 raise ImportOntologyNotFoundException(
-                    f"Ontology corresponding to {import_file} not "
+                    f"Ontology corresponding to {user_import} not "
                     f"found in the current directory or the "
-                    f"directory of original json config.")
+                    f"directory of source json config.")
+
             if import_json_file in rec_visited_paths:
                 raise ImportOntologyAlreadyGeneratedException(
                     f"Ontology corresponding to {import_json_file}"
@@ -469,23 +508,39 @@ class OntologyCodeGenerator:
                     f"aborting")
             elif import_json_file not in visited_paths:
                 self.parse_ontology_spec(
-                    import_json_file, destination_dir,
+                    import_json_file, destination_dir, installed_json_file,
                     visited_paths, rec_visited_paths)
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
-        self.parse_schema(spec_dict)
+
+        is_installed = True
+        if forte_json_file is None:
+            is_installed = False
+            forte_json_file = json_file_path
+
+        curr_forte_dir = str(Path(os.path.join(os.path.dirname(__file__),
+                                               *([os.pardir] * 3))).resolve())
+
+        if installed_forte_dir is not None and \
+                os.path.samefile(curr_forte_dir, installed_forte_dir):
+            forte_json_file = os.path.relpath(forte_json_file, curr_forte_dir)
+        self.parse_schema(spec_dict, forte_json_file, is_installed)
 
         rec_visited_paths[json_file_path] = False
 
-    def parse_schema(self, schema: Dict):
+    def parse_schema(self, schema: Dict,
+                     source_json_file: str,
+                     is_installed: bool):
         r""" Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
         new module file if module is generated for the first time.
 
         Args:
             schema: Ontology dictionary extracted from a json config.
-
+            source_json_file: Path of the source json file.
+            is_installed: True if the ontology is already installed
+            (like ft.onto.base_ontology)
         Returns:
             Modules to be imported by dependencies of the current ontology.
         """
@@ -512,20 +567,24 @@ class OntologyCodeGenerator:
                     f"ontology, will be overridden.", DuplicateEntriesWarning)
             self.allowed_types_tree[raw_entry_name] = set()
 
-            # Get various name of this entry.
-            en = EntryName(raw_entry_name)
-            module_writer = self.module_writers.get(en.module_name)
-            module_writer.set_description(file_desc)
-
             # Add the entry definition to the import managers.
             # This time adding to the root manager so everyone can access it
-            #  if needed, but they will only appear in the import list when
-            #  requested.
+            # if needed, but they will only appear in the import list when
+            # requested.
             self.import_managers.root.add_object_to_import(raw_entry_name)
 
-            # Add the entry item to the writer.
+            # Get various name of this entry.
+            en = EntryName(raw_entry_name)
             entry_item, properties = self.parse_entry(en, definition)
-            module_writer.add_entry(en, entry_item)
+
+            # Get or set module writer only if the ontology is not already
+            # installed
+            if not is_installed:
+                module_writer = self.module_writers.get(en.module_name)
+                module_writer.set_description(file_desc)
+                module_writer.source_file = source_json_file
+                # Add entry item to the writer.
+                module_writer.add_entry(en, entry_item)
 
             # Modules to be imported by the dependencies.
             # modules_to_import.append(en.class_name)
@@ -639,7 +698,7 @@ class OntologyCodeGenerator:
                     # The types for arg_ann and so on are in typed_ast._ast3,
                     # these types are protected hence hard to be used here.
 
-                    short_ann_name: str = arg_ann.value.id  # type: ignore
+                    short_ann_name = arg_ann.value.id  # type: ignore
                     full_ann_name: str = this_manager.get_name_to_use(
                         short_ann_name)
 
@@ -709,7 +768,7 @@ class OntologyCodeGenerator:
 
         this_manager = self.import_managers.get(entry_name.module_name)
 
-        # Validate if the entry parent is presented.
+        # Validate if the parent entry is present.
         if not this_manager.is_known_name(parent_entry):
             raise ParentEntryNotDeclaredException(
                 f"Cannot add {entry_name.class_name} to the ontology as "

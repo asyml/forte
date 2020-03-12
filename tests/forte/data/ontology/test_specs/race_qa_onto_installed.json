@@ -1,15 +1,15 @@
 {
-  "ontology_name": "race_multi_choice_qa_ontology",
+  "ontology_name": "race_qa_installed_ontology",
   "import_paths": [
-    "base_ontology.json"
+    "ft.onto.base_ontology"
   ],
   "definitions": [
     {
-      "entry_name": "ft.onto.race_multi_choice_qa_ontology.RaceDocument",
+      "entry_name": "ft.onto.race_qa_installed_ontology.RaceDocument",
       "parent_entry": "ft.onto.base_ontology.Document"
     },
     {
-      "entry_name": "ft.onto.race_multi_choice_qa_ontology.Passage",
+      "entry_name": "ft.onto.race_qa_installed_ontology.Passage",
       "parent_entry": "ft.onto.base_ontology.Document",
       "attributes": [
         {
@@ -19,17 +19,17 @@
       ]
     },
     {
-      "entry_name": "ft.onto.race_multi_choice_qa_ontology.Option",
+      "entry_name": "ft.onto.race_qa_installed_ontology.Option",
       "parent_entry": "forte.data.ontology.top.Annotation"
     },
     {
-      "entry_name": "ft.onto.race_multi_choice_qa_ontology.Question",
+      "entry_name": "ft.onto.race_qa_installed_ontology.Question",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "attributes": [
         {
           "name": "options",
           "type": "List",
-          "item_type": "ft.onto.race_multi_choice_qa_ontology.Option"
+          "item_type": "ft.onto.race_qa_installed_ontology.Option"
         },
         {
           "name": "answers",

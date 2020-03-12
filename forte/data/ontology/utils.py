@@ -65,14 +65,15 @@ def search_in_dirs(file, dirs_paths):
     else `None`
 
     """
+    abs_file = file
     for _dir in dirs_paths:
         if not os.path.isabs(file):
-            file = os.path.join(_dir, file)
-        file = str(Path(file).resolve())
+            abs_file = os.path.join(_dir, file)
+        abs_file = str(Path(abs_file).resolve())
 
         for dir_path in Path(_dir).glob("**/*"):
             resolved_path = str(dir_path.resolve())
-            if file == resolved_path:
+            if abs_file == resolved_path:
                 return resolved_path
     return None
 
