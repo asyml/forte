@@ -15,10 +15,8 @@
 import yaml
 
 import texar.torch as tx
-from forte.processors.elastic_search_query_creator import \
-    ElasticSearchQueryCreator
-from forte.processors.elastic_search_processor import \
-    ElasticSearchProcessor
+from forte.processors.ir import ElasticSearchQueryCreator
+from forte.processors.ir import ElasticSearchProcessor
 from forte.pipeline import Pipeline
 
 from examples.passage_reranker.reader import EvalReader
@@ -40,7 +38,7 @@ if __name__ == "__main__":
     for idx, m_pack in enumerate(nlp.process_dataset(
             "./collection_and_queries/queries.dev.small.tsv")):
         if (idx + 1) % 1000 == 0:
-            print(f"Processed {idx+1} examples")
+            print(f"Processed {idx + 1} examples")
 
     scores = nlp.evaluate()
     print(scores)

@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Modules of Forte library utils.
-"""
 
-from forte.utils.types import *
-from forte.utils.utils import *
-from forte.utils.utils_io import *
+# This package contains Information Retrieval Processors, to use processor in
+# this package, run the 'ir' option in setup.py
+
+from forte.processors.ir.bert_based_query_creator import *
+from forte.processors.ir.elastic_search_query_creator import *
+from forte.processors.ir.elastic_search_index_processor import *
+from forte.processors.ir.elastic_search_processor import *
+from forte.processors.ir.search_processor import *

@@ -96,7 +96,6 @@ namespaces
 multipack
 qa
 duplications
-param
 subclasses
 lowercased
 labeler

@@ -20,9 +20,8 @@ from texar.torch import HParams
 from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
-from forte.processors import MicrosoftBingTranslator, BertBasedQueryCreator, \
-    SRLPredictor
-from forte.processors.search_processor import SearchProcessor
+from forte.processors import MicrosoftBingTranslator, SRLPredictor
+from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
 from forte.processors.nltk_processors import \
     (NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
@@ -33,7 +32,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def main():
-
     config = yaml.safe_load(open("config.yml", "r"))
     config = HParams(config, default_hparams=None)
 
