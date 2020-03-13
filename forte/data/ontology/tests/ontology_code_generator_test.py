@@ -28,7 +28,7 @@ from testfixtures import LogCapture, log_capture
 from forte.data.ontology import utils
 from forte.data.ontology.code_generation_exceptions import (
     DirectoryAlreadyPresentWarning, DuplicateEntriesWarning,
-    ImportOntologyNotFoundException,
+    OntologySourceNotFoundException,
     TypeNotDeclaredException, UnsupportedTypeException,
     DuplicatedAttributesWarning, ParentEntryNotSupportedException
 )
@@ -115,7 +115,7 @@ class GenerateOntologyTest(unittest.TestCase):
 
     @data((True, 'test_duplicate_entry.json', DuplicateEntriesWarning),
           (True, 'test_duplicate_attribute.json', DuplicatedAttributesWarning),
-          (False, 'example_ontology.json', ImportOntologyNotFoundException),
+          (False, 'example_ontology.json', OntologySourceNotFoundException),
           (False, 'test_invalid_parent.json', ParentEntryNotSupportedException),
           (False, 'test_invalid_attribute.json', TypeNotDeclaredException),
           (False, 'test_nested_item_type.json', UnsupportedTypeException),

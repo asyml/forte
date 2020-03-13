@@ -1,6 +1,6 @@
 {
   "ontology_name": "race_qa_installed_ontology",
-  "import_paths": [
+  "imports": [
     "ft.onto.base_ontology"
   ],
   "definitions": [

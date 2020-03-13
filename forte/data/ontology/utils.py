@@ -16,6 +16,7 @@ Utility functions for ontology generation.
 """
 import os
 import sys
+import re
 from importlib import util as import_util
 from pathlib import Path
 from pydoc import locate
@@ -78,6 +79,11 @@ def search_in_dirs(file, dirs_paths):
     return None
 
 
+def get_module_path(module: str):
+    module_spec = import_util.find_spec(module)
+    return module_spec.origin if module_spec is not None else None
+
+
 def get_top_level_dirs(path: Optional[str]):
     """
     Args:
@@ -138,3 +144,29 @@ def get_python_version() -> Tuple[int, int]:
     """
     version_info = sys.version_info
     return version_info[0], version_info[1]
+
+
+def get_schema_from_ontology(imported_onto_file: Optional[str],
+                             delimiters: List[str]) -> str:
+    if imported_onto_file is None:
+        raise FileNotFoundError
+    with open(imported_onto_file, 'r') as imported_onto:
+        regex = '|'.join(map(re.escape, delimiters))
+        reqd_line = imported_onto.readlines()[1]
+        installed_json_file = list(filter(None, re.split(regex, reqd_line)))[0]
+    return installed_json_file
+
+
+def get_installed_forte_dir():
+    forte_spec = import_util.find_spec('forte')
+    installed_forte_dir = None
+    if forte_spec is not None and forte_spec.origin is not None:
+        forte_origin = forte_spec.origin
+        installed_forte_dir = os.path.dirname(os.path.dirname(forte_origin))
+    return installed_forte_dir
+
+
+def get_current_forte_dir():
+    relative_path = os.path.join(os.path.dirname(__file__),
+                                 *([os.pardir] * 3))
+    return str(Path(relative_path).resolve())

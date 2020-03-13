@@ -18,8 +18,8 @@ from abc import ABC
 from pathlib import Path
 from typing import Optional, Any, List, Dict, Set, Tuple
 
-from forte.data.ontology.code_generation_exceptions import \
-    CodeGenerationException
+from forte.data.ontology.code_generation_exceptions import (
+    CodeGenerationException)
 from forte.data.ontology.ontology_code_const import (
     SUPPORTED_PRIMITIVES, NON_COMPOSITES, COMPOSITES, Config,
     get_ignore_error_lines)

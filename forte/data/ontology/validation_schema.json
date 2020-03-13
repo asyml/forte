@@ -16,8 +16,8 @@
       "description": "Description of the ontology.",
       "type": "string"
     },
-    "import_paths": {
-      "description": "JSON import paths.",
+    "imports": {
+      "description": "JSON import paths or installed ontology packages.",
       "type": "array",
       "uniqueItems": true,
       "items": {
