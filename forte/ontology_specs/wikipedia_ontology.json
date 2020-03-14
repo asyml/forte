@@ -1,5 +1,5 @@
 {
-  "ontology_name": "wikipedia",
+  "name": "wikipedia",
   "imports": [
     "base_ontology.json"
   ],

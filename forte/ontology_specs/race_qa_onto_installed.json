@@ -1,5 +1,5 @@
 {
-  "ontology_name": "race_qa_installed_ontology",
+  "name": "race_qa_installed_ontology",
   "imports": [
     "ft.onto.base_ontology"
   ],

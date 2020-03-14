@@ -68,14 +68,12 @@ def search_in_dirs(file, dirs_paths):
     """
     abs_file = file
     for _dir in dirs_paths:
+        abs_dir = os.path.abspath(_dir)
         if not os.path.isabs(file):
-            abs_file = os.path.join(_dir, file)
-        abs_file = str(Path(abs_file).resolve())
-
-        for dir_path in Path(_dir).glob("**/*"):
-            resolved_path = str(dir_path.resolve())
-            if abs_file == resolved_path:
-                return resolved_path
+            abs_file = os.path.join(abs_dir, file)
+        abs_file = os.path.normpath(abs_file)
+        if os.path.exists(abs_file):
+            return abs_file
     return None
 
 
@@ -120,18 +118,19 @@ def split_file_path(path: str):
     return path_split[::-1]
 
 
-def validate_json_schema(input_filepath: str, validation_filepath: str):
+def validate_json_schema(input_filepath: str):
     """
     Validates the input json schema using validation meta-schema provided in
-    `validation_filepath` according to the specification in
+    `validation_filepath.json` according to the specification in
     `http://json-schema.org`.
     If the tested json is not valid, a `jsonschema.exceptions.ValidationError`
     is thrown.
     Args:
         input_filepath: Filepath of the json schema to be validated
-        validation_filepath: Filepath of the valiodation specification
     """
-    with open(validation_filepath, 'r') as validation_json_file:
+    validation_file_path = os.path.normpath(
+        os.path.join(os.path.dirname(__file__), 'validation_schema.json'))
+    with open(validation_file_path, 'r') as validation_json_file:
         validation_schema = json.loads(validation_json_file.read())
     with open(input_filepath, 'r') as input_json_file:
         input_schema = json.loads(input_json_file.read())
@@ -157,16 +156,15 @@ def get_schema_from_ontology(imported_onto_file: Optional[str],
     return installed_json_file
 
 
+def get_parent_path(file_path: str, level: int = 1):
+    relative_path = os.path.join(file_path, *([os.pardir] * level))
+    return os.path.normpath(relative_path)
+
+
 def get_installed_forte_dir():
-    forte_spec = import_util.find_spec('forte')
-    installed_forte_dir = None
-    if forte_spec is not None and forte_spec.origin is not None:
-        forte_origin = forte_spec.origin
-        installed_forte_dir = os.path.dirname(os.path.dirname(forte_origin))
-    return installed_forte_dir
+    init_path = get_module_path('forte')
+    return get_parent_path(init_path, 2) if init_path is not None else None
 
 
 def get_current_forte_dir():
-    relative_path = os.path.join(os.path.dirname(__file__),
-                                 *([os.pardir] * 3))
-    return str(Path(relative_path).resolve())
+    return get_parent_path(__file__, 4)

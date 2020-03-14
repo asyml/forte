@@ -11,7 +11,7 @@ from forte.data.ontology import utils
 
 
 class SchemaKeywords:
-    ontology_name = 'ontology_name'
+    ontology_name = 'name'
     imports = 'imports'
     prefixes = 'additional_prefixes'
     definitions = 'definitions'

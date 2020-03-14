@@ -1,5 +1,5 @@
 {
-  "ontology_name": "race_multi_choice_qa_ontology",
+  "name": "race_multi_choice_qa_ontology",
   "imports": [
     "ft.onto.base_ontology"
   ],

@@ -18,6 +18,10 @@ class OntologySpecError(ValueError):
     pass
 
 
+class OntologySpecValidationError(OntologySpecError):
+    pass
+
+
 class OntologySourceNotFoundException(OntologySpecError):
     pass
 

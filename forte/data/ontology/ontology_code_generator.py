@@ -31,6 +31,7 @@ from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
 
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
+import jsonschema
 
 from forte.data.ontology import top, utils
 from forte.data.ontology.code_generation_exceptions import (
@@ -38,7 +39,8 @@ from forte.data.ontology.code_generation_exceptions import (
     OntologySourceNotFoundException, OntologyAlreadyGeneratedException,
     ParentEntryNotDeclaredException, TypeNotDeclaredException,
     UnsupportedTypeException, InvalidIdentifierException,
-    DuplicatedAttributesWarning, ParentEntryNotSupportedException)
+    DuplicatedAttributesWarning, ParentEntryNotSupportedException,
+    OntologySpecValidationError)
 from forte.data.ontology.code_generation_objects import (
     NonCompositeProperty, ListProperty, ClassTypeDefinition,
     EntryDefinition, Property, ImportManagerPool,
@@ -367,18 +369,6 @@ class OntologyCodeGenerator:
         if self.installed_forte_dir is not None:
             self.import_dirs.add(self.installed_forte_dir)
 
-        # TODO: validate the JSON paths here.
-
-        # # TODO: This section does the required imports, maybe useless.
-        # # Adding the imported objects to the allowed types.
-        # for import_module in self.required_imports:
-        #     for obj_str in utils.get_user_objects_from_module(import_module):
-        #         full_obj_str = f"{import_module}.{obj_str}"
-        #         self.allowed_types_tree[full_obj_str] = set()
-        #         # self.import_manager.add_object_to_import(
-        #            full_obj_str, False)
-        #         # self.full_ref_to_import[obj_str] = full_obj_str
-
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
         try:
@@ -431,7 +421,12 @@ class OntologyCodeGenerator:
         imports the generated python classes to generate the classes
         corresponding to the entries of `json_file_path`.
         Args:
-            ontology_reference: The current json config to be processed.
+            ontology_reference: Reference to the ontology. Can be of the
+            following forms -
+                (1) Absolute or relative path to the current json config to be
+                processed
+                (2) Full name of the installed ontology module that is to be
+                imported (ft.onto.base_ontology)
             destination_dir: Directory in which the generated module will
             be located
             source_json_file: Path of the json config relative to Forte
@@ -479,7 +474,15 @@ class OntologyCodeGenerator:
         visited_paths[json_file_path] = True
         rec_visited_paths[json_file_path] = True
 
-        # Load the ontology specification.
+        # Validate and load the ontology specification.
+        try:
+            utils.validate_json_schema(json_file_path)
+        except Exception as exception:
+            if type(exception).__name__.split('.')[0] == jsonschema.__name__ and \
+                    hasattr(exception, 'message'):
+                raise OntologySpecValidationError(exception.message)
+            raise
+
         with open(json_file_path, 'r') as f:
             spec_dict = json.load(f)
 
