@@ -27,15 +27,12 @@ from testfixtures import LogCapture, log_capture
 
 from forte.data.ontology import utils
 from forte.data.ontology.code_generation_exceptions import (
-    DirectoryAlreadyPresentWarning, DuplicateEntriesWarning,
-    OntologySourceNotFoundException,
-    TypeNotDeclaredException, UnsupportedTypeException,
-    DuplicatedAttributesWarning, ParentEntryNotSupportedException
-)
+    DuplicatedAttributesWarning, DuplicateEntriesWarning,
+    OntologySourceNotFoundException, TypeNotDeclaredException,
+    UnsupportedTypeException, ParentEntryNotSupportedException)
 from forte.data.ontology.code_generation_objects import ImportManager
 from forte.data.ontology.ontology_code_generator import (
-    OntologyCodeGenerator
-)
+    OntologyCodeGenerator)
 
 
 @ddt
@@ -115,7 +112,7 @@ class GenerateOntologyTest(unittest.TestCase):
             folder_path = os.path.join(folder_path, name)
 
     @data((True, 'test_duplicate_entry.json', DuplicateEntriesWarning),
-          #(True, 'test_duplicate_attribute.json', DuplicatedAttributesWarning),
+          (True, 'test_duplicate_attr_name.json', DuplicatedAttributesWarning),
           (False, 'example_ontology.json', OntologySourceNotFoundException),
           (False, 'test_invalid_parent.json', ParentEntryNotSupportedException),
           (False, 'test_invalid_attribute.json', TypeNotDeclaredException),

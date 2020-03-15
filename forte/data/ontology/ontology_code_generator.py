@@ -27,7 +27,7 @@ from datetime import datetime
 from distutils import dir_util
 from pathlib import Path
 from types import ModuleType
-from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
+from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any, cast
 
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
@@ -478,9 +478,9 @@ class OntologyCodeGenerator:
         try:
             utils.validate_json_schema(json_file_path)
         except Exception as exception:
-            if type(exception).__name__.split('.')[0] == jsonschema.__name__ and \
-                    hasattr(exception, 'message'):
-                raise OntologySpecValidationError(exception.message)
+            if type(exception).__name__.split('.')[0] == jsonschema.__name__ \
+                    and hasattr(exception, 'message'):
+                raise OntologySpecValidationError(cast(Any, exception).message)
             raise
 
         with open(json_file_path, 'r') as f:
@@ -579,17 +579,25 @@ class OntologyCodeGenerator:
                         f"the ontology, will be overridden",
                         DuplicatedAttributesWarning
                     )
-                self.allowed_types_tree[en.class_name].add(
-                    property_name)
+                self.allowed_types_tree[en.class_name].add(property_name)
 
-    def parse_onto_ref(self, user_import, is_package):
+    def parse_onto_ref(self, onto_ref: str, is_package: bool) -> Optional[str]:
+        """
+        Located the source json file corresponding to the ontology reference
+        Args:
+            onto_ref: Relative or absolute path of the source json schema or
+            fully qualified name of the installed ontology module
+            is_package: False if `onto_ref` denotes a path
+        Returns:
+            Full path of the source json schema to be parsed
+        """
         # A user import can be a json path or an ontology module
         # If it is the ontology package, we locate the corresponding json
-        schema_to_import = user_import
+        schema_to_import = onto_ref
         if is_package:
             # User import is an installed ontology module
             # Find if the ontology module is installed
-            onto_file = utils.get_module_path(user_import)
+            onto_file = utils.get_module_path(onto_ref)
 
             # Locate source json schema file path from the comments of
             # the generated ontology
