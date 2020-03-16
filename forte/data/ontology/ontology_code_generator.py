@@ -50,7 +50,8 @@ from forte.data.ontology.ontology_code_const import (
     REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
     DEFAULT_PREFIX, SchemaKeywords, file_header, NON_COMPOSITES, COMPOSITES,
     ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
-    hardcoded_pack_map, SOURCE_JSON_PFX, SOURCE_JSON_SFX)
+    hardcoded_pack_map, SOURCE_JSON_PFX, SOURCE_JSON_SFX, AUTO_GEN_FILENAME,
+    AUTO_DELETE_FILENAME)
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -581,7 +582,7 @@ class OntologyCodeGenerator:
                     )
                 self.allowed_types_tree[en.class_name].add(property_name)
 
-    def parse_onto_ref(self, onto_ref: str, is_package: bool) -> Optional[str]:
+    def parse_onto_ref(self, onto_ref: str, is_package: bool):
         """
         Located the source json file corresponding to the ontology reference
         Args:
@@ -601,7 +602,7 @@ class OntologyCodeGenerator:
 
             # Locate source json schema file path from the comments of
             # the generated ontology
-            delims = '# ', SOURCE_JSON_PFX, SOURCE_JSON_SFX
+            delims = ['# ', SOURCE_JSON_PFX, SOURCE_JSON_SFX]
             schema_to_import = utils.get_schema_from_ontology(onto_file, delims)
 
         # Check for installed ontology source file or json_file in user
@@ -633,12 +634,12 @@ class OntologyCodeGenerator:
 
         rel_paths = dir_util.copy_tree(path, '', dry_run=1)
         rel_paths = [os.path.dirname(file) for file in rel_paths
-                     if os.path.basename(file).startswith('.generated')]
+                     if os.path.basename(file).startswith(AUTO_GEN_FILENAME)]
 
         del_dir = None
         if not is_forced:
             curr_time_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
-            del_dir = os.path.join(os.path.dirname(path), '.deleted',
+            del_dir = os.path.join(os.path.dirname(path), AUTO_DELETE_FILENAME,
                                    curr_time_str)
             for rel_path in rel_paths:
                 joined_path = os.path.join(del_dir, rel_path)
@@ -672,7 +673,7 @@ class OntologyCodeGenerator:
         if os.path.isfile(path):
             # path is a file type
             # delete .generated marker files and automatically generated files
-            is_empty = os.path.basename(path).startswith('.generated')
+            is_empty = os.path.basename(path).startswith(AUTO_GEN_FILENAME)
             if not is_empty and os.access(path, os.R_OK):
                 with open(path, 'r') as f:
                     lines = f.readlines()
