@@ -18,11 +18,11 @@ from abc import ABC
 from pathlib import Path
 from typing import Optional, Any, List, Dict, Set, Tuple
 
-from forte.data.ontology.code_generation_exceptions import \
-    CodeGenerationException
+from forte.data.ontology.code_generation_exceptions import (
+    CodeGenerationException)
 from forte.data.ontology.ontology_code_const import (
     SUPPORTED_PRIMITIVES, NON_COMPOSITES, COMPOSITES, Config,
-    get_ignore_error_lines)
+    get_ignore_error_lines, AUTO_GEN_FILENAME)
 from forte.data.ontology.utils import split_file_path
 
 
@@ -746,11 +746,8 @@ class ModuleWriter:
               first generated here.
             destination: The destination directory where the code should be
               placed
-
         Returns:
-
         """
-
         entry_dir_split = split_file_path(self.pkg_dir)
 
         rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
@@ -761,7 +758,7 @@ class ModuleWriter:
 
             dest_path = os.path.join(destination, rel_dir_path)
             if not os.path.exists(dest_path):
-                Path(os.path.join(temp_path, '.generated')).touch()
+                Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
     def write(self, tempdir: str, destination: str):
         """

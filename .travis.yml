@@ -39,8 +39,8 @@ script:
   # generating ontology from ontology_specs
   - ./scripts/build_ontology_specs.sh
   # linting
-  - pylint forte/ examples/ ft/ scripts/
-  - flake8 forte/ examples/ ft/ scripts/
+  - pylint forte/ examples/ ft/ scripts/ tests/
+  - flake8 forte/ examples/ ft/ scripts/ tests/
   # type checking
   - mypy .
   # needed for test cases

@@ -19,9 +19,7 @@ test cases.
 from typing import Dict, Optional, Type
 
 import numpy as np
-from texar.torch import HParams
 
-from forte.common import Resources
 from forte.data.data_pack import DataPack
 from forte.data.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
