@@ -1,42 +1,18 @@
 import os
 from typing import List
 
+from string import Template
+
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import top
 from forte.data.ontology import utils
 
-REQUIRED_IMPORTS: List[str] = [
-    'typing',
-    # 'ft.onto',
-    # 'forte.data.data_pack',
-]
-
-TOP_MOST_CLASS = 'forte.data.ontology.core.Entry'
-TOP_MOST_MODULE_NAME = 'forte.data.ontology.core'
-
-DEFAULT_CONSTRAINTS_KEYS = {
-    "BaseLink": {"parent_type": "ParentType", "child_type": "ChildType"},
-    "BaseGroup": {"member_type": "MemberType"}
-}
-AUTO_GEN_SIGNATURE = '***automatically_generated***'
-IGNORE_ERRORS_LINES: List[str] = [
-    f'# {AUTO_GEN_SIGNATURE}',
-    '# flake8: noqa',
-    '# mypy: ignore-errors',
-    '# pylint: skip-file']
-DEFAULT_PREFIX = "ft.onto"
-
-SUPPORTED_PRIMITIVES = {'int', 'float', 'str', 'bool'}
-NON_COMPOSITES = {key: key for key in SUPPORTED_PRIMITIVES}
-COMPOSITES = {'List': 'typing.List', 'Dict': 'typing.Dict'}
-
-ALL_INBUILT_TYPES = set(list(NON_COMPOSITES.keys()) + list(COMPOSITES.keys()))
-
 
 class SchemaKeywords:
-    ontology_name = 'ontology_name'
+    ontology_name = 'name'
+    imports = 'imports'
     prefixes = 'additional_prefixes'
     definitions = 'definitions'
     parent_entry = 'parent_entry'
@@ -47,10 +23,47 @@ class SchemaKeywords:
     attribute_type = 'type'
     parent_type = 'parent_type'
     child_type = 'child_type'
+    member_type = 'member_type'
     default_value = 'default'
     element_type = 'item_type'
     dict_key_type = 'key_type'
     dict_value_type = 'value_type'
+
+
+REQUIRED_IMPORTS: List[str] = ['typing']
+
+TOP_MOST_MODULE_NAME = 'forte.data.ontology.core'
+
+DEFAULT_CONSTRAINTS_KEYS = {
+    "BaseLink": {SchemaKeywords.parent_type: "ParentType",
+                 SchemaKeywords.child_type: "ChildType"},
+    "BaseGroup": {SchemaKeywords.member_type: "MemberType"}
+}
+AUTO_GEN_SIGNATURE = '***automatically_generated***'
+AUTO_GEN_FILENAME = '.generated'
+AUTO_DELETE_FILENAME = '.deleted'
+SOURCE_JSON_PFX = "***source json:"
+SOURCE_JSON_SFX = "***"
+SOURCE_JSON_TEMP = Template(f"{SOURCE_JSON_PFX}$file_path{SOURCE_JSON_SFX}")
+
+
+def get_ignore_error_lines(json_filepath: str) -> List[str]:
+    source_json_sign = SOURCE_JSON_TEMP.substitute(file_path=json_filepath)
+    return [
+        f'# {AUTO_GEN_SIGNATURE}',
+        f'# {source_json_sign}',
+        '# flake8: noqa',
+        '# mypy: ignore-errors',
+        '# pylint: skip-file']
+
+
+DEFAULT_PREFIX = "ft.onto"
+
+SUPPORTED_PRIMITIVES = {'int', 'float', 'str', 'bool'}
+NON_COMPOSITES = {key: key for key in SUPPORTED_PRIMITIVES}
+COMPOSITES = {'List': 'typing.List', 'Dict': 'typing.Dict'}
+
+ALL_INBUILT_TYPES = set(list(NON_COMPOSITES.keys()) + list(COMPOSITES.keys()))
 
 
 def file_header(desc_str, ontology_name):

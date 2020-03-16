@@ -18,11 +18,11 @@ from abc import ABC
 from pathlib import Path
 from typing import Optional, Any, List, Dict, Set, Tuple
 
-from forte.data.ontology.code_generation_exceptions import \
-    CodeGenerationException
+from forte.data.ontology.code_generation_exceptions import (
+    CodeGenerationException)
 from forte.data.ontology.ontology_code_const import (
-    IGNORE_ERRORS_LINES, SUPPORTED_PRIMITIVES, NON_COMPOSITES, COMPOSITES,
-    Config)
+    SUPPORTED_PRIMITIVES, NON_COMPOSITES, COMPOSITES, Config,
+    get_ignore_error_lines, AUTO_GEN_FILENAME)
 from forte.data.ontology.utils import split_file_path
 
 
@@ -424,11 +424,10 @@ class DictProperty(Property):
         return self.name
 
     def to_access_functions(self, level):
-        """ Generate access function to for Dict types. This extend the
-        base function and add some composite specific types.
-
-        :param level:
-        :return:
+        r"""Generate access function to for Dict types. This extend the base
+        function and add some composite specific types.
+        Args:
+            level: Indent level
         """
         name = self.name
         key_type = self.import_manager.get_name_to_use(self.key_type)
@@ -721,6 +720,8 @@ class ModuleWriter:
     def __init__(self, module_name: str,
                  import_managers: ImportManagerPool):
         self.module_name = module_name
+        self.source_file: str = ""
+
         self.description: Optional[str] = None
         self.import_managers: ImportManagerPool = import_managers
         self.entries: List[Tuple[EntryName, EntryDefinition]] = []
@@ -745,11 +746,8 @@ class ModuleWriter:
               first generated here.
             destination: The destination directory where the code should be
               placed
-
         Returns:
-
         """
-
         entry_dir_split = split_file_path(self.pkg_dir)
 
         rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
@@ -760,7 +758,7 @@ class ModuleWriter:
 
             dest_path = os.path.join(destination, rel_dir_path)
             if not os.path.exists(dest_path):
-                Path(os.path.join(temp_path, '.generated')).touch()
+                Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
     def write(self, tempdir: str, destination: str):
         """
@@ -801,7 +799,8 @@ class ModuleWriter:
 
     def to_description(self, level):
         quotes = '"""'
-        lines = IGNORE_ERRORS_LINES + [quotes, self.description, quotes]
+        lines = get_ignore_error_lines(self.source_file) + \
+                [quotes, self.description, quotes]
         return indent_code(lines, level)
 
     def to_import_code(self, level):

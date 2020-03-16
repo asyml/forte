@@ -27,15 +27,12 @@ from testfixtures import LogCapture, log_capture
 
 from forte.data.ontology import utils
 from forte.data.ontology.code_generation_exceptions import (
-    DuplicateEntriesWarning,
-    ImportOntologyNotFoundException,
-    TypeNotDeclaredException, UnsupportedTypeException,
-    DuplicatedAttributesWarning, ParentEntryNotSupportedException
-)
+    DuplicatedAttributesWarning, DuplicateEntriesWarning,
+    OntologySourceNotFoundException, TypeNotDeclaredException,
+    UnsupportedTypeException, ParentEntryNotSupportedException)
 from forte.data.ontology.code_generation_objects import ImportManager
 from forte.data.ontology.ontology_code_generator import (
-    OntologyCodeGenerator
-)
+    OntologyCodeGenerator)
 
 
 @ddt
@@ -45,7 +42,6 @@ class GenerateOntologyTest(unittest.TestCase):
         self.dir_path = None
 
         curr_dir = os.path.dirname(__file__)
-        self.valid_filepath = 'forte/data/ontology/validation_schema.json'
         self.spec_dir = os.path.join(curr_dir, "test_specs/")
         self.test_output = os.path.join(curr_dir, "test_outputs/")
 
@@ -64,8 +60,10 @@ class GenerateOntologyTest(unittest.TestCase):
         ('example_complex_ontology', ['ft/onto/example_complex_ontology']),
         ('example_multi_module_ontology', ['ft/onto/ft_module',
                                            'custom/user/custom_module']),
+        ('race_qa_onto_installed', ['ft/onto/race_qa_installed_ontology']),
         ('race_qa_onto', ['ft/onto/base_ontology',
-                          'ft/onto/race_multi_choice_qa_ontology']))
+                          'ft/onto/race_qa_ontology'])
+    )
     def test_generated_code(self, value):
         input_file_name, file_paths = value
         file_paths = sorted(file_paths)
@@ -111,8 +109,8 @@ class GenerateOntologyTest(unittest.TestCase):
             folder_path = os.path.join(folder_path, name)
 
     @data((True, 'test_duplicate_entry.json', DuplicateEntriesWarning),
-          (True, 'test_duplicate_attribute.json', DuplicatedAttributesWarning),
-          (False, 'example_ontology.json', ImportOntologyNotFoundException),
+          (True, 'test_duplicate_attr_name.json', DuplicatedAttributesWarning),
+          (False, 'example_ontology.json', OntologySourceNotFoundException),
           (False, 'test_invalid_parent.json', ParentEntryNotSupportedException),
           (False, 'test_invalid_attribute.json', TypeNotDeclaredException),
           (False, 'test_nested_item_type.json', UnsupportedTypeException),
@@ -166,10 +164,6 @@ class GenerateOntologyTest(unittest.TestCase):
 
         imports = manager.get_import_statements()
 
-        # expected_imports = ["import os.path",
-        #                     "import os.path as os_path",
-        #                     "from os import path"]
-
         expected_imports = ["from os import path"]
 
         self.assertListEqual(imports, expected_imports)
@@ -183,7 +177,7 @@ class GenerateOntologyTest(unittest.TestCase):
     )
     def test_valid_json(self, input_filepath):
         input_filepath = os.path.join(self.spec_dir, input_filepath)
-        utils.validate_json_schema(input_filepath, self.valid_filepath)
+        utils.validate_json_schema(input_filepath)
 
     @data(
         ("test_duplicate_attribute.json",
@@ -195,7 +189,7 @@ class GenerateOntologyTest(unittest.TestCase):
         input_filepath, error_msg = value
         input_filepath = os.path.join(self.spec_dir, input_filepath)
         with self.assertRaises(jsonschema.exceptions.ValidationError) as cm:
-            utils.validate_json_schema(input_filepath, self.valid_filepath)
+            utils.validate_json_schema(input_filepath)
         self.assertTrue(error_msg in cm.exception.args[0])
 
 

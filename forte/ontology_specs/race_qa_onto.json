@@ -1,7 +1,7 @@
 {
-  "ontology_name": "race_multi_choice_qa_ontology",
-  "import_paths": [
-    "base_ontology.json"
+  "name": "race_multi_choice_qa_ontology",
+  "imports": [
+    "ft.onto.base_ontology"
   ],
   "definitions": [
     {
