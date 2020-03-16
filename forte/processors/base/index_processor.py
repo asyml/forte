@@ -19,7 +19,7 @@ from typing import Dict, Any, List, Tuple
 
 from texar.torch import HParams
 from forte.common import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.processors.base.base_processor import BaseProcessor
 
 __all__ = [

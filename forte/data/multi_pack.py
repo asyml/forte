@@ -17,12 +17,14 @@ import logging
 from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
                     Tuple)
 
-from forte.common.types import EntryType, DataRequest
+from forte.data.ontology.core import EntryType
+from forte.data.types import DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
 from forte.data.index import BaseIndex
 from forte.data.ontology.top import (
-    Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries)
+    Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries,
+    MultiPackGeneric)
 from forte.data.ontology.core import Entry
 from forte.data.span import Span
 
@@ -48,6 +50,9 @@ class MultiPackMeta(BaseMeta):
         super().__init__()
 
 
+# pylint: disable=too-many-public-methods
+
+# TODO: operations for multi pack is far less complete comparing to data pack.
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     r"""A :class:`MultiPack' contains multiple DataPacks and a collection of
     cross-pack entries (links, and groups)
@@ -61,6 +66,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         self.links: List[MultiPackLink] = []
         self.groups: List[MultiPackGroup] = []
+        self.generics: List[MultiPackGeneric] = []
 
         self.meta: MultiPackMeta = MultiPackMeta()
 
@@ -94,6 +100,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def subentry(self, pack_index: int, entry: Entry):
         return SubEntry(self, pack_index, entry.tid)
+
+    def get_subentry(self, subentry: SubEntry):
+        return self.packs[subentry.pack_index].get_entry(subentry.entry_id)
 
     def get_span_text(self, span: Span):
         raise ValueError(
@@ -160,6 +169,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def get_pack(self, name: str):
         return self._packs[self.__name_index[name]]
+
+    def iter_groups(self):
+        yield from self.groups
 
     def get_single_pack_data(
             self,
@@ -245,6 +257,51 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         pass
 
+    def __add_entry_with_check(self, entry: EntryType,
+                               allow_duplicate: bool = True) -> EntryType:
+        r"""Internal method to add an :class:`Entry` object to the
+        :class:`MultiPack` object.
+
+        Args:
+            entry (Entry): An :class:`Entry` object to be added to the datapack.
+            allow_duplicate (bool): Whether we allow duplicate in the datapack.
+
+        Returns:
+            The input entry itself
+        """
+        if isinstance(entry, MultiPackLink):
+            target = self.links
+        elif isinstance(entry, MultiPackGroup):
+            target = self.groups  # type: ignore
+        elif isinstance(entry, MultiPackGeneric):
+            target = self.generics  # type: ignore
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(entry)} for Multipack. A valid "
+                f"entry should be an instance of MultiPackLink, MultiPackGroup"
+                f", or MultiPackGeneric."
+            )
+
+        add_new = allow_duplicate or (entry not in target)
+
+        if add_new:
+            self.record_entry(entry)
+
+            target.append(entry)  # type: ignore
+
+            # update the data pack index if needed
+            self.index.update_basic_index([entry])
+            if self.index.link_index_on and isinstance(
+                    entry, MultiPackLink):
+                self.index.update_link_index([entry])
+            if self.index.group_index_on and isinstance(
+                    entry, MultiPackGroup):
+                self.index.update_group_index([entry])
+
+            return entry
+        else:
+            return target[target.index(entry)]  # type: ignore
+
     def add_or_get_entry(self, entry: EntryType) -> EntryType:
         r"""Try to add an :class:`Entry` object to the :class:`Multipack`
         object. If a same entry already exists, will return the existing entry
@@ -259,32 +316,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             If a same entry already exists, returns the existing
             entry. Otherwise, return the (input) entry just added.
         """
-        if isinstance(entry, MultiPackLink):
-            target: List[Any] = self.links
-        elif isinstance(entry, MultiPackGroup):
-            target = self.groups
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
-
-        if entry not in target:
-            self.record_entry(entry)
-
-            target.append(entry)
-
-            # update the data pack index if needed
-            self.index.update_basic_index([entry])
-            if self.index.link_index_on and isinstance(
-                    entry, MultiPackLink):
-                self.index.update_link_index([entry])
-            if self.index.group_index_on and isinstance(
-                    entry, MultiPackGroup):
-                self.index.update_group_index([entry])
-
-            return entry
-        return target[target.index(entry)]
+        return self.__add_entry_with_check(entry, False)
 
     def add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
@@ -297,21 +329,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
             The input entry itself
         """
-        if isinstance(entry, MultiPackLink):
-            target: List[Any] = self.links
-        elif isinstance(entry, MultiPackGroup):
-            target = self.groups
-        else:
-            raise ValueError(
-                f"Invalid entry type {type(entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
-
-        # add the entry to the target entry list
-        entry.set_tid()
-        self.add_entry_creation_record(entry.tid)
-        target.append(entry)
-        return entry
+        return self.__add_entry_with_check(entry, True)
 
     def get_entry(self, tid: int) -> EntryType:
         r"""Look up the entry_index with key ``tid``."""
@@ -320,6 +338,40 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             raise KeyError(
                 f"There is no entry with tid '{tid}'' in this datapack")
         return entry
+
+    def delete_entry(self, entry: EntryType):
+        r"""Delete an :class:`~forte.data.ontology.top.Entry` object from the
+         :class:`MultiPack`.
+
+        Args:
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+                object to be deleted from the pack.
+
+        """
+        if isinstance(entry, MultiPackLink):
+            target = self.links
+        elif isinstance(entry, MultiPackGroup):
+            target = self.groups  # type: ignore
+        elif isinstance(entry, MultiPackGeneric):
+            target = self.generics  # type: ignore
+        else:
+            raise ValueError(
+                f"Invalid entry type {type(entry)}. A valid entry "
+                f"should be an instance of Annotation, Link, or Group."
+            )
+
+        begin = 0
+        for i, e in enumerate(target[begin:]):
+            if e.tid == entry.tid:
+                target.pop(i + begin)
+                break
+
+        # update basic index
+        self.index.remove_entry(entry)
+
+        # set other index invalid
+        self.index.turn_link_index_switch(on=False)
+        self.index.turn_group_index_switch(on=False)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:

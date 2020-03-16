@@ -17,7 +17,7 @@ Utility functions related to data processing input/output.
 import os
 from typing import Dict, List, Iterator, Any, Tuple
 
-from forte.common.types import ReplaceOperationsType
+from forte.data.types import ReplaceOperationsType
 from forte.data.span import Span
 
 __all__ = [
@@ -80,6 +80,20 @@ def slice_batch(batch, start, length):
             sliced_batch[entry] = fields[start: start + length]
 
     return sliced_batch
+
+
+def dataset_path_iterator_with_base(
+        dir_path: str, file_extension: str) -> Iterator[Tuple[str, str]]:
+    r"""An iterator returning file_paths in a directory containing files of the
+    given datasets, including the original directory as the first element.
+    """
+    for root, _, files in os.walk(dir_path):
+        for data_file in files:
+            if len(file_extension) > 0:
+                if data_file.endswith(file_extension):
+                    yield dir_path, os.path.join(root, data_file)
+            else:
+                yield dir_path, os.path.join(root, data_file)
 
 
 def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:

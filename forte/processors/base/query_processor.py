@@ -20,7 +20,7 @@ import numpy as np
 
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
-from forte.data.ontology import Query
+from forte.data.ontology.top import Query
 from forte.processors.base.pack_processor import BasePackProcessor
 
 __all__ = [

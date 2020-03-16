@@ -15,10 +15,11 @@
 Utility functions for ontology generation.
 """
 import os
+import sys
 from importlib import util as import_util
 from pathlib import Path
 from pydoc import locate
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import json
 import jsonschema
 
@@ -28,11 +29,11 @@ def get_user_objects_from_module(module_str: str,
     """
     Args:
         module_str: Module in the form of string, package.module.
-        custom_dirs: custom directories to search from if `module_str` not a
-        part of imported modules.
+        custom_dirs: custom directories to search from if `module_str` is not a
+          part of imported modules.
 
     Returns: A list of objects present in the module `module_str`,
-             None is module not found
+             None if module not found
 
     """
     module = locate(module_str)
@@ -128,3 +129,11 @@ def validate_json_schema(input_filepath: str, validation_filepath: str):
     with open(input_filepath, 'r') as input_json_file:
         input_schema = json.loads(input_json_file.read())
     jsonschema.Draft6Validator(validation_schema).validate(input_schema)
+
+
+def get_python_version() -> Tuple[int, int]:
+    """
+    :return: Python major and minor version at runtime
+    """
+    version_info = sys.version_info
+    return version_info[0], version_info[1]

@@ -18,7 +18,6 @@ from typing import Optional, Set, Tuple, Type, Any, Dict, Union
 import numpy as np
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.container import EntryContainer
 from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base_pack import PackType
 from forte.data.span import Span
@@ -225,7 +224,7 @@ class Group(BaseGroup[Entry]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             members: Optional[Set[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)
@@ -402,5 +401,5 @@ class Query(Generics):
         self.results.update(pid_to_score)
 
 
-SinglePackEntries = (Link, Group, Annotation)
-MultiPackEntries = (MultiPackLink, MultiPackGroup)
+SinglePackEntries = (Link, Group, Annotation, Generics)
+MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric, SubEntry)

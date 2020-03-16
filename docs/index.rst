@@ -24,4 +24,5 @@ API
    code/processors.rst
    code/models.rst
    code/trainers.rst
+   code/evaluation.rst
    code/utils.rst

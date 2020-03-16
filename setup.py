@@ -41,11 +41,11 @@ setuptools.setup(
         'sentiment': ['vaderSentiment'],
         'txtgen': ['regex', 'tensorflow'],
         'stanfordnlp': ['stanfordnlp'],
-        'test': ['ddt', 'jsonschema'],
+        'test': ['ddt', 'testfixtures'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch'],
-        'spacy': ['spacy'],
+        'spacy': ['spacy>=2.2.3'],
         'allennlp': ['allennlp']
     },
     entry_points={

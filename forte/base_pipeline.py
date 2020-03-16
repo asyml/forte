@@ -25,7 +25,7 @@ import yaml
 
 from texar.torch import HParams
 
-from forte.common.evaluation import Evaluator
+from forte.evaluation.base.base_evaluator import Evaluator
 from forte.common.resources import Resources
 from forte.data.readers.base_reader import BaseReader
 from forte.data.base_pack import PackType

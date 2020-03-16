@@ -17,7 +17,8 @@ from typing import Any, Dict, Tuple
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.data import DataPack, MultiPack
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.processors.base import QueryProcessor
 
 __all__ = [

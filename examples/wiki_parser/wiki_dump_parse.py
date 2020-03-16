@@ -25,7 +25,7 @@ from typing import TextIO, Any, Dict
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import load_redirects
 from forte.data.datasets.wikipedia.dbpedia_based_reader import DBpediaWikiReader
 from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \
@@ -33,8 +33,6 @@ from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \
 from forte.pipeline import Pipeline
 from forte.processors.base.writers import JsonPackWriter
 from ft.onto.wikipedia import WikiPage
-
-from utils import get_single
 
 __all__ = [
     'WikiArticleWriter',
@@ -62,7 +60,7 @@ class WikiArticleWriter(JsonPackWriter[DataPack]):
 
     def sub_output_path(self, pack: DataPack) -> str:
         sub_dir = str(int(self.article_count / 2000)).zfill(5)
-        pid = get_single(pack, WikiPage).page_id
+        pid = pack.get_single(WikiPage).page_id
         doc_name = f'doc_{self.article_count}' if pid is None else pid
 
         return os.path.join(sub_dir, doc_name + '.json')
@@ -106,10 +104,12 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     # Load redirects.
     logging.info("Loading redirects")
     redirect_pickle = os.path.join(output_path, 'redirects.pickle')
+
+    redirect_map: Dict[str, str]
     if os.path.exists(redirect_pickle):
-        redirect_map: Dict[str, str] = pickle.load(open(redirect_pickle, 'rb'))
+        redirect_map = pickle.load(open(redirect_pickle, 'rb'))
     else:
-        redirect_map: Dict[str, str] = load_redirects(redirects)
+        redirect_map = load_redirects(redirects)
         with open(redirect_pickle, 'wb') as pickle_f:
             pickle.dump(redirect_map, pickle_f)
     logging.info("Done loading.")

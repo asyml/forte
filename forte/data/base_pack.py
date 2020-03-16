@@ -19,11 +19,10 @@ from typing import List, Optional, Set, Type, TypeVar, Union
 
 import jsonpickle
 
-from forte.common.types import EntryType, LinkType, GroupType
+from forte.data.ontology.core import EntryType, GroupType, LinkType
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
-
 
 __all__ = [
     "BasePack",
@@ -67,6 +66,17 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             setattr(self.meta, k, v)
 
     @abstractmethod
+    def delete_entry(self, entry: EntryType):
+        """ Remove the entry from the pack.
+        Args:
+            entry: The entry to be removed.
+
+        Returns:
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`BasePack` object. Allow duplicate entries in a pack.
@@ -79,6 +89,20 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             The input entry itself
         """
         raise NotImplementedError
+
+    def add_entry_(self, entry: EntryType) -> int:
+        """
+        A slightly different variation from `add_entry` function, it returns
+        the entry id instead.
+
+        Args:
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+                object to be added to the pack.
+
+        Returns:
+            The entry id of the added entry.
+        """
+        return self.add_entry(entry).tid
 
     @abstractmethod
     def add_or_get_entry(self, entry: EntryType) -> EntryType:

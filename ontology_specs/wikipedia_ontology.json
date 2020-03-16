@@ -1,0 +1,85 @@
+{
+  "ontology_name": "wikipedia",
+  "import_paths": [
+    "base_ontology.json"
+  ],
+  "definitions": [
+    {
+      "entry_name": "ft.onto.wikipedia.WikiPage",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": [
+        {
+          "name": "page_id",
+          "type": "str"
+        },
+        {
+          "name": "page_name",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiBody",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": []
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiSection",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": [
+        {
+          "name": "is_intro",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiParagraph",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": []
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiTitle",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": []
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiAnchor",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "attributes": [
+        {
+          "name": "target_page_name",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiInfoBoxProperty",
+      "parent_entry": "forte.data.ontology.top.Generics",
+      "attributes": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "value",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.wikipedia.WikiInfoBoxMapped",
+      "parent_entry": "forte.data.ontology.top.Generics",
+      "attributes": [
+        {
+          "name": "key",
+          "type": "str"
+        },
+        {
+          "name": "value",
+          "type": "str"
+        }
+      ]
+    }
+  ]
+}

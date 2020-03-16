@@ -23,7 +23,7 @@ from texar.torch import HParams
 
 from forte.common import Resources
 from forte.data.data_pack import DataPack
-from forte.common.types import DataRequest
+from forte.data.types import DataRequest
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.processors.base import BatchProcessor, FixedSizeBatchProcessor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink

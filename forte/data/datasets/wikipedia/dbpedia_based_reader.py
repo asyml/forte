@@ -25,8 +25,8 @@ from typing import Any, Iterator, Dict, List, DefaultDict, Tuple
 from texar.torch import HParams
 import rdflib
 
-from forte import Resources
-from forte.data import DataPack
+from forte.common import Resources
+from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
     get_resource_name, get_resource_fragment,
@@ -81,7 +81,7 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
                 target_page_name = get_resource_name(info_value)
                 if target_page_name in redirects:
                     target_page_name = redirects[target_page_name]
-                anchor.set_target_page_name(target_page_name)
+                anchor.target_page_name = target_page_name
         pack.add_entry(anchor)
 
 
@@ -90,8 +90,8 @@ def add_info_boxes(pack: DataPack, info_box_statements: List):
         slot_name = v.toPython()
         slot_value = get_resource_name(o)
         info_box = WikiInfoBoxMapped(pack)
-        info_box.set_key(slot_name)
-        info_box.set_value(slot_value)
+        info_box.key = slot_name
+        info_box.value = slot_value
         pack.add_entry(info_box)
 
 
@@ -151,8 +151,8 @@ class DBpediaWikiReader(PackReader):
         pack.set_text(full_text)
         page = WikiPage(pack, 0, len(full_text))
         pack.add_entry(page)
-        page.set_page_id(str_data['oldid'])
-        page.set_page_name(doc_name)
+        page.page_id = str_data['oldid']
+        page.page_name = doc_name
 
         if len(node_data['struct']) > 0:
             add_struct(pack, node_data['struct'])

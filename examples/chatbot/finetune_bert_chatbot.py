@@ -12,31 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
-import importlib
 import functools
-from pathlib import Path
 import pickle
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
-from sklearn.metrics.pairwise import paired_cosine_distances
-
 import torch
-from torch import nn
 import torch.nn.functional as F
-
+from torch import nn
+from sklearn.metrics.pairwise import paired_cosine_distances
 import texar.torch as tx
+
+from examples.chatbot import config_data
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_dir", default="data/",
                     help="Data directory to read the files from")
 parser.add_argument("--output_dir", default="model/",
                     help="Output directory to write the pickled files")
-parser.add_argument("--config_data", default="config_data",
-                    help="File to read the config from")
 args = parser.parse_args()
-
-config_data = importlib.import_module(args.config_data)
 
 
 def get_lr_multiplier(step: int, total_steps: int, warmup_steps: int) -> float:
@@ -99,6 +94,91 @@ class SiameseBert(nn.Module):
         return sent_a_embedding, sent_b_embedding, logits, preds
 
 
+def _compute_loss(logits, labels):
+    r"""Compute loss.
+    """
+
+    loss = F.cross_entropy(logits.view(-1, chatbot_bert.num_classes),
+                           labels.view(-1), reduction='mean')
+    return loss
+
+
+def _train_epoch():
+    r"""Trains on the training set, and evaluates on the dev set
+    periodically.
+    """
+
+    data_iterator.switch_to_dataset("train")
+    chatbot_bert.train()
+
+    for batch in data_iterator:
+        optim.zero_grad()
+        _, _, logits, _ = chatbot_bert(
+            sent_a_input_ids=batch["sent_a_input_ids"],
+            sent_a_seq_len=batch["sent_a_seq_len"],
+            sent_a_segment_ids=batch["sent_a_segment_ids"],
+            sent_b_input_ids=batch["sent_b_input_ids"],
+            sent_b_seq_len=batch["sent_b_seq_len"],
+            sent_b_segment_ids=batch["sent_b_segment_ids"])
+        labels = batch["label_ids"]
+
+        loss = _compute_loss(logits, labels)
+        loss.backward()
+        optim.step()
+        scheduler.step()
+        step = scheduler.last_epoch
+        step += 1
+
+        dis_steps = config_data.display_steps
+        if dis_steps > 0 and step % dis_steps == 0:
+            print(f"step: {step}; loss: {loss.item()}")
+
+        eval_steps = config_data.eval_steps
+        if eval_steps > 0 and step % eval_steps == 0:
+            _eval_epoch(dataset="eval")
+
+
+@torch.no_grad()
+def _eval_epoch(dataset="eval"):
+    r"""Evaluates on ``dataset``."""
+
+    data_iterator.switch_to_dataset(dataset)
+    chatbot_bert.eval()
+
+    embeddings_a = []
+    embeddings_b = []
+    labels = []
+    nsamples = 0
+    avg_rec = tx.utils.AverageRecorder()
+    for batch in data_iterator:
+        sent_a_embedding, sent_b_embedding, _, preds = \
+            chatbot_bert(sent_a_input_ids=batch["sent_a_input_ids"],
+                         sent_a_seq_len=batch["sent_a_seq_len"],
+                         sent_a_segment_ids=batch["sent_a_segment_ids"],
+                         sent_b_input_ids=batch["sent_b_input_ids"],
+                         sent_b_seq_len=batch["sent_b_seq_len"],
+                         sent_b_segment_ids=batch["sent_b_segment_ids"])
+
+        label_ids = batch["label_ids"]
+        labels.extend(label_ids.to("cpu").numpy())
+        embeddings_a.extend(sent_a_embedding.to("cpu").numpy())
+        embeddings_b.extend(sent_b_embedding.to("cpu").numpy())
+
+        accu = tx.evals.accuracy(label_ids, preds)
+        avg_rec.add([accu], batch["sent_a_input_ids"].size(1))
+        nsamples += len(batch)
+
+    cosine_scores = \
+        1 - (paired_cosine_distances(embeddings_a, embeddings_b))
+    threshold = 0.5
+    predictions = np.array(cosine_scores > threshold, dtype=int)
+    cosine_accuracy = np.sum(predictions == labels) / len(labels)
+    print(f"Evaluating on {dataset} dataset."
+          f"Accuracy based on Cosine Similarity: {cosine_accuracy},"
+          f"Accuracy based on logits: {avg_rec.avg(0)},"
+          f"nsamples: {nsamples}")
+
+
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -131,7 +211,7 @@ if __name__ == "__main__":
         opt_params, betas=(0.9, 0.999), eps=1e-6, lr=static_lr)
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(
-        optim, functools.partial(get_lr_multiplier,
+        optim, functools.partial(get_lr_multiplier,  # type: ignore
                                  total_steps=num_train_steps,
                                  warmup_steps=num_warmup_steps))
 
@@ -144,88 +224,6 @@ if __name__ == "__main__":
 
     data_iterator = tx.data.DataIterator(
         {"train": train_dataset, "eval": eval_dataset, "test": test_dataset})
-
-    def _compute_loss(logits, labels):
-        r"""Compute loss.
-        """
-
-        loss = F.cross_entropy(logits.view(-1, chatbot_bert.num_classes),
-                               labels.view(-1), reduction='mean')
-        return loss
-
-    def _train_epoch():
-        r"""Trains on the training set, and evaluates on the dev set
-        periodically.
-        """
-
-        data_iterator.switch_to_dataset("train")
-        chatbot_bert.train()
-
-        for batch in data_iterator:
-            optim.zero_grad()
-            _, _, logits, _ = chatbot_bert(
-                sent_a_input_ids=batch["sent_a_input_ids"],
-                sent_a_seq_len=batch["sent_a_seq_len"],
-                sent_a_segment_ids=batch["sent_a_segment_ids"],
-                sent_b_input_ids=batch["sent_b_input_ids"],
-                sent_b_seq_len=batch["sent_b_seq_len"],
-                sent_b_segment_ids=batch["sent_b_segment_ids"])
-            labels = batch["label_ids"]
-
-            loss = _compute_loss(logits, labels)
-            loss.backward()
-            optim.step()
-            scheduler.step()
-            step = scheduler.last_epoch
-            step += 1
-
-            dis_steps = config_data.display_steps
-            if dis_steps > 0 and step % dis_steps == 0:
-                print(f"step: {step}; loss: {loss.item()}")
-
-            eval_steps = config_data.eval_steps
-            if eval_steps > 0 and step % eval_steps == 0:
-                _eval_epoch(dataset="eval")
-
-    @torch.no_grad()
-    def _eval_epoch(dataset="eval"):
-        r"""Evaluates on ``dataset``."""
-
-        data_iterator.switch_to_dataset(dataset)
-        chatbot_bert.eval()
-
-        embeddings_a = []
-        embeddings_b = []
-        labels = []
-        nsamples = 0
-        avg_rec = tx.utils.AverageRecorder()
-        for batch in data_iterator:
-            sent_a_embedding, sent_b_embedding, _, preds = \
-                chatbot_bert(sent_a_input_ids=batch["sent_a_input_ids"],
-                             sent_a_seq_len=batch["sent_a_seq_len"],
-                             sent_a_segment_ids=batch["sent_a_segment_ids"],
-                             sent_b_input_ids=batch["sent_b_input_ids"],
-                             sent_b_seq_len=batch["sent_b_seq_len"],
-                             sent_b_segment_ids=batch["sent_b_segment_ids"])
-
-            label_ids = batch["label_ids"]
-            labels.extend(label_ids.to("cpu").numpy())
-            embeddings_a.extend(sent_a_embedding.to("cpu").numpy())
-            embeddings_b.extend(sent_b_embedding.to("cpu").numpy())
-
-            accu = tx.evals.accuracy(label_ids, preds)
-            avg_rec.add([accu], batch["sent_a_input_ids"].size(1))
-            nsamples += len(batch)
-
-        cosine_scores = \
-            1 - (paired_cosine_distances(embeddings_a, embeddings_b))
-        threshold = 0.5
-        predictions = np.array(cosine_scores > threshold, dtype=int)
-        cosine_accuracy = np.sum(predictions == labels) / len(labels)
-        print(f"Evaluating on {dataset} dataset."
-              f"Accuracy based on Cosine Similarity: {cosine_accuracy},"
-              f"Accuracy based on logits: {avg_rec.avg(0)},"
-              f"nsamples: {nsamples}")
 
     for _ in range(config_data.max_train_epoch):
         print("Finetuning BERT for chatbot...")

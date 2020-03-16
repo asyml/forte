@@ -17,8 +17,9 @@ from typing import Dict, Any
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
-from forte.data import DataPack, MultiPack
-from forte.data.ontology import Query
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
+from forte.data.ontology.top import Query
 from forte.processors.base import MultiPackProcessor
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 

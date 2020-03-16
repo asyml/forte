@@ -22,7 +22,8 @@ from texar.torch.modules import BERTEncoder
 from texar.torch.data import BERTTokenizer
 
 from forte.common.resources import Resources
-from forte.data import DataPack, MultiPack
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.processors.base import QueryProcessor
 
 __all__ = [

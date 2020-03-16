@@ -19,8 +19,8 @@ __all__ = [
 from texar.torch import HParams
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-from forte import Resources
-from forte.data import DataPack
+from forte.common import Resources
+from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Sentence
 
@@ -54,7 +54,6 @@ class VaderSentimentProcessor(PackProcessor):
         self.sentence_component = configs.get('sentence_component')
 
     def _process(self, input_pack: DataPack):
-        sentence: Sentence
         for sentence in input_pack.get(entry_type=Sentence,
                                        component=self.sentence_component):
             scores = self.analyzer.polarity_scores(sentence.text)

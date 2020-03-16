@@ -20,7 +20,7 @@ import yaml
 import torch
 import texar.torch as tx
 
-from forte.indexers import EmbeddingBasedIndexer
+from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
 
 logging.basicConfig(level=logging.INFO)
 
