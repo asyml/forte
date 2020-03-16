@@ -71,8 +71,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         return input_info
 
     def initialize(self, resource: Resources, configs: HParams):
-
-        self.define_batcher()
+        super().initialize(resource, configs)
 
         self.resource = resource
         self.config_model = configs.config_model

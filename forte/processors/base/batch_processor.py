@@ -20,7 +20,7 @@ from typing import Dict, Optional, Type
 
 from texar.torch import HParams
 
-from forte.common import Resources
+from forte.common import Resources, ProcessorConfigError
 from forte.data.types import DataRequest
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -38,7 +38,6 @@ __all__ = [
     "FixedSizeBatchProcessor",
     "FixedSizeMultiPackBatchProcessor"
 ]
-
 
 process_manager = ProcessManager()
 
@@ -63,7 +62,13 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     def initialize(self, resource: Resources, configs: Optional[HParams]):
         super().initialize(resource, configs)
         # Initialize the batcher.
-        self.batcher.initialize(configs)
+        assert configs is not None
+        try:
+            self.batcher.initialize(configs.batcher)
+        except AttributeError:
+            raise ProcessorConfigError(
+                "To use batch processor, please provide the 'batch' "
+                "config at the top level.")
 
     @abstractmethod
     def define_context(self) -> Type[Annotation]:

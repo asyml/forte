@@ -30,10 +30,12 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
 from forte.data.selector import FirstPackSelector
 from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
-from forte.processors.base.tests.dummy_batch_processor import \
+from tests.dummy_batch_processor import \
     DummyRelationExtractor
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Token, Sentence
+
+data_samples_root = "data_samples"
 
 
 class NewType(Generics):
@@ -126,10 +128,6 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
     def __init__(self) -> None:
         super().__init__()
         self.counter = 0
-        self.batcher = self.define_batcher()
-
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
-        self.batcher.initialize(configs.batcher)  # type: ignore
 
     def define_context(self) -> Type[Sentence]:
         return Sentence
@@ -170,7 +168,7 @@ class PipelineTest(unittest.TestCase):
         nlp.add_processor(dummy, config=config)
         nlp.initialize()
 
-        dataset_path = "data_samples/ontonotes/00"
+        dataset_path = os.path.join(data_samples_root, "ontonotes/00")
 
         # get processed pack from dataset
         for pack in nlp.process_dataset(dataset_path):
@@ -192,7 +190,7 @@ class PipelineTest(unittest.TestCase):
         dummy = DummyPackProcessor()
         nlp.add_processor(dummy)
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
             types = list(pack.get_entries_by_type(NewType))
@@ -213,7 +211,7 @@ class PipelineTest(unittest.TestCase):
         config = {"batcher": {"batch_size": 4}}
         nlp.add_processor(processor=dummy, config=config)
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
             types = list(pack.get_entries_by_type(NewType))
@@ -240,7 +238,7 @@ class PipelineTest(unittest.TestCase):
         config = {"batcher": {"batch_size": 2 * batch_size}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -269,7 +267,7 @@ class PipelineTest(unittest.TestCase):
         dummy3 = DummyPackProcessor()
         nlp.add_processor(processor=dummy3)
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -298,7 +296,7 @@ class PipelineTest(unittest.TestCase):
         config = {"batcher": {"batch_size": batch_size2}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -328,7 +326,7 @@ class PipelineTest(unittest.TestCase):
         config = {"batcher": {"batch_size": batch_size3}}
         nlp.add_processor(processor=dummy3, config=config)
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -360,7 +358,7 @@ class PipelineTest(unittest.TestCase):
         dummy4 = DummyPackProcessor()
         nlp.add_processor(processor=dummy4)
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -387,7 +385,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add_processor(dummy, config=config)
         nlp.initialize()
 
-        dataset_path = "data_samples/ontonotes/00"
+        dataset_path = data_samples_root + "/ontonotes/00"
 
         # get processed pack from dataset
         for pack in nlp.process_dataset(dataset_path):
@@ -409,7 +407,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         dummy = DummyPackProcessor()
         nlp.add_processor(dummy, selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
             types = list(pack.get_pack("pack").get_entries_by_type(NewType))
@@ -431,7 +429,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
             types = list(pack.get_pack("pack").get_entries_by_type(NewType))
@@ -460,7 +458,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -491,7 +489,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy3,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -523,7 +521,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -556,7 +554,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add_processor(processor=dummy3, config=config,
                           selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -591,7 +589,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         dummy4 = DummyPackProcessor()
         nlp.add_processor(processor=dummy4, selector=FirstPackSelector())
         nlp.initialize()
-        data_path = "data_samples/random_texts/0.txt"
+        data_path = data_samples_root + "/random_texts/0.txt"
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):

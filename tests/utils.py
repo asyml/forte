@@ -12,9 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Modules of Forte library utils.
+Utils for unit tests.
 """
 
-from forte.utils.types import *
-from forte.utils.utils import *
-from forte.utils.utils_io import *
+import os
+import unittest
+
+__all__ = [
+    "performance_test",
+    "pretrained_test",
+]
+
+from typing import Any, Callable
+
+
+def define_skip_condition(flag: str, explanation: str):
+    return unittest.skipUnless(
+        os.environ.get(flag, 0) or os.environ.get('TEST_ALL', 0),
+        explanation + f" Set `{flag}=1` or `TEST_ALL=1` to run.")
+
+
+performance_test = define_skip_condition(
+    'TEST_PERFORMANCE', "Test the performance of Forte modules.")
+
+pretrained_test: Callable[[Any], Any] = define_skip_condition(
+    'TEST_PRETRAINED', "Test requires loading pre-trained checkpoints.")

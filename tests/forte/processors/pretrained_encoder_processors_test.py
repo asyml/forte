@@ -22,7 +22,7 @@ from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
     NLTKWordTokenizer, NLTKPOSTagger, NLTKChunker
 from forte.processors.pretrained_encoder_processors import PretrainedEncoder
-from forte.utils.test import pretrained_test
+from tests.utils import pretrained_test
 from ft.onto.base_ontology import Document, Phrase, Sentence
 
 

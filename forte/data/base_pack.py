@@ -67,7 +67,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):
-        """ Remove the entry from the pack.
+        r""" Remove the entry from the pack.
+
         Args:
             entry: The entry to be removed.
 

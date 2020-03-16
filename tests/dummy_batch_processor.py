@@ -42,12 +42,9 @@ class DummyRelationExtractor(BatchProcessor):
     ``ft.onto.base_ontology.Sentence``.
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
         self.batcher = self.define_batcher()
-
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
-        self.batcher.initialize(configs.batcher)
 
     def define_batcher(self) -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
@@ -104,10 +101,10 @@ class DummyRelationExtractor(BatchProcessor):
                 link = RelationLink(data_pack)
                 link.rel_type = output_dict["RelationLink"]["rel_type"][i][j]
                 parent: EntityMention = data_pack.get_entry(  # type: ignore
-                        output_dict["RelationLink"]["parent.tid"][i][j])
+                    output_dict["RelationLink"]["parent.tid"][i][j])
                 link.set_parent(parent)
                 child: EntityMention = data_pack.get_entry(  # type: ignore
-                        output_dict["RelationLink"]["child.tid"][i][j])
+                    output_dict["RelationLink"]["child.tid"][i][j])
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)
 
@@ -119,13 +116,10 @@ class DummyRelationExtractor(BatchProcessor):
 
 
 class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
         self.counter = 0
         self.batcher = self.define_batcher()
-
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
-        self.batcher.initialize(configs.batcher)
 
     def define_context(self) -> Type[Sentence]:
         return Sentence

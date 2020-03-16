@@ -15,6 +15,8 @@
 Unit tests for Resources.
 """
 import unittest
+import tempfile
+import shutil
 
 from forte.common.resources import Resources
 
@@ -37,7 +39,7 @@ class ResourcesTest(unittest.TestCase):
             'dummy': DummyObject(1, 2)
         }
         self.resources = Resources(**self.kwargs)
-        self.output_dir = './'
+        self.output_dir = tempfile.mkdtemp()
 
     def test_save_with_keys(self):
         keys = list(self.kwargs.keys())
@@ -56,6 +58,9 @@ class ResourcesTest(unittest.TestCase):
         new_resources.load(keys=keys, path=self.output_dir)
 
         self.assertEqual(new_resources.resources, self.resources.resources)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.output_dir)
 
 
 if __name__ == '__main__':

@@ -11,27 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Utils for unit tests.
-"""
 
-import os
-import unittest
+# This package contains Information Retrieval Processors, to use processor in
+# this package, run the 'ir' option in setup.py
 
-__all__ = [
-    "performance_test",
-    "pretrained_test",
-]
-
-
-def define_skip_condition(flag: str, explanation: str):
-    return unittest.skipUnless(
-        os.environ.get(flag, 0) or os.environ.get('TEST_ALL', 0),
-        explanation + f" Set `{flag}=1` or `TEST_ALL=1` to run.")
-
-
-performance_test = define_skip_condition(
-    'TEST_PERFORMANCE', "Test the performance of Forte modules.")
-
-pretrained_test = define_skip_condition(
-    'TEST_PRETRAINED', "Test requires loading pre-trained checkpoints.")
+from forte.processors.ir.bert_based_query_creator import *
+from forte.processors.ir.elastic_search_query_creator import *
+from forte.processors.ir.elastic_search_index_processor import *
+from forte.processors.ir.elastic_search_processor import *
+from forte.processors.ir.search_processor import *

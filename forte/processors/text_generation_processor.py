@@ -53,13 +53,12 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         self.top_k = None
         self.top_p = None
         self.device = None
-        self.define_context()
 
     def _define_input_info(self) -> DataRequest:
         return {}
 
     def define_context(self):
-        self.context_type = Sentence
+        return Sentence
 
     def define_batcher(self) -> ProcessingBatcher:
         return FixedSizeMultiPackProcessingBatcher()
