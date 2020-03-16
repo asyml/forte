@@ -39,9 +39,11 @@ DEFAULT_CONSTRAINTS_KEYS = {
                  SchemaKeywords.child_type: "ChildType"},
     "BaseGroup": {SchemaKeywords.member_type: "MemberType"}
 }
-AUTO_GEN_SIGNATURE = '***automatically_generated***'
+
 AUTO_GEN_FILENAME = '.generated'
-AUTO_DELETE_FILENAME = '.deleted'
+AUTO_DEL_FILENAME = '.deleted'
+
+AUTO_GEN_SIGNATURE = '***automatically_generated***'
 SOURCE_JSON_PFX = "***source json:"
 SOURCE_JSON_SFX = "***"
 SOURCE_JSON_TEMP = Template(f"{SOURCE_JSON_PFX}$file_path{SOURCE_JSON_SFX}")

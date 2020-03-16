@@ -51,7 +51,7 @@ from forte.data.ontology.ontology_code_const import (
     DEFAULT_PREFIX, SchemaKeywords, file_header, NON_COMPOSITES, COMPOSITES,
     ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
     hardcoded_pack_map, SOURCE_JSON_PFX, SOURCE_JSON_SFX, AUTO_GEN_FILENAME,
-    AUTO_DELETE_FILENAME)
+    AUTO_DEL_FILENAME)
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -343,7 +343,8 @@ class OntologyCodeGenerator:
 
     def generate(self, spec_path: str,
                  destination_dir: str = os.getcwd(),
-                 is_dry_run: bool = False) -> Optional[str]:
+                 is_dry_run: bool = False,
+                 include_init: bool = True) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to
             the class.
@@ -357,6 +358,9 @@ class OntologyCodeGenerator:
                 is_dry_run: if `True`, creates the ontology in the temporary
                     directory, else, creates the ontology in the
                     `destination_dir`.
+                include_init: if `True`, generates `__init__.py` in the already
+                    existing directories, otherwise only generates `__init__.py`
+                    in the generated directories.
 
             Returns:
                 Directory path in which the modules are created: either one of
@@ -390,7 +394,7 @@ class OntologyCodeGenerator:
         logging.info('Working on %s', spec_path)
         for writer in self.module_writers.writers():
             logging.info('Writing module: %s', writer.module_name)
-            writer.write(tempdir, destination_dir)
+            writer.write(tempdir, destination_dir, include_init)
             logging.info('Done writing.')
 
         # When everything is successfully completed, copy the contents of
@@ -406,8 +410,8 @@ class OntologyCodeGenerator:
                         "existing directory.", existing_top_dir,
                         destination_dir)
 
-            dir_util.copy_tree(tempdir, destination_dir)
-
+            utils.copytree(tempdir, destination_dir,
+                           ignore_pattern_if_file_exists='*/__init__.py')
             return destination_dir
         return tempdir
 
@@ -582,7 +586,7 @@ class OntologyCodeGenerator:
                     )
                 self.allowed_types_tree[en.class_name].add(property_name)
 
-    def parse_onto_ref(self, onto_ref: str, is_package: bool):
+    def parse_onto_ref(self, onto_ref: str, is_package: bool) -> str:
         """
         Located the source json file corresponding to the ontology reference
         Args:
@@ -613,8 +617,8 @@ class OntologyCodeGenerator:
             raise FileNotFoundError
         return import_json_file
 
-    def cleanup_generated_ontology(self, path, is_forced=False) -> \
-            Tuple[bool, Optional[str]]:
+    def cleanup_generated_ontology(self, path, is_forced=False) -> (
+            Tuple[bool, Optional[str]]):
         """
         Deletes the generated files and directories. Generated files are
         identified by the header `***automatically_generated***`. Generated
@@ -639,7 +643,7 @@ class OntologyCodeGenerator:
         del_dir = None
         if not is_forced:
             curr_time_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
-            del_dir = os.path.join(os.path.dirname(path), AUTO_DELETE_FILENAME,
+            del_dir = os.path.join(os.path.dirname(path), AUTO_DEL_FILENAME,
                                    curr_time_str)
             for rel_path in rel_paths:
                 joined_path = os.path.join(del_dir, rel_path)
