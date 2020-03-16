@@ -54,20 +54,17 @@ class GenerateOntologyTest(unittest.TestCase):
             self.generator.cleanup_generated_ontology(self.dir_path,
                                                       is_forced=True)
 
-    # @data(
-    #     ('example_ontology', ['ft/onto/example_import_ontology',
-    #                           'ft/onto/example_ontology']),
-    #     ('example_complex_ontology', ['ft/onto/example_complex_ontology']),
-    #     ('example_multi_module_ontology', ['ft/onto/ft_module',
-    #                                        'custom/user/custom_module']),
-    #     ('race_qa_onto_installed', ['ft/onto/race_qa_installed_ontology']),
-    #     ('race_qa_onto', ['ft/onto/base_ontology',
-    #                       'ft/onto/race_qa_ontology'])
-    # )
-    # def test_generated_code(self, value):
-    def test_generated_code(self):
-        value = ('example_ontology', ['ft/onto/example_import_ontology',
-                              'ft/onto/example_ontology'])
+    @data(
+        ('example_ontology', ['ft/onto/example_import_ontology',
+                              'ft/onto/example_ontology']),
+        ('example_complex_ontology', ['ft/onto/example_complex_ontology']),
+        ('example_multi_module_ontology', ['ft/onto/ft_module',
+                                           'custom/user/custom_module']),
+        ('race_qa_onto_installed', ['ft/onto/race_qa_installed_ontology']),
+        ('race_qa_onto', ['ft/onto/base_ontology',
+                          'ft/onto/race_qa_ontology'])
+    )
+    def test_generated_code(self, value):
         input_file_name, file_paths = value
         file_paths = sorted(file_paths)
 
