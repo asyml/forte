@@ -9,20 +9,39 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology import top
 from forte.data.ontology import utils
 
-REQUIRED_IMPORTS: List[str] = [
-    'typing',
-    # 'ft.onto',
-    # 'forte.data.data_pack',
-]
 
-TOP_MOST_CLASS = 'forte.data.ontology.core.Entry'
+class SchemaKeywords:
+    ontology_name = 'name'
+    imports = 'imports'
+    prefixes = 'additional_prefixes'
+    definitions = 'definitions'
+    parent_entry = 'parent_entry'
+    entry_name = 'entry_name'
+    description = 'description'
+    attributes = 'attributes'
+    attribute_name = 'name'
+    attribute_type = 'type'
+    parent_type = 'parent_type'
+    child_type = 'child_type'
+    member_type = 'member_type'
+    default_value = 'default'
+    element_type = 'item_type'
+    dict_key_type = 'key_type'
+    dict_value_type = 'value_type'
+
+
+REQUIRED_IMPORTS: List[str] = ['typing']
+
 TOP_MOST_MODULE_NAME = 'forte.data.ontology.core'
 
 DEFAULT_CONSTRAINTS_KEYS = {
-    "BaseLink": {"parent_type": "ParentType", "child_type": "ChildType"},
-    "BaseGroup": {"member_type": "MemberType"}
+    "BaseLink": {SchemaKeywords.parent_type: "ParentType",
+                 SchemaKeywords.child_type: "ChildType"},
+    "BaseGroup": {SchemaKeywords.member_type: "MemberType"}
 }
 AUTO_GEN_SIGNATURE = '***automatically_generated***'
+AUTO_GEN_FILENAME = '.generated'
+AUTO_DELETE_FILENAME = '.deleted'
 SOURCE_JSON_PFX = "***source json:"
 SOURCE_JSON_SFX = "***"
 SOURCE_JSON_TEMP = Template(f"{SOURCE_JSON_PFX}$file_path{SOURCE_JSON_SFX}")
@@ -45,24 +64,6 @@ NON_COMPOSITES = {key: key for key in SUPPORTED_PRIMITIVES}
 COMPOSITES = {'List': 'typing.List', 'Dict': 'typing.Dict'}
 
 ALL_INBUILT_TYPES = set(list(NON_COMPOSITES.keys()) + list(COMPOSITES.keys()))
-
-
-class SchemaKeywords:
-    ontology_name = 'ontology_name'
-    prefixes = 'additional_prefixes'
-    definitions = 'definitions'
-    parent_entry = 'parent_entry'
-    entry_name = 'entry_name'
-    description = 'description'
-    attributes = 'attributes'
-    attribute_name = 'name'
-    attribute_type = 'type'
-    parent_type = 'parent_type'
-    child_type = 'child_type'
-    default_value = 'default'
-    element_type = 'item_type'
-    dict_key_type = 'key_type'
-    dict_value_type = 'value_type'
 
 
 def file_header(desc_str, ontology_name):

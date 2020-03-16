@@ -19,28 +19,28 @@ import copy
 import json
 import logging
 import os
-import re
 import shutil
 import tempfile
 import warnings
-import importlib
 from collections import defaultdict
 from datetime import datetime
 from distutils import dir_util
 from pathlib import Path
 from types import ModuleType
-from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
+from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any, cast
 
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
+import jsonschema
 
 from forte.data.ontology import top, utils
 from forte.data.ontology.code_generation_exceptions import (
     DuplicateEntriesWarning, OntologySpecError,
-    ImportOntologyNotFoundException, ImportOntologyAlreadyGeneratedException,
+    OntologySourceNotFoundException, OntologyAlreadyGeneratedException,
     ParentEntryNotDeclaredException, TypeNotDeclaredException,
     UnsupportedTypeException, InvalidIdentifierException,
-    DuplicatedAttributesWarning, ParentEntryNotSupportedException)
+    DuplicatedAttributesWarning, ParentEntryNotSupportedException,
+    OntologySpecValidationError)
 from forte.data.ontology.code_generation_objects import (
     NonCompositeProperty, ListProperty, ClassTypeDefinition,
     EntryDefinition, Property, ImportManagerPool,
@@ -50,7 +50,8 @@ from forte.data.ontology.ontology_code_const import (
     REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
     DEFAULT_PREFIX, SchemaKeywords, file_header, NON_COMPOSITES, COMPOSITES,
     ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
-    hardcoded_pack_map, SOURCE_JSON_PFX, SOURCE_JSON_SFX)
+    hardcoded_pack_map, SOURCE_JSON_PFX, SOURCE_JSON_SFX, AUTO_GEN_FILENAME,
+    AUTO_DELETE_FILENAME)
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -156,12 +157,13 @@ class OntologyCodeGenerator:
         'test/example_ontology_config.json')
     """
 
-    def __init__(self, json_dir_paths: Optional[List[str]] = None):
+    def __init__(self, import_dirs: Optional[List[str]] = None):
         """
         Args:
-            json_dir_paths: Additional user provided paths to search the
-            imported json configs from. By default paths provided in the json
-            configs and the current working directory would be searched.
+            import_dirs: Additional user provided paths to search the
+            imported json configs or installed ontologies from. By default paths
+            provided in the imports, current working directory and the path
+            where forte is installed (if it is) would be searched.
         """
         # The entries of the `self.top_ontology_module` serve as ancestors of
         # the user-defined entries.
@@ -222,10 +224,12 @@ class OntologyCodeGenerator:
         for type_str in ALL_INBUILT_TYPES:
             self.allowed_types_tree[type_str] = set()
 
-        # Directories to be examined to find json files for user-defined config
-        # imports.
-        self.json_paths: List[str] = [] \
-            if json_dir_paths is None else json_dir_paths
+        # Directories to be examined to find json schema or installed ontology
+        # packages which the user wants to import
+        import_dirs = [] if import_dirs is None else import_dirs
+        self.import_dirs: Set[str] = set(import_dirs)
+
+        self.installed_forte_dir = utils.get_installed_forte_dir()
 
     @no_type_check
     def initialize_top_entries(self, manager: ImportManager,
@@ -359,22 +363,12 @@ class OntologyCodeGenerator:
                 the temporary directory or `destination_dir`.
         """
         # Update the list of directories to be examined for imported configs
-        self.json_paths.extend([
+        self.import_dirs.update([
             os.path.dirname(os.path.realpath(spec_path)),
             os.path.dirname(os.path.realpath('ft/onto')),
             os.getcwd()])
-
-        # TODO: validate the JSON paths here.
-
-        # # TODO: This section does the required imports, maybe useless.
-        # # Adding the imported objects to the allowed types.
-        # for import_module in self.required_imports:
-        #     for obj_str in utils.get_user_objects_from_module(import_module):
-        #         full_obj_str = f"{import_module}.{obj_str}"
-        #         self.allowed_types_tree[full_obj_str] = set()
-        #         # self.import_manager.add_object_to_import(
-        #            full_obj_str, False)
-        #         # self.full_ref_to_import[obj_str] = full_obj_str
+        if self.installed_forte_dir is not None:
+            self.import_dirs.add(self.installed_forte_dir)
 
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
@@ -417,9 +411,8 @@ class OntologyCodeGenerator:
             return destination_dir
         return tempdir
 
-    def parse_ontology_spec(self, json_file_path: str,
+    def parse_ontology_spec(self, ontology_reference: str,
                             destination_dir: str,
-                            forte_json_file: Optional[str] = None,
                             visited_paths: Optional[Dict[str, bool]] = None,
                             rec_visited_paths: Optional[Dict[str, bool]] = None
                             ):
@@ -429,18 +422,37 @@ class OntologyCodeGenerator:
         imports the generated python classes to generate the classes
         corresponding to the entries of `json_file_path`.
         Args:
-            json_file_path: The current json config to be processed.
+            ontology_reference: Reference to the ontology. Can be of the
+            following forms -
+                (1) Absolute or relative path to the current json config to be
+                processed
+                (2) Full name of the installed ontology module that is to be
+                imported (ft.onto.base_ontology)
             destination_dir: Directory in which the generated module will
             be located
-            forte_json_file: Path of the json config relative to Forte
-            installation directory, in case the imported ontology is a
-            Forte ontology, else None
+            source_json_file: Path of the json config relative to Forte
+            installation directory, in case the imported ontology is installed,
+            else None
             visited_paths: Keeps track of the json configs already processed.
             rec_visited_paths: Keeps track of the current recursion stack, to
             detect, and throw error if any cycles are present.
-            with the base ontology config, else, False.
         Returns:
         """
+        is_pkg = not ontology_reference.endswith('.json')
+
+        # Obtain the json source file corresponding to ontology reference
+        try:
+            json_file_path = self.parse_onto_ref(ontology_reference, is_pkg)
+        except FileNotFoundError:
+            if is_pkg:
+                error_msg = (f"Ontology corresponding to package "
+                             f"{ontology_reference} not found to be installed.")
+            else:
+                error_msg = (f"Ontology corresponding to {ontology_reference} "
+                             f"not found in the current directory or the "
+                             f"directory of source json config.")
+            raise OntologySourceNotFoundException(error_msg)
+
         # Initialize the visited dicts when the function is called for the
         # first time.
         if visited_paths is None:
@@ -449,83 +461,56 @@ class OntologyCodeGenerator:
         if rec_visited_paths is None:
             rec_visited_paths = defaultdict(lambda: False)
 
+        # Check for import cycles
+        if rec_visited_paths[json_file_path]:
+            raise OntologyAlreadyGeneratedException(
+                f"Ontology corresponding to {json_file_path} already "
+                f"generated, cycles not permitted, aborting")
+
+        # If the ontology is already generated, need not generate it again
+        if visited_paths[json_file_path]:
+            return
+
+        # Add the json_file path to the visited dictionaries
         visited_paths[json_file_path] = True
         rec_visited_paths[json_file_path] = True
 
-        # Load the ontology specification.
+        # Validate and load the ontology specification.
+        try:
+            utils.validate_json_schema(json_file_path)
+        except Exception as exception:
+            if type(exception).__name__.split('.')[0] == jsonschema.__name__ \
+                    and hasattr(exception, 'message'):
+                raise OntologySpecValidationError(cast(Any, exception).message)
+            raise
+
         with open(json_file_path, 'r') as f:
             spec_dict = json.load(f)
 
-        # Extract imported json files and generate ontology for them.
-        json_imports: List[str] = spec_dict.get("import_paths", [])
-
-        # Get location of installed forte
-        forte_spec = importlib.util.find_spec('forte')
-        installed_forte_dir = None
-        if forte_spec is not None and forte_spec.origin is not None:
-            forte_origin = forte_spec.origin
-            installed_forte_dir = os.path.dirname(os.path.dirname(forte_origin))
-            self.json_paths.append(installed_forte_dir)
-
-        for user_import in json_imports:
-            installed_json_file = None
-            is_package = not user_import.endswith('.json')
-            if is_package:
-                # Check installed modules
-                try:
-                    import_spec = importlib.util.find_spec(user_import)
-                    if import_spec is None or import_spec.origin is None:
-                        raise FileNotFoundError
-
-                    with open(import_spec.origin, 'r') as imported_onto:
-                        delimiters = '# ', SOURCE_JSON_PFX, SOURCE_JSON_SFX
-                        regex = '|'.join(map(re.escape, delimiters))
-                        reqd_line = imported_onto.readlines()[1]
-                        installed_json_file = list(filter(
-                            None, re.split(regex, reqd_line)))[0]
-
-                    schema_to_import = installed_json_file
-                except (FileNotFoundError, IndexError):
-                    raise ImportOntologyNotFoundException(
-                        f"Ontology corresponding to package {user_import} not "
-                        f"found to be installed.")
-            else:
-                schema_to_import = user_import
-            # Check for installed ontology source file or json_file in user
-            # provided directories
-            import_json_file = utils.search_in_dirs(schema_to_import,
-                                                    self.json_paths)
-            if import_json_file is None:
-                raise ImportOntologyNotFoundException(
-                    f"Ontology corresponding to {user_import} not "
-                    f"found in the current directory or the "
-                    f"directory of source json config.")
-
-            if import_json_file in rec_visited_paths:
-                raise ImportOntologyAlreadyGeneratedException(
-                    f"Ontology corresponding to {import_json_file}"
-                    f" already generated, cycles not permitted, "
-                    f"aborting")
-            elif import_json_file not in visited_paths:
-                self.parse_ontology_spec(
-                    import_json_file, destination_dir, installed_json_file,
-                    visited_paths, rec_visited_paths)
+        # Parse imported ontologies
+        user_imports: Set[str] = set(spec_dict.get(SchemaKeywords.imports, []))
+        for user_import in user_imports:
+            # Users can import either installed ontologies
+            # ('ft.onto.base_ontology') or path to the json schema files.
+            self.parse_ontology_spec(user_import, destination_dir,
+                                     visited_paths, rec_visited_paths)
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
 
-        is_installed = True
-        if forte_json_file is None:
-            is_installed = False
-            forte_json_file = json_file_path
+        # Get the file path of the source json to be printed in the comments of
+        # the generated ontology
 
-        curr_forte_dir = str(Path(os.path.join(os.path.dirname(__file__),
-                                               *([os.pardir] * 3))).resolve())
+        # Print relative json path in the ontology if the current directory is
+        # the installation directory - example, when running the test cases
+        curr_forte_dir = utils.get_current_forte_dir()
 
-        if installed_forte_dir is not None and \
-                os.path.samefile(curr_forte_dir, installed_forte_dir):
-            forte_json_file = os.path.relpath(forte_json_file, curr_forte_dir)
-        self.parse_schema(spec_dict, forte_json_file, is_installed)
+        print_json_file = json_file_path
+        if self.installed_forte_dir is not None and os.path.samefile(
+                curr_forte_dir, self.installed_forte_dir):
+            print_json_file = os.path.relpath(json_file_path, curr_forte_dir)
+
+        self.parse_schema(spec_dict, print_json_file, is_pkg)
 
         rec_visited_paths[json_file_path] = False
 
@@ -555,11 +540,9 @@ class OntologyCodeGenerator:
             schema.get(SchemaKeywords.ontology_name, "")
         )
 
-        # new_modules_to_import = []
         for definition in entry_definitions:
             raw_entry_name = definition[SchemaKeywords.entry_name]
             validate_entry(raw_entry_name, sorted_prefixes)
-            # new_modules_to_import.append(matched_pkg)
 
             if raw_entry_name in self.allowed_types_tree:
                 warnings.warn(
@@ -571,23 +554,22 @@ class OntologyCodeGenerator:
             # This time adding to the root manager so everyone can access it
             # if needed, but they will only appear in the import list when
             # requested.
+            # Entry class should be added to the imports before the attributes
+            # to be able to used as the attribute type for the same entry.
             self.import_managers.root.add_object_to_import(raw_entry_name)
 
-            # Get various name of this entry.
+            # Get various parts of the entry name.
             en = EntryName(raw_entry_name)
             entry_item, properties = self.parse_entry(en, definition)
 
-            # Get or set module writer only if the ontology is not already
-            # installed
+            # Get or set module writer only if the ontology to be generated
+            # is not already installed.
             if not is_installed:
                 module_writer = self.module_writers.get(en.module_name)
                 module_writer.set_description(file_desc)
                 module_writer.source_file = source_json_file
                 # Add entry item to the writer.
                 module_writer.add_entry(en, entry_item)
-
-            # Modules to be imported by the dependencies.
-            # modules_to_import.append(en.class_name)
 
             # Adding entry attributes to the allowed types for validation.
             for property_name in properties:
@@ -598,8 +580,38 @@ class OntologyCodeGenerator:
                         f"the ontology, will be overridden",
                         DuplicatedAttributesWarning
                     )
-                self.allowed_types_tree[en.class_name].add(
-                    property_name)
+                self.allowed_types_tree[en.class_name].add(property_name)
+
+    def parse_onto_ref(self, onto_ref: str, is_package: bool):
+        """
+        Located the source json file corresponding to the ontology reference
+        Args:
+            onto_ref: Relative or absolute path of the source json schema or
+            fully qualified name of the installed ontology module
+            is_package: False if `onto_ref` denotes a path
+        Returns:
+            Full path of the source json schema to be parsed
+        """
+        # A user import can be a json path or an ontology module
+        # If it is the ontology package, we locate the corresponding json
+        schema_to_import = onto_ref
+        if is_package:
+            # User import is an installed ontology module
+            # Find if the ontology module is installed
+            onto_file = utils.get_module_path(onto_ref)
+
+            # Locate source json schema file path from the comments of
+            # the generated ontology
+            delims = ['# ', SOURCE_JSON_PFX, SOURCE_JSON_SFX]
+            schema_to_import = utils.get_schema_from_ontology(onto_file, delims)
+
+        # Check for installed ontology source file or json_file in user
+        # provided directories
+        import_json_file = utils.search_in_dirs(schema_to_import,
+                                                self.import_dirs)
+        if import_json_file is None:
+            raise FileNotFoundError
+        return import_json_file
 
     def cleanup_generated_ontology(self, path, is_forced=False) -> \
             Tuple[bool, Optional[str]]:
@@ -622,12 +634,12 @@ class OntologyCodeGenerator:
 
         rel_paths = dir_util.copy_tree(path, '', dry_run=1)
         rel_paths = [os.path.dirname(file) for file in rel_paths
-                     if os.path.basename(file).startswith('.generated')]
+                     if os.path.basename(file).startswith(AUTO_GEN_FILENAME)]
 
         del_dir = None
         if not is_forced:
             curr_time_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
-            del_dir = os.path.join(os.path.dirname(path), '.deleted',
+            del_dir = os.path.join(os.path.dirname(path), AUTO_DELETE_FILENAME,
                                    curr_time_str)
             for rel_path in rel_paths:
                 joined_path = os.path.join(del_dir, rel_path)
@@ -661,7 +673,7 @@ class OntologyCodeGenerator:
         if os.path.isfile(path):
             # path is a file type
             # delete .generated marker files and automatically generated files
-            is_empty = os.path.basename(path).startswith('.generated')
+            is_empty = os.path.basename(path).startswith(AUTO_GEN_FILENAME)
             if not is_empty and os.access(path, os.R_OK):
                 with open(path, 'r') as f:
                     lines = f.readlines()
