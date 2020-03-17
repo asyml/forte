@@ -1,7 +1,7 @@
 {
   "name": "example_ontology",
   "description": "",
-  "imports": [
+  "import_paths": [
     "example_import_ontology.json"
   ],
   "definitions": [

@@ -45,13 +45,14 @@ from forte.data.ontology.code_generation_objects import (
     NonCompositeProperty, ListProperty, ClassTypeDefinition,
     EntryDefinition, Property, ImportManagerPool,
     EntryName, ModuleWriterPool, ImportManager, DictProperty)
+
 # Builtin and local imports required in the generated python modules.
 from forte.data.ontology.ontology_code_const import (
     REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
     DEFAULT_PREFIX, SchemaKeywords, file_header, NON_COMPOSITES, COMPOSITES,
     ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
     hardcoded_pack_map, SOURCE_JSON_PFX, SOURCE_JSON_SFX, AUTO_GEN_FILENAME,
-    AUTO_DELETE_FILENAME)
+    AUTO_DEL_FILENAME)
 
 
 # TODO: Causing error in sphinx - fix and uncomment. Current version displays
@@ -343,7 +344,8 @@ class OntologyCodeGenerator:
 
     def generate(self, spec_path: str,
                  destination_dir: str = os.getcwd(),
-                 is_dry_run: bool = False) -> Optional[str]:
+                 is_dry_run: bool = False,
+                 include_init: bool = True) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to
             the class.
@@ -357,6 +359,9 @@ class OntologyCodeGenerator:
                 is_dry_run: if `True`, creates the ontology in the temporary
                     directory, else, creates the ontology in the
                     `destination_dir`.
+                include_init: if `True`, generates `__init__.py` in the already
+                    existing directories, otherwise only generates `__init__.py`
+                    in the generated directories.
 
             Returns:
                 Directory path in which the modules are created: either one of
@@ -390,7 +395,7 @@ class OntologyCodeGenerator:
         logging.info('Working on %s', spec_path)
         for writer in self.module_writers.writers():
             logging.info('Writing module: %s', writer.module_name)
-            writer.write(tempdir, destination_dir)
+            writer.write(tempdir, destination_dir, include_init)
             logging.info('Done writing.')
 
         # When everything is successfully completed, copy the contents of
@@ -406,13 +411,14 @@ class OntologyCodeGenerator:
                         "existing directory.", existing_top_dir,
                         destination_dir)
 
-            dir_util.copy_tree(tempdir, destination_dir)
-
+            utils.copytree(tempdir, destination_dir,
+                           ignore_pattern_if_file_exists='*/__init__.py')
             return destination_dir
         return tempdir
 
     def parse_ontology_spec(self, ontology_reference: str,
                             destination_dir: str,
+                            is_path_type: bool = True,
                             visited_paths: Optional[Dict[str, bool]] = None,
                             rec_visited_paths: Optional[Dict[str, bool]] = None
                             ):
@@ -425,20 +431,19 @@ class OntologyCodeGenerator:
             ontology_reference: Reference to the ontology. Can be of the
             following forms -
                 (1) Absolute or relative path to the current json config to be
-                processed
+                processed. In this case, `is_path_type` is True
                 (2) Full name of the installed ontology module that is to be
-                imported (ft.onto.base_ontology)
+                imported (ft.onto.base_ontology). In this case, `is_path_type`
+                is False
             destination_dir: Directory in which the generated module will
             be located
-            source_json_file: Path of the json config relative to Forte
-            installation directory, in case the imported ontology is installed,
-            else None
-            visited_paths: Keeps track of the json configs already processed.
+            is_path_type: if `ontology_reference` is of type json path
+            visited_paths: Keeps track of the json configs already processed
             rec_visited_paths: Keeps track of the current recursion stack, to
-            detect, and throw error if any cycles are present.
+            detect, and throw error if any cycles are present
         Returns:
         """
-        is_pkg = not ontology_reference.endswith('.json')
+        is_pkg = not is_path_type
 
         # Obtain the json source file corresponding to ontology reference
         try:
@@ -488,11 +493,17 @@ class OntologyCodeGenerator:
             spec_dict = json.load(f)
 
         # Parse imported ontologies
-        user_imports: Set[str] = set(spec_dict.get(SchemaKeywords.imports, []))
-        for user_import in user_imports:
-            # Users can import either installed ontologies
-            # ('ft.onto.base_ontology') or path to the json schema files.
-            self.parse_ontology_spec(user_import, destination_dir,
+        # Users can import either installed ontologies
+        # ('ft.onto.base_ontology') or path to the json schema files.
+        pkg_imports: Set[str] = set(spec_dict.get(SchemaKeywords.imports, []))
+        for pkg_import in pkg_imports:
+            self.parse_ontology_spec(pkg_import, destination_dir, False,
+                                     visited_paths, rec_visited_paths)
+
+        json_imports: Set[str] = set(spec_dict.get(SchemaKeywords.import_paths,
+                                                   []))
+        for json_import in json_imports:
+            self.parse_ontology_spec(json_import, destination_dir, True,
                                      visited_paths, rec_visited_paths)
 
         # Once the ontology for all the imported files is generated, generate
@@ -582,7 +593,7 @@ class OntologyCodeGenerator:
                     )
                 self.allowed_types_tree[en.class_name].add(property_name)
 
-    def parse_onto_ref(self, onto_ref: str, is_package: bool):
+    def parse_onto_ref(self, onto_ref: str, is_package: bool) -> str:
         """
         Located the source json file corresponding to the ontology reference
         Args:
@@ -613,8 +624,8 @@ class OntologyCodeGenerator:
             raise FileNotFoundError
         return import_json_file
 
-    def cleanup_generated_ontology(self, path, is_forced=False) -> \
-            Tuple[bool, Optional[str]]:
+    def cleanup_generated_ontology(self, path, is_forced=False) -> (
+            Tuple[bool, Optional[str]]):
         """
         Deletes the generated files and directories. Generated files are
         identified by the header `***automatically_generated***`. Generated
@@ -639,7 +650,7 @@ class OntologyCodeGenerator:
         del_dir = None
         if not is_forced:
             curr_time_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
-            del_dir = os.path.join(os.path.dirname(path), AUTO_DELETE_FILENAME,
+            del_dir = os.path.join(os.path.dirname(path), AUTO_DEL_FILENAME,
                                    curr_time_str)
             for rel_path in rel_paths:
                 joined_path = os.path.join(del_dir, rel_path)

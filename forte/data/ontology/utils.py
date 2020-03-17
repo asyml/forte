@@ -17,12 +17,87 @@ Utility functions for ontology generation.
 import os
 import sys
 import re
-from importlib import util as import_util
+import json
+import fnmatch
+
 from pathlib import Path
 from pydoc import locate
+from importlib import util as import_util
 from typing import Optional, List, Tuple
-import json
+
+from distutils.file_util import copy_file
+from distutils.dir_util import mkpath
+from distutils.errors import DistutilsFileError
+from distutils import log
+
 import jsonschema
+
+
+AUTO_GEN_SIGNATURE = '***automatically_generated***'
+
+
+def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
+             preserve_times=False, preserve_symlinks=False, update=False,
+             verbose=1, dry_run=0):
+    """
+    A slightly modified version of `distutils.dir_util.copytree`, with the
+    added parameter `ignore_pattern_if_file_exists` that ignores files if it
+    matches the given pattern and already exists in the destination directory.
+    By default, ignores all existing destination files.
+    """
+
+    if not dry_run and not os.path.isdir(src):
+        raise DistutilsFileError(
+              "cannot copy tree '%s': not a directory" % src)
+    try:
+        names = os.listdir(src)
+    except OSError as e:
+        if dry_run:
+            names = []
+        else:
+            raise DistutilsFileError(
+                  "error listing files in '%s': %s" % (src, e.strerror))
+
+    if not dry_run:
+        mkpath(dst, verbose=verbose)
+
+    outputs = []
+    outputs_ignored = []
+
+    for n in names:
+        src_name = os.path.join(src, n)
+        dst_name = os.path.join(dst, n)
+
+        if n.startswith('.nfs'):
+            # skip NFS rename files
+            continue
+
+        if preserve_symlinks and os.path.islink(src_name):
+            link_dest = os.readlink(src_name)
+            if verbose >= 1:
+                log.info("linking %s -> %s", dst_name, link_dest)
+            if not dry_run:
+                os.symlink(link_dest, dst_name)
+            outputs.append(dst_name)
+
+        elif os.path.isdir(src_name):
+            part_outputs, part_outputs_ignored = copytree(
+                src_name, dst_name, ignore_pattern_if_file_exists,
+                preserve_mode, preserve_times, preserve_symlinks, update,
+                verbose=verbose, dry_run=dry_run)
+            outputs.extend(part_outputs)
+            outputs_ignored.extend(part_outputs_ignored)
+
+        elif not (fnmatch.fnmatch(dst_name, ignore_pattern_if_file_exists) and
+                  os.path.exists(dst_name)):
+            copy_file(src_name, dst_name, preserve_mode, preserve_times, update,
+                      verbose=verbose, dry_run=dry_run)
+            outputs.append(dst_name)
+
+        else:
+            outputs_ignored.append(dst_name)
+
+    return outputs, outputs_ignored
 
 
 def get_user_objects_from_module(module_str: str,
@@ -168,3 +243,17 @@ def get_installed_forte_dir():
 
 def get_current_forte_dir():
     return get_parent_path(__file__, 4)
+
+
+def get_generated_files_in_dir(path):
+    def is_generated(file_path):
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+            return len(lines) > 0 and lines[0] == f'# {AUTO_GEN_SIGNATURE}\n'
+    ext_files = []
+    for root, _, files in os.walk(path):
+        for file in files:
+            path = os.path.join(root, file)
+            if is_generated(path):
+                ext_files.append(path)
+    return ext_files
