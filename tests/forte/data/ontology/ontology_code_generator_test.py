@@ -76,7 +76,7 @@ class GenerateOntologyTest(unittest.TestCase):
         expected_files = [f"{os.path.join(folder_path, file)}.py"
                           for file in file_paths]
 
-        self.assertCountEqual(generated_files, expected_files)
+        self.assertEqual(generated_files, expected_files)
 
         for i, generated_file in enumerate(generated_files):
             with open(generated_file, 'r') as f:
@@ -120,7 +120,7 @@ class GenerateOntologyTest(unittest.TestCase):
         exp_files = sorted([f"{os.path.join(folder_path, file)}.py"
                            for file in exp_file_path])
 
-        self.assertCountEqual(gen_files, exp_files)
+        self.assertEqual(gen_files, exp_files)
 
         # Now, corrupt one of the init files
         corrupted_path = os.path.join(folder_path, 'ft/__init__.py')
@@ -137,7 +137,7 @@ class GenerateOntologyTest(unittest.TestCase):
         # Assert the generated python files after removing the corrupted file
         # which should not have been regenerated
         exp_files = [file for file in exp_files if file != corrupted_path]
-        self.assertCountEqual(gen_files, exp_files)
+        self.assertEqual(gen_files, exp_files)
 
     @data((True, 'test_duplicate_entry.json', DuplicateEntriesWarning),
           (True, 'test_duplicate_attr_name.json', DuplicatedAttributesWarning),

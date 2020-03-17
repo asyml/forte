@@ -1,6 +1,6 @@
 {
   "name": "wikipedia",
-  "imports": [
+  "import_paths": [
     "base_ontology.json"
   ],
   "definitions": [

@@ -13,6 +13,7 @@ from forte.data.ontology import utils
 class SchemaKeywords:
     ontology_name = 'name'
     imports = 'imports'
+    import_paths = 'import_paths'
     prefixes = 'additional_prefixes'
     definitions = 'definitions'
     parent_entry = 'parent_entry'

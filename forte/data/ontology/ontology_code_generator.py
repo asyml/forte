@@ -45,6 +45,7 @@ from forte.data.ontology.code_generation_objects import (
     NonCompositeProperty, ListProperty, ClassTypeDefinition,
     EntryDefinition, Property, ImportManagerPool,
     EntryName, ModuleWriterPool, ImportManager, DictProperty)
+
 # Builtin and local imports required in the generated python modules.
 from forte.data.ontology.ontology_code_const import (
     REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
@@ -417,6 +418,7 @@ class OntologyCodeGenerator:
 
     def parse_ontology_spec(self, ontology_reference: str,
                             destination_dir: str,
+                            is_path_type: bool = True,
                             visited_paths: Optional[Dict[str, bool]] = None,
                             rec_visited_paths: Optional[Dict[str, bool]] = None
                             ):
@@ -429,20 +431,19 @@ class OntologyCodeGenerator:
             ontology_reference: Reference to the ontology. Can be of the
             following forms -
                 (1) Absolute or relative path to the current json config to be
-                processed
+                processed. In this case, `is_path_type` is True
                 (2) Full name of the installed ontology module that is to be
-                imported (ft.onto.base_ontology)
+                imported (ft.onto.base_ontology). In this case, `is_path_type`
+                is False
             destination_dir: Directory in which the generated module will
             be located
-            source_json_file: Path of the json config relative to Forte
-            installation directory, in case the imported ontology is installed,
-            else None
-            visited_paths: Keeps track of the json configs already processed.
+            is_path_type: if `ontology_reference` is of type json path
+            visited_paths: Keeps track of the json configs already processed
             rec_visited_paths: Keeps track of the current recursion stack, to
-            detect, and throw error if any cycles are present.
+            detect, and throw error if any cycles are present
         Returns:
         """
-        is_pkg = not ontology_reference.endswith('.json')
+        is_pkg = not is_path_type
 
         # Obtain the json source file corresponding to ontology reference
         try:
@@ -492,11 +493,17 @@ class OntologyCodeGenerator:
             spec_dict = json.load(f)
 
         # Parse imported ontologies
-        user_imports: Set[str] = set(spec_dict.get(SchemaKeywords.imports, []))
-        for user_import in user_imports:
-            # Users can import either installed ontologies
-            # ('ft.onto.base_ontology') or path to the json schema files.
-            self.parse_ontology_spec(user_import, destination_dir,
+        # Users can import either installed ontologies
+        # ('ft.onto.base_ontology') or path to the json schema files.
+        pkg_imports: Set[str] = set(spec_dict.get(SchemaKeywords.imports, []))
+        for pkg_import in pkg_imports:
+            self.parse_ontology_spec(pkg_import, destination_dir, False,
+                                     visited_paths, rec_visited_paths)
+
+        json_imports: Set[str] = set(spec_dict.get(SchemaKeywords.import_paths,
+                                                   []))
+        for json_import in json_imports:
+            self.parse_ontology_spec(json_import, destination_dir, True,
                                      visited_paths, rec_visited_paths)
 
         # Once the ontology for all the imported files is generated, generate
