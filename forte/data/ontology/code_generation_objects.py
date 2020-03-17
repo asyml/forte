@@ -22,7 +22,7 @@ from forte.data.ontology.code_generation_exceptions import (
     CodeGenerationException)
 from forte.data.ontology.ontology_code_const import (
     SUPPORTED_PRIMITIVES, NON_COMPOSITES, COMPOSITES, Config,
-    get_ignore_error_lines, AUTO_GEN_FILENAME)
+    get_ignore_error_lines, AUTO_GEN_SIGNATURE, AUTO_GEN_FILENAME)
 from forte.data.ontology.utils import split_file_path
 
 
@@ -735,7 +735,8 @@ class ModuleWriter:
     def add_entry(self, entry_name: EntryName, entry_item: EntryDefinition):
         self.entries.append((entry_name, entry_item))
 
-    def make_module_dirs(self, tempdir: str, destination: str):
+    def make_module_dirs(self, tempdir: str, destination: str,
+                         include_init: bool):
         """
         Create entry sub-directories with .generated file to indicate the
          subdirectory is created by this procedure. No such file will be added
@@ -746,6 +747,8 @@ class ModuleWriter:
               first generated here.
             destination: The destination directory where the code should be
               placed
+            include_init: True if `__init__.py` is to be generated in existing
+              packages in which `__init__.py` does not already exists
         Returns:
         """
         entry_dir_split = split_file_path(self.pkg_dir)
@@ -757,22 +760,31 @@ class ModuleWriter:
                 os.mkdir(temp_path)
 
             dest_path = os.path.join(destination, rel_dir_path)
-            if not os.path.exists(dest_path):
+            dest_path_exists = os.path.exists(dest_path)
+            if not dest_path_exists:
                 Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
-    def write(self, tempdir: str, destination: str):
+            # Create init file
+            if not dest_path_exists or include_init:
+                init_file_path = os.path.join(temp_path, '__init__.py')
+                with open(init_file_path, 'w') as init_file:
+                    init_file.write(f'# {AUTO_GEN_SIGNATURE}\n')
+
+    def write(self, tempdir: str, destination: str, include_init: bool):
         """
         Write the entry information to file.
 
         Args:
             tempdir: A temporary directory for writing intermediate files.
             destination: The actual folder to place the generated code.
+            include_init: Whether to include `__init__.py` in the existing
+            directories if it does not already exist.
 
         Returns:
 
         """
 
-        self.make_module_dirs(tempdir, destination)
+        self.make_module_dirs(tempdir, destination, include_init)
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + '.py'
 
         with open(full_path, 'w') as f:

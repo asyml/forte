@@ -17,7 +17,15 @@
       "type": "string"
     },
     "imports": {
-      "description": "JSON import paths or installed ontology packages.",
+      "description": "Installed ontology packages.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "import_paths": {
+      "description": "JSON import paths.",
       "type": "array",
       "uniqueItems": true,
       "items": {

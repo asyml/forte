@@ -1,7 +1,7 @@
 {
   "name": "wikipedia",
-  "imports": [
-    "ft.onto.base_ontology"
+  "import_paths": [
+    "base_ontology.json"
   ],
   "definitions": [
     {

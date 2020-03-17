@@ -37,7 +37,9 @@ def create(args_):
         args_.no_dry_run = False
 
     is_dry_run = not args_.no_dry_run
-    generated_folder = generator.generate(spec_path, dest_path, is_dry_run)
+    include_init = not args_.exclude_init
+    generated_folder = generator.generate(spec_path, dest_path, is_dry_run,
+                                          include_init)
     log.info("Ontology generated in the directory %s.", generated_folder)
 
 
@@ -115,6 +117,14 @@ def main():
                                default=None,
                                help='Paths in which the root and imported '
                                     'spec files are to be searched.')
+
+    create_parser.add_argument('-e', '--exclude_init',
+                               required=False,
+                               default=None,
+                               action='store_true',
+                               help='Excludes generation of `__init__.py` files'
+                                    ' in the already existing directories, if'
+                                    '`__init__.py` not already present.')
 
     create_parser.set_defaults(func=create)
 
