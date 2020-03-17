@@ -37,10 +37,10 @@ class Token(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['lemma'] = self._lemma
-        state['is_verb'] = self._is_verb
-        state['num_chars'] = self._num_chars
-        state['score'] = self._score
+        state['lemma'] = state.pop('_lemma')
+        state['is_verb'] = state.pop('_is_verb')
+        state['num_chars'] = state.pop('_num_chars')
+        state['score'] = state.pop('_score')
         return state
 
     def __setstate__(self, state): 
@@ -94,7 +94,7 @@ class Sentence(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['tokens'] = self._tokens
+        state['tokens'] = state.pop('_tokens')
         return state
 
     def __setstate__(self, state): 

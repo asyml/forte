@@ -34,7 +34,7 @@ class Dependency(Link):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['rel_type'] = self._rel_type
+        state['rel_type'] = state.pop('_rel_type')
         return state
 
     def __setstate__(self, state): 

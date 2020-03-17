@@ -64,15 +64,15 @@ class Token(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['pos'] = self._pos
-        state['ud_xpos'] = self._ud_xpos
-        state['lemma'] = self._lemma
-        state['chunk'] = self._chunk
-        state['ner'] = self._ner
-        state['sense'] = self._sense
-        state['is_root'] = self._is_root
-        state['ud_features'] = self._ud_features
-        state['ud_misc'] = self._ud_misc
+        state['pos'] = state.pop('_pos')
+        state['ud_xpos'] = state.pop('_ud_xpos')
+        state['lemma'] = state.pop('_lemma')
+        state['chunk'] = state.pop('_chunk')
+        state['ner'] = state.pop('_ner')
+        state['sense'] = state.pop('_sense')
+        state['is_root'] = state.pop('_is_root')
+        state['ud_features'] = state.pop('_ud_features')
+        state['ud_misc'] = state.pop('_ud_misc')
         return state
 
     def __setstate__(self, state): 
@@ -204,9 +204,9 @@ class Sentence(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['speaker'] = self._speaker
-        state['part_id'] = self._part_id
-        state['sentiment'] = self._sentiment
+        state['speaker'] = state.pop('_speaker')
+        state['part_id'] = state.pop('_part_id')
+        state['sentiment'] = state.pop('_sentiment')
         return state
 
     def __setstate__(self, state): 
@@ -262,7 +262,7 @@ class Phrase(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['phrase_type'] = self._phrase_type
+        state['phrase_type'] = state.pop('_phrase_type')
         return state
 
     def __setstate__(self, state): 
@@ -302,9 +302,9 @@ class PredicateArgument(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['ner_type'] = self._ner_type
-        state['predicate_lemma'] = self._predicate_lemma
-        state['is_verb'] = self._is_verb
+        state['ner_type'] = state.pop('_ner_type')
+        state['predicate_lemma'] = state.pop('_predicate_lemma')
+        state['is_verb'] = state.pop('_is_verb')
         return state
 
     def __setstate__(self, state): 
@@ -350,7 +350,7 @@ class EntityMention(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['ner_type'] = self._ner_type
+        state['ner_type'] = state.pop('_ner_type')
         return state
 
     def __setstate__(self, state): 
@@ -378,7 +378,7 @@ class EventMention(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['event_type'] = self._event_type
+        state['event_type'] = state.pop('_event_type')
         return state
 
     def __setstate__(self, state): 
@@ -410,9 +410,9 @@ class PredicateMention(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['predicate_lemma'] = self._predicate_lemma
-        state['framenet_id'] = self._framenet_id
-        state['is_verb'] = self._is_verb
+        state['predicate_lemma'] = state.pop('_predicate_lemma')
+        state['framenet_id'] = state.pop('_framenet_id')
+        state['is_verb'] = state.pop('_is_verb')
         return state
 
     def __setstate__(self, state): 
@@ -462,7 +462,7 @@ class PredicateLink(Link):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['arg_type'] = self._arg_type
+        state['arg_type'] = state.pop('_arg_type')
         return state
 
     def __setstate__(self, state): 
@@ -496,8 +496,8 @@ class Dependency(Link):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['dep_label'] = self._dep_label
-        state['rel_type'] = self._rel_type
+        state['dep_label'] = state.pop('_dep_label')
+        state['rel_type'] = state.pop('_rel_type')
         return state
 
     def __setstate__(self, state): 
@@ -539,7 +539,7 @@ class EnhancedDependency(Link):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['dep_label'] = self._dep_label
+        state['dep_label'] = state.pop('_dep_label')
         return state
 
     def __setstate__(self, state): 
@@ -571,7 +571,7 @@ class RelationLink(Link):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['rel_type'] = self._rel_type
+        state['rel_type'] = state.pop('_rel_type')
         return state
 
     def __setstate__(self, state): 
@@ -611,7 +611,7 @@ class EventRelation(Link):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['rel_type'] = self._rel_type
+        state['rel_type'] = state.pop('_rel_type')
         return state
 
     def __setstate__(self, state): 

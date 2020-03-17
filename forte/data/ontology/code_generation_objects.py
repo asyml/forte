@@ -235,7 +235,7 @@ def getter(name, field_name, is_forte_type=False, composite_type=None):
 
 def change_get_state(name, field_name, level):
     return [
-        (f"state['{name}'] = self.{field_name}", level)
+        (f"state['{name}'] = state.pop('{field_name}')", level),
     ]
 
 
