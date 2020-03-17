@@ -52,7 +52,6 @@ class MultiPackMeta(BaseMeta):
 
 # pylint: disable=too-many-public-methods
 
-# TODO: operations for multi pack is far less complete comparing to data pack.
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     r"""A :class:`MultiPack' contains multiple DataPacks and a collection of
     cross-pack entries (links, and groups)

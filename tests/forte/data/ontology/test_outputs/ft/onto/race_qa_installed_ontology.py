@@ -1,10 +1,10 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/race_qa_onto.json***
+# ***source json:tests/forte/data/ontology/test_specs/race_qa_onto_installed.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated ontology race_multi_choice_qa_ontology. Do not change manually.
+Automatically generated ontology race_qa_installed_ontology. Do not change manually.
 """
 
 from forte.data.data_pack import DataPack

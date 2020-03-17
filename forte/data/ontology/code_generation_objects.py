@@ -18,11 +18,11 @@ from abc import ABC
 from pathlib import Path
 from typing import Optional, Any, List, Dict, Set, Tuple
 
-from forte.data.ontology.code_generation_exceptions import \
-    CodeGenerationException
+from forte.data.ontology.code_generation_exceptions import (
+    CodeGenerationException)
 from forte.data.ontology.ontology_code_const import (
-    IGNORE_ERRORS_LINES, SUPPORTED_PRIMITIVES, NON_COMPOSITES, COMPOSITES,
-    Config)
+    SUPPORTED_PRIMITIVES, NON_COMPOSITES, COMPOSITES, Config,
+    get_ignore_error_lines, AUTO_GEN_SIGNATURE, AUTO_GEN_FILENAME)
 from forte.data.ontology.utils import split_file_path
 
 
@@ -424,11 +424,10 @@ class DictProperty(Property):
         return self.name
 
     def to_access_functions(self, level):
-        """ Generate access function to for Dict types. This extend the
-        base function and add some composite specific types.
-
-        :param level:
-        :return:
+        r"""Generate access function to for Dict types. This extend the base
+        function and add some composite specific types.
+        Args:
+            level: Indent level
         """
         name = self.name
         key_type = self.import_manager.get_name_to_use(self.key_type)
@@ -721,6 +720,8 @@ class ModuleWriter:
     def __init__(self, module_name: str,
                  import_managers: ImportManagerPool):
         self.module_name = module_name
+        self.source_file: str = ""
+
         self.description: Optional[str] = None
         self.import_managers: ImportManagerPool = import_managers
         self.entries: List[Tuple[EntryName, EntryDefinition]] = []
@@ -734,7 +735,8 @@ class ModuleWriter:
     def add_entry(self, entry_name: EntryName, entry_item: EntryDefinition):
         self.entries.append((entry_name, entry_item))
 
-    def make_module_dirs(self, tempdir: str, destination: str):
+    def make_module_dirs(self, tempdir: str, destination: str,
+                         include_init: bool):
         """
         Create entry sub-directories with .generated file to indicate the
          subdirectory is created by this procedure. No such file will be added
@@ -745,7 +747,8 @@ class ModuleWriter:
               first generated here.
             destination: The destination directory where the code should be
               placed
-
+            include_init: True if `__init__.py` is to be generated in existing
+              packages in which `__init__.py` does not already exists
         Returns:
 
         """
@@ -759,22 +762,31 @@ class ModuleWriter:
                 os.mkdir(temp_path)
 
             dest_path = os.path.join(destination, rel_dir_path)
-            if not os.path.exists(dest_path):
-                Path(os.path.join(temp_path, '.generated')).touch()
+            dest_path_exists = os.path.exists(dest_path)
+            if not dest_path_exists:
+                Path(os.path.join(temp_path, AUTO_GEN_FILENAME)).touch()
 
-    def write(self, tempdir: str, destination: str):
+            # Create init file
+            if not dest_path_exists or include_init:
+                init_file_path = os.path.join(temp_path, '__init__.py')
+                with open(init_file_path, 'w') as init_file:
+                    init_file.write(f'# {AUTO_GEN_SIGNATURE}\n')
+
+    def write(self, tempdir: str, destination: str, include_init: bool):
         """
         Write the entry information to file.
 
         Args:
             tempdir: A temporary directory for writing intermediate files.
             destination: The actual folder to place the generated code.
+            include_init: Whether to include `__init__.py` in the existing
+            directories if it does not already exist.
 
         Returns:
 
         """
 
-        self.make_module_dirs(tempdir, destination)
+        self.make_module_dirs(tempdir, destination, include_init)
         full_path = os.path.join(tempdir, self.pkg_dir, self.file_name) + '.py'
 
         with open(full_path, 'w') as f:
@@ -801,7 +813,8 @@ class ModuleWriter:
 
     def to_description(self, level):
         quotes = '"""'
-        lines = IGNORE_ERRORS_LINES + [quotes, self.description, quotes]
+        lines = get_ignore_error_lines(self.source_file) + \
+                [quotes, self.description, quotes]
         return indent_code(lines, level)
 
     def to_import_code(self, level):

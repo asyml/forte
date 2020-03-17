@@ -1,9 +1,10 @@
 # ***automatically_generated***
+# ***source json:tests/forte/data/ontology/test_specs/example_complex_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
 """
-Automatically generated ontology . Do not change manually.
+Automatically generated ontology example_complex_ontology. Do not change manually.
 """
 
 from forte.data.data_pack import DataPack

@@ -18,11 +18,15 @@ class OntologySpecError(ValueError):
     pass
 
 
-class ImportOntologyNotFoundException(OntologySpecError):
+class OntologySpecValidationError(OntologySpecError):
     pass
 
 
-class ImportOntologyAlreadyGeneratedException(OntologySpecError):
+class OntologySourceNotFoundException(OntologySpecError):
+    pass
+
+
+class OntologyAlreadyGeneratedException(OntologySpecError):
     pass
 
 
