@@ -23,8 +23,8 @@ from forte.pipeline import Pipeline
 from forte.processors import MicrosoftBingTranslator, SRLPredictor
 from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
-from forte.processors.nltk_processors import \
-    (NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
+from forte.processors.nltk_processors import (
+    NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
 
 from ft.onto.base_ontology import PredicateLink, Sentence
 

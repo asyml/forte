@@ -1,6 +1,6 @@
 # Ontology Configuration #
 
-Welcome! Forte uses allows one to define relations between the annotations, 
+Welcome! Forte allows one to define relations between the annotations, 
  using _Ontologies_. This allows we have rich interaction between different NLP 
 concepts.
 
@@ -82,7 +82,6 @@ associated with an entry, like, `pos_tag` for the entry `Token`.
 in the module `forte.data.ontology.base.top`. All user-defined entries should extend one of 
 the top entries. 
  
-<!--We plan to deprecate base_ontology_bak.py?-->
 We provide a set of commonly used entries in the module ``forte.data.ontology.base_ontology.py``. 
 Those entries could be reused directly and need not be redefined in the ontology config by the user.
  
