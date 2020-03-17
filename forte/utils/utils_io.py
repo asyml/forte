@@ -34,3 +34,16 @@ def maybe_create_dir(dirname: str) -> bool:
         os.makedirs(dirname)
         return True
     return False
+
+
+def ensure_dir(filename: str):
+    """
+
+    Args:
+        filename:
+
+    Returns:
+
+    """
+    d = os.path.dirname(filename)
+    maybe_create_dir(d)

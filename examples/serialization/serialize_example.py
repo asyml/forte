@@ -23,7 +23,7 @@ from forte.processors.writers import DocIdJsonPackWriter
 nlp = Pipeline()
 reader = OntonotesReader()
 
-data_path = "../data_samples/ontonotes/00/"
+data_path = "../../data_samples/ontonotes/00/"
 
 nlp.set_reader(OntonotesReader())
 nlp.add_processor(NLTKSentenceSegmenter())
@@ -34,7 +34,7 @@ nlp.add_processor(NLTKPOSTagger())
 # will use the DocID field in the data pack as the file name.
 nlp.add_processor(DocIdJsonPackWriter(), HParams(
     {
-        'output_dir': '.'
+        'output_dir': 'output'
     },
     DocIdJsonPackWriter.default_configs(),
 ))

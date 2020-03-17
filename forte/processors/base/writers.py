@@ -25,7 +25,7 @@ from texar.torch.hyperparams import HParams
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.processors.base.base_processor import BaseProcessor
-from forte.utils.utils_io import maybe_create_dir
+from forte.utils.utils_io import maybe_create_dir, ensure_dir
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,8 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
 
         maybe_create_dir(self.root_output_dir)
         p = os.path.join(self.root_output_dir, sub_path)
+
+        ensure_dir(p)
 
         if self.zip_pack:
             with gzip.open(p + '.gz', 'wt') as out:

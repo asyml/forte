@@ -123,6 +123,17 @@
       ]
     },
     {
+      "entry_name": "ft.onto.base_ontology.EventMention",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `EventMention`, used to refer to a mention of an event.",
+      "attributes": [
+        {
+          "name": "event_type",
+          "type": "str"
+        }
+      ]
+    },
+    {
       "entry_name": "ft.onto.base_ontology.PredicateMention",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `PredicateMention`, normally used to represent a predicate (normally verbs) in a piece of text.",
@@ -190,7 +201,7 @@
     {
       "entry_name": "ft.onto.base_ontology.RelationLink",
       "parent_entry": "forte.data.ontology.top.Link",
-      "description": "A `Link` type entry which represent a relation.",
+      "description": "A `Link` type entry which represent a relation between two entity mentions",
       "attributes": [
         {
           "name": "rel_type",
@@ -206,6 +217,20 @@
       "parent_entry": "forte.data.ontology.top.Group",
       "description": "A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.",
       "member_type": "ft.onto.base_ontology.EntityMention"
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.EventRelation",
+      "parent_entry": "forte.data.ontology.top.Link",
+      "description": "A `Link` type entry which represent a relation between two event mentions.",
+      "attributes": [
+        {
+          "name": "rel_type",
+          "type": "str",
+          "description": "The type of the relation."
+        }
+      ],
+      "parent_type": "ft.onto.base_ontology.EventMention",
+      "child_type": "ft.onto.base_ontology.EventMention"
     }
   ]
 }

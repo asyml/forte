@@ -25,12 +25,14 @@ __all__ = [
     "Utterance",
     "PredicateArgument",
     "EntityMention",
+    "EventMention",
     "PredicateMention",
     "PredicateLink",
     "Dependency",
     "EnhancedDependency",
     "RelationLink",
     "CoreferenceGroup",
+    "EventRelation",
 ]
 
 
@@ -364,6 +366,34 @@ class EntityMention(Annotation):
         self.set_fields(_ner_type=ner_type)
 
 
+class EventMention(Annotation):
+    """
+    A span based annotation `EventMention`, used to refer to a mention of an event.
+    Attributes:
+        _event_type (Optional[str])
+    """
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self._event_type: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['event_type'] = self._event_type
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self._event_type = state.get('event_type', None) 
+
+    @property
+    def event_type(self):
+        return self._event_type
+
+    @event_type.setter
+    def event_type(self, event_type: Optional[str]):
+        self.set_fields(_event_type=event_type)
+
+
 class PredicateMention(Annotation):
     """
     A span based annotation `PredicateMention`, normally used to represent a predicate (normally verbs) in a piece of text.
@@ -527,7 +557,7 @@ class EnhancedDependency(Link):
 
 class RelationLink(Link):
     """
-    A `Link` type entry which represent a relation.
+    A `Link` type entry which represent a relation between two entity mentions
     Attributes:
         _rel_type (Optional[str])	The type of the relation.
     """
@@ -563,3 +593,35 @@ class CoreferenceGroup(Group):
     """
     def __init__(self, pack: DataPack, members: Optional[Set[Entry]] = None):
         super().__init__(pack, members)
+
+
+class EventRelation(Link):
+    """
+    A `Link` type entry which represent a relation between two event mentions.
+    Attributes:
+        _rel_type (Optional[str])	The type of the relation.
+    """
+    ParentType = EventMention
+
+    ChildType = EventMention
+
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self._rel_type: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['rel_type'] = self._rel_type
+        return state
+
+    def __setstate__(self, state): 
+        state = super().__setstate__(state)
+        self._rel_type = state.get('rel_type', None) 
+
+    @property
+    def rel_type(self):
+        return self._rel_type
+
+    @rel_type.setter
+    def rel_type(self, rel_type: Optional[str]):
+        self.set_fields(_rel_type=rel_type)
