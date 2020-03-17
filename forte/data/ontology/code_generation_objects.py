@@ -749,10 +749,9 @@ class ModuleWriter:
               placed
             include_init: True if `__init__.py` is to be generated in existing
               packages in which `__init__.py` does not already exists
+              
         Returns:
-
         """
-
         entry_dir_split = split_file_path(self.pkg_dir)
 
         rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
