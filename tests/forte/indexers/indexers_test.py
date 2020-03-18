@@ -144,3 +144,7 @@ class TestElasticSearchIndexer(unittest.TestCase):
                               refresh=False)
         forte_time = time.time() - start
         self.assertLessEqual(forte_time, baseline + epsilon)
+
+
+if __name__ == '__main__':
+    unittest.main()

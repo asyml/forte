@@ -60,7 +60,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.batch_size = 3
         self.batcher = self.define_batcher()
 
-    def define_context(self) -> Type[Annotation]:
+    def _define_context(self) -> Type[Annotation]:
         return Sentence
 
     def _define_input_info(self) -> DataRequest:

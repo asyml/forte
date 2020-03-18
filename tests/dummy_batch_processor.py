@@ -47,7 +47,7 @@ class DummyRelationExtractor(BatchProcessor):
     def define_batcher(self) -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
 
-    def define_context(self) -> Type[Sentence]:
+    def _define_context(self) -> Type[Sentence]:
         return Sentence
 
     def _define_input_info(self) -> DataRequest:
@@ -119,7 +119,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         self.counter = 0
         self.batcher = self.define_batcher()
 
-    def define_context(self) -> Type[Sentence]:
+    def _define_context(self) -> Type[Sentence]:
         return Sentence
 
     def _define_input_info(self) -> DataRequest:
