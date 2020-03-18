@@ -235,7 +235,7 @@ def getter(name, field_name, is_forte_type=False, composite_type=None):
 
 def change_get_state(name, field_name, level):
     return [
-        (f"state['{name}'] = self.{field_name}", level)
+        (f"state['{name}'] = state.pop('{field_name}')", level),
     ]
 
 
@@ -665,7 +665,7 @@ class EntryDefinition(Item):
 
         lines = [
             ("def __setstate__(self, state): ", 0),
-            ("state = super().__setstate__(state)", 1),
+            ("super().__setstate__(state)", 1),
         ]
         for p in self.properties:
             lines.extend(p.to_setstate(1))

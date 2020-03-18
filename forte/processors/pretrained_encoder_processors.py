@@ -111,7 +111,7 @@ class PretrainedEncoder(PackProcessor):
         return list(self.name2tokenizer.keys())
 
     # pylint: disable=unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
         if configs.pretrained_model_name in self.name2tokenizer:
             self.tokenizer = \
                 self.name2tokenizer[configs.pretrained_model_name](

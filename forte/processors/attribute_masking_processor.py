@@ -19,7 +19,6 @@ from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 
-
 __all__ = [
     "AttributeMasker"
 ]
@@ -59,5 +58,5 @@ class AttributeMasker(PackProcessor):
     def _process(self, input_pack: DataPack):
         for entry_type, attributes in self.fields:
             for entry in input_pack.get_entries_by_type(entry_type):
-                entry.set_fields(
-                    **{attribute: None for attribute in attributes})
+                for attribute in attributes:
+                    setattr(entry, attribute, None)

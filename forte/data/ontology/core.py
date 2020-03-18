@@ -74,6 +74,16 @@ class Entry(Generic[ContainerType]):
         self.__field_modified: Set[str] = set()
         pack.validate(self)
 
+    def reset(self):
+        """
+        Reset the entry to the empty state.
+
+        Returns:
+
+        """
+        # TODO: do we need to record this reset action as an edit?
+        self.__init__(self.__pack)
+
     def __getstate__(self):
         r"""In serialization, the pack is not serialize, and it will be set
         by the container.
@@ -145,10 +155,14 @@ class Entry(Generic[ContainerType]):
             match the field's type.
         """
         for field_name, field_value in kwargs.items():
-            # TODO: This is wrong, absence of attribute is treated the same as
-            #  the attribute being None. We need to really identify
-            #  whether the field exists to disallow users adding unknown fields.
-            if hasattr(self, field_name):
+            if field_name in vars(self):
+                # NOTE: hasattr does not work here because it check both
+                #  functions and attributes. We are only interested to see if
+                #  the attributes are there.
+                #  For example, if we use hasattr, is will return True for
+                #  the setter and getter of the attribute name.
+
+                # if hasattr(self, field_name):
                 setattr(self, field_name, field_value)
             else:
                 raise AttributeError(

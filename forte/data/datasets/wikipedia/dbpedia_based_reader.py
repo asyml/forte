@@ -102,8 +102,8 @@ class DBpediaWikiReader(PackReader):
         self.link_reader = None
         self.redirects: Dict[str, str] = {}
 
-    def initialize(self, resource: Resources, configs: HParams):
-        self.redirects = resource.get('redirects')
+    def initialize(self, resources: Resources, configs: HParams):
+        self.redirects = resources.get('redirects')
 
         # These NIF readers organize the statements in the specific RDF context,
         # in this case each context correspond to one wiki page, this allows

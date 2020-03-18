@@ -40,14 +40,14 @@ class Token(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['lemma'] = self._lemma
-        state['is_verb'] = self._is_verb
-        state['num_chars'] = self._num_chars
-        state['score'] = self._score
+        state['lemma'] = state.pop('_lemma')
+        state['is_verb'] = state.pop('_is_verb')
+        state['num_chars'] = state.pop('_num_chars')
+        state['score'] = state.pop('_score')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._lemma = state.get('lemma', None) 
         self._is_verb = state.get('is_verb', None) 
         self._num_chars = state.get('num_chars', None) 
@@ -97,11 +97,11 @@ class Sentence(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['key_tokens'] = self._key_tokens
+        state['key_tokens'] = state.pop('_key_tokens')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._key_tokens = state.get('key_tokens', None) 
 
     @property
@@ -140,11 +140,11 @@ class Dependency(Link):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['rel_type'] = self._rel_type
+        state['rel_type'] = state.pop('_rel_type')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._rel_type = state.get('rel_type', None) 
 
     @property

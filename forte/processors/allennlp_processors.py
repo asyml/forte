@@ -33,13 +33,15 @@ MODEL2URL = {
     'stanford_dependencies': "https://allennlp.s3.amazonaws.com/models/biaffine-dependency-parser-ptb-2018.08.23.tar.gz",
     'universal_dependencies': "https://allennlp.s3.amazonaws.com/models/biaffine-dependency-parser-ud-2018.08.23.tar.gz",
 }
+
+
 # pylint: enable=line-too-long
 
 
 class AllenNLPProcessor(PackProcessor):
 
     # pylint: disable=attribute-defined-outside-init,unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
         self.processors = configs.processors
         if self.processors is None or self.processors == "":
             self.processors = self.default_configs()['processors']
@@ -135,11 +137,9 @@ class AllenNLPProcessor(PackProcessor):
         for i, word in enumerate(words):
             word_begin = sentence.text.find(word, word_end)
             word_end = word_begin + len(word)
-            token = Token(input_pack,
-                          offset + word_begin,
-                          offset + word_end)
+            token = Token(input_pack, offset + word_begin, offset + word_end)
             if "pos" in self.processors:
-                token.set_fields(pos=pos[i])
+                token.pos = pos[i]
             tokens.append(token)
             input_pack.add_entry(token)
 
@@ -153,5 +153,5 @@ class AllenNLPProcessor(PackProcessor):
             relation = Dependency(input_pack,
                                   parent=tokens[heads[i] - 1],
                                   child=token)
-            relation.set_fields(rel_type=deps[i])
+            relation.rel_type = deps[i]
             input_pack.add_or_get_entry(relation)

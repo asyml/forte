@@ -62,15 +62,15 @@ class CoNLLNERTrainer(BaseTrainer):
 
         self.__past_dev_result = None
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
 
-        self.resource = resource
+        self.resource = resources
 
-        self.word_alphabet = resource.get("word_alphabet")
-        self.char_alphabet = resource.get("char_alphabet")
-        self.ner_alphabet = resource.get("ner_alphabet")
+        self.word_alphabet = resources.get("word_alphabet")
+        self.char_alphabet = resources.get("char_alphabet")
+        self.ner_alphabet = resources.get("ner_alphabet")
 
-        word_embedding_table = resource.get('word_embedding_table')
+        word_embedding_table = resources.get('word_embedding_table')
 
         self.config_model = configs.config_model
         self.config_data = configs.config_data

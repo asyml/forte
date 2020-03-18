@@ -23,7 +23,6 @@ from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import EntityMention, Token, Sentence, Phrase
 
-
 __all__ = [
     "NLTKPOSTagger",
     "NLTKSentenceSegmenter",
@@ -37,6 +36,7 @@ __all__ = [
 class NLTKWordTokenizer(PackProcessor):
     r"""A wrapper of NLTK word tokenizer.
     """
+
     def __init__(self):
         super().__init__()
         self.sentence_component = None
@@ -56,6 +56,7 @@ class NLTKWordTokenizer(PackProcessor):
 class NLTKPOSTagger(PackProcessor):
     r"""A wrapper of NLTK pos tagger.
     """
+
     def __init__(self):
         super().__init__()
         self.token_component = None
@@ -68,12 +69,13 @@ class NLTKPOSTagger(PackProcessor):
             token_texts = [token.text for token in token_entries]
             taggings = pos_tag(token_texts)
             for token, tag in zip(token_entries, taggings):
-                token.set_fields(pos=tag[1])
+                token.pos = tag[1]
 
 
 class NLTKLemmatizer(PackProcessor):
     r"""A wrapper of NLTK lemmatizer.
     """
+
     def __init__(self):
         super().__init__()
         self.token_component = None
@@ -89,7 +91,7 @@ class NLTKLemmatizer(PackProcessor):
             lemmas = [self.lemmatizer.lemmatize(token_texts[i], token_pos[i])
                       for i in range(len(token_texts))]
             for token, lemma in zip(token_entries, lemmas):
-                token.set_fields(lemma=lemma)
+                token.lemma = lemma
 
 
 def penn2morphy(penntag: str) -> str:
@@ -105,13 +107,14 @@ def penn2morphy(penntag: str) -> str:
 class NLTKChunker(PackProcessor):
     r"""A wrapper of NLTK chunker.
     """
+
     def __init__(self):
         super().__init__()
         self.chunker = None
         self.token_component = None
 
     # pylint: disable=unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
         self.chunker = RegexpParser(configs.pattern)
 
     @staticmethod
@@ -138,9 +141,9 @@ class NLTKChunker(PackProcessor):
                     begin_pos = token_entries[index].span.begin
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     phrase = Phrase(input_pack, begin_pos, end_pos)
-                    kwargs_i = {"phrase_type": chunk.label()}
-                    phrase.set_fields(**kwargs_i)
+                    phrase.phrase_type = chunk.label()
                     input_pack.add_or_get_entry(phrase)
+
                     index += len(chunk)
                 else:
                     # For example:
@@ -151,6 +154,7 @@ class NLTKChunker(PackProcessor):
 class NLTKSentenceSegmenter(PackProcessor):
     r"""A wrapper of NLTK sentence tokenizer.
     """
+
     def _process(self, input_pack: DataPack):
         text = input_pack.text
         end_pos = 0
@@ -167,6 +171,7 @@ class NLTKSentenceSegmenter(PackProcessor):
 class NLTKNER(PackProcessor):
     r"""A wrapper of NLTK NER.
     """
+
     def __init__(self):
         super().__init__()
         self.token_component = None
@@ -187,8 +192,7 @@ class NLTKNER(PackProcessor):
                     begin_pos = token_entries[index].span.begin
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     entity = EntityMention(input_pack, begin_pos, end_pos)
-                    kwargs_i = {"ner_type": chunk.label()}
-                    entity.set_fields(**kwargs_i)
+                    entity.ner_type = chunk.label()
                     input_pack.add_or_get_entry(entity)
                     index += len(chunk)
                 else:

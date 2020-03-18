@@ -31,8 +31,8 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
         self._score: Optional[float] = None
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resource: Resources, configs: HParams):
-        self.resource = resource
+    def initialize(self, resources: Resources, configs: HParams):
+        self.resource = resources
         self.config = configs
 
     def consume_next(self, pred_pack, _):

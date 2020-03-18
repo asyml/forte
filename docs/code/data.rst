@@ -110,9 +110,14 @@ Readers
 .. autoclass:: forte.data.readers.corpus_reader.CorpusReader
     :members:
 
-:hidden:`DeserializeReader`
-----------------------------
-.. autoclass:: forte.data.readers.deserialize_reader.DeserializeReader
+:hidden:`RawDataDeserializeReader`
+----------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.RawDataDeserializeReader
+    :members:
+
+:hidden:`RecursiveDirectoryDeserializeReader`
+---------------------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.RecursiveDirectoryDeserializeReader
     :members:
 
 :hidden:`HTMLReader`

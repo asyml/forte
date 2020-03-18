@@ -14,7 +14,7 @@
 """
 Pipeline component module.
 """
-from typing import Generic
+from typing import Generic, Optional
 
 from texar.torch import HParams
 
@@ -24,19 +24,21 @@ from forte.data.base_pack import PackType
 
 class PipelineComponent(Generic[PackType]):
 
-    def initialize(self, resource: Resources, configs: HParams):
+    # pylint: disable=attribute-defined-outside-init
+    def initialize(self, resources: Resources, configs: HParams):
         r"""The pipeline will call the initialize method at the start of a
         processing. The processor and reader will be initialized with
         ``configs``, and register global resources into ``resource``. The
         implementation should set up the states of the component.
 
         Args:
-            resource (Resources): A global resource register. User can register
+            resources (Resources): A global resource register. User can register
                 shareable resources here, for example, the vocabulary.
             configs (HParams): The configuration passed in to set up this
                 component.
         """
-        pass
+        self.resources: Optional[Resources] = resources
+        self.configs: HParams = configs
 
     def finish(self, resource: Resources):
         r"""The pipeline will call this function at the end of the pipeline to
@@ -48,3 +50,14 @@ class PipelineComponent(Generic[PackType]):
             resource (Resources): A global resource registry.
         """
         pass
+
+    @staticmethod
+    def default_configs():
+        r"""Returns a `dict` of configurations of the component with default
+        values. Used to replace the missing values of input `configs`
+        during pipeline construction.
+
+
+        """
+        return {
+        }

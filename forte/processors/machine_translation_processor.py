@@ -58,10 +58,10 @@ class MicrosoftBingTranslator(MultiPackProcessor):
         is called by the pipeline during the initialization.
 
         Args:
-            - resources (Resources): An object of class
+            resources (Resources): An object of class
                 :class:`forte.common.Resources` that holds references to objects
                 that can be shared throughout the pipeline.
-            - configs (HParams): A configuration to initialize the
+            configs (HParams): A configuration to initialize the
                 processor. This processor is expected to hold the following
                 (key, value) pairs
 
