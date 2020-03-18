@@ -184,7 +184,7 @@ class OntonotesReader(PackReader):
                     if fields.pos_tag is not None:
                         token.pos = fields.pos_tag
                     if fields.word_sense is not None:
-                        token.word_sense = fields.word_sense
+                        token.sense = fields.word_sense
                     pack.add_entry(token)
 
                     # add entity mentions
@@ -270,7 +270,6 @@ class OntonotesReader(PackReader):
 
             # group the coreference mentions in the whole document
             for _, mention_list in groups.items():
-                # kwargs_i = {"coref_type": group_id}
                 group = CoreferenceGroup(pack)
                 group.add_members(mention_list)
                 pack.add_entry(group)
@@ -306,7 +305,6 @@ class OntonotesReader(PackReader):
                 raise ValueError(
                     "current_entity_mention is None when meet right blanket.")
             # Exiting a span, add and then reset the current span.
-            kwargs_i = {"ner_type": current_entity_mention[1]}
             entity = EntityMention(pack, current_entity_mention[0], word_end)
             entity.ner_type = current_entity_mention[1]
             pack.add_entry(entity)

@@ -91,8 +91,7 @@ class StandfordNLPProcessor(PackProcessor):
 
                     if "pos" in self.processors:
                         token.pos = word.pos
-                        token.upos = word.upos
-                        token.xpos = word.xpos
+                        token.ud_xpos = word.xpos
 
                     if "lemma" in self.processors:
                         token.lemma = word.lemma

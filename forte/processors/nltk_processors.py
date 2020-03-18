@@ -23,7 +23,6 @@ from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import EntityMention, Token, Sentence, Phrase
 
-
 __all__ = [
     "NLTKPOSTagger",
     "NLTKSentenceSegmenter",
@@ -37,6 +36,7 @@ __all__ = [
 class NLTKWordTokenizer(PackProcessor):
     r"""A wrapper of NLTK word tokenizer.
     """
+
     def __init__(self):
         super().__init__()
         self.sentence_component = None
@@ -56,6 +56,7 @@ class NLTKWordTokenizer(PackProcessor):
 class NLTKPOSTagger(PackProcessor):
     r"""A wrapper of NLTK pos tagger.
     """
+
     def __init__(self):
         super().__init__()
         self.token_component = None
@@ -74,6 +75,7 @@ class NLTKPOSTagger(PackProcessor):
 class NLTKLemmatizer(PackProcessor):
     r"""A wrapper of NLTK lemmatizer.
     """
+
     def __init__(self):
         super().__init__()
         self.token_component = None
@@ -105,6 +107,7 @@ def penn2morphy(penntag: str) -> str:
 class NLTKChunker(PackProcessor):
     r"""A wrapper of NLTK chunker.
     """
+
     def __init__(self):
         super().__init__()
         self.chunker = None
@@ -138,8 +141,9 @@ class NLTKChunker(PackProcessor):
                     begin_pos = token_entries[index].span.begin
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     phrase = Phrase(input_pack, begin_pos, end_pos)
-                    pharse.phrase_type = chunk.label()
+                    phrase.phrase_type = chunk.label()
                     input_pack.add_or_get_entry(phrase)
+
                     index += len(chunk)
                 else:
                     # For example:
@@ -150,6 +154,7 @@ class NLTKChunker(PackProcessor):
 class NLTKSentenceSegmenter(PackProcessor):
     r"""A wrapper of NLTK sentence tokenizer.
     """
+
     def _process(self, input_pack: DataPack):
         text = input_pack.text
         end_pos = 0
@@ -166,6 +171,7 @@ class NLTKSentenceSegmenter(PackProcessor):
 class NLTKNER(PackProcessor):
     r"""A wrapper of NLTK NER.
     """
+
     def __init__(self):
         super().__init__()
         self.token_component = None
@@ -186,7 +192,6 @@ class NLTKNER(PackProcessor):
                     begin_pos = token_entries[index].span.begin
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     entity = EntityMention(input_pack, begin_pos, end_pos)
-                    kwargs_i = {"ner_type": chunk.label()}
                     entity.ner_type = chunk.label()
                     input_pack.add_or_get_entry(entity)
                     index += len(chunk)

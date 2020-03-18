@@ -33,7 +33,7 @@ class RawDataDeserializeReader(BaseDeserializeReader):
     This reader assumes the data passed in are raw DataPack strings.
     """
 
-    def _collect(self, data_list: List[str]) -> Iterator[str]:
+    def _collect(self, data_list: List[str]) -> Iterator[str]:  # type: ignore
         yield from data_list
 
 
@@ -43,7 +43,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
     a DataPack.
     """
 
-    def _collect(self, data_dir: str) -> Iterator[str]:
+    def _collect(self, data_dir: str) -> Iterator[str]:  # type: ignore
         """
         This function will collect the files of the given directory. If the
          'suffix' field in the config is set, it will only take files matching
@@ -56,7 +56,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         Returns:
 
         """
-        for root, dirs, files in os.walk(data_dir):
+        for root, _, files in os.walk(data_dir):
             for file in files:
                 if not self.configs.suffix or file.endswith(
                         self.configs.suffix):

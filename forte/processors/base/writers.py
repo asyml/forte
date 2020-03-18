@@ -20,6 +20,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 import json
+from typing import Optional
 
 from texar.torch.hyperparams import HParams
 
@@ -38,10 +39,11 @@ __all__ = [
 class JsonPackWriter(BaseProcessor[PackType], ABC):
     def __init__(self):
         super().__init__()
-        self.configs: Optional[HParams] = None
+        self.zip_pack: bool = False
+        self.indent: Optional[int] = None
 
-    def initialize(self, _: Resources, configs: HParams):
-        self.configs: HParams = configs
+    def initialize(self, resources: Resources, configs: HParams):
+        super(JsonPackWriter, self).initialize(resources, configs)
 
         if not configs.output_dir:
             raise NotADirectoryError('Root output directory is not defined '
@@ -49,6 +51,9 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
 
         if not os.path.exists(configs.output_dir):
             os.makedirs(configs.output_dir)
+
+        self.zip_pack = configs.zip_pack
+        self.indent = configs.indent
 
     @abstractmethod
     def sub_output_path(self, pack: PackType) -> str:

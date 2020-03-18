@@ -14,7 +14,7 @@
 """
 Pipeline component module.
 """
-from typing import Generic
+from typing import Generic, Optional
 
 from texar.torch import HParams
 
@@ -37,7 +37,7 @@ class PipelineComponent(Generic[PackType]):
             configs (HParams): The configuration passed in to set up this
                 component.
         """
-        self.resources: Resources = resources
+        self.resources: Optional[Resources] = resources
         self.configs: HParams = configs
 
     def finish(self, resource: Resources):
