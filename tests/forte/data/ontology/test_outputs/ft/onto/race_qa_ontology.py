@@ -42,7 +42,7 @@ class Passage(Document):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._passage_id = state.get('passage_id', None) 
 
     @property
@@ -77,7 +77,7 @@ class Question(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._options = state.get('options', None) 
         self._answers = state.get('answers', None) 
 

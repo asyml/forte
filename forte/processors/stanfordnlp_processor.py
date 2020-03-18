@@ -39,7 +39,7 @@ class StandfordNLPProcessor(PackProcessor):
         stanfordnlp.download(self.lang, self.MODELS_DIR)
 
     # pylint: disable=unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
         self.processors = configs.processors
         self.lang = configs.lang
         self.set_up()
@@ -90,12 +90,12 @@ class StandfordNLPProcessor(PackProcessor):
                                   )
 
                     if "pos" in self.processors:
-                        token.set_fields(pos=word.pos)
-                        token.set_fields(upos=word.upos)
-                        token.set_fields(xpos=word.xpos)
+                        token.pos = word.pos
+                        token.upos = word.upos
+                        token.xpos = word.xpos
 
                     if "lemma" in self.processors:
-                        token.set_fields(lemma=word.lemma)
+                        token.lemma = word.lemma
 
                     token = input_pack.add_or_get_entry(token)
                     tokens.append(token)
@@ -107,7 +107,6 @@ class StandfordNLPProcessor(PackProcessor):
                     child = token  # current token
                     parent = tokens[word.governor - 1]  # Root token
                     relation_entry = Dependency(input_pack, parent, child)
-                    relation_entry.set_fields(
-                        rel_type=word.dependency_relation)
+                    relation_entry.rel_type = word.dependency_relation
 
                     input_pack.add_or_get_entry(relation_entry)

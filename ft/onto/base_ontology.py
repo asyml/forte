@@ -76,7 +76,7 @@ class Token(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._pos = state.get('pos', None) 
         self._ud_xpos = state.get('ud_xpos', None) 
         self._lemma = state.get('lemma', None) 
@@ -210,7 +210,7 @@ class Sentence(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._speaker = state.get('speaker', None) 
         self._part_id = state.get('part_id', None) 
         self._sentiment = state.get('sentiment', None) 
@@ -266,7 +266,7 @@ class Phrase(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._phrase_type = state.get('phrase_type', None) 
 
     @property
@@ -308,7 +308,7 @@ class PredicateArgument(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._ner_type = state.get('ner_type', None) 
         self._predicate_lemma = state.get('predicate_lemma', None) 
         self._is_verb = state.get('is_verb', None) 
@@ -354,7 +354,7 @@ class EntityMention(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._ner_type = state.get('ner_type', None) 
 
     @property
@@ -382,7 +382,7 @@ class EventMention(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._event_type = state.get('event_type', None) 
 
     @property
@@ -416,7 +416,7 @@ class PredicateMention(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._predicate_lemma = state.get('predicate_lemma', None) 
         self._framenet_id = state.get('framenet_id', None) 
         self._is_verb = state.get('is_verb', None) 
@@ -466,7 +466,7 @@ class PredicateLink(Link):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._arg_type = state.get('arg_type', None) 
 
     @property
@@ -501,7 +501,7 @@ class Dependency(Link):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._dep_label = state.get('dep_label', None) 
         self._rel_type = state.get('rel_type', None) 
 
@@ -543,7 +543,7 @@ class EnhancedDependency(Link):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._dep_label = state.get('dep_label', None) 
 
     @property
@@ -575,7 +575,7 @@ class RelationLink(Link):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._rel_type = state.get('rel_type', None) 
 
     @property
@@ -615,7 +615,7 @@ class EventRelation(Link):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._rel_type = state.get('rel_type', None) 
 
     @property

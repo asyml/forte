@@ -43,7 +43,7 @@ class WikiPage(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._page_id = state.get('page_id', None) 
         self._page_name = state.get('page_name', None) 
 
@@ -84,7 +84,7 @@ class WikiSection(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._is_intro = state.get('is_intro', None) 
 
     @property
@@ -121,7 +121,7 @@ class WikiAnchor(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._target_page_name = state.get('target_page_name', None) 
 
     @property
@@ -151,7 +151,7 @@ class WikiInfoBoxProperty(Generics):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._key = state.get('key', None) 
         self._value = state.get('value', None) 
 
@@ -190,7 +190,7 @@ class WikiInfoBoxMapped(Generics):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._key = state.get('key', None) 
         self._value = state.get('value', None) 
 

@@ -39,7 +39,7 @@ MODEL2URL = {
 class AllenNLPProcessor(PackProcessor):
 
     # pylint: disable=attribute-defined-outside-init,unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
         self.processors = configs.processors
         if self.processors is None or self.processors == "":
             self.processors = self.default_configs()['processors']
@@ -139,7 +139,7 @@ class AllenNLPProcessor(PackProcessor):
                           offset + word_begin,
                           offset + word_end)
             if "pos" in self.processors:
-                token.set_fields(pos=pos[i])
+                token.pos = pos[i]
             tokens.append(token)
             input_pack.add_entry(token)
 
@@ -153,5 +153,5 @@ class AllenNLPProcessor(PackProcessor):
             relation = Dependency(input_pack,
                                   parent=tokens[heads[i] - 1],
                                   child=token)
-            relation.set_fields(rel_type=deps[i])
+            relation.rel_type = deps[1]
             input_pack.add_or_get_entry(relation)

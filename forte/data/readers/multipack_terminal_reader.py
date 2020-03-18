@@ -41,8 +41,8 @@ class MultiPackTerminalReader(MultiPackReader):
         super().__init__()
 
     # pylint: disable=unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
-        self.resource = resource
+    def initialize(self, resources: Resources, configs: HParams):
+        self.resource = resources
         self.config = configs
 
     # pylint: disable=unused-argument

@@ -59,8 +59,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
-        super().initialize(resource, configs)
+    def initialize(self, resources: Resources, configs: Optional[HParams]):
+        super().initialize(resources, configs)
         # Initialize the batcher.
         assert configs is not None
         try:

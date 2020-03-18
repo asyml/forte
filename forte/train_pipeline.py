@@ -41,7 +41,7 @@ class TrainPipeline:
 
         if preprocessors is not None:
             for p in preprocessors:
-                p.initialize(resource=self.resource,
+                p.initialize(resources=self.resource,
                              configs=configs.preprocessor)
             self.preprocessors = preprocessors
         else:

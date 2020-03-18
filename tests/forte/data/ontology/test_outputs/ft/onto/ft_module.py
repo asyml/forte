@@ -44,7 +44,7 @@ class Token(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._lemma = state.get('lemma', None) 
         self._is_verb = state.get('is_verb', None) 
         self._num_chars = state.get('num_chars', None) 
@@ -98,7 +98,7 @@ class Sentence(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._tokens = state.get('tokens', None) 
 
     @property

@@ -37,7 +37,7 @@ class Token(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._pos = state.get('pos', None) 
         self._lemma = state.get('lemma', None) 
 
@@ -73,7 +73,7 @@ class EntityMention(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._entity_type = state.get('entity_type', None) 
 
     @property

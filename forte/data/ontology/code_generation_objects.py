@@ -665,7 +665,7 @@ class EntryDefinition(Item):
 
         lines = [
             ("def __setstate__(self, state): ", 0),
-            ("state = super().__setstate__(state)", 1),
+            ("super().__setstate__(state)", 1),
         ]
         for p in self.properties:
             lines.extend(p.to_setstate(1))

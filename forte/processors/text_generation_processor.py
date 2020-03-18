@@ -63,10 +63,10 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
     def define_batcher(self) -> ProcessingBatcher:
         return FixedSizeMultiPackProcessingBatcher()
 
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
+    def initialize(self, resources: Resources, configs: Optional[HParams]):
         """
         Args:
-            resource:
+            resources:
             configs: A config with the following keys:
                 * input_pack_name: specify the input pack name of the MultiPack
                   to be processed
@@ -79,7 +79,7 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
 
         Returns:
         """
-        super().initialize(resource, configs)
+        super().initialize(resources, configs)
 
         if configs is not None:
             self.input_pack_name = configs.input_pack_name
@@ -95,7 +95,7 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
                                    else "cpu")
         self.model.to(device=self.device)
 
-        resource.update(model=self.model)
+        resources.update(model=self.model)
         self.word_processor = tx.data.GPT2Tokenizer(
             pretrained_model_name=configs.pretrained_model_name)
 

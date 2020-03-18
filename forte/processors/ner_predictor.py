@@ -70,10 +70,10 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         }
         return input_info
 
-    def initialize(self, resource: Resources, configs: HParams):
-        super().initialize(resource, configs)
+    def initialize(self, resources: Resources, configs: HParams):
+        super().initialize(resources, configs)
 
-        self.resource = resource
+        self.resource = resources
         self.config_model = configs.config_model
         self.config_data = configs.config_data
 
@@ -86,13 +86,13 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         self.resource.load(keys=missing_keys, path=resource_path)
 
-        self.word_alphabet = resource.get("word_alphabet")
-        self.char_alphabet = resource.get("char_alphabet")
-        self.ner_alphabet = resource.get("ner_alphabet")
-        word_embedding_table = resource.get("word_embedding_table")
+        self.word_alphabet = resources.get("word_alphabet")
+        self.char_alphabet = resources.get("char_alphabet")
+        self.ner_alphabet = resources.get("ner_alphabet")
+        word_embedding_table = resources.get("word_embedding_table")
 
-        if resource.get("device"):
-            self.device = resource.get("device")
+        if resources.get("device"):
+            self.device = resources.get("device")
         else:
             self.device = torch.device('cuda') if torch.cuda.is_available() \
                 else torch.device('cpu')
@@ -113,7 +113,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
             self.resource.load(keys={"model": load_model}, path=resource_path)
 
-        self.model = resource.get("model")
+        self.model = resources.get("model")
         self.model.to(self.device)
         self.model.eval()
 
@@ -186,7 +186,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 orig_token: Token = data_pack.get_entry(tid)  # type: ignore
                 ner_tag: str = output_dict["Token"]["ner"][i][j]
 
-                orig_token.set_fields(ner=ner_tag)
+                orig_token.ner = ner_tag
 
                 token = orig_token
                 token_ner = token.get_field("ner")
@@ -201,18 +201,16 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                     if token_ner[2:] != current_entity_mention[1]:
                         continue
 
-                    kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = EntityMention(data_pack,
                                            current_entity_mention[0],
                                            token.span.end)
-                    entity.set_fields(**kwargs_i)
+                    entity.ner_type = current_entity_mention[1]
                     data_pack.add_or_get_entry(entity)
                 elif token_ner[0] == "S":
                     current_entity_mention = (token.span.begin, token_ner[2:])
-                    kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = EntityMention(data_pack, current_entity_mention[0],
                                            token.span.end)
-                    entity.set_fields(**kwargs_i)
+                    entity.ner_type = current_entity_mention[1]
                     data_pack.add_or_get_entry(entity)
 
     def get_batch_tensor(

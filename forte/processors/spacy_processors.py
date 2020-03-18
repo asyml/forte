@@ -21,7 +21,6 @@ from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import EntityMention, Sentence, Token
 
-
 __all__ = [
     "SpacyProcessor",
 ]
@@ -31,6 +30,7 @@ class SpacyProcessor(PackProcessor):
     """
     A wrapper for spaCy processors
     """
+
     def __init__(self):
         super().__init__()
         self.processors: str = ""
@@ -46,7 +46,7 @@ class SpacyProcessor(PackProcessor):
             self.nlp = spacy.load(self.lang_model)
 
     # pylint: disable=unused-argument
-    def initialize(self, resource: Resources,
+    def initialize(self, resources: Resources,
                    configs: HParams):
         self.processors = configs.processors
         self.lang_model = configs.lang
@@ -88,14 +88,13 @@ class SpacyProcessor(PackProcessor):
                 for word in sentence:
                     begin_pos_word = word.idx
                     end_pos_word = begin_pos_word + len(word.text)
-                    token = Token(input_pack, begin_pos_word,
-                                  end_pos_word)
+                    token = Token(input_pack, begin_pos_word, end_pos_word)
 
                     if "pos" in self.processors:
-                        token.set_fields(pos=word.tag_)
+                        token.pos = word.tag_
 
                     if "lemma" in self.processors:
-                        token.set_fields(lemma=word.lemma_)
+                        token.lemma = word.lemma_
 
                     input_pack.add_or_get_entry(token)
 
@@ -114,8 +113,7 @@ class SpacyProcessor(PackProcessor):
         for item in ner_doc.ents:
             entity = EntityMention(input_pack, item.start_char,
                                    item.end_char)
-            kwargs_i = {"ner_type": item.label_}
-            entity.set_fields(**kwargs_i)
+            entity.ner_type = item.label_
             input_pack.add_or_get_entry(entity)
 
     def _process(self, input_pack: DataPack):

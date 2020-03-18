@@ -45,8 +45,8 @@ class MultiPackSentenceReader(MultiPackReader):
         self.config = HParams(None, self.default_configs())
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resource: Resources, configs: HParams) -> None:
-        self.resource = resource
+    def initialize(self, resources: Resources, configs: HParams) -> None:
+        self.resource = resources
         self.config = configs
 
     def _collect(self, text_directory: str) -> Iterator[Any]:  # type: ignore

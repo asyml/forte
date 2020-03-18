@@ -19,6 +19,7 @@ import gzip
 import logging
 import os
 from abc import abstractmethod, ABC
+import json
 
 from texar.torch.hyperparams import HParams
 
@@ -37,19 +38,17 @@ __all__ = [
 class JsonPackWriter(BaseProcessor[PackType], ABC):
     def __init__(self):
         super().__init__()
-        self.root_output_dir: str = ''
-        self.zip_pack: bool = False
+        self.configs: Optional[HParams] = None
 
     def initialize(self, _: Resources, configs: HParams):
-        self.root_output_dir = configs.output_dir
-        self.zip_pack = configs.zip_pack
+        self.configs: HParams = configs
 
-        if not self.root_output_dir:
+        if not configs.output_dir:
             raise NotADirectoryError('Root output directory is not defined '
                                      'correctly in the configs.')
 
-        if not os.path.exists(self.root_output_dir):
-            os.makedirs(self.root_output_dir)
+        if not os.path.exists(configs.output_dir):
+            os.makedirs(configs.output_dir)
 
     @abstractmethod
     def sub_output_path(self, pack: PackType) -> str:
@@ -67,6 +66,7 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
         return {
             'output_dir': None,
             'zip_pack': False,
+            'indent': None,
         }
 
     def _process(self, input_pack: PackType):
@@ -75,14 +75,20 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
             raise ValueError(
                 "No concrete path provided from sub_output_path.")
 
-        maybe_create_dir(self.root_output_dir)
-        p = os.path.join(self.root_output_dir, sub_path)
+        maybe_create_dir(self.configs.output_dir)
+        p = os.path.join(self.configs.output_dir, sub_path)
 
         ensure_dir(p)
 
-        if self.zip_pack:
+        out_str: str = input_pack.serialize()
+
+        if self.configs.indent:
+            out_str = json.dumps(
+                json.loads(out_str), indent=self.configs.indent)
+
+        if self.configs.zip_pack:
             with gzip.open(p + '.gz', 'wt') as out:
-                out.write(input_pack.serialize())
+                out.write(out_str)
         else:
             with open(p, 'w') as out:
-                out.write(input_pack.serialize())
+                out.write(out_str)

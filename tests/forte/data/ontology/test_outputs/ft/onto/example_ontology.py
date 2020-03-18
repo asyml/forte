@@ -43,7 +43,7 @@ class Word(Token):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._string_features = state.get('string_features', None) 
         self._word_forms = state.get('word_forms', None) 
         self._token_ranks = state.get('token_ranks', None) 
@@ -124,7 +124,7 @@ class WordLink(Link):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._string_features = state.get('string_features', None) 
 
     @property

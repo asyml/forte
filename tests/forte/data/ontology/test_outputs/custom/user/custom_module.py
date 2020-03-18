@@ -38,7 +38,7 @@ class Dependency(Link):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._rel_type = state.get('rel_type', None) 
 
     @property

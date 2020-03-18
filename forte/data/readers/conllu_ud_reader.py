@@ -75,8 +75,6 @@ class ConllUDReader(PackReader):
 
         token_feature_fields = ["ud_features", "ud_misc"]
 
-        token_entry_fields = ["lemma", "pos", "ud_xpos",
-                              "ud_features", "ud_misc"]
 
         data_pack: DataPack = DataPack()
         doc_sent_begin: int = 0
@@ -122,13 +120,15 @@ class ConllUDReader(PackReader):
                 word_begin = doc_offset
                 word_end = doc_offset + len(word)
 
-                token: Token \
-                    = Token(data_pack, word_begin, word_end)
-                kwargs = {key: token_comps[key]
-                          for key in token_entry_fields}
-
                 # add token
-                token.set_fields(**kwargs)
+                token: Token = Token(data_pack, word_begin, word_end)
+
+                token.lemma = token_comps['lemma']
+                token.pos = token_comps['pos']
+                token.ud_xpos = token_comps['ud_xpos']
+                token.ud_features = token_comps['ud_features']
+                token.ud_misc = token_comps['ud_misc']
+
                 data_pack.add_or_get_entry(token)
 
                 sent_tokens[str(token_comps["id"])] = (token_comps, token)

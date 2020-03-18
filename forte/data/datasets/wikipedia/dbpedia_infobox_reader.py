@@ -76,12 +76,12 @@ class DBpediaInfoBoxReader(PackReader):
         self.redirects: Dict[str, str]
         self.logger = logging.getLogger(__name__)
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
         # pylint: disable=attribute-defined-outside-init
         self.pack_index = read_index(configs.pack_index)
         self.pack_dir = configs.pack_dir
 
-        self.redirects = resource.get('redirects')
+        self.redirects = resources.get('redirects')
 
         self.literal_info_reader = NIFBufferedContextReader(
             configs.mapping_literals)

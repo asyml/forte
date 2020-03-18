@@ -28,7 +28,7 @@ class BaseTrainer(PipelineComponent):
         self._validation_requested = False
 
     @abstractmethod
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
         """
         The training pipeline will run this initialization method during
         the initialization phase and send resources in as parameters.

@@ -30,8 +30,8 @@ class EvalReader(MultiPackReader):
         return "cached_string_file"
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resource: Resources, configs: HParams):
-        self.resource = resource
+    def initialize(self, resources: Resources, configs: HParams):
+        self.resource = resources
         self.config = configs
 
     def _collect(self, *args, **kwargs) -> Iterator[str]:

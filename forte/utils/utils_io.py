@@ -46,4 +46,5 @@ def ensure_dir(filename: str):
 
     """
     d = os.path.dirname(filename)
-    maybe_create_dir(d)
+    if d:
+        maybe_create_dir(d)

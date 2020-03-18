@@ -47,7 +47,7 @@ class Token(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._lemma = state.get('lemma', None) 
         self._is_verb = state.get('is_verb', None) 
         self._num_chars = state.get('num_chars', None) 
@@ -101,7 +101,7 @@ class Sentence(Annotation):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._key_tokens = state.get('key_tokens', None) 
 
     @property
@@ -144,7 +144,7 @@ class Dependency(Link):
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._rel_type = state.get('rel_type', None) 
 
     @property

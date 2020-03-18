@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from texar.torch import HParams
-
 from forte.pipeline import Pipeline
 from forte.data.readers import OntonotesReader
 from forte.processors.nltk_processors import NLTKWordTokenizer, \
@@ -32,12 +30,13 @@ nlp.add_processor(NLTKPOSTagger())
 
 # This is a simple writer that serialize the result to the current directory and
 # will use the DocID field in the data pack as the file name.
-nlp.add_processor(DocIdJsonPackWriter(), HParams(
+nlp.add_processor(
+    DocIdJsonPackWriter(),
     {
-        'output_dir': 'output'
-    },
-    DocIdJsonPackWriter.default_configs(),
-))
+        'output_dir': 'output',
+        'indent': 2,
+    }
+)
 
 nlp.initialize()
 

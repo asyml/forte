@@ -180,10 +180,11 @@ class OntonotesReader(PackReader):
 
                     # add tokens
                     token = Token(pack, word_begin, word_end)
+
                     if fields.pos_tag is not None:
-                        token.set_fields(pos=fields.pos_tag)
+                        token.pos = fields.pos_tag
                     if fields.word_sense is not None:
-                        token.set_fields(sense=fields.word_sense)
+                        token.word_sense = fields.word_sense
                     pack.add_entry(token)
 
                     # add entity mentions
@@ -197,16 +198,14 @@ class OntonotesReader(PackReader):
                             fields.lemmatised_word != "-"):
                         word_is_verbal_predicate = any(
                             "(V" in x for x in fields.predicate_labels)
-                        kwargs_i = {
-                            "predicate_lemma": fields.lemmatised_word,
-                            "is_verb": word_is_verbal_predicate
-                        }
                         pred_mention = PredicateMention(
                             pack, word_begin, word_end)
-                        pred_mention.set_fields(**kwargs_i)
+
+                        pred_mention.predicate_lemma = fields.lemmatised_word
+                        pred_mention.is_verb = word_is_verbal_predicate
+
                         if fields.framenet_id is not None:
-                            pred_mention.set_fields(
-                                framenet_id=fields.framenet_id)
+                            pred_mention.framenet_id = fields.framenet_id
                         pack.add_entry(pred_mention)
 
                         if word_is_verbal_predicate:
@@ -248,11 +247,8 @@ class OntonotesReader(PackReader):
                     for predicate, pred_arg in zip(verbal_predicates,
                                                    verbal_pred_args):
                         for arg in pred_arg:
-                            kwargs_i = {
-                                "arg_type": arg[1],
-                            }
                             link = PredicateLink(pack, predicate, arg[0])
-                            link.set_fields(**kwargs_i)
+                            link.arg_type = arg[1]
                             pack.add_entry(link)
 
                     verbal_predicates = []
@@ -263,9 +259,9 @@ class OntonotesReader(PackReader):
 
                     sent = Sentence(pack, sentence_begin, offset - 1)
                     if speaker is not None:
-                        sent.set_fields(speaker=speaker)
+                        sent.speaker = speaker
                     if part_id is not None:
-                        sent.set_fields(part_id=int(part_id))
+                        sent.part_id = int(part_id)
                     pack.add_entry(sent)
 
                     sentence_begin = offset
@@ -276,7 +272,6 @@ class OntonotesReader(PackReader):
             for _, mention_list in groups.items():
                 # kwargs_i = {"coref_type": group_id}
                 group = CoreferenceGroup(pack)
-                # group.set_fields(**kwargs_i)
                 group.add_members(mention_list)
                 pack.add_entry(group)
 
@@ -313,7 +308,7 @@ class OntonotesReader(PackReader):
             # Exiting a span, add and then reset the current span.
             kwargs_i = {"ner_type": current_entity_mention[1]}
             entity = EntityMention(pack, current_entity_mention[0], word_end)
-            entity.set_fields(**kwargs_i)
+            entity.ner_type = current_entity_mention[1]
             pack.add_entry(entity)
 
             current_entity_mention = None
