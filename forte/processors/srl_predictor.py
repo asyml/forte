@@ -84,7 +84,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
             map_location=self.device))
         self.model.eval()
 
-    def define_context(self):
+    def _define_context(self):
         return Sentence
 
     def _define_input_info(self) -> DataRequest:

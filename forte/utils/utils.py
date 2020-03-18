@@ -97,8 +97,12 @@ def get_class(class_name: str,
                 break
 
     if class_ is None:
-        raise ValueError(
-            "Class not found in {}: {}".format(module_paths, class_name))
+        if module_paths:
+            raise ValueError(
+                "Class not found in {}: {}".format(module_paths, class_name))
+        else:
+            raise ValueError(
+                "Class not found in {}".format(class_name))
 
     return class_
 

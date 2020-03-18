@@ -53,7 +53,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     def __init__(self):
         super().__init__()
-        self.context_type: Type[Annotation] = self.define_context()
+        self.context_type: Type[Annotation] = self._define_context()
         self.input_info: DataRequest = self._define_input_info()
 
         self.batcher: ProcessingBatcher = self.define_batcher()
@@ -61,7 +61,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     def initialize(self, resources: Resources, configs: Optional[HParams]):
         super().initialize(resources, configs)
-        # Initialize the batcher.
+
         assert configs is not None
         try:
             self.batcher.initialize(configs.batcher)
@@ -71,7 +71,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
                 "config at the top level.")
 
     @abstractmethod
-    def define_context(self) -> Type[Annotation]:
+    def _define_context(self) -> Type[Annotation]:
         r"""User should define the context type for batch processors here. The
         context must be of type :class:`Annotation`, the processor will create
         data batches with in the span of each annotations. For example, if the
