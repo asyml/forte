@@ -59,8 +59,8 @@ class UtilsTest(unittest.TestCase):
 
     def test_create_class_with_kwargs(self):
         p, hparams = utils.create_class_with_kwargs(
-            class_name=
-            'forte.processors.lowercaser_processor.LowerCaserProcessor',
+            class_name='forte.processors.lowercaser_processor'
+                       '.LowerCaserProcessor',
             class_args={},
             h_params={
                 'overwrite_configs': {
