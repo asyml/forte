@@ -33,6 +33,8 @@ MODEL2URL = {
     'stanford_dependencies': "https://allennlp.s3.amazonaws.com/models/biaffine-dependency-parser-ptb-2018.08.23.tar.gz",
     'universal_dependencies': "https://allennlp.s3.amazonaws.com/models/biaffine-dependency-parser-ud-2018.08.23.tar.gz",
 }
+
+
 # pylint: enable=line-too-long
 
 
@@ -135,9 +137,7 @@ class AllenNLPProcessor(PackProcessor):
         for i, word in enumerate(words):
             word_begin = sentence.text.find(word, word_end)
             word_end = word_begin + len(word)
-            token = Token(input_pack,
-                          offset + word_begin,
-                          offset + word_end)
+            token = Token(input_pack, offset + word_begin, offset + word_end)
             if "pos" in self.processors:
                 token.pos = pos[i]
             tokens.append(token)
@@ -153,5 +153,5 @@ class AllenNLPProcessor(PackProcessor):
             relation = Dependency(input_pack,
                                   parent=tokens[heads[i] - 1],
                                   child=token)
-            relation.rel_type = deps[1]
+            relation.rel_type = deps[i]
             input_pack.add_or_get_entry(relation)
