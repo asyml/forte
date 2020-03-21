@@ -38,12 +38,12 @@ class WikiPage(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['page_id'] = self._page_id
-        state['page_name'] = self._page_name
+        state['page_id'] = state.pop('_page_id')
+        state['page_name'] = state.pop('_page_name')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._page_id = state.get('page_id', None) 
         self._page_name = state.get('page_name', None) 
 
@@ -80,11 +80,11 @@ class WikiSection(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['is_intro'] = self._is_intro
+        state['is_intro'] = state.pop('_is_intro')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._is_intro = state.get('is_intro', None) 
 
     @property
@@ -117,11 +117,11 @@ class WikiAnchor(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['target_page_name'] = self._target_page_name
+        state['target_page_name'] = state.pop('_target_page_name')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._target_page_name = state.get('target_page_name', None) 
 
     @property
@@ -146,12 +146,12 @@ class WikiInfoBoxProperty(Generics):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['key'] = self._key
-        state['value'] = self._value
+        state['key'] = state.pop('_key')
+        state['value'] = state.pop('_value')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._key = state.get('key', None) 
         self._value = state.get('value', None) 
 
@@ -185,12 +185,12 @@ class WikiInfoBoxMapped(Generics):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['key'] = self._key
-        state['value'] = self._value
+        state['key'] = state.pop('_key')
+        state['value'] = state.pop('_value')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._key = state.get('key', None) 
         self._value = state.get('value', None) 
 

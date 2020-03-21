@@ -38,11 +38,11 @@ class Passage(Document):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['passage_id'] = self._passage_id
+        state['passage_id'] = state.pop('_passage_id')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._passage_id = state.get('passage_id', None) 
 
     @property
@@ -72,12 +72,12 @@ class Question(Annotation):
 
     def __getstate__(self): 
         state = super().__getstate__()
-        state['options'] = self._options
-        state['answers'] = self._answers
+        state['options'] = state.pop('_options')
+        state['answers'] = state.pop('_answers')
         return state
 
     def __setstate__(self, state): 
-        state = super().__setstate__(state)
+        super().__setstate__(state)
         self._options = state.get('options', None) 
         self._answers = state.get('answers', None) 
 

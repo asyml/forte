@@ -73,12 +73,11 @@ class CoNLL03Reader(PackReader):
                 word_end = offset + len(word)
 
                 # Add tokens.
-                kwargs_i = {"pos": pos,
-                            "chunk": chunk_id,
-                            "ner": ner_tag}
                 token = Token(pack, word_begin, word_end)
+                token.pos = pos
+                token.chunk = chunk_id
+                token.ner = ner_tag
 
-                token.set_fields(**kwargs_i)
                 pack.add_or_get_entry(token)
 
                 text += word + " "

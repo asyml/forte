@@ -137,6 +137,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         self.batch_size = default_config.batch_size
 
     def initialize(self, config: HParams):
+        super(FixedSizeDataPackBatcher, self).initialize(config)
         config_ = HParams(config, self.default_configs())
         self.batch_size = config_.batch_size
         self.batch_is_full = False

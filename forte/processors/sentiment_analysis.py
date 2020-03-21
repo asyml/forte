@@ -49,7 +49,7 @@ class VaderSentimentProcessor(PackProcessor):
         self.sentence_component = None
         self.analyzer = SentimentIntensityAnalyzer()
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: HParams):
         # pylint: disable=unused-argument
         self.sentence_component = configs.get('sentence_component')
 

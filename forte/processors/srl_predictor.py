@@ -84,7 +84,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
             map_location=self.device))
         self.model.eval()
 
-    def define_context(self):
+    def _define_context(self):
         return Sentence
 
     def _define_input_info(self) -> DataRequest:
@@ -140,7 +140,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
                     )
                     )
                     link = PredicateLink(data_pack, pred, arg)
-                    link.set_fields(arg_type=label)
+                    link.arg_type = label
                     data_pack.add_or_get_entry(link)
 
     @staticmethod

@@ -51,11 +51,11 @@ class WikiArticleWriter(JsonPackWriter[DataPack]):
         super().__init__()
         self.article_count: int = 0
 
-    def initialize(self, resource: Resources, configs: HParams):
-        super(WikiArticleWriter, self).initialize(resource, configs)
+    def initialize(self, resources: Resources, configs: HParams):
+        super(WikiArticleWriter, self).initialize(resources, configs)
         self.article_count = 0
         self.article_index = open(
-            os.path.join(self.root_output_dir, 'article.idx'), 'w')
+            os.path.join(self.configs.output_dir, 'article.idx'), 'w')
         self.csv_writer = csv.writer(self.article_index, delimiter='\t')
 
     def sub_output_path(self, pack: DataPack) -> str:
@@ -90,7 +90,7 @@ class WikiArticleWriter(JsonPackWriter[DataPack]):
         if self.article_count % 1000 == 0:
             logging.info(
                 "Written %s to %s",
-                self.article_count, self.root_output_dir
+                self.article_count, self.configs.output_dir
             )
 
     def finish(self, resource: Resources):

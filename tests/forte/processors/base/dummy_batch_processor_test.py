@@ -52,10 +52,10 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
     def test_one_batch_processor(self, batch_size):
         nlp = Pipeline()
         nlp.set_reader(StringReader())
-        dummy = DummmyFixedSizeBatchProcessor()
+        batcher = DummmyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
         nlp.add_processor(NLTKSentenceSegmenter())
-        nlp.add_processor(dummy, config=config)
+        nlp.add_processor(batcher, config=config)
         nlp.initialize()
         sentences = ["This tool is called Forte. The goal of this project to "
                      "help you build NLP pipelines. NLP has never been made "
@@ -63,7 +63,7 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
         pack = nlp.process(sentences)
         sent_len = len(list(pack.get(Sentence)))
         self.assertEqual(
-            dummy.counter, (sent_len // batch_size +
+            batcher.counter, (sent_len // batch_size +
                             (sent_len % batch_size > 0)))
 
     @data(1, 2, 3)

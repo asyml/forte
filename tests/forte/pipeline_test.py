@@ -129,7 +129,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         super().__init__()
         self.counter = 0
 
-    def define_context(self) -> Type[Sentence]:
+    def _define_context(self) -> Type[Sentence]:
         return Sentence
 
     def _define_input_info(self) -> Dict:
