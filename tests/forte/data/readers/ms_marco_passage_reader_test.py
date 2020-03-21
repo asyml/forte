@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for corpus_reader.
+Tests for ms_marco_passage_reader.
 """
 import os
 import unittest

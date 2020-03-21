@@ -36,7 +36,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
     def initialize(self, resources: Resources, configs: HParams):
         super().initialize(resources, configs)
         cls = utils.get_class(self.config.indexer.name,
-                                  module_paths=["forte.indexers"])
+                              module_paths=["forte.indexers"])
         self.indexer = cls(hparams=self.config.indexer.hparams)
 
     @staticmethod

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from typing import List, Optional, Tuple
 from texar.torch import HParams
 
@@ -45,11 +47,15 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
             rank += 1
 
     def get_result(self):
+        curr_dir = os.path.dirname(__file__)
+        output_file = os.path.join(curr_dir, self.config.output_file)
+        gt_file = os.path.join(curr_dir, self.config.ground_truth_file)
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
         if self._score is None:
-            with open(self.config.output_file, "w") as f:
+            with open(output_file, "w") as f:
                 for result in self.predicted_results:
                     f.write('\t'.join(result) + '\n')
 
-            self._score = compute_metrics_from_files(
-                self.config.ground_truth_file, self.config.output_file)
+            self._score = compute_metrics_from_files(gt_file, output_file)
         return self._score

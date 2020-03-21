@@ -1,8 +1,11 @@
+data:
+  relative_path: "data/collectionandqueries"
+
 reader:
   pack_name: "query"
 
 query_creator:
-  size: 10
+  size: 5
   field: "content"
   query_pack_name: "query"
 
@@ -15,7 +18,71 @@ indexer:
     hosts: "localhost:9200"
     algorithm: "bm25"
 
+
+NER:
+  batcher:
+    batch_size: 16
+  config_data:
+    train_path: ""
+    val_path: ""
+    test_path: ""
+    num_epochs: 200
+    batch_size_tokens: 512
+    test_batch_size: 16
+    max_char_length: 45
+    num_char_pad: 2
+
+  config_model:
+    output_hidden_size: 128
+    dropout_rate: 0.3
+    word_emb:
+      dim: 100
+    char_emb:
+      dim: 30
+      initializer:
+        type: "normal_"
+
+    char_cnn_conv:
+      in_channels: 30
+      out_channels: 30
+      kernel_size: 3
+      padding: 2
+
+    bilstm_sentence_encoder:
+      rnn_cell_fw:
+        input_size: 130
+        type: "LSTMCell"
+        kwargs:
+          num_units: 128
+      rnn_cell_share_config: "yes"
+      output_layer_fw:
+        num_layers: 0
+      output_layer_share_config: "yes"
+
+    learning_rate: 0.01
+    momentum: 0.9
+    decay_interval: 1
+    decay_rate: 0.05
+    random_seed: 1234
+    initializer:
+      type: "xavier_uniform_"
+
+    model_path: "./examples/passage_reranker/models/NER"
+    resource_dir: "./examples/passage_reranker/resources"
+
+
+writer:
+  output_file: "output/results_eval.tsv"
+
 evaluator:
   pack_name: "query"
-  ground_truth_file: "collection_and_queries/query_doc_id.tsv"
-  output_file: "results_dev.tsv"
+  ground_truth_file: "data/collectionandqueries/query_doc_id.tsv"
+  output_file: "output/results_dev.tsv"
+
+reranker:
+  size: 5
+  pretrained_model_name: "bert-base-uncased"
+  cache_dir: "models"
+  query_pack_name: "query"
+  field: "content"
+  max_seq_length: 512

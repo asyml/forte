@@ -105,11 +105,6 @@ Readers
 .. autoclass:: forte.data.readers.conllu_ud_reader.ConllUDReader
     :members:
 
-:hidden:`CorpusReader`
-------------------------
-.. autoclass:: forte.data.readers.corpus_reader.CorpusReader
-    :members:
-
 :hidden:`DeserializeReader`
 ----------------------------
 .. autoclass:: forte.data.readers.deserialize_reader.DeserializeReader

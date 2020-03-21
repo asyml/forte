@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import texar.torch as tx
 
-from forte.data.readers import CorpusReader
+from forte.data.readers import MSMarcoPassageReader
 from forte.processors.ir import ElasticSearchIndexProcessor
 from forte.pipeline import Pipeline
 
 if __name__ == "__main__":
     nlp = Pipeline()
-    nlp.set_reader(CorpusReader())
+    nlp.set_reader(MSMarcoPassageReader())
     config = tx.HParams({
         "batch_size": 100000,
         "fields": ["doc_id", "content"],
@@ -40,6 +42,9 @@ if __name__ == "__main__":
     nlp.add_processor(ElasticSearchIndexProcessor(), config=config)
     nlp.initialize()
 
-    for idx, pack in enumerate(nlp.process_dataset(".")):
+    data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "data", "collectionandqueries")
+
+    for idx, pack in enumerate(nlp.process_dataset(data_path)):
         if idx + 1 > 0 and (idx + 1) % 100000 == 0:
             print(f"Completed {idx+1} packs")

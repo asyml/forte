@@ -12,31 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import yaml
 
 import texar.torch as tx
-from forte.processors.ir import ElasticSearchQueryCreator
-from forte.processors.ir import ElasticSearchProcessor
+
 from forte.pipeline import Pipeline
+from forte.processors.ir import (
+    ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
 
 from examples.passage_reranker.reader import EvalReader
 from examples.passage_reranker.ms_marco_evaluator import MSMarcoEvaluator
 
+
 if __name__ == "__main__":
-    config = yaml.safe_load(open("config.yml", "r"))
+    config_file = os.path.join(os.path.dirname(__file__), 'config.yml')
+    config = yaml.safe_load(open(config_file, "r"))
     config = tx.HParams(config, default_hparams=None)
     ms_marco_evaluator = MSMarcoEvaluator()
 
     nlp = Pipeline()
-    nlp.set_reader(reader=EvalReader(), config=config.reader)
+    eval_reader = EvalReader()
+    nlp.set_reader(reader=eval_reader, config=config.reader)
     nlp.add_processor(processor=ElasticSearchQueryCreator(),
                       config=config.query_creator)
-    nlp.add_processor(processor=ElasticSearchProcessor(), config=config.indexer)
-    nlp.set_evaluator(evaluator=ms_marco_evaluator, config=config.evaluator)
+    nlp.add_processor(processor=ElasticSearchProcessor(),
+                      config=config.indexer)
+    nlp.add_processor(processor=BertRerankingProcessor(),
+                      config=config.reranker)
+
+    nlp.set_evaluator(evaluator=ms_marco_evaluator,
+                      config=config.evaluator)
     nlp.initialize()
 
-    for idx, m_pack in enumerate(nlp.process_dataset(
-            "./collection_and_queries/queries.dev.small.tsv")):
+    file_path = os.path.join(os.path.dirname(__file__),
+                             "data/collectionandqueries/queries.dev.small.tsv")
+    for idx, m_pack in enumerate(nlp.process_dataset(file_path)):
         if (idx + 1) % 1000 == 0:
             print(f"Processed {idx + 1} examples")
 
