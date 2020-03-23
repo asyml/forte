@@ -69,7 +69,8 @@ class TestVaderSentiment(unittest.TestCase):
             # emojis handled
             "Not bad at all"  # Capitalized negation
         ]
-
+        # TODO: The exact expected scores depend on the version of
+        #  vaderSentiment. Currently, the version of vaderSentiment is 3.3.1
         expected_scores = [
             {'neg': 0.0, 'neu': 0.254, 'pos': 0.746, 'compound': 0.8316},
             {'neg': 0.0, 'neu': 0.248, 'pos': 0.752, 'compound': 0.8439},
@@ -79,7 +80,7 @@ class TestVaderSentiment(unittest.TestCase):
             {'neg': 0.0, 'neu': 0.294, 'pos': 0.706, 'compound': 0.9469},
             {'neg': 0.646, 'neu': 0.354, 'pos': 0.0, 'compound': -0.7424},
             {'neg': 0.0, 'neu': 0.508, 'pos': 0.492, 'compound': 0.4404},
-            {'neg': 0.0, 'neu': 0.637, 'pos': 0.363, 'compound': 0.431},
+            {'neg': 0.0, 'neu': 0.678, 'pos': 0.322, 'compound': 0.431},
             {'neg': 0.0, 'neu': 0.697, 'pos': 0.303, 'compound': 0.3832},
             {'neg': 0.327, 'neu': 0.579, 'pos': 0.094, 'compound': -0.7042},
             {'neg': 0.779, 'neu': 0.221, 'pos': 0.0, 'compound': -0.5461},
