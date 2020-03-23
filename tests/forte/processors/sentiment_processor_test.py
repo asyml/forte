@@ -89,12 +89,17 @@ class TestVaderSentiment(unittest.TestCase):
             {'neg': 0.0, 'neu': 0.698, 'pos': 0.302, 'compound': 0.8248},
         ]
 
+        expected_categories = [
+            s['compound'] > 0 for s in expected_scores
+        ]
+
         document = ' '.join(sentences)
         pack = self.pipeline.process(document)
 
         sentence: Sentence
         for idx, sentence in enumerate(pack.get(Sentence)):
-            self.assertEqual(sentence.sentiment, expected_scores[idx])
+            self.assertEqual(sentence.sentiment['compound'] > 0,
+                             expected_categories[idx])
 
 
 if __name__ == "__main__":
