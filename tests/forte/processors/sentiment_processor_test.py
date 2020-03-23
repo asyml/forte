@@ -69,8 +69,7 @@ class TestVaderSentiment(unittest.TestCase):
             # emojis handled
             "Not bad at all"  # Capitalized negation
         ]
-        # TODO: The exact expected scores depend on the version of
-        #  vaderSentiment. Currently, the version of vaderSentiment is 3.3.1
+
         expected_scores = [
             {'neg': 0.0, 'neu': 0.254, 'pos': 0.746, 'compound': 0.8316},
             {'neg': 0.0, 'neu': 0.248, 'pos': 0.752, 'compound': 0.8439},
@@ -92,9 +91,15 @@ class TestVaderSentiment(unittest.TestCase):
         document = ' '.join(sentences)
         pack = self.pipeline.process(document)
 
+        # testing within one decimal place as the exact scores depend on the
+        # version of sentimentVader
         sentence: Sentence
         for idx, sentence in enumerate(pack.get(Sentence)):
-            self.assertEqual(sentence.sentiment, expected_scores[idx])
+            expected_keys = set(expected_scores[idx].keys())
+            self.assertSetEqual(set(sentence.sentiment.keys()), expected_keys)
+            for key in expected_keys:
+                self.assertAlmostEqual(sentence.sentiment[key],
+                                       expected_scores[idx][key], places=1)
 
 
 if __name__ == "__main__":
