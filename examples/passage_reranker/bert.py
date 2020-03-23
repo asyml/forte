@@ -22,8 +22,8 @@ import torch
 from torch.nn import Parameter
 
 from texar.torch.modules.pretrained import PretrainedBERTMixin
-from texar.torch.modules.encoders import BERTEncoder
-from texar.torch.modules.classifiers import BERTClassifier
+from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
+from texar.torch.modules.classifiers import BERTClassifier as TxBERTClassifier
 from texar.torch.hyperparams import HParams
 
 __all__ = [
@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-class BERTClassifier(BERTClassifier, PretrainedBERTMixin):
+class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         hparams = self.default_hparams()
@@ -220,7 +220,7 @@ class BERTClassifier(BERTClassifier, PretrainedBERTMixin):
         return cast(Parameter, super()._name_to_variable(name))
 
 
-class BERTEncoder(BERTEncoder):
+class BERTEncoder(TxBERTEncoder):
     def load_pretrained_config(self,
                                pretrained_model_name: Optional[str] = None,
                                cache_dir: Optional[str] = None,

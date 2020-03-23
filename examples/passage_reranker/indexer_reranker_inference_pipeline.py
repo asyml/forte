@@ -68,4 +68,4 @@ if __name__ == "__main__":
             if p < num_passages:
                 input(colored("Press ENTER to get next result...\n", 'green'))
 
-    print(colored('#'*20, 'blue'))
+    print(colored('#' * 20, 'blue'))

@@ -15,10 +15,8 @@
 import os
 
 from typing import List, Optional, Tuple
-from texar.torch import HParams
 
 from forte.evaluation.base import Evaluator
-from forte.common import Resources
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Query
 
