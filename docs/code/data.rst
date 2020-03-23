@@ -105,9 +105,19 @@ Readers
 .. autoclass:: forte.data.readers.conllu_ud_reader.ConllUDReader
     :members:
 
-:hidden:`DeserializeReader`
-----------------------------
-.. autoclass:: forte.data.readers.deserialize_reader.DeserializeReader
+:hidden:`BaseDeserializeReader`
+--------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.BaseDeserializeReader
+    :members:
+
+:hidden:`RawDataDeserializeReader`
+-----------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.RawDataDeserializeReader
+    :members:
+
+:hidden:`RecursiveDirectoryDeserializeReader`
+----------------------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.RecursiveDirectoryDeserializeReader
     :members:
 
 :hidden:`HTMLReader`
