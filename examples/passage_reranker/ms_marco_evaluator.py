@@ -32,11 +32,6 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
         self.predicted_results: List[Tuple[str, str, str]] = []
         self._score: Optional[float] = None
 
-    # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, configs: HParams):
-        self.resource = resources
-        self.config = configs
-
     def consume_next(self, pred_pack, _):
         query_pack = pred_pack.get_pack(self.config.pack_name)
         query = list(query_pack.get_entries_by_type(Query))[0]

@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Utils of BERT Modules.
+BERT encoder and BERT classifier. BERT classifier takes in fine-tuned BERT
+encoder.
 """
 import os
 from typing import Optional, cast
@@ -26,12 +27,12 @@ from texar.torch.modules.classifiers import BERTClassifier
 from texar.torch.hyperparams import HParams
 
 __all__ = [
-    "FineTunedBERTEncoder",
-    "FineTunedBERTClassifier"
+    "BERTEncoder",
+    "BERTClassifier"
 ]
 
 
-class FineTunedBERTClassifier(BERTClassifier, PretrainedBERTMixin):
+class BERTClassifier(BERTClassifier, PretrainedBERTMixin):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         hparams = self.default_hparams()
@@ -219,7 +220,7 @@ class FineTunedBERTClassifier(BERTClassifier, PretrainedBERTMixin):
         return cast(Parameter, super()._name_to_variable(name))
 
 
-class FineTunedBERTEncoder(BERTEncoder):
+class BERTEncoder(BERTEncoder):
     def load_pretrained_config(self,
                                pretrained_model_name: Optional[str] = None,
                                cache_dir: Optional[str] = None,

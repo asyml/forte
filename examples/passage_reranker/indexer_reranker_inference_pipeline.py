@@ -20,18 +20,14 @@ import yaml
 import texar.torch as tx
 
 from forte.data.multi_pack import MultiPack
-from forte.data.selector import RegexNameMatchSelector
 from forte.data.readers import MultiPackTerminalReader
 
 from forte.pipeline import Pipeline
 
 from forte.processors.ir import (
     ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
-from forte.processors import CoNLLNERPredictor
-from forte.processors.nltk_processors import (
-    NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
 
-from ft.onto.base_ontology import Sentence, Token, EntityMention
+from ft.onto.base_ontology import Sentence
 
 
 if __name__ == "__main__":
@@ -55,36 +51,21 @@ if __name__ == "__main__":
     nlp.add_processor(processor=BertRerankingProcessor(),
                       config=config.reranker)
 
-    # NER Tagging
-    nlp.add_processor(processor=NLTKSentenceSegmenter(),
-                      selector=RegexNameMatchSelector(doc_pack_name))
-    nlp.add_processor(processor=NLTKWordTokenizer(),
-                      selector=RegexNameMatchSelector(doc_pack_name))
-    nlp.add_processor(processor=NLTKPOSTagger(),
-                      selector=RegexNameMatchSelector(doc_pack_name))
-    nlp.add_processor(CoNLLNERPredictor(), config=config.NER,
-                      selector=RegexNameMatchSelector(doc_pack_name))
-
     nlp.initialize()
 
-    passages = [f"passage_{i}" for i in range(config.query_creator.size)]
-    print(f"Obtained {len(passages)} passages.")
+    passage_keys = [f"passage_{i}" for i in range(config.query_creator.size)]
+    num_passages = len(passage_keys)
+    print(f"Retrieved {num_passages} passages.")
 
-    for idx, m_pack_ in enumerate(nlp.process_dataset()):
+    for m_pack_ in nlp.process_dataset():
         m_pack = cast(MultiPack, m_pack_)
-        if (idx + 1) % 10000 == 0:
-            print(f"Processed {idx+1} examples")
-        for passage in passages:
+        for p, passage in enumerate(passage_keys):
             pack = m_pack.get_pack(passage)
-            print(colored("Passage: ", "green"), pack.text, "\n")
-            for sentence in pack.get(Sentence):
+            print(colored(f"Passage: #{p}", "green"), pack.text, "\n")
+            for s, sentence in enumerate(pack.get(Sentence)):
                 sent_text = sentence.text
-                print(colored("Sentence:", 'green'), sent_text, "\n")
-                # first method to get entry in a sentence
-                tokens = [(token.text, token.pos) for token in
-                          pack.get(Token, sentence)]
-                entities = [(entity.text, entity.ner_type) for entity in
-                            pack.get(EntityMention, sentence)]
-                print(colored("Tokens:", 'red'), tokens, "\n")
-                print(colored("EntityMentions:", 'red'), entities, "\n")
-                input(colored("Press ENTER to continue...\n", 'green'))
+                print(colored(f"Sentence #{s}:", 'green'), sent_text, "\n")
+            if p < num_passages:
+                input(colored("Press ENTER to get next result...\n", 'green'))
+
+    print(colored('#'*20, 'blue'))

@@ -27,7 +27,7 @@ from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
 
 from examples.passage_reranker.bert import (
-    FineTunedBERTClassifier, FineTunedBERTEncoder)
+    BERTClassifier, BERTEncoder)
 
 __all__ = [
     "BertRerankingProcessor"
@@ -44,7 +44,7 @@ class BertRerankingProcessor(MultiPackProcessor):
         # `texar.torch.modules.classifiers.BertClassifier`. Should not ideally
         # be changing a private variable.
         # pylint: disable=protected-access
-        FineTunedBERTClassifier._ENCODER_CLASS = FineTunedBERTEncoder
+        BERTClassifier._ENCODER_CLASS = BERTEncoder
         # pylint: enable=protected-access
 
         cache_dir = os.path.join(os.path.dirname(__file__),
@@ -53,7 +53,7 @@ class BertRerankingProcessor(MultiPackProcessor):
         self.device = torch.device('cuda:0') \
             if torch.cuda.is_available() else torch.device('cpu')
 
-        self.model = FineTunedBERTClassifier(
+        self.model = BERTClassifier(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=cache_dir,
             hparams=self.config).to(self.device)
