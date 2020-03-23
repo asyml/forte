@@ -17,6 +17,7 @@ from termcolor import colored
 import torch
 from texar.torch import HParams
 
+from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
@@ -36,7 +37,7 @@ def main():
     config = HParams(config, default_hparams=None)
 
     resource = Resources()
-    query_pipeline = Pipeline(resource=resource)
+    query_pipeline = Pipeline[MultiPack](resource=resource)
     query_pipeline.set_reader(
         reader=MultiPackTerminalReader(), config=config.reader)
 

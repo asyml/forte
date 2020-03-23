@@ -2,6 +2,7 @@
 import unittest
 from ddt import ddt, data, unpack
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.allennlp_processors import AllenNLPProcessor
@@ -180,7 +181,7 @@ class TestAllenNLPProcessor(unittest.TestCase):
 
     @staticmethod
     def _create_pipeline(config):
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         nlp.set_reader(StringReader())
 
         # Using SpacyProcessor to segment the sentences

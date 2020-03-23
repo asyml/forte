@@ -15,12 +15,12 @@
 Unit tests for spaCy processors.
 """
 import unittest
+
 from ddt import ddt, data
 
-from texar.torch import HParams
-
-from forte.pipeline import Pipeline
+from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
+from forte.pipeline import Pipeline
 from forte.processors.spacy_processors import SpacyProcessor
 from ft.onto.base_ontology import Token, EntityMention
 
@@ -28,7 +28,7 @@ from ft.onto.base_ontology import Token, EntityMention
 @ddt
 class TestSpacyProcessor(unittest.TestCase):
     def setUp(self):
-        self.spacy = Pipeline()
+        self.spacy = Pipeline[DataPack]()
         self.spacy.set_reader(StringReader())
 
         config = {
@@ -67,7 +67,7 @@ class TestSpacyProcessor(unittest.TestCase):
 
     )
     def test_spacy_variation_pipeline(self, value):
-        spacy = Pipeline()
+        spacy = Pipeline[DataPack]()
         spacy.set_reader(StringReader())
 
         config = {
@@ -133,7 +133,7 @@ class TestSpacyProcessor(unittest.TestCase):
             self.assertEqual(entities_type, ['GPE', 'ORG', 'ORG'])
 
     def test_neg_spacy_processor(self):
-        spacy = Pipeline()
+        spacy = Pipeline[DataPack]()
         spacy.set_reader(StringReader())
 
         config = {

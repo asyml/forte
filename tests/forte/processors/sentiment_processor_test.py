@@ -17,6 +17,7 @@ Unit tests for NLTK processors.
 
 import unittest
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
@@ -27,7 +28,7 @@ from ft.onto.base_ontology import Sentence
 class TestVaderSentiment(unittest.TestCase):
 
     def setUp(self):
-        self.pipeline = Pipeline()
+        self.pipeline = Pipeline[DataPack]()
         self.pipeline.set_reader(StringReader())
         self.pipeline.add_processor(NLTKSentenceSegmenter())
         self.pipeline.add_processor(VaderSentimentProcessor())

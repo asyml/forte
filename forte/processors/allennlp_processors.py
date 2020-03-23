@@ -75,8 +75,8 @@ class AllenNLPProcessor(PackProcessor):
                                'are False, processor will only run if there '
                                'are no existing conflicting entries.')
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure for AllenNLP.
         :return: A dictionary with the default config for this processor.
@@ -92,12 +92,14 @@ class AllenNLPProcessor(PackProcessor):
                 they already exist, e.g. allowing new tokens with same spans,
                 used only when `overwrite_entries` is False
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'processors': "tokenize,pos,depparse",
             'output_format': "universal_dependencies",
             'overwrite_entries': False,
             'allow_parallel_entries': True
-        }
+        })
+        return config
 
     def _process(self, input_pack: DataPack):
         # handle existing entries

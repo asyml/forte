@@ -21,6 +21,7 @@ import shutil
 
 from ddt import ddt, data, unpack
 
+from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.data.readers import MultiPackSentenceReader
 from forte.processors import MicrosoftBingTranslator
@@ -45,7 +46,7 @@ class TestMachineTranslationProcessor(unittest.TestCase):
             with open(file_path, 'w') as f:
                 f.write(text)
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader_config = {
             "input_pack_name": "input",
             "output_pack_name": "output"

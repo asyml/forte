@@ -92,9 +92,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
     def pack_type(self):
         raise NotImplementedError
 
-    def __reader_name(self):
-        return self.__class__.__name__
-
     @abstractmethod
     def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
         r"""Returns an iterator of data objects, and each individual object

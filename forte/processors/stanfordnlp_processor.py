@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Any, Dict
 
 import stanfordnlp
 from texar.torch import HParams
@@ -46,18 +46,21 @@ class StandfordNLPProcessor(PackProcessor):
         self.nlp = stanfordnlp.Pipeline(**configs.todict(),
                                         models_dir=self.MODELS_DIR)
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
         """
         This defines a basic config structure for StanfordNLP.
         :return:
         """
-        return {
-            'processors': 'tokenize,pos,lemma,depparse',
-            'lang': 'en',
-            # Language code for the language to build the Pipeline
-            'use_gpu': False,
-        }
+        config = cls.default_configs()
+        config.update(
+            {
+                'processors': 'tokenize,pos,lemma,depparse',
+                'lang': 'en',
+                # Language code for the language to build the Pipeline
+                'use_gpu': False,
+            })
+        return config
 
     def _process(self, input_pack: DataPack):
         doc = input_pack.text

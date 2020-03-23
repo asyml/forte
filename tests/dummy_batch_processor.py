@@ -44,13 +44,16 @@ class DummyRelationExtractor(BatchProcessor):
         super().__init__()
         self.batcher = self.define_batcher()
 
-    def define_batcher(self) -> ProcessingBatcher:
+    @staticmethod
+    def define_batcher() -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
 
-    def _define_context(self) -> Type[Sentence]:
+    @staticmethod
+    def _define_context() -> Type[Sentence]:
         return Sentence
 
-    def _define_input_info(self) -> DataRequest:
+    @staticmethod
+    def _define_input_info() -> DataRequest:
         input_info: DataRequest = {
             Token: [],
             EntityMention: {"fields": ["ner_type", "tid"]}
@@ -106,11 +109,11 @@ class DummyRelationExtractor(BatchProcessor):
                 link.set_child(child)
                 data_pack.add_or_get_entry(link)
 
-    @staticmethod
-    def default_configs():
-        return {
-            "batcher": {"batch_size": 10}
-        }
+    @classmethod
+    def default_configs(cls):
+        configs = super().default_configs()
+        configs["batcher"] = {"batch_size": 10}
+        return configs
 
 
 class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
@@ -119,10 +122,12 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         self.counter = 0
         self.batcher = self.define_batcher()
 
-    def _define_context(self) -> Type[Sentence]:
+    @staticmethod
+    def _define_context() -> Type[Sentence]:
         return Sentence
 
-    def _define_input_info(self) -> DataRequest:
+    @staticmethod
+    def _define_input_info() -> DataRequest:
         return {}
 
     def predict(self, data_batch: Dict):
@@ -134,8 +139,8 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         r"""Add corresponding fields to data_pack"""
         pass
 
-    @staticmethod
-    def default_configs():
-        return {
-            "batcher": {"batch_size": 10}
-        }
+    @classmethod
+    def default_configs(cls):
+        configs = super().default_configs()
+        configs["batcher"] = {"batch_size": 10}
+        return configs

@@ -31,7 +31,7 @@ from ft.onto.base_ontology import Token
 
 class TestLowerCaserProcessor(unittest.TestCase):
     def test_lowercaser_processor(self):
-        pipe_serialize = Pipeline()
+        pipe_serialize = Pipeline[DataPack]()
         pipe_serialize.set_reader(OntonotesReader())
         pipe_serialize.add_processor(NLTKSentenceSegmenter())
         pipe_serialize.add_processor(NLTKWordTokenizer())
@@ -51,7 +51,7 @@ class TestLowerCaserProcessor(unittest.TestCase):
         dataset_path = "data_samples/ontonotes/00"
         pipe_serialize.run(dataset_path)
 
-        pipe_deserialize = Pipeline()
+        pipe_deserialize = Pipeline[DataPack]()
         pipe_deserialize.set_reader(RecursiveDirectoryDeserializeReader())
         pipe_deserialize.initialize()
 

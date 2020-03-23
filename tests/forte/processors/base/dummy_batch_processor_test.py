@@ -17,6 +17,7 @@ Unit tests for dummy processor.
 import unittest
 from ddt import ddt, data
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import OntonotesReader, StringReader, PlainTextReader
 from forte.pipeline import Pipeline
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
@@ -28,7 +29,7 @@ from ft.onto.base_ontology import RelationLink, Sentence
 class DummyProcessorTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.nlp = Pipeline()
+        self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
         config = {"batcher": {"batch_size": 5}}
@@ -50,7 +51,7 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
 
     @data(1, 2, 3)
     def test_one_batch_processor(self, batch_size):
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         nlp.set_reader(StringReader())
         batcher = DummmyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
@@ -68,7 +69,7 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
 
     @data(1, 2, 3)
     def test_two_batch_processors(self, batch_size):
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         nlp.set_reader(PlainTextReader())
         dummy1 = DummmyFixedSizeBatchProcessor()
         dummy2 = DummmyFixedSizeBatchProcessor()

@@ -17,6 +17,7 @@ import yaml
 from termcolor import colored
 from texar.torch import HParams
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors import CoNLLNERPredictor, SRLPredictor
@@ -32,7 +33,7 @@ config = HParams(config, default_hparams=None)
 
 
 def main():
-    pl = Pipeline()
+    pl = Pipeline[DataPack]()
     pl.set_reader(StringReader())
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())

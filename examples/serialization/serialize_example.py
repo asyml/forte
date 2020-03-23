@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import OntonotesReader
 from forte.processors.nltk_processors import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
 from forte.processors.writers import DocIdJsonPackWriter
 
-nlp = Pipeline()
+nlp = Pipeline[DataPack]()
 reader = OntonotesReader()
 
 data_path = "../../data_samples/ontonotes/00/"

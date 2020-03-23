@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=logging-fstring-interpolation
 import logging
 from typing import Optional, List
 
 from texar.torch import HParams
 
-from forte.pipeline import Pipeline
-from forte.evaluation.base.base_evaluator import Evaluator
 from forte.common.resources import Resources
 from forte.data.readers.base_reader import BaseReader
+from forte.evaluation.base.base_evaluator import Evaluator
+from forte.pipeline import Pipeline
 from forte.processors.base import BaseProcessor
 from forte.trainer.base import BaseTrainer
 
@@ -73,7 +72,7 @@ class TrainPipeline:
         self.train()
         self.finish()
 
-    def prepare(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def prepare(self):
         prepare_pl = Pipeline()
         prepare_pl.set_reader(self.train_reader)
         for p in self.preprocessors:
@@ -102,7 +101,7 @@ class TrainPipeline:
             if self.trainer.stop_train():
                 return
 
-            logging.info(f"End of epoch {epoch}")
+            logging.info("End of epoch %d", epoch)
 
     def _validate(self, epoch: int):
         validation_result = {"epoch": epoch}

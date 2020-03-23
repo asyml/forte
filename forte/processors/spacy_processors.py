@@ -52,19 +52,21 @@ class SpacyProcessor(PackProcessor):
         self.lang_model = configs.lang
         self.set_up()
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure for spaCy.
         Returns:
 
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'processors': 'tokenize, pos, lemma',
             'lang': 'en_core_web_sm',
             # Language code for the language to build the Pipeline
             'use_gpu': False,
-        }
+        })
+        return config
 
     def _process_parser(self, sentences, input_pack):
         """Parse the sentence. Default behaviour is to segment sentence, POSTag

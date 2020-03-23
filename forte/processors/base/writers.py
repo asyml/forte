@@ -64,15 +64,17 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
         """
         raise NotImplementedError
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""This defines a basic ``Hparams`` structure.
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'output_dir': None,
             'zip_pack': False,
             'indent': None,
-        }
+        })
+        return config
 
     def _process(self, input_pack: PackType):
         sub_path = self.sub_output_path(input_pack)

@@ -17,16 +17,15 @@ import yaml
 from termcolor import colored
 from texar.torch import HParams
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import PlainTextReader
-from forte.processors import (
-    CoNLLNERPredictor, SRLPredictor)
+from forte.processors import (CoNLLNERPredictor, SRLPredictor)
 from forte.processors.nltk_processors import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
 
 from ft.onto.base_ontology import Token, Sentence, EntityMention, \
     PredicateLink, PredicateArgument, PredicateMention
-
 
 parser = argparse.ArgumentParser()
 
@@ -38,7 +37,7 @@ def main(dataset_dir: str):
     config = yaml.safe_load(open("config.yml", "r"))
     config = HParams(config, default_hparams=None)
 
-    pl = Pipeline()
+    pl = Pipeline[DataPack]()
     pl.set_reader(PlainTextReader())
     pl.add_processor(NLTKSentenceSegmenter())
     pl.add_processor(NLTKWordTokenizer())

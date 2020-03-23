@@ -14,12 +14,13 @@
 
 import texar.torch as tx
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import CorpusReader
 from forte.processors.ir import ElasticSearchIndexProcessor
 from forte.pipeline import Pipeline
 
 if __name__ == "__main__":
-    nlp = Pipeline()
+    nlp = Pipeline[DataPack]()
     nlp.set_reader(CorpusReader())
     config = tx.HParams({
         "batch_size": 100000,

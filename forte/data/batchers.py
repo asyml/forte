@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 from typing import (
-    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator)
+    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator, Any)
 
 from texar.torch import HParams
 
@@ -128,6 +128,11 @@ class ProcessingBatcher(Generic[PackType]):
         """
         raise NotImplementedError
 
+    @classmethod
+    @abstractmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        raise NotImplementedError
+
 
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def __init__(self, cross_pack=True):
@@ -173,8 +178,8 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
-    @staticmethod
-    def default_configs() -> Dict:
+    @classmethod
+    def default_configs(cls) -> Dict:
         return {
             'batch_size': 10
         }
@@ -247,8 +252,8 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
-    @staticmethod
-    def default_configs() -> Dict:
+    @classmethod
+    def default_configs(cls) -> Dict:
         return {
             'batch_size': 10,
             'input_pack_name': 'source'

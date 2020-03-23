@@ -118,7 +118,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     raw_pack_dir = os.path.join(output_path, 'nif_raw')
 
     # First, we create the NIF reader that read the NIF in order.
-    nif_pl = Pipeline()
+    nif_pl = Pipeline[DataPack]()
     nif_pl.resource.update(redirects=redirect_map)
 
     nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
@@ -143,7 +143,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     nif_pl.run(nif_context)
 
     # Second, we add info boxes to the packs with NIF.
-    ib_pl = Pipeline()
+    ib_pl = Pipeline[DataPack]()
     ib_pl.resource.update(redirects=redirect_map)
     ib_pl.set_reader(DBpediaInfoBoxReader(), config=HParams(
         {

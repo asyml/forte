@@ -62,9 +62,10 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
 
         self.encoder.to(self.device)
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
-        return {
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config.update({
             "model": {
                 "name": "bert-base-uncased"
             },
@@ -73,7 +74,8 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
             },
             "max_seq_length": 128,
             "query_pack_name": "query"
-        }
+        })
+        return config
 
     @torch.no_grad()
     def get_embeddings(self, inputs, sequence_length, segment_ids):

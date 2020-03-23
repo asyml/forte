@@ -17,6 +17,7 @@ Unit tests for NLTK processors.
 
 import unittest
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
@@ -27,7 +28,7 @@ from ft.onto.base_ontology import Token, Sentence, Phrase, EntityMention
 class TestNLTKSentenceSegmenter(unittest.TestCase):
 
     def setUp(self):
-        self.nltk = Pipeline()
+        self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.initialize()
@@ -46,7 +47,7 @@ class TestNLTKSentenceSegmenter(unittest.TestCase):
 class TestNLTKWordTokenizer(unittest.TestCase):
 
     def setUp(self):
-        self.nltk = Pipeline()
+        self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
@@ -73,7 +74,7 @@ class TestNLTKWordTokenizer(unittest.TestCase):
 class TestNLTKPOSTagger(unittest.TestCase):
 
     def setUp(self):
-        self.nltk = Pipeline()
+        self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
@@ -100,7 +101,7 @@ class TestNLTKPOSTagger(unittest.TestCase):
 class TestNLTKLemmatizer(unittest.TestCase):
 
     def setUp(self):
-        self.nltk = Pipeline()
+        self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
@@ -129,7 +130,7 @@ class TestNLTKLemmatizer(unittest.TestCase):
 class TestNLTKChunker(unittest.TestCase):
 
     def setUp(self):
-        self.nltk = Pipeline()
+        self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())
@@ -159,7 +160,7 @@ class TestNLTKChunker(unittest.TestCase):
 class TestNLTKNER(unittest.TestCase):
 
     def setUp(self):
-        self.nltk = Pipeline()
+        self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
         self.nltk.add_processor(NLTKSentenceSegmenter())
         self.nltk.add_processor(NLTKWordTokenizer())

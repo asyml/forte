@@ -15,6 +15,8 @@
 import yaml
 
 import texar.torch as tx
+
+from forte.data.data_pack import DataPack
 from forte.processors.ir import ElasticSearchQueryCreator
 from forte.processors.ir import ElasticSearchProcessor
 from forte.pipeline import Pipeline
@@ -27,7 +29,7 @@ if __name__ == "__main__":
     config = tx.HParams(config, default_hparams=None)
     ms_marco_evaluator = MSMarcoEvaluator()
 
-    nlp = Pipeline()
+    nlp = Pipeline[DataPack]()
     nlp.set_reader(reader=EvalReader(), config=config.reader)
     nlp.add_processor(processor=ElasticSearchQueryCreator(),
                       config=config.query_creator)

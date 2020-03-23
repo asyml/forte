@@ -73,16 +73,18 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         """
         pass
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
         r"""Returns a `dict` of configurations of the processor with default
         values. Used to replace the missing values of input ``configs`` during
         pipeline construction.
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'selector': {
                 'type': 'forte.data.selector.DummySelector',
                 'args': None,
                 'kwargs': {}
             }
-        }
+        })
+        return config

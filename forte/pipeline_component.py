@@ -20,6 +20,7 @@ from texar.torch import HParams
 
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
+from forte.utils import get_full_module_name
 
 
 class PipelineComponent(Generic[PackType]):
@@ -40,6 +41,10 @@ class PipelineComponent(Generic[PackType]):
         self.resources: Optional[Resources] = resources
         self.configs: HParams = configs
 
+    @property
+    def name(self):
+        return get_full_module_name(self)
+
     def finish(self, resource: Resources):
         r"""The pipeline will call this function at the end of the pipeline to
         notify all the components. The user can implement this function to
@@ -59,5 +64,4 @@ class PipelineComponent(Generic[PackType]):
 
 
         """
-        return {
-        }
+        return {}

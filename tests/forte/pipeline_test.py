@@ -129,10 +129,12 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         super().__init__()
         self.counter = 0
 
-    def _define_context(self) -> Type[Sentence]:
+    @staticmethod
+    def _define_context() -> Type[Sentence]:
         return Sentence
 
-    def _define_input_info(self) -> Dict:
+    @staticmethod
+    def _define_input_info() -> Dict:
         return {}
 
     def predict(self, data_batch: Dict):
@@ -147,11 +149,15 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
             entry = entries[0]  # type: ignore
             entry.value += "[BATCH]"
 
-    @staticmethod
-    def default_configs():
-        return {
-            "batcher": {"batch_size": 4}
-        }
+    @classmethod
+    def default_configs(cls):
+        config = super().default_configs()
+        config.update(
+            {
+                "batcher": {"batch_size": 4}
+            }
+        )
+        return config
 
 
 @ddt
@@ -161,7 +167,7 @@ class PipelineTest(unittest.TestCase):
         from forte.data.readers import OntonotesReader
 
         # Define and config the Pipeline
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
         config = {"batcher": {"batch_size": 5}}
@@ -184,7 +190,7 @@ class PipelineTest(unittest.TestCase):
     def test_pipeline1(self):
         """Tests a pack processor only."""
 
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy = DummyPackProcessor()
@@ -204,7 +210,7 @@ class PipelineTest(unittest.TestCase):
     def test_pipeline2(self):
         """Tests a batch processor only."""
 
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy = DummmyFixedSizeBatchProcessor()
@@ -226,7 +232,7 @@ class PipelineTest(unittest.TestCase):
     def test_pipeline3(self, batch_size):
         """Tests a chain of Batch->Pack->Batch with different batch sizes."""
 
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
@@ -254,7 +260,7 @@ class PipelineTest(unittest.TestCase):
     def test_pipeline4(self, batch_size):
         """Tests a chain of Pack->Batch->Pack."""
 
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyPackProcessor()
@@ -284,7 +290,7 @@ class PipelineTest(unittest.TestCase):
     def test_pipeline5(self, batch_size1, batch_size2):
         # Tests a chain of Batch->Pack->Batch with different batch sizes.
 
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
@@ -313,7 +319,7 @@ class PipelineTest(unittest.TestCase):
     def test_pipeline6(self, batch_size1, batch_size2, batch_size3):
         # Tests a chain of Batch->Batch->Batch with different batch sizes.
 
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
@@ -343,7 +349,7 @@ class PipelineTest(unittest.TestCase):
     def test_pipeline7(self, batch_size1, batch_size2, batch_size3):
         # Tests a chain of Batch->Batch->Batch->Pack with different batch sizes.
 
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         reader = SentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
@@ -378,7 +384,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         from forte.data.readers import OntonotesReader
 
         # Define and config the Pipeline
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
         config = {"batcher": {"batch_size": 5}}
@@ -401,7 +407,7 @@ class MultiPackPipelineTest(unittest.TestCase):
     def test_pipeline1(self):
         """Tests a pack processor only."""
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy = DummyPackProcessor()
@@ -421,7 +427,7 @@ class MultiPackPipelineTest(unittest.TestCase):
     def test_pipeline2(self):
         """Tests a batch processor only."""
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy = DummmyFixedSizeBatchProcessor()
@@ -444,7 +450,7 @@ class MultiPackPipelineTest(unittest.TestCase):
     def test_pipeline3(self, batch_size):
         """Tests a chain of Batch->Pack->Batch with different batch sizes."""
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
@@ -474,7 +480,7 @@ class MultiPackPipelineTest(unittest.TestCase):
     def test_pipeline4(self, batch_size):
         """Tests a chain of Pack->Batch->Pack."""
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummyPackProcessor()
@@ -506,7 +512,7 @@ class MultiPackPipelineTest(unittest.TestCase):
     def test_pipeline5(self, batch_size1, batch_size2):
         # Tests a chain of Batch->Pack->Batch with different batch sizes.
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
@@ -538,7 +544,7 @@ class MultiPackPipelineTest(unittest.TestCase):
     def test_pipeline6(self, batch_size1, batch_size2, batch_size3):
         # Tests a chain of Batch->Batch->Batch with different batch sizes.
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()
@@ -571,7 +577,7 @@ class MultiPackPipelineTest(unittest.TestCase):
     def test_pipeline7(self, batch_size1, batch_size2, batch_size3):
         # Tests a chain of Batch->Batch->Batch->Pack with different batch sizes.
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
         dummy1 = DummmyFixedSizeBatchProcessor()

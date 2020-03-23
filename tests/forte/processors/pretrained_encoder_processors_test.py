@@ -17,6 +17,7 @@ Unit tests for pretrained encoders.
 
 import unittest
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
@@ -30,7 +31,7 @@ class TestPretrainedEncoder(unittest.TestCase):
 
     @pretrained_test
     def test_encoder_sentence(self):
-        pipeline = Pipeline()
+        pipeline = Pipeline[DataPack]()
         pipeline.set_reader(StringReader())
         pipeline.add_processor(NLTKSentenceSegmenter())
         pipeline.add_processor(PretrainedEncoder())
@@ -47,7 +48,7 @@ class TestPretrainedEncoder(unittest.TestCase):
 
     @pretrained_test
     def test_encoder_document(self):
-        pipeline = Pipeline()
+        pipeline = Pipeline[DataPack]()
         pipeline.set_reader(StringReader())
         pipeline.add_processor(
             PretrainedEncoder(),
@@ -65,7 +66,7 @@ class TestPretrainedEncoder(unittest.TestCase):
 
     @pretrained_test
     def test_encoder_phrase(self):
-        pipeline = Pipeline()
+        pipeline = Pipeline[DataPack]()
         pipeline.set_reader(StringReader())
         pipeline.add_processor(NLTKSentenceSegmenter())
         pipeline.add_processor(NLTKWordTokenizer())

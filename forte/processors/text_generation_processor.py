@@ -45,7 +45,6 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         self.word_processor = None
         self.model = None
 
-        self.batch_size = 6
         self._get_helper = None
 
         self.max_decoding_length = None
@@ -54,13 +53,16 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         self.top_p = None
         self.device = None
 
-    def _define_input_info(self) -> DataRequest:
+    @staticmethod
+    def _define_input_info() -> DataRequest:
         return {}
 
-    def _define_context(self):
+    @staticmethod
+    def _define_context():
         return Sentence
 
-    def define_batcher(self) -> ProcessingBatcher:
+    @staticmethod
+    def define_batcher() -> ProcessingBatcher:
         return FixedSizeMultiPackProcessingBatcher()
 
     def initialize(self, resources: Resources, configs: Optional[HParams]):
@@ -222,21 +224,24 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
 
         return words, lengths
 
-    @staticmethod
-    def default_configs():
-        return {
-            'max_decoding_length': 128,
-            'temperature': 0.7,
-            'top_p': None,
-            'top_k': 40,
-            'pretrained_model_name': "117M",
-            'checkpoint': None,
-            'input_pack_name': None,
-            'output_pack_name': None,
-            'selector': {
-                'type': 'forte.data.selector.DummySelector',
-                'args': None,
-                'kwargs': {}
-            },
-            'batch_size': 10,
-        }
+    @classmethod
+    def default_configs(cls):
+        config = super().default_configs()
+        config.update(
+            {
+                'max_decoding_length': 128,
+                'temperature': 0.7,
+                'top_p': None,
+                'top_k': 40,
+                'pretrained_model_name': "117M",
+                'checkpoint': None,
+                'input_pack_name': None,
+                'output_pack_name': None,
+                'selector': {
+                    'type': 'forte.data.selector.DummySelector',
+                    'args': None,
+                    'kwargs': {}
+                },
+            }
+        )
+        return config
