@@ -48,7 +48,8 @@ class ElasticSearchProcessor(MultiPackProcessor):
         return {
             "query_pack_name": "query",
             "index_config": ElasticSearchIndexer.default_configs(),
-            "field": "content"
+            "field": "content",
+            "response_pack_name_prefix": "passage"
         }
 
     def _process(self, input_pack: MultiPack):

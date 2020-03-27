@@ -336,5 +336,8 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 },
                 "model_path": "",
                 "resource_dir": ""
+            },
+            "batcher": {
+                "batch_size": 16
             }
         }

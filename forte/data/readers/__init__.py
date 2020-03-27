@@ -14,10 +14,9 @@
 
 from forte.data.readers.conll03_reader import *
 from forte.data.readers.conllu_ud_reader import *
-from forte.data.readers.corpus_reader import *
+from forte.data.readers.ms_marco_passage_reader import *
 from forte.data.readers.deserialize_reader import *
 from forte.data.readers.html_reader import *
-from forte.data.readers.ms_marco_passage_reader import *
 from forte.data.readers.multipack_sentence_reader import *
 from forte.data.readers.multipack_terminal_reader import *
 from forte.data.readers.ontonotes_reader import *
