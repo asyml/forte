@@ -14,6 +14,7 @@
 
 import os
 import yaml
+import argparse
 
 import texar.torch as tx
 
@@ -21,16 +22,29 @@ from forte.pipeline import Pipeline
 from forte.processors.ir import (
     ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
 
-from examples.passage_reranker.reader import EvalReader
-from examples.passage_reranker.ms_marco_evaluator import MSMarcoEvaluator
+from examples.passage_ranker.reader import EvalReader
+from examples.passage_ranker.ms_marco_evaluator import MSMarcoEvaluator
 
 
 if __name__ == "__main__":
-    config_file = os.path.join(os.path.dirname(__file__), 'config.yml')
-    config = yaml.safe_load(open(config_file, "r"))
-    config = tx.HParams(config, default_hparams=None)
-    ms_marco_evaluator = MSMarcoEvaluator()
+    parser = argparse.ArgumentParser()
 
+    parser.add_argument("--config_file", default="./config.yml",
+                        help="Config YAML filepath")
+    args = parser.parse_args()
+
+    # loading config
+    config = yaml.safe_load(open(args.config_file, "r"))
+    config = tx.HParams(config, default_hparams=None)
+
+    # reading query input file
+    parser.add_argument("--input_file",
+                        default="./data/collectionandqueries/query_doc_id.tsv",
+                        help="Input query filepath")
+
+    input_file = config.evaluator.input_file
+
+    # initializing pipeline with processors
     nlp = Pipeline()
     eval_reader = EvalReader()
     nlp.set_reader(reader=eval_reader, config=config.reader)
@@ -41,13 +55,11 @@ if __name__ == "__main__":
     nlp.add_processor(processor=BertRerankingProcessor(),
                       config=config.reranker)
 
-    nlp.set_evaluator(evaluator=ms_marco_evaluator,
+    nlp.set_evaluator(evaluator=MSMarcoEvaluator(),
                       config=config.evaluator)
     nlp.initialize()
 
-    file_path = os.path.join(os.path.dirname(__file__),
-                             "data/collectionandqueries/queries.dev.small.tsv")
-    for idx, m_pack in enumerate(nlp.process_dataset(file_path)):
+    for idx, m_pack in enumerate(nlp.process_dataset(input_file)):
         if (idx + 1) % 1000 == 0:
             print(f"Processed {idx + 1} examples")
 

@@ -13,6 +13,10 @@
 # limitations under the License.
 
 import os
+import logging
+import argparse
+
+import yaml
 
 import texar.torch as tx
 
@@ -20,31 +24,28 @@ from forte.data.readers import MSMarcoPassageReader
 from forte.processors.ir import ElasticSearchIndexProcessor
 from forte.pipeline import Pipeline
 
+
+logging.basicConfig(level=logging.INFO)
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config_file", default="./config.yml",
+                        help="Config YAML filepath")
+    args = parser.parse_args()
+
+    config = yaml.safe_load(open(args.config_file, "r"))
+    config = tx.HParams(config, default_hparams=None)
+
     nlp = Pipeline()
     nlp.set_reader(MSMarcoPassageReader())
-    config = tx.HParams({
-        "batch_size": 100000,
-        "fields": ["doc_id", "content"],
-        "indexer": {
-            "name": "ElasticSearchIndexer",
-            "hparams": {
-                "index_name": "elastic_indexer2",
-                "hosts": "localhost:9200",
-                "algorithm": "bm25"
-            },
-            "other_kwargs": {
-                "request_timeout": 60,
-                "refresh": False
-            }
-        }
-    }, default_hparams=None)
-    nlp.add_processor(ElasticSearchIndexProcessor(), config=config)
+    nlp.add_processor(ElasticSearchIndexProcessor(),
+                      config=config.create_index)
     nlp.initialize()
 
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "data", "collectionandqueries")
+                             config.data.relative_path)
 
     for idx, pack in enumerate(nlp.process_dataset(data_path)):
-        if idx + 1 > 0 and (idx + 1) % 100000 == 0:
-            print(f"Completed {idx+1} packs")
+        if idx + 1 > 0 and (idx + 1) % 10000 == 0:
+            print(f"Indexed {idx+1} packs")

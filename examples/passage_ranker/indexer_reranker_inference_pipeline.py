@@ -36,8 +36,8 @@ if __name__ == "__main__":
     config = tx.HParams(config, default_hparams=None)
 
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "data", "collectionandqueries")
-    query_path = os.path.join(data_path, "queries.dev.small.tsv")
+                             config.data.relative_path)
+
     doc_pack_name = config.indexer.response_pack_name_prefix
 
     nlp = Pipeline()

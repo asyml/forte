@@ -9,14 +9,29 @@ query_creator:
   field: "content"
   query_pack_name: "query"
 
+create_index:
+  batch_size: 10000
+  fields:
+    - doc_id
+    - content
+  indexer:
+    name: "ElasticSearchIndexer"
+    hparams:
+      index_name: "elastic_indexer"
+      hosts: "localhost:9200"
+      algorithm: "bm25"
+    other_kwargs:
+      request_timeout: 60
+      refresh: true
+
 indexer:
   query_pack_name: "query"
-  field: "content"
-  response_pack_name_prefix: "passage"
   index_config:
-    index_name: "elastic_indexer2"
+    index_name: "elastic_indexer"
     hosts: "localhost:9200"
     algorithm: "bm25"
+  field: "content"
+  response_pack_name_prefix: "passage"
 
 writer:
   output_file: "output/results_eval.tsv"
@@ -24,12 +39,13 @@ writer:
 evaluator:
   pack_name: "query"
   ground_truth_file: "data/collectionandqueries/query_doc_id.tsv"
+  input_file: "data/collectionandqueries/qrels.dev.small.tsv"
   output_file: "output/results_dev.tsv"
 
 reranker:
   size: 5
   pretrained_model_name: "bert-base-uncased"
-  cache_dir: "models"
+  model_dir: "models"
   query_pack_name: "query"
   field: "content"
   max_seq_length: 512

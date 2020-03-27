@@ -26,7 +26,7 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
 
-from examples.passage_reranker.bert import (
+from examples.passage_ranker.bert import (
     BERTClassifier, BERTEncoder)
 
 __all__ = [
@@ -48,7 +48,7 @@ class BertRerankingProcessor(MultiPackProcessor):
         # pylint: enable=protected-access
 
         cache_dir = os.path.join(os.path.dirname(__file__),
-                                 self.config.cache_dir)
+                                 self.config.model_dir)
 
         self.device = torch.device('cuda:0') \
             if torch.cuda.is_available() else torch.device('cpu')
@@ -71,7 +71,7 @@ class BertRerankingProcessor(MultiPackProcessor):
             "query_pack_name": "query",
             "field": "content",
             "pretrained_model_name": pretrained_model_name,
-            "cache_dir": os.path.join(os.path.dirname(__file__), "models"),
+            "model_dir": os.path.join(os.path.dirname(__file__), "models"),
             "max_seq_length": 512
         }
 
