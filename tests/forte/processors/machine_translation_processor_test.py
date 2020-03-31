@@ -59,8 +59,8 @@ class TestMachineTranslationProcessor(unittest.TestCase):
             "out_pack_name": "result"
         }
 
-        nlp.add_processor(MicrosoftBingTranslator(),
-                          config=translator_config)
+        nlp.add(MicrosoftBingTranslator(),
+                config=translator_config)
         nlp.initialize()
 
         english_results = ["Hey good morning", "This is Forte. A tool for NLP"]

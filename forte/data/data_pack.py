@@ -16,6 +16,7 @@ import logging
 from typing import (Dict, Iterable, Iterator, List, Optional, Type, Union, Any,
                     Set, Callable, Tuple)
 
+import jsonpickle
 import numpy as np
 from sortedcontainers import SortedList
 
@@ -29,6 +30,7 @@ from forte.data.ontology.core import Entry
 from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generics, Query)
 from forte.data import data_utils_io
+from forte.pack_manager import PackManager
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +83,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         self.index: DataIndex = DataIndex()
         self.meta: Meta = Meta(doc_id)
+        self._pack_manager.register_pack(self)
 
     def __getstate__(self):
         r"""
@@ -88,10 +91,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             1) will serialize the annotation sorted list as a normal list;
             2) will not serialize the indices
         """
-        state = super(DataPack, self).__getstate__()
+        state = super().__getstate__()
         state['annotations'] = list(state['annotations'])
-        state.pop('index')
-
         return state
 
     def __setstate__(self, state):
@@ -100,7 +101,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             1) transform the annotation list back to a sorted list;
             2) initialize the indexes.
         """
-        super(DataPack, self).__setstate__(state)
+        super().__setstate__(state)
+
         self.annotations = SortedList(self.annotations)
         self.index = DataIndex()
         self.index.update_basic_index(list(self.annotations))
@@ -347,8 +349,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         add_new = allow_duplicate or (entry not in target)
 
         if add_new:
-            self.record_entry(entry)
-
             if isinstance(target, list):
                 target.append(entry)
             else:

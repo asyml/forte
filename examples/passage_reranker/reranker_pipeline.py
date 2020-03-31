@@ -31,10 +31,10 @@ if __name__ == "__main__":
 
     nlp = Pipeline[DataPack]()
     nlp.set_reader(reader=EvalReader(), config=config.reader)
-    nlp.add_processor(processor=ElasticSearchQueryCreator(),
-                      config=config.query_creator)
-    nlp.add_processor(processor=ElasticSearchProcessor(), config=config.indexer)
-    nlp.set_evaluator(evaluator=ms_marco_evaluator, config=config.evaluator)
+    nlp.add(component=ElasticSearchQueryCreator(),
+            config=config.query_creator)
+    nlp.add(component=ElasticSearchProcessor(), config=config.indexer)
+    nlp.add(component=ms_marco_evaluator, config=config.evaluator)
     nlp.initialize()
 
     for idx, m_pack in enumerate(nlp.process_dataset(

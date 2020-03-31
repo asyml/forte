@@ -30,7 +30,7 @@ class TestNLTKSentenceSegmenter(unittest.TestCase):
     def setUp(self):
         self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
-        self.nltk.add_processor(NLTKSentenceSegmenter())
+        self.nltk.add(NLTKSentenceSegmenter())
         self.nltk.initialize()
 
     def test_segmenter(self):
@@ -49,8 +49,8 @@ class TestNLTKWordTokenizer(unittest.TestCase):
     def setUp(self):
         self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
-        self.nltk.add_processor(NLTKSentenceSegmenter())
-        self.nltk.add_processor(NLTKWordTokenizer())
+        self.nltk.add(NLTKSentenceSegmenter())
+        self.nltk.add(NLTKWordTokenizer())
         self.nltk.initialize()
 
     def test_tokenizer(self):
@@ -76,9 +76,9 @@ class TestNLTKPOSTagger(unittest.TestCase):
     def setUp(self):
         self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
-        self.nltk.add_processor(NLTKSentenceSegmenter())
-        self.nltk.add_processor(NLTKWordTokenizer())
-        self.nltk.add_processor(NLTKPOSTagger())
+        self.nltk.add(NLTKSentenceSegmenter())
+        self.nltk.add(NLTKWordTokenizer())
+        self.nltk.add(NLTKPOSTagger())
         self.nltk.initialize()
 
     def test_pos_tagger(self):
@@ -103,10 +103,10 @@ class TestNLTKLemmatizer(unittest.TestCase):
     def setUp(self):
         self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
-        self.nltk.add_processor(NLTKSentenceSegmenter())
-        self.nltk.add_processor(NLTKWordTokenizer())
-        self.nltk.add_processor(NLTKPOSTagger())
-        self.nltk.add_processor(NLTKLemmatizer())
+        self.nltk.add(NLTKSentenceSegmenter())
+        self.nltk.add(NLTKWordTokenizer())
+        self.nltk.add(NLTKPOSTagger())
+        self.nltk.add(NLTKLemmatizer())
         self.nltk.initialize()
 
     def test_lemmatizer(self):
@@ -132,11 +132,11 @@ class TestNLTKChunker(unittest.TestCase):
     def setUp(self):
         self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
-        self.nltk.add_processor(NLTKSentenceSegmenter())
-        self.nltk.add_processor(NLTKWordTokenizer())
-        self.nltk.add_processor(NLTKPOSTagger())
+        self.nltk.add(NLTKSentenceSegmenter())
+        self.nltk.add(NLTKWordTokenizer())
+        self.nltk.add(NLTKPOSTagger())
         config = {'pattern': 'NP: {<DT>?<JJ>*<NN>}'}
-        self.nltk.add_processor(NLTKChunker(), config=config)
+        self.nltk.add(NLTKChunker(), config=config)
         self.nltk.initialize()
 
     def test_chunker(self):
@@ -162,10 +162,10 @@ class TestNLTKNER(unittest.TestCase):
     def setUp(self):
         self.nltk = Pipeline[DataPack]()
         self.nltk.set_reader(StringReader())
-        self.nltk.add_processor(NLTKSentenceSegmenter())
-        self.nltk.add_processor(NLTKWordTokenizer())
-        self.nltk.add_processor(NLTKPOSTagger())
-        self.nltk.add_processor(NLTKNER())
+        self.nltk.add(NLTKSentenceSegmenter())
+        self.nltk.add(NLTKWordTokenizer())
+        self.nltk.add(NLTKPOSTagger())
+        self.nltk.add(NLTKNER())
         self.nltk.initialize()
 
     def test_ner(self):

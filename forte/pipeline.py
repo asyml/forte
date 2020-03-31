@@ -23,15 +23,19 @@ import yaml
 from texar.torch import HParams
 
 from forte.common import ProcessorConfigError
+from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
+from forte.data.caster import Caster
 from forte.data.readers.base_reader import BaseReader
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
-from forte.process_manager import ProcessManager, ProcessJobStatus
+from forte.pipeline_component import PipelineComponent
+from forte.process_job import ProcessJob
+from forte.process_manager import _ProcessManager, ProcessJobStatus
 from forte.processors.base.base_processor import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
-from forte.utils import get_class, create_class_with_kwargs
+from forte.utils import create_class_with_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -39,51 +43,23 @@ __all__ = [
     "Pipeline"
 ]
 
-process_manager = ProcessManager()
-
-
-class ProcessJob:
-    counter = itertools.count(0)
-
-    def __init__(self, pack: Optional[PackType], is_poison: bool):
-        self.__pack: Optional[PackType] = pack
-        self.__is_poison: bool = is_poison
-        self.__status = ProcessJobStatus.UNPROCESSED
-        self.__id = next(ProcessJob.counter)
-
-    def set_status(self, status):
-        self.__status = status
-
-    @property
-    def id(self):
-        return self.__id
-
-    @property
-    def pack(self) -> PackType:
-        if self.__pack is None:
-            raise ValueError("This job do not have a valid pack.")
-        return self.__pack
-
-    @property
-    def is_poison(self) -> bool:
-        return self.__is_poison
-
-    @property
-    def status(self):
-        return self.__status
-
 
 class ProcessBuffer:
 
-    def __init__(self, data_iter: Iterator[PackType]):
+    def __init__(self,
+                 pipeline: "Pipeline",
+                 data_iter: Iterator[PackType],
+                 ):
         self.__data_iter: Iterator[PackType] = data_iter
         self.__data_exhausted = False
+        self.__pipeline = pipeline
+        self.__process_manager: _ProcessManager = pipeline.proc_mgr
 
     def __iter__(self):
         return self
 
     def __next__(self) -> ProcessJob:
-        if process_manager.current_queue_index == -1:
+        if self.__process_manager.current_queue_index == -1:
             if self.__data_exhausted:
                 # Both the buffer is empty and the data input is exhausted.
                 raise StopIteration
@@ -91,26 +67,25 @@ class ProcessBuffer:
                 job_pack = next(self.__data_iter)
                 job = ProcessJob(job_pack, False)
 
-                pipeline = process_manager.current_pipeline
-                if pipeline.evaluator:
+                if len(self.__pipeline.evaluator_indices) > 0:
                     gold_copy = job_pack.view()
-                    pipeline.add_gold_packs({job.id: gold_copy})
+                    self.__pipeline.add_gold_packs({job.id: gold_copy})
 
-                process_manager.add_to_queue(queue_index=0, job=job)
-                process_manager.set_current_queue_index(queue_index=0)
-                process_manager.set_current_processor_index(processor_index=0)
+                self.__process_manager.add_to_queue(queue_index=0, job=job)
+                self.__process_manager.current_queue_index = 0
+                self.__process_manager.current_processor_index = 0
                 return job
             except StopIteration:
                 self.__data_exhausted = True
                 job = ProcessJob(None, True)
-                process_manager.add_to_queue(queue_index=0, job=job)
-                process_manager.set_current_queue_index(queue_index=0)
-                process_manager.set_current_processor_index(processor_index=0)
+                self.__process_manager.add_to_queue(queue_index=0, job=job)
+                self.__process_manager.current_queue_index = 0
+                self.__process_manager.current_processor_index = 0
                 return job
         else:
-            q_index = process_manager.current_queue_index
-            u_index = process_manager.unprocessed_queue_indices[q_index]
-            return process_manager.current_queue[u_index]
+            q_index = self.__process_manager.current_queue_index
+            u_index = self.__process_manager.unprocessed_queue_indices[q_index]
+            return self.__process_manager.current_queue[u_index]
 
 
 class Pipeline(Generic[PackType]):
@@ -124,14 +99,17 @@ class Pipeline(Generic[PackType]):
         self._reader: BaseReader
         self._reader_config: Optional[HParams]
 
-        self._processors: List[BaseProcessor] = []
+        self._components: List[PipelineComponent] = []
         self._selectors: List[Selector] = []
 
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[HParams]] = []
 
-        self._evaluator: Optional[Evaluator] = None
-        self._evaluator_config: Optional[HParams] = None
+        # Will intialize at `initialize` because the processors length is
+        # unknown.
+        self.proc_mgr: _ProcessManager
+
+        self.evaluator_indices: List[int] = []
 
         # needed for evaluator
         self._predict_to_gold: Dict[int, PackType] = {}
@@ -153,74 +131,46 @@ class Pipeline(Generic[PackType]):
         configs = yaml.safe_load(open(config_path))
         self.init_from_config(configs)
 
-    def init_from_config(self, configs: Dict):
+    def init_from_config(self, configs: List):
         r"""Initialized the pipeline (ontology and processors) from the
         given configurations.
 
         Args:
             configs: The configs used to initialize the pipeline.
         """
-        if "Reader" not in configs or configs["Reader"] is None:
-            raise KeyError('No reader in the configuration')
 
-        reader_config = configs["Reader"]
+        is_first: bool = True
+        for component_config in configs:
+            component = create_class_with_kwargs(
+                class_name=component_config['type'],
+                class_args=component_config.get('kwargs', {}),
+            )
 
-        reader, reader_hparams = create_class_with_kwargs(
-            class_name=reader_config["type"],
-            class_args=reader_config.get("kwargs", {}),
-            h_params=reader_config.get("hparams", {}))
-
-        self.set_reader(reader, reader_hparams)
-
-        if "Processors" in configs and configs["Processors"] is not None:
-            for processor_configs in configs["Processors"]:
-
-                p_class = get_class(processor_configs["type"])
-                if processor_configs.get("kwargs"):
-                    processor_kwargs = processor_configs["kwargs"]
-                else:
-                    processor_kwargs = {}
-                p = p_class(**processor_kwargs)
-
-                hparams: Dict = {}
-
-                if processor_configs.get("configs"):
-                    # Extract the hparams section and build hparams
-                    processor_hparams = processor_configs["configs"]
-
-                    if processor_hparams.get("config_path"):
-                        filebased_hparams = yaml.safe_load(
-                            open(processor_hparams["config_path"]))
-                    else:
-                        filebased_hparams = {}
-                    hparams.update(filebased_hparams)
-
-                    if processor_hparams.get("overwrite_configs"):
-                        overwrite_hparams = processor_hparams[
-                            "overwrite_configs"]
-                    else:
-                        overwrite_hparams = {}
-                    hparams.update(overwrite_hparams)
-                default_processor_hparams = p_class.default_configs()
-
-                processor_hparams = HParams(hparams,
-                                            default_processor_hparams)
-                self.add_processor(p, processor_hparams)
+            if is_first:
+                if not isinstance(component, BaseReader):
+                    raise ProcessorConfigError(
+                        "The first component of a pipeline must be a reader.")
+                self.set_reader(component, component_config.get('configs', {}))
+            else:
+                if isinstance(component, BaseProcessor):
+                    self.add(component, component_config.get('configs', {}))
+                elif isinstance(component, Caster):
+                    pass
 
     def initialize(self):
+        # The process manager need to be assigned first.
+        self.proc_mgr = _ProcessManager(len(self._components))
+
         self._reader.initialize(self.resource, self._reader_config)
+        self._reader._assign_manager(self.proc_mgr)
+
         self.initialize_processors()
-        process_manager.initialize_queues(pipeline_length=len(self._processors))
-
-        if self._evaluator:
-            self._evaluator.initialize(self.resource, self._evaluator_config)
-
-        process_manager.set_current_pipeline(self)
 
     def initialize_processors(self):
-        for processor, config in zip(self.processors, self.processor_configs):
+        for processor, config in zip(self.components, self.processor_configs):
             try:
                 processor.initialize(self.resource, config)
+                processor._assign_manager(self.proc_mgr)
             except ProcessorConfigError as e:
                 logging.error("Exception occur when initializing "
                               "processor %s", processor.name)
@@ -229,56 +179,35 @@ class Pipeline(Generic[PackType]):
     def set_reader(self, reader: BaseReader,
                    config: Optional[Union[HParams, Dict[str, Any]]] = None):
         self._reader = reader
-
-        if config is None:
-            config = reader.default_configs()
-        config = HParams(config, reader.default_configs())
-
-        self._reader_config = config
+        self._reader_config = reader.make_configs(config)
 
     @property
     def reader(self):
         return self._reader
 
     @property
-    def processors(self):
-        return self._processors
+    def components(self):
+        return self._components
 
     @property
     def processor_configs(self):
         return self._configs
 
-    @property
-    def evaluator(self):
-        return self._evaluator
+    def add(self, component: PipelineComponent,
+            config: Optional[Union[HParams, Dict[str, Any]]] = None,
+            selector: Optional[Selector] = None):
+        self._processors_index[component.name] = len(self.components)
+        if isinstance(component, Evaluator):
+            # This will ask the job to keep a copy of the gold standard.
+            self.evaluator_indices.append(len(self.components))
 
-    def add_processor(self, processor: BaseProcessor,
-                      config: Optional[Union[HParams, Dict[str, Any]]] = None,
-                      selector: Optional[Selector] = None):
-        self._processors_index[processor.component_name] = len(self.processors)
-
-        self._processors.append(processor)
-
-        if config is None:
-            config = processor.default_configs()
-        config = HParams(config, processor.default_configs())
-
-        self.processor_configs.append(config)
+        self._components.append(component)
+        self.processor_configs.append(component.make_configs(config))
 
         if selector is None:
             self._selectors.append(DummySelector())
         else:
             self._selectors.append(selector)
-
-    def set_evaluator(self, evaluator: Evaluator,
-                      config: Optional[HParams] = None):
-
-        if not isinstance(evaluator, Evaluator):
-            raise ValueError(f"Evaluator should be an instance of Evaluator. "
-                             f"Got {type(evaluator)}")
-
-        self._evaluator = evaluator
-        self._evaluator_config = config
 
     def add_gold_packs(self, pack):
         r"""Add gold packs to the dictionary. This dictionary is used by the
@@ -349,6 +278,18 @@ class Pipeline(Generic[PackType]):
         data_iter = self._reader.iter(*args, **kwargs)
         return self._process_packs(data_iter)
 
+    def finish(self):
+        """
+        Call the finish method of all pipeline component. This need to be called
+        explicitly to release all resources.
+
+        Returns:
+
+        """
+        self.reader.finish(self.resource)
+        for p in self.components:
+            p.finish(self.resource)
+
     def _process_packs(
             self, data_iter: Iterator[PackType]) -> Iterator[PackType]:
         r"""Process the packs received from the reader by the running through
@@ -378,16 +319,16 @@ class Pipeline(Generic[PackType]):
         #
         # 3) In case of a BatchProcessor, a job enters into QUEUED status if the
         # job does not satisfy the `batch_size` requirement of that processor.
-        # In that case, the pipeline requests for additional jobs from the reader
-        # and starts the execution loop from the beginning.
+        # In that case, the pipeline requests for additional jobs from the
+        # reader and starts the execution loop from the beginning.
         #
         # 4) At any point, while moving to the next processor, the pipeline
-        # ensures that all jobs are either in QUEUED or PROCESSED status. If they
-        # are PROCESSED, they will be moved to the next queue. This design ensures
-        # that at any point, while processing the job at processor `i`, all the
-        # jobs in the previous queues are in QUEUED status. So whenever a new job
-        # is needed, the pipeline can directly request it from the reader instead
-        # of looking at previous queues for UNPROCESSED jobs.
+        # ensures that all jobs are either in QUEUED or PROCESSED status. If
+        # they are PROCESSED, they will be moved to the next queue. This design
+        # ensures that at any point, while processing the job at processor `i`,
+        # all the jobs in the previous queues are in QUEUED status. So whenever
+        # a new job is needed, the pipeline can directly request it from the
+        # reader instead of looking at previous queues for UNPROCESSED jobs.
         #
         # 5) When a processor receives a poison pack, it flushes all the
         # remaining batches in its memory (this actually has no effect in
@@ -405,11 +346,11 @@ class Pipeline(Generic[PackType]):
         #            batch_size = 2                               batch_size = 2
         #  Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
         #
-        #          |______________|
-        #          |______________|
-        #          |______________|
-        #          |______________|
-        #          |_<J1>: QUEUED_|
+        #          |___________|
+        #          |___________|
+        #          |___________|
+        #          |___________|
+        #          |_J1:QUEUED_|
         #
         # B1 needs another pack to process job J1
         #
@@ -418,11 +359,11 @@ class Pipeline(Generic[PackType]):
         #           batch_size = 2                               batch_size = 2
         # Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
         #
-        #          |______________|       |__________________|
-        #          |______________|       |__________________|
-        #          |______________|       |__________________|
-        #          |______________|       |_<J2>:UNPROCESSED_|
-        #          |______________|       |_<J1>:UNPROCESSED_|
+        #          |___________|       |_______________|
+        #          |___________|       |_______________|
+        #          |___________|       |_______________|
+        #          |___________|       |_J2:UNPROCESSED_|
+        #          |___________|       |_J1:UNPROCESSED_|
         #
         # B1 processes both the packs, the jobs are moved to the next queue.
         #
@@ -431,11 +372,11 @@ class Pipeline(Generic[PackType]):
         #           batch_size = 2                               batch_size = 2
         # Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
         #
-        #          |______________|       |__________________|     |__________________|
-        #          |______________|       |__________________|     |__________________|
-        #          |______________|       |__________________|     |__________________|
-        #          |______________|       |__________________|     |__________________|
-        #          |______________|       |_<J2>:UNPROCESSED_|     |_<J1>:UNPROCESSED_|
+        #          |___________|       |_______________|     |_______________|
+        #          |___________|       |_______________|     |_______________|
+        #          |___________|       |_______________|     |_______________|
+        #          |___________|       |_______________|     |_______________|
+        #          |___________|       |_J2:UNPROCESSED_|     |_J1:UNPROCESSED_|
         #
         # P1 processes the first job. However, there exists one UNPROCESSED job
         # J2 in the queue. Pipeline first processes this job before moving to the
@@ -446,11 +387,11 @@ class Pipeline(Generic[PackType]):
         #           batch_size = 2                               batch_size = 2
         # Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
         #
-        #        |______________|       |__________________|     |__________________|
-        #        |______________|       |__________________|     |__________________|
-        #        |______________|       |__________________|     |__________________|
-        #        |______________|       |__________________|     |_<J2>:UNPROCESSED_|
-        #        |______________|       |__________________|     |_<J1>:UNPROCESSED_|
+        #        |___________|       |_______________|     |_______________|
+        #        |___________|       |_______________|     |_______________|
+        #        |___________|       |_______________|     |_______________|
+        #        |___________|       |_______________|     |_J2:UNPROCESSED_|
+        #        |___________|       |_______________|     |_J1:UNPROCESSED_|
         #
         #
         # After 5th step (iteration),
@@ -458,213 +399,196 @@ class Pipeline(Generic[PackType]):
         #           batch_size = 2                               batch_size = 2
         # Reader -> B1 (BatchProcessor) -> P1 (PackProcessor) -> B2(BatchProcessor)
         #
-        #        |______________|       |__________________|     |__________________|
-        #        |______________|       |__________________|     |__________________|
-        #        |______________|       |__________________|     |__________________|    --> Yield J1.pack and J2.pack
-        #        |______________|       |__________________|     |__________________|
-        #        |______________|       |__________________|     |__________________|
+        #        |___________|       |_______________|     |_______________|
+        #        |___________|       |_______________|     |_______________|
+        #        |___________|       |_______________|     |_______________|    --> Yield J1.pack and J2.pack
+        #        |___________|       |_______________|     |_______________|
+        #        |___________|       |_______________|     |_______________|
 
-        buffer = ProcessBuffer(data_iter)
+        buffer = ProcessBuffer(self, data_iter)
 
-        if len(self.processors) == 0:
+        if len(self.components) == 0:
             yield from data_iter
+            # Write return here instead of using if..else to reduce indent.
+            return
 
-        else:
-            while not process_manager.exhausted():
+        while not self.proc_mgr.exhausted():
+            # job has to be the first UNPROCESSED element
+            # the status of the job now is UNPROCESSED
+            unprocessed_job: ProcessJob = next(buffer)
 
-                # job has to be the first UNPROCESSED element
-                # the status of the job now is UNPROCESSED
-                unprocessed_job = next(buffer)
+            processor_index = self.proc_mgr.current_processor_index
+            processor = self.components[processor_index]
+            selector = self._selectors[processor_index]
+            current_queue_index = self.proc_mgr.current_queue_index
+            current_queue = self.proc_mgr.current_queue
+            pipeline_length = self.proc_mgr.pipeline_length
+            unprocessed_queue_indices = \
+                self.proc_mgr.unprocessed_queue_indices
+            processed_queue_indices = \
+                self.proc_mgr.processed_queue_indices
+            next_queue_index = current_queue_index + 1
+            should_yield = next_queue_index >= pipeline_length
 
-                processor_index = process_manager.current_processor_index
-                processor = self.processors[processor_index]
-                selector = self._selectors[processor_index]
-                current_queue_index = process_manager.current_queue_index
-                current_queue = process_manager.current_queue
-                pipeline_length = process_manager.pipeline_length
-                unprocessed_queue_indices = \
-                    process_manager.unprocessed_queue_indices
-                processed_queue_indices = \
-                    process_manager.processed_queue_indices
-                next_queue_index = current_queue_index + 1
-                should_yield = next_queue_index >= pipeline_length
+            if not unprocessed_job.is_poison:
+                for pack in selector.select(unprocessed_job.pack):
+                    # First, perform the component action on the pack
+                    try:
+                        if isinstance(processor, Caster):
+                            # Replacing the job pack with the casted version.
+                            unprocessed_job.alter_pack(processor.cast(pack))
+                        elif isinstance(processor, BaseProcessor):
+                            processor.process(pack)
+                        elif isinstance(processor, Evaluator):
+                            processor.consume_next(
+                                pack,
+                                self._predict_to_gold[unprocessed_job.id]
+                            )
+                    except Exception as e:
+                        raise ProcessExecutionException(
+                            f'Exception occurred when running '
+                            f'{processor.name}') from e
 
-                if not unprocessed_job.is_poison:
+                    # Then, based on component type, handle the queue.
+                    if isinstance(processor, BaseBatchProcessor):
+                        index = \
+                            unprocessed_queue_indices[current_queue_index]
 
-                    for pack in selector.select(unprocessed_job.pack):
+                        # check status of all the jobs up to "index"
+                        for i, job_i in enumerate(
+                                itertools.islice(current_queue, 0,
+                                                 index + 1)):
 
-                        processor.process(pack)
+                            if job_i.status == ProcessJobStatus.PROCESSED:
+                                processed_queue_indices[
+                                    current_queue_index] = i
 
-                        if isinstance(processor, BaseBatchProcessor):
+                        # there are UNPROCESSED jobs in the queue
+                        if index < len(current_queue) - 1:
+                            unprocessed_queue_indices[current_queue_index] \
+                                += 1
 
-                            index = \
-                                unprocessed_queue_indices[current_queue_index]
+                        # Fetch more data from the reader to process the
+                        # first job
+                        elif (processed_queue_indices[current_queue_index]
+                              == -1):
 
-                            # check status of all the jobs up to "index"
-                            for i, job_i in enumerate(
-                                    itertools.islice(current_queue, 0,
-                                                     index + 1)):
+                            unprocessed_queue_indices[current_queue_index] \
+                                = len(current_queue)
 
-                                if job_i.status == ProcessJobStatus.PROCESSED:
-                                    processed_queue_indices[
-                                        current_queue_index] = i
+                            self.proc_mgr.current_processor_index = 0
 
-                            # there are UNPROCESSED jobs in the queue
-                            if index < len(current_queue) - 1:
-                                unprocessed_queue_indices[current_queue_index] \
-                                    += 1
+                            self.proc_mgr.current_queue_index = -1
 
-                            # Fetch more data from the reader to process the
-                            # first job
-                            elif (processed_queue_indices[current_queue_index]
-                                  == -1):
-
-                                unprocessed_queue_indices[current_queue_index] \
-                                    = len(current_queue)
-
-                                process_manager.set_current_processor_index(
-                                    processor_index=0)
-
-                                process_manager.set_current_queue_index(
-                                    queue_index=-1)
-
-                            else:
-                                processed_queue_index = \
-                                    processed_queue_indices[current_queue_index]
-
-                                # move or yield the pack
-                                c_queue = list(current_queue)
-                                for job_i in \
-                                        c_queue[:processed_queue_index + 1]:
-
-                                    if should_yield:
-                                        if self._evaluator:
-                                            self._evaluator.consume_next(
-                                                job_i.pack,
-                                                self._predict_to_gold[job_i.id])
-                                            del self._predict_to_gold[job_i.id]
-                                        yield job_i.pack
-
-                                    else:
-                                        process_manager.add_to_queue(
-                                            queue_index=next_queue_index,
-                                            job=job_i)
-
-                                    current_queue.popleft()
-
-                                # set the UNPROCESSED and PROCESSED indices
-                                unprocessed_queue_indices[current_queue_index] \
-                                    = len(current_queue)
-
-                                processed_queue_indices[current_queue_index] \
-                                    = -1
-
-                                if should_yield:
-                                    process_manager.set_current_processor_index(
-                                        processor_index=0)
-
-                                    process_manager.set_current_queue_index(
-                                        queue_index=-1)
-                                else:
-                                    process_manager.set_current_processor_index(
-                                        processor_index=next_queue_index)
-                                    process_manager.set_current_queue_index(
-                                        queue_index=next_queue_index)
-
-                        # For PackProcessor
-                        # - Process all the packs in the queue and move them to
-                        # the next queue
                         else:
+                            processed_queue_index = \
+                                processed_queue_indices[current_queue_index]
 
-                            index = \
-                                unprocessed_queue_indices[current_queue_index]
+                            # move or yield the pack
+                            c_queue = list(current_queue)
+                            for job_i in \
+                                    c_queue[:processed_queue_index + 1]:
 
-                            # there are UNPROCESSED jobs in the queue
-                            if index < len(current_queue) - 1:
-                                unprocessed_queue_indices[current_queue_index] \
-                                    += 1
+                                if should_yield:
+                                    self._predict_to_gold.pop(job_i.id, None)
+                                    yield job_i.pack
+                                else:
+                                    self.proc_mgr.add_to_queue(
+                                        queue_index=next_queue_index,
+                                        job=job_i)
+                                current_queue.popleft()
+
+                            # set the UNPROCESSED and PROCESSED indices
+                            unprocessed_queue_indices[current_queue_index] \
+                                = len(current_queue)
+
+                            processed_queue_indices[current_queue_index] \
+                                = -1
+
+                            if should_yield:
+                                self.proc_mgr.current_processor_index = 0
+                                self.proc_mgr.current_queue_index = -1
+                            else:
+                                self.proc_mgr.current_processor_index \
+                                    = next_queue_index
+                                self.proc_mgr.current_queue_index \
+                                    = next_queue_index
+
+                    # Besides Batch Processors, the other component type only
+                    # deal with one pack at a time, these include: PackProcessor
+                    # Evaluator, Caster.
+                    # - Move them to the next queue
+                    else:
+                        index = unprocessed_queue_indices[current_queue_index]
+
+                        # there are UNPROCESSED jobs in the queue
+                        if index < len(current_queue) - 1:
+                            unprocessed_queue_indices[current_queue_index] \
+                                += 1
+                        else:
+                            # current_queue is modified in this array
+                            for job_i in list(current_queue):
+                                if should_yield:
+                                    self._predict_to_gold.pop(job_i.id, None)
+                                    yield job_i.pack
+                                else:
+                                    self.proc_mgr.add_to_queue(
+                                        queue_index=next_queue_index,
+                                        job=job_i)
+                                current_queue.popleft()
+
+                            # set the UNPROCESSED index
+                            # we do not use "processed_queue_indices" as the
+                            # jobs get PROCESSED whenever they are passed
+                            # into a PackProcessor
+                            unprocessed_queue_indices[current_queue_index] \
+                                = len(current_queue)
+
+                            # update the current queue and processor only
+                            # when all the jobs are processed in the current
+                            # queue
+                            if should_yield:
+                                self.proc_mgr.current_processor_index = 0
+                                self.proc_mgr.current_queue_index = -1
 
                             else:
-                                # current_queue is modified in this array
-                                for job_i in list(current_queue):
+                                self.proc_mgr.current_processor_index \
+                                    = next_queue_index
+                                self.proc_mgr.current_queue_index \
+                                    = next_queue_index
+            else:
+                processor.flush()
 
-                                    if should_yield:
-                                        if self._evaluator:
-                                            self._evaluator.consume_next(
-                                                job_i.pack,
-                                                self._predict_to_gold[job_i.id])
-                                            del self._predict_to_gold[job_i.id]
-                                        yield job_i.pack
+                # current queue is modified in the loop
+                for job in list(current_queue):
 
-                                    else:
-                                        process_manager.add_to_queue(
-                                            queue_index=next_queue_index,
-                                            job=job_i)
+                    if job.status != ProcessJobStatus.PROCESSED and \
+                            not job.is_poison:
+                        raise ValueError("Job is neither PROCESSED nor is "
+                                         "a poison. Something went wrong "
+                                         "during execution.")
 
-                                    current_queue.popleft()
+                    if not job.is_poison and should_yield:
+                        self._predict_to_gold.pop(job.id)
+                        yield job.pack
 
-                                # set the UNPROCESSED index
-                                # we do not use "processed_queue_indices" as the
-                                # jobs get PROCESSED whenever they are passed
-                                # into a PackProcessor
-                                unprocessed_queue_indices[current_queue_index] \
-                                    = len(current_queue)
+                    elif not should_yield:
+                        self.proc_mgr.add_to_queue(
+                            queue_index=next_queue_index, job=job)
 
-                                # update the current queue and processor only
-                                # when all the jobs are processed in the current
-                                # queue
-                                if should_yield:
-                                    process_manager.set_current_processor_index(
-                                        processor_index=0)
+                    if not job.is_poison:
+                        current_queue.popleft()
 
-                                    process_manager.set_current_queue_index(
-                                        queue_index=-1)
-
-                                else:
-                                    process_manager.set_current_processor_index(
-                                        processor_index=next_queue_index)
-
-                                    process_manager.set_current_queue_index(
-                                        queue_index=next_queue_index)
-
-                else:
-
-                    processor.flush()
-
-                    # current queue is modified in the loop
-                    for job in list(current_queue):
-
-                        if job.status != ProcessJobStatus.PROCESSED and \
-                                not job.is_poison:
-                            raise ValueError("Job is neither PROCESSED nor is "
-                                             "a poison. Something went wrong "
-                                             "during execution.")
-
-                        if not job.is_poison and should_yield:
-                            if self._evaluator:
-                                self._evaluator.consume_next(
-                                    job.pack, self._predict_to_gold[job.id])
-                                del self._predict_to_gold[job.id]
-                            yield job.pack
-
-                        elif not should_yield:
-                            process_manager.add_to_queue(
-                                queue_index=next_queue_index, job=job)
-
-                        if not job.is_poison:
-                            current_queue.popleft()
-
-                    if not should_yield:
-                        # set next processor and queue as current
-                        process_manager.set_current_processor_index(
-                            processor_index=next_queue_index)
-
-                        process_manager.set_current_queue_index(
-                            queue_index=next_queue_index)
+                if not should_yield:
+                    # set next processor and queue as current
+                    self.proc_mgr.current_processor_index = next_queue_index
+                    self.proc_mgr.current_queue_index = next_queue_index
 
     def evaluate(self):
-        if self._evaluator:
-            return self._evaluator.get_result()
+        for i in self.evaluator_indices:
+            p = self.components[i]
+            assert isinstance(p, Evaluator)
+            return p.get_result()
         else:
             raise ValueError("Pipeline has no evaluator. "
                              "Cannot evaluate the results.")

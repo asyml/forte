@@ -33,7 +33,7 @@ class DummyProcessorTest(unittest.TestCase):
         self.nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
         config = {"batcher": {"batch_size": 5}}
-        self.nlp.add_processor(dummy, config=config)
+        self.nlp.add(dummy, config=config)
         self.nlp.initialize()
 
         self.data_path = "data_samples/ontonotes/00/"
@@ -55,8 +55,8 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
         nlp.set_reader(StringReader())
         batcher = DummmyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
-        nlp.add_processor(NLTKSentenceSegmenter())
-        nlp.add_processor(batcher, config=config)
+        nlp.add(NLTKSentenceSegmenter())
+        nlp.add(batcher, config=config)
         nlp.initialize()
         sentences = ["This tool is called Forte. The goal of this project to "
                      "help you build NLP pipelines. NLP has never been made "
@@ -74,11 +74,11 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
         dummy1 = DummmyFixedSizeBatchProcessor()
         dummy2 = DummmyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
-        nlp.add_processor(NLTKSentenceSegmenter())
+        nlp.add(NLTKSentenceSegmenter())
 
-        nlp.add_processor(dummy1, config=config)
+        nlp.add(dummy1, config=config)
         config = {"batcher": {"batch_size": 2 * batch_size}}
-        nlp.add_processor(dummy2, config=config)
+        nlp.add(dummy2, config=config)
 
         nlp.initialize()
         data_path = "data_samples/random_texts"

@@ -34,6 +34,7 @@ class Evaluator(PipelineComponent[PackType]):
         config: The configuration of the evaluator.
     """
     def __init__(self, config: Optional[HParams] = None):
+        super().__init__()
         self.config: Optional[HParams] = config
 
     @abstractmethod

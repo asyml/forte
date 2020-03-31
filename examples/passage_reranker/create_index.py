@@ -38,7 +38,7 @@ if __name__ == "__main__":
             }
         }
     }, default_hparams=None)
-    nlp.add_processor(ElasticSearchIndexProcessor(), config=config)
+    nlp.add(ElasticSearchIndexProcessor(), config=config)
     nlp.initialize()
 
     for idx, pack in enumerate(nlp.process_dataset(".")):

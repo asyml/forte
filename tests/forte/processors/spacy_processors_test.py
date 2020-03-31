@@ -37,7 +37,7 @@ class TestSpacyProcessor(unittest.TestCase):
             # Language code for the language to build the Pipeline
             "use_gpu": False
         }
-        self.spacy.add_processor(SpacyProcessor(), config=config)
+        self.spacy.add(SpacyProcessor(), config=config)
         self.spacy.initialize()
 
     def test_spacy_processor(self):
@@ -76,7 +76,7 @@ class TestSpacyProcessor(unittest.TestCase):
             # Language code for the language to build the Pipeline
             "use_gpu": False
         }
-        spacy.add_processor(SpacyProcessor(), config=config)
+        spacy.add(SpacyProcessor(), config=config)
         spacy.initialize()
 
         sentences = ["This tool is called Forte.",
@@ -142,7 +142,7 @@ class TestSpacyProcessor(unittest.TestCase):
             # Language code for the language to build the Pipeline
             "use_gpu": False
         }
-        spacy.add_processor(SpacyProcessor(), config=config)
+        spacy.add(SpacyProcessor(), config=config)
         spacy.initialize()
 
         sentences = ["This tool is called Forte.",

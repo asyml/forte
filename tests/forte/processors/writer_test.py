@@ -33,13 +33,13 @@ class TestLowerCaserProcessor(unittest.TestCase):
     def test_lowercaser_processor(self):
         pipe_serialize = Pipeline[DataPack]()
         pipe_serialize.set_reader(OntonotesReader())
-        pipe_serialize.add_processor(NLTKSentenceSegmenter())
-        pipe_serialize.add_processor(NLTKWordTokenizer())
-        pipe_serialize.add_processor(NLTKPOSTagger())
+        pipe_serialize.add(NLTKSentenceSegmenter())
+        pipe_serialize.add(NLTKWordTokenizer())
+        pipe_serialize.add(NLTKPOSTagger())
 
         output_path = tempfile.mkdtemp()
 
-        pipe_serialize.add_processor(
+        pipe_serialize.add(
             DocIdJsonPackWriter(), {
                 'output_dir': output_path,
                 'indent': 2,

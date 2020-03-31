@@ -98,8 +98,8 @@ class MultiPackSentenceReader(MultiPackReader):
 
             yield m_pack
 
-    @staticmethod
-    def default_configs() -> Dict[str, str]:
+    @classmethod
+    def default_configs(cls) -> Dict[str, str]:
         r"""Returns a dictionary of hyperparameters with default values.
 
         .. code-block:: python

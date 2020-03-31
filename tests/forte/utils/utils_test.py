@@ -62,7 +62,7 @@ class UtilsTest(unittest.TestCase):
             class_name='forte.processors.lowercaser_processor'
                        '.LowerCaserProcessor',
             class_args={},
-            h_params={
+            configs={
                 'overwrite_configs': {
                     'selector': {
                         'type': 'forte.data.selector.AllPackSelector',

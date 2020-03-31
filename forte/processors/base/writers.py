@@ -16,16 +16,18 @@ Writers are simply processors with the side-effect to write to the disk.
 This file provide some basic writer implementations.
 """
 import gzip
+import json
 import logging
 import os
 from abc import abstractmethod, ABC
-import json
-from typing import Optional
+from typing import Optional, Any, Dict
 
 from texar.torch.hyperparams import HParams
 
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.processors.base.base_processor import BaseProcessor
 from forte.utils.utils_io import maybe_create_dir, ensure_dir
 
@@ -33,10 +35,52 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     'JsonPackWriter',
+    'MultiPackWriter',
 ]
 
 
-class JsonPackWriter(BaseProcessor[PackType], ABC):
+def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
+               indent: int = None, zip_pack: bool = False,
+               overwrite: bool = False) -> Optional[str]:
+    """
+    Write a pack to a path.
+
+    Args:
+        input_pack: A Pack to be written.
+        output_dir: The output directory.
+        sub_path: The file name for this pack.
+        indent: Whether to format JSON with an indent.
+        zip_pack: Whether to zip the output JSON.
+        overwrite: Whether to overwrite the file if already exists.
+
+    Returns:
+        If successfully written, will return the path of the output file.
+        otherwise, will return None.
+
+    """
+    output_path = os.path.join(output_dir, sub_path) + '.json'
+    if overwrite or not os.path.exists(output_path):
+        if zip_pack:
+            output_path = output_path + '.gz'
+
+        ensure_dir(output_path)
+
+        out_str: str = input_pack.serialize()
+
+        if indent:
+            out_str = json.dumps(json.loads(out_str), indent=indent)
+
+        if zip_pack:
+            with gzip.open(output_path, 'wt') as out:
+                out.write(out_str)
+        else:
+            with open(output_path, 'w') as out:
+                out.write(out_str)
+
+    return output_path
+
+
+class JsonPackWriter(BaseProcessor[DataPack], ABC):
     def __init__(self):
         super().__init__()
         self.zip_pack: bool = False
@@ -56,7 +100,7 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
         self.indent = configs.indent
 
     @abstractmethod
-    def sub_output_path(self, pack: PackType) -> str:
+    def sub_output_path(self, pack: DataPack) -> str:
         r"""Allow defining output path using the information of the pack.
 
         Args:
@@ -76,26 +120,70 @@ class JsonPackWriter(BaseProcessor[PackType], ABC):
         })
         return config
 
-    def _process(self, input_pack: PackType):
+    def _process(self, input_pack: DataPack):
         sub_path = self.sub_output_path(input_pack)
         if sub_path == '':
             raise ValueError(
                 "No concrete path provided from sub_output_path.")
 
         maybe_create_dir(self.configs.output_dir)
-        p = os.path.join(self.configs.output_dir, sub_path)
+        write_pack(input_pack, self.configs.output_dir, sub_path,
+                   self.configs.indent, self.configs.zip_pack,
+                   self.configs.overwrite)
 
-        ensure_dir(p)
 
-        out_str: str = input_pack.serialize()
+class MultiPackWriter(BaseProcessor[MultiPack]):
+    def __init__(self):
+        super().__init__()
+        self.pack_base_out = 'packs'
 
-        if self.configs.indent:
-            out_str = json.dumps(
-                json.loads(out_str), indent=self.configs.indent)
+    def initialize(self, resources: Resources, configs: HParams):
+        super().initialize(resources, configs)
+        pack_index = os.path.join(self.configs.output_dir, 'pack.idx')
+        self.pack_idx_out = open(pack_index, 'w')
 
-        if self.configs.zip_pack:
-            with gzip.open(p + '.gz', 'wt') as out:
-                out.write(out_str)
-        else:
-            with open(p, 'w') as out:
-                out.write(out_str)
+    def pack_name(self, pack: DataPack) -> str:
+        r"""Allow defining output path using the information of the datapack.
+
+        Args:
+            pack: The input datapack.
+        """
+        return f"mult_pack_{pack.meta.pack_id}"
+
+    def multipack_name(self, pack: MultiPack) -> str:
+        r"""Allow defining output path using the information of the multipack.
+
+        Args:
+            pack: The input multipack.
+        """
+        return f"mult_pack_{pack.meta.pack_id}"
+
+    def _process(self, input_pack: MultiPack):
+        pack_out_dir = os.path.join(self.configs.output_dir, self.pack_base_out)
+
+        # TODO: pack idx not correct yet.
+        for pack in input_pack.packs:
+            pack_id: str = str(pack.meta.pack_id)
+            pack_out = write_pack(
+                pack, pack_out_dir, self.pack_name(pack),
+                self.configs.indent, self.configs.zip_pack)
+            self.pack_idx_out.write(f'{pack_id}\t{pack_out}\n')
+
+        write_pack(
+            input_pack, self.configs.output_dir,
+            self.multipack_name(input_pack),
+            self.configs.indent, self.configs.zip_pack
+        )
+
+    def finish(self, resource: Resources):
+        self.pack_idx_out.close()
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config.update({
+            'output_dir': None,
+            'zip_pack': False,
+            'indent': None,
+        })
+        return config

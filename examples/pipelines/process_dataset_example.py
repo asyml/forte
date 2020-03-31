@@ -39,11 +39,11 @@ def main(dataset_dir: str):
 
     pl = Pipeline[DataPack]()
     pl.set_reader(PlainTextReader())
-    pl.add_processor(NLTKSentenceSegmenter())
-    pl.add_processor(NLTKWordTokenizer())
-    pl.add_processor(NLTKPOSTagger())
-    pl.add_processor(CoNLLNERPredictor(), config=config.NER)
-    pl.add_processor(SRLPredictor(), config=config.SRL)
+    pl.add(NLTKSentenceSegmenter())
+    pl.add(NLTKWordTokenizer())
+    pl.add(NLTKPOSTagger())
+    pl.add(CoNLLNERPredictor(), config=config.NER)
+    pl.add(SRLPredictor(), config=config.SRL)
 
     pl.initialize()
 

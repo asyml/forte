@@ -29,7 +29,7 @@ from forte.data import slice_batch
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology.top import Annotation
 from forte.processors.base.base_processor import BaseProcessor
-from forte.process_manager import ProcessManager, ProcessJobStatus
+from forte.process_manager import _ProcessManager, ProcessJobStatus
 
 __all__ = [
     "BaseBatchProcessor",
@@ -38,8 +38,6 @@ __all__ = [
     "FixedSizeBatchProcessor",
     "FixedSizeMultiPackBatchProcessor"
 ]
-
-process_manager = ProcessManager()
 
 
 class BaseBatchProcessor(BaseProcessor[PackType], ABC):
@@ -132,10 +130,10 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         # update the status of the jobs. The jobs which were removed from
         # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
-        q_index = process_manager.current_queue_index
-        u_index = process_manager.unprocessed_queue_indices[q_index]
+        q_index = self._process_manager.current_queue_index
+        u_index = self._process_manager.unprocessed_queue_indices[q_index]
         data_pool_length = len(self.batcher.data_pack_pool)
-        current_queue = process_manager.current_queue
+        current_queue = self._process_manager.current_queue
 
         for i, job_i in enumerate(
                 itertools.islice(current_queue, 0, u_index + 1)):
@@ -150,7 +148,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self.pack_all(pred)
             self.update_batcher_pool(-1)
 
-        current_queue = process_manager.current_queue
+        current_queue = self._process_manager.current_queue
 
         for job in current_queue:
             job.set_status(ProcessJobStatus.PROCESSED)

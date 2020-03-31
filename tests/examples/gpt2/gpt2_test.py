@@ -28,7 +28,7 @@ class Gpt2Test(unittest.TestCase):
                                      'sample_multipack_pipeline_gpt.yml')
         p = multipack_pipeline_gpt2.create_pipeline(sample_config)
 
-        self.assertEqual(len(p.processors), 3)
+        self.assertEqual(len(p.components), 3)
 
         p_names = [
             'forte.processors.text_generation_processor.'
@@ -37,7 +37,7 @@ class Gpt2Test(unittest.TestCase):
             'forte.processors.nltk_processors.NLTKPOSTagger',
         ]
 
-        for proc, p_name in zip(p.processors, p_names):
+        for proc, p_name in zip(p.components, p_names):
             self.assertEqual(proc.name, p_name)
 
         self.assertEqual(

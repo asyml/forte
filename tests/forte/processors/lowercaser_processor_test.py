@@ -26,7 +26,7 @@ class TestLowerCaserProcessor(unittest.TestCase):
     def setUp(self):
         self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(StringReader())
-        self.nlp.add_processor(LowerCaserProcessor())
+        self.nlp.add(LowerCaserProcessor())
         self.nlp.initialize()
 
     def test_lowercaser_processor(self):

@@ -24,13 +24,11 @@ from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
 from forte.utils.utils import get_full_module_name
 from forte.pipeline_component import PipelineComponent
-from forte.process_manager import ProcessManager, ProcessJobStatus
+from forte.process_manager import _ProcessManager, ProcessJobStatus
 
 __all__ = [
     "BaseProcessor",
 ]
-
-process_manager = ProcessManager()
 
 
 class BaseProcessor(PipelineComponent[PackType], ABC):
@@ -39,18 +37,18 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
     """
 
     def __init__(self):
-        self.component_name = get_full_module_name(self)
+        super().__init__()
         self.selector = DummySelector()
 
     def process(self, input_pack: PackType):
         # Set the component for recording purpose.
-        process_manager.set_current_component(self.component_name)
+        self._process_manager.current_component = self.name
         self._process(input_pack)
 
         # Change status for pack processors
-        q_index = process_manager.current_queue_index
-        u_index = process_manager.unprocessed_queue_indices[q_index]
-        current_queue = process_manager.current_queue
+        q_index = self._process_manager.current_queue_index
+        u_index = self._process_manager.unprocessed_queue_indices[q_index]
+        current_queue = self._process_manager.current_queue
 
         for job_i in itertools.islice(current_queue, 0, u_index + 1):
             if job_i.status == ProcessJobStatus.UNPROCESSED:
@@ -69,7 +67,8 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         raise NotImplementedError
 
     def flush(self):
-        r"""Indicate that there will be no more packs to be passed in.
+        r"""Indicate that there will be no more packs to be passed in, handle
+        what's remaining in the buffer.
         """
         pass
 
@@ -85,6 +84,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
                 'type': 'forte.data.selector.DummySelector',
                 'args': None,
                 'kwargs': {}
-            }
+            },
+            'overwrite': False,
         })
         return config

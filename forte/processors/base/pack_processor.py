@@ -36,14 +36,18 @@ class BasePackProcessor(BaseProcessor[PackType], ABC):
     pass
 
 
-class PackProcessor(BasePackProcessor[DataPack], ABC):
+class PackProcessor(BaseProcessor[DataPack], ABC):
     r"""The base class of processors that process one :class:`DataPack` each
     time.
     """
-    pass
+
+    def _process(self, input_pack: DataPack):
+        raise NotImplementedError
 
 
-class MultiPackProcessor(BasePackProcessor[MultiPack], ABC):
+class MultiPackProcessor(BaseProcessor[MultiPack], ABC):
     r"""The base class of processors that process :class:`MultiPack` each time.
     """
-    pass
+
+    def _process(self, input_pack: MultiPack):
+        raise NotImplementedError

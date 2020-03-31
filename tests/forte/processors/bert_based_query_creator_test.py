@@ -54,7 +54,7 @@ class TestBertBasedQueryCreator(unittest.TestCase):
                   "tokenizer": {"name": "bert-base-uncased"},
                   "max_seq_length": 128,
                   "query_pack_name": "query"}
-        nlp.add_processor(BertBasedQueryCreator(), config=config)
+        nlp.add(BertBasedQueryCreator(), config=config)
 
         nlp.initialize()
 

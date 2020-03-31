@@ -14,7 +14,7 @@ from ft.onto.base_ontology import Sentence, Token
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self, config: Optional[HParams] = None):
         super().__init__(config)
-        self.test_component = CoNLLNERPredictor().component_name
+        self.test_component = CoNLLNERPredictor().name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
         self.scores: Dict[str, float] = {}

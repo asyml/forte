@@ -61,7 +61,7 @@ class Entry(Generic[ContainerType]):
     def __init__(self, pack: ContainerType):
         super(Entry, self).__init__()
 
-        self._tid: int = -1
+        self._tid: int = pack.get_next_id()
 
         self._embedding: np.ndarray = np.empty(0)
 
@@ -73,6 +73,8 @@ class Entry(Generic[ContainerType]):
         self.__pack: ContainerType = pack
         self.__field_modified: Set[str] = set()
         pack.validate(self)
+
+        pack.add_entry_creation_record(self._tid)
 
     def reset(self):
         """
@@ -130,15 +132,6 @@ class Entry(Generic[ContainerType]):
     def tid(self) -> int:
         return self._tid
 
-    def set_tid(self):
-        r"""Set the entry id with the auto-increment manager.
-        """
-        # self._tid = f"{get_full_module_name(self)}.{tid}"
-        self._tid = self.pack.get_next_id()
-
-    def attach(self, pack: ContainerType):
-        self.__pack = pack
-
     @property
     def pack(self) -> ContainerType:
         return self.__pack
@@ -169,19 +162,8 @@ class Entry(Generic[ContainerType]):
                     f"The entry type [{self.__class__}] does not have an "
                     f"attribute: '{field_name}'.")
 
-            if self.tid == -1:
-                # This means the entry is not part of any data pack yet, we
-                # remember the field modification for now.
-                self.__field_modified.add(field_name)
-            else:
-                # We add the record to the system.
-                self.__pack.add_field_record(self.tid, field_name)
-
-    def get_fields_modified(self) -> Set[str]:
-        return self.__field_modified
-
-    def reset_fields_modified(self):
-        self.__field_modified.clear()
+            # We add the record to the system.
+            self.__pack.add_field_record(self.tid, field_name)
 
     def get_field(self, field_name):
         return getattr(self, field_name)

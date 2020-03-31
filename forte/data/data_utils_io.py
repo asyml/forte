@@ -100,6 +100,9 @@ def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
     r"""An iterator returning the file paths in a directory containing files of
     the given datasets.
     """
+    if not os.path.exists(dir_path):
+        raise FileNotFoundError('Cannot find the directory [%s].' % dir_path)
+
     for root, _, files in os.walk(dir_path):
         for data_file in files:
             if len(file_extension) > 0:

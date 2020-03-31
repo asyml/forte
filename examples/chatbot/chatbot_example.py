@@ -41,30 +41,30 @@ def main():
     query_pipeline.set_reader(
         reader=MultiPackTerminalReader(), config=config.reader)
 
-    query_pipeline.add_processor(
-        processor=MicrosoftBingTranslator(), config=config.translator)
-    query_pipeline.add_processor(
-        processor=BertBasedQueryCreator(), config=config.query_creator)
-    query_pipeline.add_processor(
-        processor=SearchProcessor(), config=config.indexer)
-    query_pipeline.add_processor(
-        processor=NLTKSentenceSegmenter(),
+    query_pipeline.add(
+        component=MicrosoftBingTranslator(), config=config.translator)
+    query_pipeline.add(
+        component=BertBasedQueryCreator(), config=config.query_creator)
+    query_pipeline.add(
+        component=SearchProcessor(), config=config.indexer)
+    query_pipeline.add(
+        component=NLTKSentenceSegmenter(),
         selector=NameMatchSelector(
             select_name=config.indexer.response_pack_name[0]))
-    query_pipeline.add_processor(
-        processor=NLTKWordTokenizer(),
+    query_pipeline.add(
+        component=NLTKWordTokenizer(),
         selector=NameMatchSelector(
             select_name=config.indexer.response_pack_name[0]))
-    query_pipeline.add_processor(
-        processor=NLTKPOSTagger(),
+    query_pipeline.add(
+        component=NLTKPOSTagger(),
         selector=NameMatchSelector(
             select_name=config.indexer.response_pack_name[0]))
-    query_pipeline.add_processor(
-        processor=SRLPredictor(), config=config.SRL,
+    query_pipeline.add(
+        component=SRLPredictor(), config=config.SRL,
         selector=NameMatchSelector(
             select_name=config.indexer.response_pack_name[0]))
-    query_pipeline.add_processor(
-        processor=MicrosoftBingTranslator(), config=config.back_translator)
+    query_pipeline.add(
+        component=MicrosoftBingTranslator(), config=config.back_translator)
 
     query_pipeline.initialize()
 

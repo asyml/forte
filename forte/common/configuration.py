@@ -12,40 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Utility functions related to input/output.
+We are going to reuse the configuration class HParams in Texar. However, the
+name might be confusing in the context of processors, so we rename them to
+Config here.
 """
-import os
 
-__all__ = [
-    "maybe_create_dir",
-    "ensure_dir"
-]
+from texar.torch import HParams
 
-
-def maybe_create_dir(dirname: str) -> bool:
-    r"""Creates directory if it does not exist.
-
-    Args:
-        dirname (str): Path to the directory.
-
-    Returns:
-        bool: Whether a new directory is created.
-    """
-    if not os.path.isdir(dirname):
-        os.makedirs(dirname)
-        return True
-    return False
-
-
-def ensure_dir(filename: str):
-    """
-
-    Args:
-        filename:
-
-    Returns:
-
-    """
-    d = os.path.dirname(filename)
-    if d:
-        maybe_create_dir(d)
+Config = HParams

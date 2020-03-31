@@ -121,7 +121,7 @@ class TestAllenNLPProcessor(unittest.TestCase):
         nlp = self._create_pipeline(config)
 
         # Adding extra processor to have existing tokens and dependencies
-        nlp.add_processor(processor=AllenNLPProcessor(), config=config)
+        nlp.add(component=AllenNLPProcessor(), config=config)
         nlp.initialize()
 
         if not overwrite_entries and not allow_parallel_entries:
@@ -185,13 +185,13 @@ class TestAllenNLPProcessor(unittest.TestCase):
         nlp.set_reader(StringReader())
 
         # Using SpacyProcessor to segment the sentences
-        nlp.add_processor(processor=SpacyProcessor(), config={
+        nlp.add(component=SpacyProcessor(), config={
             'processors': '',
             'lang': "en_core_web_sm",  # Language code to build the Pipeline
             'use_gpu': False
         })
 
-        nlp.add_processor(processor=AllenNLPProcessor(), config=config)
+        nlp.add(component=AllenNLPProcessor(), config=config)
         nlp.initialize()
         return nlp
 

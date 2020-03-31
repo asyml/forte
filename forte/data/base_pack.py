@@ -15,14 +15,15 @@
 import copy
 import logging
 from abc import abstractmethod
-from typing import List, Optional, Set, Type, TypeVar, Union
+from typing import List, Optional, Set, Type, TypeVar, Union, Tuple
 
 import jsonpickle
 
-from forte.data.ontology.core import EntryType, GroupType, LinkType
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
+from forte.data.ontology.core import EntryType, GroupType, LinkType
+from forte.pack_manager import PackManager
 
 __all__ = [
     "BasePack",
@@ -38,6 +39,48 @@ class BaseMeta:
 
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id: Optional[str] = doc_id
+        self._pack_id: int = -1
+        self._serial_session: int = 0
+        # Obtain the global pack manager.
+        self._pack_manager: PackManager = PackManager()
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+
+        # Convert the 2-int tuple key to a global key.
+        this_key = self.pack_key
+        state['_pack_id'] = self._pack_manager.get_global_id(*this_key)
+        state.pop('_serial_session')
+        state.pop('_pack_manager')
+        return state
+
+    def __setstate__(self, state):
+        """
+        Re-obtain the pack manager during deserialization.
+        Args:
+            state:
+
+        Returns:
+
+        """
+        self.__dict__.update(state)
+        self._pack_manager: PackManager = PackManager()
+
+    @property
+    def pack_id(self) -> int:
+        return self._pack_id
+
+    @property
+    def serial_session(self) -> int:
+        return self._serial_session
+
+    @serial_session.setter
+    def serial_session(self, session: int):
+        self._serial_session = session
+
+    @property
+    def pack_key(self) -> Tuple[int, int]:
+        return self._serial_session, self.pack_id
 
 
 class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
@@ -58,6 +101,19 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         self.meta: BaseMeta = BaseMeta(doc_id)
         self.index: BaseIndex = BaseIndex()
+
+        # Obtain the global pack manager.
+        self._pack_manager: PackManager = PackManager()
+
+    def __getstate__(self):
+        state = super().__getstate__()
+        state.pop('index')
+        state.pop('_pack_manager')
+        return state
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self.__dict__['_pack_manager'] = PackManager()
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
@@ -127,42 +183,55 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def record_entry(self, entry: EntryType):
-        r"""
-
-        Record basic information for the entry:
-          - Set the id for the entry.
-          - Record the creator component for the entry.
-          - Record the field creator component for the entry.
-
-        Args:
-            entry: The entry to be added.
-
-        Returns:
-
-        """
-        # Assign a new id for the entry.
-        entry.set_tid()
-
-        # Once we have the id of this entry, we can record the component
-        self.add_entry_creation_record(entry.tid)
-        for f in entry.get_fields_modified():
-            # We record the fields created before pack attachment.
-            self.add_field_record(entry.tid, f)
-        entry.reset_fields_modified()
-
     def serialize(self) -> str:
         r"""Serializes a pack to a string."""
         return jsonpickle.encode(self, unpicklable=True)
 
-    @classmethod
-    def deserialize(cls, string: str):
+    @staticmethod
+    def deserialize(string: str):
         r"""Deserialize a pack from a string.
         """
         return jsonpickle.decode(string)
 
     def view(self):
         return copy.deepcopy(self)
+
+    def add_entry_creation_record(self, entry_id: int):
+        """
+        Record who creates the entry, will be called
+        in :class:`~forte.data.ontology.core.Entry`
+
+        Args:
+            entry_id: The id of the entry.
+
+        Returns:
+
+        """
+        c = self._pack_manager.get_component(self.meta.serial_session,
+                                             self.meta.pack_id)
+        try:
+            self.creation_records[c].add(entry_id)
+        except KeyError:
+            self.creation_records[c] = {entry_id}
+
+    def add_field_record(self, entry_id: int, field_name: str):
+        """
+        Record who modifies the entry, will be called
+        in :class:`~forte.data.ontology.core.Entry`
+
+        Args:
+            entry_id: The id of the entry.
+            field_name: The name of the field modified.
+
+        Returns:
+
+        """
+        c = self._pack_manager.get_component(self.meta.serial_session,
+                                             self.meta.pack_id)
+        try:
+            self.field_records[c].add((entry_id, field_name))
+        except KeyError:
+            self.field_records[c] = {(entry_id, field_name)}
 
     # TODO: how to make this return the precise type here?
     def get_entry(self, tid: int) -> EntryType:
@@ -277,6 +346,15 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             if self.validate_group(entry):
                 groups.add(entry)  # type: ignore
         return groups
+
+    def finished(self):
+        """
+        De-register this pack from the global manager, mark as done.
+        Returns:
+
+        """
+        self._pack_manager.deregister_pack(self.meta.serial_session,
+                                           self.meta.pack_id)
 
 
 PackType = TypeVar('PackType', bound=BasePack)

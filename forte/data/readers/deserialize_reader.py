@@ -13,10 +13,17 @@
 # limitations under the License.
 import os
 from abc import ABC
-from typing import Iterator, List
+from typing import Iterator, List, Any
 
+from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.readers.base_reader import PackReader, MultiPackReader
+
+__all__ = [
+    'RawDataDeserializeReader',
+    'RecursiveDirectoryDeserializeReader',
+    'DirPackReader'
+]
 
 
 class BaseDeserializeReader(PackReader, ABC):
@@ -25,7 +32,8 @@ class BaseDeserializeReader(PackReader, ABC):
         return "cached_string_file"
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
-        yield DataPack.deserialize(data_source)
+        pack: DataPack = DataPack.deserialize(data_source)
+        yield pack
 
 
 class RawDataDeserializeReader(BaseDeserializeReader):
@@ -68,3 +76,24 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         return {
             "suffix": ".json"
         }
+
+
+class MultiPackDiskReader(MultiPackReader):
+    """
+    This reader implements one particular way of deserializing Multipack. Note
+    that the DataPacks are serialized on the side, and the Multipack contains
+    references to them. The reader here assemble these information together.
+    """
+
+    def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
+        pass
+
+    def _parse_pack(self, collection: Any) -> Iterator[PackType]:
+        pass
+
+    def _cache_key_function(self, collection: Any) -> str:
+        pass
+
+
+# A short name for this class.
+DirPackReader = RecursiveDirectoryDeserializeReader

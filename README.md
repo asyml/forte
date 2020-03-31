@@ -119,7 +119,7 @@ config.add_hparam('config_model', config_model)
 
 pl = Pipeline()
 pl.set_reader(CoNLL03Reader())
-pl.add_processor(CoNLLNERPredictor(), config=config)
+pl.add(CoNLLNERPredictor(), config=config)
 
 pl.initialize()
 

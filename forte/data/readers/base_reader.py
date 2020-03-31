@@ -26,8 +26,9 @@ from forte.data.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.pack_manager import PackManager
 from forte.pipeline_component import PipelineComponent
-from forte.process_manager import ProcessManager
+from forte.process_manager import _ProcessManager
 from forte.utils.utils import get_full_module_name
 
 __all__ = [
@@ -37,8 +38,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-process_manager = ProcessManager()
 
 
 class BaseReader(PipelineComponent[PackType], ABC):
@@ -66,11 +65,15 @@ class BaseReader(PipelineComponent[PackType], ABC):
                  from_cache: bool = False,
                  cache_directory: Optional[str] = None,
                  append_to_cache: bool = False):
-
+        super().__init__()
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
+
+        # Each reader will acquire their own ID session.
+        self._pack_manager = PackManager()
+        self._session_id = self._pack_manager.get_new_session()
 
     @staticmethod
     def default_configs():
@@ -114,8 +117,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         This internally setup the component meta data. Users should implement
         the :meth:`_parse_pack` method.
         """
-        process_manager.set_current_component(self.component_name)
-        yield from self._parse_pack(collection)
+        self._process_manager.current_component = self.component_name
+        for p in self._parse_pack(collection):
+            self._pack_manager.register_pack_with_session(self._session_id, p)
+            yield p
 
     @abstractmethod
     def _parse_pack(self, collection: Any) -> Iterator[PackType]:
@@ -174,10 +179,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 not_first = False
                 for pack in self.parse_pack(collection):
                     # write to the cache if _cache_directory specified
-
                     if self._cache_directory is not None:
-                        self.cache_data(
-                            collection, pack, not_first)
+                        self.cache_data(collection, pack, not_first)
 
                     if not isinstance(pack, self.pack_type):
                         raise ValueError(

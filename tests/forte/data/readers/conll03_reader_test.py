@@ -39,8 +39,8 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         self.nlp = Pipeline[DataPack]()
 
         self.nlp.set_reader(CoNLL03Reader())
-        self.nlp.add_processor(DummyPackProcessor())
-        self.nlp.add_processor(DummyPackProcessor())
+        self.nlp.add(DummyPackProcessor())
+        self.nlp.add(DummyPackProcessor())
 
         self.nlp.initialize()
 

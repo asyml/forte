@@ -32,7 +32,7 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
             }
         }
 
-        pl.add_processor(processor=AttributeMasker(), config=config)
+        pl.add(component=AttributeMasker(), config=config)
         pl.initialize()
 
         for pack in pl.process_dataset("data_samples/conll03/"):

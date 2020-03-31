@@ -30,8 +30,8 @@ class TestVaderSentiment(unittest.TestCase):
     def setUp(self):
         self.pipeline = Pipeline[DataPack]()
         self.pipeline.set_reader(StringReader())
-        self.pipeline.add_processor(NLTKSentenceSegmenter())
-        self.pipeline.add_processor(VaderSentimentProcessor())
+        self.pipeline.add(NLTKSentenceSegmenter())
+        self.pipeline.add(VaderSentimentProcessor())
         self.pipeline.initialize()
 
     def test_segmenter(self):

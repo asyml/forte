@@ -130,7 +130,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         DBpediaWikiReader.default_configs()
     ))
 
-    nif_pl.add_processor(WikiArticleWriter(), config=HParams(
+    nif_pl.add(WikiArticleWriter(), config=HParams(
         {
             'output_dir': raw_pack_dir,
             'zip_pack': True,
@@ -156,7 +156,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         DBpediaInfoBoxReader.default_configs()
     ))
 
-    ib_pl.add_processor(WikiArticleWriter(), config=HParams(
+    ib_pl.add(WikiArticleWriter(), config=HParams(
         {
             'output_dir': os.path.join(output_path, 'nif_info_box'),
             'zip_pack': True,
