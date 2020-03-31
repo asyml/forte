@@ -15,7 +15,7 @@
 import copy
 import logging
 from abc import abstractmethod
-from typing import List, Optional, Set, Type, TypeVar, Union, Tuple
+from typing import List, Optional, Set, Type, TypeVar, Union, Tuple, Iterator
 
 import jsonpickle
 
@@ -126,6 +126,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             setattr(self.meta, k, v)
 
     @abstractmethod
+    def __iter__(self) -> Iterator[EntryType]:
+        raise NotImplementedError
+
+    @abstractmethod
     def delete_entry(self, entry: EntryType):
         r""" Remove the entry from the pack.
 
@@ -211,12 +215,14 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        c: str = self._pack_manager.get_component(self.meta.serial_session,
-                                                  self.meta.pack_id)
-        try:
-            self.creation_records[c].add(entry_id)
-        except KeyError:
-            self.creation_records[c] = {entry_id}
+        c = self._pack_manager.get_component(self.meta.serial_session,
+                                             self.meta.pack_id)
+
+        if c is not None:
+            try:
+                self.creation_records[c].add(entry_id)
+            except KeyError:
+                self.creation_records[c] = {entry_id}
 
     def add_field_record(self, entry_id: int, field_name: str):
         """
@@ -248,7 +254,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def get_ids_by_component(self, component: str) -> Set[int]:
         r"""Look up the component_index with key ``component``."""
-        print(self.creation_records)
         entry_set: Set[int] = self.creation_records[component]
 
         if len(entry_set) == 0:

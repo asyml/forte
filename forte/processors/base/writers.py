@@ -141,6 +141,7 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(resources, configs)
         pack_index = os.path.join(self.configs.output_dir, 'pack.idx')
+        ensure_dir(pack_index)
         self.pack_idx_out = open(pack_index, 'w')
 
     def pack_name(self, pack: DataPack) -> str:

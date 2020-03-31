@@ -74,7 +74,10 @@ class Entry(Generic[ContainerType]):
         self.__field_modified: Set[str] = set()
         pack.validate(self)
 
-        pack.add_entry_creation_record(self._tid)
+        self.record_creation()
+
+    def record_creation(self):
+        self.__pack.add_entry_creation_record(self._tid)
 
     def reset(self):
         """

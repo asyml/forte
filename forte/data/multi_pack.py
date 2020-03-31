@@ -103,6 +103,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for a in self.groups:
             a.set_pack(self)
 
+    def __iter__(self):
+        yield from self.links
+        yield from self.groups
+        yield from self.generics
+
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 

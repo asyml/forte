@@ -73,8 +73,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._pack_manager = PackManager()
         self._session_id = self._pack_manager.get_new_session()
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""Returns a `dict` of configurations of the reader with default
         values. Used to replace the missing values of input `configs`
         during pipeline construction.
@@ -116,12 +116,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
         the :meth:`_parse_pack` method.
         """
         for p in self._parse_pack(collection):
-            self._pack_manager.lock_pack(
-                p.meta.serial_session, p.meta.pack_id,
-                self.name)
             self._pack_manager.register_pack_with_session(self._session_id, p)
-            self._pack_manager.release_pack(
-                p.meta.serial_session, p.meta.pack_id)
+            for entry in p:
+                entry.record_creation()
             yield p
 
     @abstractmethod

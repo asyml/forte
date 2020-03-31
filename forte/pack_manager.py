@@ -69,16 +69,14 @@ class PackManager:
             raise ProcessFlowException("The pack manager is not initialized.")
         return self.instance.global_id_map[(session_id, pack_id)]
 
-    def get_component(self, session_id: int, pack_id: int) -> str:
+    def get_component(self, session_id: int, pack_id: int) -> Optional[str]:
         if self.instance is None:
             raise ProcessFlowException("The pack manager is not initialized.")
 
         if (session_id, pack_id) in self.instance.locked_pack:
             return self.instance.locked_pack[(session_id, pack_id)]
         else:
-            raise ProcessFlowException(
-                f"The pack indexed by [{session_id}, {pack_id}] "
-                f"has not obtained by any component.")
+            return None
 
     def lock_pack(self, session_id: int, pack_id: int, component: str):
         if self.instance is None:

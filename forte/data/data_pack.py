@@ -119,6 +119,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         for a in self.generics:
             a.set_pack(self)
 
+    def __iter__(self):
+        yield from self.annotations
+        yield from self.links
+        yield from self.groups
+        yield from self.generics
+
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)
 
