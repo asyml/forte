@@ -17,20 +17,16 @@ import logging
 from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
                     Tuple)
 
-import jsonpickle
-
-from forte.data.ontology.core import EntryType
-from forte.data.types import DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
 from forte.data.index import BaseIndex
+from forte.data.ontology.core import Entry
+from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries,
     MultiPackGeneric)
-from forte.data.ontology.core import Entry
 from forte.data.span import Span
-from forte.pack_manager import PackManager
-from forte.utils.thread import AtomicCounter
+from forte.data.types import DataRequest
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +151,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: The pack at the index.
 
         """
-        return self.__pack_manager.get_pack(*self._pack_references[index])
+        return self._pack_manager.get_pack(*self._pack_references[index])
 
     def get_pack(self, name: str) -> DataPack:
         """

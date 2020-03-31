@@ -13,7 +13,6 @@
 # limitations under the License.
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
 from forte.processors.base.writers import JsonPackWriter, MultiPackWriter
 
 

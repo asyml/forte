@@ -70,6 +70,10 @@ class BaseMeta:
     def pack_id(self) -> int:
         return self._pack_id
 
+    @pack_id.setter
+    def pack_id(self, pid: int):
+        self._pack_id = pid
+
     @property
     def serial_session(self) -> int:
         return self._serial_session
@@ -207,8 +211,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        c = self._pack_manager.get_component(self.meta.serial_session,
-                                             self.meta.pack_id)
+        c: str = self._pack_manager.get_component(self.meta.serial_session,
+                                                  self.meta.pack_id)
         try:
             self.creation_records[c].add(entry_id)
         except KeyError:

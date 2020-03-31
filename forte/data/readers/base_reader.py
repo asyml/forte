@@ -16,19 +16,17 @@ Base reader type to be inherited by all readers.
 """
 import logging
 import os
-
 from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
 from forte.common.resources import Resources
-from forte.data.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.data.types import ReplaceOperationsType
 from forte.pack_manager import PackManager
 from forte.pipeline_component import PipelineComponent
-from forte.process_manager import _ProcessManager
 from forte.utils.utils import get_full_module_name
 
 __all__ = [
@@ -117,9 +115,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
         This internally setup the component meta data. Users should implement
         the :meth:`_parse_pack` method.
         """
-        self._process_manager.current_component = self.component_name
         for p in self._parse_pack(collection):
+            self._pack_manager.lock_pack(
+                p.meta.serial_session, p.meta.pack_id,
+                self.name)
             self._pack_manager.register_pack_with_session(self._session_id, p)
+            self._pack_manager.release_pack(
+                p.meta.serial_session, p.meta.pack_id)
             yield p
 
     @abstractmethod

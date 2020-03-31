@@ -33,7 +33,7 @@ from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader,
     print_progress, print_notice)
-from forte.data.readers import PackReader
+from forte.data.readers.base_reader import PackReader
 from ft.onto.wikipedia import WikiInfoBoxProperty, WikiInfoBoxMapped
 
 state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]

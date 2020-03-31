@@ -65,16 +65,31 @@ class PackManager:
         self.__lock = threading.Lock()
 
     def get_global_id(self, session_id: int, pack_id: int) -> int:
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
         return self.instance.global_id_map[(session_id, pack_id)]
 
-    def get_component(self, session_id: int, pack_id: int) -> Optional[str]:
-        return self.instance.locked_pack.get((session_id, pack_id), None)
+    def get_component(self, session_id: int, pack_id: int) -> str:
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
+
+        if (session_id, pack_id) in self.instance.locked_pack:
+            return self.instance.locked_pack[(session_id, pack_id)]
+        else:
+            raise ProcessFlowException(
+                f"The pack indexed by [{session_id}, {pack_id}] "
+                f"has not obtained by any component.")
 
     def lock_pack(self, session_id: int, pack_id: int, component: str):
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
+
         with self.__lock:
             self.instance.locked_pack[(session_id, pack_id)] = component
 
     def release_pack(self, session_id: int, pack_id: int):
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
         with self.__lock:
             try:
                 self.instance.locked_pack.pop((session_id, pack_id))
@@ -89,6 +104,8 @@ class PackManager:
 
         Returns: The session Id to be used.
         """
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
         with self.__lock:
             self.instance.pack_id_session += 1
             return self.instance.pack_id_session
@@ -104,12 +121,13 @@ class PackManager:
         Returns:
 
         """
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
         if (session_id, pack_id) in self.instance.locked_pack:
             raise ProcessFlowException(
-                "Cannot de-register a pack [%d,%d] when it is still "
-                "in used by a component [%s]",
-                session_id, pack_id,
-                self.instance.locked_pack[(session_id, pack_id)])
+                f"Cannot de-register a pack [{session_id},{pack_id}] when "
+                f"it is still in used by a component "
+                f"[{self.instance.locked_pack[(session_id, pack_id)]}]")
         self.instance.pack_pool.pop((session_id, pack_id))
 
     def register_pack(self, pack: ContainerType):
@@ -139,15 +157,22 @@ class PackManager:
         Returns:
 
         """
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
+
         with self.__lock:
-            pack.meta.serial_session = id_session
-            if pack.meta.pack_id < 0:
+            meta = pack.meta  # type: ignore
+
+            meta.serial_session = id_session
+
+            s_pid: Tuple[int, int]
+            if meta.pack_id < 0:
                 # This is a new pack, new pid will be assigned.
                 self.instance.default_next_id += 1
                 s_pid = (id_session, self.instance.default_next_id)
-                pack.meta._pack_id = self.instance.default_next_id
+                meta.pack_id = self.instance.default_next_id
             else:
-                s_pid: Tuple[int, int] = (id_session, pack.meta.pack_id)
+                s_pid = (id_session, meta.pack_id)
                 if s_pid in self.instance.pack_pool:
                     return
 
@@ -164,4 +189,7 @@ class PackManager:
         Returns:
 
         """
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
+
         return self.instance.pack_pool[(id_session, pack_id)]

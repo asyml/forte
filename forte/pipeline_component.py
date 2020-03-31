@@ -14,7 +14,7 @@
 """
 Pipeline component module.
 """
-from typing import Generic, Optional, Union, Dict, Type
+from typing import Generic, Optional, Union, Dict, Any
 
 import yaml
 from texar.torch import HParams
@@ -22,6 +22,7 @@ from texar.torch import HParams
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
+from forte.pack_manager import PackManager
 from forte.process_manager import _ProcessManager
 from forte.utils import get_full_module_name
 
@@ -29,11 +30,12 @@ from forte.utils import get_full_module_name
 class PipelineComponent(Generic[PackType]):
     def __init__(self):
         self._process_manager: _ProcessManager
-
-    def _assign_manager(self, process_manager: _ProcessManager):
-        self._process_manager = process_manager
+        self._pack_manager: PackManager = PackManager()
 
     # pylint: disable=attribute-defined-outside-init
+    def assign_manager(self, process_manager: _ProcessManager):
+        self._process_manager = process_manager
+
     def initialize(self, resources: Resources, configs: HParams):
         r"""The pipeline will call the initialize method at the start of a
         processing. The processor and reader will be initialized with
@@ -70,20 +72,39 @@ class PipelineComponent(Generic[PackType]):
         pass
 
     @classmethod
-    def make_configs(cls, configs: Optional[Union[Dict, Config]]):
+    def make_configs(
+            cls, configs: Optional[Union[Config, Dict[str, Any]]]) -> Config:
+        """
+        Create the component configuration for this class, by merging the
+        provided config with the ``default_config``.
+
+        The following config conventions are expected:
+          - The top level key can be a special `config_path`.
+          - `config_path` should be point to a file system path, which will
+             be a YAML file containing configurations.
+          - Other key values in the configs will be considered as parameters.
+
+        Args:
+            configs: The input config to be merged with the default config.
+
+        Returns:
+            The merged configuration.
+        """
         merged_configs: Dict = {}
 
-        if configs is None:
-            configs = {}
+        if configs is not None:
+            if isinstance(configs, Config):
+                configs = configs.todict()
 
-        if "config_path" in configs and not configs["config_path"] is None:
-            config_path = configs.pop('config_path')
-            filebased_configs = yaml.safe_load(open(config_path))
-        else:
-            filebased_configs = {}
+            if "config_path" in configs and not configs["config_path"] is None:
+                filebased_configs = yaml.safe_load(
+                    open(configs.pop("config_path")))
+            else:
+                filebased_configs = {}
 
-        merged_configs.update(filebased_configs)
-        merged_configs.update(configs)
+            merged_configs.update(filebased_configs)
+
+            merged_configs.update(configs)
 
         final_configs = Config(merged_configs, cls.default_configs())
         return final_configs
@@ -93,7 +114,5 @@ class PipelineComponent(Generic[PackType]):
         r"""Returns a `dict` of configurations of the component with default
         values. Used to replace the missing values of input `configs`
         during pipeline construction.
-
-
         """
         return {}

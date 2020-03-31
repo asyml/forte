@@ -17,12 +17,12 @@ Base class for Pipeline module.
 
 import itertools
 import logging
-from typing import Any, Dict, Generic, Iterator, List, Optional, Union
+from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple
 
 import yaml
-from texar.torch import HParams
 
 from forte.common import ProcessorConfigError
+from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
@@ -97,13 +97,13 @@ class Pipeline(Generic[PackType]):
 
     def __init__(self, resource: Optional[Resources] = None):
         self._reader: BaseReader
-        self._reader_config: Optional[HParams]
+        self._reader_config: Optional[Config]
 
         self._components: List[PipelineComponent] = []
         self._selectors: List[Selector] = []
 
         self._processors_index: Dict = {'': -1}
-        self._configs: List[Optional[HParams]] = []
+        self._configs: List[Optional[Config]] = []
 
         # Will intialize at `initialize` because the processors length is
         # unknown.
@@ -152,17 +152,15 @@ class Pipeline(Generic[PackType]):
                         "The first component of a pipeline must be a reader.")
                 self.set_reader(component, component_config.get('configs', {}))
             else:
-                if isinstance(component, BaseProcessor):
-                    self.add(component, component_config.get('configs', {}))
-                elif isinstance(component, Caster):
-                    pass
+                # Can be processor, caster, or eavluator
+                self.add(component, component_config.get('configs', {}))
 
     def initialize(self):
         # The process manager need to be assigned first.
         self.proc_mgr = _ProcessManager(len(self._components))
 
         self._reader.initialize(self.resource, self._reader_config)
-        self._reader._assign_manager(self.proc_mgr)
+        self._reader.assign_manager(self.proc_mgr)
 
         self.initialize_processors()
 
@@ -170,14 +168,14 @@ class Pipeline(Generic[PackType]):
         for processor, config in zip(self.components, self.processor_configs):
             try:
                 processor.initialize(self.resource, config)
-                processor._assign_manager(self.proc_mgr)
+                processor.assign_manager(self.proc_mgr)
             except ProcessorConfigError as e:
                 logging.error("Exception occur when initializing "
                               "processor %s", processor.name)
                 raise e
 
     def set_reader(self, reader: BaseReader,
-                   config: Optional[Union[HParams, Dict[str, Any]]] = None):
+                   config: Optional[Union[Config, Dict[str, Any]]] = None):
         self._reader = reader
         self._reader_config = reader.make_configs(config)
 
@@ -194,7 +192,7 @@ class Pipeline(Generic[PackType]):
         return self._configs
 
     def add(self, component: PipelineComponent,
-            config: Optional[Union[HParams, Dict[str, Any]]] = None,
+            config: Optional[Union[Config, Dict[str, Any]]] = None,
             selector: Optional[Selector] = None):
         self._processors_index[component.name] = len(self.components)
         if isinstance(component, Evaluator):
@@ -490,7 +488,8 @@ class Pipeline(Generic[PackType]):
                                     c_queue[:processed_queue_index + 1]:
 
                                 if should_yield:
-                                    self._predict_to_gold.pop(job_i.id, None)
+                                    if job_i.id in self._predict_to_gold:
+                                        self._predict_to_gold.pop(job_i.id)
                                     yield job_i.pack
                                 else:
                                     self.proc_mgr.add_to_queue(
@@ -529,7 +528,8 @@ class Pipeline(Generic[PackType]):
                             # current_queue is modified in this array
                             for job_i in list(current_queue):
                                 if should_yield:
-                                    self._predict_to_gold.pop(job_i.id, None)
+                                    if job_i.id in self._predict_to_gold:
+                                        self._predict_to_gold.pop(job_i.id)
                                     yield job_i.pack
                                 else:
                                     self.proc_mgr.add_to_queue(
@@ -584,11 +584,8 @@ class Pipeline(Generic[PackType]):
                     self.proc_mgr.current_processor_index = next_queue_index
                     self.proc_mgr.current_queue_index = next_queue_index
 
-    def evaluate(self):
+    def evaluate(self) -> Iterator[Tuple[str, Any]]:
         for i in self.evaluator_indices:
             p = self.components[i]
             assert isinstance(p, Evaluator)
-            return p.get_result()
-        else:
-            raise ValueError("Pipeline has no evaluator. "
-                             "Cannot evaluate the results.")
+            yield p.name, p.get_result()

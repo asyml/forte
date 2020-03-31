@@ -40,7 +40,6 @@ class ProcessJob:
         the system itself. One should not call this function without proper
         understanding.
 
-        
         Args:
             pack:
 

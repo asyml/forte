@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 
-class WikiArticleWriter(JsonPackWriter[DataPack]):
+class WikiArticleWriter(JsonPackWriter):
     article_index: TextIO
 
     # It is difficult to get the type of the csv writer

@@ -18,7 +18,7 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import OntonotesReader, DirPackReader
 from forte.pipeline import Pipeline
-from forte.processors.base import MultiPackProcessor, MultiPackWriter
+from forte.processors.base import MultiPackProcessor
 from forte.processors.nltk_processors import (
     NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
 from forte.processors.writers import DocIdJsonPackWriter, DocIdMultiPackWriter
@@ -34,7 +34,11 @@ class PackCopier(MultiPackProcessor):
         from_pack: DataPack = input_pack.get_pack(self.configs.copy_from)
 
         copy_pack.set_text(from_pack.text)
-        copy_pack.meta.doc_id = from_pack.meta.doc_id + '_copy'
+
+        if from_pack.meta.doc_id is not None:
+            copy_pack.meta.doc_id = from_pack.meta.doc_id + '_copy'
+        else:
+            copy_pack.meta.doc_id = 'copy'
 
         input_pack.add_pack(copy_pack, self.configs.copy_to)
 

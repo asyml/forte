@@ -47,9 +47,14 @@ class AtomicCounter:
 
     def __init__(self, initial=0):
         self.value = initial
-        self.__lock = threading.Lock
+        self.__lock = threading.Lock()
 
     def increment(self, amount=1) -> int:
         with self.__lock:
             self.value += amount
             return self.value
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

@@ -69,7 +69,6 @@ class _ProcessManager:
     """
 
     def __init__(self, pipeline_length):
-        self._current_component: str = '__default__'
         self._pipeline_length: int = pipeline_length
         self._queues: List[Deque[ProcessJob]] = [
             deque() for _ in range(pipeline_length)]
@@ -77,19 +76,6 @@ class _ProcessManager:
         self._current_processor_index: int = 0
         self._unprocessed_queue_indices: List[int] = [0] * pipeline_length
         self._processed_queue_indices: List[int] = [-1] * pipeline_length
-
-    @property
-    def current_component(self) -> str:
-        return self._current_component
-
-    @current_component.setter
-    def current_component(self, component_name: str):
-        r"""Set the current component
-
-        Args:
-             component_name (str): Current component name
-        """
-        self._current_component = component_name
 
     @property
     def current_processor_index(self):
@@ -144,7 +130,3 @@ class _ProcessManager:
 
         return (len(self._queues[self.pipeline_length - 1]) == 1
                 and self._queues[self.pipeline_length - 1][0].is_poison)
-
-    @property
-    def component(self):
-        return self._current_component

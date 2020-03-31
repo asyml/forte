@@ -40,7 +40,7 @@ __all__ = [
 
 
 def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
-               indent: int = None, zip_pack: bool = False,
+               indent: Optional[int] = None, zip_pack: bool = False,
                overwrite: bool = False) -> Optional[str]:
     """
     Write a pack to a path.
@@ -138,6 +138,7 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
         self.pack_base_out = 'packs'
 
     def initialize(self, resources: Resources, configs: HParams):
+        # pylint: disable=attribute-defined-outside-init
         super().initialize(resources, configs)
         pack_index = os.path.join(self.configs.output_dir, 'pack.idx')
         self.pack_idx_out = open(pack_index, 'w')

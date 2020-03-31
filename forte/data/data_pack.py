@@ -16,21 +16,19 @@ import logging
 from typing import (Dict, Iterable, Iterator, List, Optional, Type, Union, Any,
                     Set, Callable, Tuple)
 
-import jsonpickle
 import numpy as np
 from sortedcontainers import SortedList
 
 from forte.common.exception import EntryNotFoundError
-from forte.data.ontology.core import EntryType
-from forte.data.types import ReplaceOperationsType, DataRequest
+from forte.data import data_utils_io
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.span import Span
 from forte.data.ontology.core import Entry
+from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generics, Query)
-from forte.data import data_utils_io
-from forte.pack_manager import PackManager
+from forte.data.span import Span
+from forte.data.types import ReplaceOperationsType, DataRequest
 
 logger = logging.getLogger(__name__)
 

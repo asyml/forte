@@ -30,9 +30,6 @@ OutputPackType = TypeVar('OutputPackType', bound=BasePack)
 
 class Caster(PipelineComponent[InputPackType],
              Generic[InputPackType, OutputPackType]):
-    def __init__(self):
-        super().__init__()
-
     def cast(self, pack: InputPackType) -> OutputPackType:
         raise NotImplementedError
 
@@ -41,14 +38,7 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
     """
     This class creates a MultiPack from a DataPack, this MultiPack will only
     contains the original DataPack, indexed by the :attr:`pack_name`.
-
-    Attributes:
-        pack_name: The pack name that will be assigned to the data pack when
-            it is boxed to the multi pack.
     """
-
-    def __init__(self):
-        super().__init__()
 
     def cast(self, pack: DataPack) -> MultiPack:
         """
