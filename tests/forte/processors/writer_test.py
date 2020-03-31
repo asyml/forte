@@ -20,8 +20,9 @@ import tempfile
 import unittest
 from typing import List, Dict
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import OntonotesReader, \
-    RecursiveDirectoryDeserializeReader, DataPack
+    RecursiveDirectoryDeserializeReader
 from forte.pipeline import Pipeline
 from forte.processors.nltk_processors import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter

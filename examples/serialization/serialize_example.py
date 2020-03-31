@@ -22,6 +22,7 @@ from forte.processors.base import MultiPackProcessor
 from forte.processors.nltk_processors import (
     NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
 from forte.processors.writers import DocIdJsonPackWriter, DocIdMultiPackWriter
+from ft.onto.base_ontology import EntityMention, CrossDocEntityRelation
 
 
 class PackCopier(MultiPackProcessor):
@@ -40,6 +41,12 @@ class PackCopier(MultiPackProcessor):
         else:
             copy_pack.meta.doc_id = 'copy'
 
+        ent: EntityMention
+        for ent in from_pack.get_entries(EntityMention):
+            copy_pack.add_entry(
+                EntityMention(copy_pack, ent.begin, ent.end)
+            )
+
         input_pack.add_pack(copy_pack, self.configs.copy_to)
 
     @classmethod
@@ -48,6 +55,24 @@ class PackCopier(MultiPackProcessor):
             'copy_from': 'default',
             'copy_to': 'duplicate'
         }
+
+
+class ExampleCoreferencer(MultiPackProcessor):
+    """
+    Mark some example coreference relations.
+    """
+
+    def _process(self, input_pack: MultiPack):
+        pack_i = input_pack.get_pack('default')
+        pack_j = input_pack.get_pack('duplicate')
+
+        for ent_i, ent_j in zip(pack_i.get_entries(EntityMention),
+                                pack_j.get_entries(EntityMention)):
+            link = CrossDocEntityRelation(input_pack)
+            link.set_parent(input_pack.subentry(0, ent_i))
+            link.set_child(input_pack.subentry(1, ent_j))
+            link.rel_type = 'coreference'
+            input_pack.add_entry(link)
 
 
 def pack_example(input_path, output_path):
@@ -100,10 +125,9 @@ def multi_example(input_path, output_path):
 
     nlp = Pipeline()
     nlp.set_reader(DirPackReader())
-
     nlp.add(MultiPackBoxer())
-
     nlp.add(PackCopier())
+    nlp.add(ExampleCoreferencer())
 
     nlp.add(
         DocIdMultiPackWriter(),

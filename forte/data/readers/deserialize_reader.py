@@ -15,6 +15,7 @@ import os
 from abc import ABC
 from typing import Iterator, List, Any
 
+from forte.common.exception import ProcessExecutionException
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
@@ -32,7 +33,17 @@ class BaseDeserializeReader(PackReader, ABC):
         return "cached_string_file"
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
+        if data_source is None:
+            raise ProcessExecutionException(
+                "Data source is None, cannot deserialize.")
+
         pack: DataPack = DataPack.deserialize(data_source)
+
+        if pack is None:
+            raise ProcessExecutionException(
+                f"Cannot recover pack from the following data source: \n"
+                f"{data_source}")
+
         yield pack
 
 
@@ -71,8 +82,8 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
                     with open(os.path.join(root, file)) as f:
                         yield f.read()
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         return {
             "suffix": ".json"
         }

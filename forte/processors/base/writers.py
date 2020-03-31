@@ -163,18 +163,18 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
     def _process(self, input_pack: MultiPack):
         pack_out_dir = os.path.join(self.configs.output_dir, self.pack_base_out)
 
-        # TODO: pack idx not correct yet.
         for pack in input_pack.packs:
-            pack_id: str = str(pack.meta.pack_id)
             pack_out = write_pack(
-                pack, pack_out_dir, self.pack_name(pack),
-                self.configs.indent, self.configs.zip_pack)
-            self.pack_idx_out.write(f'{pack_id}\t{pack_out}\n')
+                pack, pack_out_dir, self.pack_name(pack), self.configs.indent,
+                self.configs.zip_pack, self.configs.overwrite)
+
+            global_index = self._pack_manager.get_global_id(*pack.meta.pack_key)
+            self.pack_idx_out.write(f'{global_index}\t{pack_out}\n')
 
         write_pack(
             input_pack, self.configs.output_dir,
-            self.multipack_name(input_pack),
-            self.configs.indent, self.configs.zip_pack
+            self.multipack_name(input_pack), self.configs.indent,
+            self.configs.zip_pack, self.configs.overwrite
         )
 
     def finish(self, resource: Resources):

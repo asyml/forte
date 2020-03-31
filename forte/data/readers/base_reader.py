@@ -20,6 +20,7 @@ from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
+from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -115,6 +116,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         This internally setup the component meta data. Users should implement
         the :meth:`_parse_pack` method.
         """
+        if collection is None:
+            raise ProcessExecutionException(
+                "Got None collection, cannot parse as data pack.")
+
         for p in self._parse_pack(collection):
             self._pack_manager.register_pack_with_session(self._session_id, p)
             for entry in p:

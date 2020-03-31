@@ -50,6 +50,7 @@ class BaseMeta:
         # Convert the 2-int tuple key to a global key.
         this_key = self.pack_key
         state['_pack_id'] = self._pack_manager.get_global_id(*this_key)
+
         state.pop('_serial_session')
         state.pop('_pack_manager')
         return state

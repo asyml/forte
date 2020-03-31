@@ -77,6 +77,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def __getstate__(self):
         r"""In serialization, the packs won't be saved directly in this dict.
+        Instead, only the pack reference to those single packs will be kept.
+        The serialization need to make sure all the serialization IDs are
+        matching correctly.
         """
         state = super().__getstate__()
 

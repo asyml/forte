@@ -68,6 +68,14 @@ class Annotation(Entry):
     def span(self):
         return self._span
 
+    @property
+    def begin(self):
+        return self._span.begin
+
+    @property
+    def end(self):
+        return self._span.end
+
     def set_span(self, begin: int, end: int):
         r"""Set the span of the annotation.
         """
@@ -287,8 +295,8 @@ class MultiPackLink(BaseLink):
     def __init__(
             self,
             pack: PackType,
-            parent: Optional[SubEntry],
-            child: Optional[SubEntry],
+            parent: Optional[SubEntry] = None,
+            child: Optional[SubEntry] = None,
     ):
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
@@ -316,17 +324,19 @@ class MultiPackLink(BaseLink):
             parent: The parent of the link, identified as a sub entry, which
                 has a value for the pack index and the tid in the pack.
         """
-        if not isinstance(parent, self.ParentType):
+        parent_entry = self.pack.get_subentry(parent)
+        if not isinstance(parent_entry, self.ParentType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
-                f"instance of {self.ParentType}, but get {type(parent)}")
+                f"instance of {self.ParentType}, but get {type(parent_entry)}")
         self._parent = parent.index_key
 
     def set_child(self, child: SubEntry):  # type: ignore
-        if not isinstance(child, self.ChildType):
+        child_entry = self.pack.get_subentry(child)
+        if not isinstance(child_entry, self.ChildType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
-                f"instance of {self.ChildType}, but get {type(child)}")
+                f"instance of {self.ChildType}, but get {type(child_entry)}")
         self._child = child.index_key
 
     def get_parent(self) -> SubEntry:
