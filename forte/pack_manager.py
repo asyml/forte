@@ -103,7 +103,7 @@ class PackManager:
         except ValueError:
             pass
 
-    def set_remappaed_pack_id(self, pack: ContainerType):
+    def set_remapped_pack_id(self, pack: ContainerType):
         """
         Give a new id to the pack and remember the remap.
 
@@ -141,7 +141,7 @@ class PackManager:
     def set_pack_id(self, pack: ContainerType):
         """
         Assign the next id to the incoming pack.
-        
+
         Args:
             pack: The pack to assign pack id on.
 
@@ -213,7 +213,7 @@ class PackManager:
         """
         return self.instance().pack_pool[pack_id]
 
-    def instance(self) -> __PackManager:
+    def instance(self):  # I don't know how to specify type __PackManager.
         if self.__instance is None:
             raise ProcessFlowException("The pack manager is not initialized.")
 

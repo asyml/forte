@@ -47,5 +47,4 @@ class TestStanfordNLPProcessor(unittest.TestCase):
                      "pipelines.",
                      "NLP has never been made this easy before."]
         document = ' '.join(sentences)
-        pack = self.stanford_nlp.process(document)
-        print(pack)
+        self.stanford_nlp.process(document)

@@ -138,9 +138,6 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
     pack_idx = 'pack.idx'
     multi_idx = 'multi.idx'
 
-    def __init__(self):
-        super().__init__()
-
     def initialize(self, resources: Resources, configs: HParams):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(resources, configs)

@@ -18,7 +18,6 @@ from typing import Iterator, List, Any, Dict
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
-from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
@@ -26,7 +25,8 @@ from forte.data.readers.base_reader import PackReader, MultiPackReader
 __all__ = [
     'RawDataDeserializeReader',
     'RecursiveDirectoryDeserializeReader',
-    'DirPackReader'
+    'DirPackReader',
+    'MultiPackDiskReader',
 ]
 
 
@@ -128,10 +128,11 @@ class MultiPackDiskReader(MultiPackReader):
 
         with open(multi_idx_path) as multi_idx:
             for line in multi_idx:
-                pid, multi_path = line.strip().split()
+                _, multi_path = line.strip().split()
                 yield multi_path
 
     def _parse_pack(self, multi_pack_path: str) -> Iterator[MultiPack]:
+        # pylint: disable=protected-access
         with open(os.path.join(
                 self.configs.data_path, multi_pack_path)) as m_data:
             m_pack: MultiPack = MultiPack.deserialize(m_data.read())
@@ -145,12 +146,13 @@ class MultiPackDiskReader(MultiPackReader):
                     # needs it.
                     self._pack_manager.reference_pack(pack)
 
-            self.remap_packs(m_pack)
+            self._remap_packs(m_pack)
 
             yield m_pack
 
-    def remap_packs(self, multi_pack: MultiPack):
+    def _remap_packs(self, multi_pack: MultiPack):
         """Need to call this after reading the relevant data packs"""
+        # pylint: disable=protected-access
         new_pack_refs: List[int] = []
         for pid in multi_pack._pack_ref:
             new_pack_refs.append(self._pack_manager.get_remapped_id(pid))

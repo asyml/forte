@@ -108,7 +108,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         super().__setstate__(state)
 
         # Obtain a new pack id for this pack, and record the change of id.
-        self._pack_manager.set_remappaed_pack_id(self)
+        self._pack_manager.set_remapped_pack_id(self)
 
         self.annotations = SortedList(self.annotations)
         self.index = DataIndex()

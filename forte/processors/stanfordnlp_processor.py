@@ -14,7 +14,7 @@
 
 from typing import List, Any, Dict
 
-import stanfordnlp
+import stanza
 from texar.torch import HParams
 
 from ft.onto.base_ontology import Token, Sentence, Dependency
@@ -36,14 +36,14 @@ class StandfordNLPProcessor(PackProcessor):
         self.lang = 'en'  # English is default
 
     def set_up(self):
-        stanfordnlp.download(self.lang, self.MODELS_DIR)
+        stanza.download(self.lang, self.MODELS_DIR)
 
     # pylint: disable=unused-argument
     def initialize(self, resources: Resources, configs: HParams):
         self.processors = configs.processors
         self.lang = configs.lang
         self.set_up()
-        self.nlp = stanfordnlp.Pipeline(**configs.todict(),
+        self.nlp = stanza.Pipeline(**configs.todict(),
                                         models_dir=self.MODELS_DIR)
 
     @classmethod

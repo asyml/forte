@@ -13,7 +13,6 @@
 # limitations under the License.
 from typing import Any, Dict
 
-from forte.common import Resources
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
