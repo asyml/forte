@@ -120,12 +120,11 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 "Got None collection, cannot parse as data pack.")
 
         for p in self._parse_pack(collection):
-            # Overwrite the session id with the reader's session.
-            self._pack_manager.obtain_pack(p.meta.pack_id, self.name)
             for entry in p:
+                # Here the creation will be recorded to the reader because
+                # we have set the reader to be the initial_reader in the
+                # pack manager.
                 entry.record_creation()
-            self._pack_manager.release_pack(p.meta.pack_id)
-
             yield p
 
     @abstractmethod

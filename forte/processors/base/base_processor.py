@@ -40,8 +40,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
     def process(self, input_pack: PackType):
         # Set the component for recording purpose.
-        self._pack_manager.obtain_pack(
-            input_pack.meta.pack_id, self.name)
+        input_pack.set_control_component(self.name)
         self._process(input_pack)
 
         # Change status for pack processors
@@ -52,8 +51,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         for job_i in itertools.islice(current_queue, 0, u_index + 1):
             if job_i.status == ProcessJobStatus.UNPROCESSED:
                 job_i.set_status(ProcessJobStatus.PROCESSED)
-
-        self._pack_manager.release_pack(input_pack.meta.pack_id)
 
     @abstractmethod
     def _process(self, input_pack: PackType):

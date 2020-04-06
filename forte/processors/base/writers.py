@@ -189,7 +189,7 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
             f'{input_pack.meta.pack_id}\t'
             f'{os.path.relpath(multi_out, self.configs.output_dir)}\n')
 
-    def finish(self, resource: Resources):
+    def finish(self, _):
         self.pack_idx_out.close()
         self.multi_idx_out.close()
 

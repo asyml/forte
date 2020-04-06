@@ -49,11 +49,8 @@ class PackManager:
             # A global ID counter.
             self.next_id: int = 0
 
-            # The token holder is allow to create a pack.
-            self.pack_creation_token_holder: Optional[str] = None
-
-            # The pack is obtained by particular component.
-            self.obtained_by: Dict[int, str] = {}
+            # This is the initial reader component.
+            self.initial_reader: Optional[str] = None
 
             # This creates a re-mapping of some deserialized data packs to
             # their new id.
@@ -65,43 +62,18 @@ class PackManager:
         if not PackManager.__instance:
             PackManager.__instance = PackManager.__PackManager()
 
-    def get_component(self, pack_id: int) -> Optional[str]:
-        return self.instance().obtained_by.get(pack_id, None)
+    def reset(self):
+        if self.__instance is not None:
+            self.__instance.__init__()
 
-    def obtain_pack(self, pack_id: int, component: str):
-        """
-        A component call this method to obtain the data pack. Once taken,
-        all the modification to the data pack will be recorded by the component.
+    def set_input_source(self, input_component: str):
+        self.instance().initial_reader = input_component
 
-        Args:
-            pack_id:
-            component:
+    def get_input_source(self) -> str:
+        if self.instance().initial_reader is None:
+            raise ProcessFlowException("Input source is not set.")
 
-        Returns:
-
-        """
-        if pack_id not in self.instance().obtained_by:
-            self.instance().obtained_by[pack_id] = component
-        else:
-            raise ProcessFlowException(
-                f"Both {component} and {self.instance().obtained_by[pack_id]} "
-                f"are trying to obtain the same pack, this is currently "
-                f"not allowed.")
-
-    def release_pack(self, pack_id: int):
-        """
-        A component call this method to release the data pack.
-
-        Args:
-            pack_id:
-
-        Returns:
-
-        """
-        try:
-            self.instance().obtained_by.pop(pack_id)
-        except ValueError:
-            pass
+        return self.instance().initial_reader
 
     def set_remapped_pack_id(self, pack: ContainerType):
         """
@@ -189,11 +161,10 @@ class PackManager:
         """
         pack_id = get_pack_id(pack)
 
-        if pack_id in self.instance().obtained_by:
+        if self.instance().pack_references[pack_id] <= 0:
             raise ProcessFlowException(
-                f"Cannot de-register a pack [{pack_id}] when "
-                f"it is still in used by a component "
-                f"[{self.instance().obtained_by[pack_id]}]")
+                f"Pack reference count for pack [{pack_id}] is only "
+                f"self.instance().pack_references[pack_id], which is invalid.")
 
         # Reduce the reference count.
         self.instance().pack_references[pack_id] -= 1

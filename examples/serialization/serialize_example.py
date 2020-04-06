@@ -69,9 +69,7 @@ class ExampleCoreferencer(MultiPackProcessor):
 
         for ent_i, ent_j in zip(pack_i.get_entries(EntityMention),
                                 pack_j.get_entries(EntityMention)):
-            link = CrossDocEntityRelation(input_pack)
-            link.set_parent(input_pack.subentry(0, ent_i))
-            link.set_child(input_pack.subentry(1, ent_j))
+            link = CrossDocEntityRelation(input_pack, ent_i, ent_j)
             link.rel_type = 'coreference'
             input_pack.add_entry(link)
 

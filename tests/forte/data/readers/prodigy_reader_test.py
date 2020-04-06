@@ -33,6 +33,7 @@ class ProdigyReaderTest(unittest.TestCase):
                                               delete=False)
         self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(ProdigyReader())
+        self.nlp.initialize()
         self.create_sample_file()
 
     def tearDown(self):

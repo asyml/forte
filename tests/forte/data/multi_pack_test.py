@@ -74,11 +74,11 @@ class DataPackTest(unittest.TestCase):
         token: Annotation
         left_tokens = {}
         for token in self.multi_pack.packs[0].get(Token):
-            left_tokens[token.text] = self.multi_pack.subentry(0, token)
+            left_tokens[token.text] = token
 
         right_tokens = {}
         for token in self.multi_pack.packs[1].get(Token):
-            right_tokens[token.text] = self.multi_pack.subentry(1, token)
+            right_tokens[token.text] = token
 
         for key, lt in left_tokens.items():
             if key in right_tokens:
@@ -88,8 +88,8 @@ class DataPackTest(unittest.TestCase):
 
         linked_tokens = []
         for link in self.multi_pack.links:
-            parent_text = self.multi_pack.get_subentry(link.get_parent()).text
-            child_text = self.multi_pack.get_subentry(link.get_child()).text
+            parent_text = link.get_parent().text
+            child_text = link.get_child().text
             linked_tokens.append((parent_text, child_text))
 
         self.assertListEqual(
@@ -102,8 +102,8 @@ class DataPackTest(unittest.TestCase):
 
         linked_tokens = []
         for link in self.multi_pack.links:
-            parent_text = self.multi_pack.get_subentry(link.get_parent()).text
-            child_text = self.multi_pack.get_subentry(link.get_child()).text
+            parent_text = link.get_parent().text
+            child_text = link.get_child().text
             linked_tokens.append((parent_text, child_text))
 
         self.assertListEqual(

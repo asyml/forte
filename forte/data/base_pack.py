@@ -19,7 +19,6 @@ from typing import List, Optional, Set, Type, TypeVar, Union, Iterator
 
 import jsonpickle
 
-from forte.common import ProcessFlowException
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
@@ -91,6 +90,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         # Obtain the global pack manager.
         self._pack_manager: PackManager = PackManager()
+
+        self.__control_component: Optional[str] = None
 
     def __getstate__(self):
         state = super().__getstate__()
@@ -187,6 +188,18 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def view(self):
         return copy.deepcopy(self)
 
+    def set_control_component(self, component: str):
+        """
+        Record the current component that is taking control of this pack.
+
+        Args:
+            component: The component that is going to take control
+
+        Returns:
+
+        """
+        self.__control_component = component
+
     def add_entry_creation_record(self, entry_id: int):
         """
         Record who creates the entry, will be called
@@ -198,13 +211,15 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        c = self._pack_manager.get_component(self.meta.pack_id)
+        c = self.__control_component
 
-        if c is not None:
-            try:
-                self.creation_records[c].add(entry_id)
-            except KeyError:
-                self.creation_records[c] = {entry_id}
+        if c is None:
+            c = self._pack_manager.get_input_source()
+
+        try:
+            self.creation_records[c].add(entry_id)
+        except KeyError:
+            self.creation_records[c] = {entry_id}
 
     def add_field_record(self, entry_id: int, field_name: str):
         """
@@ -218,11 +233,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        c = self._pack_manager.get_component(self.meta.pack_id)
+        c = self.__control_component
 
         if c is None:
-            raise ProcessFlowException(
-                "No processor in control when adding field records.")
+            c = self._pack_manager.get_input_source()
+
         try:
             self.field_records[c].add((entry_id, field_name))
         except KeyError:
@@ -340,14 +355,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             if self.validate_group(entry):
                 groups.add(entry)  # type: ignore
         return groups
-
-    def finished(self):
-        """
-        De-register this pack from the global manager, mark as done.
-        Returns:
-
-        """
-        self._pack_manager.dereference_pack(self.meta.pack_id)
 
 
 PackType = TypeVar('PackType', bound=BasePack)

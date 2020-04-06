@@ -181,9 +181,7 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
             text += output_sentence + "\n"
 
             input_sent = input_pack.get_entry(input_id)
-            cross_link = MultiPackLink(
-                data_pack, data_pack.subentry(self.input_pack_name, input_sent),
-                data_pack.subentry(self.output_pack_name, sent))
+            cross_link = MultiPackLink(data_pack, input_sent, sent)
             data_pack.add_entry(cross_link)
             # We may also consider adding two link with opposite directions
             # Here the unidirectional link indicates the generation dependency

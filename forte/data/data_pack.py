@@ -85,9 +85,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         # Assign a pack id for this pack.
         self._pack_manager.set_pack_id(self)
 
-    def __del__(self):
-        self._pack_manager.dereference_pack(self)
-
     def __getstate__(self):
         r"""
         In serialization,

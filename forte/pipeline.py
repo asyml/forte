@@ -31,6 +31,7 @@ from forte.data.caster import Caster
 from forte.data.readers.base_reader import BaseReader
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
+from forte.pack_manager import PackManager
 from forte.pipeline_component import PipelineComponent
 from forte.process_job import ProcessJob
 from forte.process_manager import _ProcessManager, ProcessJobStatus
@@ -109,6 +110,10 @@ class Pipeline(Generic[PackType]):
         # unknown.
         self.proc_mgr: _ProcessManager
 
+        # This manager controls global pack access information
+        self._pack_manager: PackManager = PackManager()
+        self._pack_manager.reset()
+
         self.evaluator_indices: List[int] = []
 
         # needed for evaluator
@@ -119,7 +124,7 @@ class Pipeline(Generic[PackType]):
         else:
             self.resource = resource
 
-        self.initlialized: bool = False
+        self.initialized: bool = False
 
     def init_from_config_path(self, config_path):
         r"""Read the configurations from the given path ``config_path``
@@ -153,6 +158,7 @@ class Pipeline(Generic[PackType]):
                     raise ProcessorConfigError(
                         "The first component of a pipeline must be a reader.")
                 self.set_reader(component, component_config.get('configs', {}))
+                is_first = False
             else:
                 # Can be processor, caster, or evaluator
                 self.add(component, component_config.get('configs', {}))
@@ -166,7 +172,7 @@ class Pipeline(Generic[PackType]):
 
         self.initialize_processors()
 
-        self.initlialized = True
+        self.initialized = True
 
     def initialize_processors(self):
         for processor, config in zip(self.components, self.processor_configs):
@@ -182,6 +188,7 @@ class Pipeline(Generic[PackType]):
                    config: Optional[Union[Config, Dict[str, Any]]] = None):
         self._reader = reader
         self._reader_config = reader.make_configs(config)
+        self._pack_manager.set_input_source(reader.name)
 
     @property
     def reader(self):
@@ -411,7 +418,7 @@ class Pipeline(Generic[PackType]):
         #        |___________|       |_______________|     |_______________|
         #        |___________|       |_______________|     |_______________|
 
-        if not self.initlialized:
+        if not self.initialized:
             raise ProcessFlowException(
                 "Please call initialize before running the pipeline")
 

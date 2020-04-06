@@ -445,7 +445,6 @@ class MultiPackPipelineTest(unittest.TestCase):
     @data(2, 4, 8)
     def test_pipeline3(self, batch_size):
         """Tests a chain of Batch->Pack->Batch with different batch sizes."""
-
         nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
         nlp.set_reader(reader)
