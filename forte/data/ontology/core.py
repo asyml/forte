@@ -59,7 +59,7 @@ class Entry(Generic[ContainerType]):
     """
 
     def __init__(self, pack: ContainerType):
-        super(Entry, self).__init__()
+        super().__init__()
 
         self._tid: int = pack.get_next_id()
 

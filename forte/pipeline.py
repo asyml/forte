@@ -23,7 +23,8 @@ import yaml
 
 from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
-from forte.common.exception import ProcessExecutionException
+from forte.common.exception import ProcessExecutionException, \
+    ProcessFlowException
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.caster import Caster
@@ -45,7 +46,6 @@ __all__ = [
 
 
 class ProcessBuffer:
-
     def __init__(self,
                  pipeline: "Pipeline",
                  data_iter: Iterator[PackType],
@@ -119,6 +119,8 @@ class Pipeline(Generic[PackType]):
         else:
             self.resource = resource
 
+        self.initlialized: bool = False
+
     def init_from_config_path(self, config_path):
         r"""Read the configurations from the given path ``config_path``
         and build the pipeline with the config.
@@ -152,7 +154,7 @@ class Pipeline(Generic[PackType]):
                         "The first component of a pipeline must be a reader.")
                 self.set_reader(component, component_config.get('configs', {}))
             else:
-                # Can be processor, caster, or eavluator
+                # Can be processor, caster, or evaluator
                 self.add(component, component_config.get('configs', {}))
 
     def initialize(self):
@@ -163,6 +165,8 @@ class Pipeline(Generic[PackType]):
         self._reader.assign_manager(self.proc_mgr)
 
         self.initialize_processors()
+
+        self.initlialized = True
 
     def initialize_processors(self):
         for processor, config in zip(self.components, self.processor_configs):
@@ -195,6 +199,10 @@ class Pipeline(Generic[PackType]):
             config: Optional[Union[Config, Dict[str, Any]]] = None,
             selector: Optional[Selector] = None):
         self._processors_index[component.name] = len(self.components)
+
+        if isinstance(component, BaseReader):
+            raise ProcessFlowException("Reader need to be set via set_reader()")
+
         if isinstance(component, Evaluator):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
@@ -403,6 +411,10 @@ class Pipeline(Generic[PackType]):
         #        |___________|       |_______________|     |_______________|
         #        |___________|       |_______________|     |_______________|
 
+        if not self.initlialized:
+            raise ProcessFlowException(
+                "Please call initialize before running the pipeline")
+
         buffer = ProcessBuffer(self, data_iter)
 
         if len(self.components) == 0:
@@ -569,7 +581,8 @@ class Pipeline(Generic[PackType]):
                                          "during execution.")
 
                     if not job.is_poison and should_yield:
-                        self._predict_to_gold.pop(job.id)
+                        if job.id in self._predict_to_gold:
+                            self._predict_to_gold.pop(job.id)
                         yield job.pack
 
                     elif not should_yield:

@@ -22,7 +22,7 @@ from forte.data.readers import OntonotesReader, StringReader, PlainTextReader
 from forte.pipeline import Pipeline
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
 from tests.dummy_batch_processor import \
-    DummyRelationExtractor, DummmyFixedSizeBatchProcessor
+    DummyRelationExtractor, DummyFixedSizeBatchProcessor
 from ft.onto.base_ontology import RelationLink, Sentence
 
 
@@ -53,7 +53,7 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
     def test_one_batch_processor(self, batch_size):
         nlp = Pipeline[DataPack]()
         nlp.set_reader(StringReader())
-        batcher = DummmyFixedSizeBatchProcessor()
+        batcher = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
         nlp.add(NLTKSentenceSegmenter())
         nlp.add(batcher, config=config)
@@ -71,8 +71,8 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
     def test_two_batch_processors(self, batch_size):
         nlp = Pipeline[DataPack]()
         nlp.set_reader(PlainTextReader())
-        dummy1 = DummmyFixedSizeBatchProcessor()
-        dummy2 = DummmyFixedSizeBatchProcessor()
+        dummy1 = DummyFixedSizeBatchProcessor()
+        dummy2 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
         nlp.add(NLTKSentenceSegmenter())
 

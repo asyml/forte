@@ -17,23 +17,19 @@ Unit tests for Pipeline.
 
 import os
 import unittest
-
-from ddt import ddt, data, unpack
 from typing import Any, Dict, Iterator, Optional, Type
 
-from texar.torch import HParams
+from ddt import ddt, data, unpack
 
-from forte.common.resources import Resources
-from forte.data.readers.base_reader import PackReader, MultiPackReader
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
+from forte.data.readers.base_reader import PackReader, MultiPackReader
 from forte.data.selector import FirstPackSelector
-from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
-from tests.dummy_batch_processor import \
-    DummyRelationExtractor
 from forte.pipeline import Pipeline
+from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from ft.onto.base_ontology import Token, Sentence
+from tests.dummy_batch_processor import DummyRelationExtractor
 
 data_samples_root = "data_samples"
 

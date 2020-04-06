@@ -59,7 +59,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def __init__(self):
         super().__init__()
-        self._pack_references: List[Tuple[int, int]] = []
+        self._pack_ref: List[int] = []
         self._pack_names: List[str] = []
         self.__name_index = {}
 
@@ -73,21 +73,21 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         # Used to automatically give name to sub packs.
         self.__default_pack_prefix = '_pack'
-        self._pack_manager.register_pack(self)
+        self._pack_manager.set_pack_id(self)
 
-    def __getstate__(self):
-        r"""In serialization, the packs won't be saved directly in this dict.
-        Instead, only the pack reference to those single packs will be kept.
-        The serialization need to make sure all the serialization IDs are
-        matching correctly.
-        """
-        state = super().__getstate__()
-
-        state['_pack_ref'] = []
-        for ref_key in state['_pack_references']:
-            global_index = self._pack_manager.get_global_id(*ref_key)
-            state['_pack_ref'].append(global_index)
-        return state
+    # def __getstate__(self):
+    #     r"""In serialization, the packs won't be saved directly in this dict.
+    #     Instead, only the pack reference to those single packs will be kept.
+    #     The serialization need to make sure all the serialization IDs are
+    #     matching correctly.
+    #     """
+    #     state = super().__getstate__()
+    #
+    #     state['_pack_ref'] = []
+    #     for ref_key in state['_pack_references']:
+    #         global_index = self._pack_manager.get_global_id(*ref_key)
+    #         state['_pack_ref'].append(global_index)
+    #     return state
 
     def __setstate__(self, state):
         r"""In deserialization, we set up the index and entry-pack references.
@@ -96,8 +96,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.index = BaseIndex()
 
         # All the serialized packs will share the same new serial session.
-        self._pack_references = [
-            (self.meta.serial_session, pid) for pid in state['_pack_ref']
+        self._pack_ref = [
+            pid for pid in state['_pack_ref']
         ]
 
         for a in self.links:
@@ -110,6 +110,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         yield from self.links
         yield from self.groups
         yield from self.generics
+
+    def __del__(self):
+        """ A destructor for the MultiPack. During destruction, the Multi Pack
+        will inform the PackManager that it won't need the DataPack anymore.
+        """
+        for pack in self.packs:
+            self._pack_manager.dereference_pack(pack)
 
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
@@ -140,26 +147,31 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"got {type(pack)}"
             )
 
-        self._pack_references.append(pack.meta.pack_key)
-
         pid = pack.meta.pack_id
 
+        # Tell the system that this multi pack is referencing this data pack.
+        self._pack_manager.reference_pack(pack)
+
+        self._pack_ref.append(pid)
+
         if pack_name is None:
+            # Create a default name based on the pack id.
             pack_name = f'{self.__default_pack_prefix}_{pid}'
 
         self._pack_names.append(pack_name)
-        self.__name_index[pack_name] = len(self._pack_references) - 1
+        self.__name_index[pack_name] = len(self._pack_ref) - 1
 
     def get_pack_at(self, index: int) -> DataPack:
         """
         Get data pack at provided index.
+
         Args:
             index: The index of the pack.
 
         Returns: The pack at the index.
 
         """
-        return self._pack_manager.get_pack(*self._pack_references[index])
+        return self._pack_manager.get_pack(self._pack_ref[index])
 
     def get_pack(self, name: str) -> DataPack:
         """
@@ -171,7 +183,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         """
         return self._pack_manager.get_pack(
-            *self._pack_references[self.__name_index[name]])
+            self._pack_ref[self.__name_index[name]])
 
     @property
     def packs(self) -> List[DataPack]:
@@ -180,9 +192,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
 
         """
-        # Here we are enforcing that
-        return [self._pack_manager.get_pack(*r) for
-                r in self._pack_references]
+        return [self._pack_manager.get_pack(r) for r in self._pack_ref]
 
     @property
     def pack_names(self) -> Set[str]:

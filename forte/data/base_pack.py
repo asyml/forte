@@ -15,7 +15,7 @@
 import copy
 import logging
 from abc import abstractmethod
-from typing import List, Optional, Set, Type, TypeVar, Union, Tuple, Iterator
+from typing import List, Optional, Set, Type, TypeVar, Union, Iterator
 
 import jsonpickle
 
@@ -40,18 +40,11 @@ class BaseMeta:
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id: Optional[str] = doc_id
         self._pack_id: int = -1
-        self._serial_session: int = 0
         # Obtain the global pack manager.
         self._pack_manager: PackManager = PackManager()
 
     def __getstate__(self):
         state = self.__dict__.copy()
-
-        # Convert the 2-int tuple key to a global key.
-        this_key = self.pack_key
-        state['_pack_id'] = self._pack_manager.get_global_id(*this_key)
-
-        state.pop('_serial_session')
         state.pop('_pack_manager')
         return state
 
@@ -74,18 +67,6 @@ class BaseMeta:
     @pack_id.setter
     def pack_id(self, pid: int):
         self._pack_id = pid
-
-    @property
-    def serial_session(self) -> int:
-        return self._serial_session
-
-    @serial_session.setter
-    def serial_session(self, session: int):
-        self._serial_session = session
-
-    @property
-    def pack_key(self) -> Tuple[int, int]:
-        return self._serial_session, self.pack_id
 
 
 class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
@@ -216,8 +197,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        c = self._pack_manager.get_component(self.meta.serial_session,
-                                             self.meta.pack_id)
+        c = self._pack_manager.get_component(self.meta.pack_id)
 
         if c is not None:
             try:
@@ -237,8 +217,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        c = self._pack_manager.get_component(self.meta.serial_session,
-                                             self.meta.pack_id)
+        c = self._pack_manager.get_component(self.meta.pack_id)
         try:
             self.field_records[c].add((entry_id, field_name))
         except KeyError:
@@ -363,8 +342,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        self._pack_manager.deregister_pack(self.meta.serial_session,
-                                           self.meta.pack_id)
+        self._pack_manager.dereference_pack(self.meta.pack_id)
 
 
 PackType = TypeVar('PackType', bound=BasePack)

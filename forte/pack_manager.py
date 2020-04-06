@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import threading
-from typing import Dict, Optional, Tuple
+from collections import Counter
+from typing import Dict, Optional
 
 from forte.common.exception import ProcessFlowException
 from forte.data.container import ContainerType
@@ -37,83 +37,64 @@ class PackManager:
             # In this attribute we store a mapping from a unique identifier
             # to the data packs. However, importing DataPack or even PackType
             # will create cyclic imports, so we only import ContainerType.
+            #
+            # This pool is used to hold the packs that need to be used. In
+            # a single pack case, the pack can be removed once used. In a multi
+            # pack case, this can hold the packs until the life cycle of the
+            # multi pack. Note that if the pack pool is not release, there may
+            # be memory leakage.
+            self.pack_references: Counter = Counter()
+            self.pack_pool: Dict[int, ContainerType] = {}
 
-            # Here the mapping is designed to be a two-int tuple look up key to
-            # the data pack.
-            # The first is a session ID that is used to differentiate
-            # the ID count space caused by different readers. The second is the
-            # counter in that count space.
+            # A global ID counter.
+            self.next_id: int = 0
 
-            self.pack_pool: Dict[Tuple[int, int], ContainerType] = {}
-
-            # This dictionary contains the flattened id map. We can find the
-            # actual global index of from a packs 2-int tuple look up key.
-            self.global_id_map: Dict[Tuple[int, int], int] = {}
-
-            self.global_next_id: int = 0
-            self.default_next_id: int = 0
-            self.pack_id_session: int = PackManager.default_id_session
+            # The token holder is allow to create a pack.
+            self.pack_creation_token_holder: Optional[str] = None
 
             # The pack is obtained by particular component.
-            self.locked_pack: Dict[Tuple[int, int], str] = {}
+            self.obtained_by: Dict[int, str] = {}
 
     instance: Optional[__PackManager] = None
 
     def __init__(self):
         if not PackManager.instance:
             PackManager.instance = PackManager.__PackManager()
-        self.__lock = threading.Lock()
 
-    def get_global_id(self, session_id: int, pack_id: int) -> int:
+    def get_component(self, pack_id: int) -> Optional[str]:
         if self.instance is None:
             raise ProcessFlowException("The pack manager is not initialized.")
-        return self.instance.global_id_map[(session_id, pack_id)]
+        return self.instance.obtained_by.get(pack_id, None)
 
-    def get_component(self, session_id: int, pack_id: int) -> Optional[str]:
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-
-        if (session_id, pack_id) in self.instance.locked_pack:
-            return self.instance.locked_pack[(session_id, pack_id)]
-        else:
-            return None
-
-    def lock_pack(self, session_id: int, pack_id: int, component: str):
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-
-        with self.__lock:
-            self.instance.locked_pack[(session_id, pack_id)] = component
-
-    def release_pack(self, session_id: int, pack_id: int):
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-        with self.__lock:
-            try:
-                self.instance.locked_pack.pop((session_id, pack_id))
-            except ValueError:
-                pass
-
-    def get_new_session(self) -> int:
-        """Call this when the Pack ID may collide with the existing pack
-        ids, this will open up a new session, a separate space for the IDs.
-        The major use case is when de-serializing multiple independently
-        serialized packs. Each deserializer may need a new session here.
-
-        Returns: The session Id to be used.
+    def obtain_pack(self, pack_id: int, component: str):
         """
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-        with self.__lock:
-            self.instance.pack_id_session += 1
-            return self.instance.pack_id_session
+        A component call this method to obtain the data pack. Once taken,
+        all the modification to the data pack will be recorded by the component.
 
-    def deregister_pack(self, session_id: int, pack_id: int):
-        """
-        Must remember to de-register a pack after processing, otherwise
-        we will have memory issues.
         Args:
-            session_id:
+            pack_id:
+            component:
+
+        Returns:
+
+        """
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
+
+        print('obtaining ', pack_id, 'from pack_manager')
+        if pack_id not in self.instance.obtained_by:
+            self.instance.obtained_by[pack_id] = component
+        else:
+            raise ProcessFlowException(
+                f"Both {component} and {self.instance.obtained_by[pack_id]} "
+                f"are trying to obtain the same pack, this is currently "
+                f"not allowed.")
+
+    def release_pack(self, pack_id: int):
+        """
+        A component call this method to release the data pack.
+
+        Args:
             pack_id:
 
         Returns:
@@ -121,36 +102,39 @@ class PackManager:
         """
         if self.instance is None:
             raise ProcessFlowException("The pack manager is not initialized.")
-        if (session_id, pack_id) in self.instance.locked_pack:
-            raise ProcessFlowException(
-                f"Cannot de-register a pack [{session_id},{pack_id}] when "
-                f"it is still in used by a component "
-                f"[{self.instance.locked_pack[(session_id, pack_id)]}]")
-        self.instance.pack_pool.pop((session_id, pack_id))
 
-    def register_pack(self, pack: ContainerType):
+        try:
+            print('releasing ', pack_id)
+            self.instance.obtained_by.pop(pack_id)
+        except ValueError:
+            pass
+
+    def set_pack_id(self, pack: ContainerType):
         """
-        Register a data pack, using the default session counter.
+        Assign the next id to the incoming pack.
+        
+        Args:
+            pack: The pack to assign pack id on.
+
+        Returns:
+
+        """
+        # Negative pack id means this is a new pack.
+        assert pack.meta.pack_id < 0
+        pack.meta.pack_id = self.instance.next_id
+        self.instance.next_id += 1
+
+    def reference_pack(self, pack: ContainerType):
+        """
+        Add a reference to the data pack or multi pack, so that the pack will
+        be kept in the memory. This is similar to counting-based reference
+        management, the pack will be released when the count drop to 0.
+
+        As a side effect, if the pack does not have an pid, the system will
+        assign an id for it.
 
         Args:
-            pack: the pack itself.
-
-        Returns: The pid of the added pack.
-
-        """
-        return self.register_pack_with_session(
-            PackManager.default_id_session, pack)
-
-    def register_pack_with_session(
-            self, id_session: int, pack: ContainerType):
-        """
-        Add a data pack or multi pack to the pool. If this is called via the
-        new instance creation, then it won't have a id, the system will assign
-        an id for it.
-
-        Args:
-            id_session: The ID session indicates id space of this pack.
-            pack: The pack itself.
+            pack: The data pack to be register to the system.
 
         Returns:
 
@@ -158,30 +142,47 @@ class PackManager:
         if self.instance is None:
             raise ProcessFlowException("The pack manager is not initialized.")
 
-        with self.__lock:
-            meta = pack.meta  # type: ignore
+        pid: int = pack.meta.pack_id
+        # Increment the reference and store the pack itself.
+        self.instance.pack_references[pid] += 1
+        self.instance.pack_pool[pid] = pack
 
-            meta.serial_session = id_session
+    def dereference_pack(self, pack: ContainerType):
+        """
+        This method reduce the count the data pack or multi pack, when the count
+        reaches 0, the pack will be released.
 
-            s_pid: Tuple[int, int]
-            if meta.pack_id < 0:
-                # This is a new pack, new pid will be assigned.
-                self.instance.default_next_id += 1
-                s_pid = (id_session, self.instance.default_next_id)
-                meta.pack_id = self.instance.default_next_id
-            else:
-                s_pid = (id_session, meta.pack_id)
-                if s_pid in self.instance.pack_pool:
-                    return
+        Must remember to de-reference a pack after processing, otherwise
+        we will have memory issues.
 
-            self.instance.pack_pool[s_pid] = pack
-            self.instance.global_next_id += 1
-            self.instance.global_id_map[s_pid] = self.instance.global_next_id
+        Args:
+            pack: The pack to de-reference.
 
-    def get_pack(self, id_session: int, pack_id: int):
+        Returns:
+
+        """
+        if self.instance is None:
+            raise ProcessFlowException("The pack manager is not initialized.")
+
+        pack_id = pack.meta.pack_id
+
+        if pack_id in self.instance.obtained_by:
+            raise ProcessFlowException(
+                f"Cannot de-register a pack [{pack_id}] when "
+                f"it is still in used by a component "
+                f"[{self.instance.obtained_by[pack_id]}]")
+
+        # Reduce the reference count.
+        self.instance.pack_references[pack_id] -= 1
+
+        # If the reference count reaches 0, then we can remove the pack from
+        # the pool and allow Python to garbage collect it.
+        if self.instance.pack_references[pack_id] == 0:
+            self.instance.pack_pool.pop(pack)
+
+    def get_pack(self, pack_id: int):
         r"""Return the data pack corresponding to the session and id.
         Args:
-            id_session: The id session that PIDs are assigned
             pack_id: The pid of this pack.
 
         Returns:
@@ -190,4 +191,4 @@ class PackManager:
         if self.instance is None:
             raise ProcessFlowException("The pack manager is not initialized.")
 
-        return self.instance.pack_pool[(id_session, pack_id)]
+        return self.instance.pack_pool[pack_id]

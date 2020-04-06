@@ -28,7 +28,7 @@ from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
 __all__ = [
     "DummyRelationExtractor",
-    "DummmyFixedSizeBatchProcessor",
+    "DummyFixedSizeBatchProcessor",
 ]
 
 
@@ -116,7 +116,7 @@ class DummyRelationExtractor(BatchProcessor):
         return configs
 
 
-class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
+class DummyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
     def __init__(self):
         super().__init__()
         self.counter = 0

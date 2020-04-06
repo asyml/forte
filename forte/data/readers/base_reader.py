@@ -72,7 +72,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         # Each reader will acquire their own ID session.
         self._pack_manager = PackManager()
-        self._session_id = self._pack_manager.get_new_session()
 
     @classmethod
     def default_configs(cls):
@@ -121,9 +120,12 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 "Got None collection, cannot parse as data pack.")
 
         for p in self._parse_pack(collection):
-            self._pack_manager.register_pack_with_session(self._session_id, p)
+            # Overwrite the session id with the reader's session.
+            self._pack_manager.obtain_pack(p.meta.pack_id, self.name)
             for entry in p:
                 entry.record_creation()
+            self._pack_manager.release_pack(p.meta.pack_id)
+
             yield p
 
     @abstractmethod
