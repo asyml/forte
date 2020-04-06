@@ -14,7 +14,6 @@ from forte.data.ontology.top import Annotation
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
-from forte.data.ontology.top import SubEntry
 from typing import Dict
 from typing import Optional
 from typing import Set
@@ -602,7 +601,7 @@ class CrossDocEntityRelation(MultiPackLink):
 
     ChildType = EntityMention
 
-    def __init__(self, pack: MultiPack, parent: Optional[SubEntry] = None, child: Optional[SubEntry] = None):
+    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self._rel_type: Optional[str] = None
 
@@ -674,7 +673,7 @@ class CrossDocEventRelation(MultiPackLink):
 
     ChildType = EventMention
 
-    def __init__(self, pack: MultiPack, parent: Optional[SubEntry] = None, child: Optional[SubEntry] = None):
+    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self._rel_type: Optional[str] = None
 

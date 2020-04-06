@@ -40,7 +40,7 @@ setuptools.setup(
         'srl': ['mypy-extensions', 'allennlp'],
         'sentiment': ['vaderSentiment'],
         'txtgen': ['regex', 'tensorflow'],
-        'stanfordnlp': ['stanfordnlp'],
+        'stanza': ['stanza'],
         'test': ['ddt', 'testfixtures'],
         'example': ['termcolor'],
         'wikipedia': ['rdflib'],

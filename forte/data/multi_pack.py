@@ -23,7 +23,7 @@ from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
-    Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries,
+    Annotation, MultiPackGroup, MultiPackLink, MultiPackEntries,
     MultiPackGeneric)
 from forte.data.span import Span
 from forte.data.types import DataRequest
@@ -112,11 +112,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 
-    def subentry(self, pack_index: int, entry: Entry):
-        return SubEntry(self, pack_index, entry.tid)
-
-    def get_subentry(self, subentry: SubEntry):
-        return self.packs[subentry.pack_index].get_entry(subentry.entry_id)
+    def get_subentry(self, pack_id: int, entry_id: int):
+        return self._pack_manager.get_pack(pack_id).get_entry(entry_id)
 
     def get_span_text(self, span: Span):
         raise ValueError(

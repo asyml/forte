@@ -44,7 +44,7 @@ class StandfordNLPProcessor(PackProcessor):
         self.lang = configs.lang
         self.set_up()
         self.nlp = stanza.Pipeline(**configs.todict(),
-                                        models_dir=self.MODELS_DIR)
+                                   models_dir=self.MODELS_DIR)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -52,7 +52,7 @@ class StandfordNLPProcessor(PackProcessor):
         This defines a basic config structure for StanfordNLP.
         :return:
         """
-        config = cls.default_configs()
+        config = super().default_configs()
         config.update(
             {
                 'processors': 'tokenize,pos,lemma,depparse',

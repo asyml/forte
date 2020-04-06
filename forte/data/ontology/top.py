@@ -30,7 +30,6 @@ __all__ = [
     "MultiPackGeneric",
     "MultiPackGroup",
     "MultiPackLink",
-    "SubEntry",
     "Query",
     "SinglePackEntries",
     "MultiPackEntries",
@@ -238,44 +237,6 @@ class Group(BaseGroup[Entry]):
         super().__init__(pack, members)
 
 
-class SubEntry(Entry[PackType]):
-    r"""This is used to identify an Entry in one of the packs in the
-    :class:`Multipack`. For example, the sentence in one of the packs. A
-    ``pack_index`` and an ``entry`` is needed to identify this.
-
-    Args:
-        pack_index: Indicate which pack this entry belongs. If this is less
-            than 0, then this is a cross pack entry.
-        entry_id: The tid of the entry in the sub pack.
-    """
-
-    def __init__(self, pack: PackType, pack_index: int, entry_id: int):
-        super().__init__(pack)
-        self._pack_index: int = pack_index
-        self._entry_id: int = entry_id
-
-    @property
-    def pack_index(self):
-        return self._pack_index
-
-    @property
-    def entry_id(self):
-        return self._entry_id
-
-    def __hash__(self):
-        return hash((type(self), self._pack_index, self._entry_id))
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return (type(self), self.pack_index, self.entry_id
-                ) == (type(other), other.pack_index, other.entry)
-
-    @property
-    def index_key(self) -> Tuple[int, int]:
-        return self._pack_index, self._entry_id
-
-
 class MultiPackGeneric(Entry):
     def __init__(self, pack: PackType):
         super(MultiPackGeneric, self).__init__(pack=pack)
@@ -285,18 +246,18 @@ class MultiPackLink(BaseLink):
     r"""This is used to link entries in a :class:`MultiPack`, which is
     designed to support cross pack linking, this can support applications such
     as sentence alignment and cross-document coreference. Each link should have
-    a parent node and a child node. Note that the nodes are `SubEntry(s)`, thus
-    have one additional index on which pack it comes from.
+    a parent node and a child node. Note that the nodes are indexed by two
+    integers, one additional index on which pack it comes from.
     """
 
-    ParentType = SubEntry
-    ChildType = SubEntry
+    ParentType = Entry
+    ChildType = Entry
 
     def __init__(
             self,
             pack: PackType,
-            parent: Optional[SubEntry] = None,
-            child: Optional[SubEntry] = None,
+            parent: Optional[Entry] = None,
+            child: Optional[Entry] = None,
     ):
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
@@ -315,61 +276,64 @@ class MultiPackLink(BaseLink):
             raise IncompleteEntryError("Child is not set for this link.")
         return self._child
 
-    # TODO: Use the pack id here, don't use subentry.
     def set_parent(self, parent: Entry):
-        r"""This will set the `parent` of the current instance with given Entry
-        The parent is saved internally as a tuple: ``pack_name`` and
+        r"""This will set the `parent` of the current instance with given Entry.
+        The parent is saved internally as a tuple: ``pack id`` and
         ``entry.tid``.
 
         Args:
-            parent: The parent of the link, identified as a sub entry, which
-                has a value for the pack index and the tid in the pack.
+            parent: The parent of the link, which is an Entry from a data pack,
+                it has access to the pack index and its own tid in the pack.
         """
-        parent_entry = self.pack.get_subentry(parent)
-        if not isinstance(parent_entry, self.ParentType):
+        if not isinstance(parent, self.ParentType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
-                f"instance of {self.ParentType}, but get {type(parent_entry)}")
-        self._parent = parent.index_key
+                f"instance of {self.ParentType}, but get {type(parent)}")
+        self._parent = parent.pack_id, parent.tid
 
-    def set_child(self, child: SubEntry):  # type: ignore
-        child_entry = self.pack.get_subentry(child)
-        if not isinstance(child_entry, self.ChildType):
+    def set_child(self, child: Entry):
+        r"""This will set the `child` of the current instance with given Entry.
+        The child is saved internally as a tuple: ``pack id`` and
+        ``entry.tid``.
+
+        Args:
+            child: The child of the link, which is an Entry from a data pack,
+                it has access to the pack index and its own tid in the pack.
+        """
+
+        if not isinstance(child, self.ChildType):
             raise TypeError(
-                f"The parent of {type(self)} should be an "
-                f"instance of {self.ChildType}, but get {type(child_entry)}")
-        self._child = child.index_key
+                f"The child of {type(self)} should be an "
+                f"instance of {self.ChildType}, but get {type(child)}")
+        self._child = child.pack_id, child.tid
 
-    def get_parent(self) -> SubEntry:
+    def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
 
         Returns:
-             An instance of :class:`SubEntry` that is the parent of the link
-             from the given DataPack.
+             An instance of :class:`Entry` that is the parent of the link.
         """
         if self._parent is None:
             raise IncompleteEntryError("The parent of this link is not set.")
+
         pack_idx, parent_tid = self._parent
+        return self.pack.get_subentry(pack_idx, parent_tid)
 
-        return SubEntry(self.pack, pack_idx, parent_tid)
-
-    def get_child(self) -> SubEntry:
+    def get_child(self) -> Entry:
         r"""Get the child entry of the link.
 
         Returns:
-             An instance of :class:`SubEntry` that is the child of the link
-             from the given DataPack.
+             An instance of :class:`Entry` that is the child of the link.
         """
         if self._child is None:
             raise IncompleteEntryError("The parent of this link is not set.")
 
         pack_idx, child_tid = self._child
-
-        return SubEntry(self.pack, pack_idx, child_tid)
+        return self.pack.get_subentry(pack_idx, child_tid)
 
 
 # pylint: disable=duplicate-bases
-class MultiPackGroup(BaseGroup[SubEntry]):
+class MultiPackGroup(BaseGroup[Entry]):
     r"""Group type entries, such as "coreference group". Each group has a set
     of members.
     """
@@ -377,7 +341,7 @@ class MultiPackGroup(BaseGroup[SubEntry]):
     def __init__(
             self,
             pack: PackType,
-            members: Optional[Set[SubEntry]],
+            members: Optional[Set[Entry]],
     ):  # pylint: disable=useless-super-delegation
         super().__init__(pack, members)
 
@@ -413,4 +377,4 @@ class Query(Generics):
 
 
 SinglePackEntries = (Link, Group, Annotation, Generics)
-MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric, SubEntry)
+MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)

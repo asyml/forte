@@ -133,11 +133,27 @@ class Entry(Generic[ContainerType]):
 
     @property
     def tid(self) -> int:
+        """
+        Get the id of this entry.
+
+        Returns:
+
+        """
         return self._tid
 
     @property
     def pack(self) -> ContainerType:
         return self.__pack
+
+    @property
+    def pack_id(self) -> int:
+        """
+        Get the id of the pack that contains this entry.
+
+        Returns:
+
+        """
+        return self.__pack.meta.pack_id  # type: ignore
 
     def set_pack(self, pack: ContainerType):
         self.__pack = pack
