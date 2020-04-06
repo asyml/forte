@@ -13,11 +13,14 @@
 # limitations under the License.
 import os
 from abc import ABC
-from typing import Iterator, List, Any
+from typing import Iterator, List, Any, Dict
 
+from forte.common import Resources
+from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
 
 __all__ = [
@@ -91,16 +94,87 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
 
 class MultiPackDiskReader(MultiPackReader):
     """
-    This reader implements one particular way of deserializing Multipack. Note
-    that the DataPacks are serialized on the side, and the Multipack contains
-    references to them. The reader here assemble these information together.
+    This reader implements one particular way of deserializing Multipack, which
+    is corresponding to the
+    :class:`~forte.processors.base.writers.MultiPackWriter`
+
+    in this format, the DataPacks are serialized on the side, and the Multipack
+    contains references to them. The reader here assemble these information
+    together.
     """
 
-    def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
-        pass
+    def __init__(self):
+        super().__init__()
+        self.__pack_paths: Dict[int, str] = {}
 
-    def _parse_pack(self, collection: Any) -> Iterator[PackType]:
-        pass
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+        self.__get_pack_paths()
+
+    def _collect(self) -> Iterator[str]:  # type: ignore
+        """
+        This collect actually do not need any data source, it directly read
+        the data from the configurations.
+
+        Returns:
+
+        """
+        multi_idx_path = os.path.join(self.configs.data_path, 'multi.idx')
+
+        if not os.path.exists(multi_idx_path):
+            raise FileNotFoundError(
+                f"Cannot find file {multi_idx_path}, the multi pack "
+                f"serialization format may be unknown.")
+
+        with open(multi_idx_path) as multi_idx:
+            for line in multi_idx:
+                pid, multi_path = line.strip().split()
+                yield multi_path
+
+    def _parse_pack(self, multi_pack_path: str) -> Iterator[MultiPack]:
+        with open(os.path.join(
+                self.configs.data_path, multi_pack_path)) as m_data:
+            m_pack: MultiPack = MultiPack.deserialize(m_data.read())
+
+            for pid in m_pack._pack_ref:
+                sub_pack_path = self.__pack_paths[pid]
+                with open(os.path.join(
+                        self.configs.data_path, sub_pack_path)) as pack_data:
+                    pack: DataPack = DataPack.deserialize(pack_data.read())
+                    # Add a reference count to this pack, because the multipack
+                    # needs it.
+                    self._pack_manager.reference_pack(pack)
+
+            self.remap_packs(m_pack)
+
+            yield m_pack
+
+    def remap_packs(self, multi_pack: MultiPack):
+        """Need to call this after reading the relevant data packs"""
+        new_pack_refs: List[int] = []
+        for pid in multi_pack._pack_ref:
+            new_pack_refs.append(self._pack_manager.get_remapped_id(pid))
+        multi_pack._pack_ref = new_pack_refs
+
+    def __get_pack_paths(self):
+        pack_idx_path = os.path.join(self.configs.data_path, 'pack.idx')
+
+        if not os.path.exists(pack_idx_path):
+            raise FileNotFoundError(
+                f"Cannot find file {pack_idx_path}, the multi pack "
+                f"serialization format may be unknown.")
+
+        # Reade data packs paths first.
+        with open(pack_idx_path) as pack_idx:
+            for line in pack_idx:
+                pid, pack_path = line.strip().split()
+                self.__pack_paths[int(pid)] = pack_path
+
+    @classmethod
+    def default_configs(cls):
+        return {
+            "data_path": None
+        }
 
     def _cache_key_function(self, collection: Any) -> str:
         pass

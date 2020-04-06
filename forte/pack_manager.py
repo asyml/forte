@@ -55,16 +55,18 @@ class PackManager:
             # The pack is obtained by particular component.
             self.obtained_by: Dict[int, str] = {}
 
-    instance: Optional[__PackManager] = None
+            # This creates a re-mapping of some deserialized data packs to
+            # their new id.
+            self.remap: Dict[int, int] = {}
+
+    __instance: Optional[__PackManager] = None
 
     def __init__(self):
-        if not PackManager.instance:
-            PackManager.instance = PackManager.__PackManager()
+        if not PackManager.__instance:
+            PackManager.__instance = PackManager.__PackManager()
 
     def get_component(self, pack_id: int) -> Optional[str]:
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-        return self.instance.obtained_by.get(pack_id, None)
+        return self.instance().obtained_by.get(pack_id, None)
 
     def obtain_pack(self, pack_id: int, component: str):
         """
@@ -78,15 +80,11 @@ class PackManager:
         Returns:
 
         """
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-
-        print('obtaining ', pack_id, 'from pack_manager')
-        if pack_id not in self.instance.obtained_by:
-            self.instance.obtained_by[pack_id] = component
+        if pack_id not in self.instance().obtained_by:
+            self.instance().obtained_by[pack_id] = component
         else:
             raise ProcessFlowException(
-                f"Both {component} and {self.instance.obtained_by[pack_id]} "
+                f"Both {component} and {self.instance().obtained_by[pack_id]} "
                 f"are trying to obtain the same pack, this is currently "
                 f"not allowed.")
 
@@ -100,14 +98,45 @@ class PackManager:
         Returns:
 
         """
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-
         try:
-            print('releasing ', pack_id)
-            self.instance.obtained_by.pop(pack_id)
+            self.instance().obtained_by.pop(pack_id)
         except ValueError:
             pass
+
+    def set_remappaed_pack_id(self, pack: ContainerType):
+        """
+        Give a new id to the pack and remember the remap.
+
+        Args:
+            pack:
+
+        Returns:
+
+        """
+        # The pack should already have a valid pack id.
+        assert get_pack_id(pack) >= 0
+
+        pid = get_pack_id(pack)
+
+        # Record this remapping, and assign a new id to the pack.
+        if pid in self.instance().remap:
+            raise ProcessFlowException(f"The pack id {pid} "
+                                       f"has already been remapped.")
+
+        self.instance().remap[pid] = self.instance().next_id
+        pack.meta.pack_id = self.instance().next_id  # type: ignore
+        self.instance().next_id += 1
+
+    def get_remapped_id(self, old_id: int) -> int:
+        """
+        Get the remapped id from the old id.
+        Args:
+            old_id: The old id.
+
+        Returns: The remapped id.
+
+        """
+        return self.instance().remap[old_id]
 
     def set_pack_id(self, pack: ContainerType):
         """
@@ -120,9 +149,9 @@ class PackManager:
 
         """
         # Negative pack id means this is a new pack.
-        assert pack.meta.pack_id < 0
-        pack.meta.pack_id = self.instance.next_id
-        self.instance.next_id += 1
+        assert get_pack_id(pack) < 0
+        pack.meta.pack_id = self.instance().next_id  # type: ignore
+        self.instance().next_id += 1
 
     def reference_pack(self, pack: ContainerType):
         """
@@ -139,13 +168,10 @@ class PackManager:
         Returns:
 
         """
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-
-        pid: int = pack.meta.pack_id
+        pid: int = get_pack_id(pack)
         # Increment the reference and store the pack itself.
-        self.instance.pack_references[pid] += 1
-        self.instance.pack_pool[pid] = pack
+        self.instance().pack_references[pid] += 1
+        self.instance().pack_pool[pid] = pack
 
     def dereference_pack(self, pack: ContainerType):
         """
@@ -161,24 +187,21 @@ class PackManager:
         Returns:
 
         """
-        if self.instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
+        pack_id = get_pack_id(pack)
 
-        pack_id = pack.meta.pack_id
-
-        if pack_id in self.instance.obtained_by:
+        if pack_id in self.instance().obtained_by:
             raise ProcessFlowException(
                 f"Cannot de-register a pack [{pack_id}] when "
                 f"it is still in used by a component "
-                f"[{self.instance.obtained_by[pack_id]}]")
+                f"[{self.instance().obtained_by[pack_id]}]")
 
         # Reduce the reference count.
-        self.instance.pack_references[pack_id] -= 1
+        self.instance().pack_references[pack_id] -= 1
 
         # If the reference count reaches 0, then we can remove the pack from
         # the pool and allow Python to garbage collect it.
-        if self.instance.pack_references[pack_id] == 0:
-            self.instance.pack_pool.pop(pack)
+        if self.instance().pack_references[pack_id] == 0:
+            self.instance().pack_pool.pop(pack_id)
 
     def get_pack(self, pack_id: int):
         r"""Return the data pack corresponding to the session and id.
@@ -188,7 +211,14 @@ class PackManager:
         Returns:
 
         """
-        if self.instance is None:
+        return self.instance().pack_pool[pack_id]
+
+    def instance(self) -> __PackManager:
+        if self.__instance is None:
             raise ProcessFlowException("The pack manager is not initialized.")
 
-        return self.instance.pack_pool[pack_id]
+        return self.__instance
+
+
+def get_pack_id(pack: ContainerType) -> int:
+    return pack.meta.pack_id  # type: ignore

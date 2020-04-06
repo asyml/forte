@@ -19,6 +19,7 @@ from typing import List, Optional, Set, Type, TypeVar, Union, Iterator
 
 import jsonpickle
 
+from forte.common import ProcessFlowException
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
@@ -218,6 +219,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         """
         c = self._pack_manager.get_component(self.meta.pack_id)
+
+        if c is None:
+            raise ProcessFlowException(
+                "No processor in control when adding field records.")
         try:
             self.field_records[c].add((entry_id, field_name))
         except KeyError:

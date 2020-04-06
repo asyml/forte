@@ -22,6 +22,7 @@ __all__ = [
     "ProcessorConfigError",
     "PackDataException",
     "ProcessFlowException",
+    "ProcessExecutionException",
 ]
 
 

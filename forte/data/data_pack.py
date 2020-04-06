@@ -103,8 +103,12 @@ class DataPack(BasePack[Entry, Link, Group]):
         In deserialization, we
             1) transform the annotation list back to a sorted list;
             2) initialize the indexes.
+            3) Obtain the pack ids.
         """
         super().__setstate__(state)
+
+        # Obtain a new pack id for this pack, and record the change of id.
+        self._pack_manager.set_remappaed_pack_id(self)
 
         self.annotations = SortedList(self.annotations)
         self.index = DataIndex()

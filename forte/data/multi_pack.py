@@ -75,22 +75,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.__default_pack_prefix = '_pack'
         self._pack_manager.set_pack_id(self)
 
-    # def __getstate__(self):
-    #     r"""In serialization, the packs won't be saved directly in this dict.
-    #     Instead, only the pack reference to those single packs will be kept.
-    #     The serialization need to make sure all the serialization IDs are
-    #     matching correctly.
-    #     """
-    #     state = super().__getstate__()
-    #
-    #     state['_pack_ref'] = []
-    #     for ref_key in state['_pack_references']:
-    #         global_index = self._pack_manager.get_global_id(*ref_key)
-    #         state['_pack_ref'].append(global_index)
-    #     return state
-
     def __setstate__(self, state):
-        r"""In deserialization, we set up the index and entry-pack references.
+        r"""In deserialization, we set up the index and the references to the
+        data packs inside.
         """
         super().__setstate__(state)
         self.index = BaseIndex()
@@ -99,6 +86,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._pack_ref = [
             pid for pid in state['_pack_ref']
         ]
+
+        self.index = BaseIndex()
+        self.index.update_basic_index(self.links)
+        self.index.update_basic_index(self.groups)
 
         for a in self.links:
             a.set_pack(self)

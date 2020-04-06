@@ -36,7 +36,7 @@ class PipelineComponent(Generic[PackType]):
     def assign_manager(self, process_manager: _ProcessManager):
         self._process_manager = process_manager
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         r"""The pipeline will call the initialize method at the start of a
         processing. The processor and reader will be initialized with
         ``configs``, and register global resources into ``resource``. The

@@ -13,10 +13,12 @@
 # limitations under the License.
 from typing import Any, Dict
 
+from forte.common import Resources
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import OntonotesReader, DirPackReader
+from forte.data.readers.deserialize_reader import MultiPackDiskReader
 from forte.pipeline import Pipeline
 from forte.processors.base import MultiPackProcessor
 from forte.processors.nltk_processors import (
@@ -75,6 +77,19 @@ class ExampleCoreferencer(MultiPackProcessor):
             input_pack.add_entry(link)
 
 
+class ExampleCorefCounter(MultiPackProcessor):
+    def __init__(self):
+        super().__init__()
+        self.coref_count = 0
+
+    def _process(self, input_pack: MultiPack):
+        rels = input_pack.get_entries_by_type(CrossDocEntityRelation)
+        self.coref_count += len(rels)
+
+    def finish(self, _):
+        print(f"Found {self.coref_count} in the multi packs.")
+
+
 def pack_example(input_path, output_path):
     """
     This example read data from input path and serialize to output path.
@@ -123,13 +138,16 @@ def multi_example(input_path, output_path):
     """
     print("Multi Pack serialization example.")
 
-    nlp = Pipeline()
-    nlp.set_reader(DirPackReader())
-    nlp.add(MultiPackBoxer())
-    nlp.add(PackCopier())
-    nlp.add(ExampleCoreferencer())
+    print("We first read the data, and add multi-packs to them, and then"
+          "save the results.")
+    coref_pl = Pipeline()
+    coref_pl.set_reader(DirPackReader())
+    coref_pl.add(MultiPackBoxer())
+    coref_pl.add(PackCopier())
+    coref_pl.add(ExampleCoreferencer())
+    coref_pl.add(ExampleCorefCounter())
 
-    nlp.add(
+    coref_pl.add(
         DocIdMultiPackWriter(),
         {
             'output_dir': output_path,
@@ -138,9 +156,19 @@ def multi_example(input_path, output_path):
         }
     )
 
-    nlp.initialize()
-    nlp.run(input_path)
-    nlp.finish()
+    coref_pl.initialize()
+    coref_pl.run(input_path)
+    coref_pl.finish()
+
+    print("We can then load the saved results, and see if everything is OK."
+          "We should see the same number of multi packs there. ")
+    reading_pl = Pipeline()
+    reading_pl.set_reader(MultiPackDiskReader(), {'data_path': output_path})
+    reading_pl.add(ExampleCorefCounter())
+
+    reading_pl.initialize()
+    reading_pl.run()
+    reading_pl.finish()
 
 
 if __name__ == '__main__':

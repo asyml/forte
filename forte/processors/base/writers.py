@@ -41,7 +41,7 @@ __all__ = [
 
 def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
                indent: Optional[int] = None, zip_pack: bool = False,
-               overwrite: bool = False) -> Optional[str]:
+               overwrite: bool = False) -> str:
     """
     Write a pack to a path.
 
@@ -133,16 +133,25 @@ class JsonPackWriter(BaseProcessor[DataPack], ABC):
 
 
 class MultiPackWriter(BaseProcessor[MultiPack]):
+    pack_base_out = 'packs'
+    multi_base = 'multi'
+    pack_idx = 'pack.idx'
+    multi_idx = 'multi.idx'
+
     def __init__(self):
         super().__init__()
-        self.pack_base_out = 'packs'
 
     def initialize(self, resources: Resources, configs: HParams):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(resources, configs)
-        pack_index = os.path.join(self.configs.output_dir, 'pack.idx')
+
+        pack_index = os.path.join(self.configs.output_dir, self.pack_idx)
         ensure_dir(pack_index)
         self.pack_idx_out = open(pack_index, 'w')
+
+        multi_index = os.path.join(self.configs.output_dir, self.multi_idx)
+        ensure_dir(multi_index)
+        self.multi_idx_out = open(multi_index, 'w')
 
     def pack_name(self, pack: DataPack) -> str:
         r"""Allow defining output path using the information of the datapack.
@@ -161,6 +170,7 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
         return f"mult_pack_{pack.meta.pack_id}"
 
     def _process(self, input_pack: MultiPack):
+        multi_out_dir = os.path.join(self.configs.output_dir, self.multi_base)
         pack_out_dir = os.path.join(self.configs.output_dir, self.pack_base_out)
 
         for pack in input_pack.packs:
@@ -168,17 +178,23 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
                 pack, pack_out_dir, self.pack_name(pack), self.configs.indent,
                 self.configs.zip_pack, self.configs.overwrite)
 
-            global_index = self._pack_manager.get_global_id(*pack.meta.pack_key)
-            self.pack_idx_out.write(f'{global_index}\t{pack_out}\n')
+            self.pack_idx_out.write(
+                f'{pack.meta.pack_id}\t'
+                f'{os.path.relpath(pack_out, self.configs.output_dir)}\n')
 
-        write_pack(
-            input_pack, self.configs.output_dir,
+        multi_out = write_pack(
+            input_pack, multi_out_dir,
             self.multipack_name(input_pack), self.configs.indent,
             self.configs.zip_pack, self.configs.overwrite
         )
 
+        self.multi_idx_out.write(
+            f'{input_pack.meta.pack_id}\t'
+            f'{os.path.relpath(multi_out, self.configs.output_dir)}\n')
+
     def finish(self, resource: Resources):
         self.pack_idx_out.close()
+        self.multi_idx_out.close()
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
