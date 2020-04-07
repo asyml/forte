@@ -168,18 +168,19 @@ class TestAllenNLPProcessor(unittest.TestCase):
                 # checking the tokens and pos
                 tokens = self._test_tokenizer(pack, sentence, i,
                                               processors, tag_format)
-                deps: List[Dependency] = list(
-                    pack.get_entries(Dependency, sentence))
-
-                indexed_deps = {}
-                for d in deps:
-                    indexed_deps[d.get_child().tid] = d
-
-                sorted_deps = []
-                for t in tokens:
-                    sorted_deps.append(indexed_deps[t.tid])
 
                 if "depparse" in processors:
+                    deps: List[Dependency] = list(
+                        pack.get_entries(Dependency, sentence))
+
+                    indexed_deps = {}
+                    for d in deps:
+                        indexed_deps[d.get_child().tid] = d
+
+                    sorted_deps = []
+                    for t in tokens:
+                        sorted_deps.append(indexed_deps[t.tid])
+
                     # checking the dependencies
                     self._test_dependencies(i, tokens, sorted_deps, tag_format)
 
