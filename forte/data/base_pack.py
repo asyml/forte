@@ -262,11 +262,24 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return entry_set
 
     def get_entries_by_component(self, component: str) -> Set[EntryType]:
+        """
+        Return all entries created by the particular component, an unorderred
+        set.
+
+        Args:
+            component: The component to get the entries.
+
+        Returns:
+
+        """
         return {self.get_entry(tid)
                 for tid in self.get_ids_by_component(component)}
 
     def get_ids_by_type(self, entry_type: Type[EntryType]) -> Set[int]:
         r"""Look up the type_index with key ``entry_type``.
+
+        Args:
+            entry_type: The type of the entry you are looking for.
 
         Returns:
              A set of entry tids. The entries are instances of entry_type (
@@ -282,11 +295,23 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 "There is no %s type entry in this datapack", entry_type)
         return subclass_index
 
-    def get_entries_by_type(self, tp: Type[EntryType]) -> Set[EntryType]:
+    def get_entries_by_type(
+            self, entry_type: Type[EntryType]) -> Set[EntryType]:
+        """
+        Return all entries of this particular type without orders. If you
+        need to use natural order of the annotations, use
+        :func:`forte.data.data_pack.get_entries`.
+
+        Args:
+            entry_type: The type of the entry you are looking for.
+
+        Returns:
+
+        """
         entries: Set[EntryType] = set()
-        for tid in self.get_ids_by_type(tp):
+        for tid in self.get_ids_by_type(entry_type):
             entry: EntryType = self.get_entry(tid)
-            if isinstance(entry, tp):
+            if isinstance(entry, entry_type):
                 entries.add(entry)
         return entries
 

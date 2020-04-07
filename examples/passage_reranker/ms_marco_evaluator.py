@@ -13,14 +13,12 @@
 # limitations under the License.
 
 from typing import List, Optional, Tuple
-from texar.torch import HParams
-
-from forte.evaluation.base import Evaluator
-from forte.common import Resources
-from forte.data.multi_pack import MultiPack
-from forte.data.ontology import Query
 
 from examples.passage_reranker.eval_script import compute_metrics_from_files
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
+from forte.data.ontology import Query
+from forte.evaluation.base import Evaluator
 
 
 class MSMarcoEvaluator(Evaluator[MultiPack]):
@@ -30,14 +28,9 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
         self.predicted_results: List[Tuple[str, str, str]] = []
         self._score: Optional[float] = None
 
-    # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, configs: HParams):
-        self.resource = resources
-        self.config = configs
-
-    def consume_next(self, pred_pack, _):
-        query_pack = pred_pack.get_pack(self.config.pack_name)
-        query = list(query_pack.get_entries_by_type(Query))[0]
+    def consume_next(self, pred_pack: MultiPack, _):
+        query_pack: DataPack = pred_pack.get_pack(self.config.pack_name)
+        query = list(query_pack.get_entries(Query))[0]
         rank = 1
         for pid, _ in query.results.items():
             self.predicted_results.append(

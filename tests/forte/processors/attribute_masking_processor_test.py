@@ -19,7 +19,7 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
         pl.initialize()
 
         for pack in pl.process_dataset("data_samples/conll03/"):
-            entries = pack.get_entries_by_type(Token)
+            entries = pack.get_entries(Token)
             for entry in entries:
                 self.assertIsNotNone(entry.ner)
 
@@ -36,6 +36,6 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
         pl.initialize()
 
         for pack in pl.process_dataset("data_samples/conll03/"):
-            entries = pack.get_entries_by_type(Token)
+            entries = pack.get_entries(Token)
             for entry in entries:
                 self.assertIsNone(entry.ner)
