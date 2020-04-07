@@ -15,9 +15,7 @@
 Defines the Evaluator interface and related functions.
 """
 from abc import abstractmethod
-from typing import Any, Optional
-
-from texar.torch import HParams
+from typing import Any
 
 from forte.data.base_pack import PackType
 from forte.pipeline_component import PipelineComponent

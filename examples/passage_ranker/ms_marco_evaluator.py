@@ -41,8 +41,7 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
                 raise ProcessExecutionException(
                     'Doc ID of the query pack is not set, '
                     'please double check the reader.')
-            self.predicted_results.append(
-                (query_pack.meta.doc_id, pid, str(rank)))
+            self.predicted_results.append((doc_id, pid, str(rank)))
             rank += 1
 
     def get_result(self):
