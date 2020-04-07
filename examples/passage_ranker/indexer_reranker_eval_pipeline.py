@@ -15,17 +15,14 @@
 import argparse
 
 import yaml
-
 import texar.torch as tx
 
-from forte.data.data_pack import DataPack
+from examples.passage_ranker.ms_marco_evaluator import MSMarcoEvaluator
+from examples.passage_ranker.reader import EvalReader
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.processors.ir import (
     ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
-
-from examples.passage_ranker.reader import EvalReader
-from examples.passage_ranker.ms_marco_evaluator import MSMarcoEvaluator
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
