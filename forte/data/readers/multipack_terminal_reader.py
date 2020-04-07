@@ -16,7 +16,7 @@
 The reader that reads text data from a terminal and packs into a Multipack.
 """
 import logging
-from typing import Iterator
+from typing import Iterator, Dict, Any
 
 from texar.torch import HParams
 from forte.common.resources import Resources
@@ -70,7 +70,6 @@ class MultiPackTerminalReader(MultiPackReader):
 
         Returns: MultiPack containing a datapack for the current query.
         """
-
         multi_pack = MultiPack()
 
         # use context to build the query
@@ -90,3 +89,9 @@ class MultiPackTerminalReader(MultiPackReader):
         multi_pack.update_pack({self.config.pack_name: pack})
 
         yield multi_pack
+
+    @staticmethod
+    def default_configs() -> Dict[str, Any]:
+        return {
+            "pack_name": "query"
+        }

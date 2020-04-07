@@ -25,7 +25,7 @@ from ft.onto.base_ontology import Document
 
 class EvalReader(MultiPackReader):
 
-    # pylint: disable=unused-argument
+    # pylint: disable=no-self-use,unused-argument
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
 
@@ -34,6 +34,7 @@ class EvalReader(MultiPackReader):
         self.resource = resources
         self.config = configs
 
+    # pylint: disable=no-self-use
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         file_path = args[0]
         with open(file_path, "r") as f:
@@ -49,3 +50,9 @@ class EvalReader(MultiPackReader):
         data_pack.set_text(fields[1])
         multi_pack.update_pack({self.config.pack_name: data_pack})
         yield multi_pack
+
+    @staticmethod
+    def default_configs():
+        return {
+            "pack_name": "query"
+        }

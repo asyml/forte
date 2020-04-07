@@ -26,6 +26,9 @@ core
 
 top
 ----------
+.. autoclass:: forte.data.ontology.top.Generics
+    :members:
+
 .. autoclass:: forte.data.ontology.top.Annotation
     :members:
 
@@ -35,13 +38,16 @@ top
 .. autoclass:: forte.data.ontology.top.Group
     :members:
 
+.. autoclass:: forte.data.ontology.top.MultiPackGeneric
+    :members:
+
 .. autoclass:: forte.data.ontology.top.MultiPackGroup
     :members:
 
 .. autoclass:: forte.data.ontology.top.MultiPackLink
     :members:
 
-.. autoclass:: forte.data.ontology.top.SubEntry
+.. autoclass:: forte.data.ontology.top.Query
     :members:
 
 Packs
@@ -105,18 +111,18 @@ Readers
 .. autoclass:: forte.data.readers.conllu_ud_reader.ConllUDReader
     :members:
 
-:hidden:`CorpusReader`
-------------------------
-.. autoclass:: forte.data.readers.corpus_reader.CorpusReader
+:hidden:`BaseDeserializeReader`
+--------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.BaseDeserializeReader
     :members:
 
 :hidden:`RawDataDeserializeReader`
-----------------------------------
+-----------------------------------
 .. autoclass:: forte.data.readers.deserialize_reader.RawDataDeserializeReader
     :members:
 
 :hidden:`RecursiveDirectoryDeserializeReader`
----------------------------------------------
+----------------------------------------------
 .. autoclass:: forte.data.readers.deserialize_reader.RecursiveDirectoryDeserializeReader
     :members:
 
