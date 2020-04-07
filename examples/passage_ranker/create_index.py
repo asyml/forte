@@ -19,6 +19,7 @@ import argparse
 import yaml
 import texar.torch as tx
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import MSMarcoPassageReader
 from forte.processors.ir import ElasticSearchIndexProcessor
 from forte.pipeline import Pipeline
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     config = yaml.safe_load(open(args.config_file, "r"))
     config = tx.HParams(config, default_hparams=None)
 
-    nlp = Pipeline()
+    nlp: Pipeline[DataPack] = Pipeline()
     nlp.set_reader(MSMarcoPassageReader())
     nlp.add(ElasticSearchIndexProcessor(), config=config.create_index)
     nlp.initialize()

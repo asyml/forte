@@ -28,14 +28,7 @@ __all__ = [
 
 
 class Evaluator(PipelineComponent[PackType]):
-    r"""The evaluator.
-
-    Args:
-        config: The configuration of the evaluator.
-    """
-    def __init__(self, config: Optional[HParams] = None):
-        super().__init__()
-        self.config: Optional[HParams] = config
+    r"""The base class of the evaluator."""
 
     @abstractmethod
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):

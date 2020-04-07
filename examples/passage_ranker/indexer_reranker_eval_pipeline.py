@@ -18,6 +18,8 @@ import yaml
 
 import texar.torch as tx
 
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.processors.ir import (
     ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     input_file = config.evaluator.input_file
 
     # initializing pipeline with processors
-    nlp = Pipeline()
+    nlp: Pipeline = Pipeline[MultiPack]()
     eval_reader = EvalReader()
     nlp.set_reader(reader=eval_reader, config=config.reader)
     nlp.add(ElasticSearchQueryCreator(), config=config.query_creator)

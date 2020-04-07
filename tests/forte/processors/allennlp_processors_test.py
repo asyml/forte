@@ -38,7 +38,7 @@ class TestAllenNLPProcessor(unittest.TestCase):
             'stanford_dependencies': [],
             'universal_dependencies': []
         }
-        self.deps = {
+        self.dep_types = {
             'stanford_dependencies': [],
             'universal_dependencies': []
         }
@@ -53,13 +53,13 @@ class TestAllenNLPProcessor(unittest.TestCase):
             self.tokens.append(univ_results['words'])
 
             self.pos['universal_dependencies'].append(univ_results['pos'])
-            self.deps['universal_dependencies'].append(
+            self.dep_types['universal_dependencies'].append(
                 univ_results['predicted_dependencies'])
             self.dep_heads['universal_dependencies'].append(
                 univ_results['predicted_heads'])
 
             self.pos['stanford_dependencies'].append(stan_results['pos'])
-            self.deps['stanford_dependencies'].append(
+            self.dep_types['stanford_dependencies'].append(
                 stan_results['predicted_dependencies'])
             self.dep_heads['stanford_dependencies'].append(
                 stan_results['predicted_heads'])
@@ -205,13 +205,11 @@ class TestAllenNLPProcessor(unittest.TestCase):
         self.assertEqual(token.pos, exp_pos)
 
     def _test_dependencies(self, sent_idx, tokens, deps, tag_format):
+
         for j, dep in enumerate(deps):
-            print(tokens[j].text)
-            print(dep.get_parent().text,
-                  tokens[self.dep_heads[tag_format][sent_idx][j] - 1].text)
             self.assertEqual(
                 dep.get_parent(),
                 tokens[self.dep_heads[tag_format][sent_idx][j] - 1])
             self.assertEqual(
                 dep.rel_type,
-                self.deps[tag_format][sent_idx][j])
+                self.dep_types[tag_format][sent_idx][j])

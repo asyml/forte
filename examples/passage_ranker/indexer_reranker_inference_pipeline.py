@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     doc_pack_name = config.indexer.response_pack_name_prefix
 
-    nlp = Pipeline()
+    nlp: Pipeline[MultiPack] = Pipeline()
     nlp.set_reader(reader=MultiPackTerminalReader(), config=config.reader)
 
     # Indexing and Re-ranking
