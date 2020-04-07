@@ -131,7 +131,7 @@ class PackManager:
         be kept in the memory. This is similar to counting-based reference
         management, the pack will be released when the count drop to 0.
 
-        As a side effect, if the pack does not have an pid, the system will
+        As a side effect, if the pack does not have an id, the system will
         assign an id for it.
 
         Args:

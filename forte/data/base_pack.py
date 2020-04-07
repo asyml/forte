@@ -263,7 +263,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def get_entries_by_component(self, component: str) -> Set[EntryType]:
         """
-        Return all entries created by the particular component, an unorderred
+        Return all entries created by the particular component, an unordered
         set.
 
         Args:

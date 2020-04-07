@@ -371,7 +371,7 @@ class Query(Generics):
         r"""Updates the results for this query.
 
         Args:
-             pid_to_score (dict): A dict containing pid -> score mapping
+             pid_to_score (dict): A dict containing pack id -> score mapping
         """
         self.results.update(pid_to_score)
 
