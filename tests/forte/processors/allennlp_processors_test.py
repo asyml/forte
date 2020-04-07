@@ -1,5 +1,7 @@
 """This module tests LowerCaser processor."""
 import unittest
+from typing import List
+
 from ddt import ddt, data, unpack
 
 from allennlp.predictors import Predictor
@@ -166,11 +168,20 @@ class TestAllenNLPProcessor(unittest.TestCase):
                 # checking the tokens and pos
                 tokens = self._test_tokenizer(pack, sentence, i,
                                               processors, tag_format)
-                deps = pack.get_entries(Dependency, sentence)
+                deps: List[Dependency] = list(
+                    pack.get_entries(Dependency, sentence))
+
+                indexed_deps = {}
+                for d in deps:
+                    indexed_deps[d.get_child().tid] = d
+
+                sorted_deps = []
+                for t in tokens:
+                    sorted_deps.append(indexed_deps[t.tid])
 
                 if "depparse" in processors:
                     # checking the dependencies
-                    self._test_dependencies(i, tokens, deps, tag_format)
+                    self._test_dependencies(i, tokens, sorted_deps, tag_format)
 
     @staticmethod
     def _create_pipeline(config):
@@ -205,7 +216,7 @@ class TestAllenNLPProcessor(unittest.TestCase):
         self.assertEqual(token.pos, exp_pos)
 
     def _test_dependencies(self, sent_idx, tokens, deps, tag_format):
-
+        print(deps)
         for j, dep in enumerate(deps):
             self.assertEqual(
                 dep.get_parent(),
