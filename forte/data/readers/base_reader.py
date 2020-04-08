@@ -139,7 +139,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def _cache_key_function(self, collection: Any) -> Optional[str]:
         r"""Computes the cache key based on the type of data.
 
