@@ -135,7 +135,7 @@ def multi_example(input_path, output_path):
     """
     print("Multi Pack serialization example.")
 
-    print("We first read the data, and add multi-packs to them, and then"
+    print("We first read the data, and add multi-packs to them, and then "
           "save the results.")
     coref_pl = Pipeline()
     coref_pl.set_reader(DirPackReader())
@@ -157,7 +157,7 @@ def multi_example(input_path, output_path):
     coref_pl.run(input_path)
     coref_pl.finish()
 
-    print("We can then load the saved results, and see if everything is OK."
+    print("We can then load the saved results, and see if everything is OK. "
           "We should see the same number of multi packs there. ")
     reading_pl = Pipeline()
     reading_pl.set_reader(MultiPackDiskReader(), {'data_path': output_path})
@@ -168,10 +168,13 @@ def multi_example(input_path, output_path):
     reading_pl.finish()
 
 
-if __name__ == '__main__':
-    data_path = "../../data_samples/ontonotes/00/"
+def main(data_path: str):
     pack_output = 'pack_out'
     multipack_output = 'multi_out'
 
     pack_example(data_path, pack_output)
     multi_example(pack_output, multipack_output)
+
+
+if __name__ == '__main__':
+    main("../../data_samples/ontonotes/00/")
