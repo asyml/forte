@@ -147,16 +147,20 @@ class MultiPackDiskReader(MultiPackReader):
                     self._pack_manager.reference_pack(pack)
 
             self._remap_packs(m_pack)
-
             yield m_pack
 
     def _remap_packs(self, multi_pack: MultiPack):
         """Need to call this after reading the relevant data packs"""
         # pylint: disable=protected-access
         new_pack_refs: List[int] = []
+        new_inverse_refs: Dict[int, int] = {}
         for pid in multi_pack._pack_ref:
-            new_pack_refs.append(self._pack_manager.get_remapped_id(pid))
+            remapped_id = self._pack_manager.get_remapped_id(pid)
+            new_pack_refs.append(remapped_id)
+            new_inverse_refs[remapped_id] = len(new_pack_refs) - 1
+
         multi_pack._pack_ref = new_pack_refs
+        multi_pack._inverse_pack_ref = new_inverse_refs
 
     def __get_pack_paths(self):
         pack_idx_path = os.path.join(self.configs.data_path, 'pack.idx')

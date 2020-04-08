@@ -17,6 +17,7 @@ import logging
 from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
                     Tuple)
 
+from forte.common import ProcessExecutionException
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
 from forte.data.index import BaseIndex
@@ -59,9 +60,15 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def __init__(self):
         super().__init__()
+        # Store the global ids.
         self._pack_ref: List[int] = []
+        # Store the reverse mapping from global id to the pack index.
+        self._inverse_pack_ref: Dict[int, int] = {}
+
+        # Store the pack names.
         self._pack_names: List[str] = []
-        self.__name_index = {}
+        # Store the reverse mapping from name to the pack index.
+        self.__name_index: Dict[str, int] = {}
 
         self.links: List[MultiPackLink] = []
         self.groups: List[MultiPackGroup] = []
@@ -80,12 +87,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         data packs inside.
         """
         super().__setstate__(state)
-        self.index = BaseIndex()
-
-        # All the serialized packs will share the same new serial session.
-        self._pack_ref = [
-            pid for pid in state['_pack_ref']
-        ]
 
         self.index = BaseIndex()
         self.index.update_basic_index(self.links)
@@ -106,14 +107,14 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """ A destructor for the MultiPack. During destruction, the Multi Pack
         will inform the PackManager that it won't need the DataPack anymore.
         """
-        for pack in self.packs:
-            self._pack_manager.dereference_pack(pack)
+        for pack_id in self._pack_ref:
+            self._pack_manager.dereference_pack(pack_id)
 
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 
-    def get_subentry(self, pack_id: int, entry_id: int):
-        return self._pack_manager.get_pack(pack_id).get_entry(entry_id)
+    def get_subentry(self, pack_idx: int, entry_id: int):
+        return self.get_pack_at(pack_idx).get_entry(entry_id)
 
     def get_span_text(self, span: Span):
         raise ValueError(
@@ -140,11 +141,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Tell the system that this multi pack is referencing this data pack.
         self._pack_manager.reference_pack(pack)
 
-        self._pack_ref.append(pid)
-
         if pack_name is None:
             # Create a default name based on the pack id.
             pack_name = f'{self.__default_pack_prefix}_{pid}'
+
+        # Record the pack's global id and names. Also the reverse lookup map.
+        self._pack_ref.append(pid)
+        self._inverse_pack_ref[pid] = len(self._pack_ref) - 1
 
         self._pack_names.append(pack_name)
         self.__name_index[pack_name] = len(self._pack_ref) - 1
@@ -160,6 +163,22 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         """
         return self._pack_manager.get_pack(self._pack_ref[index])
+
+    def get_pack_index(self, pack_id: int) -> int:
+        """
+        Get the pack index from the global pack id.
+
+        Args:
+            pack_id: The global pack id to find.
+
+        Returns:
+
+        """
+        try:
+            return self._inverse_pack_ref[pack_id]
+        except KeyError as e:
+            raise ProcessExecutionException(
+                f"Pack {pack_id} is not in this multi-pack.") from e
 
     def get_pack(self, name: str) -> DataPack:
         """
@@ -177,7 +196,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def packs(self) -> List[DataPack]:
         """
         Get the list of Data packs that in the order of added.
-        Returns:
+
+        Returns: List of data packs contained in this multi-pack.
 
         """
         return [self._pack_manager.get_pack(r) for r in self._pack_ref]

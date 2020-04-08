@@ -278,8 +278,9 @@ class MultiPackLink(BaseLink):
 
     def set_parent(self, parent: Entry):
         r"""This will set the `parent` of the current instance with given Entry.
-        The parent is saved internally as a tuple: ``pack id`` and
-        ``entry.tid``.
+        The parent is saved internally as a tuple: ``pack index`` and
+        ``entry.tid``. Pack index is the index of the data pack in the
+        multi-pack.
 
         Args:
             parent: The parent of the link, which is an Entry from a data pack,
@@ -289,12 +290,13 @@ class MultiPackLink(BaseLink):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}")
-        self._parent = parent.pack_id, parent.tid
+        self._parent = self.pack.get_pack_index(parent.pack_id), parent.tid
 
     def set_child(self, child: Entry):
         r"""This will set the `child` of the current instance with given Entry.
-        The child is saved internally as a tuple: ``pack id`` and
-        ``entry.tid``.
+        The child is saved internally as a tuple: ``pack index`` and
+        ``entry.tid``. Pack index is the index of the data pack in the
+        multi-pack.
 
         Args:
             child: The child of the link, which is an Entry from a data pack,
@@ -305,7 +307,7 @@ class MultiPackLink(BaseLink):
             raise TypeError(
                 f"The child of {type(self)} should be an "
                 f"instance of {self.ChildType}, but get {type(child)}")
-        self._child = child.pack_id, child.tid
+        self._child = self.pack.get_pack_index(child.pack_id), child.tid
 
     def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.

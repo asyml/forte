@@ -145,7 +145,7 @@ class PackManager:
         self.instance().pack_references[pid] += 1
         self.instance().pack_pool[pid] = pack
 
-    def dereference_pack(self, pack: ContainerType):
+    def dereference_pack(self, pack_id: int):
         """
         This method reduce the count the data pack or multi pack, when the count
         reaches 0, the pack will be released.
@@ -154,17 +154,22 @@ class PackManager:
         we will have memory issues.
 
         Args:
-            pack: The pack to de-reference.
+            pack_id: The pack id that points to the pack to be de-referenced.
 
         Returns:
 
         """
-        pack_id = get_pack_id(pack)
+        if pack_id not in self.instance().pack_references:
+            # This can happen when the instance is reset by the pipeline.
+            return
 
-        if self.instance().pack_references[pack_id] <= 0:
+        if self.instance().pack_references[pack_id] < 0:
+            # I am not sure if there are cases that can deduct the reference
+            # count too much, but we'd put a check here just in case.
             raise ProcessFlowException(
                 f"Pack reference count for pack [{pack_id}] is only "
-                f"self.instance().pack_references[pack_id], which is invalid.")
+                f"{self.instance().pack_references[pack_id]},"
+                f" which is invalid.")
 
         # Reduce the reference count.
         self.instance().pack_references[pack_id] -= 1
