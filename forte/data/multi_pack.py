@@ -98,6 +98,19 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for a in self.groups:
             a.set_pack(self)
 
+    def realign_packs(self):
+        """Need to call this after reading the relevant data packs"""
+        # pylint: disable=protected-access
+        new_pack_refs: List[int] = []
+        new_inverse_refs: Dict[int, int] = {}
+        for pid in self._pack_ref:
+            remapped_id = self._pack_manager.get_remapped_id(pid)
+            new_pack_refs.append(remapped_id)
+            new_inverse_refs[remapped_id] = len(new_pack_refs) - 1
+
+        self._pack_ref = new_pack_refs
+        self._inverse_pack_ref = new_inverse_refs
+
     def __iter__(self):
         yield from self.links
         yield from self.groups
@@ -162,7 +175,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: The pack at the index.
 
         """
-        return self._pack_manager.get_pack(self._pack_ref[index])
+        return self._pack_manager.get_from_pool(self._pack_ref[index])
 
     def get_pack_index(self, pack_id: int) -> int:
         """
@@ -189,7 +202,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: The pack that has that name.
 
         """
-        return self._pack_manager.get_pack(
+        return self._pack_manager.get_from_pool(
             self._pack_ref[self.__name_index[name]])
 
     @property
@@ -200,7 +213,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: List of data packs contained in this multi-pack.
 
         """
-        return [self._pack_manager.get_pack(r) for r in self._pack_ref]
+        return [self._pack_manager.get_from_pool(r) for r in self._pack_ref]
 
     @property
     def pack_names(self) -> Set[str]:

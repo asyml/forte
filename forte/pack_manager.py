@@ -75,6 +75,16 @@ class PackManager:
 
         return self.instance().initial_reader
 
+    def reset_remap(self):
+        """
+        A reader may call this to clear the remap dictionary.
+
+        Returns:
+
+        """
+
+        self.instance().remap.clear()
+
     def set_remapped_pack_id(self, pack: ContainerType):
         """
         Give a new id to the pack and remember the remap.
@@ -102,13 +112,14 @@ class PackManager:
     def get_remapped_id(self, old_id: int) -> int:
         """
         Get the remapped id from the old id.
+
         Args:
             old_id: The old id.
 
-        Returns: The remapped id.
+        Returns: The remapped id. -1 if not found.
 
         """
-        return self.instance().remap[old_id]
+        return self.instance().remap.get(old_id, -1)
 
     def set_pack_id(self, pack: ContainerType):
         """
@@ -179,12 +190,12 @@ class PackManager:
         if self.instance().pack_references[pack_id] == 0:
             self.instance().pack_pool.pop(pack_id)
 
-    def get_pack(self, pack_id: int):
-        r"""Return the data pack corresponding to the session and id.
+    def get_from_pool(self, pack_id: int) -> ContainerType:
+        r"""Return the data pack corresponding to the id.
         Args:
             pack_id: The pid of this pack.
 
-        Returns:
+        Returns: The pack indexed by this pack id.
 
         """
         return self.instance().pack_pool[pack_id]

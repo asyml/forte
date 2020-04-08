@@ -70,8 +70,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
 
-        # Each reader will acquire their own ID session.
         self._pack_manager = PackManager()
+        self._pack_manager.reset_remap()
 
     @classmethod
     def default_configs(cls):
