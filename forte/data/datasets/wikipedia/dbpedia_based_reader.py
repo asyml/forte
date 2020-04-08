@@ -168,9 +168,6 @@ class DBpediaWikiReader(PackReader):
 
         yield pack
 
-    def _cache_key_function(self, collection: Any) -> str:
-        pass
-
     @staticmethod
     def default_configs():
         """

@@ -18,7 +18,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, Union
 
 from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
@@ -140,14 +140,14 @@ class BaseReader(PipelineComponent[PackType], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _cache_key_function(self, collection: Any) -> str:
+    def _cache_key_function(self, collection: Any) -> Optional[str]:
         r"""Computes the cache key based on the type of data.
 
         Args:
             collection: Any object that provides information to identify the
                 name and location of the cache file
         """
-        raise NotImplementedError
+        return None
 
     # pylint: disable=unused-argument
     def text_replace_operation(self, text: str) -> ReplaceOperationsType:
@@ -163,7 +163,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         return []
 
-    def _get_cache_location(self, collection: Any) -> Path:
+    def _get_cache_location(self, collection: Any) -> str:
         r"""Gets the path to the cache file for a collection.
 
         Args:
@@ -172,7 +172,12 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Returns (Path): file path to the cache file for a Pack.
         """
         file_path = self._cache_key_function(collection)
-        return Path(os.path.join(str(self._cache_directory), file_path))
+        if file_path is None:
+            raise ProcessExecutionException(
+                "Cache key is None. You probably set `from_cache` to true but "
+                "fail to implement the _cache_key_function")
+
+        return os.path.join(str(self._cache_directory), file_path)
 
     def _lazy_iter(self, *args, **kwargs):
         for collection in self._collect(*args, **kwargs):
@@ -245,7 +250,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
             with open(cache_filename, 'w') as cache:
                 cache.write(pack.serialize() + "\n")
 
-    def read_from_cache(self, cache_filename: Path) -> Iterator[PackType]:
+    def read_from_cache(
+            self, cache_filename: Union[Path, str]) -> Iterator[PackType]:
         r"""Reads one or more Packs from ``cache_filename``, and yields Pack(s)
         from the cache file.
 

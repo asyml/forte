@@ -133,11 +133,8 @@ class DBpediaInfoBoxReader(PackReader):
             self.logger.warning("Resource %s is not in the raw packs.",
                                 resource_name)
 
-    def _cache_key_function(self, info_box_data: Dict[str, List]) -> str:
-        pass
-
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure
         :return:
