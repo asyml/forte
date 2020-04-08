@@ -16,6 +16,7 @@ import yaml
 
 from texar.torch import HParams
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.processors.ner_predictor import CoNLLNERPredictor
@@ -29,9 +30,9 @@ config.add_hparam('config_data', config_data)
 config.add_hparam('config_model', config_model)
 
 
-pl = Pipeline()
+pl = Pipeline[DataPack]()
 pl.set_reader(CoNLL03Reader())
-pl.add_processor(CoNLLNERPredictor(), config=config)
+pl.add(CoNLLNERPredictor(), config=config)
 
 pl.initialize()
 

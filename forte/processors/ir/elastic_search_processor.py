@@ -38,19 +38,20 @@ class ElasticSearchProcessor(MultiPackProcessor):
         super().__init__()
 
     def initialize(self, resources: Resources, configs: HParams):
-
         self.resources = resources
         self.config = configs
         self.index = ElasticSearchIndexer(hparams=self.config.index_config)
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
-        return {
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config.update({
             "query_pack_name": "query",
             "index_config": ElasticSearchIndexer.default_configs(),
             "field": "content",
             "response_pack_name_prefix": "passage"
-        }
+        })
+        return config
 
     def _process(self, input_pack: MultiPack):
         r"""Searches ElasticSearch indexer to fetch documents for a query. This

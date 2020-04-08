@@ -84,10 +84,12 @@ class SRLPredictor(FixedSizeBatchProcessor):
             map_location=self.device))
         self.model.eval()
 
-    def _define_context(self):
+    @staticmethod
+    def _define_context():
         return Sentence
 
-    def _define_input_info(self) -> DataRequest:
+    @staticmethod
+    def _define_input_info() -> DataRequest:
         input_info: DataRequest = {Token: []}
         return input_info
 
@@ -143,16 +145,17 @@ class SRLPredictor(FixedSizeBatchProcessor):
                     link.arg_type = label
                     data_pack.add_or_get_entry(link)
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure
         :return:
         """
-        hparams_dict = {
+        configs = super(cls).default_configs()
+        configs.update({
             'storage_path': None,
             "batcher": {
                 "batch_size": 4
             }
-        }
-        return hparams_dict
+        })
+        return configs

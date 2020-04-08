@@ -17,16 +17,14 @@ import logging
 import argparse
 
 import yaml
-
 import texar.torch as tx
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import MSMarcoPassageReader
 from forte.processors.ir import ElasticSearchIndexProcessor
 from forte.pipeline import Pipeline
 
-
 logging.basicConfig(level=logging.INFO)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -37,10 +35,9 @@ if __name__ == "__main__":
     config = yaml.safe_load(open(args.config_file, "r"))
     config = tx.HParams(config, default_hparams=None)
 
-    nlp = Pipeline()
+    nlp: Pipeline[DataPack] = Pipeline()
     nlp.set_reader(MSMarcoPassageReader())
-    nlp.add_processor(ElasticSearchIndexProcessor(),
-                      config=config.create_index)
+    nlp.add(ElasticSearchIndexProcessor(), config=config.create_index)
     nlp.initialize()
 
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -48,4 +45,4 @@ if __name__ == "__main__":
 
     for idx, pack in enumerate(nlp.process_dataset(data_path)):
         if idx + 1 > 0 and (idx + 1) % 10000 == 0:
-            print(f"Indexed {idx+1} packs")
+            print(f"Indexed {idx + 1} packs")

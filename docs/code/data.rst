@@ -26,6 +26,9 @@ core
 
 top
 ----------
+.. autoclass:: forte.data.ontology.top.Generics
+    :members:
+
 .. autoclass:: forte.data.ontology.top.Annotation
     :members:
 
@@ -35,13 +38,16 @@ top
 .. autoclass:: forte.data.ontology.top.Group
     :members:
 
+.. autoclass:: forte.data.ontology.top.MultiPackGeneric
+    :members:
+
 .. autoclass:: forte.data.ontology.top.MultiPackGroup
     :members:
 
 .. autoclass:: forte.data.ontology.top.MultiPackLink
     :members:
 
-.. autoclass:: forte.data.ontology.top.SubEntry
+.. autoclass:: forte.data.ontology.top.Query
     :members:
 
 Packs

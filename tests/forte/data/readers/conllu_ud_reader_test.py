@@ -78,9 +78,8 @@ class ConllUDReaderTest(unittest.TestCase):
         data_pack = self.data_packs[doc_index]
         expected_doc_id = self.doc_ids[doc_index]
         self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
-        self.assertEqual(
-            len(data_pack.get_entries_by_type(Sentence)), 1)
-        dependencies = data_pack.get_entries_by_type(Dependency)
+        self.assertEqual(len(list(data_pack.get_entries(Sentence))), 1)
+        dependencies = data_pack.get_entries(Dependency)
         for link in dependencies:
             root_token = get_dependency_tree_root(link, data_pack)
             self.assertEqual(root_token.text, "nominated")

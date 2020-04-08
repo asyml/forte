@@ -36,10 +36,10 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         # Define and config the Pipeline
         self.dataset_path = "data_samples/ontonotes/00"
 
-        self.nlp = Pipeline()
+        self.nlp = Pipeline[DataPack]()
 
         self.nlp.set_reader(OntonotesReader())
-        self.nlp.add_processor(DummyPackProcessor())
+        self.nlp.add(DummyPackProcessor())
 
         self.nlp.initialize()
 

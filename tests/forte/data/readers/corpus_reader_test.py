@@ -18,6 +18,7 @@ import os
 import unittest
 from typing import Dict
 
+from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Document
 
 from forte.data.data_pack import DataPack
@@ -26,7 +27,10 @@ from forte.data.readers import MSMarcoPassageReader
 
 class MSMarcoPassageReaderTest(unittest.TestCase):
     def setUp(self):
-        self.reader = MSMarcoPassageReader()
+        self.pipeline = Pipeline()
+
+        self.pipeline.set_reader(MSMarcoPassageReader())
+        self.pipeline.initialize()
 
         self.data_dir = 'data_samples/ms_marco_passage_retrieval'
 
@@ -39,9 +43,9 @@ class MSMarcoPassageReaderTest(unittest.TestCase):
 
     def test_ms_marco_passage_reader(self):
         actual_content: Dict[str, str] = {}
-        for data_pack in self.reader.iter(self.data_dir):
+        for data_pack in self.pipeline.process_dataset(self.data_dir):
             self.assertIsInstance(data_pack, DataPack)
-            doc_entries = list(data_pack.get_entries_by_type(Document))
+            doc_entries = list(data_pack.get_entries(Document))
             self.assertTrue(len(doc_entries) == 1)
             doc_entry: Document = doc_entries[0]
             self.assertIsInstance(doc_entry, Document)

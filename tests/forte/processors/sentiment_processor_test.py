@@ -17,6 +17,7 @@ Unit tests for NLTK processors.
 
 import unittest
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
@@ -27,10 +28,10 @@ from ft.onto.base_ontology import Sentence
 class TestVaderSentiment(unittest.TestCase):
 
     def setUp(self):
-        self.pipeline = Pipeline()
+        self.pipeline = Pipeline[DataPack]()
         self.pipeline.set_reader(StringReader())
-        self.pipeline.add_processor(NLTKSentenceSegmenter())
-        self.pipeline.add_processor(VaderSentimentProcessor())
+        self.pipeline.add(NLTKSentenceSegmenter())
+        self.pipeline.add(VaderSentimentProcessor())
         self.pipeline.initialize()
 
     def test_segmenter(self):
@@ -86,6 +87,10 @@ class TestVaderSentiment(unittest.TestCase):
             {'neg': 0.454, 'neu': 0.546, 'pos': 0.0, 'compound': -0.3609},
             {'neg': 0.0, 'neu': 0.327, 'pos': 0.673, 'compound': 0.9551},
             {'neg': 0.0, 'neu': 0.698, 'pos': 0.302, 'compound': 0.8248},
+        ]
+
+        expected_categories = [
+            s['compound'] > 0 for s in expected_scores
         ]
 
         document = ' '.join(sentences)

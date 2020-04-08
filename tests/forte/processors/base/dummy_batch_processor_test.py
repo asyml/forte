@@ -17,22 +17,23 @@ Unit tests for dummy processor.
 import unittest
 from ddt import ddt, data
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import OntonotesReader, StringReader, PlainTextReader
 from forte.pipeline import Pipeline
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
 from tests.dummy_batch_processor import \
-    DummyRelationExtractor, DummmyFixedSizeBatchProcessor
+    DummyRelationExtractor, DummyFixedSizeBatchProcessor
 from ft.onto.base_ontology import RelationLink, Sentence
 
 
 class DummyProcessorTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.nlp = Pipeline()
+        self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(OntonotesReader())
         dummy = DummyRelationExtractor()
         config = {"batcher": {"batch_size": 5}}
-        self.nlp.add_processor(dummy, config=config)
+        self.nlp.add(dummy, config=config)
         self.nlp.initialize()
 
         self.data_path = "data_samples/ontonotes/00/"
@@ -50,12 +51,12 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
 
     @data(1, 2, 3)
     def test_one_batch_processor(self, batch_size):
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         nlp.set_reader(StringReader())
-        batcher = DummmyFixedSizeBatchProcessor()
+        batcher = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
-        nlp.add_processor(NLTKSentenceSegmenter())
-        nlp.add_processor(batcher, config=config)
+        nlp.add(NLTKSentenceSegmenter())
+        nlp.add(batcher, config=config)
         nlp.initialize()
         sentences = ["This tool is called Forte. The goal of this project to "
                      "help you build NLP pipelines. NLP has never been made "
@@ -68,16 +69,16 @@ class DummyFixedSizeBatchProcessorTest(unittest.TestCase):
 
     @data(1, 2, 3)
     def test_two_batch_processors(self, batch_size):
-        nlp = Pipeline()
+        nlp = Pipeline[DataPack]()
         nlp.set_reader(PlainTextReader())
-        dummy1 = DummmyFixedSizeBatchProcessor()
-        dummy2 = DummmyFixedSizeBatchProcessor()
+        dummy1 = DummyFixedSizeBatchProcessor()
+        dummy2 = DummyFixedSizeBatchProcessor()
         config = {"batcher": {"batch_size": batch_size}}
-        nlp.add_processor(NLTKSentenceSegmenter())
+        nlp.add(NLTKSentenceSegmenter())
 
-        nlp.add_processor(dummy1, config=config)
+        nlp.add(dummy1, config=config)
         config = {"batcher": {"batch_size": 2 * batch_size}}
-        nlp.add_processor(dummy2, config=config)
+        nlp.add(dummy2, config=config)
 
         nlp.initialize()
         data_path = "data_samples/random_texts"

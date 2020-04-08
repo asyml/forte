@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 
-class WikiArticleWriter(JsonPackWriter[DataPack]):
+class WikiArticleWriter(JsonPackWriter):
     article_index: TextIO
 
     # It is difficult to get the type of the csv writer
@@ -118,7 +118,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     raw_pack_dir = os.path.join(output_path, 'nif_raw')
 
     # First, we create the NIF reader that read the NIF in order.
-    nif_pl = Pipeline()
+    nif_pl = Pipeline[DataPack]()
     nif_pl.resource.update(redirects=redirect_map)
 
     nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
@@ -130,7 +130,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         DBpediaWikiReader.default_configs()
     ))
 
-    nif_pl.add_processor(WikiArticleWriter(), config=HParams(
+    nif_pl.add(WikiArticleWriter(), config=HParams(
         {
             'output_dir': raw_pack_dir,
             'zip_pack': True,
@@ -143,7 +143,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     nif_pl.run(nif_context)
 
     # Second, we add info boxes to the packs with NIF.
-    ib_pl = Pipeline()
+    ib_pl = Pipeline[DataPack]()
     ib_pl.resource.update(redirects=redirect_map)
     ib_pl.set_reader(DBpediaInfoBoxReader(), config=HParams(
         {
@@ -156,7 +156,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         DBpediaInfoBoxReader.default_configs()
     ))
 
-    ib_pl.add_processor(WikiArticleWriter(), config=HParams(
+    ib_pl.add(WikiArticleWriter(), config=HParams(
         {
             'output_dir': os.path.join(output_path, 'nif_info_box'),
             'zip_pack': True,

@@ -15,16 +15,14 @@
 import argparse
 
 import yaml
-
 import texar.torch as tx
 
+from examples.passage_ranker.ms_marco_evaluator import MSMarcoEvaluator
+from examples.passage_ranker.reader import EvalReader
+from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.processors.ir import (
     ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
-
-from examples.passage_ranker.reader import EvalReader
-from examples.passage_ranker.ms_marco_evaluator import MSMarcoEvaluator
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -45,18 +43,13 @@ if __name__ == "__main__":
     input_file = config.evaluator.input_file
 
     # initializing pipeline with processors
-    nlp = Pipeline()
+    nlp: Pipeline = Pipeline[MultiPack]()
     eval_reader = EvalReader()
     nlp.set_reader(reader=eval_reader, config=config.reader)
-    nlp.add_processor(processor=ElasticSearchQueryCreator(),
-                      config=config.query_creator)
-    nlp.add_processor(processor=ElasticSearchProcessor(),
-                      config=config.indexer)
-    nlp.add_processor(processor=BertRerankingProcessor(),
-                      config=config.reranker)
-
-    nlp.set_evaluator(evaluator=MSMarcoEvaluator(),
-                      config=config.evaluator)
+    nlp.add(ElasticSearchQueryCreator(), config=config.query_creator)
+    nlp.add(ElasticSearchProcessor(), config=config.indexer)
+    nlp.add(BertRerankingProcessor(), config=config.reranker)
+    nlp.add(MSMarcoEvaluator(), config=config.evaluator)
     nlp.initialize()
 
     for idx, m_pack in enumerate(nlp.process_dataset(input_file)):

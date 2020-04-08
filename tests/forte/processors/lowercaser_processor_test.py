@@ -16,6 +16,7 @@ Unit tests for LowerCaser processor.
 """
 import unittest
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.lowercaser_processor import LowerCaserProcessor
@@ -23,9 +24,9 @@ from forte.processors.lowercaser_processor import LowerCaserProcessor
 
 class TestLowerCaserProcessor(unittest.TestCase):
     def setUp(self):
-        self.nlp = Pipeline()
+        self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(StringReader())
-        self.nlp.add_processor(LowerCaserProcessor())
+        self.nlp.add(LowerCaserProcessor())
         self.nlp.initialize()
 
     def test_lowercaser_processor(self):

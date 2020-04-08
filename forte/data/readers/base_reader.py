@@ -16,18 +16,18 @@ Base reader type to be inherited by all readers.
 """
 import logging
 import os
-
 from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
+from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
-from forte.data.types import ReplaceOperationsType
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.data.types import ReplaceOperationsType
+from forte.pack_manager import PackManager
 from forte.pipeline_component import PipelineComponent
-from forte.process_manager import ProcessManager
 from forte.utils.utils import get_full_module_name
 
 __all__ = [
@@ -37,8 +37,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-process_manager = ProcessManager()
 
 
 class BaseReader(PipelineComponent[PackType], ABC):
@@ -66,14 +64,17 @@ class BaseReader(PipelineComponent[PackType], ABC):
                  from_cache: bool = False,
                  cache_directory: Optional[str] = None,
                  append_to_cache: bool = False):
-
+        super().__init__()
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
 
-    @staticmethod
-    def default_configs():
+        # Each reader will acquire their own ID session.
+        self._pack_manager = PackManager()
+
+    @classmethod
+    def default_configs(cls):
         r"""Returns a `dict` of configurations of the reader with default
         values. Used to replace the missing values of input `configs`
         during pipeline construction.
@@ -91,9 +92,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
     @property
     def pack_type(self):
         raise NotImplementedError
-
-    def __reader_name(self):
-        return self.__class__.__name__
 
     @abstractmethod
     def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
@@ -117,8 +115,17 @@ class BaseReader(PipelineComponent[PackType], ABC):
         This internally setup the component meta data. Users should implement
         the :meth:`_parse_pack` method.
         """
-        process_manager.set_current_component(self.component_name)
-        yield from self._parse_pack(collection)
+        if collection is None:
+            raise ProcessExecutionException(
+                "Got None collection, cannot parse as data pack.")
+
+        for p in self._parse_pack(collection):
+            for entry in p:
+                # Here the creation will be recorded to the reader because
+                # we have set the reader to be the initial_reader in the
+                # pack manager.
+                entry.record_creation()
+            yield p
 
     @abstractmethod
     def _parse_pack(self, collection: Any) -> Iterator[PackType]:
@@ -177,10 +184,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 not_first = False
                 for pack in self.parse_pack(collection):
                     # write to the cache if _cache_directory specified
-
                     if self._cache_directory is not None:
-                        self.cache_data(
-                            collection, pack, not_first)
+                        self.cache_data(collection, pack, not_first)
 
                     if not isinstance(pack, self.pack_type):
                         raise ValueError(

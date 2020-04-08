@@ -17,6 +17,7 @@ import os
 from termcolor import colored
 from texar.torch import HParams
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
@@ -25,7 +26,7 @@ from ft.onto.base_ontology import Token, Sentence, Dependency
 
 
 def stanford_nlp_example(lang: str, text: str):
-    pl = Pipeline()
+    pl = Pipeline[DataPack]()
     pl.set_reader(StringReader())
 
     models_path = os.getcwd()
@@ -35,8 +36,8 @@ def stanford_nlp_example(lang: str, text: str):
         # Language code for the language to build the Pipeline
         'use_gpu': False
     }, StandfordNLPProcessor.default_configs())
-    pl.add_processor(processor=StandfordNLPProcessor(models_path),
-                     config=config)
+    pl.add(component=StandfordNLPProcessor(models_path),
+           config=config)
 
     pl.initialize()
 

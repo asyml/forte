@@ -15,12 +15,16 @@
 Unit tests for spaCy processors.
 """
 import unittest
+from typing import List
+
 from ddt import ddt, data
+import spacy
+from spacy.language import Language
 
-from texar.torch import HParams
-
-from forte.pipeline import Pipeline
+from forte.common import ProcessExecutionException
+from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
+from forte.pipeline import Pipeline
 from forte.processors.spacy_processors import SpacyProcessor
 from ft.onto.base_ontology import Token, EntityMention
 
@@ -28,7 +32,7 @@ from ft.onto.base_ontology import Token, EntityMention
 @ddt
 class TestSpacyProcessor(unittest.TestCase):
     def setUp(self):
-        self.spacy = Pipeline()
+        self.spacy = Pipeline[DataPack]()
         self.spacy.set_reader(StringReader())
 
         config = {
@@ -37,8 +41,10 @@ class TestSpacyProcessor(unittest.TestCase):
             # Language code for the language to build the Pipeline
             "use_gpu": False
         }
-        self.spacy.add_processor(SpacyProcessor(), config=config)
+        self.spacy.add(SpacyProcessor(), config=config)
         self.spacy.initialize()
+
+        self.nlp: Language = spacy.load(config['lang'])
 
     def test_spacy_processor(self):
         sentences = ["This tool is called Forte.",
@@ -67,7 +73,7 @@ class TestSpacyProcessor(unittest.TestCase):
 
     )
     def test_spacy_variation_pipeline(self, value):
-        spacy = Pipeline()
+        spacy = Pipeline[DataPack]()
         spacy.set_reader(StringReader())
 
         config = {
@@ -76,7 +82,7 @@ class TestSpacyProcessor(unittest.TestCase):
             # Language code for the language to build the Pipeline
             "use_gpu": False
         }
-        spacy.add_processor(SpacyProcessor(), config=config)
+        spacy.add(SpacyProcessor(), config=config)
         spacy.initialize()
 
         sentences = ["This tool is called Forte.",
@@ -84,26 +90,25 @@ class TestSpacyProcessor(unittest.TestCase):
                      "pipelines.",
                      "NLP has never been made this easy before."]
         document = ' '.join(sentences)
-        pack = spacy.process(document)
-        tokens = [x for x in pack.annotations if
-                  isinstance(x, Token)]
-        if "tokenize" in value:
-            exp_pos = ['DT', 'NN', 'VBZ', 'VBN', 'NNP', '.', 'DT', 'NN', 'IN',
-                       'DT', 'NN', 'TO', 'VB', 'PRP', 'VB', 'NNP', 'NNS', '.',
-                       'NNP', 'VBZ', 'RB', 'VBN', 'VBN', 'DT', 'JJ', 'RB', '.']
+        pack: DataPack = spacy.process(document)
+        tokens: List[Token] = list(pack.get_entries(Token))  # type: ignore
 
-            exp_lemma = ['this', 'tool', 'be', 'call', 'Forte', '.', 'the',
-                         'goal', 'of', 'this', 'project', 'to', 'help',
-                         '-PRON-', 'build', 'NLP', 'pipeline', '.', 'NLP',
-                         'have', 'never', 'be', 'make', 'this', 'easy',
-                         'before', '.']
+        raw_results = self.nlp(document)
+        sentences = raw_results.sents
+
+        if "tokenize" in value:
+            exp_pos = []
+            exp_lemma = []
+            for s in sentences:
+                for w in s:
+                    exp_lemma.append(w.lemma_)
+                    exp_pos.append(w.tag_)
 
             tokens_text = [x.text for x in tokens]
+            self.assertEqual(tokens_text, document.replace('.', ' .').split())
 
-            pos = [x.pos for x in pack.annotations if isinstance(x, Token)]
-            lemma = [x.lemma for x in pack.annotations if isinstance(x, Token)]
-            document_ = document.replace('.', ' .')
-            self.assertEqual(tokens_text, document_.split())
+            pos = [x.pos for x in tokens]
+            lemma = [x.lemma for x in tokens]
 
             # Check token texts
             for token, text in zip(tokens, tokens_text):
@@ -125,15 +130,22 @@ class TestSpacyProcessor(unittest.TestCase):
             self.assertListEqual(tokens, [])
 
         if "ner" in value:
-            entities_text = [x.text for x in pack.annotations if isinstance(x, EntityMention)]
-            entities_type = [x.ner_type for x in pack.annotations if
-                             isinstance(x, EntityMention)]
+            pack_ents: List[EntityMention] = list(
+                pack.get_entries(EntityMention))
+            entities_text = [x.text for x in pack_ents]
+            entities_type = [x.ner_type for x in pack_ents]
 
-            self.assertEqual(entities_text, ['Forte', 'NLP', 'NLP'])
-            self.assertEqual(entities_type, ['GPE', 'ORG', 'ORG'])
+            raw_ents = raw_results.ents
+            exp_ent_text = [
+                document[ent.start_char: ent.end_char] for ent in raw_ents
+            ]
+            exp_ent_types = [ent.label_ for ent in raw_ents]
+
+            self.assertEqual(entities_text, exp_ent_text)
+            self.assertEqual(entities_type, exp_ent_types)
 
     def test_neg_spacy_processor(self):
-        spacy = Pipeline()
+        spacy = Pipeline[DataPack]()
         spacy.set_reader(StringReader())
 
         config = {
@@ -142,7 +154,7 @@ class TestSpacyProcessor(unittest.TestCase):
             # Language code for the language to build the Pipeline
             "use_gpu": False
         }
-        spacy.add_processor(SpacyProcessor(), config=config)
+        spacy.add(SpacyProcessor(), config=config)
         spacy.initialize()
 
         sentences = ["This tool is called Forte.",
@@ -150,7 +162,7 @@ class TestSpacyProcessor(unittest.TestCase):
                      "pipelines.",
                      "NLP has never been made this easy before."]
         document = ' '.join(sentences)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ProcessExecutionException):
             _ = spacy.process(document)
 
 

@@ -1,0 +1,43 @@
+#begin document (bn/abc/00/abc_0059); part 000
+bn/abc/00/abc_0059   0    0             The    DT    (TOP(S(NP(NP*          -    -   -   -          *      *   (ARG0*   (ARG0*    (ARG0*             *   (0
+bn/abc/00/abc_0059   0    1      Indonesian    JJ                *          -    -   -   -      (NORP)     *        *        *         *             *    -
+bn/abc/00/abc_0059   0    2     billionaire    NN                *)         -    -   -   -          *      *        *        *         *             *    -
+bn/abc/00/abc_0059   0    3           James   NNP             (NP*          -    -   -   -   (PERSON*      *        *        *         *             *    -
+bn/abc/00/abc_0059   0    4           Riady   NNP               *))         -    -   -   -          *)     *        *)       *)        *)            *    0)
+bn/abc/00/abc_0059   0    5             has   VBZ             (VP*        have  01   -   -          *    (V*)       *        *         *             *    -
+bn/abc/00/abc_0059   0    6          agreed   VBN             (VP*       agree  01   3   -          *      *      (V*)       *         *             *    -
+bn/abc/00/abc_0059   0    7              to    TO           (S(VP*          -    -   -   -          *      *   (ARG1*        *         *             *    -
+bn/abc/00/abc_0059   0    8             pay    VB          (VP(VP*         pay  01   1   -          *      *        *      (V*)        *             *    -
+bn/abc/00/abc_0059   0    9               $     $          (NP(QP*          -    -   -   -    (MONEY*      *        *   (ARG1*         *             *    -
+bn/abc/00/abc_0059   0   10            8.5     CD                *          -    -   -   -          *      *        *        *         *             *    -
+bn/abc/00/abc_0059   0   11         million    CD              *)))         -    -   -   -          *)     *        *        *)        *             *    -
+bn/abc/00/abc_0059   0   12             and    CC                *          -    -   -   -          *      *        *        *         *             *    -
+bn/abc/00/abc_0059   0   13           plead    VB             (VP*       plead  02   3   -          *      *        *        *       (V*)            *    -
+bn/abc/00/abc_0059   0   14          guilty    JJ         (S(ADJP*          -    -   -   -          *      *        *        *    (ARG1*)            *    -
+bn/abc/00/abc_0059   0   15              to    IN             (PP*          -    -   -   -          *      *        *        *    (ARG2*             *    -
+bn/abc/00/abc_0059   0   16       illegally    RB         (S(ADVP*)         -    -   -   -          *      *        *        *         *    (ARGM-MNR*)   -
+bn/abc/00/abc_0059   0   17        donating   VBG             (VP*      donate  01   1   -          *      *        *        *         *           (V*)   -
+bn/abc/00/abc_0059   0   18           money    NN          (NP(NP*)      money   -   2   -          *      *        *        *         *        (ARG1*)   -
+bn/abc/00/abc_0059   0   19             for    IN             (PP*          -    -   -   -          *      *        *        *         *        (ARG2*    -
+bn/abc/00/abc_0059   0   20            Bill   NNP          (NP(NP*          -    -   -   -   (PERSON*      *        *        *         *             *    -
+bn/abc/00/abc_0059   0   21         Clinton   NNP                *          -    -   -   -          *      *        *        *         *             *    -
+bn/abc/00/abc_0059   0   22              's   POS                *)         -    -   -   -          *)     *        *        *         *             *    -
+bn/abc/00/abc_0059   0   23           1992     CD                *          -    -   -   -      (DATE)     *        *        *         *             *    -
+bn/abc/00/abc_0059   0   24    presidential    JJ                *          -    -   -   -          *      *        *        *         *             *    -
+bn/abc/00/abc_0059   0   25        campaign    NN   *))))))))))))))   campaign   -   1   -          *      *        *)       *         *)            *)   -
+bn/abc/00/abc_0059   0   26               .     .               *))         -    -   -   -          *      *        *        *         *             *    -
+
+bn/abc/00/abc_0059   0    0           He   PRP       (TOP(S(NP*)          -    -   -   -        *    (ARG0*)     *         *         *    (0)
+bn/abc/00/abc_0059   0    1       admits   VBZ             (VP*        admit  01   1   -        *       (V*)     *         *         *     -
+bn/abc/00/abc_0059   0    2           he   PRP      (SBAR(S(NP*)          -    -   -   -        *    (ARG1*      *    (ARG0*)   (ARG0*)   (0)
+bn/abc/00/abc_0059   0    3          was   VBD             (VP*           be  03   -   -        *         *    (V*)        *         *     -
+bn/abc/00/abc_0059   0    4       trying   VBG             (VP*          try  01   1   -        *         *      *       (V*)        *     -
+bn/abc/00/abc_0059   0    5           to    TO           (S(VP*           -    -   -   -        *         *      *    (ARG1*         *     -
+bn/abc/00/abc_0059   0    6    influence    VB             (VP*    influence  01   1   -        *         *      *         *       (V*)    -
+bn/abc/00/abc_0059   0    7     American    JJ          (NP(NP*           -    -   -   -    (NORP)        *      *         *    (ARG1*     -
+bn/abc/00/abc_0059   0    8       policy    NN                *)      policy   -   1   -        *         *      *         *         *     -
+bn/abc/00/abc_0059   0    9           on    IN             (PP*           -    -   -   -        *         *      *         *         *     -
+bn/abc/00/abc_0059   0   10        China   NNP   (NP*)))))))))))          -    -   -   -     (GPE)        *)     *         *)        *)    -
+bn/abc/00/abc_0059   0   11            .     .               *))          -    -   -   -        *         *      *         *         *     -
+
+#end document

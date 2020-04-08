@@ -39,8 +39,8 @@ class ElasticSearchIndexProcessor(IndexProcessor):
                               module_paths=["forte.indexers"])
         self.indexer = cls(hparams=self.config.indexer.hparams)
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
         r"""Returns a dictionary of default hyperparameters.
 
         .. code-block:: python
@@ -80,7 +80,8 @@ class ElasticSearchIndexProcessor(IndexProcessor):
                 :meth:`ElasticSearchIndexer.add_bulk` API
 
         """
-        return {
+        config = super().default_configs()
+        config.update({
             **IndexProcessor.default_configs(),
             "fields": ["doc_id", "content"],
             "indexer": {
@@ -91,7 +92,8 @@ class ElasticSearchIndexProcessor(IndexProcessor):
                     "refresh": False
                 }
             }
-        }
+        })
+        return config
 
     def _bulk_process(self):
         documents = [{self.config.fields[0]: document[0],

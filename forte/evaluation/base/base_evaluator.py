@@ -15,9 +15,7 @@
 Defines the Evaluator interface and related functions.
 """
 from abc import abstractmethod
-from typing import Any, Optional
-
-from texar.torch import HParams
+from typing import Any
 
 from forte.data.base_pack import PackType
 from forte.pipeline_component import PipelineComponent
@@ -28,13 +26,7 @@ __all__ = [
 
 
 class Evaluator(PipelineComponent[PackType]):
-    r"""The evaluator.
-
-    Args:
-        config: The configuration of the evaluator.
-    """
-    def __init__(self, config: Optional[HParams] = None):
-        self.config: Optional[HParams] = config
+    r"""The base class of the evaluator."""
 
     @abstractmethod
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):

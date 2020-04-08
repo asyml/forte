@@ -110,6 +110,6 @@ class CoNLL03Reader(PackReader):
 
         yield pack
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         return {}

@@ -18,6 +18,7 @@ import os
 
 __all__ = [
     "maybe_create_dir",
+    "ensure_dir"
 ]
 
 

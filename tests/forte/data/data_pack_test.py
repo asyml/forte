@@ -18,6 +18,9 @@ import os
 import logging
 import unittest
 
+from forte.data.data_pack import DataPack
+from forte.pipeline import Pipeline
+from forte.utils import utils
 from ft.onto.base_ontology import (
     Token, Sentence, Document, EntityMention, PredicateArgument, PredicateLink,
     PredicateMention)
@@ -29,13 +32,14 @@ logging.basicConfig(level=logging.DEBUG)
 class DataPackTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.reader = OntonotesReader()
-        data_rel_path = "data_samples/ontonotes/00/abc_0059.gold_conll"
         file_dir_path = os.path.dirname(__file__)
-        data_path = os.path.abspath(os.path.join(file_dir_path,
-                                                 *([os.pardir] * 3),
-                                                 data_rel_path))
-        self.data_pack = list(self.reader.parse_pack(data_path))[0]
+        data_path = os.path.join(file_dir_path, os.pardir, os.pardir,
+                                 'test_data', 'ontonotes')
+
+        pipeline = Pipeline()
+        pipeline.set_reader(OntonotesReader())
+        pipeline.initialize()
+        self.data_pack: DataPack = pipeline.process_one(data_path)
 
     def test_get_data(self):
         requests = {
@@ -48,7 +52,7 @@ class DataPackTest(unittest.TestCase):
                 "unit": "Token"
             },
             PredicateLink: {
-                "component": self.reader.component_name,
+                "component": utils.get_full_module_name(OntonotesReader),
                 "fields": ["parent", "child", "arg_type"]
             }
         }
@@ -78,9 +82,8 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(instances), 0)
 
         # case 5: get entries
-        instances = list(self.data_pack.get_data(Sentence,
-                                                 request=requests,
-                                                 skip_k=1))
+        instances = list(self.data_pack.get_data(
+            Sentence, request=requests, skip_k=1))
         self.assertEqual(len(instances[0].keys()), 9)
         self.assertEqual(len(instances[0]["PredicateLink"]), 4)
         self.assertEqual(len(instances[0]["Token"]), 5)

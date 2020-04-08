@@ -61,7 +61,7 @@ class MultiPackSentenceReaderTest(unittest.TestCase):
             with open(file_path, 'w') as f:
                 f.write(text)
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader_config = {"input_pack_name": "input",
                          "output_pack_name": "output"}
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)

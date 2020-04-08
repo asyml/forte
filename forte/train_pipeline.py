@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=logging-fstring-interpolation
 import logging
 from typing import Optional, List
 
-from texar.torch import HParams
-
-from forte.pipeline import Pipeline
-from forte.evaluation.base.base_evaluator import Evaluator
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.readers.base_reader import BaseReader
+from forte.evaluation.base.base_evaluator import Evaluator
+from forte.pipeline import Pipeline
 from forte.processors.base import BaseProcessor
 from forte.trainer.base import BaseTrainer
 
@@ -30,14 +28,14 @@ logger = logging.getLogger(__name__)
 
 class TrainPipeline:
     def __init__(self, train_reader: BaseReader, trainer: BaseTrainer,
-                 dev_reader: BaseReader, configs: HParams,
+                 dev_reader: BaseReader, configs: Config,
                  preprocessors: Optional[List[BaseProcessor]] = None,
                  evaluator: Optional[Evaluator] = None,
                  predictor: Optional[BaseProcessor] = None):
         self.resource = Resources()
         self.configs = configs
 
-        train_reader.initialize(self.resource, self.configs)
+        train_reader.initialize(self.resource, self.configs.reader)
 
         if preprocessors is not None:
             for p in preprocessors:
@@ -56,6 +54,7 @@ class TrainPipeline:
 
         if evaluator is not None:
             self.evaluator = evaluator
+            self.evaluator.initialize(self.resource, self.configs.evaluator)
 
     def run(self):
         logging.info("Preparing the pipeline")
@@ -73,16 +72,14 @@ class TrainPipeline:
         self.train()
         self.finish()
 
-    def prepare(self, *args, **kwargs):  # pylint: disable=unused-argument
+    def prepare(self):
         prepare_pl = Pipeline()
         prepare_pl.set_reader(self.train_reader)
         for p in self.preprocessors:
-            prepare_pl.add_processor(p)
+            prepare_pl.add(p)
 
         prepare_pl.run(self.configs.config_data.train_path)
-
-        for p in self.preprocessors:
-            p.finish(resource=self.resource)
+        prepare_pl.finish()
 
     def train(self):
         epoch = 0
@@ -102,7 +99,7 @@ class TrainPipeline:
             if self.trainer.stop_train():
                 return
 
-            logging.info(f"End of epoch {epoch}")
+            logging.info("End of epoch %d", epoch)
 
     def _validate(self, epoch: int):
         validation_result = {"epoch": epoch}

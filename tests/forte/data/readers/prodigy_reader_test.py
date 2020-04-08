@@ -19,6 +19,7 @@ import os
 import tempfile
 import unittest
 
+from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Token, Document, EntityMention
 from forte.data.readers import ProdigyReader
 from forte.pipeline import Pipeline
@@ -30,8 +31,9 @@ class ProdigyReaderTest(unittest.TestCase):
         # Define and config the Pipeline
         self.fp = tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl',
                                               delete=False)
-        self.nlp = Pipeline()
+        self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(ProdigyReader())
+        self.nlp.initialize()
         self.create_sample_file()
 
     def tearDown(self):

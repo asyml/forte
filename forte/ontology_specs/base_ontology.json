@@ -213,6 +213,20 @@
       "child_type": "ft.onto.base_ontology.EntityMention"
     },
     {
+      "entry_name": "ft.onto.base_ontology.CrossDocEntityRelation",
+      "parent_entry": "forte.data.ontology.top.MultiPackLink",
+      "description": "A `Link` type entry which represent a relation between two entity mentions across the packs.",
+      "attributes": [
+        {
+          "name": "rel_type",
+          "type": "str",
+          "description": "The type of the relation."
+        }
+      ],
+      "parent_type": "ft.onto.base_ontology.EntityMention",
+      "child_type": "ft.onto.base_ontology.EntityMention"
+    },
+    {
       "entry_name": "ft.onto.base_ontology.CoreferenceGroup",
       "parent_entry": "forte.data.ontology.top.Group",
       "description": "A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.",
@@ -222,6 +236,20 @@
       "entry_name": "ft.onto.base_ontology.EventRelation",
       "parent_entry": "forte.data.ontology.top.Link",
       "description": "A `Link` type entry which represent a relation between two event mentions.",
+      "attributes": [
+        {
+          "name": "rel_type",
+          "type": "str",
+          "description": "The type of the relation."
+        }
+      ],
+      "parent_type": "ft.onto.base_ontology.EventMention",
+      "child_type": "ft.onto.base_ontology.EventMention"
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.CrossDocEventRelation",
+      "parent_entry": "forte.data.ontology.top.MultiPackLink",
+      "description": "A `Link` type entry which represent a relation between two event mentions across the packs.",
       "attributes": [
         {
           "name": "rel_type",

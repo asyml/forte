@@ -17,6 +17,7 @@ Unit tests for pretrained encoders.
 
 import unittest
 
+from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
@@ -30,10 +31,10 @@ class TestPretrainedEncoder(unittest.TestCase):
 
     @pretrained_test
     def test_encoder_sentence(self):
-        pipeline = Pipeline()
+        pipeline = Pipeline[DataPack]()
         pipeline.set_reader(StringReader())
-        pipeline.add_processor(NLTKSentenceSegmenter())
-        pipeline.add_processor(PretrainedEncoder())
+        pipeline.add(NLTKSentenceSegmenter())
+        pipeline.add(PretrainedEncoder())
         pipeline.initialize()
 
         sentences = ["This tool is called Forte.",
@@ -47,9 +48,9 @@ class TestPretrainedEncoder(unittest.TestCase):
 
     @pretrained_test
     def test_encoder_document(self):
-        pipeline = Pipeline()
+        pipeline = Pipeline[DataPack]()
         pipeline.set_reader(StringReader())
-        pipeline.add_processor(
+        pipeline.add(
             PretrainedEncoder(),
             config={'entry_type': 'ft.onto.base_ontology.Document'})
         pipeline.initialize()
@@ -65,14 +66,14 @@ class TestPretrainedEncoder(unittest.TestCase):
 
     @pretrained_test
     def test_encoder_phrase(self):
-        pipeline = Pipeline()
+        pipeline = Pipeline[DataPack]()
         pipeline.set_reader(StringReader())
-        pipeline.add_processor(NLTKSentenceSegmenter())
-        pipeline.add_processor(NLTKWordTokenizer())
-        pipeline.add_processor(NLTKPOSTagger())
+        pipeline.add(NLTKSentenceSegmenter())
+        pipeline.add(NLTKWordTokenizer())
+        pipeline.add(NLTKPOSTagger())
         config = {'pattern': 'NP: {<DT>?<JJ>*<NN>}'}
-        pipeline.add_processor(NLTKChunker(), config=config)
-        pipeline.add_processor(
+        pipeline.add(NLTKChunker(), config=config)
+        pipeline.add(
             PretrainedEncoder(),
             config={'entry_type': 'ft.onto.base_ontology.Phrase'})
         pipeline.initialize()

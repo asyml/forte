@@ -19,6 +19,7 @@ import os
 import unittest
 from pathlib import Path
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 
@@ -29,12 +30,14 @@ class StringReaderPipelineTest(unittest.TestCase):
         # Define and config the Pipeline
         self.dataset_path = "forte/data/readers/tests/"
 
-        self.pl1 = Pipeline()
+        self.pl1: Pipeline = Pipeline[DataPack]()
         self._cache_directory = Path(os.path.join(os.getcwd(), "cache_data"))
         self.pl1.set_reader(StringReader())
+        self.pl1.initialize()
 
-        self.pl2 = Pipeline()
+        self.pl2: Pipeline = Pipeline[DataPack]()
         self.pl2.set_reader(StringReader())
+        self.pl2.initialize()
 
         self.text = (
             "The plain green Norway spruce is displayed in the gallery's "

@@ -19,21 +19,19 @@ from abc import abstractmethod
 from typing import Dict, Generic, Set, Tuple, TypeVar
 
 from forte.data.span import Span
-from forte.process_manager import ProcessManager
 
 __all__ = [
-    "IdManager",
+    "EntryIdManager",
     "EntryContainer",
+    "ContainerType",
 ]
 
 E = TypeVar('E')
 L = TypeVar('L')
 G = TypeVar('G')
 
-process_manager = ProcessManager()
 
-
-class IdManager:
+class EntryIdManager:
     r"""Control the ids assigned to each entry."""
 
     def __init__(self, initial_id_count: int = 0):
@@ -58,7 +56,7 @@ class EntryContainer(Generic[E, L, G]):
         self.field_records: Dict[str, Set[Tuple[int, str]]] = {}
 
         # The Id manager controls the ID management in this container
-        self._id_manager = IdManager()
+        self._id_manager = EntryIdManager()
 
     def __getstate__(self):
         r"""In serialization:
@@ -77,23 +75,17 @@ class EntryContainer(Generic[E, L, G]):
         r"""In deserialization,
             - The :class:`IdManager` is recreated from the id count.
         """
-        self._id_manager = IdManager(state['serialization']['next_id'])
         self.__dict__.update(state)
         self.__dict__.pop('serialization')
+        self._id_manager = EntryIdManager(state['serialization']['next_id'])
 
+    @abstractmethod
     def add_entry_creation_record(self, entry_id: int):
-        c = process_manager.component
-        try:
-            self.creation_records[c].add(entry_id)
-        except KeyError:
-            self.creation_records[c] = {entry_id}
+        raise NotImplementedError
 
+    @abstractmethod
     def add_field_record(self, entry_id: int, field_name: str):
-        c = process_manager.component
-        try:
-            self.field_records[c].add((entry_id, field_name))
-        except KeyError:
-            self.field_records[c] = {(entry_id, field_name)}
+        raise NotImplementedError
 
     @abstractmethod
     def validate(self, item: E) -> bool:

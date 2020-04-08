@@ -58,12 +58,13 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.train_instances_cache = []
 
         self.batch_size = 3
-        self.batcher = self.define_batcher()
 
-    def _define_context(self) -> Type[Annotation]:
+    @staticmethod
+    def _define_context() -> Type[Annotation]:
         return Sentence
 
-    def _define_input_info(self) -> DataRequest:
+    @staticmethod
+    def _define_input_info() -> DataRequest:
         input_info: DataRequest = {
             Token: [],
             Sentence: [],
@@ -279,11 +280,15 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         return words, chars, masks, lengths
 
     # TODO: change this to manageable size
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""Default config for NER Predictor"""
 
-        return {
+        configs = super().default_configs()
+        # TODO: Batcher in NER need to be update to use the sytem one.
+        configs["batcher"] = {"batch_size": 10}
+
+        more_configs = {
             "config_data": {
                 "train_path": "",
                 "val_path": "",
@@ -341,3 +346,6 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 "batch_size": 16
             }
         }
+
+        configs.update(more_configs)
+        return configs

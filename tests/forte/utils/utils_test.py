@@ -16,8 +16,6 @@ Unit test for utilities.
 """
 import unittest
 
-from forte.data.readers import StringReader
-from forte.pipeline import Pipeline
 from forte.utils import utils
 
 
@@ -58,31 +56,15 @@ class UtilsTest(unittest.TestCase):
             'LowerCaserProcessor')
 
     def test_create_class_with_kwargs(self):
-        p, hparams = utils.create_class_with_kwargs(
+        p = utils.create_class_with_kwargs(
             class_name='forte.processors.lowercaser_processor'
                        '.LowerCaserProcessor',
             class_args={},
-            h_params={
-                'overwrite_configs': {
-                    'selector': {
-                        'type': 'forte.data.selector.AllPackSelector',
-                        'args': None,
-                        'kwargs': {}
-                    }
-                }
-            }
         )
 
         self.assertEqual(
-            p.component_name,
+            p.name,
             'forte.processors.lowercaser_processor.LowerCaserProcessor')
-
-        # Note that here the provided hparam is merged with the
-        # default config, but not assigned to the processor yet.
-        self.assertEqual(
-            hparams.selector.type,
-            'forte.data.selector.AllPackSelector'
-        )
 
 
 if __name__ == '__main__':

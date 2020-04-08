@@ -59,14 +59,16 @@ class VaderSentimentProcessor(PackProcessor):
             scores = self.analyzer.polarity_scores(sentence.text)
             sentence.sentiment = scores
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""This defines a basic config structure for VaderSentimentProcessor.
 
         sentence_component (str): If not None, the processor will process
           sentence with the provided component name. If None, then all sentences
           will be processed.
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'sentence_component': None
-        }
+        })
+        return config

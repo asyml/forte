@@ -44,11 +44,13 @@ class IndexProcessor(BaseProcessor[DataPack], ABC):
         self.resources = resources
         self.config = configs
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
-        return {
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config.update({
             "batch_size": 128
-        }
+        })
+        return config
 
     def _bulk_process(self):
         r"""Subclasses of :class:`IndexProcessor` should implement this method

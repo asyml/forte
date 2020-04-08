@@ -17,16 +17,16 @@ import logging
 from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
                     Tuple)
 
-from forte.data.ontology.core import EntryType
-from forte.data.types import DataRequest
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
 from forte.data.index import BaseIndex
-from forte.data.ontology.top import (
-    Annotation, MultiPackGroup, MultiPackLink, SubEntry, MultiPackEntries,
-    MultiPackGeneric)
 from forte.data.ontology.core import Entry
+from forte.data.ontology.core import EntryType
+from forte.data.ontology.top import (
+    Annotation, MultiPackGroup, MultiPackLink, MultiPackEntries,
+    MultiPackGeneric)
 from forte.data.span import Span
+from forte.data.types import DataRequest
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def __init__(self):
         super().__init__()
-        self._packs: List[DataPack] = []
+        self._pack_ref: List[int] = []
         self._pack_names: List[str] = []
         self.__name_index = {}
 
@@ -71,22 +71,25 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         self.index: BaseIndex = BaseIndex()
 
+        # Used to automatically give name to sub packs.
         self.__default_pack_prefix = '_pack'
-
-    def __getstate__(self):
-        r"""In serialization,
-            - will not serialize the indexes
-        """
-        state = self.__dict__.copy()
-        state.pop('index')
-        return state
+        self._pack_manager.set_pack_id(self)
 
     def __setstate__(self, state):
-        r"""In deserialization, we
-            - initialize the indexes.
+        r"""In deserialization, we set up the index and the references to the
+        data packs inside.
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self.index = BaseIndex()
+
+        # All the serialized packs will share the same new serial session.
+        self._pack_ref = [
+            pid for pid in state['_pack_ref']
+        ]
+
+        self.index = BaseIndex()
+        self.index.update_basic_index(self.links)
+        self.index.update_basic_index(self.groups)
 
         for a in self.links:
             a.set_pack(self)
@@ -94,14 +97,23 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for a in self.groups:
             a.set_pack(self)
 
+    def __iter__(self):
+        yield from self.links
+        yield from self.groups
+        yield from self.generics
+
+    def __del__(self):
+        """ A destructor for the MultiPack. During destruction, the Multi Pack
+        will inform the PackManager that it won't need the DataPack anymore.
+        """
+        for pack in self.packs:
+            self._pack_manager.dereference_pack(pack)
+
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 
-    def subentry(self, pack_index: int, entry: Entry):
-        return SubEntry(self, pack_index, entry.tid)
-
-    def get_subentry(self, subentry: SubEntry):
-        return self.packs[subentry.pack_index].get_entry(subentry.entry_id)
+    def get_subentry(self, pack_id: int, entry_id: int):
+        return self._pack_manager.get_pack(pack_id).get_entry(entry_id)
 
     def get_span_text(self, span: Span):
         raise ValueError(
@@ -123,18 +135,52 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"got {type(pack)}"
             )
 
-        self._packs.append(pack)
-        pid = len(self._packs) - 1
+        pid = pack.meta.pack_id
+
+        # Tell the system that this multi pack is referencing this data pack.
+        self._pack_manager.reference_pack(pack)
+
+        self._pack_ref.append(pid)
 
         if pack_name is None:
+            # Create a default name based on the pack id.
             pack_name = f'{self.__default_pack_prefix}_{pid}'
 
         self._pack_names.append(pack_name)
-        self.__name_index[pack_name] = pid
+        self.__name_index[pack_name] = len(self._pack_ref) - 1
+
+    def get_pack_at(self, index: int) -> DataPack:
+        """
+        Get data pack at provided index.
+
+        Args:
+            index: The index of the pack.
+
+        Returns: The pack at the index.
+
+        """
+        return self._pack_manager.get_pack(self._pack_ref[index])
+
+    def get_pack(self, name: str) -> DataPack:
+        """
+        Get data pack of name.
+        Args:
+            name: The name of the pack
+
+        Returns: The pack that has that name.
+
+        """
+        return self._pack_manager.get_pack(
+            self._pack_ref[self.__name_index[name]])
 
     @property
     def packs(self) -> List[DataPack]:
-        return self._packs
+        """
+        Get the list of Data packs that in the order of added.
+        Returns:
+
+        """
+        return [self._pack_manager.get_pack(r) for r in self._pack_ref]
 
     @property
     def pack_names(self) -> Set[str]:
@@ -145,7 +191,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             self.add_pack(pack, pack_name)
 
     def iter_packs(self) -> Iterator[Tuple[str, DataPack]]:
-        for pack_name, pack in zip(self._pack_names, self._packs):
+        for pack_name, pack in zip(self._pack_names, self.packs):
             yield pack_name, pack
 
     def rename_pack(self, old_name: str, new_name: str):
@@ -165,9 +211,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pack_index = self.__name_index[old_name]
         self.__name_index[new_name] = pack_index
         self._pack_names[pack_index] = new_name
-
-    def get_pack(self, name: str):
-        return self._packs[self.__name_index[name]]
 
     def iter_groups(self):
         yield from self.groups
@@ -206,8 +249,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             containing the required annotations and context).
         """
 
-        yield from self._packs[
-            pack_index].get_data(context_type, request, skip_k)
+        yield from self.get_pack_at(
+            pack_index).get_data(context_type, request, skip_k)
 
     def get_cross_pack_data(
             self,
@@ -284,8 +327,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         add_new = allow_duplicate or (entry not in target)
 
         if add_new:
-            self.record_entry(entry)
-
             target.append(entry)  # type: ignore
 
             # update the data pack index if needed

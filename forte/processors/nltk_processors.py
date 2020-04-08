@@ -117,13 +117,15 @@ class NLTKChunker(PackProcessor):
     def initialize(self, resources: Resources, configs: HParams):
         self.chunker = RegexpParser(configs.pattern)
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""This defines a basic config structure for NLTKChunker.
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'pattern': 'NP: {<DT>?<JJ>*<NN>}',
-        }
+        })
+        return config
 
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(Sentence):

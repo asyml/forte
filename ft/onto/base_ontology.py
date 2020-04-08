@@ -8,10 +8,12 @@ Automatically generated ontology base_ontology. Do not change manually.
 """
 
 from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
+from forte.data.ontology.top import MultiPackLink
 from typing import Dict
 from typing import Optional
 from typing import Set
@@ -31,8 +33,10 @@ __all__ = [
     "Dependency",
     "EnhancedDependency",
     "RelationLink",
+    "CrossDocEntityRelation",
     "CoreferenceGroup",
     "EventRelation",
+    "CrossDocEventRelation",
 ]
 
 
@@ -587,6 +591,38 @@ class RelationLink(Link):
         self.set_fields(_rel_type=rel_type)
 
 
+class CrossDocEntityRelation(MultiPackLink):
+    """
+    A `Link` type entry which represent a relation between two entity mentions across the packs.
+    Attributes:
+        _rel_type (Optional[str])	The type of the relation.
+    """
+    ParentType = EntityMention
+
+    ChildType = EntityMention
+
+    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self._rel_type: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['rel_type'] = state.pop('_rel_type')
+        return state
+
+    def __setstate__(self, state): 
+        super().__setstate__(state)
+        self._rel_type = state.get('rel_type', None) 
+
+    @property
+    def rel_type(self):
+        return self._rel_type
+
+    @rel_type.setter
+    def rel_type(self, rel_type: Optional[str]):
+        self.set_fields(_rel_type=rel_type)
+
+
 class CoreferenceGroup(Group):
     """
     A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.
@@ -606,6 +642,38 @@ class EventRelation(Link):
     ChildType = EventMention
 
     def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self._rel_type: Optional[str] = None
+
+    def __getstate__(self): 
+        state = super().__getstate__()
+        state['rel_type'] = state.pop('_rel_type')
+        return state
+
+    def __setstate__(self, state): 
+        super().__setstate__(state)
+        self._rel_type = state.get('rel_type', None) 
+
+    @property
+    def rel_type(self):
+        return self._rel_type
+
+    @rel_type.setter
+    def rel_type(self, rel_type: Optional[str]):
+        self.set_fields(_rel_type=rel_type)
+
+
+class CrossDocEventRelation(MultiPackLink):
+    """
+    A `Link` type entry which represent a relation between two event mentions across the packs.
+    Attributes:
+        _rel_type (Optional[str])	The type of the relation.
+    """
+    ParentType = EventMention
+
+    ChildType = EventMention
+
+    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self._rel_type: Optional[str] = None
 

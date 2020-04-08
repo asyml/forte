@@ -13,22 +13,17 @@
 # limitations under the License.
 
 import os
-from typing import cast
-from termcolor import colored
-import yaml
 
+import yaml
+from termcolor import colored
 import texar.torch as tx
 
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
-
 from forte.pipeline import Pipeline
-
 from forte.processors.ir import (
     ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
-
 from ft.onto.base_ontology import Sentence
-
 
 if __name__ == "__main__":
     config_file = os.path.join(os.path.dirname(__file__), 'config.yml')
@@ -40,16 +35,13 @@ if __name__ == "__main__":
 
     doc_pack_name = config.indexer.response_pack_name_prefix
 
-    nlp = Pipeline()
+    nlp: Pipeline[MultiPack] = Pipeline()
     nlp.set_reader(reader=MultiPackTerminalReader(), config=config.reader)
 
     # Indexing and Re-ranking
-    nlp.add_processor(processor=ElasticSearchQueryCreator(),
-                      config=config.query_creator)
-    nlp.add_processor(processor=ElasticSearchProcessor(),
-                      config=config.indexer)
-    nlp.add_processor(processor=BertRerankingProcessor(),
-                      config=config.reranker)
+    nlp.add(ElasticSearchQueryCreator(), config=config.query_creator)
+    nlp.add(ElasticSearchProcessor(), config=config.indexer)
+    nlp.add(BertRerankingProcessor(), config=config.reranker)
 
     nlp.initialize()
 
@@ -57,8 +49,8 @@ if __name__ == "__main__":
     num_passages = len(passage_keys)
     print(f"Retrieved {num_passages} passages.")
 
-    for m_pack_ in nlp.process_dataset():
-        m_pack = cast(MultiPack, m_pack_)
+    m_pack: MultiPack
+    for m_pack in nlp.process_dataset():
         for p, passage in enumerate(passage_keys):
             pack = m_pack.get_pack(passage)
             print(colored(f"Passage: #{p}", "green"), pack.text, "\n")

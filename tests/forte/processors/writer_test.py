@@ -20,8 +20,9 @@ import tempfile
 import unittest
 from typing import List, Dict
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import OntonotesReader, \
-    RecursiveDirectoryDeserializeReader, DataPack
+    RecursiveDirectoryDeserializeReader
 from forte.pipeline import Pipeline
 from forte.processors.nltk_processors import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
@@ -31,15 +32,15 @@ from ft.onto.base_ontology import Token
 
 class TestLowerCaserProcessor(unittest.TestCase):
     def test_lowercaser_processor(self):
-        pipe_serialize = Pipeline()
+        pipe_serialize = Pipeline[DataPack]()
         pipe_serialize.set_reader(OntonotesReader())
-        pipe_serialize.add_processor(NLTKSentenceSegmenter())
-        pipe_serialize.add_processor(NLTKWordTokenizer())
-        pipe_serialize.add_processor(NLTKPOSTagger())
+        pipe_serialize.add(NLTKSentenceSegmenter())
+        pipe_serialize.add(NLTKWordTokenizer())
+        pipe_serialize.add(NLTKPOSTagger())
 
         output_path = tempfile.mkdtemp()
 
-        pipe_serialize.add_processor(
+        pipe_serialize.add(
             DocIdJsonPackWriter(), {
                 'output_dir': output_path,
                 'indent': 2,
@@ -51,7 +52,7 @@ class TestLowerCaserProcessor(unittest.TestCase):
         dataset_path = "data_samples/ontonotes/00"
         pipe_serialize.run(dataset_path)
 
-        pipe_deserialize = Pipeline()
+        pipe_deserialize = Pipeline[DataPack]()
         pipe_deserialize.set_reader(RecursiveDirectoryDeserializeReader())
         pipe_deserialize.initialize()
 

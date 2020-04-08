@@ -54,13 +54,15 @@ class ElasticSearchQueryCreator(QueryProcessor[MultiPack]):
         field = self.config.field or "content"
         return {"query": {"match": {field: text}}, "size": size}
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
-        return {
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config.update({
             "size": 1000,
             "field": "content",
             "query_pack_name": "query"
-        }
+        })
+        return config
 
     def _process_query(self, input_pack: MultiPack) -> \
             Tuple[DataPack, Dict[str, Any]]:

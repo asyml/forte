@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Any, Dict
 
-import stanfordnlp
+import stanza
 from texar.torch import HParams
 
 from ft.onto.base_ontology import Token, Sentence, Dependency
@@ -36,28 +36,31 @@ class StandfordNLPProcessor(PackProcessor):
         self.lang = 'en'  # English is default
 
     def set_up(self):
-        stanfordnlp.download(self.lang, self.MODELS_DIR)
+        stanza.download(self.lang, self.MODELS_DIR)
 
     # pylint: disable=unused-argument
     def initialize(self, resources: Resources, configs: HParams):
         self.processors = configs.processors
         self.lang = configs.lang
         self.set_up()
-        self.nlp = stanfordnlp.Pipeline(**configs.todict(),
-                                        models_dir=self.MODELS_DIR)
+        self.nlp = stanza.Pipeline(**configs.todict(),
+                                   models_dir=self.MODELS_DIR)
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
         """
         This defines a basic config structure for StanfordNLP.
         :return:
         """
-        return {
-            'processors': 'tokenize,pos,lemma,depparse',
-            'lang': 'en',
-            # Language code for the language to build the Pipeline
-            'use_gpu': False,
-        }
+        config = super().default_configs()
+        config.update(
+            {
+                'processors': 'tokenize,pos,lemma,depparse',
+                'lang': 'en',
+                # Language code for the language to build the Pipeline
+                'use_gpu': False,
+            })
+        return config
 
     def _process(self, input_pack: DataPack):
         doc = input_pack.text

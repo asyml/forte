@@ -21,6 +21,7 @@ import shutil
 
 from ddt import ddt, data, unpack
 
+from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.processors.ir import BertBasedQueryCreator
 from forte.data.readers import MultiPackSentenceReader
@@ -45,7 +46,7 @@ class TestBertBasedQueryCreator(unittest.TestCase):
             with open(file_path, 'w') as f:
                 f.write(text)
 
-        nlp = Pipeline()
+        nlp = Pipeline[MultiPack]()
         reader_config = {"input_pack_name": "query",
                          "output_pack_name": "output"}
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
@@ -53,7 +54,7 @@ class TestBertBasedQueryCreator(unittest.TestCase):
                   "tokenizer": {"name": "bert-base-uncased"},
                   "max_seq_length": 128,
                   "query_pack_name": "query"}
-        nlp.add_processor(BertBasedQueryCreator(), config=config)
+        nlp.add(BertBasedQueryCreator(), config=config)
 
         nlp.initialize()
 

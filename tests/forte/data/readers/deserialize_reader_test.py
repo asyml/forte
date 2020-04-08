@@ -16,6 +16,7 @@ Unit tests for Deserialize Reader.
 """
 import unittest
 
+from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader, RawDataDeserializeReader
 from forte.pipeline import Pipeline
 
@@ -23,15 +24,13 @@ from forte.pipeline import Pipeline
 class DeserializeReaderPipelineTest(unittest.TestCase):
 
     def setUp(self):
-
         # Define and config the Pipeline
-        self.nlp = Pipeline()
+        self.nlp: Pipeline[DataPack] = Pipeline[DataPack]()
         self.nlp.set_reader(StringReader())
         self.nlp.initialize()
 
-    def test_process_next(self):
-
-        another_pipeline = Pipeline()
+    def test_direct_deserialize(self):
+        another_pipeline = Pipeline[DataPack]()
         another_pipeline.set_reader(RawDataDeserializeReader())
         another_pipeline.initialize()
 

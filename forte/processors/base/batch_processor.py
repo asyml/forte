@@ -16,20 +16,20 @@ The processors that process data in batch.
 """
 import itertools
 from abc import abstractmethod, ABC
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Type, Any
 
 from texar.torch import HParams
 
 from forte.common import Resources, ProcessorConfigError
-from forte.data.types import DataRequest
+from forte.data import slice_batch
 from forte.data.base_pack import PackType
+from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data import slice_batch
-from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.ontology.top import Annotation
+from forte.data.types import DataRequest
+from forte.process_manager import ProcessJobStatus
 from forte.processors.base.base_processor import BaseProcessor
-from forte.process_manager import ProcessManager, ProcessJobStatus
 
 __all__ = [
     "BaseBatchProcessor",
@@ -38,8 +38,6 @@ __all__ = [
     "FixedSizeBatchProcessor",
     "FixedSizeMultiPackBatchProcessor"
 ]
-
-process_manager = ProcessManager()
 
 
 class BaseBatchProcessor(BaseProcessor[PackType], ABC):
@@ -55,7 +53,6 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         super().__init__()
         self.context_type: Type[Annotation] = self._define_context()
         self.input_info: DataRequest = self._define_input_info()
-
         self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
@@ -65,13 +62,15 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         assert configs is not None
         try:
             self.batcher.initialize(configs.batcher)
-        except AttributeError:
+        except AttributeError as e:
             raise ProcessorConfigError(
-                "To use batch processor, please provide the 'batch' "
-                "config at the top level.")
+                e, "Error in handling batcher config, please provide the "
+                   "check the config to see if you have the key 'batcher'."
+            )
 
+    @staticmethod
     @abstractmethod
-    def _define_context(self) -> Type[Annotation]:
+    def _define_context() -> Type[Annotation]:
         r"""User should define the context type for batch processors here. The
         context must be of type :class:`Annotation`, the processor will create
         data batches with in the span of each annotations. For example, if the
@@ -83,8 +82,9 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         """
         raise NotImplementedError
 
+    @staticmethod
     @abstractmethod
-    def _define_input_info(self) -> DataRequest:
+    def _define_input_info() -> DataRequest:
         r"""User should define the :attr:`input_info` for the batch processors
         here. The input info will be used to get batched data for this
         processor.
@@ -94,8 +94,9 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         """
         raise NotImplementedError
 
+    @staticmethod
     @abstractmethod
-    def define_batcher(self) -> ProcessingBatcher:
+    def define_batcher() -> ProcessingBatcher:
         r"""Define a specific batcher for this processor.
         Single pack :class:`BatchProcessor` initialize the batcher to be a
         :class:`~forte.data.batchers.ProcessingBatcher`.
@@ -129,10 +130,10 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         # update the status of the jobs. The jobs which were removed from
         # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
-        q_index = process_manager.current_queue_index
-        u_index = process_manager.unprocessed_queue_indices[q_index]
+        q_index = self._process_manager.current_queue_index
+        u_index = self._process_manager.unprocessed_queue_indices[q_index]
         data_pool_length = len(self.batcher.data_pack_pool)
-        current_queue = process_manager.current_queue
+        current_queue = self._process_manager.current_queue
 
         for i, job_i in enumerate(
                 itertools.islice(current_queue, 0, u_index + 1)):
@@ -147,7 +148,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self.pack_all(pred)
             self.update_batcher_pool(-1)
 
-        current_queue = process_manager.current_queue
+        current_queue = self._process_manager.current_queue
 
         for job in current_queue:
             job.set_status(ProcessJobStatus.PROCESSED)
@@ -175,6 +176,14 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
                                         self.batcher.current_batch_sources[i])
             self.pack(self.batcher.data_pack_pool[i], output_dict_i)
             start += self.batcher.current_batch_sources[i]
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        super_config = super().default_configs()
+
+        super_config['batcher'] = cls.define_batcher().default_configs()
+
+        return super_config
 
     @abstractmethod
     def pack(self, pack: PackType, inputs) -> None:
@@ -233,8 +242,8 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
 
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):
-
-    def define_batcher(self) -> ProcessingBatcher:
+    @staticmethod
+    def define_batcher() -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
 
 
@@ -257,6 +266,6 @@ class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
 
 
 class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):
-
-    def define_batcher(self) -> ProcessingBatcher:
+    @staticmethod
+    def define_batcher() -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()

@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Optional
 
 import spacy
 from spacy.language import Language
 from texar.torch import HParams
 
+from forte.common import ProcessExecutionException
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
@@ -34,7 +36,7 @@ class SpacyProcessor(PackProcessor):
     def __init__(self):
         super().__init__()
         self.processors: str = ""
-        self.nlp: Language = None
+        self.nlp: Optional[Language] = None
         self.lang_model: str = ''
 
     def set_up(self):
@@ -52,19 +54,21 @@ class SpacyProcessor(PackProcessor):
         self.lang_model = configs.lang
         self.set_up()
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure for spaCy.
         Returns:
 
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'processors': 'tokenize, pos, lemma',
             'lang': 'en_core_web_sm',
             # Language code for the language to build the Pipeline
             'use_gpu': False,
-        }
+        })
+        return config
 
     def _process_parser(self, sentences, input_pack):
         """Parse the sentence. Default behaviour is to segment sentence, POSTag
@@ -98,19 +102,17 @@ class SpacyProcessor(PackProcessor):
 
                     input_pack.add_or_get_entry(token)
 
-    def _process_ner(self, doc, input_pack):
+    def _process_ner(self, result, input_pack):
         """Perform spaCy's NER Pipeline on the document.
 
         Args:
-            doc: The document
+            result: SpaCy results
             input_pack: Input pack to fill
 
         Returns:
 
         """
-        ner_doc = self.nlp(doc)
-
-        for item in ner_doc.ents:
+        for item in result.ents:
             entity = EntityMention(input_pack, item.start_char,
                                    item.end_char)
             entity.ner_type = item.label_
@@ -119,15 +121,15 @@ class SpacyProcessor(PackProcessor):
     def _process(self, input_pack: DataPack):
         doc = input_pack.text
 
-        if 'ner' in self.processors:
-            self._process_ner(doc, input_pack)
+        # Do all process.
+        if self.nlp is None:
+            raise ProcessExecutionException(
+                "The SpaCy pipeline is not initialized, maybe you "
+                "haven't called the initialization function.")
+        result = self.nlp(doc)
 
-        try:
-            # sentence parsing
-            sentences = self.nlp(doc).sents
-            self._process_parser(sentences, input_pack)
-        except ValueError:
-            raise ValueError(f"The provided language model does not support"
-                             f" SpaCy's parser pipeline. Refer to "
-                             f"https://spacy.io/models/ for more information."
-                             f" Please check input and try again.")
+        # Record NER results.
+        self._process_ner(result, input_pack)
+
+        # Process sentence parses.
+        self._process_parser(result.sents, input_pack)

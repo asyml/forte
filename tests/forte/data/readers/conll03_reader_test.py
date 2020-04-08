@@ -36,11 +36,11 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         # Define and config the Pipeline
         self.dataset_path = "data_samples/conll03"
 
-        self.nlp = Pipeline()
+        self.nlp = Pipeline[DataPack]()
 
         self.nlp.set_reader(CoNLL03Reader())
-        self.nlp.add_processor(DummyPackProcessor())
-        self.nlp.add_processor(DummyPackProcessor())
+        self.nlp.add(DummyPackProcessor())
+        self.nlp.add(DummyPackProcessor())
 
         self.nlp.initialize()
 
