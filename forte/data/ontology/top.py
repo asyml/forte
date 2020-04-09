@@ -58,10 +58,7 @@ class Annotation(Entry):
 
     def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack)
-        if begin > end:
-            raise ValueError(
-                f"The begin {begin} of span is greater than the end {end}")
-        self._span = Span(begin, end)
+        self.set_span(begin, end)
 
     @property
     def span(self):
@@ -78,6 +75,11 @@ class Annotation(Entry):
     def set_span(self, begin: int, end: int):
         r"""Set the span of the annotation.
         """
+        if not isinstance(begin, int) or not isinstance(end, int):
+            raise ValueError(
+                f"Begin and End for an annotation must be integer, "
+                f"got {begin}:{type(begin)} and {end}:{type(end)}")
+
         if begin > end:
             raise ValueError(
                 f"The begin {begin} of span is greater than the end {end}")

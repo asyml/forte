@@ -260,7 +260,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Returns: List of cached data packs.
         """
         logger.info("reading from cache file %s", cache_filename)
-        with cache_filename.open("r") as cache_file:
+        with open(cache_filename, "r") as cache_file:
             for line in cache_file:
                 pack = DataPack.deserialize(line.strip())
                 if not isinstance(pack, self.pack_type):

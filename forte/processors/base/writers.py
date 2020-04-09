@@ -77,6 +77,7 @@ def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
             with open(output_path, 'w') as out:
                 out.write(out_str)
 
+    logging.info(f"Writing a pack to {output_path}")
     return output_path
 
 
