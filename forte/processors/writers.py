@@ -31,7 +31,7 @@ class DocIdMultiPackWriter(MultiPackWriter):
         if name is None:
             raise ProcessExecutionException(
                 'Cannot used the DocIdMultiPackWriter because the doc id '
-                'is not assigned for the pack %d.', pack.meta.pack_id)
+                'is not assigned for the pack %s.', pack.meta.pack_id)
         return name
 
     def multipack_name(self, pack: MultiPack) -> str:
@@ -39,5 +39,5 @@ class DocIdMultiPackWriter(MultiPackWriter):
         if name is None:
             raise ProcessExecutionException(
                 'Cannot used the DocIdMultiPackWriter because the doc id is '
-                'not assigned for the pack %d.', pack.meta.pack_id)
+                'not assigned for the pack %s.', pack.meta.pack_id)
         return name
