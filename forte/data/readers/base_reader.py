@@ -140,6 +140,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         raise NotImplementedError
 
     def _cache_key_function(self, collection: Any) -> Optional[str]:
+        # pylint: disable=unused-argument
         r"""Computes the cache key based on the type of data.
 
         Args:
@@ -170,6 +171,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         Returns (Path): file path to the cache file for a Pack.
         """
+        # pylint: disable=assignment-from-none
         file_path = self._cache_key_function(collection)
         if file_path is None:
             raise ProcessExecutionException(

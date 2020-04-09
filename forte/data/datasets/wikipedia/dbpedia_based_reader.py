@@ -20,10 +20,10 @@ This reader is based on DBpedia's extracted datasets.
 """
 import logging
 from collections import defaultdict
-from typing import Any, Iterator, Dict, List, DefaultDict, Tuple
+from typing import Iterator, Dict, List, DefaultDict, Tuple
 
-from texar.torch import HParams
 import rdflib
+from texar.torch import HParams
 
 from forte.common import Resources
 from forte.data.data_pack import DataPack

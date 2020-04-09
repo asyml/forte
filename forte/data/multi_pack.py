@@ -99,9 +99,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             a.set_pack(self)
 
         # Rebuild the name to index lookup.
-        self._name_index = dict(
-            [(n, i) for (i, n) in enumerate(self._pack_names)]
-        )
+        self._name_index = {n: i for (i, n) in enumerate(self._pack_names)}
 
     def __getstate__(self):
         r"""
