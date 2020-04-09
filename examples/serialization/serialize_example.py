@@ -19,10 +19,10 @@ from forte.data.multi_pack import MultiPack
 from forte.data.readers import OntonotesReader, DirPackReader
 from forte.data.readers.deserialize_reader import MultiPackDiskReader
 from forte.pipeline import Pipeline
-from forte.processors.base import MultiPackProcessor
+from forte.processors.base import MultiPackProcessor, MultiPackWriter
 from forte.processors.nltk_processors import (
     NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
-from forte.processors.writers import DocIdJsonPackWriter, DocIdMultiPackWriter
+from forte.processors.writers import DocIdJsonPackWriter
 from ft.onto.base_ontology import EntityMention, CrossDocEntityRelation
 
 
@@ -84,7 +84,7 @@ class ExampleCorefCounter(MultiPackProcessor):
         self.coref_count += len(rels)
 
     def finish(self, _):
-        print(f"Found {self.coref_count} in the multi packs.")
+        print(f"Found {self.coref_count} pairs in the multi packs.")
 
 
 def pack_example(input_path, output_path):
@@ -145,7 +145,7 @@ def multi_example(input_path, output_path):
     coref_pl.add(ExampleCorefCounter())
 
     coref_pl.add(
-        DocIdMultiPackWriter(),
+        MultiPackWriter(),
         {
             'output_dir': output_path,
             'indent': 2,
