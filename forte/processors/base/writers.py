@@ -22,8 +22,7 @@ import os
 from abc import abstractmethod, ABC
 from typing import Optional, Any, Dict
 
-from texar.torch.hyperparams import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
@@ -87,7 +86,7 @@ class JsonPackWriter(BaseProcessor[DataPack], ABC):
         self.zip_pack: bool = False
         self.indent: Optional[int] = None
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         super(JsonPackWriter, self).initialize(resources, configs)
 
         if not configs.output_dir:
@@ -139,7 +138,7 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
     pack_idx = 'pack.idx'
     multi_idx = 'multi.idx'
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(resources, configs)
 

@@ -23,9 +23,9 @@ from collections import defaultdict
 from typing import Iterator, Dict, List, DefaultDict, Tuple
 
 import rdflib
-from texar.torch import HParams
 
 from forte.common import Resources
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
@@ -102,7 +102,7 @@ class DBpediaWikiReader(PackReader):
         self.link_reader = None
         self.redirects: Dict[str, str] = {}
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.redirects = resources.get('redirects')
 
         # These NIF readers organize the statements in the specific RDF context,

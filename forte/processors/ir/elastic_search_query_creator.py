@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # pylint: disable=attribute-defined-outside-init
 from typing import Any, Dict, Tuple
 
-from texar.torch.hyperparams import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -35,7 +35,7 @@ class ElasticSearchQueryCreator(QueryProcessor[MultiPack]):
     def __init__(self) -> None:
         super().__init__()
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.resource = resources
         self.config = configs
 

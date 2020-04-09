@@ -14,12 +14,11 @@
 # pylint: disable=attribute-defined-outside-init
 from typing import Dict, Any
 
-from texar.torch.hyperparams import HParams
-
-from forte.common.resources import Resources
-from forte.processors.base import IndexProcessor
-from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte import utils
+from forte.common.configuration import Config
+from forte.common.resources import Resources
+from forte.indexers.elastic_indexer import ElasticSearchIndexer
+from forte.processors.base import IndexProcessor
 
 __all__ = [
     "ElasticSearchIndexProcessor"
@@ -33,7 +32,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
     def __init__(self) -> None:
         super().__init__()
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         cls = utils.get_class(self.config.indexer.name,
                               module_paths=["forte.indexers"])

@@ -20,6 +20,7 @@ import yaml
 import torch
 import texar.torch as tx
 
+from forte.common.configuration import Config
 from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
 
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +31,7 @@ parser.add_argument("--config_data", default="config_data",
 args = parser.parse_args()
 
 config = yaml.safe_load(open("config.yml", "r"))
-config = tx.HParams(config, default_hparams=None)
+config = Config(config, default_hparams=None)
 config_data = importlib.import_module(args.config_data)
 
 
@@ -51,7 +52,7 @@ class Indexer:
         self.tokenizer = tx.data.BERTTokenizer(
             pretrained_model_name="bert-base-uncased")
 
-        self.index = EmbeddingBasedIndexer(hparams={
+        self.index = EmbeddingBasedIndexer(config={
             "index_type": "GpuIndexFlatIP", "dim": 768, "device": "gpu0"})
 
     @torch.no_grad()

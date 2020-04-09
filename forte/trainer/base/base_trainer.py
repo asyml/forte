@@ -15,8 +15,7 @@
 from abc import abstractmethod
 from typing import Dict, Iterator
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.pipeline_component import PipelineComponent
 
@@ -28,7 +27,7 @@ class BaseTrainer(PipelineComponent):
         self._validation_requested = False
 
     @abstractmethod
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         """
         The training pipeline will run this initialization method during
         the initialization phase and send resources in as parameters.

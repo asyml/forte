@@ -17,9 +17,9 @@ from collections import Counter
 
 import numpy as np
 import torch
-from texar.torch import HParams
 
 from forte.common import Resources
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.models.ner.utils import load_glove_embedding, normalize_digit_word
 from forte.processors import Alphabet
@@ -74,7 +74,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
         self.ner_cnt: Counter = Counter()
 
     # pylint: disable=unused-argument
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.min_frequency = configs.min_frequency
         self.normalize_digit = configs.normalize_digit
         self.embedding_path = configs.embedding_path

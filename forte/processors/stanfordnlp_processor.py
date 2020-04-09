@@ -15,12 +15,12 @@
 from typing import List, Any, Dict
 
 import stanza
-from texar.torch import HParams
 
-from ft.onto.base_ontology import Token, Sentence, Dependency
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
+from ft.onto.base_ontology import Token, Sentence, Dependency
 
 __all__ = [
     "StandfordNLPProcessor",
@@ -39,7 +39,7 @@ class StandfordNLPProcessor(PackProcessor):
         stanza.download(self.lang, self.MODELS_DIR)
 
     # pylint: disable=unused-argument
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.processors = configs.processors
         self.lang = configs.lang
         self.set_up()
