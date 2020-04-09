@@ -28,12 +28,10 @@ COmprehension Dataset." (2016).
 import os
 from typing import Iterator, Tuple
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
+from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from forte.common.resources import Resources
-
 from ft.onto.base_ontology import Document
 
 __all__ = [
@@ -46,7 +44,7 @@ class MSMarcoPassageReader(PackReader):
         super().__init__()
         self.configs = None
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         # pylint: disable = unused-argument
         self.configs = configs
 

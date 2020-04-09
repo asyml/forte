@@ -12,19 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
-from urllib.parse import urlencode
-from os import getenv
 import uuid
+from os import getenv
 from typing import Optional
+from urllib.parse import urlencode
+
 import requests
 
-from texar.torch.hyperparams import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base import MultiPackProcessor
-
 from ft.onto.base_ontology import Document, Utterance
 
 __all__ = [
@@ -53,7 +52,7 @@ class MicrosoftBingTranslator(MultiPackProcessor):
 
     # pylint: disable=unused-argument
     def initialize(self, resources: Optional[Resources],
-                   configs: Optional[HParams]):
+                   configs: Optional[Config]):
         r"""Initialize the processor with `resources` and `configs`. This method
         is called by the pipeline during the initialization.
 
@@ -61,7 +60,7 @@ class MicrosoftBingTranslator(MultiPackProcessor):
             resources (Resources): An object of class
                 :class:`forte.common.Resources` that holds references to objects
                 that can be shared throughout the pipeline.
-            configs (HParams): A configuration to initialize the
+            configs (Config): A configuration to initialize the
                 processor. This processor is expected to hold the following
                 (key, value) pairs
 

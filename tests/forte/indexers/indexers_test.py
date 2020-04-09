@@ -91,7 +91,7 @@ class TestElasticSearchIndexer(unittest.TestCase):
 
     def setUp(self):
         self.indexer = ElasticSearchIndexer(
-            hparams={"index_name": "test_index"})
+            config={"index_name": "test_index"})
 
     def tearDown(self):
         self.indexer.elasticsearch.indices.delete(

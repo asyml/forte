@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=attribute-defined-outside-init
+
 from abc import abstractmethod
 from typing import (
     Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator, Any)
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -52,8 +53,7 @@ class ProcessingBatcher(Generic[PackType]):
 
         self.cross_pack: bool = cross_pack
 
-    def initialize(  # pylint: disable=unused-argument
-            self, config: Optional[HParams]):
+    def initialize(self, _):
         r"""The implementation should initialize the batcher and setup the
         internal states of this batcher.
         This batcher will be called at the pipeline initialize stage.
@@ -135,16 +135,9 @@ class ProcessingBatcher(Generic[PackType]):
 
 
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
-    def __init__(self, cross_pack=True):
-        super().__init__(cross_pack)
-        self.batch_is_full = False
-        default_config = HParams(None, self.default_configs())
-        self.batch_size = default_config.batch_size
-
-    def initialize(self, config: HParams):
+    def initialize(self, config: Config):
         super(FixedSizeDataPackBatcher, self).initialize(config)
-        config_ = HParams(config, self.default_configs())
-        self.batch_size = config_.batch_size
+        self.batch_size = config.batch_size
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
@@ -204,16 +197,10 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
         super().__init__(cross_pack)
         self.batch_is_full = False
 
-        default_config = HParams(None, self.default_configs())
-        self.input_pack_name = default_config.input_pack_name
-        self.batch_size = default_config.batch_size
-        self.initialize(default_config)
-
-    def initialize(self, config: HParams):
+    def initialize(self, config: Config):
         super().initialize(config)
         self.input_pack_name = config.input_pack_name
         self.batch_size = config.batch_size
-
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:

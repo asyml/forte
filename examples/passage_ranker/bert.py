@@ -20,11 +20,11 @@ from typing import Optional, cast
 
 import torch
 from torch.nn import Parameter
-
 from texar.torch.modules.pretrained import PretrainedBERTMixin
 from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
 from texar.torch.modules.classifiers import BERTClassifier as TxBERTClassifier
-from texar.torch.hyperparams import HParams
+
+from forte.common.configuration import Config
 
 __all__ = [
     "BERTEncoder",
@@ -87,7 +87,7 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
         super_params = self.default_hparams()
         if 'prefix' not in super_params:
             super_params["prefix"] = '_encoder.encoder.'
-        self._hparams = HParams(pretrained_model_hparams, super_params)
+        self._hparams = Config(pretrained_model_hparams, super_params)
 
     def _init_from_checkpoint(self, pretrained_model_name: str,
                               cache_dir: str, **kwargs):

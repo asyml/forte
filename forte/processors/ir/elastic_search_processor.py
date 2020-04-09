@@ -39,7 +39,7 @@ class ElasticSearchProcessor(MultiPackProcessor):
     def initialize(self, resources: Resources, configs: Config):
         self.resources = resources
         self.config = configs
-        self.index = ElasticSearchIndexer(hparams=self.config.index_config)
+        self.index = ElasticSearchIndexer(config=self.config.index_config)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

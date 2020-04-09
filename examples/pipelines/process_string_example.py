@@ -15,8 +15,8 @@
 import yaml
 
 from termcolor import colored
-from texar.torch import HParams
 
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
@@ -29,7 +29,7 @@ from ft.onto.base_ontology import Token, Sentence, PredicateLink, \
 
 config = yaml.safe_load(open("config.yml", "r"))
 
-config = HParams(config, default_hparams=None)
+config = Config(config, default_hparams=None)
 
 
 def main():

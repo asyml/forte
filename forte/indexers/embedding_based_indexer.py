@@ -34,7 +34,7 @@ class EmbeddingBasedIndexer:
     the vectors are indexed using this class.
 
     Args:
-        config (HParams): optional
+        config (Config): optional
             Hyperparameters. Missing hyperparameter will be set to default
             values. See :meth:`default_hparams` for the hyperparameter structure
             and default values.

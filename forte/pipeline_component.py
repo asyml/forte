@@ -17,7 +17,6 @@ Pipeline component module.
 from typing import Generic, Optional, Union, Dict, Any
 
 import yaml
-from texar.torch import HParams
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -45,11 +44,11 @@ class PipelineComponent(Generic[PackType]):
         Args:
             resources (Resources): A global resource register. User can register
                 shareable resources here, for example, the vocabulary.
-            configs (HParams): The configuration passed in to set up this
+            configs (Config): The configuration passed in to set up this
                 component.
         """
         self.resources: Optional[Resources] = resources
-        self.configs: HParams = configs
+        self.configs: Config = configs
 
     @property
     def name(self):

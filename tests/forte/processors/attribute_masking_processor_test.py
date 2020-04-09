@@ -1,12 +1,9 @@
 """This module tests Attribute Masking processor."""
 import unittest
-import os
-
-from texar.torch import HParams
 
 from forte.data.data_pack import DataPack
-from forte.pipeline import Pipeline
 from forte.data.readers import CoNLL03Reader
+from forte.pipeline import Pipeline
 from forte.processors import AttributeMasker
 from ft.onto.base_ontology import Token
 

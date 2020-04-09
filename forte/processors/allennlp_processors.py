@@ -13,14 +13,15 @@
 # limitations under the License.
 
 import logging
-from allennlp.predictors import Predictor
-from texar.torch import HParams
 
-from ft.onto.base_ontology import Token, Sentence, Dependency
+from allennlp.predictors import Predictor
+
+from forte.common import ProcessorConfigError
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
-from forte.common import ProcessorConfigError
+from ft.onto.base_ontology import Token, Sentence, Dependency
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ MODEL2URL = {
 class AllenNLPProcessor(PackProcessor):
 
     # pylint: disable=attribute-defined-outside-init,unused-argument
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
         if configs.tag_formalism not in MODEL2URL:

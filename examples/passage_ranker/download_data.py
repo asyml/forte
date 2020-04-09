@@ -15,8 +15,8 @@ import argparse
 from pathlib import Path
 
 import yaml
-import texar.torch as tx
 
+from forte.common.configuration import Config
 from forte.data.data_utils import maybe_download
 
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     data_config = yaml.safe_load(open(args.config_file, "r"))["data"]
-    config = tx.HParams(data_config, default_hparams=_get_default_config())
+    config = Config(data_config, default_hparams=_get_default_config())
 
     # data path can be passed through command line, it is given priority
     default_data_path = config.relative_path

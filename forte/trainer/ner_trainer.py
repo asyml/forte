@@ -22,8 +22,8 @@ from typing import List, Tuple, Iterator, Optional
 
 import numpy as np
 import torch
-import torchtext
 from torch.optim import SGD
+import torchtext
 from tqdm import tqdm
 
 from forte.common.configuration import Config
