@@ -24,8 +24,8 @@ import logging
 import os
 from typing import List, Iterator, Dict, Tuple
 
-import rdflib
 from smart_open import open
+import rdflib
 
 from forte.common import Resources
 from forte.common.configuration import Config
