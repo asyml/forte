@@ -113,6 +113,23 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def __iter__(self) -> Iterator[EntryType]:
         raise NotImplementedError
 
+    @property
+    def doc_id(self):
+        return self.meta.doc_id
+
+    @doc_id.setter
+    def doc_id(self, doc_id: str):
+        """
+        Update the doc id of this pack.
+
+        Args:
+            doc_id: The new doc id.
+
+        Returns:
+
+        """
+        self.meta.doc_id = doc_id
+
     @abstractmethod
     def delete_entry(self, entry: EntryType):
         r""" Remove the entry from the pack.

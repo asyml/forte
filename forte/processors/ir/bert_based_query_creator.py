@@ -67,7 +67,8 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
         config = super().default_configs()
         config.update({
             "model": {
-                "name": "bert-base-uncased"
+                'path': None,
+                "name": "bert-base-uncased",
             },
             "tokenizer": {
                 "name": "bert-base-uncased"

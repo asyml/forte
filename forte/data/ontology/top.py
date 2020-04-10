@@ -58,7 +58,7 @@ class Annotation(Entry):
 
     def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack)
-        self.set_span(begin, end)
+        self.set_span(pack.text, begin, end)  # type: ignore
 
     @property
     def span(self):
@@ -72,7 +72,7 @@ class Annotation(Entry):
     def end(self):
         return self._span.end
 
-    def set_span(self, begin: int, end: int):
+    def set_span(self, pack_text: str, begin: int, end: int):
         r"""Set the span of the annotation.
         """
         if not isinstance(begin, int) or not isinstance(end, int):
@@ -83,6 +83,24 @@ class Annotation(Entry):
         if begin > end:
             raise ValueError(
                 f"The begin {begin} of span is greater than the end {end}")
+
+        if begin < 0:
+            raise ValueError('The begin cannot be negative.')
+
+        if end > len(pack_text):
+            if len(pack_text) == 0:
+                raise ValueError(
+                    f"The end {end} of span is greater than the text length "
+                    f"{len(pack_text)}, which is invalid. The text length is 0,"
+                    f" so it may be the case the you haven't set text for the"
+                    f" data pack."
+                )
+            else:
+                raise ValueError(
+                    f"The end {end} of span is greater than the text length "
+                    f"{len(pack_text)}, which is invalid."
+                )
+
         self._span = Span(begin, end)
 
     def __hash__(self):
@@ -370,6 +388,27 @@ class Query(Generics):
             traditional models) representing the query.
         """
         self.value = value
+
+    @property
+    def results(self):
+        return self.results
+
+    @results.setter
+    def results(self, pid_to_score: Dict[str, float]):
+        self.results = pid_to_score
+
+    def add_result(self, pid: str, score: float):
+        """
+        Set the result score for a particular pid.
+
+        Args:
+            pid: the pack id.
+            score: the score for the pack
+
+        Returns:
+
+        """
+        self.results[pid] = score
 
     def update_results(self, pid_to_score: Dict[str, float]):
         r"""Updates the results for this query.

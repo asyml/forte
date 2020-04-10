@@ -62,13 +62,13 @@ class ProdigyReader(PackReader):
         """
         pack = DataPack()
         text = data['text']
-        tokens = data['tokens']
-        spans = data['spans']
+        pack.set_text(text, replace_func=self.text_replace_operation)
 
         document = Document(pack, 0, len(text))
-        pack.set_text(text, replace_func=self.text_replace_operation)
         pack.add_or_get_entry(document)
 
+        tokens = data['tokens']
+        spans = data['spans']
         for token in tokens:
             begin = token['start']
             end = token['end']

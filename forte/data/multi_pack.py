@@ -149,7 +149,43 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             "MultiPack objects do not contain text, please refer to a "
             "specific data pack to get text.")
 
-    def add_pack(self, pack: DataPack, pack_name: Optional[str] = None):
+    def add_pack(self, pack_name: Optional[str] = None) -> DataPack:
+        """
+        Create a data pack and add it to this multi pack. If pack_name is not
+        None, it will be used to index the data pack. Otherwise, a default name
+        based on the pack id will be created for this data pack. The created
+        data pack will be returned.
+
+        Args:
+            pack_name (str): The pack name used for the new created pack
+
+        Returns: The newly created data pack.
+
+        """
+        if pack_name in self._name_index:
+            raise ValueError(
+                f"The name {pack_name} has already been taken.")
+        if pack_name is not None and not isinstance(pack_name, str):
+            raise ValueError(
+                f"key of the pack should be str, but got "
+                f"" f"{type(pack_name)}"
+            )
+
+        pack: DataPack = DataPack()
+        self.add_pack_(pack)
+        return pack
+
+    def add_pack_(self, pack: DataPack, pack_name: Optional[str] = None):
+        """
+        Add a existing data pack to the multi pack.
+
+        Args:
+            pack (DataPack): The existing data pack.
+            pack_name (str): The name to used in this multi pack.
+
+        Returns:
+
+        """
         if pack_name in self._name_index:
             raise ValueError(
                 f"The name {pack_name} has already been taken.")
@@ -236,7 +272,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def update_pack(self, named_packs: Dict[str, DataPack]):
         for pack_name, pack in named_packs.items():
-            self.add_pack(pack, pack_name)
+            self.add_pack_(pack, pack_name)
 
     def iter_packs(self) -> Iterator[Tuple[str, DataPack]]:
         for pack_name, pack in zip(self._pack_names, self.packs):
