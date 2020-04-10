@@ -48,13 +48,13 @@ class EmbeddingBasedIndexer:
 
     def __init__(self, config: Optional[Union[Dict, Config]] = None):
         super().__init__()
-        self._hparams = Config(hparams=config,
-                               default_hparams=self.default_configs())
+        self._config = Config(hparams=config,
+                              default_hparams=self.default_configs())
         self._meta_data: Dict[int, str] = {}
 
-        index_type = self._hparams.index_type
-        device = self._hparams.device
-        dim = self._hparams.dim
+        index_type = self._config.index_type
+        device = self._config.device
+        dim = self._config.dim
 
         if device.lower().startswith("gpu"):
             if isinstance(index_type, str) and not index_type.startswith("Gpu"):
@@ -68,7 +68,7 @@ class EmbeddingBasedIndexer:
                 logging.warning("Cannot create the index on device %s. "
                                 "Total number of GPUs on this machine is "
                                 "%s. Using gpu0 for the index.",
-                                self._hparams.device, faiss.get_num_gpus())
+                                self._config.device, faiss.get_num_gpus())
             config_class_name = \
                 self.INDEX_TYPE_TO_CONFIG.get(index_class.__name__)
             config = utils.get_class(config_class_name,  # type: ignore
@@ -203,7 +203,7 @@ class EmbeddingBasedIndexer:
         cpu_index = faiss.read_index(f"{path}/index.faiss")
 
         if device is None:
-            device = self._hparams.device
+            device = self._config.device
 
         if device.lower().startswith("gpu"):
             gpu_resource = faiss.StandardGpuResources()

@@ -19,7 +19,7 @@ from typing import (Dict, Iterable, Iterator, List, Optional, Type, Union, Any,
 import numpy as np
 from sortedcontainers import SortedList
 
-from forte.common.exception import EntryNotFoundError
+from forte.common.exception import EntryNotFoundError, ProcessExecutionException
 from forte.data import data_utils_io
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
@@ -67,7 +67,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     """
 
     def __init__(self, doc_id: Optional[str] = None):
-        super().__init__()
+        super().__init__(doc_id)
         self._text = ""
 
         self.annotations: SortedList[Annotation] = SortedList()
@@ -150,13 +150,15 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return self._text[span.begin: span.end]
 
+    # TODO: having to set the replace_func here is not very intuitive.
     def set_text(
             self, text: str, replace_func:
             Optional[Callable[[str], ReplaceOperationsType]] = None):
 
         if len(self._text) > 0:
-            logger.warning("The new text is overwriting the original one, "
-                           "which might cause unexpected behavior.")
+            raise ProcessExecutionException(
+                "The new text is overwriting the original one, "
+                "which might cause unexpected behavior.")
 
         span_ops = [] if replace_func is None else replace_func(text)
 
@@ -296,6 +298,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         return Span(orig_begin, orig_end)
 
+    # TODO: Consider run add_entry automatically at some point.
     def add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.

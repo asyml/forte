@@ -67,18 +67,21 @@ class ElasticSearchProcessor(MultiPackProcessor):
 
         # ElasticSearchQueryCreator adds a Query entry to query pack. We now
         # fetch it as the first element.
-        first_query = list(query_pack.get_entries(Query))[0]
+        first_query: Query = query_pack.get_single(Query)
         results = self.index.search(first_query.value)
         hits = results["hits"]["hits"]
-        packs = {}
+
         for idx, hit in enumerate(hits):
             document = hit["_source"]
-            first_query.update_results({document["doc_id"]: hit["_score"]})
-            pack = DataPack(doc_id=document["doc_id"])
+            first_query.add_result(document["doc_id"], hit["_score"])
+
+            pack: DataPack = input_pack.add_pack(
+                f"{self.config.response_pack_name_prefix}_{idx}"
+            )
+            pack.doc_id = document["doc_id"]
+
             content = document[self.config.field]
+            pack.set_text(content)
+
             document = Document(pack=pack, begin=0, end=len(content))
             pack.add_entry(document)
-            pack.set_text(content)
-            packs[f"{self.config.response_pack_name_prefix}_{idx}"] = pack
-
-        input_pack.update_pack(packs)

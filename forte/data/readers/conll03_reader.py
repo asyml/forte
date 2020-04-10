@@ -101,10 +101,11 @@ class CoNLL03Reader(PackReader):
             sentence_cnt += 1
             pack.add_or_get_entry(sent)
 
+        pack.set_text(text, replace_func=self.text_replace_operation)
+
         document = Document(pack, 0, len(text))
         pack.add_or_get_entry(document)
 
-        pack.set_text(text, replace_func=self.text_replace_operation)
         pack.meta.doc_id = file_path
         doc.close()
 

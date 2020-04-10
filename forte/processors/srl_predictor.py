@@ -151,7 +151,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
         This defines a basic config structure
         :return:
         """
-        configs = super(cls).default_configs()
+        configs = super().default_configs()
         configs.update({
             'storage_path': None,
             "batcher": {

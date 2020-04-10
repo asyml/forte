@@ -64,8 +64,6 @@ class RACEMultiChoiceQAReader(PackReader):
             pack = DataPack()
             text: str = dataset['article']
             article_end = len(text)
-            article = RaceDocument(pack, 0, article_end)
-            pack.add_entry(article)
             offset = article_end + 1
 
             for qid, ques_text in enumerate(dataset['questions']):
@@ -93,6 +91,9 @@ class RACEMultiChoiceQAReader(PackReader):
                 pack.add_entry(question)
 
             pack.set_text(text, replace_func=self.text_replace_operation)
+
+            article = RaceDocument(pack, 0, article_end)
+            pack.add_entry(article)
 
             passage_id: str = dataset['id']
             passage = Passage(pack, 0, len(pack.text))

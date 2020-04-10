@@ -91,16 +91,19 @@ class MultiPackSentenceReader(MultiPackReader):
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:  # type: ignore
         with open(file_path, "r", encoding="utf8") as doc:
             for line in doc:
-                m_pack = MultiPack()
-                pack = DataPack(doc_id=file_path)
                 line = line.strip()
                 if len(line) == 0:
                     continue
+
+                m_pack = MultiPack()
+                pack = m_pack.add_pack('pack')
+                pack.set_text(line)
+
                 sent = Sentence(pack, 0, len(line))
                 pack.add_entry(sent)
-                pack.set_text(line)
+
                 self.count += 1
-                m_pack.update_pack({"pack": pack})
+
                 yield m_pack  # type: ignore
 
 

@@ -275,13 +275,12 @@ class OntonotesReader(PackReader):
                 pack.add_entry(group)
 
             text = " ".join(words)
-            document = Document(pack, 0, len(text))
-            pack.add_entry(document)
-
-            if document_id is not None:
-                pack.set_meta(doc_id=document_id)
             pack.set_text(text, replace_func=self.text_replace_operation)
 
+            document = Document(pack, 0, len(text))
+            pack.add_entry(document)
+            if document_id is not None:
+                pack.doc_id = document_id
         yield pack
 
     def _process_entity_annotations(
