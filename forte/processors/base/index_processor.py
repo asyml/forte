@@ -17,8 +17,8 @@ Index processor
 from abc import ABC
 from typing import Dict, Any, List, Tuple
 
-from texar.torch import HParams
 from forte.common import Resources
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base.base_processor import BaseProcessor
 
@@ -40,7 +40,7 @@ class IndexProcessor(BaseProcessor[DataPack], ABC):
         self.documents: List[Tuple[str, str]] = []
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.resources = resources
         self.config = configs
 

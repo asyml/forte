@@ -18,9 +18,9 @@ from typing import Dict, Any
 
 import torch
 
-from texar.torch.hyperparams import HParams
 from texar.torch.data.tokenizers.bert_tokenizer import BERTTokenizer
 
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Query
@@ -36,9 +36,9 @@ __all__ = [
 
 class BertRerankingProcessor(MultiPackProcessor):
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.resources = resources
-        self.config = HParams(configs, self.default_configs())
+        self.config = Config(configs, self.default_configs())
 
         # TODO: At the time of writing, no way in texar to set encoder in
         # `texar.torch.modules.classifiers.BertClassifier`. Should not ideally

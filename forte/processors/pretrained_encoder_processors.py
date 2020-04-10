@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import texar.torch as tx
 import torch
 
-import texar.torch as tx
-
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.ontology.top import Annotation
 from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import get_class
 
@@ -111,7 +109,7 @@ class PretrainedEncoder(PackProcessor):
         return list(self.name2tokenizer.keys())
 
     # pylint: disable=unused-argument
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         if configs.pretrained_model_name in self.name2tokenizer:
             self.tokenizer = \
                 self.name2tokenizer[configs.pretrained_model_name](

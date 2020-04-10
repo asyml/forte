@@ -105,7 +105,7 @@ class MultiPackDiskReader(MultiPackReader):
 
     def __init__(self):
         super().__init__()
-        self.__pack_paths: Dict[int, str] = {}
+        self.__pack_index: Dict[int, str] = {}
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -136,31 +136,20 @@ class MultiPackDiskReader(MultiPackReader):
         with open(os.path.join(
                 self.configs.data_path, multi_pack_path)) as m_data:
             m_pack: MultiPack = MultiPack.deserialize(m_data.read())
-
             for pid in m_pack._pack_ref:
-                sub_pack_path = self.__pack_paths[pid]
+                sub_pack_path = self.__pack_index[pid]
+                if self._pack_manager.get_remapped_id(pid) >= 0:
+                    # This pid is already been read.
+                    continue
+
                 with open(os.path.join(
                         self.configs.data_path, sub_pack_path)) as pack_data:
                     pack: DataPack = DataPack.deserialize(pack_data.read())
                     # Add a reference count to this pack, because the multipack
                     # needs it.
                     self._pack_manager.reference_pack(pack)
-
-            self._remap_packs(m_pack)
+            m_pack.realign_packs()
             yield m_pack
-
-    def _remap_packs(self, multi_pack: MultiPack):
-        """Need to call this after reading the relevant data packs"""
-        # pylint: disable=protected-access
-        new_pack_refs: List[int] = []
-        new_inverse_refs: Dict[int, int] = {}
-        for pid in multi_pack._pack_ref:
-            remapped_id = self._pack_manager.get_remapped_id(pid)
-            new_pack_refs.append(remapped_id)
-            new_inverse_refs[remapped_id] = len(new_pack_refs) - 1
-
-        multi_pack._pack_ref = new_pack_refs
-        multi_pack._inverse_pack_ref = new_inverse_refs
 
     def __get_pack_paths(self):
         pack_idx_path = os.path.join(self.configs.data_path, 'pack.idx')
@@ -174,7 +163,7 @@ class MultiPackDiskReader(MultiPackReader):
         with open(pack_idx_path) as pack_idx:
             for line in pack_idx:
                 pid, pack_path = line.strip().split()
-                self.__pack_paths[int(pid)] = pack_path
+                self.__pack_index[int(pid)] = pack_path
 
     @classmethod
     def default_configs(cls):

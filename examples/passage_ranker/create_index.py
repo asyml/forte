@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import logging
 import argparse
+import logging
+import os
 
 import yaml
-import texar.torch as tx
 
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import MSMarcoPassageReader
-from forte.processors.ir import ElasticSearchIndexProcessor
 from forte.pipeline import Pipeline
+from forte.processors.ir import ElasticSearchIndexProcessor
 
 logging.basicConfig(level=logging.INFO)
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = yaml.safe_load(open(args.config_file, "r"))
-    config = tx.HParams(config, default_hparams=None)
+    config = Config(config, default_hparams=None)
 
     nlp: Pipeline[DataPack] = Pipeline()
     nlp.set_reader(MSMarcoPassageReader())

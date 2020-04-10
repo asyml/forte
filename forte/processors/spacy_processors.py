@@ -15,9 +15,9 @@ from typing import Optional
 
 import spacy
 from spacy.language import Language
-from texar.torch import HParams
 
 from forte.common import ProcessExecutionException
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
@@ -48,8 +48,7 @@ class SpacyProcessor(PackProcessor):
             self.nlp = spacy.load(self.lang_model)
 
     # pylint: disable=unused-argument
-    def initialize(self, resources: Resources,
-                   configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.processors = configs.processors
         self.lang_model = configs.lang
         self.set_up()

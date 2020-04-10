@@ -16,10 +16,10 @@ __all__ = [
     "VaderSentimentProcessor",
 ]
 
-from texar.torch import HParams
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from forte.common import Resources
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Sentence
@@ -49,7 +49,7 @@ class VaderSentimentProcessor(PackProcessor):
         self.sentence_component = None
         self.analyzer = SentimentIntensityAnalyzer()
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         # pylint: disable=unused-argument
         self.sentence_component = configs.get('sentence_component')
 

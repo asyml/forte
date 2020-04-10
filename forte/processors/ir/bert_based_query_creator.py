@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
-from typing import Any, Dict, Tuple
 import pickle
+from typing import Any, Dict, Tuple
+
 import numpy as np
-
 import torch
-from texar.torch.hyperparams import HParams
-from texar.torch.modules import BERTEncoder
 from texar.torch.data import BERTTokenizer
+from texar.torch.modules import BERTEncoder
 
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -38,7 +38,7 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
     def __init__(self) -> None:
         super().__init__()
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.resource = resources
         self.config = configs
 

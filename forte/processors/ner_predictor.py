@@ -19,14 +19,14 @@ from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
 import torch
-from texar.torch.hyperparams import HParams
 
-from forte.models.ner.model_factory import BiRecurrentConvCRF
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
-from forte.data.types import DataRequest
 from forte.data.ontology import Annotation
+from forte.data.types import DataRequest
 from forte.models.ner import utils
+from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 from ft.onto.base_ontology import Token, Sentence, EntityMention
 
@@ -71,7 +71,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         }
         return input_info
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
         self.resource = resources

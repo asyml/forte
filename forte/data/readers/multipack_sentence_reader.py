@@ -17,8 +17,7 @@ The reader for reading sentences from text files into MultiPack
 import os
 from typing import Any, Iterator, Dict, Tuple
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_utils_io import dataset_path_iterator_with_base
 from forte.data.data_pack import DataPack
@@ -42,10 +41,10 @@ class MultiPackSentenceReader(MultiPackReader):
 
     def __init__(self) -> None:
         super().__init__()
-        self.config = HParams(None, self.default_configs())
+        self.config = Config(None, self.default_configs())
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, configs: HParams) -> None:
+    def initialize(self, resources: Resources, configs: Config) -> None:
         self.resource = resources
         self.config = configs
 

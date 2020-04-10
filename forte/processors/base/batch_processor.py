@@ -18,9 +18,8 @@ import itertools
 from abc import abstractmethod, ABC
 from typing import Dict, Optional, Type, Any
 
-from texar.torch import HParams
-
 from forte.common import Resources, ProcessorConfigError
+from forte.common.configuration import Config
 from forte.data import slice_batch
 from forte.data.base_pack import PackType
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
@@ -56,7 +55,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
-    def initialize(self, resources: Resources, configs: Optional[HParams]):
+    def initialize(self, resources: Resources, configs: Optional[Config]):
         super().initialize(resources, configs)
 
         assert configs is not None

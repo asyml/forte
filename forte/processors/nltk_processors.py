@@ -16,8 +16,7 @@ from nltk import word_tokenize, pos_tag, sent_tokenize, ne_chunk
 from nltk.chunk import RegexpParser
 from nltk.stem import WordNetLemmatizer
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
@@ -114,7 +113,7 @@ class NLTKChunker(PackProcessor):
         self.token_component = None
 
     # pylint: disable=unused-argument
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.chunker = RegexpParser(configs.pattern)
 
     @classmethod

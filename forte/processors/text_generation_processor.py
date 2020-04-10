@@ -18,12 +18,12 @@ from typing import Dict, List, Optional
 import numpy as np
 import torch
 import texar.torch as tx
-from texar.torch.hyperparams import HParams
 
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.multi_pack import MultiPack, MultiPackLink
 from forte.data.batchers import (
     ProcessingBatcher, FixedSizeMultiPackProcessingBatcher)
+from forte.data.multi_pack import MultiPack, MultiPackLink
 from forte.data.types import DataRequest
 from forte.processors.base.batch_processor import MultiPackBatchProcessor
 from ft.onto.base_ontology import Sentence
@@ -65,7 +65,7 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
     def define_batcher() -> ProcessingBatcher:
         return FixedSizeMultiPackProcessingBatcher()
 
-    def initialize(self, resources: Resources, configs: Optional[HParams]):
+    def initialize(self, resources: Resources, configs: Optional[Config]):
         """
         Args:
             resources:

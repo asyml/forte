@@ -13,8 +13,7 @@
 # limitations under the License.
 from typing import Any, Dict
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
@@ -27,7 +26,7 @@ __all__ = [
 class AttributeMasker(PackProcessor):
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, _: Resources, config: HParams):
+    def initialize(self, _: Resources, config: Config):
         self.fields = config.kwargs
 
     @classmethod

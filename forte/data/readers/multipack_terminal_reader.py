@@ -18,12 +18,11 @@ The reader that reads text data from a terminal and packs into a Multipack.
 import logging
 from typing import Iterator, Dict, Any
 
-from texar.torch import HParams
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
-
 from ft.onto.base_ontology import Utterance
 
 logger = logging.getLogger(__name__)
@@ -41,7 +40,7 @@ class MultiPackTerminalReader(MultiPackReader):
         super().__init__()
 
     # pylint: disable=unused-argument
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.resource = resources
         self.config = configs
 

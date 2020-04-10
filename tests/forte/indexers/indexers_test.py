@@ -36,7 +36,7 @@ class TestEmbeddingBasedIndexer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.index = EmbeddingBasedIndexer(
-            hparams={"index_type": "IndexFlatL2", "dim": 2})
+            config={"index_type": "IndexFlatL2", "dim": 2})
 
         vectors = np.array([[1, 0], [0, 1], [1, 1]], dtype=np.float32)
         cls.index.add(vectors, meta_data={0: "0", 1: "1", 2: "2"})
@@ -68,7 +68,7 @@ class TestEmbeddingBasedIndexer(unittest.TestCase):
             self.assertIn(file, saved_files)
 
         new_index = EmbeddingBasedIndexer(
-            hparams={"index_type": "IndexFlatL2", "dim": 2})
+            config={"index_type": "IndexFlatL2", "dim": 2})
         new_index.load(path=self.index_path, device="cpu")
 
         self.assertEqual(new_index._index.ntotal, 3)
@@ -91,7 +91,7 @@ class TestElasticSearchIndexer(unittest.TestCase):
 
     def setUp(self):
         self.indexer = ElasticSearchIndexer(
-            hparams={"index_name": "test_index"})
+            config={"index_name": "test_index"})
 
     def tearDown(self):
         self.indexer.elasticsearch.indices.delete(

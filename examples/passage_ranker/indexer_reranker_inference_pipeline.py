@@ -16,8 +16,8 @@ import os
 
 import yaml
 from termcolor import colored
-import texar.torch as tx
 
+from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
 from forte.pipeline import Pipeline
@@ -28,7 +28,7 @@ from ft.onto.base_ontology import Sentence
 if __name__ == "__main__":
     config_file = os.path.join(os.path.dirname(__file__), 'config.yml')
     config = yaml.safe_load(open(config_file, "r"))
-    config = tx.HParams(config, default_hparams=None)
+    config = Config(config, default_hparams=None)
 
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              config.data.relative_path)

@@ -15,13 +15,12 @@
 import os
 
 from termcolor import colored
-from texar.torch import HParams
 
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
-
 from ft.onto.base_ontology import Token, Sentence, Dependency
 
 
@@ -30,7 +29,7 @@ def stanford_nlp_example(lang: str, text: str):
     pl.set_reader(StringReader())
 
     models_path = os.getcwd()
-    config = HParams({
+    config = Config({
         'processors': 'tokenize,pos,lemma,depparse',
         'lang': lang,
         # Language code for the language to build the Pipeline

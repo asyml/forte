@@ -20,8 +20,7 @@ import numpy as np
 import faiss
 import torch
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte import utils
 
 __all__ = [
@@ -35,7 +34,7 @@ class EmbeddingBasedIndexer:
     the vectors are indexed using this class.
 
     Args:
-        hparams (HParams): optional
+        config (Config): optional
             Hyperparameters. Missing hyperparameter will be set to default
             values. See :meth:`default_hparams` for the hyperparameter structure
             and default values.
@@ -47,10 +46,10 @@ class EmbeddingBasedIndexer:
         "GpuIndexIVFFlat": "GpuIndexIVFFlatConfig"
     }
 
-    def __init__(self, hparams: Optional[Union[Dict, HParams]] = None):
+    def __init__(self, config: Optional[Union[Dict, Config]] = None):
         super().__init__()
-        self._hparams = HParams(hparams=hparams,
-                                default_hparams=self.default_configs())
+        self._hparams = Config(hparams=config,
+                               default_hparams=self.default_configs())
         self._meta_data: Dict[int, str] = {}
 
         index_type = self._hparams.index_type

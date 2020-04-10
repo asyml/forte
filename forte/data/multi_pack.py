@@ -68,7 +68,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Store the pack names.
         self._pack_names: List[str] = []
         # Store the reverse mapping from name to the pack index.
-        self.__name_index: Dict[str, int] = {}
+        self._name_index: Dict[str, int] = {}
 
         self.links: List[MultiPackLink] = []
         self.groups: List[MultiPackGroup] = []
@@ -98,6 +98,34 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for a in self.groups:
             a.set_pack(self)
 
+        # Rebuild the name to index lookup.
+        self._name_index = {n: i for (i, n) in enumerate(self._pack_names)}
+
+    def __getstate__(self):
+        r"""
+        Pop some recoverable information in serialization.
+
+        Returns:
+
+        """
+        state = super().__getstate__()
+        state.pop('_inverse_pack_ref')
+        state.pop('_name_index')
+        return state
+
+    def realign_packs(self):
+        """Need to call this after reading the relevant data packs"""
+        # pylint: disable=protected-access
+        new_pack_refs: List[int] = []
+        new_inverse_refs: Dict[int, int] = {}
+        for pid in self._pack_ref:
+            remapped_id = self._pack_manager.get_remapped_id(pid)
+            new_pack_refs.append(remapped_id)
+            new_inverse_refs[remapped_id] = len(new_pack_refs) - 1
+
+        self._pack_ref = new_pack_refs
+        self._inverse_pack_ref = new_inverse_refs
+
     def __iter__(self):
         yield from self.links
         yield from self.groups
@@ -122,7 +150,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             "specific data pack to get text.")
 
     def add_pack(self, pack: DataPack, pack_name: Optional[str] = None):
-        if pack_name in self.__name_index:
+        if pack_name in self._name_index:
             raise ValueError(
                 f"The name {pack_name} has already been taken.")
         if pack_name is not None and not isinstance(pack_name, str):
@@ -150,7 +178,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._inverse_pack_ref[pid] = len(self._pack_ref) - 1
 
         self._pack_names.append(pack_name)
-        self.__name_index[pack_name] = len(self._pack_ref) - 1
+        self._name_index[pack_name] = len(self._pack_ref) - 1
 
     def get_pack_at(self, index: int) -> DataPack:
         """
@@ -162,7 +190,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: The pack at the index.
 
         """
-        return self._pack_manager.get_pack(self._pack_ref[index])
+        return self._pack_manager.get_from_pool(self._pack_ref[index])
 
     def get_pack_index(self, pack_id: int) -> int:
         """
@@ -189,8 +217,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: The pack that has that name.
 
         """
-        return self._pack_manager.get_pack(
-            self._pack_ref[self.__name_index[name]])
+        return self._pack_manager.get_from_pool(
+            self._pack_ref[self._name_index[name]])
 
     @property
     def packs(self) -> List[DataPack]:
@@ -200,7 +228,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: List of data packs contained in this multi-pack.
 
         """
-        return [self._pack_manager.get_pack(r) for r in self._pack_ref]
+        return [self._pack_manager.get_from_pool(r) for r in self._pack_ref]
 
     @property
     def pack_names(self) -> Set[str]:
@@ -226,10 +254,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns:
 
         """
-        if new_name in self.__name_index:
+        if new_name in self._name_index:
             raise ValueError("The new name is already taken.")
-        pack_index = self.__name_index[old_name]
-        self.__name_index[new_name] = pack_index
+        pack_index = self._name_index[old_name]
+        self._name_index[new_name] = pack_index
         self._pack_names[pack_index] = new_name
 
     def iter_groups(self):

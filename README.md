@@ -102,17 +102,17 @@ A simple code example that runs Named Entity Recognizer
 ```python
 import yaml
 
-from texar.torch import HParams
-
 from forte.pipeline import Pipeline
 from forte.data.readers import CoNLL03Reader
 from forte.processors import CoNLLNERPredictor
-from ft.onto.base_ontology import Token, Sentence, EntityMention
+from ft.onto.base_ontology import Token, Sentence
+from forte.common.configuration import Config
+
 
 config_data = yaml.safe_load(open("config_data.yml", "r"))
 config_model = yaml.safe_load(open("config_model.yml", "r"))
 
-config = HParams({}, default_hparams=None)
+config = Config({}, default_hparams=None)
 config.add_hparam('config_data', config_data)
 config.add_hparam('config_model', config_model)
 

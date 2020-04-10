@@ -14,8 +14,7 @@
 
 from typing import Iterator
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -30,7 +29,7 @@ class EvalReader(MultiPackReader):
         return "cached_string_file"
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.resource = resources
         self.config = configs
 

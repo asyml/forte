@@ -15,8 +15,8 @@ import argparse
 from pathlib import Path
 
 import yaml
-import texar.torch as tx
 
+from forte.common.configuration import Config
 from forte.data.data_utils import maybe_download
 
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = yaml.safe_load(open(args.config_file, "r"))
-    config = tx.HParams(config, default_hparams=None)
+    config = Config(config, default_hparams=None)
 
     default_model_name = config.reranker.pretrained_model_name
     default_model_dir = config.reranker.model_dir

@@ -19,16 +19,16 @@ This will use the following datasets from DBpedia:
         -- mappingbased_objects_en.tql.bz2
         -- infobox_properties_wkd_uris_en.tql.bz2
 """
+import csv
+import logging
 import os
 from typing import List, Iterator, Dict, Tuple
-import logging
 
-import csv
 from smart_open import open
-from texar.torch import HParams
 import rdflib
 
 from forte.common import Resources
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader,
@@ -76,7 +76,7 @@ class DBpediaInfoBoxReader(PackReader):
         self.redirects: Dict[str, str]
         self.logger = logging.getLogger(__name__)
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         # pylint: disable=attribute-defined-outside-init
         self.pack_index = read_index(configs.pack_index)
         self.pack_dir = configs.pack_dir
@@ -133,11 +133,8 @@ class DBpediaInfoBoxReader(PackReader):
             self.logger.warning("Resource %s is not in the raw packs.",
                                 resource_name)
 
-    def _cache_key_function(self, info_box_data: Dict[str, List]) -> str:
-        pass
-
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure
         :return:

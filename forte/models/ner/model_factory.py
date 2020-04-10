@@ -13,19 +13,19 @@
 # limitations under the License.
 
 import torch
-from torch import nn
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
+from torch import nn
 import texar.torch as texar
-from texar.torch.hyperparams import HParams
 from texar.torch.modules.embedders import WordEmbedder
 
+from forte.common.configuration import Config
 from forte.models.ner.conditional_random_field import ConditionalRandomField
 
 
 class BiRecurrentConvCRF(nn.Module):
     def __init__(self, word_embedding_table: torch.Tensor, char_vocab_size: int,
-                 tag_vocab_size: int, config_model: HParams):
+                 tag_vocab_size: int, config_model: Config):
         super().__init__()
 
         # TODO: Fix this. init_value doesn't need to be tensor but

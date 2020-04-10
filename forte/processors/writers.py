@@ -13,6 +13,7 @@
 # limitations under the License.
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.processors.base.writers import JsonPackWriter, MultiPackWriter
 
 
@@ -30,5 +31,13 @@ class DocIdMultiPackWriter(MultiPackWriter):
         if name is None:
             raise ProcessExecutionException(
                 'Cannot used the DocIdMultiPackWriter because the doc id '
-                'is not assigned. ')
+                'is not assigned for the pack %d.' % pack.meta.pack_id)
+        return name
+
+    def multipack_name(self, pack: MultiPack) -> str:
+        name = pack.meta.doc_id
+        if name is None:
+            raise ProcessExecutionException(
+                'Cannot used the DocIdMultiPackWriter because the doc id is '
+                'not assigned for the pack %d.' % pack.meta.pack_id)
         return name

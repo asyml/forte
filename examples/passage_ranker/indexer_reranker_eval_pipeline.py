@@ -15,10 +15,10 @@
 import argparse
 
 import yaml
-import texar.torch as tx
 
 from examples.passage_ranker.ms_marco_evaluator import MSMarcoEvaluator
 from examples.passage_ranker.reader import EvalReader
+from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.processors.ir import (
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     # loading config
     config = yaml.safe_load(open(args.config_file, "r"))
-    config = tx.HParams(config, default_hparams=None)
+    config = Config(config, default_hparams=None)
 
     # reading query input file
     parser.add_argument("--input_file",

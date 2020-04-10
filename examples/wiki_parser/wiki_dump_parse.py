@@ -22,8 +22,7 @@ import pickle
 import sys
 from typing import TextIO, Any, Dict
 
-from texar.torch.hyperparams import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import load_redirects
@@ -51,7 +50,7 @@ class WikiArticleWriter(JsonPackWriter):
         super().__init__()
         self.article_count: int = 0
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         super(WikiArticleWriter, self).initialize(resources, configs)
         self.article_count = 0
         self.article_index = open(
@@ -121,7 +120,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     nif_pl = Pipeline[DataPack]()
     nif_pl.resource.update(redirects=redirect_map)
 
-    nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
+    nif_pl.set_reader(DBpediaWikiReader(), config=Config(
         {
             'redirect_path': redirects,
             'nif_page_structure': nif_page_structure,
@@ -130,7 +129,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         DBpediaWikiReader.default_configs()
     ))
 
-    nif_pl.add(WikiArticleWriter(), config=HParams(
+    nif_pl.add(WikiArticleWriter(), config=Config(
         {
             'output_dir': raw_pack_dir,
             'zip_pack': True,
@@ -145,7 +144,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     # Second, we add info boxes to the packs with NIF.
     ib_pl = Pipeline[DataPack]()
     ib_pl.resource.update(redirects=redirect_map)
-    ib_pl.set_reader(DBpediaInfoBoxReader(), config=HParams(
+    ib_pl.set_reader(DBpediaInfoBoxReader(), config=Config(
         {
             'pack_index': os.path.join(raw_pack_dir, 'article.idx'),
             'pack_dir': raw_pack_dir,
@@ -156,7 +155,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         DBpediaInfoBoxReader.default_configs()
     ))
 
-    ib_pl.add(WikiArticleWriter(), config=HParams(
+    ib_pl.add(WikiArticleWriter(), config=Config(
         {
             'output_dir': os.path.join(output_path, 'nif_info_box'),
             'zip_pack': True,

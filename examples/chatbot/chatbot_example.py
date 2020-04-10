@@ -15,8 +15,8 @@ import yaml
 
 from termcolor import colored
 import torch
-from texar.torch import HParams
 
+from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
@@ -34,7 +34,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def main():
     config = yaml.safe_load(open("config.yml", "r"))
-    config = HParams(config, default_hparams=None)
+    config = Config(config, default_hparams=None)
 
     resource = Resources()
     query_pipeline = Pipeline[MultiPack](resource=resource)

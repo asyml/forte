@@ -20,12 +20,12 @@ This reader is based on DBpedia's extracted datasets.
 """
 import logging
 from collections import defaultdict
-from typing import Any, Iterator, Dict, List, DefaultDict, Tuple
+from typing import Iterator, Dict, List, DefaultDict, Tuple
 
-from texar.torch import HParams
 import rdflib
 
 from forte.common import Resources
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
@@ -102,7 +102,7 @@ class DBpediaWikiReader(PackReader):
         self.link_reader = None
         self.redirects: Dict[str, str] = {}
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.redirects = resources.get('redirects')
 
         # These NIF readers organize the statements in the specific RDF context,
@@ -167,9 +167,6 @@ class DBpediaWikiReader(PackReader):
         pack.meta.doc_id = doc_name
 
         yield pack
-
-    def _cache_key_function(self, collection: Any) -> str:
-        pass
 
     @staticmethod
     def default_configs():

@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=attribute-defined-outside-init
-from texar.torch.hyperparams import HParams
 
+# pylint: disable=attribute-defined-outside-init
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -34,14 +34,13 @@ class SearchProcessor(MultiPackProcessor):
     def __init__(self) -> None:
         super().__init__()
 
-        self.index = EmbeddingBasedIndexer(hparams={
+        self.index = EmbeddingBasedIndexer(config={
             "index_type": "GpuIndexFlatIP",
             "dim": 768,
             "device": "gpu0"
         })
 
-    def initialize(self, resources: Resources, configs: HParams):
-
+    def initialize(self, resources: Resources, configs: Config):
         self.resources = resources
         self.config = configs
         self.index.load(self.config.model_dir)

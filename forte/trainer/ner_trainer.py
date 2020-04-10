@@ -14,23 +14,23 @@
 
 # pylint: disable=logging-fstring-interpolation
 import logging
+import pickle
 import random
 import time
-import pickle
 from pathlib import Path
 from typing import List, Tuple, Iterator, Optional
 
 import numpy as np
-from tqdm import tqdm
 import torch
 from torch.optim import SGD
 import torchtext
-from texar.torch import HParams
+from tqdm import tqdm
 
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.trainer.base.base_trainer import BaseTrainer
 from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
+from forte.trainer.base.base_trainer import BaseTrainer
 from ft.onto.base_ontology import Token, Sentence
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class CoNLLNERTrainer(BaseTrainer):
 
         self.__past_dev_result = None
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
 
         self.resource = resources
 

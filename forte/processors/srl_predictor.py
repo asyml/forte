@@ -16,13 +16,13 @@ import logging
 import os
 from typing import Dict, List, Tuple, Optional
 
-import torch
 import texar.torch as tx
-from texar.torch.hyperparams import HParams
+import torch
 
-from forte.data.span import Span
-from forte.data.data_pack import DataPack
+from forte.common.configuration import Config
 from forte.common.resources import Resources
+from forte.data.data_pack import DataPack
+from forte.data.span import Span
 from forte.data.types import DataRequest
 from forte.models.srl.model import LabeledSpanGraphNetwork
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
@@ -58,7 +58,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
     def initialize(self,
                    resources: Resources,
-                   configs: Optional[HParams]):
+                   configs: Optional[Config]):
         super().initialize(resources, configs)
 
         model_dir = configs.storage_path if configs is not None else None

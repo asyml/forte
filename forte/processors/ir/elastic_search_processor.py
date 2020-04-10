@@ -11,18 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # pylint: disable=attribute-defined-outside-init
 from typing import Dict, Any
 
-from texar.torch.hyperparams import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Query
-from forte.processors.base import MultiPackProcessor
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
-
+from forte.processors.base import MultiPackProcessor
 from ft.onto.base_ontology import Document
 
 __all__ = [
@@ -37,10 +36,10 @@ class ElasticSearchProcessor(MultiPackProcessor):
     def __init__(self) -> None:
         super().__init__()
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         self.resources = resources
         self.config = configs
-        self.index = ElasticSearchIndexer(hparams=self.config.index_config)
+        self.index = ElasticSearchIndexer(config=self.config.index_config)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
