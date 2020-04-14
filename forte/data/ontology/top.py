@@ -87,20 +87,6 @@ class Annotation(Entry):
         if begin < 0:
             raise ValueError('The begin cannot be negative.')
 
-        if end > len(pack_text):
-            if len(pack_text) == 0:
-                raise ValueError(
-                    f"The end {end} of span is greater than the text length "
-                    f"{len(pack_text)}, which is invalid. The text length is 0,"
-                    f" so it may be the case the you haven't set text for the"
-                    f" data pack."
-                )
-            else:
-                raise ValueError(
-                    f"The end {end} of span is greater than the text length "
-                    f"{len(pack_text)}, which is invalid."
-                )
-
         self._span = Span(begin, end)
 
     def __hash__(self):

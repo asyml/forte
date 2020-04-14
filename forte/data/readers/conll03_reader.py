@@ -78,7 +78,7 @@ class CoNLL03Reader(PackReader):
                 token.chunk = chunk_id
                 token.ner = ner_tag
 
-                pack.add_or_get_entry(token)
+                pack.add_entry(token)
 
                 text += word + " "
                 offset = word_end + 1
@@ -89,7 +89,7 @@ class CoNLL03Reader(PackReader):
                     continue
                 # add sentence
                 sent = Sentence(pack, sentence_begin, offset - 1)
-                pack.add_or_get_entry(sent)
+                pack.add_entry(sent)
 
                 sentence_begin = offset
                 sentence_cnt += 1
@@ -99,12 +99,12 @@ class CoNLL03Reader(PackReader):
             # Add the last sentence if exists.
             sent = Sentence(pack, sentence_begin, offset - 1)
             sentence_cnt += 1
-            pack.add_or_get_entry(sent)
+            pack.add_entry(sent)
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
         document = Document(pack, 0, len(text))
-        pack.add_or_get_entry(document)
+        pack.add_entry(document)
 
         pack.meta.doc_id = file_path
         doc.close()

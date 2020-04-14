@@ -22,11 +22,12 @@ import pickle
 import tempfile
 
 from forte.data.container import EntryContainer
+from forte.data.ontology.core import Entry
 from forte.data.span import Span
 
 
 class DummyContainer(EntryContainer):
-    def add_entry_creation_record(self, entry_id: int):
+    def record_new_entry(self, entry: Entry):
         pass
 
     def add_field_record(self, entry_id: int, field_name: str):

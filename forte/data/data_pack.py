@@ -347,6 +347,24 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         if isinstance(entry, Annotation):
             target = self.annotations
+
+            begin, end = entry.span.begin, entry.span.end
+
+            if end > len(self.text):
+                if len(self.text) == 0:
+                    raise ValueError(
+                        f"The end {end} of span is greater than the text  "
+                        f"length {len(self.text)}, which is invalid. The text "
+                        f"length is 0, so it may be the case the you haven't "
+                        f"set text for the data pack. Please set the text "
+                        f"before calling `add_entry` on the annotations."
+                    )
+                else:
+                    raise ValueError(
+                        f"The end {end} of span is greater than the text "
+                        f"length {len(self.text)}, which is invalid."
+                    )
+
         elif isinstance(entry, Link):
             target = self.links
         elif isinstance(entry, Group):
@@ -375,6 +393,9 @@ class DataPack(BasePack[Entry, Link, Group]):
             if self.index.group_index_on and isinstance(entry, Group):
                 self.index.update_group_index([entry])
             self.index.deactivate_coverage_index()
+
+            self._un_added_entries.pop(entry.tid)
+
             return entry
         else:
             return target[target.index(entry)]
@@ -487,6 +508,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         annotation_types: Dict[Type[Annotation], Union[Dict, List]] = dict()
         link_types: Dict[Type[Link], Union[Dict, List]] = dict()
         group_types: Dict[Type[Group], Union[Dict, List]] = dict()
+        generics_types: Dict[Type[Generics], Union[Dict, List]] = dict()
+
         if request is not None:
             for key, value in request.items():
                 if issubclass(key, Annotation):
@@ -495,6 +518,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                     link_types[key] = value
                 elif issubclass(key, Group):
                     group_types[key] = value
+                elif issubclass(key, Generics):
+                    generics_types[key] = value
 
         context_args = annotation_types.get(context_type)
 
@@ -548,6 +573,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                     data[l_type.__name__] = self._generate_link_entry_data(
                         l_type, l_args, data, context)
 
+            # TODO: Group and Generics not finished.
             if group_types:
                 # pylint: disable=unused-variable
                 for g_type, g_args in group_types.items():

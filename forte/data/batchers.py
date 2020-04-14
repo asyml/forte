@@ -157,6 +157,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         """
         instances: List[Dict] = []
         current_size = sum(self.current_batch_sources)
+
         for data in data_pack.get_data(context_type, requests, offset):
             instances.append(data)
             if len(instances) == self.batch_size - current_size:

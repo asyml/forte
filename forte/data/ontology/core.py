@@ -77,7 +77,7 @@ class Entry(Generic[ContainerType]):
         self.record_creation()
 
     def record_creation(self):
-        self.__pack.add_entry_creation_record(self._tid)
+        self.__pack.record_new_entry(self)
 
     def reset(self):
         """

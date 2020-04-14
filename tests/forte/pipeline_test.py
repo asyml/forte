@@ -65,10 +65,14 @@ class SentenceReader(PackReader):
                 line = line.strip()
                 if len(line) == 0:
                     continue
+
+                pack.set_text(line)
                 sent = Sentence(pack, 0, len(line))
                 pack.add_entry(sent)
-                pack.set_text(line)
                 self.count += 1
+
+                print('#### yielding data : ', line)
+
                 yield pack
 
 
@@ -288,6 +292,7 @@ class PipelineTest(unittest.TestCase):
     @unpack
     def test_pipeline5(self, batch_size1, batch_size2):
         # Tests a chain of Batch->Pack->Batch with different batch sizes.
+        print('running pipeline 5 with', batch_size1, batch_size2)
 
         nlp = Pipeline[DataPack]()
         reader = SentenceReader()
@@ -529,6 +534,7 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
+            print(pack.pack_names)
             types = list(pack.get_pack("pack").get_entries_by_type(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)

@@ -135,6 +135,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """ A destructor for the MultiPack. During destruction, the Multi Pack
         will inform the PackManager that it won't need the DataPack anymore.
         """
+        super().__del__()
         for pack_id in self._pack_ref:
             self._pack_manager.dereference_pack(pack_id)
 
@@ -172,7 +173,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             )
 
         pack: DataPack = DataPack()
-        self.add_pack_(pack)
+        self.add_pack_(pack, pack_name)
         return pack
 
     def add_pack_(self, pack: DataPack, pack_name: Optional[str] = None):
@@ -422,6 +423,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                     entry, MultiPackGroup):
                 self.index.update_group_index([entry])
 
+            self._un_added_entries.pop(entry.tid)
             return entry
         else:
             return target[target.index(entry)]  # type: ignore

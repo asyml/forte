@@ -15,9 +15,10 @@
 import copy
 import logging
 from abc import abstractmethod
-from typing import List, Optional, Set, Type, TypeVar, Union, Iterator
+from typing import List, Optional, Set, Type, TypeVar, Union, Iterator, Dict
 
 import jsonpickle
+from forte.common import ProcessExecutionException
 
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
@@ -93,6 +94,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         self.__control_component: Optional[str] = None
 
+        self._un_added_entries: Dict[int, Entry] = {}
+
     def __getstate__(self):
         state = super().__getstate__()
         state.pop('index')
@@ -112,6 +115,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:
         raise NotImplementedError
+
+    def __del__(self):
+        if len(self._un_added_entries) > 0:
+            raise ProcessExecutionException(
+                "There are entries not added to the index correctly.")
 
     @property
     def doc_id(self):
@@ -192,6 +200,18 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
+    def add_all_remaining_entry(self):
+        """
+        Calling this function will add the entries that are not added to the
+        pack manually.
+
+        Returns:
+
+        """
+        for entry in list(self._un_added_entries.values()):
+            self.add_entry(entry)
+        self._un_added_entries.clear()
+
     def serialize(self) -> str:
         r"""Serializes a pack to a string."""
         return jsonpickle.encode(self, unpicklable=True)
@@ -217,26 +237,31 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.__control_component = component
 
-    def add_entry_creation_record(self, entry_id: int):
+    def record_new_entry(self, entry: EntryType):
         """
-        Record who creates the entry, will be called
-        in :class:`~forte.data.ontology.core.Entry`
+        Call this when adding a new entry, will be called
+        in :class:`~forte.data.ontology.core.Entry` during
+        its init time.
 
         Args:
-            entry_id: The id of the entry.
+            entry: The entry to be added.
 
         Returns:
 
         """
+        # Record that this entry hasn't been added
+        # to the index yet.
+        self._un_added_entries[entry.tid] = entry
+
         c = self.__control_component
 
         if c is None:
             c = self._pack_manager.get_input_source()
 
         try:
-            self.creation_records[c].add(entry_id)
+            self.creation_records[c].add(entry.tid)
         except KeyError:
-            self.creation_records[c] = {entry_id}
+            self.creation_records[c] = {entry.tid}
 
     def add_field_record(self, entry_id: int, field_name: str):
         """
