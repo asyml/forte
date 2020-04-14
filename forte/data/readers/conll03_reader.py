@@ -103,6 +103,8 @@ class CoNLL03Reader(PackReader):
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
+        pack.set_text(text, replace_func=self.text_replace_operation)
+
         document = Document(pack, 0, len(text))
         pack.add_entry(document)
 
