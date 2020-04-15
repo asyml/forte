@@ -185,7 +185,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
             if self.from_cache:
                 for pack in self.read_from_cache(
                         self._get_cache_location(collection)):
-                    print('call from reader')
                     pack.add_all_remaining_entries()
                     yield pack
             else:

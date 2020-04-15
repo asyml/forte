@@ -287,8 +287,10 @@ class HTMLReader(PackReader):
         else:
             text = data_source
 
-        Document(pack, 0, len(text))
         self.set_text(pack, text)
+        # Note that pack.text can be different from the text passed in, due to
+        # the text_replace_operation
+        Document(pack, 0, len(pack.text))
 
         yield pack
 

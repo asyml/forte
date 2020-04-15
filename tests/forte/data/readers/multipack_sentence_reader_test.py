@@ -43,8 +43,11 @@ class MultiPackSentenceReaderTest(unittest.TestCase):
         with open(file_path, 'w') as f:
             f.write(text)
 
-        multipack = list(MultiPackSentenceReader().parse_pack(
-            (self.test_dir, file_path)))[0]
+        pl = Pipeline()
+        pl.set_reader(MultiPackSentenceReader())
+        pl.initialize()
+
+        multipack: MultiPack = pl.process_one(self.test_dir)
         input_pack = multipack.get_pack('input_src')
         self.assertEqual(len(multipack.packs), 2)
         self.assertEqual(multipack._pack_names, ['input_src', 'output_tgt'])

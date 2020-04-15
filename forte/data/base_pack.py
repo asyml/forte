@@ -95,17 +95,19 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         self.__control_component: Optional[str] = None
 
-        self._un_added_entries: Dict[int, Tuple[Entry, str]] = {}
+        self._pending_entries: Dict[int, Tuple[Entry, str]] = {}
 
     def __getstate__(self):
         state = super().__getstate__()
         state.pop('index')
         state.pop('_pack_manager')
+        state.pop('_pending_entries')
         return state
 
     def __setstate__(self, state):
         super().__setstate__(state)
         self.__dict__['_pack_manager'] = PackManager()
+        self.__dict__['_pending_entries'] = {}
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
@@ -118,9 +120,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     def __del__(self):
-        if len(self._un_added_entries) > 0:
+        if len(self._pending_entries) > 0:
             raise ProcessExecutionException(
-                f"There are {len(self._un_added_entries)} "
+                f"There are {len(self._pending_entries)} "
                 f"entries not added to the index correctly.")
 
     @property
@@ -210,10 +212,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        for entry, _ in list(self._un_added_entries.values()):
+        print('calling add all entries')
+        for entry, _ in list(self._pending_entries.values()):
             self.add_entry(entry)
-
-        self._un_added_entries.clear()
+        self._pending_entries.clear()
 
     def serialize(self) -> str:
         r"""Serializes a pack to a string."""
@@ -223,7 +225,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def deserialize(string: str):
         r"""Deserialize a pack from a string.
         """
-        return jsonpickle.decode(string)
+        pack = jsonpickle.decode(string)
+        return pack
 
     def view(self):
         return copy.deepcopy(self)
@@ -259,7 +262,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         # Record that this entry hasn't been added
         # to the index yet.
-        self._un_added_entries[entry.tid] = entry, c
+        self._pending_entries[entry.tid] = entry, c
 
         try:
             self.creation_records[c].add(entry.tid)
@@ -275,7 +278,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        entry, c = self._un_added_entries.pop(entry.tid)
+        entry, c = self._pending_entries.pop(entry.tid)
         self.creation_records[c].remove(entry.tid)
 
     def add_field_record(self, entry_id: int, field_name: str):

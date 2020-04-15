@@ -20,6 +20,7 @@ import unittest
 
 from typing import List
 
+from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence, Document, Dependency
 from forte.data.readers import ConllUDReader
 from forte.data.data_pack import DataPack
@@ -34,9 +35,12 @@ class ConllUDReaderTest(unittest.TestCase):
         conll_ud_dir = os.path.abspath(os.path.join(file_dir_path,
                                                     *([os.pardir] * 4),
                                                     'data_samples/conll_ud'))
-        reader = ConllUDReader()
+        pl = Pipeline()
+        pl.set_reader(ConllUDReader())
+        pl.initialize()
+
         self.data_packs: List[DataPack] = \
-            [data_pack for data_pack in reader.iter(conll_ud_dir)]
+            [data_pack for data_pack in pl.process_dataset(conll_ud_dir)]
         self.doc_ids = ["weblog-blogspot.com_nominations_20041117172713_ENG_"
                         "20041117_172713",
                         "weblog-blogspot.com_nominations_20041117172713_ENG_"

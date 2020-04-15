@@ -168,7 +168,8 @@ class ConllUDReader(PackReader):
                 doc_sent_begin = doc_offset
                 doc_num_sent += 1
 
-        data_pack.set_text(doc_text.strip())
+        doc_text = doc_text.strip()
+        data_pack.set_text(doc_text)
 
         # add doc to data_pack
         Document(data_pack, 0, len(doc_text))

@@ -300,6 +300,18 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def iter_groups(self):
         yield from self.groups
 
+    def add_all_remaining_entries(self):
+        """
+        Calling this function will add the entries that are not added to the
+        pack manually.
+
+        Returns:
+
+        """
+        super().add_all_remaining_entries()
+        for pack in self.packs:
+            pack.add_all_remaining_entries()
+
     def get_single_pack_data(
             self,
             pack_index: int,
@@ -423,7 +435,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                     entry, MultiPackGroup):
                 self.index.update_group_index([entry])
 
-            self._un_added_entries.pop(entry.tid)
+            self._pending_entries.pop(entry.tid)
             return entry
         else:
             return target[target.index(entry)]  # type: ignore

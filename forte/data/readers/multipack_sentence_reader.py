@@ -71,8 +71,6 @@ class MultiPackSentenceReader(MultiPackReader):
 
             input_pack = m_pack.add_pack(input_pack_name)
             input_pack.doc_id = doc_id
-            input_pack.set_text(
-                text, replace_func=self.text_replace_operation)
 
             for line in doc:
                 line = line.strip()
@@ -85,9 +83,10 @@ class MultiPackSentenceReader(MultiPackReader):
                 text += line + '\n'
                 offset = offset + len(line) + 1
 
+            input_pack.set_text(
+                text, replace_func=self.text_replace_operation)
             # Create a output pack without text.
             m_pack.add_pack(output_pack_name)
-
             yield m_pack
 
     @classmethod

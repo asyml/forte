@@ -7,6 +7,7 @@ import unittest
 from forte.data.multi_pack import MultiPack, MultiPackLink
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
+from forte.pack_manager import PackManager
 from ft.onto.base_ontology import (
     Token)
 
@@ -17,16 +18,19 @@ def _space_token(pack: DataPack):
     begin = 0
     for i, c in enumerate(pack.text):
         if c == ' ':
-            Token(pack, begin, i)
+            pack.add_entry(Token(pack, begin, i))
             begin = i + 1
 
     if begin < len(pack.text):
-        Token(pack, begin, len(pack.text))
+        pack.add_entry(Token(pack, begin, len(pack.text)))
 
 
 class DataPackTest(unittest.TestCase):
 
     def setUp(self) -> None:
+        # Note: input source is created automatically by the system, but we
+        #  can also set it manually at test cases.
+        PackManager().set_input_source('test case')
         self.multi_pack = MultiPack()
         self.data_pack1 = self.multi_pack.add_pack(pack_name="left pack")
         self.data_pack2 = self.multi_pack.add_pack(pack_name="right pack")

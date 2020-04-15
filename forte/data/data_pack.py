@@ -369,7 +369,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                 else:
                     raise ValueError(
                         f"The end {end} of span is greater than the text "
-                        f"length {len(self.text)}, which is invalid."
+                        f"length {len(self.text)}, which is invalid. The "
+                        f"problematic entry is of type {entry.__class__} "
+                        f"at [{begin}:{end}]"
                     )
 
         elif isinstance(entry, Link):
@@ -402,7 +404,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 self.index.update_group_index([entry])
             self.index.deactivate_coverage_index()
 
-            self._un_added_entries.pop(entry.tid)
+            self._pending_entries.pop(entry.tid)
 
             return entry
         else:
