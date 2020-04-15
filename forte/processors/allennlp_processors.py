@@ -153,4 +153,3 @@ class AllenNLPProcessor(PackProcessor):
                                   parent=tokens[heads[i] - 1],
                                   child=token)
             relation.rel_type = deps[i]
-            input_pack.add_or_get_entry(relation)

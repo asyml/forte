@@ -15,7 +15,8 @@
 import copy
 import logging
 from abc import abstractmethod
-from typing import List, Optional, Set, Type, TypeVar, Union, Iterator, Dict
+from typing import List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, \
+    Tuple
 
 import jsonpickle
 from forte.common import ProcessExecutionException
@@ -94,7 +95,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         self.__control_component: Optional[str] = None
 
-        self._un_added_entries: Dict[int, Entry] = {}
+        self._un_added_entries: Dict[int, Tuple[Entry, str]] = {}
 
     def __getstate__(self):
         state = super().__getstate__()
@@ -119,7 +120,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def __del__(self):
         if len(self._un_added_entries) > 0:
             raise ProcessExecutionException(
-                "There are entries not added to the index correctly.")
+                f"There are {len(self._un_added_entries)} "
+                f"entries not added to the index correctly.")
 
     @property
     def doc_id(self):
@@ -200,7 +202,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def add_all_remaining_entry(self):
+    def add_all_remaining_entries(self):
         """
         Calling this function will add the entries that are not added to the
         pack manually.
@@ -208,7 +210,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        for entry in list(self._un_added_entries.values()):
+        for entry, _ in list(self._un_added_entries.values()):
             self.add_entry(entry)
         self._un_added_entries.clear()
 
@@ -249,19 +251,31 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        # Record that this entry hasn't been added
-        # to the index yet.
-        self._un_added_entries[entry.tid] = entry
-
         c = self.__control_component
 
         if c is None:
             c = self._pack_manager.get_input_source()
 
+        # Record that this entry hasn't been added
+        # to the index yet.
+        self._un_added_entries[entry.tid] = entry, c
+
         try:
             self.creation_records[c].add(entry.tid)
         except KeyError:
             self.creation_records[c] = {entry.tid}
+
+    def regret_record(self, entry: EntryType):
+        """
+
+        Args:
+            entry:
+
+        Returns:
+
+        """
+        entry, c = self._un_added_entries.pop(entry.tid)
+        self.creation_records[c].remove(entry.tid)
 
     def add_field_record(self, entry_id: int, field_name: str):
         """

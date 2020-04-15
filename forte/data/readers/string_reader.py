@@ -31,6 +31,7 @@ __all__ = [
 class StringReader(PackReader):
     r""":class:`StringReader` is designed to read in a list of string variables.
     """
+
     # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
         return str(hash(collection)) + '.html'
@@ -57,9 +58,7 @@ class StringReader(PackReader):
         """
         pack = DataPack()
 
-        document = Document(pack, 0, len(data_source))
-        pack.add_or_get_entry(document)
-
         self.set_text(pack, data_source)
+        Document(pack, 0, len(data_source))
 
         yield pack

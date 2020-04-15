@@ -81,10 +81,7 @@ class SpacyProcessor(PackProcessor):
 
         """
         for sentence in sentences:
-            sentence_entry = Sentence(input_pack,
-                                      sentence.start_char,
-                                      sentence.end_char)
-            input_pack.add_or_get_entry(sentence_entry)
+            Sentence(input_pack, sentence.start_char, sentence.end_char)
 
             if "tokenize" in self.processors:
                 # Iterating through spaCy token objects
@@ -98,8 +95,6 @@ class SpacyProcessor(PackProcessor):
 
                     if "lemma" in self.processors:
                         token.lemma = word.lemma_
-
-                    input_pack.add_or_get_entry(token)
 
     def _process_ner(self, result, input_pack):
         """Perform spaCy's NER Pipeline on the document.
@@ -115,7 +110,6 @@ class SpacyProcessor(PackProcessor):
             entity = EntityMention(input_pack, item.start_char,
                                    item.end_char)
             entity.ner_type = item.label_
-            input_pack.add_or_get_entry(entity)
 
     def _process(self, input_pack: DataPack):
         doc = input_pack.text

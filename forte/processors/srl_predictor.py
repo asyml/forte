@@ -137,13 +137,11 @@ class SRLPredictor(FixedSizeBatchProcessor):
                 )
 
                 for arg_span, label in arg_result:
-                    arg = data_pack.add_or_get_entry(PredicateArgument(
+                    arg = PredicateArgument(
                         data_pack, arg_span.begin, arg_span.end
-                    )
                     )
                     link = PredicateLink(data_pack, pred, arg)
                     link.arg_type = label
-                    data_pack.add_or_get_entry(link)
 
     @classmethod
     def default_configs(cls):

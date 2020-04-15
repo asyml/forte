@@ -185,7 +185,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
             if self.from_cache:
                 for pack in self.read_from_cache(
                         self._get_cache_location(collection)):
-                    pack.add_all_remaining_entry()
+                    print('call from reader')
+                    pack.add_all_remaining_entries()
                     yield pack
             else:
                 not_first = False
@@ -199,8 +200,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
                             f"No Pack object read from the given "
                             f"collection {collection}, returned {type(pack)}."
                         )
+
                     not_first = True
-                    pack.add_all_remaining_entry()
+
+                    pack.add_all_remaining_entries()
                     yield pack
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:

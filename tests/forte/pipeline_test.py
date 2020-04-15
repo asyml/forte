@@ -21,11 +21,12 @@ from typing import Any, Dict, Iterator, Optional, Type
 
 from ddt import ddt, data, unpack
 
+from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
 from forte.data.readers.base_reader import PackReader, MultiPackReader
-from forte.data.selector import FirstPackSelector
+from forte.data.selector import FirstPackSelector, NameMatchSelector
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from ft.onto.base_ontology import Token, Sentence
@@ -70,8 +71,6 @@ class SentenceReader(PackReader):
                 sent = Sentence(pack, 0, len(line))
                 pack.add_entry(sent)
                 self.count += 1
-
-                print('#### yielding data : ', line)
 
                 yield pack
 
@@ -292,8 +291,6 @@ class PipelineTest(unittest.TestCase):
     @unpack
     def test_pipeline5(self, batch_size1, batch_size2):
         # Tests a chain of Batch->Pack->Batch with different batch sizes.
-        print('running pipeline 5 with', batch_size1, batch_size2)
-
         nlp = Pipeline[DataPack]()
         reader = SentenceReader()
         nlp.set_reader(reader)
@@ -384,21 +381,29 @@ class PipelineTest(unittest.TestCase):
 @ddt
 class MultiPackPipelineTest(unittest.TestCase):
 
-    def test_process_next(self):
+    #  TODO: This is not a multi pack test.
+    def test_process_multi_next(self):
         from forte.data.readers import OntonotesReader
 
         # Define and config the Pipeline
         nlp = Pipeline[DataPack]()
         nlp.set_reader(OntonotesReader())
-        dummy = DummyRelationExtractor()
-        config = {"batcher": {"batch_size": 5}}
-        nlp.add(dummy, config=config)
+
+        pack_name = 'test_pack'
+        nlp.add(MultiPackBoxer(), {'pack_name': pack_name})
+        nlp.add(
+            DummyRelationExtractor(),
+            config={"batcher": {"batch_size": 5}},
+            selector=NameMatchSelector(select_name=pack_name)
+        )
         nlp.initialize()
 
         dataset_path = data_samples_root + "/ontonotes/00"
 
         # get processed pack from dataset
-        for pack in nlp.process_dataset(dataset_path):
+        m_pack: MultiPack
+        for m_pack in nlp.process_dataset(dataset_path):
+            pack = m_pack.get_pack(pack_name)
             # get sentence from pack
             for sentence in pack.get_entries(Sentence):
                 sent_text = sentence.text
@@ -534,7 +539,6 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            print(pack.pack_names)
             types = list(pack.get_pack("pack").get_entries_by_type(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)

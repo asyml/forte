@@ -206,13 +206,11 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                                            current_entity_mention[0],
                                            token.span.end)
                     entity.ner_type = current_entity_mention[1]
-                    data_pack.add_or_get_entry(entity)
                 elif token_ner[0] == "S":
                     current_entity_mention = (token.span.begin, token_ner[2:])
                     entity = EntityMention(data_pack, current_entity_mention[0],
                                            token.span.end)
                     entity.ner_type = current_entity_mention[1]
-                    data_pack.add_or_get_entry(entity)
 
     def get_batch_tensor(
             self, data: List[Tuple[List[int], List[List[int]]]],

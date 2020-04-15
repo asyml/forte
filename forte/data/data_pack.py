@@ -298,7 +298,6 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         return Span(orig_begin, orig_end)
 
-    # TODO: Consider run add_entry automatically at some point.
     def add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
@@ -350,10 +349,14 @@ class DataPack(BasePack[Entry, Link, Group]):
 
             begin, end = entry.span.begin, entry.span.end
 
+            if begin < 0:
+                raise ValueError(f'The begin {begin} is smaller than 0, this'
+                                 f'is not a valid begin.')
+
             if end > len(self.text):
                 if len(self.text) == 0:
                     raise ValueError(
-                        f"The end {end} of span is greater than the text  "
+                        f"The end {end} of span is greater than the text "
                         f"length {len(self.text)}, which is invalid. The text "
                         f"length is 0, so it may be the case the you haven't "
                         f"set text for the data pack. Please set the text "
@@ -377,6 +380,7 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"should be an instance of Annotation, Link, Group of Generics."
             )
 
+        # TODO: duplicate is ill-defined.
         add_new = allow_duplicate or (entry not in target)
 
         if add_new:
@@ -402,7 +406,9 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.top.Entry` object from the
-        :class:`DataPack`.
+        :class:`DataPack`. This find out the entry in the index and remove it
+        from the index. Note that entries will only appear in the index if
+        `add_entry` (or _add_entry_with_check) is called.
 
         Args:
             entry (Entry): An :class:`~forte.data.ontology.top.Entry`
@@ -430,10 +436,21 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"should be an instance of Annotation, Link, or Group."
             )
 
+        # TODO: I think the tid are orderred, so we can actually remove with
+        #  faster search.
+        index_to_remove = -1
         for i, e in enumerate(target[begin:]):
             if e.tid == entry.tid:
-                target.pop(i + begin)
+                index_to_remove = begin + i
                 break
+
+        if index_to_remove > 0:
+            target.pop(index_to_remove)
+        else:
+            logger.warning(
+                "The entry with id %d that you are trying to removed "
+                "does not exists in the data pack's index. Probably it is "
+                "created but not added in the first place.", entry.tid)
 
         # update basic index
         self.index.remove_entry(entry)
@@ -741,6 +758,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         if len(self.annotations) == 0:
             yield from []
+            # After yield, don't do real queries.
+            return
 
         range_begin = range_annotation.span.begin if range_annotation else 0
         range_end = (range_annotation.span.end if range_annotation else
@@ -764,12 +783,17 @@ class DataPack(BasePack[Entry, Link, Group]):
                 valid_id &= coverage_index[range_annotation.tid]
 
         if issubclass(entry_type, Annotation):
-            begin_index = self.annotations.bisect(
-                Annotation(self, range_begin, range_begin)
-            )
-            end_index = self.annotations.bisect(
-                Annotation(self, range_end, range_end)
-            )
+            temp_begin = Annotation(self, range_begin, range_begin)
+            begin_index = self.annotations.bisect(temp_begin)
+
+            temp_end = Annotation(self, range_end, range_end)
+            end_index = self.annotations.bisect(temp_end)
+
+            # Make sure these temporary annotations are not part of the
+            # actual data.
+            temp_begin.regret_creation()
+            temp_end.regret_creation()
+
             for annotation in self.annotations[begin_index: end_index]:
                 if annotation.tid not in valid_id:
                     continue

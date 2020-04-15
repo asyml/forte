@@ -48,8 +48,7 @@ class NLTKWordTokenizer(PackProcessor):
             for word in word_tokenize(sentence.text):
                 begin_pos = sentence.text.find(word, end_pos)
                 end_pos = begin_pos + len(word)
-                token = Token(input_pack, begin_pos + offset, end_pos + offset)
-                input_pack.add_or_get_entry(token)
+                Token(input_pack, begin_pos + offset, end_pos + offset)
 
 
 class NLTKPOSTagger(PackProcessor):
@@ -143,7 +142,6 @@ class NLTKChunker(PackProcessor):
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     phrase = Phrase(input_pack, begin_pos, end_pos)
                     phrase.phrase_type = chunk.label()
-                    input_pack.add_or_get_entry(phrase)
 
                     index += len(chunk)
                 else:
@@ -165,8 +163,7 @@ class NLTKSentenceSegmenter(PackProcessor):
             for sentence_text in sentences:
                 begin_pos = text.find(sentence_text, end_pos)
                 end_pos = begin_pos + len(sentence_text)
-                sentence_entry = Sentence(input_pack, begin_pos, end_pos)
-                input_pack.add_or_get_entry(sentence_entry)
+                Sentence(input_pack, begin_pos, end_pos)
 
 
 class NLTKNER(PackProcessor):
@@ -194,7 +191,6 @@ class NLTKNER(PackProcessor):
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     entity = EntityMention(input_pack, begin_pos, end_pos)
                     entity.ner_type = chunk.label()
-                    input_pack.add_or_get_entry(entity)
                     index += len(chunk)
                 else:
                     # For example:

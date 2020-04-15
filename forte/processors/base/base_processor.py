@@ -48,7 +48,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         u_index = self._process_manager.unprocessed_queue_indices[q_index]
         current_queue = self._process_manager.current_queue
 
-        # TODO: Can we do this?
         for job_i in itertools.islice(current_queue, 0, u_index + 1):
             if job_i.status == ProcessJobStatus.UNPROCESSED:
                 job_i.set_status(ProcessJobStatus.PROCESSED)
@@ -64,12 +63,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
             input_pack: The input datapack.
         """
         raise NotImplementedError
-
-    def flush(self):
-        r"""Indicate that there will be no more packs to be passed in, handle
-        what's remaining in the buffer.
-        """
-        pass
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
