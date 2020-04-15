@@ -157,8 +157,9 @@ class ImportManager:
             if class_name not in self.__short_name_pool:
                 self.__short_name_pool.add(class_name)
             else:
-                logging.warning(f"Re-declared a new class named [{class_name}]"
-                                f", which is probably used in import.")
+                logging.warning(
+                    "Re-declared a new class named [%s]"
+                    ", which is probably used in import.", class_name)
             self.__defining_names[full_name] = class_name
 
     def add_object_to_import(self, full_name: str):
