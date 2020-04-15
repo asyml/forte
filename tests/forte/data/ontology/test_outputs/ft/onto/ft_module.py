@@ -108,7 +108,7 @@ class Sentence(Annotation):
     @tokens.setter
     def tokens(self, tokens: Optional[List[Token]]):
         tokens = [] if tokens is None else tokens
-        self.set_fields(_tokens=[self.pack.add_entry_(obj) for obj in tokens])
+        self.set_fields(_tokens=[obj.tid for obj in tokens])
 
     def num_tokens(self):
         return len(self._tokens)
@@ -118,7 +118,7 @@ class Sentence(Annotation):
         self._tokens.clear()
 
     def add_tokens(self, a_tokens: Token):
-        self._tokens.append(self.pack.add_entry_(a_tokens))
+        self._tokens.append(a_tokens.tid)
 
 
 class Document(Annotation):
