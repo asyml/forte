@@ -82,8 +82,7 @@ class MultiPackTerminalReader(MultiPackReader):
         pack = multi_pack.add_pack(self.config.pack_name)
         pack.set_text(data_source, replace_func=self.text_replace_operation)
 
-        utterance = Utterance(pack, 0, len(data_source))
-        pack.add_entry(utterance)
+        Utterance(pack, 0, len(data_source))
 
         yield multi_pack
 

@@ -57,8 +57,7 @@ class SearchProcessor(MultiPackProcessor):
             pack = input_pack.add_pack()
             pack.set_text(doc)
 
-            document = Document(pack, 0, len(doc))
-            pack.add_entry(document)
+            Document(pack, 0, len(doc))
             packs[self.config.response_pack_name_prefix + f'_{i}'] = pack
 
         input_pack.update_pack(packs)

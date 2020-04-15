@@ -99,11 +99,8 @@ class MicrosoftBingTranslator(MultiPackProcessor):
         pack: DataPack = input_pack.add_pack(self.out_pack_name)
         pack.set_text(text=text)
 
-        document = Document(pack, 0, len(text))
-        pack.add_entry(document)
-
-        utterance = Utterance(pack, 0, len(text))
-        pack.add_entry(utterance)
+        Document(pack, 0, len(text))
+        Utterance(pack, 0, len(text))
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

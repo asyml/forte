@@ -58,7 +58,7 @@ class Annotation(Entry):
 
     def __init__(self, pack: PackType, begin: int, end: int):
         super().__init__(pack)
-        self.set_span(pack.text, begin, end)  # type: ignore
+        self.set_span(begin, end)
 
     @property
     def span(self):
@@ -72,7 +72,7 @@ class Annotation(Entry):
     def end(self):
         return self._span.end
 
-    def set_span(self, pack_text: str, begin: int, end: int):
+    def set_span(self, begin: int, end: int):
         r"""Set the span of the annotation.
         """
         if not isinstance(begin, int) or not isinstance(end, int):

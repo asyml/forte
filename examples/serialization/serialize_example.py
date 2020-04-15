@@ -44,9 +44,7 @@ class PackCopier(MultiPackProcessor):
 
         ent: EntityMention
         for ent in from_pack.get_entries(EntityMention):
-            copy_pack.add_entry(
-                EntityMention(copy_pack, ent.begin, ent.end)
-            )
+            EntityMention(copy_pack, ent.begin, ent.end)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

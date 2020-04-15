@@ -17,11 +17,11 @@ def _space_token(pack: DataPack):
     begin = 0
     for i, c in enumerate(pack.text):
         if c == ' ':
-            pack.add_entry(Token(pack, begin, i))
+            Token(pack, begin, i)
             begin = i + 1
 
     if begin < len(pack.text):
-        pack.add_entry(Token(pack, begin, len(pack.text)))
+        Token(pack, begin, len(pack.text))
 
 
 class DataPackTest(unittest.TestCase):

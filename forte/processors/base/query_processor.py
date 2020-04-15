@@ -71,4 +71,3 @@ class QueryProcessor(BasePackProcessor[PackType], ABC):
         query_pack, query_value = self._process_query(input_pack)
         query = Query(pack=query_pack)
         query.set_value(value=query_value)
-        query_pack.add_entry(query)

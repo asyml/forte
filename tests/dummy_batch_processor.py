@@ -107,7 +107,6 @@ class DummyRelationExtractor(BatchProcessor):
                 child: EntityMention = data_pack.get_entry(  # type: ignore
                     output_dict["RelationLink"]["child.tid"][i][j])
                 link.set_child(child)
-                data_pack.add_or_get_entry(link)
 
     @classmethod
     def default_configs(cls):

@@ -83,5 +83,4 @@ class ElasticSearchProcessor(MultiPackProcessor):
             content = document[self.config.field]
             pack.set_text(content)
 
-            document = Document(pack=pack, begin=0, end=len(content))
-            pack.add_entry(document)
+            Document(pack=pack, begin=0, end=len(content))

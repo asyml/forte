@@ -75,7 +75,6 @@ class StandfordNLPProcessor(PackProcessor):
             end_pos = doc.find(sentence.words[-1].text, begin_pos) + len(
                 sentence.words[-1].text)
             sentence_entry = Sentence(input_pack, begin_pos, end_pos)
-            input_pack.add_or_get_entry(sentence_entry)
 
             tokens: List[Token] = []
             if "tokenize" in self.processors:
@@ -99,7 +98,6 @@ class StandfordNLPProcessor(PackProcessor):
                     if "lemma" in self.processors:
                         token.lemma = word.lemma
 
-                    token = input_pack.add_or_get_entry(token)
                     tokens.append(token)
 
             # For each sentence, get the dependency relations among tokens
@@ -110,5 +108,3 @@ class StandfordNLPProcessor(PackProcessor):
                     parent = tokens[word.governor - 1]  # Root token
                     relation_entry = Dependency(input_pack, parent, child)
                     relation_entry.rel_type = word.dependency_relation
-
-                    input_pack.add_or_get_entry(relation_entry)

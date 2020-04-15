@@ -21,12 +21,15 @@ import os
 import pickle
 import tempfile
 
-from forte.data.container import EntryContainer
+from forte.data.container import EntryContainer, E
 from forte.data.ontology.core import Entry
 from forte.data.span import Span
 
 
 class DummyContainer(EntryContainer):
+    def regret_record(self, entry: E):
+        pass
+
     def record_new_entry(self, entry: Entry):
         pass
 

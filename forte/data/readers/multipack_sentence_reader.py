@@ -81,8 +81,7 @@ class MultiPackSentenceReader(MultiPackReader):
                     continue
 
                 # add sentence
-                sent = Sentence(input_pack, offset, offset + len(line))
-                input_pack.add_entry(sent)
+                Sentence(input_pack, offset, offset + len(line))
                 text += line + '\n'
                 offset = offset + len(line) + 1
 
