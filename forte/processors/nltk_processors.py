@@ -103,6 +103,7 @@ class NLTKChunker(PackProcessor):
 
     # pylint: disable=unused-argument
     def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
         self.chunker = RegexpParser(configs.pattern)
 
     @classmethod

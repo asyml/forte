@@ -363,25 +363,30 @@ class Query(Generics):
 
     def __init__(self, pack: PackType):
         super().__init__(pack)
-        self.value: QueryType = None
-        self.results: Dict[str, float] = {}
+        self._value: QueryType = None
+        self._results: Dict[str, float] = {}
 
-    def set_value(self, value: QueryType):
+    @property
+    def value(self) -> QueryType:
+        return self._value
+
+    @value.setter
+    def value(self, value: QueryType):
         r"""Sets the value of the query.
 
         Args:
             value (numpy array or str): A vector or a string (in case of
             traditional models) representing the query.
         """
-        self.value = value
+        self._value = value
 
     @property
     def results(self):
-        return self.results
+        return self._results
 
     @results.setter
     def results(self, pid_to_score: Dict[str, float]):
-        self.results = pid_to_score
+        self._results = pid_to_score
 
     def add_result(self, pid: str, score: float):
         """

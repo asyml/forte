@@ -102,12 +102,14 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         state.pop('index')
         state.pop('_pack_manager')
         state.pop('_pending_entries')
+        state.pop('_BasePack__control_component')
         return state
 
     def __setstate__(self, state):
         super().__setstate__(state)
         self.__dict__['_pack_manager'] = PackManager()
         self.__dict__['_pending_entries'] = {}
+        self.__control_component: Optional[str] = None
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
@@ -212,7 +214,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        print('calling add all entries')
         for entry, _ in list(self._pending_entries.values()):
             self.add_entry(entry)
         self._pending_entries.clear()

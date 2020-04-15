@@ -21,6 +21,7 @@ from typing import Iterator
 
 from forte.data.readers import RACEMultiChoiceQAReader
 from forte.data.data_pack import DataPack
+from forte.pack_manager import PackManager
 from ft.onto.race_multi_choice_qa_ontology import RaceDocument, Question
 
 
@@ -35,6 +36,8 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
     def test_reader_no_replace_test(self):
         # Read with no replacements
         reader = RACEMultiChoiceQAReader()
+        PackManager().set_input_source(reader.name)
+
         data_packs: Iterator[DataPack] = reader.iter(self.dataset_path)
         file_paths: Iterator[str] = reader._collect(self.dataset_path)
 
