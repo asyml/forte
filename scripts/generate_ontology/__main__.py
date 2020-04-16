@@ -74,7 +74,7 @@ def main():
     clean_example = "generate_ontology clean --dir generated-files"
 
     file_description = '\n'.join([
-        "Utility to automatically generate or create Python classes given"
+        "Utility to automatically generate or create Python classes given "
         "the ontology.",
         "\n*create*: Generate ontology given a JSON specification.",
         f"Example: {create_example} --no_dry_run\n",
@@ -83,10 +83,11 @@ def main():
 
     parser = OntologyGenerationParser(description=file_description,
                                       formatter_class=RawTextHelpFormatter)
-    subs = parser.add_subparsers()
+    subs = parser.add_subparsers(title='required commands',
+                                 help='Select one of:')
 
     # Parser for creating the ontology.
-    create_parser = subs.add_parser('create')
+    create_parser = subs.add_parser('create', help='to create new ontology')
     create_parser.add_argument('-i', '--spec',
                                type=str,
                                required=True,
@@ -129,7 +130,7 @@ def main():
     create_parser.set_defaults(func=create)
 
     # Parsing for cleaning.
-    clean_parser = subs.add_parser('clean')
+    clean_parser = subs.add_parser('clean', help='to clean up ontologies')
 
     clean_parser.add_argument('-d', '--dir',
                               type=str,
@@ -140,7 +141,7 @@ def main():
     clean_parser.add_argument('-f', '--force',
                               default=False,
                               action='store_true',
-                              help='If true, skips the interactive deleting of'
+                              help='If true, skips the interactive deleting of '
                                    'folders. Use with caution.')
 
     clean_parser.set_defaults(func=clean)
