@@ -117,8 +117,9 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         self.index = DataIndex()
         self.index.update_basic_index(list(self.annotations))
-        self.index.update_basic_index(self.links)
-        self.index.update_basic_index(self.groups)
+        self.index.update_basic_index(list(self.links))
+        self.index.update_basic_index(list(self.groups))
+        self.index.update_basic_index(list(self.generics))
 
         for a in self.annotations:
             a.set_pack(self)

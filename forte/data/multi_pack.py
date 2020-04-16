@@ -17,6 +17,8 @@ import logging
 from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
                     Tuple)
 
+from sortedcontainers import SortedList
+
 from forte.common import ProcessExecutionException
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.data_pack import DataPack
@@ -70,9 +72,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Store the reverse mapping from name to the pack index.
         self._name_index: Dict[str, int] = {}
 
-        self.links: List[MultiPackLink] = []
-        self.groups: List[MultiPackGroup] = []
-        self.generics: List[MultiPackGeneric] = []
+        self.links: SortedList[MultiPackLink] = SortedList()
+        self.groups: SortedList[MultiPackGroup] = SortedList()
+        self.generics: SortedList[MultiPackGeneric] = SortedList()
 
         self.meta: MultiPackMeta = MultiPackMeta()
 
@@ -88,14 +90,22 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         super().__setstate__(state)
 
+        self.links = SortedList(self.links)
+        self.groups = SortedList(self.groups)
+        self.generics = SortedList(self.generics)
+
         self.index = BaseIndex()
-        self.index.update_basic_index(self.links)
-        self.index.update_basic_index(self.groups)
+        self.index.update_basic_index(list(self.links))
+        self.index.update_basic_index(list(self.groups))
+        self.index.update_basic_index(list(self.generics))
 
         for a in self.links:
             a.set_pack(self)
 
         for a in self.groups:
+            a.set_pack(self)
+
+        for a in self.generics:
             a.set_pack(self)
 
         # Rebuild the name to index lookup.
@@ -111,6 +121,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         state = super().__getstate__()
         state.pop('_inverse_pack_ref')
         state.pop('_name_index')
+
+        state['links'] = list(state['links'])
+        state['groups'] = list(state['groups'])
+        state['generics'] = list(state['generics'])
+
         return state
 
     def realign_packs(self):
@@ -424,15 +439,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         add_new = allow_duplicate or (entry not in target)
 
         if add_new:
-            target.append(entry)  # type: ignore
+            target.add(entry)  # type: ignore
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
-            if self.index.link_index_on and isinstance(
-                    entry, MultiPackLink):
+            if self.index.link_index_on and isinstance(entry, MultiPackLink):
                 self.index.update_link_index([entry])
-            if self.index.group_index_on and isinstance(
-                    entry, MultiPackGroup):
+            if self.index.group_index_on and isinstance(entry, MultiPackGroup):
                 self.index.update_group_index([entry])
 
             self._pending_entries.pop(entry.tid)
