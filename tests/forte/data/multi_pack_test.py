@@ -59,6 +59,9 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(self.multi_pack.pack_names,
                          {'left pack', 'last pack'})
 
+    def test_get_entry(self):
+        pass
+
     def test_entry(self):
         # 1. Add tokens to each pack.
         for pack in self.multi_pack.packs:

@@ -356,7 +356,7 @@ class BaseGroup(Entry, Generic[EntryType]):
             return False
         return (type(self), self.members) == (type(other), other.members)
 
-    def get_members(self):
+    def get_members(self) -> Set[EntryType]:
         r"""Get the member entries in the group.
 
         Returns:
