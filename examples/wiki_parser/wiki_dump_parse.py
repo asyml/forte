@@ -164,7 +164,6 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     ))
 
     # Now we run the info box pipeline.
-    ib_pl.initialize()
     ib_pl.run(info_boxs)
 
 

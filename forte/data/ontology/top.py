@@ -115,13 +115,10 @@ class Annotation(Entry):
     def __lt__(self, other):
         r"""To support total_ordering, :class:`Annotations` must provide
         :meth:`__lt__`.
-
-        Users can define their own lt function by themselves but this must
-        be consistent to :meth:`__eq__`.
         """
         if self.span != other.span:
             return self.span < other.span
-        return str(type(self)) < str(type(other))
+        return (str(type(self)), self._tid) < (str(type(other)), other.tid)
 
     @property
     def text(self):

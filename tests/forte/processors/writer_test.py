@@ -57,8 +57,6 @@ class TestLowerCaserProcessor(unittest.TestCase):
             }
         )
 
-        pipe_serialize.initialize()
-
         dataset_path = "data_samples/ontonotes/00"
         pipe_serialize.run(dataset_path)
 

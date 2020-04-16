@@ -242,7 +242,9 @@ class Pipeline(Generic[PackType]):
         return self.process_one(*args, **kwargs)
 
     def run(self, *args, **kwargs):
-        r"""Run the whole pipeline and ignore all returned DataPack. This is
+        r"""Run the whole pipeline and ignore all returned DataPack. Calling
+        this function will automatically call the :func:``initialize`` at the
+        beginning, and call the :func:``finish`` at the end. This is
         used when the users are relying on the side effect of the processors
         (e.g. a process that will write Packs to disk).
 
@@ -250,10 +252,12 @@ class Pipeline(Generic[PackType]):
             args: The positional arguments used to get the initial data.
             kwargs: The keyword arguments used to get the initial data.
         """
+        self.initialize()
         for _ in self.process_dataset(*args, **kwargs):
             # Process the whole dataset ignoring the return values.
             # This essentially expect the processors have side effects.
             pass
+        self.finish()
 
     def process_one(self, *args, **kwargs) -> PackType:
         r"""Process one single data pack. This is done by only reading and
@@ -283,11 +287,6 @@ class Pipeline(Generic[PackType]):
         iterator or list of DataPacks. The arguments are directly passed
         to the reader to take data from the source.
         """
-        # TODO: This is a generator, but the name may be confusing since the
-        #  user might expect this function will do all the processing. If
-        #  this is called like `process_dataset(args)` instead of
-        #  `for p in process_dataset(args)`, this will have no effect.
-
         data_iter = self._reader.iter(*args, **kwargs)
         return self._process_packs(data_iter)
 
@@ -302,6 +301,7 @@ class Pipeline(Generic[PackType]):
         self.reader.finish(self.resource)
         for p in self.components:
             p.finish(self.resource)
+        self._pack_manager.reset()
 
     def _process_packs(
             self, data_iter: Iterator[PackType]) -> Iterator[PackType]:

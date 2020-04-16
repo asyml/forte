@@ -71,9 +71,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._text = ""
 
         self.annotations: SortedList[Annotation] = SortedList()
-        self.links: List[Link] = []
-        self.groups: List[Group] = []
-        self.generics: List[Generics] = []
+        self.links: SortedList[Link] = SortedList()
+        self.groups: SortedList[Group] = SortedList()
+        self.generics: SortedList[Generics] = SortedList()
 
         self.replace_back_operations: ReplaceOperationsType = []
         self.processed_original_spans: List[Tuple[Span, Span]] = []
@@ -150,7 +150,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return self._text[span.begin: span.end]
 
-    # TODO: having to set the replace_func here is not very intuitive.
     def set_text(
             self, text: str, replace_func:
             Optional[Callable[[str], ReplaceOperationsType]] = None):
@@ -315,27 +314,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return self.__add_entry_with_check(entry, True)
 
-# def add_or_get_entry(self, entry: EntryType) -> EntryType:
-#     r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
-#     :class:`DataPack` object.
-#
-#     If the same entry already exists, will return the existing entry
-#     instead of adding the new one. Note that we regard two entries as the
-#     same if their :meth:`~forte.data.ontology.top.Entry.eq` have
-#     the same return value, and users could
-#     override :meth:`~forte.data.ontology.top.Entry.eq` in their
-#     custom entry classes.
-#
-#     Args:
-#         entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-#             object to be added to the pack.
-#
-#     Returns:
-#         If a same entry already exists, returns the existing
-#         entry. Otherwise, return the (input) entry just added.
-#     """
-#     return self.__add_entry_with_check(entry, False)
-
     def __add_entry_with_check(self, entry: EntryType,
                                allow_duplicate: bool = True) -> EntryType:
         r"""Internal method to add an :class:`Entry` object to the
@@ -390,11 +368,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         add_new = allow_duplicate or (entry not in target)
 
         if add_new:
-            if isinstance(target, list):
-                target.append(entry)
-            else:
-                # For the sorted list case.
-                target.add(entry)
+            target.add(entry)
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
@@ -424,11 +398,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 object to be deleted from the pack.
 
         """
-        begin = 0
-
         if isinstance(entry, Annotation):
             target = self.annotations
-            begin = target.bisect_left(entry)
         elif isinstance(entry, Link):
             target = self.links
         elif isinstance(entry, Group):
@@ -441,8 +412,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                 f"should be an instance of Annotation, Link, or Group."
             )
 
-        # TODO: I think the tid are orderred, so we can actually remove with
-        #  faster search.
+        begin: int = target.bisect_left(entry)
+
         index_to_remove = -1
         for i, e in enumerate(target[begin:]):
             if e.tid == entry.tid:

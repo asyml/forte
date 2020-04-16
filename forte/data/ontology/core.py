@@ -198,6 +198,11 @@ class Entry(Generic[ContainerType]):
 
         return (type(self), self._tid) == (type(other), other.tid)
 
+    def __lt__(self, other):
+        r"""Comparison based on type and id.
+        """
+        return (str(type(self)), self._tid) < (str(type(other)), other.tid)
+
     def __hash__(self) -> int:
         r"""The hash function for :class:`Entry` objects.
         To be implemented in each subclass.
