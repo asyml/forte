@@ -440,22 +440,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         else:
             return target[target.index(entry)]  # type: ignore
 
-    def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        r"""Try to add an :class:`Entry` object to the :class:`Multipack`
-        object. If a same entry already exists, will return the existing entry
-        instead of adding the new one. Note that we regard two entries to be
-        same if their :meth:`eq` have the same return value, and users could
-        override :meth:`eq` in their custom entry classes.
-
-        Args:
-            entry (Entry): An :class:`Entry` object to be added to the datapack.
-
-        Returns:
-            If a same entry already exists, returns the existing
-            entry. Otherwise, return the (input) entry just added.
-        """
-        return self.__add_entry_with_check(entry, False)
-
     def add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
 
