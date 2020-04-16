@@ -209,9 +209,7 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
 
     # TODO: Principled way of get data from multi pack?
     def _get_data_batch(
-            self,
-            data_pack: MultiPack,
-            context_type: Type[Annotation],
+            self, multi_pack: MultiPack, context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         r"""Try to get batches of size ``batch_size``. If the tail instances
@@ -223,7 +221,7 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             containing the required annotations and context, and ``cnt`` is
             the number of instances in the batch.
         """
-        input_pack = data_pack.get_pack(self.input_pack_name)
+        input_pack = multi_pack.get_pack(self.input_pack_name)
 
         instances: List[Dict] = []
         current_size = sum(self.current_batch_sources)

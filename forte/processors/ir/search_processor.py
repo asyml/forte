@@ -48,7 +48,7 @@ class SearchProcessor(MultiPackProcessor):
 
     def _process(self, input_pack: MultiPack):
         query_pack = input_pack.get_pack(self.config.query_pack_name)
-        first_query = list(query_pack.get_entries(Query))[0]
+        first_query = list(query_pack.get(Query))[0]
         results = self.index.search(first_query.value, self.k)
         documents = [r[1] for result in results for r in result]
 

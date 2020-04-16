@@ -57,8 +57,6 @@ class TestLowerCaserProcessor(unittest.TestCase):
             }
         )
 
-        pipe_serialize.initialize()
-
         dataset_path = "data_samples/ontonotes/00"
         pipe_serialize.run(dataset_path)
 
@@ -72,7 +70,7 @@ class TestLowerCaserProcessor(unittest.TestCase):
         # as expected.
         pack: DataPack
         for pack in pipe_deserialize.process_dataset(output_path):
-            tokens: List[Token] = list(pack.get_entries(Token))
+            tokens: List[Token] = list(pack.get(Token))
             token_counts[pack.meta.doc_id] = len(tokens)
 
         expected_count = {'bn/abc/00/abc_0039': 72, 'bn/abc/00/abc_0019': 370,

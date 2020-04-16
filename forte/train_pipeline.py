@@ -77,9 +77,7 @@ class TrainPipeline:
         prepare_pl.set_reader(self.train_reader)
         for p in self.preprocessors:
             prepare_pl.add(p)
-
         prepare_pl.run(self.configs.config_data.train_path)
-        prepare_pl.finish()
 
     def train(self):
         epoch = 0

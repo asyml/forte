@@ -56,7 +56,7 @@ class NLTKPOSTagger(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         token_entries = list(input_pack.get(entry_type=Token,
-                                            component=self.token_component))
+                                            components=self.token_component))
         token_texts = [token.text for token in token_entries]
         taggings = pos_tag(token_texts)
         for token, tag in zip(token_entries, taggings):
@@ -74,7 +74,7 @@ class NLTKLemmatizer(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         token_entries = list(input_pack.get(entry_type=Token,
-                                            component=self.token_component))
+                                            components=self.token_component))
         token_texts = [token.text for token in token_entries]
         token_pos = [penn2morphy(token.pos) for token in token_entries]
         lemmas = [self.lemmatizer.lemmatize(token_texts[i], token_pos[i])
@@ -120,10 +120,10 @@ class NLTKChunker(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(
-                Sentence, component=self.configs.sentence_component):
+                Sentence, components=self.configs.sentence_component):
             token_entries = list(input_pack.get(
                 entry_type=Token, range_annotation=sentence,
-                component=self.configs.token_component))
+                components=self.configs.token_component))
 
             tokens = [(token.text, token.pos) for token in token_entries]
             cs = self.chunker.parse(tokens)
@@ -168,9 +168,9 @@ class NLTKNER(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(Sentence):
-            token_entries = list(input_pack.get(entry_type=Token,
-                                                range_annotation=sentence,
-                                                component=self.token_component))
+            token_entries = list(input_pack.get(
+                entry_type=Token, range_annotation=sentence,
+                components=self.token_component))
             tokens = [(token.text, token.pos) for token in token_entries]
             ne_tree = ne_chunk(tokens)
 

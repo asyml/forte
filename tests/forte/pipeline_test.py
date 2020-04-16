@@ -176,12 +176,11 @@ class PipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in nlp.process_dataset(dataset_path):
             # get sentence from pack
-            for sentence in pack.get_entries(Sentence):
+            for sentence in pack.get(Sentence):
                 sent_text = sentence.text
 
                 # second method to get entry in a sentence
-                tokens = [token.text for token in
-                          pack.get_entries(Token, sentence)]
+                tokens = [token.text for token in pack.get(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
 
     def test_pipeline1(self):
@@ -400,12 +399,12 @@ class MultiPackPipelineTest(unittest.TestCase):
         for m_pack in nlp.process_dataset(dataset_path):
             pack = m_pack.get_pack(pack_name)
             # get sentence from pack
-            for sentence in pack.get_entries(Sentence):
+            for sentence in pack.get(Sentence):
                 sent_text = sentence.text
 
                 # second method to get entry in a sentence
                 tokens = [token.text for token in
-                          pack.get_entries(Token, sentence)]
+                          pack.get(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
 
     def test_pipeline1(self):

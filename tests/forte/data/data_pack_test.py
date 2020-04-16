@@ -17,13 +17,14 @@ Unit tests for data pack related operations.
 import os
 import logging
 import unittest
+from typing import List, Tuple
 
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.utils import utils
 from ft.onto.base_ontology import (
     Token, Sentence, Document, EntityMention, PredicateArgument, PredicateLink,
-    PredicateMention)
+    PredicateMention, CoreferenceGroup)
 from forte.data.readers import OntonotesReader
 
 logging.basicConfig(level=logging.DEBUG)
@@ -89,7 +90,76 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(len(instances[0]["Token"]), 5)
         self.assertEqual(len(instances[0]["EntityMention"]), 3)
 
-        # case 6: test delete entry
+    def test_get_entries(self):
+        # case 1: test get annotation
+        sent_texts: List[str] = []
+        for doc in self.data_pack.get(Document):
+            for sent in self.data_pack.get(Sentence, doc):
+                sent_texts.append(sent.text)
+
+        self.assertEqual(
+            sent_texts,
+            [
+                "The Indonesian billionaire James Riady has agreed "
+                "to pay $ 8.5 million and plead guilty to illegally "
+                "donating money for Bill Clinton 's 1992 presidential "
+                "campaign .",
+                'He admits he was trying to influence American policy on '
+                'China .'
+            ]
+        )
+
+        # case 2: test get link
+        links: List[Tuple[str, str, str]] = []
+        for doc in self.data_pack.get(Document):
+            link: PredicateLink
+            for link in self.data_pack.get(PredicateLink, doc):
+                links.append(
+                    (link.get_parent().text, link.get_child().text,
+                     link.arg_type))
+        self.assertEqual(
+            links,
+            [('admits', 'He', 'ARG0'),
+             ('admits', 'he was trying to influence American policy on China',
+              'ARG1'),
+             ('trying', 'he', 'ARG0'),
+             ('trying', 'to influence American policy on China', 'ARG1'),
+             ('influence', 'he', 'ARG0'),
+             ('influence', 'American policy on China', 'ARG1'),
+             ('agreed', 'The Indonesian billionaire James Riady', 'ARG0'),
+             ('agreed',
+              "to pay $ 8.5 million and plead guilty to illegally "
+              "donating money for Bill Clinton 's 1992 presidential campaign",
+              'ARG1'),
+             ('pay', 'The Indonesian billionaire James Riady', 'ARG0'),
+             ('pay', '$ 8.5 million', 'ARG1'),
+             ('plead', 'The Indonesian billionaire James Riady', 'ARG0'),
+             ('plead', 'guilty', 'ARG1'),
+             ('plead',
+              "to illegally donating money for Bill Clinton 's "
+              "1992 presidential campaign", 'ARG2'),
+             ('donating', 'illegally', 'ARGM-MNR'),
+             ('donating', 'money', 'ARG1'),
+             ('donating', "for Bill Clinton 's 1992 presidential campaign",
+              'ARG2')]
+        )
+
+        # test get groups
+        # case 2: test get link
+        groups: List[List[str]] = []
+        for doc in self.data_pack.get(Document):
+            members: List[str] = []
+            group: CoreferenceGroup
+            for group in self.data_pack.get(CoreferenceGroup, doc):
+                em: EntityMention
+                for em in group.get_members():
+                    members.append(em.text)
+            groups.append(sorted(members))
+        self.assertEqual(groups, [
+            ['He', 'The Indonesian billionaire James Riady', 'he']])
+
+    def test_delete_entry(self):
+        # test delete entry
         sentences = list(self.data_pack.get(Sentence))
         num_sent = len(sentences)
         first_sent = sentences[0]

@@ -59,7 +59,7 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(self.multi_pack.pack_names,
                          {'left pack', 'last pack'})
 
-    def test_entry(self):
+    def test_entries(self):
         # 1. Add tokens to each pack.
         for pack in self.multi_pack.packs:
             _space_token(pack)
@@ -90,6 +90,7 @@ class DataPackTest(unittest.TestCase):
                 self.multi_pack.add_entry(MultiPackLink(
                     self.multi_pack, lt, rt))
 
+        # One way to link tokens.
         linked_tokens = []
         for link in self.multi_pack.links:
             parent_text = link.get_parent().text
@@ -101,8 +102,22 @@ class DataPackTest(unittest.TestCase):
             [("This", "This"), ("pack", "pack"), ("contains", "contains"),
              ("some", "some"), ("sample", "sample"), ("data.", "data.")])
 
+        # Another way to get the links
+        linked_tokens = []
+        for link in self.multi_pack.get(MultiPackLink):
+            parent_text = link.get_parent().text
+            child_text = link.get_child().text
+            linked_tokens.append((parent_text, child_text))
+
+        self.assertListEqual(
+            linked_tokens,
+            [("This", "This"), ("pack", "pack"), ("contains", "contains"),
+             ("some", "some"), ("sample", "sample"), ("data.", "data.")])
+
         # 3. Test deletion
-        self.multi_pack.delete_entry(self.multi_pack.links[-1])
+
+        # Delete the second link.
+        self.multi_pack.delete_entry(self.multi_pack.links[1])
 
         linked_tokens = []
         for link in self.multi_pack.links:
@@ -112,8 +127,8 @@ class DataPackTest(unittest.TestCase):
 
         self.assertListEqual(
             linked_tokens,
-            [("This", "This"), ("pack", "pack"), ("contains", "contains"),
-             ("some", "some"), ("sample", "sample")])
+            [("This", "This"), ("contains", "contains"),
+             ("some", "some"), ("sample", "sample"), ("data.", "data.")])
 
 
 if __name__ == '__main__':

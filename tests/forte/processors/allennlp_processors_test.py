@@ -171,7 +171,7 @@ class TestAllenNLPProcessor(unittest.TestCase):
 
                 if "depparse" in processors:
                     deps: List[Dependency] = list(
-                        pack.get_entries(Dependency, sentence))
+                        pack.get(Dependency, sentence))
 
                     indexed_deps = {}
                     for d in deps:

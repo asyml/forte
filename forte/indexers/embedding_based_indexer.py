@@ -128,7 +128,7 @@ class EmbeddingBasedIndexer:
 
         if isinstance(vectors, torch.Tensor):
             # todo: manage the copying of tensors between CPU and GPU
-            # efficiently
+            #   efficiently
             vectors = vectors.cpu().numpy()
 
         self._index.add(vectors)

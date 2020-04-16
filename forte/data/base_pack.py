@@ -184,27 +184,27 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         return self.add_entry(entry).tid
 
-# @abstractmethod
-# def add_or_get_entry(self, entry: EntryType) -> EntryType:
-#     r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
-#     :class:`BasePack` object.
-#
-#     If a same entry already exists, will return the existing entry
-#     instead of adding the new one. Note that we regard two entries as the
-#     same if their :meth:`~forte.data.ontology.top.Entry.eq` have
-#     the same return value, and users could
-#     override :meth:`~forte.data.ontology.top.Entry.eq` in their
-#     custom entry classes.
-#
-#     Args:
-#         entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-#             object to be added to the pack.
-#
-#     Returns:
-#         If a same entry already exists, returns the existing
-#         entry. Otherwise, return the (input) entry just added.
-#     """
-#     raise NotImplementedError
+    # @abstractmethod
+    # def add_or_get_entry(self, entry: EntryType) -> EntryType:
+    #     r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to
+    #     the :class:`BasePack` object.
+    #
+    #     If a same entry already exists, will return the existing entry
+    #     instead of adding the new one. Note that we regard two entries as the
+    #     same if their :meth:`~forte.data.ontology.top.Entry.eq` have
+    #     the same return value, and users could
+    #     override :meth:`~forte.data.ontology.top.Entry.eq` in their
+    #     custom entry classes.
+    #
+    #     Args:
+    #         entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+    #             object to be added to the pack.
+    #
+    #     Returns:
+    #         If a same entry already exists, returns the existing
+    #         entry. Otherwise, return the (input) entry just added.
+    #     """
+    #     raise NotImplementedError
 
     def add_all_remaining_entries(self):
         """
@@ -335,6 +335,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         return {self.get_entry(tid)
                 for tid in self.get_ids_by_component(component)}
+
+    def get_ids_by_components(self, components: List[str]) -> Set[int]:
+        """Look up component_index using a list of components."""
+        valid_component_id: Set[int] = set()
+        for component in components:
+            valid_component_id |= self.get_ids_by_component(component)
+        return valid_component_id
 
     def get_ids_by_type(self, entry_type: Type[EntryType]) -> Set[int]:
         r"""Look up the type_index with key ``entry_type``.

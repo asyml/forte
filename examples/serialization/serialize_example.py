@@ -43,7 +43,7 @@ class PackCopier(MultiPackProcessor):
             copy_pack.doc_id = 'copy'
 
         ent: EntityMention
-        for ent in from_pack.get_entries(EntityMention):
+        for ent in from_pack.get(EntityMention):
             EntityMention(copy_pack, ent.begin, ent.end)
 
     @classmethod
@@ -63,8 +63,8 @@ class ExampleCoreferencer(MultiPackProcessor):
         pack_i = input_pack.get_pack('default')
         pack_j = input_pack.get_pack('duplicate')
 
-        for ent_i, ent_j in zip(pack_i.get_entries(EntityMention),
-                                pack_j.get_entries(EntityMention)):
+        for ent_i, ent_j in zip(pack_i.get(EntityMention),
+                                pack_j.get(EntityMention)):
             link = CrossDocEntityRelation(input_pack, ent_i, ent_j)
             link.rel_type = 'coreference'
             input_pack.add_entry(link)
@@ -112,9 +112,7 @@ def pack_example(input_path, output_path):
         }
     )
 
-    nlp.initialize()
     nlp.run(input_path)
-    nlp.finish()
 
 
 def multi_example(input_path, output_path):
@@ -149,19 +147,14 @@ def multi_example(input_path, output_path):
         }
     )
 
-    coref_pl.initialize()
     coref_pl.run(input_path)
-    coref_pl.finish()
 
     print("We can then load the saved results, and see if everything is OK. "
           "We should see the same number of multi packs there. ")
     reading_pl = Pipeline()
     reading_pl.set_reader(MultiPackDiskReader(), {'data_path': output_path})
     reading_pl.add(ExampleCorefCounter())
-
-    reading_pl.initialize()
     reading_pl.run()
-    reading_pl.finish()
 
 
 def main(data_path: str):
