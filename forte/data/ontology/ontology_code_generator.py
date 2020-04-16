@@ -215,9 +215,6 @@ class OntologyCodeGenerator:
         for type_class in COMPOSITES.values():
             self.import_managers.root.add_object_to_import(type_class)
 
-        # Mapping from the full class name to the ref string to be used here.
-        # self.full_ref_to_import: Dict[str, str] = {}
-
         # Adjacency list to store the allowed types (in-built or user-defined),
         # and their attributes (if any) in order to validate the attribute
         # types.
@@ -342,10 +339,9 @@ class OntologyCodeGenerator:
                     self.base_entry_lookup[full_ele_name] = full_ele_name
                     self.top_init_args[full_ele_name] = init_func.args
 
-    def generate(self, spec_path: str,
-                 destination_dir: str = os.getcwd(),
-                 is_dry_run: bool = False,
-                 include_init: bool = True) -> Optional[str]:
+    def generate(self, spec_path: str, destination_dir: str = os.getcwd(),
+                 is_dry_run: bool = False, include_init: bool = True,
+                 merged_path: Optional[str] = None) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to
             the class.
@@ -362,6 +358,8 @@ class OntologyCodeGenerator:
                 include_init: if `True`, generates `__init__.py` in the already
                     existing directories, otherwise only generates `__init__.py`
                     in the generated directories.
+                merged_path: if a path is provided, a merged ontology file will
+                    be written at this path.
 
             Returns:
                 Directory path in which the modules are created: either one of
@@ -375,10 +373,13 @@ class OntologyCodeGenerator:
         if self.installed_forte_dir is not None:
             self.import_dirs.add(self.installed_forte_dir)
 
+        merged_schemas: List[Dict] = []
+
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
         try:
-            self.parse_ontology_spec(spec_path, destination_dir)
+            self.parse_ontology_spec(spec_path, destination_dir,
+                                     merged_schema=merged_schemas)
         except OntologySpecError:
             logging.error("Error at parsing [%s]", spec_path)
             raise
@@ -398,6 +399,16 @@ class OntologyCodeGenerator:
             writer.write(tempdir, destination_dir, include_init)
             logging.info('Done writing.')
 
+        if merged_path is not None:
+            logging.info("Writing merged schema at %s", merged_path)
+            merged_config = {
+                "name": "all_ontology",
+                "definitions": merged_schemas
+            }
+            with open(merged_path, 'w') as out:
+                json.dump(merged_config, out, indent=2)
+            logging.info("Done writing.")
+
         # When everything is successfully completed, copy the contents of
         # `self.tempdir` to the provided folder.
         if not is_dry_run:
@@ -416,33 +427,11 @@ class OntologyCodeGenerator:
             return destination_dir
         return tempdir
 
-    def parse_ontology_spec(self, ontology_reference: str,
-                            destination_dir: str,
-                            is_path_type: bool = True,
-                            visited_paths: Optional[Dict[str, bool]] = None,
-                            rec_visited_paths: Optional[Dict[str, bool]] = None
-                            ):
-        r"""Performs a topological traversal on the directed graph formed by the
-        imported json configs. While processing each config, it first generates
-        the classes corresponding to the entries of the imported configs, then
-        imports the generated python classes to generate the classes
-        corresponding to the entries of `json_file_path`.
-        Args:
-            ontology_reference: Reference to the ontology. Can be of the
-            following forms -
-                (1) Absolute or relative path to the current json config to be
-                processed. In this case, `is_path_type` is True
-                (2) Full name of the installed ontology module that is to be
-                imported (ft.onto.base_ontology). In this case, `is_path_type`
-                is False
-            destination_dir: Directory in which the generated module will
-            be located
-            is_path_type: if `ontology_reference` is of type json path
-            visited_paths: Keeps track of the json configs already processed
-            rec_visited_paths: Keeps track of the current recursion stack, to
-            detect, and throw error if any cycles are present
-        Returns:
-        """
+    def parse_ontology_imports(
+            self, ontology_reference: str, is_path_type: bool = True,
+            visited_paths: Optional[Dict[str, bool]] = None,
+            rec_visited_paths: Optional[Dict[str, bool]] = None
+    ) -> Optional[Tuple[str, Dict[str, bool], Dict[str, bool]]]:
         is_pkg = not is_path_type
 
         # Obtain the json source file corresponding to ontology reference
@@ -474,7 +463,7 @@ class OntologyCodeGenerator:
 
         # If the ontology is already generated, need not generate it again
         if visited_paths[json_file_path]:
-            return
+            return None
 
         # Add the json_file path to the visited dictionaries
         visited_paths[json_file_path] = True
@@ -489,6 +478,47 @@ class OntologyCodeGenerator:
                 raise OntologySpecValidationError(cast(Any, exception).message)
             raise
 
+        return json_file_path, visited_paths, rec_visited_paths
+
+    def parse_ontology_spec(
+            self, ontology_reference: str,
+            destination_dir: str,
+            merged_schema: List[Dict],
+            is_path_type: bool = True,
+            visited_paths: Optional[Dict[str, bool]] = None,
+            rec_visited_paths: Optional[Dict[str, bool]] = None,
+    ):
+        r"""Performs a topological traversal on the directed graph formed by the
+        imported json configs. While processing each config, it first generates
+        the classes corresponding to the entries of the imported configs, then
+        imports the generated python classes to generate the classes
+        corresponding to the entries of `json_file_path`.
+        Args:
+            ontology_reference: Reference to the ontology. Can be of the
+            following forms:
+                (1) Absolute or relative path to the current json config to be
+                   processed. In this case, `is_path_type` is True
+                (2) Full name of the installed ontology module to be imported
+                    (ft.onto.base_ontology). In this case,
+                   `is_path_type` is False
+            destination_dir: Directory in which the generated module will
+                be located.
+            merged_schema: A list to read all the merged schema.
+            is_path_type: if `ontology_reference` is a path, otherwise it will
+                be treated as package.
+            visited_paths: Keeps track of the json configs already processed.
+            rec_visited_paths: Keeps track of the current recursion stack, to
+                detect, and throw error if any cycles are present.
+        Returns:
+        """
+        import_info = self.parse_ontology_imports(
+            ontology_reference, is_path_type, visited_paths, rec_visited_paths)
+
+        if import_info is None:
+            return
+
+        json_file_path, visited_paths, rec_visited_paths = import_info
+
         with open(json_file_path, 'r') as f:
             spec_dict = json.load(f)
 
@@ -497,14 +527,16 @@ class OntologyCodeGenerator:
         # ('ft.onto.base_ontology') or path to the json schema files.
         pkg_imports: Set[str] = set(spec_dict.get(SchemaKeywords.imports, []))
         for pkg_import in pkg_imports:
-            self.parse_ontology_spec(pkg_import, destination_dir, False,
-                                     visited_paths, rec_visited_paths)
+            self.parse_ontology_spec(pkg_import, destination_dir, merged_schema,
+                                     False, visited_paths, rec_visited_paths)
 
-        json_imports: Set[str] = set(spec_dict.get(SchemaKeywords.import_paths,
-                                                   []))
+        json_imports: Set[str] = set(spec_dict.get(
+            SchemaKeywords.import_paths, []))
+
         for json_import in json_imports:
-            self.parse_ontology_spec(json_import, destination_dir, True,
-                                     visited_paths, rec_visited_paths)
+            self.parse_ontology_spec(json_import, destination_dir,
+                                     merged_schema,
+                                     True, visited_paths, rec_visited_paths)
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
@@ -521,13 +553,13 @@ class OntologyCodeGenerator:
                 curr_forte_dir, self.installed_forte_dir):
             print_json_file = os.path.relpath(json_file_path, curr_forte_dir)
 
-        self.parse_schema(spec_dict, print_json_file, is_pkg)
+        self.parse_schema(spec_dict, print_json_file, not is_path_type,
+                          merged_schema)
 
         rec_visited_paths[json_file_path] = False
 
-    def parse_schema(self, schema: Dict,
-                     source_json_file: str,
-                     is_installed: bool):
+    def parse_schema(self, schema: Dict, source_json_file: str,
+                     is_installed: bool, merged_schema: List[Dict]):
         r""" Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
         new module file if module is generated for the first time.
@@ -536,11 +568,14 @@ class OntologyCodeGenerator:
             schema: Ontology dictionary extracted from a json config.
             source_json_file: Path of the source json file.
             is_installed: True if the ontology is already installed
-            (like ft.onto.base_ontology)
+                (like ft.onto.base_ontology)
+            merged_schema: The merged schema is used to remember all
+                definitions during parsing.
         Returns:
             Modules to be imported by dependencies of the current ontology.
         """
         entry_definitions: List[Dict] = schema[SchemaKeywords.definitions]
+        merged_schema.extend(entry_definitions)
 
         allowed_packages = set(
             schema.get(SchemaKeywords.prefixes, []) + [DEFAULT_PREFIX])
