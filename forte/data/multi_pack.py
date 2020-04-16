@@ -426,9 +426,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if isinstance(entry, MultiPackLink):
             target = self.links
         elif isinstance(entry, MultiPackGroup):
-            target = self.groups  # type: ignore
+            target = self.groups
         elif isinstance(entry, MultiPackGeneric):
-            target = self.generics  # type: ignore
+            target = self.generics
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)} for Multipack. A valid "
@@ -439,7 +439,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         add_new = allow_duplicate or (entry not in target)
 
         if add_new:
-            target.add(entry)  # type: ignore
+            target.add(entry)
 
             # update the data pack index if needed
             self.index.update_basic_index([entry])
@@ -451,7 +451,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             self._pending_entries.pop(entry.tid)
             return entry
         else:
-            return target[target.index(entry)]  # type: ignore
+            return target[target.index(entry)]
 
     def get_entries(
             self, entry_type: Type[EntryType],
@@ -557,9 +557,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if isinstance(entry, MultiPackLink):
             target = self.links
         elif isinstance(entry, MultiPackGroup):
-            target = self.groups  # type: ignore
+            target = self.groups
         elif isinstance(entry, MultiPackGeneric):
-            target = self.generics  # type: ignore
+            target = self.generics
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "

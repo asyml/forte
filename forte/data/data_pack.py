@@ -26,7 +26,7 @@ from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
-    Annotation, Link, Group, SinglePackEntries, Generics, Query)
+    Annotation, Link, Group, SinglePackEntries, Generics)
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
 

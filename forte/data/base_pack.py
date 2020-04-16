@@ -186,8 +186,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     # @abstractmethod
     # def add_or_get_entry(self, entry: EntryType) -> EntryType:
-    #     r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
-    #     :class:`BasePack` object.
+    #     r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to
+    #     the :class:`BasePack` object.
     #
     #     If a same entry already exists, will return the existing entry
     #     instead of adding the new one. Note that we regard two entries as the
