@@ -55,7 +55,7 @@ class VaderSentimentProcessor(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         for sentence in input_pack.get(entry_type=Sentence,
-                                       component=self.sentence_component):
+                                       components=self.sentence_component):
             scores = self.analyzer.polarity_scores(sentence.text)
             sentence.sentiment = scores
 

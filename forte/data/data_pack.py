@@ -93,6 +93,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         state = super().__getstate__()
         state['annotations'] = list(state['annotations'])
+        state['links'] = list(state['links'])
+        state['groups'] = list(state['groups'])
+        state['generics'] = list(state['generics'])
         return state
 
     def __setstate__(self, state):
@@ -108,6 +111,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._pack_manager.set_remapped_pack_id(self)
 
         self.annotations = SortedList(self.annotations)
+        self.links = SortedList(self.links)
+        self.groups = SortedList(self.groups)
+        self.generics = SortedList(self.generics)
+
         self.index = DataIndex()
         self.index.update_basic_index(list(self.annotations))
         self.index.update_basic_index(self.links)
