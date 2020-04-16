@@ -177,7 +177,6 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         for input_id, output_sentence in zip(input_sent_tids, output_sentences):
             offset = len(output_pack.text)
             sent = Sentence(output_pack, offset, offset + len(output_sentence))
-            output_pack.add_entry(sent)
             text += output_sentence + "\n"
 
             input_sent = input_pack.get_entry(input_id)

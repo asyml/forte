@@ -120,11 +120,11 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 "Got None collection, cannot parse as data pack.")
 
         for p in self._parse_pack(collection):
-            for entry in p:
-                # Here the creation will be recorded to the reader because
-                # we have set the reader to be the initial_reader in the
-                # pack manager.
-                entry.record_creation()
+            # for entry in p:
+            #     # Here the creation will be recorded to the reader because
+            #     # we have set the reader to be the initial_reader in the
+            #     # pack manager.
+            #     entry.record_creation()
             yield p
 
     @abstractmethod
@@ -185,6 +185,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
             if self.from_cache:
                 for pack in self.read_from_cache(
                         self._get_cache_location(collection)):
+                    pack.add_all_remaining_entries()
                     yield pack
             else:
                 not_first = False
@@ -198,7 +199,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
                             f"No Pack object read from the given "
                             f"collection {collection}, returned {type(pack)}."
                         )
+
                     not_first = True
+                    pack.add_all_remaining_entries()
                     yield pack
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:

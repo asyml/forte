@@ -14,7 +14,7 @@
 # pylint: disable=attribute-defined-outside-init
 import uuid
 from os import getenv
-from typing import Optional
+from typing import Optional, Dict, Any
 from urllib.parse import urlencode
 
 import requests
@@ -96,12 +96,19 @@ class MicrosoftBingTranslator(MultiPackProcessor):
             raise RuntimeError(response.json()['error']['message'])
 
         text = response.json()[0]["translations"][0]["text"]
-        pack = DataPack()
-
-        document = Document(pack, 0, len(text))
-        utterance = Utterance(pack, 0, len(text))
-        pack.add_entry(document)
-        pack.add_entry(utterance)
-
+        pack: DataPack = input_pack.add_pack(self.out_pack_name)
         pack.set_text(text=text)
-        input_pack.update_pack({self.out_pack_name: pack})
+
+        Document(pack, 0, len(text))
+        Utterance(pack, 0, len(text))
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config.update({
+            'src_language': 'en',
+            'target_language': 'de',
+            'in_pack_name': 'doc_0',
+            'out_pack_name': 'response',
+        })
+        return config

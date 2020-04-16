@@ -72,12 +72,15 @@ class Entry(Generic[ContainerType]):
         # to be checked by the pack.
         self.__pack: ContainerType = pack
         self.__field_modified: Set[str] = set()
-        pack.validate(self)
 
+        pack.validate(self)
         self.record_creation()
 
     def record_creation(self):
-        self.__pack.add_entry_creation_record(self._tid)
+        self.__pack.record_new_entry(self)
+
+    def regret_creation(self):
+        self.__pack.regret_record(self)
 
     def reset(self):
         """
@@ -86,7 +89,6 @@ class Entry(Generic[ContainerType]):
         Returns:
 
         """
-        # TODO: do we need to record this reset action as an edit?
         self.__init__(self.__pack)
 
     def __getstate__(self):

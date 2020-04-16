@@ -88,7 +88,7 @@ class Question(Annotation):
     @options.setter
     def options(self, options: Optional[List[Option]]):
         options = [] if options is None else options
-        self.set_fields(_options=[self.pack.add_entry_(obj) for obj in options])
+        self.set_fields(_options=[obj.tid for obj in options])
 
     def num_options(self):
         return len(self._options)
@@ -98,7 +98,7 @@ class Question(Annotation):
         self._options.clear()
 
     def add_options(self, a_options: Option):
-        self._options.append(self.pack.add_entry_(a_options))
+        self._options.append(a_options.tid)
 
     @property
     def answers(self):

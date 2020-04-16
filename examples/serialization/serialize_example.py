@@ -32,23 +32,19 @@ class PackCopier(MultiPackProcessor):
     """
 
     def _process(self, input_pack: MultiPack):
-        copy_pack: DataPack = DataPack()
         from_pack: DataPack = input_pack.get_pack(self.configs.copy_from)
+        copy_pack: DataPack = input_pack.add_pack(self.configs.copy_to)
 
         copy_pack.set_text(from_pack.text)
 
-        if from_pack.meta.doc_id is not None:
-            copy_pack.meta.doc_id = from_pack.meta.doc_id + '_copy'
+        if from_pack.doc_id is not None:
+            copy_pack.doc_id = from_pack.doc_id + '_copy'
         else:
-            copy_pack.meta.doc_id = 'copy'
+            copy_pack.doc_id = 'copy'
 
         ent: EntityMention
         for ent in from_pack.get_entries(EntityMention):
-            copy_pack.add_entry(
-                EntityMention(copy_pack, ent.begin, ent.end)
-            )
-
-        input_pack.add_pack(copy_pack, self.configs.copy_to)
+            EntityMention(copy_pack, ent.begin, ent.end)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

@@ -38,28 +38,33 @@ class ImportManager:
         self.__root = root
         self.__module_name = module_name
         self.__import_statements: List[str] = []
+        # Defining names imported by this module.
         self.__imported_names: Dict[str, str] = {}
+        # Defining names to be added by this generation module
+        self.__defining_names: Dict[str, str] = {}
         self.__short_name_pool: Set[str] = set()
         self.__fix_modules = False
 
     def fix_modules(self):
         self.__fix_modules = True
 
-    def is_known_name(self, class_name):
+    def is_known_name(self, full_class_name):
         """
         Check whether the class name can be used. It will check the class name
         in both the top manager or the current manager.
 
         Args:
-            class_name: The name to be check.
+            full_class_name: The name to be check.
 
         Returns: True if the class_name can be used, which means it is either
             imported or it is of a primitive type.
 
         """
-        return (class_name in NON_COMPOSITES or
-                class_name in COMPOSITES or
-                self.is_imported(class_name))
+        return (full_class_name in NON_COMPOSITES or
+                full_class_name in COMPOSITES or
+                self.is_imported(full_class_name) or
+                full_class_name in self.__defining_names
+                )
 
     def is_imported(self, class_name):
         """
@@ -85,6 +90,9 @@ class ImportManager:
     def get_name_to_use(self, full_name):
         if full_name in SUPPORTED_PRIMITIVES:
             return full_name
+
+        if full_name in self.__defining_names:
+            return self.__defining_names[full_name]
 
         if self.is_imported(full_name):
             return self.__imported_names[full_name]
@@ -136,6 +144,23 @@ class ImportManager:
             as_name = self.__find_next_available(class_name)
             self.__short_name_pool.add(as_name)
             return as_name
+
+    def add_defining_objects(self, full_name: str):
+        if self.__fix_modules:
+            # After fixing the modules, we should not add objects for import.
+            raise CodeGenerationException(
+                f'The module [{self.__module_name}] is fixed, cannot add '
+                f'more objects.')
+
+        if full_name not in self.__defining_names:
+            class_name = full_name.split('.')[-1]
+            if class_name not in self.__short_name_pool:
+                self.__short_name_pool.add(class_name)
+            else:
+                logging.warning(
+                    "Re-declared a new class named [%s]"
+                    ", which is probably used in import.", class_name)
+            self.__defining_names[full_name] = class_name
 
     def add_object_to_import(self, full_name: str):
         if self.__fix_modules:
@@ -447,7 +472,7 @@ class DictProperty(Property):
                 (f"{name} = {{}} if {name} is None else {name}", 1),
                 (f"self.set_fields("
                  f"{self.field_name}="
-                 f"dict([(k, self.pack.add_entry_(v)) "
+                 f"dict([(k, v.tid) "
                  f"for k, v in {name}.items()]))", 1),
                 ('', 0),
             ])
@@ -490,7 +515,7 @@ class DictProperty(Property):
                 ('', 0),
                 (f"def add_{name}(self, key: {key_type}, value: {value_type}):",
                  0),
-                (f"self.{self.field_name}[key] = self.pack.add_entry_(value)",
+                (f"self.{self.field_name}[key] = value.tid",
                  1),
             ])
         else:
@@ -559,7 +584,7 @@ class ListProperty(Property):
                 (f"{name} = [] if {name} is None else {name}", 1),
                 (f"self.set_fields("
                  f"{self.field_name}="
-                 f"[self.pack.add_entry_(obj) for obj in {name}])", 1),
+                 f"[obj.tid for obj in {name}])", 1),
                 ('', 0),
             ])
         else:
@@ -604,7 +629,7 @@ class ListProperty(Property):
                 ('', 0),
                 (f"def add_{name}(self, a_{name}: {item_type}):", 0),
                 (f"self.{self.field_name}.append("
-                 f"self.pack.add_entry_(a_{name}))", 1),
+                 f"a_{name}.tid)", 1),
             ])
         else:
             lines.extend([

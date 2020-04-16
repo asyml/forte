@@ -20,10 +20,8 @@ from typing import Any, Iterator, Dict, Tuple
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_utils_io import dataset_path_iterator_with_base
-from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
-
 from ft.onto.base_ontology import Sentence
 
 __all__ = [
@@ -71,7 +69,8 @@ class MultiPackSentenceReader(MultiPackReader):
                      file_path.startswith(base_dir) and len(base_dir):]
             doc_id = doc_id.strip(os.path.sep)
 
-            input_pack = DataPack(doc_id=doc_id)
+            input_pack = m_pack.add_pack(input_pack_name)
+            input_pack.doc_id = doc_id
 
             for line in doc:
                 line = line.strip()
@@ -80,21 +79,14 @@ class MultiPackSentenceReader(MultiPackReader):
                     continue
 
                 # add sentence
-                sent = Sentence(input_pack, offset, offset + len(line))
-                input_pack.add_entry(sent)
+                Sentence(input_pack, offset, offset + len(line))
                 text += line + '\n'
                 offset = offset + len(line) + 1
 
             input_pack.set_text(
                 text, replace_func=self.text_replace_operation)
-
-            output_pack = DataPack()
-
-            m_pack.update_pack({
-                input_pack_name: input_pack,
-                output_pack_name: output_pack
-            })
-
+            # Create a output pack without text.
+            m_pack.add_pack(output_pack_name)
             yield m_pack
 
     @classmethod

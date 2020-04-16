@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from nltk import word_tokenize, pos_tag, sent_tokenize, ne_chunk
+from nltk import pos_tag, ne_chunk, PunktSentenceTokenizer
 from nltk.chunk import RegexpParser
 from nltk.stem import WordNetLemmatizer
+from nltk.tokenize.treebank import TreebankWordTokenizer
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -38,18 +39,11 @@ class NLTKWordTokenizer(PackProcessor):
 
     def __init__(self):
         super().__init__()
-        self.sentence_component = None
+        self.tokenizer = TreebankWordTokenizer()
 
     def _process(self, input_pack: DataPack):
-        for sentence in input_pack.get(entry_type=Sentence,
-                                       component=self.sentence_component):
-            offset = sentence.span.begin
-            end_pos = 0
-            for word in word_tokenize(sentence.text):
-                begin_pos = sentence.text.find(word, end_pos)
-                end_pos = begin_pos + len(word)
-                token = Token(input_pack, begin_pos + offset, end_pos + offset)
-                input_pack.add_or_get_entry(token)
+        for begin, end in self.tokenizer.span_tokenize(input_pack.text):
+            Token(input_pack, begin, end)
 
 
 class NLTKPOSTagger(PackProcessor):
@@ -61,14 +55,12 @@ class NLTKPOSTagger(PackProcessor):
         self.token_component = None
 
     def _process(self, input_pack: DataPack):
-        for sentence in input_pack.get(Sentence):
-            token_entries = list(input_pack.get(entry_type=Token,
-                                                range_annotation=sentence,
-                                                component=self.token_component))
-            token_texts = [token.text for token in token_entries]
-            taggings = pos_tag(token_texts)
-            for token, tag in zip(token_entries, taggings):
-                token.pos = tag[1]
+        token_entries = list(input_pack.get(entry_type=Token,
+                                            component=self.token_component))
+        token_texts = [token.text for token in token_entries]
+        taggings = pos_tag(token_texts)
+        for token, tag in zip(token_entries, taggings):
+            token.pos = tag[1]
 
 
 class NLTKLemmatizer(PackProcessor):
@@ -81,16 +73,14 @@ class NLTKLemmatizer(PackProcessor):
         self.lemmatizer = WordNetLemmatizer()
 
     def _process(self, input_pack: DataPack):
-        for sentence in input_pack.get(Sentence):
-            token_entries = list(input_pack.get(entry_type=Token,
-                                                range_annotation=sentence,
-                                                component=self.token_component))
-            token_texts = [token.text for token in token_entries]
-            token_pos = [penn2morphy(token.pos) for token in token_entries]
-            lemmas = [self.lemmatizer.lemmatize(token_texts[i], token_pos[i])
-                      for i in range(len(token_texts))]
-            for token, lemma in zip(token_entries, lemmas):
-                token.lemma = lemma
+        token_entries = list(input_pack.get(entry_type=Token,
+                                            component=self.token_component))
+        token_texts = [token.text for token in token_entries]
+        token_pos = [penn2morphy(token.pos) for token in token_entries]
+        lemmas = [self.lemmatizer.lemmatize(token_texts[i], token_pos[i])
+                  for i in range(len(token_texts))]
+        for token, lemma in zip(token_entries, lemmas):
+            token.lemma = lemma
 
 
 def penn2morphy(penntag: str) -> str:
@@ -110,10 +100,10 @@ class NLTKChunker(PackProcessor):
     def __init__(self):
         super().__init__()
         self.chunker = None
-        self.token_component = None
 
     # pylint: disable=unused-argument
     def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
         self.chunker = RegexpParser(configs.pattern)
 
     @classmethod
@@ -123,14 +113,18 @@ class NLTKChunker(PackProcessor):
         config = super().default_configs()
         config.update({
             'pattern': 'NP: {<DT>?<JJ>*<NN>}',
+            'token_component': None,
+            'sentence_component': None
         })
         return config
 
     def _process(self, input_pack: DataPack):
-        for sentence in input_pack.get(Sentence):
-            token_entries = list(input_pack.get(entry_type=Token,
-                                                range_annotation=sentence,
-                                                component=self.token_component))
+        for sentence in input_pack.get(
+                Sentence, component=self.configs.sentence_component):
+            token_entries = list(input_pack.get(
+                entry_type=Token, range_annotation=sentence,
+                component=self.configs.token_component))
+
             tokens = [(token.text, token.pos) for token in token_entries]
             cs = self.chunker.parse(tokens)
 
@@ -143,7 +137,6 @@ class NLTKChunker(PackProcessor):
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     phrase = Phrase(input_pack, begin_pos, end_pos)
                     phrase.phrase_type = chunk.label()
-                    input_pack.add_or_get_entry(phrase)
 
                     index += len(chunk)
                 else:
@@ -156,17 +149,13 @@ class NLTKSentenceSegmenter(PackProcessor):
     r"""A wrapper of NLTK sentence tokenizer.
     """
 
+    def __init__(self):
+        super().__init__()
+        self.sent_splitter = PunktSentenceTokenizer()
+
     def _process(self, input_pack: DataPack):
-        text = input_pack.text
-        end_pos = 0
-        paragraphs = [p for p in text.split('\n') if p]
-        for paragraph in paragraphs:
-            sentences = sent_tokenize(paragraph)
-            for sentence_text in sentences:
-                begin_pos = text.find(sentence_text, end_pos)
-                end_pos = begin_pos + len(sentence_text)
-                sentence_entry = Sentence(input_pack, begin_pos, end_pos)
-                input_pack.add_or_get_entry(sentence_entry)
+        for begin, end in self.sent_splitter.span_tokenize(input_pack.text):
+            Sentence(input_pack, begin, end)
 
 
 class NLTKNER(PackProcessor):
@@ -194,7 +183,6 @@ class NLTKNER(PackProcessor):
                     end_pos = token_entries[index + len(chunk) - 1].span.end
                     entity = EntityMention(input_pack, begin_pos, end_pos)
                     entity.ner_type = chunk.label()
-                    input_pack.add_or_get_entry(entity)
                     index += len(chunk)
                 else:
                     # For example:

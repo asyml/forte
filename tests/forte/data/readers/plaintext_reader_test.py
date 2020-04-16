@@ -22,6 +22,7 @@ from ddt import ddt, data
 
 from forte.data.span import Span
 from forte.data.readers import PlainTextReader
+from forte.pack_manager import PackManager
 
 
 @ddt
@@ -41,7 +42,9 @@ class PlainTextReaderTest(unittest.TestCase):
 
     def test_reader_no_replace_test(self):
         # Read with no replacements
-        pack = list(PlainTextReader().parse_pack(self.file_path))[0]
+        reader = PlainTextReader()
+        PackManager().set_input_source(reader.component_name)
+        pack = list(reader.parse_pack(self.file_path))[0]
         self.assertEqual(pack.text, self.orig_text)
 
     @data(
@@ -97,6 +100,7 @@ class PlainTextReaderTest(unittest.TestCase):
                             '<title>The New Shiny Title Ends </title>')
         input_span, expected_span, mode = value
         reader = PlainTextReader()
+        PackManager().set_input_source(reader.component_name)
         reader.text_replace_operation = lambda _: span_ops
         pack = list(reader.parse_pack(self.file_path))[0]
         self.assertEqual(pack.text, output)

@@ -48,14 +48,11 @@ def add_struct(pack: DataPack, struct_statements: List):
             struct_ = get_resource_fragment(struct_type)
 
             if struct_ == 'Section':
-                section = WikiSection(pack, begin, end)
-                pack.add_entry(section)
+                WikiSection(pack, begin, end)
             elif struct_ == 'Paragraph':
-                para = WikiParagraph(pack, begin, end)
-                pack.add_entry(para)
+                WikiParagraph(pack, begin, end)
             elif struct_ == 'Title':
-                title = WikiTitle(pack, begin, end)
-                pack.add_entry(title)
+                WikiTitle(pack, begin, end)
             else:
                 logging.warning("Unknown struct type: %s", struct_type)
 
@@ -82,7 +79,6 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
                 if target_page_name in redirects:
                     target_page_name = redirects[target_page_name]
                 anchor.target_page_name = target_page_name
-        pack.add_entry(anchor)
 
 
 def add_info_boxes(pack: DataPack, info_box_statements: List):
@@ -92,7 +88,6 @@ def add_info_boxes(pack: DataPack, info_box_statements: List):
         info_box = WikiInfoBoxMapped(pack)
         info_box.key = slot_name
         info_box.value = slot_value
-        pack.add_entry(info_box)
 
 
 class DBpediaWikiReader(PackReader):
@@ -150,7 +145,6 @@ class DBpediaWikiReader(PackReader):
 
         pack.set_text(full_text)
         page = WikiPage(pack, 0, len(full_text))
-        pack.add_entry(page)
         page.page_id = str_data['oldid']
         page.page_name = doc_name
 

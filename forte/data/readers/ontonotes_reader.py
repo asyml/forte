@@ -185,7 +185,6 @@ class OntonotesReader(PackReader):
                         token.pos = fields.pos_tag
                     if fields.word_sense is not None:
                         token.sense = fields.word_sense
-                    pack.add_entry(token)
 
                     # add entity mentions
                     current_entity_mention = self._process_entity_annotations(
@@ -206,7 +205,6 @@ class OntonotesReader(PackReader):
 
                         if fields.framenet_id is not None:
                             pred_mention.framenet_id = fields.framenet_id
-                        pack.add_entry(pred_mention)
 
                         if word_is_verbal_predicate:
                             verbal_predicates.append(pred_mention)
@@ -249,7 +247,6 @@ class OntonotesReader(PackReader):
                         for arg in pred_arg:
                             link = PredicateLink(pack, predicate, arg[0])
                             link.arg_type = arg[1]
-                            pack.add_entry(link)
 
                     verbal_predicates = []
                     current_pred_arg = []
@@ -262,7 +259,6 @@ class OntonotesReader(PackReader):
                         sent.speaker = speaker
                     if part_id is not None:
                         sent.part_id = int(part_id)
-                    pack.add_entry(sent)
 
                     sentence_begin = offset
 
@@ -272,16 +268,13 @@ class OntonotesReader(PackReader):
             for _, mention_list in groups.items():
                 group = CoreferenceGroup(pack)
                 group.add_members(mention_list)
-                pack.add_entry(group)
 
             text = " ".join(words)
-            document = Document(pack, 0, len(text))
-            pack.add_entry(document)
-
-            if document_id is not None:
-                pack.set_meta(doc_id=document_id)
             pack.set_text(text, replace_func=self.text_replace_operation)
 
+            _ = Document(pack, 0, len(text))
+            if document_id is not None:
+                pack.doc_id = document_id
         yield pack
 
     def _process_entity_annotations(
@@ -307,7 +300,6 @@ class OntonotesReader(PackReader):
             # Exiting a span, add and then reset the current span.
             entity = EntityMention(pack, current_entity_mention[0], word_end)
             entity.ner_type = current_entity_mention[1]
-            pack.add_entry(entity)
 
             current_entity_mention = None
 
@@ -341,7 +333,6 @@ class OntonotesReader(PackReader):
 
                 if arg_type != "V":
                     pred_arg = PredicateArgument(pack, arg_begin, word_end)
-                    pred_arg = pack.add_entry(pred_arg)
 
                     verbal_pred_args[label_index].append((pred_arg, arg_type))
                 current_pred_arg[label_index] = None
@@ -366,8 +357,6 @@ class OntonotesReader(PackReader):
                     group_id = int(segment[1:-1])
 
                     coref_mention = EntityMention(pack, word_begin, word_end)
-                    coref_mention = pack.add_entry(coref_mention)
-
                     groups[group_id].append(coref_mention)
                 else:
                     # The span is starting, so we record the index of the word.
@@ -378,6 +367,4 @@ class OntonotesReader(PackReader):
                 group_id = int(segment[:-1])
                 start = coref_stacks[group_id].pop()
                 coref_mention = EntityMention(pack, start, word_end)
-                coref_mention = pack.add_or_get_entry(coref_mention)
-
                 groups[group_id].append(coref_mention)

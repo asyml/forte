@@ -135,6 +135,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """ A destructor for the MultiPack. During destruction, the Multi Pack
         will inform the PackManager that it won't need the DataPack anymore.
         """
+        super().__del__()
         for pack_id in self._pack_ref:
             self._pack_manager.dereference_pack(pack_id)
 
@@ -149,7 +150,43 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             "MultiPack objects do not contain text, please refer to a "
             "specific data pack to get text.")
 
-    def add_pack(self, pack: DataPack, pack_name: Optional[str] = None):
+    def add_pack(self, pack_name: Optional[str] = None) -> DataPack:
+        """
+        Create a data pack and add it to this multi pack. If pack_name is not
+        None, it will be used to index the data pack. Otherwise, a default name
+        based on the pack id will be created for this data pack. The created
+        data pack will be returned.
+
+        Args:
+            pack_name (str): The pack name used for the new created pack
+
+        Returns: The newly created data pack.
+
+        """
+        if pack_name in self._name_index:
+            raise ValueError(
+                f"The name {pack_name} has already been taken.")
+        if pack_name is not None and not isinstance(pack_name, str):
+            raise ValueError(
+                f"key of the pack should be str, but got "
+                f"" f"{type(pack_name)}"
+            )
+
+        pack: DataPack = DataPack()
+        self.add_pack_(pack, pack_name)
+        return pack
+
+    def add_pack_(self, pack: DataPack, pack_name: Optional[str] = None):
+        """
+        Add a existing data pack to the multi pack.
+
+        Args:
+            pack (DataPack): The existing data pack.
+            pack_name (str): The name to used in this multi pack.
+
+        Returns:
+
+        """
         if pack_name in self._name_index:
             raise ValueError(
                 f"The name {pack_name} has already been taken.")
@@ -236,7 +273,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def update_pack(self, named_packs: Dict[str, DataPack]):
         for pack_name, pack in named_packs.items():
-            self.add_pack(pack, pack_name)
+            self.add_pack_(pack, pack_name)
 
     def iter_packs(self) -> Iterator[Tuple[str, DataPack]]:
         for pack_name, pack in zip(self._pack_names, self.packs):
@@ -262,6 +299,18 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def iter_groups(self):
         yield from self.groups
+
+    def add_all_remaining_entries(self):
+        """
+        Calling this function will add the entries that are not added to the
+        pack manually.
+
+        Returns:
+
+        """
+        super().add_all_remaining_entries()
+        for pack in self.packs:
+            pack.add_all_remaining_entries()
 
     def get_single_pack_data(
             self,
@@ -386,25 +435,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                     entry, MultiPackGroup):
                 self.index.update_group_index([entry])
 
+            self._pending_entries.pop(entry.tid)
             return entry
         else:
             return target[target.index(entry)]  # type: ignore
-
-    def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        r"""Try to add an :class:`Entry` object to the :class:`Multipack`
-        object. If a same entry already exists, will return the existing entry
-        instead of adding the new one. Note that we regard two entries to be
-        same if their :meth:`eq` have the same return value, and users could
-        override :meth:`eq` in their custom entry classes.
-
-        Args:
-            entry (Entry): An :class:`Entry` object to be added to the datapack.
-
-        Returns:
-            If a same entry already exists, returns the existing
-            entry. Otherwise, return the (input) entry just added.
-        """
-        return self.__add_entry_with_check(entry, False)
 
     def add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.

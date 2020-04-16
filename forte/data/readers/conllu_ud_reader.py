@@ -128,8 +128,6 @@ class ConllUDReader(PackReader):
                 token.ud_features = token_comps['ud_features']
                 token.ud_misc = token_comps['ud_misc']
 
-                data_pack.add_or_get_entry(token)
-
                 sent_tokens[str(token_comps["id"])] = (token_comps, token)
 
                 sent_text += word + " "
@@ -154,7 +152,6 @@ class ConllUDReader(PackReader):
                         head = sent_tokens[token_comps["head"]][1]
                         dependency = Dependency(data_pack, head, token)
                         dependency.dep_label = label
-                        data_pack.add_or_get_entry(dependency)
 
                     # add enhanced dependencies
                     for dep in token_comps["enhanced_dependency_relations"]:
@@ -164,19 +161,18 @@ class ConllUDReader(PackReader):
                             enhanced_dependency = \
                                 EnhancedDependency(data_pack, head, token)
                             enhanced_dependency.dep_label = label
-                            data_pack.add_or_get_entry(enhanced_dependency)
 
                 # add sentence
-                sent = Sentence(data_pack, doc_sent_begin, doc_offset - 1)
-                data_pack.add_or_get_entry(sent)
+                Sentence(data_pack, doc_sent_begin, doc_offset - 1)
 
                 doc_sent_begin = doc_offset
                 doc_num_sent += 1
 
+        doc_text = doc_text.strip()
+        data_pack.set_text(doc_text)
+
         # add doc to data_pack
-        document = Document(data_pack, 0, len(doc_text))
-        data_pack.add_or_get_entry(document)
+        Document(data_pack, 0, len(doc_text))
         data_pack.meta.doc_id = doc_id
-        data_pack.set_text(doc_text.strip())
 
         yield data_pack

@@ -15,9 +15,11 @@
 import copy
 import logging
 from abc import abstractmethod
-from typing import List, Optional, Set, Type, TypeVar, Union, Iterator
+from typing import List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, \
+    Tuple
 
 import jsonpickle
+from forte.common import ProcessExecutionException
 
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
@@ -93,15 +95,21 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         self.__control_component: Optional[str] = None
 
+        self._pending_entries: Dict[int, Tuple[Entry, str]] = {}
+
     def __getstate__(self):
         state = super().__getstate__()
         state.pop('index')
         state.pop('_pack_manager')
+        state.pop('_pending_entries')
+        state.pop('_BasePack__control_component')
         return state
 
     def __setstate__(self, state):
         super().__setstate__(state)
         self.__dict__['_pack_manager'] = PackManager()
+        self.__dict__['_pending_entries'] = {}
+        self.__control_component: Optional[str] = None
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
@@ -112,6 +120,29 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:
         raise NotImplementedError
+
+    def __del__(self):
+        if len(self._pending_entries) > 0:
+            raise ProcessExecutionException(
+                f"There are {len(self._pending_entries)} "
+                f"entries not added to the index correctly.")
+
+    @property
+    def doc_id(self):
+        return self.meta.doc_id
+
+    @doc_id.setter
+    def doc_id(self, doc_id: str):
+        """
+        Update the doc id of this pack.
+
+        Args:
+            doc_id: The new doc id.
+
+        Returns:
+
+        """
+        self.meta.doc_id = doc_id
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):
@@ -153,27 +184,39 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         return self.add_entry(entry).tid
 
-    @abstractmethod
-    def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
-        :class:`BasePack` object.
+# @abstractmethod
+# def add_or_get_entry(self, entry: EntryType) -> EntryType:
+#     r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
+#     :class:`BasePack` object.
+#
+#     If a same entry already exists, will return the existing entry
+#     instead of adding the new one. Note that we regard two entries as the
+#     same if their :meth:`~forte.data.ontology.top.Entry.eq` have
+#     the same return value, and users could
+#     override :meth:`~forte.data.ontology.top.Entry.eq` in their
+#     custom entry classes.
+#
+#     Args:
+#         entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+#             object to be added to the pack.
+#
+#     Returns:
+#         If a same entry already exists, returns the existing
+#         entry. Otherwise, return the (input) entry just added.
+#     """
+#     raise NotImplementedError
 
-        If a same entry already exists, will return the existing entry
-        instead of adding the new one. Note that we regard two entries as the
-        same if their :meth:`~forte.data.ontology.top.Entry.eq` have
-        the same return value, and users could
-        override :meth:`~forte.data.ontology.top.Entry.eq` in their
-        custom entry classes.
-
-        Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-                object to be added to the pack.
+    def add_all_remaining_entries(self):
+        """
+        Calling this function will add the entries that are not added to the
+        pack manually.
 
         Returns:
-            If a same entry already exists, returns the existing
-            entry. Otherwise, return the (input) entry just added.
+
         """
-        raise NotImplementedError
+        for entry, _ in list(self._pending_entries.values()):
+            self.add_entry(entry)
+        self._pending_entries.clear()
 
     def serialize(self) -> str:
         r"""Serializes a pack to a string."""
@@ -183,7 +226,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def deserialize(string: str):
         r"""Deserialize a pack from a string.
         """
-        return jsonpickle.decode(string)
+        pack = jsonpickle.decode(string)
+        return pack
 
     def view(self):
         return copy.deepcopy(self)
@@ -200,13 +244,14 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.__control_component = component
 
-    def add_entry_creation_record(self, entry_id: int):
+    def record_new_entry(self, entry: EntryType):
         """
-        Record who creates the entry, will be called
-        in :class:`~forte.data.ontology.core.Entry`
+        Call this when adding a new entry, will be called
+        in :class:`~forte.data.ontology.core.Entry` when
+        its `__init__` function is called.
 
         Args:
-            entry_id: The id of the entry.
+            entry: The entry to be added.
 
         Returns:
 
@@ -216,10 +261,26 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if c is None:
             c = self._pack_manager.get_input_source()
 
+        # Record that this entry hasn't been added
+        # to the index yet.
+        self._pending_entries[entry.tid] = entry, c
+
         try:
-            self.creation_records[c].add(entry_id)
+            self.creation_records[c].add(entry.tid)
         except KeyError:
-            self.creation_records[c] = {entry_id}
+            self.creation_records[c] = {entry.tid}
+
+    def regret_record(self, entry: EntryType):
+        """
+
+        Args:
+            entry:
+
+        Returns:
+
+        """
+        entry, c = self._pending_entries.pop(entry.tid)
+        self.creation_records[c].remove(entry.tid)
 
     def add_field_record(self, entry_id: int, field_name: str):
         """

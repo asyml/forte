@@ -132,18 +132,15 @@ class SRLPredictor(FixedSizeBatchProcessor):
         for predictions in batch_predictions:
             for pred_span, arg_result in predictions:
 
-                pred = data_pack.add_entry(PredicateMention(
-                    data_pack, pred_span.begin, pred_span.end)
-                )
+                pred = PredicateMention(data_pack, pred_span.begin,
+                                        pred_span.end)
 
                 for arg_span, label in arg_result:
-                    arg = data_pack.add_or_get_entry(PredicateArgument(
+                    arg = PredicateArgument(
                         data_pack, arg_span.begin, arg_span.end
-                    )
                     )
                     link = PredicateLink(data_pack, pred, arg)
                     link.arg_type = label
-                    data_pack.add_or_get_entry(link)
 
     @classmethod
     def default_configs(cls):
@@ -151,7 +148,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
         This defines a basic config structure
         :return:
         """
-        configs = super(cls).default_configs()
+        configs = super().default_configs()
         configs.update({
             'storage_path': None,
             "batcher": {

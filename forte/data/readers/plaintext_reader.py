@@ -57,8 +57,7 @@ class PlainTextReader(PackReader):
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
-        document = Document(pack, 0, len(pack.text))
-        pack.add_or_get_entry(document)
+        Document(pack, 0, len(pack.text))
 
         pack.meta.doc_id = file_path
         yield pack

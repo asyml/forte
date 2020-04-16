@@ -26,50 +26,51 @@ from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
 from forte.processors.nltk_processors import (
     NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
-
 from ft.onto.base_ontology import PredicateLink, Sentence
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def main():
-    config = yaml.safe_load(open("config.yml", "r"))
-    config = Config(config, default_hparams=None)
-
+def setup(config: Config) -> Pipeline:
     resource = Resources()
     query_pipeline = Pipeline[MultiPack](resource=resource)
     query_pipeline.set_reader(
         reader=MultiPackTerminalReader(), config=config.reader)
-
     query_pipeline.add(
         component=MicrosoftBingTranslator(), config=config.translator)
     query_pipeline.add(
         component=BertBasedQueryCreator(), config=config.query_creator)
     query_pipeline.add(
-        component=SearchProcessor(), config=config.indexer)
+        component=SearchProcessor(), config=config.searcher)
+
+    top_response_pack_name = config.indexer.response_pack_name + '_0'
+
     query_pipeline.add(
         component=NLTKSentenceSegmenter(),
-        selector=NameMatchSelector(
-            select_name=config.indexer.response_pack_name[0]))
+        selector=NameMatchSelector(select_name=top_response_pack_name))
     query_pipeline.add(
         component=NLTKWordTokenizer(),
-        selector=NameMatchSelector(
-            select_name=config.indexer.response_pack_name[0]))
+        selector=NameMatchSelector(select_name=top_response_pack_name))
     query_pipeline.add(
         component=NLTKPOSTagger(),
-        selector=NameMatchSelector(
-            select_name=config.indexer.response_pack_name[0]))
+        selector=NameMatchSelector(select_name=top_response_pack_name))
     query_pipeline.add(
         component=SRLPredictor(), config=config.SRL,
-        selector=NameMatchSelector(
-            select_name=config.indexer.response_pack_name[0]))
+        selector=NameMatchSelector(select_name=top_response_pack_name))
     query_pipeline.add(
         component=MicrosoftBingTranslator(), config=config.back_translator)
 
     query_pipeline.initialize()
 
-    for m_pack in query_pipeline.process_dataset():
+    return query_pipeline
 
+
+def main(config: Config):
+    query_pipeline = setup(config)
+    resource = query_pipeline.resource
+
+    m_pack: MultiPack
+    for m_pack in query_pipeline.process_dataset():
         # update resource to be used in the next conversation
         query_pack = m_pack.get_pack(config.translator.in_pack_name)
         if resource.get("user_utterance"):
@@ -87,7 +88,9 @@ def main():
         english_pack = m_pack.get_pack("pack")
         print(colored("English Translation of the query: ", "green"),
               english_pack.text, "\n")
-        pack = m_pack.get_pack(config.indexer.response_pack_name[0])
+
+        # Just take the first pack.
+        pack = m_pack.get_pack(config.indexer.response_pack_name_prefix + '_0')
         print(colored("Retrieved Document", "green"), pack.text, "\n")
         print(colored("German Translation", "green"),
               m_pack.get_pack("response").text, "\n")
@@ -99,7 +102,8 @@ def main():
             for link in pack.get(PredicateLink, sentence):
                 parent = link.get_parent()
                 child = link.get_child()
-                print(f"  - \"{child.text}\" is role {link.arg_type} of "
+                print(f"  - \"{child.text}\" is role "  # type: ignore
+                      f"{link.arg_type} of "
                       f"predicate \"{parent.text}\"")
             print()
 
@@ -107,4 +111,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    all_config = Config(yaml.safe_load(open("config.yml", "r")), None)
+    main(all_config)

@@ -64,12 +64,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         """
         raise NotImplementedError
 
-    def flush(self):
-        r"""Indicate that there will be no more packs to be passed in, handle
-        what's remaining in the buffer.
-        """
-        pass
-
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         r"""Returns a `dict` of configurations of the processor with default

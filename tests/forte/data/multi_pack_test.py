@@ -7,6 +7,7 @@ import unittest
 from forte.data.multi_pack import MultiPack, MultiPackLink
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
+from forte.pack_manager import PackManager
 from ft.onto.base_ontology import (
     Token)
 
@@ -27,24 +28,27 @@ def _space_token(pack: DataPack):
 class DataPackTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.data_pack1 = DataPack(doc_id="some pack")
-        self.data_pack1.set_text("This pack contains some sample data.")
-        self.data_pack2 = DataPack(doc_id="another pack")
-        self.data_pack2.set_text("This pack contains some other sample data.")
-
+        # Note: input source is created automatically by the system, but we
+        #  can also set it manually at test cases.
+        PackManager().set_input_source('test case')
         self.multi_pack = MultiPack()
-        self.multi_pack.add_pack(self.data_pack1, pack_name="left pack")
-        self.multi_pack.add_pack(self.data_pack2, pack_name="right pack")
+        self.data_pack1 = self.multi_pack.add_pack(pack_name="left pack")
+        self.data_pack2 = self.multi_pack.add_pack(pack_name="right pack")
+
+        self.data_pack1.doc_id = "some pack"
+        self.data_pack1.set_text("This pack contains some sample data.")
+
+        self.data_pack2.doc_id = "another pack"
+        self.data_pack2.set_text("This pack contains some other sample data.")
 
     def test_serialization(self):
         ser_str: str = self.multi_pack.serialize()
         print(ser_str)
 
     def test_add_pack(self):
-        data_pack3 = DataPack(doc_id="the third pack")
+        data_pack3 = self.multi_pack.add_pack(pack_name="new pack")
+        data_pack3.doc_id = "the third pack"
         data_pack3.set_text("Test to see if we can add new packs..")
-
-        self.multi_pack.add_pack(data_pack3, pack_name="new pack")
 
         self.assertEqual(len(self.multi_pack.packs), 3)
         self.assertEqual(self.multi_pack.pack_names,

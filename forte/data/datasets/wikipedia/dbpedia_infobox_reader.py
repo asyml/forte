@@ -46,7 +46,6 @@ def add_property(pack: DataPack, statements: List):
         info_box = WikiInfoBoxProperty(pack)
         info_box.key = slot_name
         info_box.value = slot_value
-        pack.add_entry(info_box)
 
 
 def add_info_boxes(pack: DataPack, info_box_statements: List):
@@ -54,7 +53,6 @@ def add_info_boxes(pack: DataPack, info_box_statements: List):
         info_box = WikiInfoBoxMapped(pack)
         info_box.key = v.toPython()
         info_box.value = get_resource_name(o)
-        pack.add_entry(info_box)
 
 
 def read_index(pack_index_path: str) -> Dict[str, str]:

@@ -74,9 +74,9 @@ class MSMarcoPassageReader(PackReader):
         doc_id, doc_text = doc_info
         data_pack.meta.doc_id = doc_id
 
-        # add documents
-        data_pack.add_or_get_entry(Document(data_pack, 0, len(doc_text)))
         data_pack.set_text(doc_text)
+        # add documents
+        Document(data_pack, 0, len(doc_text))
 
         yield data_pack
 

@@ -68,7 +68,6 @@ endendtag = re.compile('>')
 # </ and the tag name, so maybe this should be fixed
 endtagfind = re.compile(r'</\s*([a-zA-Z][-.a-zA-Z0-9:_]*)\s*>')
 
-
 __all__ = [
     "HTMLReader",
 ]
@@ -77,6 +76,7 @@ __all__ = [
 class ForteHTMLParser(HTMLParser):
     r"""Parser that stores spans that HTMLReader can use.
     """
+
     def __init__(self):
         super().__init__()
         self.spans = []
@@ -220,6 +220,7 @@ class HTMLReader(PackReader):
     It takes in list of html strings, cleans the HTML tags and stores the
     cleaned text in pack.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.init_with_fileloc = False
@@ -244,6 +245,7 @@ class HTMLReader(PackReader):
             elif os.path.isfile(content):
                 def data_yielder(data):
                     yield data
+
                 self.init_with_fileloc = True
                 return data_yielder(content)
             else:  # Treat it as a string
@@ -255,6 +257,7 @@ class HTMLReader(PackReader):
             def data_iterator(data):
                 for html_string in data:
                     yield html_string
+
             return data_iterator(content)
 
         else:
@@ -284,9 +287,10 @@ class HTMLReader(PackReader):
         else:
             text = data_source
 
-        document = Document(pack, 0, len(text))
-        pack.add_or_get_entry(document)
         self.set_text(pack, text)
+        # Note that pack.text can be different from the text passed in, due to
+        # the text_replace_operation
+        Document(pack, 0, len(pack.text))
 
         yield pack
 

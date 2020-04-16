@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # pylint: disable=attribute-defined-outside-init
 import pickle
 from typing import Any, Dict, Tuple
@@ -67,7 +68,8 @@ class BertBasedQueryCreator(QueryProcessor[MultiPack]):
         config = super().default_configs()
         config.update({
             "model": {
-                "name": "bert-base-uncased"
+                'path': None,
+                "name": "bert-base-uncased",
             },
             "tokenizer": {
                 "name": "bert-base-uncased"
