@@ -315,26 +315,26 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         return self.__add_entry_with_check(entry, True)
 
-    def add_or_get_entry(self, entry: EntryType) -> EntryType:
-        r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
-        :class:`DataPack` object.
-
-        If the same entry already exists, will return the existing entry
-        instead of adding the new one. Note that we regard two entries as the
-        same if their :meth:`~forte.data.ontology.top.Entry.eq` have
-        the same return value, and users could
-        override :meth:`~forte.data.ontology.top.Entry.eq` in their
-        custom entry classes.
-
-        Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-                object to be added to the pack.
-
-        Returns:
-            If a same entry already exists, returns the existing
-            entry. Otherwise, return the (input) entry just added.
-        """
-        return self.__add_entry_with_check(entry, False)
+# def add_or_get_entry(self, entry: EntryType) -> EntryType:
+#     r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to the
+#     :class:`DataPack` object.
+#
+#     If the same entry already exists, will return the existing entry
+#     instead of adding the new one. Note that we regard two entries as the
+#     same if their :meth:`~forte.data.ontology.top.Entry.eq` have
+#     the same return value, and users could
+#     override :meth:`~forte.data.ontology.top.Entry.eq` in their
+#     custom entry classes.
+#
+#     Args:
+#         entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+#             object to be added to the pack.
+#
+#     Returns:
+#         If a same entry already exists, returns the existing
+#         entry. Otherwise, return the (input) entry just added.
+#     """
+#     return self.__add_entry_with_check(entry, False)
 
     def __add_entry_with_check(self, entry: EntryType,
                                allow_duplicate: bool = True) -> EntryType:
