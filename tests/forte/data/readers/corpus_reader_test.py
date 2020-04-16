@@ -45,7 +45,7 @@ class MSMarcoPassageReaderTest(unittest.TestCase):
         actual_content: Dict[str, str] = {}
         for data_pack in self.pipeline.process_dataset(self.data_dir):
             self.assertIsInstance(data_pack, DataPack)
-            doc_entries = list(data_pack.get_entries(Document))
+            doc_entries = list(data_pack.get(Document))
             self.assertTrue(len(doc_entries) == 1)
             doc_entry: Document = doc_entries[0]
             self.assertIsInstance(doc_entry, Document)

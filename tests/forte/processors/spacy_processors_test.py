@@ -91,7 +91,7 @@ class TestSpacyProcessor(unittest.TestCase):
                      "NLP has never been made this easy before."]
         document = ' '.join(sentences)
         pack: DataPack = spacy.process(document)
-        tokens: List[Token] = list(pack.get_entries(Token))  # type: ignore
+        tokens: List[Token] = list(pack.get(Token))  # type: ignore
 
         raw_results = self.nlp(document)
         sentences = raw_results.sents
@@ -130,8 +130,7 @@ class TestSpacyProcessor(unittest.TestCase):
             self.assertListEqual(tokens, [])
 
         if "ner" in value:
-            pack_ents: List[EntityMention] = list(
-                pack.get_entries(EntityMention))
+            pack_ents: List[EntityMention] = list(pack.get(EntityMention))
             entities_text = [x.text for x in pack_ents]
             entities_type = [x.ner_type for x in pack_ents]
 

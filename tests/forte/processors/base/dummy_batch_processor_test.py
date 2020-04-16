@@ -40,7 +40,7 @@ class DummyProcessorTest(unittest.TestCase):
 
     def test_processor(self):
         pack = self.nlp.process(self.data_path)
-        relations = list(pack.get_entries(RelationLink))
+        relations = list(pack.get(RelationLink))
         assert (len(relations) > 0)
         for relation in relations:
             self.assertEqual(relation.get_field("rel_type"), "dummy_relation")

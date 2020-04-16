@@ -33,7 +33,7 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
 
     def consume_next(self, pred_pack: MultiPack, _):
         query_pack: DataPack = pred_pack.get_pack(self.configs.pack_name)
-        query = list(query_pack.get_entries(Query))[0]
+        query = list(query_pack.get(Query))[0]
         rank = 1
         for pid, _ in query.results.items():
             doc_id: Optional[str] = query_pack.meta.doc_id

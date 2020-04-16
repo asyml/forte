@@ -69,7 +69,7 @@ class ProdigyReaderTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.fp.name):
             # get documents from pack
-            for doc in pack.get_entries(Document):
+            for doc in pack.get(Document):
                 doc_exists = True
                 self.token_check(doc, pack)
                 self.label_check(doc, pack)
@@ -79,15 +79,13 @@ class ProdigyReaderTest(unittest.TestCase):
     def token_check(self, doc, pack):
         doc_text = doc.text
         # Compare document text with tokens
-        tokens = [token.text for token in
-                  pack.get_entries(Token, doc)]
+        tokens = [token.text for token in pack.get(Token, doc)]
         self.assertEqual(tokens[2], "dolor")
         self.assertEqual(doc_text.replace(" ", ""), "".join(tokens))
 
     def label_check(self, doc, pack):
         # make sure that the labels are read in correctly
-        labels = [label.ner_type for label in
-                  pack.get_entries(EntityMention, doc)]
+        labels = [label.ner_type for label in pack.get(EntityMention, doc)]
         self.assertEqual(labels, ["sample_latin", "sample_latin"])
 
 

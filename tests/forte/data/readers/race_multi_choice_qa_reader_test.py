@@ -48,13 +48,13 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
             with open(file_path, "r", encoding="utf8", errors='ignore') as file:
                 expected = json.load(file)
 
-            articles = list(pack.get_entries(RaceDocument))
+            articles = list(pack.get(RaceDocument))
             self.assertEqual(len(articles), 1)
             expected_article = expected['article']
             self.assertEqual(articles[0].text, expected_article)
             expected_text += expected_article
 
-            for qid, question in enumerate(pack.get_entries(Question)):
+            for qid, question in enumerate(pack.get(Question)):
                 expected_question = expected['questions'][qid]
                 self.assertEqual(question.text, expected_question)
                 expected_answers = expected['answers'][qid]

@@ -80,7 +80,7 @@ class BertRerankingProcessor(MultiPackProcessor):
         query_pack_name = self.config.query_pack_name
 
         query_pack = input_pack.get_pack(self.config.query_pack_name)
-        query_entry = list(query_pack.get_entries(Query))[0]
+        query_entry = list(query_pack.get(Query))[0]
         query_text = query_pack.text
 
         packs = {}

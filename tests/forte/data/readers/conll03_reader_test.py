@@ -49,12 +49,11 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
-            for sentence in pack.get_entries(Sentence):
+            for sentence in pack.get(Sentence):
                 doc_exists = True
                 sent_text = sentence.text
                 # second method to get entry in a sentence
-                tokens = [token.text for token in
-                          pack.get_entries(Token, sentence)]
+                tokens = [token.text for token in pack.get(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
 

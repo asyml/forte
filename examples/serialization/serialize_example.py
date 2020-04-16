@@ -43,7 +43,7 @@ class PackCopier(MultiPackProcessor):
             copy_pack.doc_id = 'copy'
 
         ent: EntityMention
-        for ent in from_pack.get_entries(EntityMention):
+        for ent in from_pack.get(EntityMention):
             EntityMention(copy_pack, ent.begin, ent.end)
 
     @classmethod
@@ -63,8 +63,8 @@ class ExampleCoreferencer(MultiPackProcessor):
         pack_i = input_pack.get_pack('default')
         pack_j = input_pack.get_pack('duplicate')
 
-        for ent_i, ent_j in zip(pack_i.get_entries(EntityMention),
-                                pack_j.get_entries(EntityMention)):
+        for ent_i, ent_j in zip(pack_i.get(EntityMention),
+                                pack_j.get(EntityMention)):
             link = CrossDocEntityRelation(input_pack, ent_i, ent_j)
             link.rel_type = 'coreference'
             input_pack.add_entry(link)
