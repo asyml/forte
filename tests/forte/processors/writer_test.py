@@ -24,6 +24,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import OntonotesReader, \
     RecursiveDirectoryDeserializeReader
 from forte.pipeline import Pipeline
+from forte.processors.annotation_remover import AnnotationRemover
 from forte.processors.nltk_processors import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
 from forte.processors.writers import DocIdJsonPackWriter
@@ -31,9 +32,18 @@ from ft.onto.base_ontology import Token
 
 
 class TestLowerCaserProcessor(unittest.TestCase):
-    def test_lowercaser_processor(self):
+    def test_serialize_deserialize_processor(self):
         pipe_serialize = Pipeline[DataPack]()
         pipe_serialize.set_reader(OntonotesReader())
+        pipe_serialize.add(
+            AnnotationRemover(),
+            # Remove tokens and sentences form OntonotesReader.
+            {'removal_types':
+                [
+                    'ft.onto.base_ontology.Token',
+                    'ft.onto.base_ontology.Sentence',
+                ]}
+        )
         pipe_serialize.add(NLTKSentenceSegmenter())
         pipe_serialize.add(NLTKWordTokenizer())
         pipe_serialize.add(NLTKPOSTagger())
@@ -63,12 +73,11 @@ class TestLowerCaserProcessor(unittest.TestCase):
         pack: DataPack
         for pack in pipe_deserialize.process_dataset(output_path):
             tokens: List[Token] = list(pack.get_entries(Token))
-
             token_counts[pack.meta.doc_id] = len(tokens)
 
         expected_count = {'bn/abc/00/abc_0039': 72, 'bn/abc/00/abc_0019': 370,
                           'bn/abc/00/abc_0059': 39, 'bn/abc/00/abc_0009': 424,
-                          'bn/abc/00/abc_0029': 487, 'bn/abc/00/abc_0069': 430,
+                          'bn/abc/00/abc_0029': 487, 'bn/abc/00/abc_0069': 428,
                           'bn/abc/00/abc_0049': 73}
 
         assert token_counts == expected_count

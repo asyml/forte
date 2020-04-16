@@ -78,8 +78,6 @@ class CoNLL03Reader(PackReader):
                 token.chunk = chunk_id
                 token.ner = ner_tag
 
-                pack.add_or_get_entry(token)
-
                 text += word + " "
                 offset = word_end + 1
                 has_rows = True
@@ -88,8 +86,7 @@ class CoNLL03Reader(PackReader):
                     # Skip consecutive empty lines.
                     continue
                 # add sentence
-                sent = Sentence(pack, sentence_begin, offset - 1)
-                pack.add_or_get_entry(sent)
+                Sentence(pack, sentence_begin, offset - 1)
 
                 sentence_begin = offset
                 sentence_cnt += 1
@@ -97,14 +94,13 @@ class CoNLL03Reader(PackReader):
 
         if has_rows:
             # Add the last sentence if exists.
-            sent = Sentence(pack, sentence_begin, offset - 1)
+            Sentence(pack, sentence_begin, offset - 1)
             sentence_cnt += 1
-            pack.add_or_get_entry(sent)
-
-        document = Document(pack, 0, len(text))
-        pack.add_or_get_entry(document)
 
         pack.set_text(text, replace_func=self.text_replace_operation)
+
+        Document(pack, 0, len(text))
+
         pack.meta.doc_id = file_path
         doc.close()
 

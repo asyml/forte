@@ -58,9 +58,9 @@ class TestNLTKWordTokenizer(unittest.TestCase):
                      "The goal of this project to help you build NLP "
                      "pipelines.",
                      "NLP has never been made this easy before."]
-        tokens = [["This", "tool", "is", "called", "Forte", "."],
+        tokens = [["This", "tool", "is", "called", "Forte."],
                   ["The", "goal", "of", "this", "project", "to", "help", "you",
-                   "build", "NLP", "pipelines", "."],
+                   "build", "NLP", "pipelines."],
                   ["NLP", "has", "never", "been", "made", "this", "easy",
                    "before", "."]]
         document = ' '.join(sentences)
@@ -86,9 +86,9 @@ class TestNLTKPOSTagger(unittest.TestCase):
                      "The goal of this project to help you build NLP "
                      "pipelines.",
                      "NLP has never been made this easy before."]
-        pos = [["DT", "NN", "VBZ", "VBN", "NNP", "."],
+        pos = [["DT", "NN", "VBZ", "VBN", "NNP"],
                ["DT", "NN", "IN", "DT", "NN", "TO", "VB", "PRP", "VB", "NNP",
-                "NNS", "."],
+                "NN"],
                ["NNP", "VBZ", "RB", "VBN", "VBN", "DT", "JJ", "RB", "."]]
         document = ' '.join(sentences)
         pack = self.nltk.process(document)
@@ -114,9 +114,9 @@ class TestNLTKLemmatizer(unittest.TestCase):
                      "The goal of this project to help you build NLP "
                      "pipelines.",
                      "NLP has never been made this easy before."]
-        tokens = [["This", "tool", "be", "call", "Forte", "."],
+        tokens = [["This", "tool", "be", "call", "Forte."],
                   ["The", "goal", "of", "this", "project", "to", "help", "you",
-                   "build", "NLP", "pipeline", "."],
+                   "build", "NLP", "pipelines."],
                   ["NLP", "have", "never", "be", "make", "this", "easy",
                    "before", "."]]
         document = ' '.join(sentences)
@@ -153,8 +153,8 @@ class TestNLTKChunker(unittest.TestCase):
         entities_type = [x.phrase_type for x in phrase_entries]
 
         self.assertEqual(entities_text, ['This tool', 'The goal',
-                                         'this project'])
-        self.assertEqual(entities_type, ['NP', 'NP', 'NP'])
+                                         'this project', 'pipelines.'])
+        self.assertEqual(entities_type, ['NP', 'NP', 'NP', 'NP'])
 
 
 class TestNLTKNER(unittest.TestCase):
@@ -169,7 +169,7 @@ class TestNLTKNER(unittest.TestCase):
         self.nltk.initialize()
 
     def test_ner(self):
-        sentences = ["This tool is called New   York.",
+        sentences = ["This tool is called New York .",
                      "The goal of this project to help you build NLP "
                      "pipelines.",
                      "NLP has never been made this easy before."]
@@ -181,7 +181,7 @@ class TestNLTKNER(unittest.TestCase):
         entities_text = [x.text for x in entities_entries]
         entities_type = [x.ner_type for x in entities_entries]
 
-        self.assertEqual(entities_text, ['New   York', 'NLP', 'NLP'])
+        self.assertEqual(entities_text, ['New York', 'NLP', 'NLP'])
         self.assertEqual(entities_type, ['GPE', 'ORGANIZATION', 'ORGANIZATION'])
 
 

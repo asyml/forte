@@ -63,31 +63,6 @@ class SinglePackSelector(Selector[MultiPack, DataPack]):
         raise NotImplementedError
 
 
-class MultiPackBoxer(Selector[DataPack, MultiPack]):
-    """
-    This class creates a Dummy MultiPack from DataPack.
-
-    Attributes:
-        pack_name: The pack name that will be assigned to the data pack when
-            it is boxed to the multi pack.
-    """
-    def __init__(self, pack_name: str):
-        super().__init__()
-        self.pack_name = pack_name
-
-    def select(self, pack: DataPack) -> Iterator[MultiPack]:
-        """
-        Args:
-            pack: The data pack to be boxed
-
-        Returns: An iterator that produces the boxed multi pack.
-
-        """
-        p = MultiPack()
-        p.add_pack(pack, self.pack_name)
-        yield p
-
-
 class NameMatchSelector(SinglePackSelector):
     r"""Select a :class:`DataPack` from a :class:`MultiPack` with specified
     name.

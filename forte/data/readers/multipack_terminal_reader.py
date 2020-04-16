@@ -20,7 +20,6 @@ from typing import Iterator, Dict, Any
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
 from ft.onto.base_ontology import Utterance
@@ -73,19 +72,17 @@ class MultiPackTerminalReader(MultiPackReader):
 
         # use context to build the query
         if self.resource.get("user_utterance"):
-            user_pack = self.resource.get("user_utterance")[-1]
-            multi_pack.update_pack({"user_utterance": user_pack})
+            multi_pack.add_pack_(
+                self.resource.get("user_utterance")[-1], "user_utterance")
 
         if self.resource.get("bot_utterance"):
-            bot_pack = self.resource.get("bot_utterance")[-1]
-            multi_pack.update_pack({"bot_utterance": bot_pack})
+            multi_pack.add_pack_(
+                self.resource.get("bot_utterance")[-1], "bot_utterance")
 
-        pack = DataPack()
-        utterance = Utterance(pack, 0, len(data_source))
-        pack.add_entry(utterance)
-
+        pack = multi_pack.add_pack(self.config.pack_name)
         pack.set_text(data_source, replace_func=self.text_replace_operation)
-        multi_pack.update_pack({self.config.pack_name: pack})
+
+        Utterance(pack, 0, len(data_source))
 
         yield multi_pack
 

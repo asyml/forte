@@ -17,6 +17,7 @@ Pipeline component module.
 from typing import Generic, Optional, Union, Dict, Any
 
 import yaml
+from forte.common import ProcessorConfigError
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -105,7 +106,13 @@ class PipelineComponent(Generic[PackType]):
 
             merged_configs.update(configs)
 
-        final_configs = Config(merged_configs, cls.default_configs())
+        try:
+            final_configs = Config(merged_configs, cls.default_configs())
+        except ValueError as e:
+            raise ProcessorConfigError(
+                f'Configuration error for the processor '
+                f'{get_full_module_name(cls)}.') from e
+
         return final_configs
 
     @classmethod

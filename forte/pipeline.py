@@ -458,9 +458,12 @@ class Pipeline(Generic[PackType]):
                             processor.process(pack)
                         elif isinstance(processor, Evaluator):
                             processor.consume_next(
-                                pack,
-                                self._predict_to_gold[unprocessed_job.id]
+                                pack, self._predict_to_gold[unprocessed_job.id]
                             )
+
+                        # After the component action, make sure the entry is
+                        # added into the index.
+                        pack.add_all_remaining_entries()
                     except Exception as e:
                         raise ProcessExecutionException(
                             f'Exception occurred when running '
@@ -468,8 +471,7 @@ class Pipeline(Generic[PackType]):
 
                     # Then, based on component type, handle the queue.
                     if isinstance(processor, BaseBatchProcessor):
-                        index = \
-                            unprocessed_queue_indices[current_queue_index]
+                        index = unprocessed_queue_indices[current_queue_index]
 
                         # check status of all the jobs up to "index"
                         for i, job_i in enumerate(
@@ -580,7 +582,6 @@ class Pipeline(Generic[PackType]):
 
                 # current queue is modified in the loop
                 for job in list(current_queue):
-
                     if job.status != ProcessJobStatus.PROCESSED and \
                             not job.is_poison:
                         raise ValueError("Job is neither PROCESSED nor is "

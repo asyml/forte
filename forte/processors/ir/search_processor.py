@@ -13,14 +13,14 @@
 # limitations under the License.
 
 # pylint: disable=attribute-defined-outside-init
+from typing import Dict, Any
+
 from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Query
+from forte.indexers import EmbeddingBasedIndexer
 from forte.processors.base import MultiPackProcessor
-from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
-
 from ft.onto.base_ontology import Document
 
 __all__ = [
@@ -54,10 +54,19 @@ class SearchProcessor(MultiPackProcessor):
 
         packs = {}
         for i, doc in enumerate(documents):
-            pack = DataPack()
-            document = Document(pack=pack, begin=0, end=len(doc))
-            pack.add_entry(document)
+            pack = input_pack.add_pack()
             pack.set_text(doc)
-            packs[self.config.response_pack_name[i]] = pack
+
+            Document(pack, 0, len(doc))
+            packs[self.config.response_pack_name_prefix + f'_{i}'] = pack
 
         input_pack.update_pack(packs)
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config.update({
+            'model_dir': None,
+            'response_pack_name_prefix': 'doc'
+        })
+        return config

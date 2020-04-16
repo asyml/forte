@@ -73,7 +73,7 @@ jobs:
         # build documents
         - sphinx-build -W -b html -d _build/doctrees . _build/html
         # check for typos
-        - sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
+        - sphinx-build -b spelling -d _build/doctrees . _build/spelling
 
 notifications:
   email: false

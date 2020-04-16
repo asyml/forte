@@ -140,7 +140,6 @@ class AllenNLPProcessor(PackProcessor):
             if "pos" in self.configs.processors:
                 token.pos = pos[i]
             tokens.append(token)
-            input_pack.add_entry(token)
 
         return tokens
 
@@ -153,4 +152,3 @@ class AllenNLPProcessor(PackProcessor):
                                   parent=tokens[heads[i] - 1],
                                   child=token)
             relation.rel_type = deps[i]
-            input_pack.add_or_get_entry(relation)

@@ -15,13 +15,16 @@ query_creator:
   max_seq_length: 128
   query_pack_name: "pack"
 
+searcher:
+  model_dir: "model/chatbot"
+  response_pack_name_prefix: "doc"
+
 indexer:
   batch_size: 128
   model_dir: "model/chatbot"
   k: 1
   query_pack_name: "pack"
-  response_pack_name:
-    - "doc_0"
+  response_pack_name_prefix: "doc"
 
 SRL:
   storage_path: "model/srl"

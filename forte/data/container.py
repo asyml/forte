@@ -80,7 +80,11 @@ class EntryContainer(Generic[E, L, G]):
         self._id_manager = EntryIdManager(state['serialization']['next_id'])
 
     @abstractmethod
-    def add_entry_creation_record(self, entry_id: int):
+    def record_new_entry(self, entry: E):
+        raise NotImplementedError
+
+    @abstractmethod
+    def regret_record(self, entry: E):
         raise NotImplementedError
 
     @abstractmethod

@@ -49,7 +49,7 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
 
         """
         p = MultiPack()
-        p.add_pack(pack, self.configs.pack_name)
+        p.add_pack_(pack, self.configs.pack_name)
         return p
 
     @classmethod

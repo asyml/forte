@@ -62,25 +62,22 @@ class ProdigyReader(PackReader):
         """
         pack = DataPack()
         text = data['text']
+        pack.set_text(text, replace_func=self.text_replace_operation)
+
+        Document(pack, 0, len(text))
+
         tokens = data['tokens']
         spans = data['spans']
-
-        document = Document(pack, 0, len(text))
-        pack.set_text(text, replace_func=self.text_replace_operation)
-        pack.add_or_get_entry(document)
-
         for token in tokens:
             begin = token['start']
             end = token['end']
-            token_entry = Token(pack, begin, end)
-            pack.add_or_get_entry(token_entry)
+            Token(pack, begin, end)
 
         for span_items in spans:
             begin = span_items['start']
             end = span_items['end']
             annotation_entry = EntityMention(pack, begin, end)
             annotation_entry.ner_type = span_items['label']
-            pack.add_or_get_entry(annotation_entry)
 
         pack.meta.doc_id = data['meta']['id']
 

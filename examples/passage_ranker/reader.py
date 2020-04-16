@@ -16,7 +16,6 @@ from typing import Iterator
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
 from ft.onto.base_ontology import Document
@@ -42,16 +41,19 @@ class EvalReader(MultiPackReader):
 
     def _parse_pack(self, data_source: str) -> Iterator[MultiPack]:
         fields = data_source.split("\t")
-        data_pack = DataPack(doc_id=fields[0])
         multi_pack = MultiPack()
-        document = Document(pack=data_pack, begin=0, end=len(fields[1]))
-        data_pack.add_entry(document)
+
+        data_pack = multi_pack.add_pack(self.config.pack_name)
+
+        data_pack.doc_id = fields[0]
         data_pack.set_text(fields[1])
-        multi_pack.update_pack({self.config.pack_name: data_pack})
+
+        Document(pack=data_pack, begin=0, end=len(fields[1]))
+
         yield multi_pack
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         return {
             "pack_name": "query"
         }

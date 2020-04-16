@@ -573,6 +573,10 @@ class OntologyCodeGenerator:
             en = EntryName(raw_entry_name)
             entry_item, properties = self.parse_entry(en, definition)
 
+            # Add it as a defining object.
+            self.import_managers.get(en.module_name).add_defining_objects(
+                raw_entry_name)
+
             # Get or set module writer only if the ontology to be generated
             # is not already installed.
             if not is_installed:

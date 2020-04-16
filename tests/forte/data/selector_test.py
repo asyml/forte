@@ -16,7 +16,6 @@ Unit tests for Selector
 """
 import unittest
 
-from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.selector import NameMatchSelector, RegexNameMatchSelector, \
     FirstPackSelector, AllPackSelector
@@ -25,13 +24,15 @@ from forte.data.selector import NameMatchSelector, RegexNameMatchSelector, \
 class SelectorTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.data_pack1 = DataPack(doc_id="1")
-        self.data_pack2 = DataPack(doc_id="2")
-        self.data_pack3 = DataPack(doc_id="Three")
         self.multi_pack = MultiPack()
-        self.multi_pack.add_pack(self.data_pack1, pack_name="pack1")
-        self.multi_pack.add_pack(self.data_pack2, pack_name="pack2")
-        self.multi_pack.add_pack(self.data_pack3, pack_name="pack_three")
+
+        data_pack1 = self.multi_pack.add_pack(pack_name="pack1")
+        data_pack2 = self.multi_pack.add_pack(pack_name="pack2")
+        data_pack3 = self.multi_pack.add_pack(pack_name="pack_three")
+
+        data_pack1.doc_id = "1"
+        data_pack2.doc_id = "2"
+        data_pack3.doc_id = "Three"
 
     def test_name_match_selector(self) -> None:
         selector = NameMatchSelector(select_name="pack1")

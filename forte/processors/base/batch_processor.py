@@ -109,7 +109,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         function is implemented to convert the input datapacks into batches
         according to the Batcher. Users do not need to implement this function
         but should instead implement ``predict``, which computes results from
-        batches, and ``pack``, which convert the batch results back to
+        batches, and ``pack_all``, which convert the batch results back to
         datapacks.
 
         Args:
@@ -171,10 +171,12 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         """
         start = 0
         for i in range(len(self.batcher.data_pack_pool)):
+            pack_i = self.batcher.data_pack_pool[i]
             output_dict_i = slice_batch(output_dict, start,
                                         self.batcher.current_batch_sources[i])
-            self.pack(self.batcher.data_pack_pool[i], output_dict_i)
+            self.pack(pack_i, output_dict_i)
             start += self.batcher.current_batch_sources[i]
+            pack_i.add_all_remaining_entries()
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

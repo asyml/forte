@@ -111,7 +111,7 @@ class Sentence(Annotation):
     @key_tokens.setter
     def key_tokens(self, key_tokens: Optional[List[Token]]):
         key_tokens = [] if key_tokens is None else key_tokens
-        self.set_fields(_key_tokens=[self.pack.add_entry_(obj) for obj in key_tokens])
+        self.set_fields(_key_tokens=[obj.tid for obj in key_tokens])
 
     def num_key_tokens(self):
         return len(self._key_tokens)
@@ -121,7 +121,7 @@ class Sentence(Annotation):
         self._key_tokens.clear()
 
     def add_key_tokens(self, a_key_tokens: Token):
-        self._key_tokens.append(self.pack.add_entry_(a_key_tokens))
+        self._key_tokens.append(a_key_tokens.tid)
 
 
 class Document(Annotation):

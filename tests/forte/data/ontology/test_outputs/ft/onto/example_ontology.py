@@ -73,7 +73,7 @@ class Word(Token):
     @word_forms.setter
     def word_forms(self, word_forms: Optional[List["Word"]]):
         word_forms = [] if word_forms is None else word_forms
-        self.set_fields(_word_forms=[self.pack.add_entry_(obj) for obj in word_forms])
+        self.set_fields(_word_forms=[obj.tid for obj in word_forms])
 
     def num_word_forms(self):
         return len(self._word_forms)
@@ -83,7 +83,7 @@ class Word(Token):
         self._word_forms.clear()
 
     def add_word_forms(self, a_word_forms: "Word"):
-        self._word_forms.append(self.pack.add_entry_(a_word_forms))
+        self._word_forms.append(a_word_forms.tid)
 
     @property
     def token_ranks(self):
@@ -92,7 +92,7 @@ class Word(Token):
     @token_ranks.setter
     def token_ranks(self, token_ranks: Optional[Dict[int, "Word"]]):
         token_ranks = {} if token_ranks is None else token_ranks
-        self.set_fields(_token_ranks=dict([(k, self.pack.add_entry_(v)) for k, v in token_ranks.items()]))
+        self.set_fields(_token_ranks=dict([(k, v.tid) for k, v in token_ranks.items()]))
 
     def num_token_ranks(self):
         return len(self._token_ranks)
@@ -102,7 +102,7 @@ class Word(Token):
         self._token_ranks.clear()
 
     def add_token_ranks(self, key: int, value: "Word"):
-        self._token_ranks[key] = self.pack.add_entry_(value)
+        self._token_ranks[key] = value.tid
 
 
 class WordLink(Link):
