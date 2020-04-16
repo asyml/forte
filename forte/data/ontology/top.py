@@ -390,7 +390,7 @@ class Query(Generics):
 
     def add_result(self, pid: str, score: float):
         """
-        Set the result score for a particular pid.
+        Set the result score for a particular pack (based on the pack id).
 
         Args:
             pid: the pack id.

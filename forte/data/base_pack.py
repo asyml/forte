@@ -247,8 +247,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def record_new_entry(self, entry: EntryType):
         """
         Call this when adding a new entry, will be called
-        in :class:`~forte.data.ontology.core.Entry` during
-        its init time.
+        in :class:`~forte.data.ontology.core.Entry` when
+        its `__init__` function is called.
 
         Args:
             entry: The entry to be added.
