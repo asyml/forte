@@ -30,6 +30,11 @@ def create(args_):
     spec_paths = [normalize_path(config) for config in args_.spec_paths] \
         if args_.spec_paths is not None else None
 
+    print(args_.merged_path)
+    print(args_.dest_path)
+
+    merged_path = normalize_path(args_.merged_path)
+
     generator = OntologyCodeGenerator(spec_paths)
     if args_.no_dry_run is None:
         log.info("Ontology will be generated in a temporary directory as "
@@ -39,7 +44,7 @@ def create(args_):
     is_dry_run = not args_.no_dry_run
     include_init = not args_.exclude_init
     generated_folder = generator.generate(spec_path, dest_path, is_dry_run,
-                                          include_init)
+                                          include_init, merged_path)
     log.info("Ontology generated in the directory %s.", generated_folder)
 
 
@@ -119,6 +124,13 @@ def main():
                                help='Paths in which the root and imported '
                                     'spec files are to be searched.')
 
+    create_parser.add_argument('-m', '--merged_path',
+                               type=str,
+                               required=False,
+                               default=None,
+                               help='The destination file path for the merged'
+                                    'file path.')
+
     create_parser.add_argument('-e', '--exclude_init',
                                required=False,
                                default=None,
@@ -155,6 +167,5 @@ def main():
         OntologyGenerationParser().print_help()
         exit(2)
 
-
-if __name__ == "__main__":
-    main()
+    if __name__ == "__main__":
+        main()
