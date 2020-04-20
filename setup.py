@@ -36,7 +36,7 @@ setuptools.setup(
     ],
     extras_require={
         'nltk': ['nltk'],
-        'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext', 'tqdm'],
+        'ner': ['pyyaml', 'torch>=1.1.0', 'torchtext>=0.4.0', 'tqdm'],
         'srl': ['mypy-extensions', 'allennlp'],
         'sentiment': ['vaderSentiment'],
         'txtgen': ['regex', 'tensorflow'],
