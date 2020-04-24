@@ -98,8 +98,9 @@ def validate_entry(entry_name: str, sorted_packages: List[str]) -> str:
         # None of the package name matches.
         raise InvalidIdentifierException(
             f"Entry name [{entry_name}] does not start with any predefined "
-            f"packages, please define the packages in the ontology "
-            f"specification. Or you can use the default prefix 'ft.onto'."
+            f"packages, please define the packages by using "
+            f"`additional_prefixes` in the ontology. Or you can use the "
+            f"default prefix 'ft.onto'."
         )
 
     entry_splits = entry_name.split('.')
