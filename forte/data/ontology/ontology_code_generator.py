@@ -522,7 +522,7 @@ class OntologyCodeGenerator:
 
         for rel_import in relative_imports:
             full_pkg_path: str = self.find_import_path(rel_import)
-            logging.info('Find imported ontology at: ', full_pkg_path)
+            logging.info('Imported ontology at: %s', full_pkg_path)
             self.parse_ontology_spec(
                 full_pkg_path, destination_dir, merged_schema, visited_paths,
                 rec_visited_paths)
