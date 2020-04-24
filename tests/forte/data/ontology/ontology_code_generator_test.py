@@ -59,9 +59,7 @@ class GenerateOntologyTest(unittest.TestCase):
         ('example_complex_ontology', ['ft/onto/example_complex_ontology']),
         ('example_multi_module_ontology', ['ft/onto/ft_module',
                                            'custom/user/custom_module']),
-        ('race_qa_onto_installed', ['ft/onto/race_qa_installed_ontology']),
-        ('race_qa_onto', ['ft/onto/base_ontology',
-                          'ft/onto/race_qa_ontology'])
+        ('race_qa_onto', ['ft/onto/race_qa_ontology'])
     )
     def test_generated_code(self, value):
         input_file_name, file_paths = value
@@ -88,6 +86,7 @@ class GenerateOntologyTest(unittest.TestCase):
             with open(expected_code_path, 'r') as f:
                 expected_code = f.read()
 
+            print(generated_file, expected_code_path)
             self.assertEqual(generated_code, expected_code)
 
     def test_dry_run_false(self):
@@ -118,7 +117,7 @@ class GenerateOntologyTest(unittest.TestCase):
                          'ft/onto/__init__',
                          'ft/onto/example_import_ontology']
         exp_files = sorted([f"{os.path.join(folder_path, file)}.py"
-                           for file in exp_file_path])
+                            for file in exp_file_path])
 
         self.assertEqual(gen_files, exp_files)
 
@@ -159,6 +158,7 @@ class GenerateOntologyTest(unittest.TestCase):
                 self.assertEqual(len(w), 1)
                 assert w[0].category, msg_type
         else:
+            print('test file ', file)
             with self.assertRaises(msg_type):
                 self.generator.generate(temp_filename, is_dry_run=True)
 

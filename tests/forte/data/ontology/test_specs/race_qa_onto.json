@@ -1,6 +1,6 @@
 {
   "name": "race_qa_ontology",
-  "import_paths": [
+  "imports": [
     "base_ontology.json"
   ],
   "definitions": [

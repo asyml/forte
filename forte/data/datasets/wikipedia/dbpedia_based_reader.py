@@ -45,6 +45,14 @@ def add_struct(pack: DataPack, struct_statements: List):
             range_ = get_resource_attribute(nif_range, 'char')
             begin, end = [int(d) for d in range_.split(',')]
 
+            if end > len(pack.text):
+                # Some nif dataset are off by a bit, mostly when there are
+                # new line characters, we cannot correct them.
+                # but we need to make sure they don't go longer than the text.
+                logging.info(f"NIF Structure end is {end} by {nif_range}, "
+                             f"clipped to fit with the text.")
+                end = len(pack.text)
+
             struct_ = get_resource_fragment(struct_type)
 
             if struct_ == 'Section':
@@ -162,8 +170,8 @@ class DBpediaWikiReader(PackReader):
 
         yield pack
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure
         :return:

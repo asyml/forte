@@ -30,12 +30,9 @@ def create(args_):
     spec_paths = [normalize_path(config) for config in args_.spec_paths] \
         if args_.spec_paths is not None else None
 
-    print(args_.merged_path)
-    print(args_.dest_path)
-
     merged_path = normalize_path(args_.merged_path)
 
-    generator = OntologyCodeGenerator(spec_paths)
+    generator = OntologyCodeGenerator(spec_paths, args_.gen_all)
     if args_.no_dry_run is None:
         log.info("Ontology will be generated in a temporary directory as "
                  "--no_dry_run is not specified by the user.")
@@ -138,6 +135,15 @@ def main():
                                help='Excludes generation of `__init__.py` files'
                                     ' in the already existing directories, if'
                                     '`__init__.py` not already present.')
+
+    create_parser.add_argument('-a', '--gen_all',
+                               required=False,
+                               default=False,
+                               action='store_true',
+                               help='If True, will generate all the ontology,'
+                                    'including the existing ones shipped with'
+                                    'Forte.'
+                               )
 
     create_parser.set_defaults(func=create)
 
