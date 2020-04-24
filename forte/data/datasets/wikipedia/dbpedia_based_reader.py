@@ -76,6 +76,15 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
 
     for range_, link_infos in link_grouped.items():
         begin, end = [int(d) for d in range_.split(',')]
+
+        if end > len(pack.text):
+            # Some nif dataset are off by a bit, mostly when there are
+            # new line characters, we cannot correct them.
+            # but we need to make sure they don't go longer than the text.
+            logging.info(f"Provided anchor end is {end}, "
+                         f"clipped to fit with the text.")
+            end = len(pack.text)
+
         anchor = WikiAnchor(pack, begin, end)
         for info_key, info_value in link_infos.items():
             if info_key == 'type':
