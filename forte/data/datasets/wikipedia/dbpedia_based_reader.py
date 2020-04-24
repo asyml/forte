@@ -90,7 +90,7 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
             end = len(pack.text)
 
         if end <= begin:
-            logging.info(f"Provided anchor [%d:%d is invalid.]", begin, end)
+            logging.info("Provided anchor [%d:%d is invalid.]", begin, end)
             continue
 
         anchor = WikiAnchor(pack, begin, end)
