@@ -20,7 +20,6 @@ import json
 import logging
 import os
 import shutil
-import sys
 import tempfile
 import warnings
 from collections import defaultdict
@@ -53,7 +52,6 @@ from forte.data.ontology.ontology_code_const import (
     ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
     hardcoded_pack_map, AUTO_GEN_FILENAME,
     AUTO_DEL_FILENAME)
-from forte.utils import get_class
 from forte.utils.utils_io import get_resource
 
 
@@ -480,8 +478,8 @@ class OntologyCodeGenerator:
             if os.path.exists(full_spec_path):
                 return full_spec_path
 
-        raise OntologySourceNotFoundException('Cannot find import [%s].',
-                                              import_path)
+        raise OntologySourceNotFoundException(
+            'Cannot find import [%s].' % import_path)
 
     def parse_ontology_spec(
             self, ontology_path: str,

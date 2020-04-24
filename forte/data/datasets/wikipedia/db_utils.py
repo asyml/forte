@@ -14,15 +14,15 @@
 """
 A set of utilities to support reading DBpedia datasets.
 """
+import bz2
 import logging
 import os
-import sys
-from random import sample, choice
-from typing import List, Dict, Tuple, Union, Iterable, Any, Iterator
-import bz2
 import re
-from urllib.parse import urlparse, parse_qs
+import sys
 from collections import OrderedDict
+from random import choice
+from typing import List, Dict, Tuple, Union, Any, Iterator
+from urllib.parse import urlparse, parse_qs
 
 import rdflib
 
@@ -297,8 +297,9 @@ def test_buf():
 
     for d in data:
         got = buf.get_key(d)
+        print(got)
 
 
 if __name__ == '__main__':
-    swapped = {}
+    swapped: Dict = {}
     test_buf()

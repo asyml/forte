@@ -183,11 +183,11 @@ def get_data(dataset: str):
 if __name__ == '__main__':
     base_dir = sys.argv[1]
 
-    output_path = os.path.join(base_dir, 'packs')
+    pack_output = os.path.join(base_dir, 'packs')
 
     logging.basicConfig(
         format='%(asctime)s - %(message)s', level=logging.INFO,
-        filename=os.path.join(output_path, 'dump.log')
+        filename=os.path.join(pack_output, 'dump.log')
     )
 
     main(
@@ -198,5 +198,5 @@ if __name__ == '__main__':
         get_data('nif_text_links_en.tql.bz2'),
         get_data('redirects_en.tql.bz2'),
         get_data('infobox_properties_mapped_en.tql.bz2'),
-        output_path
+        pack_output
     )
