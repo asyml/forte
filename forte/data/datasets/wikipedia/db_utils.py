@@ -14,14 +14,15 @@
 """
 A set of utilities to support reading DBpedia datasets.
 """
+import bz2
 import logging
 import os
-import sys
-from typing import List, Dict, Tuple, Union
-import bz2
 import re
-from urllib.parse import urlparse, parse_qs
+import sys
 from collections import OrderedDict
+from random import choice
+from typing import List, Dict, Tuple, Union, Any, Iterator
+from urllib.parse import urlparse, parse_qs
 
 import rdflib
 
@@ -71,17 +72,18 @@ def strip_url_params(url) -> str:
     return parsed.scheme + "://" + parsed.netloc + parsed.path
 
 
-def print_progress(msg: str):
+def print_progress(msg: str, end='\r'):
     """
     Print progress message to the same line.
     Args:
         msg: The message to print
+        end: Line ending in terminal
 
     Returns:
 
     """
     sys.stdout.write("\033[K")  # Clear to the end of line.
-    print(f' -- {msg}', end='\r')
+    print(f' -- {msg}', end=end)
 
 
 def print_notice(msg: str):
@@ -190,19 +192,13 @@ class ContextGroupedNIFReader:
 
 
 class NIFBufferedContextReader:
-    def __init__(self, nif_path: str, buffer_size: int = 500):
+    def __init__(self, nif_path: str, window_size: int = 2000):
         self.data_name = os.path.basename(nif_path)
-
-        self.__parser = ContextGroupedNIFReader(nif_path)
-
-        self.window_statement: OrderedDict[
-            str, Tuple[List, int]] = OrderedDict()
-        self.__buffer_size = buffer_size
-        self.__entry_index = 0
-
-    def window_info(self):
-        logging.info('The buffer size for data [%s] is %s',
-                     self.data_name, len(self.window_statement))
+        self.buf = AutoPopBuffer(
+            data_iter=ContextGroupedNIFReader(nif_path),
+            default_value=[],
+            window_size=window_size
+        )
 
     def get(self, context: Union[rdflib.Graph, str]) -> List[state_type]:
         """
@@ -221,29 +217,89 @@ class NIFBufferedContextReader:
         """
         context_ = context_base(context) if isinstance(
             context, rdflib.Graph) else str(context)
+        return self.buf.get_key(context_)
 
-        if context_ in self.window_statement:
-            return self.window_statement.pop(context_)[0]
 
-        for c_, statements in self.__parser:
-            self.__entry_index += 1
-            if c_ == context_:
-                return statements
-            else:
-                self.window_statement[c_] = (statements, self.__entry_index)
+class AutoPopBuffer:
+    def __init__(self, data_iter: Iterator, default_value,
+                 window_size: int = 100):
+        self.buf_data: OrderedDict[str, Tuple[Any, int]] = OrderedDict()
 
-                # Find the oldest index.
-                oldest_index = -1
-                for _, (_, index) in self.window_statement.items():
-                    oldest_index = index
+        self.__lookup_idx = 0
+        self.__data_idx = 0
+
+        self.__default_value = default_value
+        self.__window_size = window_size
+        self.__date_iter: Iterator = data_iter
+
+    def get_key(self, key):
+        value = self.__default_value
+
+        self.__lookup_idx += 1
+
+        if key in self.buf_data:
+            value = self.buf_data.pop(key)[0]
+        else:
+            for k_, data in self.__date_iter:
+                self.__data_idx += 1
+                if k_ == key:
+                    value = data
                     break
+                else:
+                    self.buf_data[k_] = (data, self.__data_idx)
+                    if self.__data_idx - self.__lookup_idx > self.__window_size:
+                        # Give up on this search.
+                        break
 
-                # If the oldest index is out of the window, we will pop it.
-                if 0 < oldest_index <= self.__entry_index - self.__buffer_size:
-                    self.window_statement.popitem(False)
+        if len(self.buf_data) > 0:
+            # Find the oldest index.
+            _, (_, oldest_idx) = next(iter(self.buf_data.items()))
+            # If the oldest index is out of the window, we will pop it.
+            if 0 < oldest_idx < self.__lookup_idx - self.__window_size:
+                self.buf_data.popitem(False)
 
-                if len(self.window_statement) >= self.__buffer_size:
-                    # Give up on this search.
-                    return []
+        return value
 
-        return []
+
+def test_buf():
+    # Test out the buffer reader.
+    data_size = 10000
+    buffer_size = 50
+
+    data = range(0, data_size)
+    data_new = [(d, d) for d in data]
+
+    def swap_random(input_list, r):
+        i = choice(range(len(input_list)))
+        swap_range = choice(range(r))
+        j = i + swap_range
+
+        if j > len(input_list) - 1:
+            return
+
+        data_new[i], data_new[j] = data_new[j], data_new[i]
+        print('swapped', i, j)
+
+        if r > buffer_size:
+            swapped[i] = j
+            swapped[j] = i
+
+    # Swap for some times.
+    print('swapping in range')
+    for _ in range(10):
+        swap_random(data_new, buffer_size)
+
+    print('swapping out of range')
+    for _ in range(10):
+        swap_random(data_new, buffer_size * 2)
+
+    buf = AutoPopBuffer(iter(data_new), -1, buffer_size)
+
+    for d in data:
+        got = buf.get_key(d)
+        print(got)
+
+
+if __name__ == '__main__':
+    swapped: Dict = {}
+    test_buf()

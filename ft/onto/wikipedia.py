@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/wikipedia_ontology.json***
+# ***source json:examples/wiki_parser/wikipedia.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -110,19 +110,23 @@ class WikiAnchor(Annotation):
     """
     Attributes:
         _target_page_name (Optional[str])
+        _predicted_anchor (Optional[bool])
     """
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self._target_page_name: Optional[str] = None
+        self._predicted_anchor: Optional[bool] = None
 
     def __getstate__(self): 
         state = super().__getstate__()
         state['target_page_name'] = state.pop('_target_page_name')
+        state['predicted_anchor'] = state.pop('_predicted_anchor')
         return state
 
     def __setstate__(self, state): 
         super().__setstate__(state)
         self._target_page_name = state.get('target_page_name', None) 
+        self._predicted_anchor = state.get('predicted_anchor', None) 
 
     @property
     def target_page_name(self):
@@ -131,6 +135,14 @@ class WikiAnchor(Annotation):
     @target_page_name.setter
     def target_page_name(self, target_page_name: Optional[str]):
         self.set_fields(_target_page_name=target_page_name)
+
+    @property
+    def predicted_anchor(self):
+        return self._predicted_anchor
+
+    @predicted_anchor.setter
+    def predicted_anchor(self, predicted_anchor: Optional[bool]):
+        self.set_fields(_predicted_anchor=predicted_anchor)
 
 
 class WikiInfoBoxProperty(Generics):

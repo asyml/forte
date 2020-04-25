@@ -18,8 +18,11 @@ import os
 
 __all__ = [
     "maybe_create_dir",
-    "ensure_dir"
+    "ensure_dir",
+    "get_resource"
 ]
+
+import sys
 
 
 def maybe_create_dir(dirname: str) -> bool:
@@ -49,3 +52,15 @@ def ensure_dir(filename: str):
     d = os.path.dirname(filename)
     if d:
         maybe_create_dir(d)
+
+
+def get_resource(path_name, is_file=True):
+    for dirname in sys.path:
+        candidate = os.path.join(dirname, path_name)
+        if is_file:
+            if os.path.isfile(candidate):
+                return candidate
+        else:
+            if os.path.exists(candidate):
+                return candidate
+    raise FileNotFoundError("Can't find file %s in python path." % path_name)

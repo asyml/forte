@@ -8,5 +8,3 @@ the Forte projects.
    can be found at `ft.onto.base_ontology.py`
  - The `race_qa_onto.json` demonstrate how to create ontology for a QA task.
    The generated files can be found at `ft.onto.race_multi_choice_qa_ontology.py`
- - The `wikipedia_ontology.json` demonstrate defining several basic Wikipedia
-   data types. The generated files can be found at `ft.onto.wikipedia.py`

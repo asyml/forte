@@ -45,6 +45,18 @@ def add_struct(pack: DataPack, struct_statements: List):
             range_ = get_resource_attribute(nif_range, 'char')
             begin, end = [int(d) for d in range_.split(',')]
 
+            if end > len(pack.text):
+                # Some nif dataset are off by a bit, mostly when there are
+                # new line characters, we cannot correct them.
+                # but we need to make sure they don't go longer than the text.
+                logging.info("NIF Structure end is %d by %s, "
+                             "clipped to fit with the text.", end, nif_range)
+                end = len(pack.text)
+
+            if end <= begin:
+                logging.info("Provided struct [%d:%d] is invalid.", begin, end)
+                continue
+
             struct_ = get_resource_fragment(struct_type)
 
             if struct_ == 'Section':
@@ -68,6 +80,19 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
 
     for range_, link_infos in link_grouped.items():
         begin, end = [int(d) for d in range_.split(',')]
+
+        if end > len(pack.text):
+            # Some nif dataset are off by a bit, mostly when there are
+            # new line characters, we cannot correct them.
+            # but we need to make sure they don't go longer than the text.
+            logging.info("Provided anchor end is %d, "
+                         "clipped to fit with the text.", end)
+            end = len(pack.text)
+
+        if end <= begin:
+            logging.info("Provided anchor [%d:%d is invalid.]", begin, end)
+            continue
+
         anchor = WikiAnchor(pack, begin, end)
         for info_key, info_value in link_infos.items():
             if info_key == 'type':
@@ -162,8 +187,8 @@ class DBpediaWikiReader(PackReader):
 
         yield pack
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure
         :return:

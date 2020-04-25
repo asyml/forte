@@ -1,7 +1,7 @@
 {
   "name": "wikipedia",
-  "import_paths": [
-    "base_ontology.json"
+  "imports": [
+    "forte/ontology_specs/base_ontology.json"
   ],
   "definitions": [
     {

@@ -25,7 +25,8 @@ from typing import TextIO, Any, Dict
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
-from forte.data.datasets.wikipedia.db_utils import load_redirects
+from forte.data.datasets.wikipedia.db_utils import load_redirects, \
+    print_progress
 from forte.data.datasets.wikipedia.dbpedia_based_reader import DBpediaWikiReader
 from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \
     DBpediaInfoBoxReader
@@ -101,6 +102,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
          mapping_objects: str, nif_text_links: str, redirects: str,
          info_boxs: str, output_path: str):
     # Load redirects.
+    print_progress('Loading redirects', '\n')
     logging.info("Loading redirects")
     redirect_pickle = os.path.join(output_path, 'redirects.pickle')
 
@@ -111,6 +113,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         redirect_map = load_redirects(redirects)
         with open(redirect_pickle, 'wb') as pickle_f:
             pickle.dump(redirect_map, pickle_f)
+    print_progress('\nLoading redirects', '\n')
     logging.info("Done loading.")
 
     # The datasets are read in two steps.
@@ -139,6 +142,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
 
     nif_pl.initialize()
     logging.info('Start running the DBpedia text pipeline.')
+    print_progress('Start running the DBpedia text pipeline.', '\n')
     nif_pl.run(nif_context)
 
     # Second, we add info boxes to the packs with NIF.
@@ -179,7 +183,12 @@ def get_data(dataset: str):
 if __name__ == '__main__':
     base_dir = sys.argv[1]
 
-    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+    pack_output = os.path.join(base_dir, 'packs')
+
+    logging.basicConfig(
+        format='%(asctime)s - %(message)s', level=logging.INFO,
+        filename=os.path.join(pack_output, 'dump.log')
+    )
 
     main(
         get_data('nif_context_en.tql.bz2'),
@@ -189,5 +198,5 @@ if __name__ == '__main__':
         get_data('nif_text_links_en.tql.bz2'),
         get_data('redirects_en.tql.bz2'),
         get_data('infobox_properties_mapped_en.tql.bz2'),
-        os.path.join(base_dir, 'packs'),
+        pack_output
     )
