@@ -15,10 +15,11 @@
 import logging
 from collections import defaultdict
 from typing import DefaultDict, Dict, List, Set, Type, Hashable, Generic, \
-    Iterable, Tuple
+    Iterable, Tuple, Union
 
 from forte.common.exception import PackIndexError
-from forte.data.ontology.core import GroupType, LinkType, EntryType
+from forte.data.ontology.core import GroupType, LinkType, EntryType, \
+    Pointer
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,6 @@ class BaseIndex(Generic[EntryType]):
     """
 
     def __init__(self):
-
         # List of basic indexes (switches always on).
 
         # Mapping from entry's tid to entry type.
@@ -74,8 +74,9 @@ class BaseIndex(Generic[EntryType]):
             self._entry_index[entry.tid] = entry
             self._type_index[type(entry)].add(entry.tid)
 
-    def get_entry(self, tid) -> EntryType:
-        return self._entry_index[int(tid)]
+    def get_entry(self, ptr: Union[Pointer, int]) -> EntryType:
+        tid = ptr.tid if isinstance(ptr, Pointer) else ptr
+        return self._entry_index[tid]
 
     def iter_type_index(self) -> Iterable[Tuple[Type, Set[int]]]:
         for t, ids in self._type_index.items():
@@ -176,10 +177,10 @@ class BaseIndex(Generic[EntryType]):
         for link in links:
             self._link_index["child_index"][
                 link.get_child().index_key
-            ].add(link.tid)
+            ].add(link.index_key)
             self._link_index["parent_index"][
                 link.get_parent().index_key
-            ].add(link.tid)
+            ].add(link.index_key)
 
     def update_group_index(self, groups: List[GroupType]):
         r"""Build or update :attr:`group_index`, the index from group members

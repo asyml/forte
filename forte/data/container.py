@@ -16,7 +16,7 @@ Forte Container module.
 """
 
 from abc import abstractmethod
-from typing import Dict, Generic, Set, Tuple, TypeVar
+from typing import Dict, Generic, Set, Tuple, TypeVar, overload
 
 from forte.data.span import Span
 
@@ -24,11 +24,21 @@ __all__ = [
     "EntryIdManager",
     "EntryContainer",
     "ContainerType",
+    "BasePointer",
 ]
 
 E = TypeVar('E')
 L = TypeVar('L')
 G = TypeVar('G')
+
+
+class BasePointer:
+    """
+    Objects to point to other objects in the data pack.
+    """
+
+    def __str__(self):
+        raise NotImplementedError
 
 
 class EntryIdManager:
@@ -103,8 +113,16 @@ class EntryContainer(Generic[E, L, G]):
         """
         raise NotImplementedError
 
-    def get_entry(self, tid: int):
-        raise NotImplementedError
+    @overload
+    @abstractmethod
+    def get_entry(self, pointer: BasePointer): ...
+
+    @overload
+    @abstractmethod
+    def get_entry(self, tid: int): ...
+
+    def get_entry(self, p) -> E:
+        pass
 
     def get_span_text(self, span: Span):
         raise NotImplementedError

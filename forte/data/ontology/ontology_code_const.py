@@ -63,9 +63,9 @@ DEFAULT_PREFIX = "ft.onto"
 
 SUPPORTED_PRIMITIVES = {'int', 'float', 'str', 'bool'}
 NON_COMPOSITES = {key: key for key in SUPPORTED_PRIMITIVES}
-COMPOSITES = {'List': 'typing.List', 'Dict': 'typing.Dict'}
+COMPOSITES = {'List', 'Dict'}
 
-ALL_INBUILT_TYPES = set(list(NON_COMPOSITES.keys()) + list(COMPOSITES.keys()))
+ALL_INBUILT_TYPES = set(list(NON_COMPOSITES.keys()) + list(COMPOSITES))
 
 
 def file_header(desc_str, ontology_name):

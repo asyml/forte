@@ -141,9 +141,8 @@ def main():
                                default=False,
                                action='store_true',
                                help='If True, will generate all the ontology,'
-                                    'including the existing ones shipped with'
-                                    'Forte.'
-                               )
+                                    'including the existing ones shipped with '
+                                    'Forte.')
 
     create_parser.set_defaults(func=create)
 

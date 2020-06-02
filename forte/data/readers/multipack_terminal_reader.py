@@ -86,8 +86,8 @@ class MultiPackTerminalReader(MultiPackReader):
 
         yield multi_pack
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
-        return {
-            "pack_name": "query"
-        }
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        configs = super().default_configs()
+        configs["pack_name"] = "query"
+        return configs

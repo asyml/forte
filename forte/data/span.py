@@ -35,6 +35,18 @@ class Span:
     """
 
     def __init__(self, begin: int, end: int):
+        if not isinstance(begin, int) or not isinstance(end, int):
+            raise ValueError(
+                f"Begin and End for an annotation must be integer, "
+                f"got {begin}:{type(begin)} and {end}:{type(end)}")
+
+        if begin > end:
+            raise ValueError(
+                f"The begin {begin} of span is greater than the end {end}")
+
+        if begin < 0:
+            raise ValueError('The begin cannot be negative.')
+
         self.begin = begin
         self.end = end
 

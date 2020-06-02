@@ -33,6 +33,8 @@ setuptools.setup(
         'typed_ast',
         'jsonschema',
         'texar-pytorch',
+        'typing>=3.7.4'
+        'typing-inspect>=0.6.0',
     ],
     extras_require={
         'nltk': ['nltk'],
@@ -49,10 +51,10 @@ setuptools.setup(
         'allennlp': ['allennlp']
     },
     entry_points={
-          'console_scripts': [
-              'generate_ontology = scripts.generate_ontology.__main__:main'
-          ]
-      },
+        'console_scripts': [
+            'generate_ontology = scripts.generate_ontology.__main__:main'
+        ]
+    },
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: Education',

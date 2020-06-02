@@ -43,7 +43,7 @@ class DummyProcessorTest(unittest.TestCase):
         relations = list(pack.get(RelationLink))
         assert (len(relations) > 0)
         for relation in relations:
-            self.assertEqual(relation.get_field("rel_type"), "dummy_relation")
+            self.assertEqual(relation.rel_type, "dummy_relation")
 
 
 @ddt

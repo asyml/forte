@@ -464,7 +464,7 @@ class Pipeline(Generic[PackType]):
                         # After the component action, make sure the entry is
                         # added into the index.
                         pack.add_all_remaining_entries()
-                    except Exception as e:
+                    except ValueError as e:
                         raise ProcessExecutionException(
                             f'Exception occurred when running '
                             f'{processor.name}') from e

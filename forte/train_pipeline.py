@@ -17,6 +17,7 @@ from typing import Optional, List
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
+from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import BaseReader
 from forte.evaluation.base.base_evaluator import Evaluator
 from forte.pipeline import Pipeline

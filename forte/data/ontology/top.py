@@ -11,15 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type, Any, Dict, Union
+from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base_pack import PackType
+from forte.data.ontology.core import Entry, BaseLink, BaseGroup, EntryType, \
+    MultiEntry
 from forte.data.span import Span
 
 __all__ = [
@@ -57,8 +57,9 @@ class Annotation(Entry):
     """
 
     def __init__(self, pack: PackType, begin: int, end: int):
-        super().__init__(pack)
+        self._span: Optional[Span]
         self.set_span(begin, end)
+        super().__init__(pack)
 
     @property
     def span(self):
@@ -75,18 +76,6 @@ class Annotation(Entry):
     def set_span(self, begin: int, end: int):
         r"""Set the span of the annotation.
         """
-        if not isinstance(begin, int) or not isinstance(end, int):
-            raise ValueError(
-                f"Begin and End for an annotation must be integer, "
-                f"got {begin}:{type(begin)} and {end}:{type(end)}")
-
-        if begin > end:
-            raise ValueError(
-                f"The begin {begin} of span is greater than the end {end}")
-
-        if begin < 0:
-            raise ValueError('The begin cannot be negative.')
-
         self._span = Span(begin, end)
 
     def __hash__(self):
@@ -237,15 +226,91 @@ class Group(BaseGroup[Entry]):
             pack: PackType,
             members: Optional[Set[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
+        self._members: Set[int] = set()
         super().__init__(pack, members)
 
+    def add_member(self, member: Entry):
+        r"""Add one entry to the group.
 
-class MultiPackGeneric(Entry):
+        Args:
+            member: One member to be added to the group.
+        """
+        if not isinstance(member, self.MemberType):
+            raise TypeError(
+                f"The members of {type(self)} should be "
+                f"instances of {self.MemberType}, but got {type(member)}")
+        self._members.add(member.tid)
+
+    def get_members(self) -> Set[Entry]:
+        r"""Get the member entries in the group.
+
+        Returns:
+             A set of instances of :class:`Entry` that are the members of the
+             group.
+        """
+        if self.pack is None:
+            raise ValueError(f"Cannot get members because group is not "
+                             f"attached to any data pack.")
+        member_entries = set()
+        for m in self._members:
+            member_entries.add(self.pack.get_entry(m))
+        return member_entries
+
+
+# class MultiEntry(Entry, ABC):
+#     def __setattr__(self, key, value):
+#         """
+#         Handle the special sub-entry case in the multi pack case.
+#
+#         Args:
+#             key:
+#             value:
+#
+#         Returns:
+#
+#         """
+#         self._check_attr_type(key, value)
+#
+#         if isinstance(value, SinglePackEntries):
+#             # Save a sub pointer to this entry if it is a single pack entry.
+#             p_idx = self.pack.get_pack_index(value.pack_id)
+#             tid = value.tid
+#             self.__dict__[key] = MpPointer(p_idx, tid)
+#         elif isinstance(value, MultiPackEntries):
+#             # Save a pointer to this entry if it is a multi pack entry.
+#             self.__dict__[key] = Pointer(value.tid)
+#         elif isinstance(value, Entry):
+#             raise AttributeError(
+#                 f"Encounter entry type that is not a single pack entry "
+#                 f"nor a multi pack entry.")
+#         else:
+#             super().__setattr__(key, value)
+#
+#     def __getattribute__(self, item):
+#         """
+#         Handle the special sub-entry case in the multi pack case.
+#
+#         Returns:
+#
+#         """
+#         v = super().__getattribute__(item)
+#
+#         if isinstance(v, MpPointer):
+#             # Using the multi pack pointer to get the entry.
+#             import pdb
+#             pdb.set_trace()
+#
+#             return self.pack.get_entry(v)
+#         else:
+#             return v
+
+
+class MultiPackGeneric(MultiEntry, Entry):
     def __init__(self, pack: PackType):
         super(MultiPackGeneric, self).__init__(pack=pack)
 
 
-class MultiPackLink(BaseLink):
+class MultiPackLink(MultiEntry, BaseLink):
     r"""This is used to link entries in a :class:`MultiPack`, which is
     designed to support cross pack linking, this can support applications such
     as sentence alignment and cross-document coreference. Each link should have
@@ -338,17 +403,32 @@ class MultiPackLink(BaseLink):
 
 
 # pylint: disable=duplicate-bases
-class MultiPackGroup(BaseGroup[Entry]):
+class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     r"""Group type entries, such as "coreference group". Each group has a set
     of members.
     """
+    MemberType: Type[EntryType] = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            members: Optional[Set[Entry]],
+            self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
+        self._members: List[Tuple[int, int]] = []
         super().__init__(pack, members)
+
+    def add_member(self, member: Entry):
+        if not isinstance(member, self.MemberType):
+            raise TypeError(
+                f"The members of {type(self)} should be "
+                f"instances of {self.MemberType}, but got {type(member)}")
+
+        self._members.append(
+            (self.pack.get_pack_index(member.pack_id), member.tid))
+
+    def get_members(self) -> Set[Entry]:
+        members = set()
+        for pack_idx, member_tid in self._members:
+            members.add(self.pack.get_subentry(pack_idx, member_tid))
+        return members
 
 
 class Query(Generics):
@@ -360,7 +440,7 @@ class Query(Generics):
 
     def __init__(self, pack: PackType):
         super().__init__(pack)
-        self._value: QueryType = None
+        self._value: Optional[QueryType] = None
         self._results: Dict[str, float] = {}
 
     @property

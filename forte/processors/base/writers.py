@@ -142,9 +142,9 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(resources, configs)
 
-        pack_index = os.path.join(self.configs.output_dir, self.pack_idx)
-        ensure_dir(pack_index)
-        self.pack_idx_out = open(pack_index, 'w')
+        pack_paths = os.path.join(self.configs.output_dir, self.pack_idx)
+        ensure_dir(pack_paths)
+        self.pack_idx_out = open(pack_paths, 'w')
 
         multi_index = os.path.join(self.configs.output_dir, self.multi_idx)
         ensure_dir(multi_index)
