@@ -38,9 +38,9 @@ class Word(Token):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.string_features: Optional[List[str]] = List[str]()
-        self.word_forms: Optional[FList[Word]] = FList[Word]()
-        self.token_ranks: Optional[FDict[int, "Word"]] = FDict[int, "Word"]()
+        self.string_features: Optional[List[str]] = []
+        self.word_forms: Optional[FList[Word]] = FList[Word](self)
+        self.token_ranks: Optional[FDict[int, "Word"]] = FDict[int, "Word"](self)
 
 
 @dataclass
@@ -57,4 +57,4 @@ class WordLink(Link):
 
     def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
-        self.string_features: Optional[List[str]] = List[str]()
+        self.string_features: Optional[List[str]] = []

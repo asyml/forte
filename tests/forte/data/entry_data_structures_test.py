@@ -4,11 +4,13 @@ from typing import Optional, List, Any, Iterator
 
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology import Generics, MultiPackGeneric
+from forte.data.ontology import Generics, MultiPackGeneric, Annotation
 from forte.data.ontology.core import FList, FDict, MpPointer, Pointer
 from forte.data.readers.base_reader import PackReader, MultiPackReader
+from forte.pack_manager import PackManager
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, MultiPackProcessor
+from ft.onto.base_ontology import EntityMention
 
 
 @dataclass
@@ -146,6 +148,7 @@ class MultiEntryStructure(unittest.TestCase):
         mp_entry = ExampleMPEntry(input_pack)
         p1 = input_pack.add_pack('pack1')
         e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
+
         with self.assertRaises(TypeError):
             mp_entry.refer_entry = e1
 
@@ -193,3 +196,21 @@ class EntryDataStructure(unittest.TestCase):
         # Make sure we stored index instead of raw data in dict.
         for v in dict_entry.entries.__dict__['_FDict__data'].values():
             self.assertTrue(isinstance(v, int))
+
+
+class NotHashingTest(unittest.TestCase):
+    def setUp(self):
+        self.pack: DataPack = DataPack()
+        self.pack.set_text("Some text to test annotations on.")
+        PackManager().set_input_source('hashing_test')
+
+    def test_not_hashable(self):
+        anno: Annotation = Annotation(self.pack, 0, 5)
+        with self.assertRaises(TypeError):
+            hash(anno)
+        anno.regret_creation()
+
+        anno1: EntityMention = EntityMention(self.pack, 0, 2)
+        with self.assertRaises(TypeError):
+            hash(anno1)
+        anno1.regret_creation()

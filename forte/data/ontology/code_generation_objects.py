@@ -451,7 +451,7 @@ class DictProperty(Property):
         if self.type_str == 'typing.Dict':
             return 'dict()'
         else:
-            return f"{self._full_class()}()"
+            return f"{self._full_class()}(self)"
 
     def _full_class(self) -> str:
         composite_type = self.import_manager.get_name_to_use(self.type_str)
@@ -582,9 +582,10 @@ class ListProperty(Property):
         return f"{option_type}[{self._full_class()}]"
 
     def default_value(self) -> str:
-        composite_type = self.import_manager.get_name_to_use(self.type_str)
-        item_type = self.import_manager.get_name_to_use(self.item_type)
-        return f"{self._full_class()}()"
+        if self.type_str == 'typing.List':
+            return '[]'
+        else:
+            return f"{self._full_class()}(self)"
 
     def _full_class(self):
         composite_type = self.import_manager.get_name_to_use(self.type_str)

@@ -32,8 +32,9 @@ class WikiPage(Annotation):
         page_id (Optional[str])
         page_name (Optional[str])
     """
-    page_id: Optional[str] = None
-    page_name: Optional[str] = None
+
+    page_id: Optional[str]
+    page_name: Optional[str]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
@@ -43,6 +44,7 @@ class WikiPage(Annotation):
 
 @dataclass
 class WikiBody(Annotation):
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -53,7 +55,8 @@ class WikiSection(Annotation):
     Attributes:
         is_intro (Optional[bool])
     """
-    is_intro: Optional[bool] = None
+
+    is_intro: Optional[bool]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
@@ -62,12 +65,14 @@ class WikiSection(Annotation):
 
 @dataclass
 class WikiParagraph(Annotation):
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
 
 @dataclass
 class WikiTitle(Annotation):
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -78,7 +83,8 @@ class WikiAnchor(Annotation):
     Attributes:
         target_page_name (Optional[str])
     """
-    target_page_name: Optional[str] = None
+
+    target_page_name: Optional[str]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
@@ -92,8 +98,9 @@ class WikiInfoBoxProperty(Generics):
         key (Optional[str])
         value (Optional[str])
     """
-    key: Optional[str] = None
-    value: Optional[str] = None
+
+    key: Optional[str]
+    value: Optional[str]
 
     def __init__(self, pack: DataPack):
         super().__init__(pack)
@@ -108,8 +115,9 @@ class WikiInfoBoxMapped(Generics):
         key (Optional[str])
         value (Optional[str])
     """
-    key: Optional[str] = None
-    value: Optional[str] = None
+
+    key: Optional[str]
+    value: Optional[str]
 
     def __init__(self, pack: DataPack):
         super().__init__(pack)

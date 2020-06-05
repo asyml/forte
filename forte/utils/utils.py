@@ -18,6 +18,8 @@ from functools import wraps
 from inspect import getfullargspec
 from pydoc import locate
 from typing import Dict, List, Optional, get_type_hints
+from typing_inspect import is_union_type, is_generic_type, get_origin, \
+    is_callable_type, is_optional_type
 
 __all__ = [
     "get_full_module_name",
@@ -27,8 +29,6 @@ __all__ = [
     "create_class_with_kwargs",
     "check_type",
 ]
-
-from typing_inspect import is_union_type, is_generic_type, get_origin
 
 
 def get_full_module_name(o, lower: bool = False) -> str:
@@ -148,10 +148,12 @@ def create_class_with_kwargs(class_name: str, class_args: Dict):
 def check_type(obj, tp):
     if is_union_type(tp):
         return any(check_type(obj, a) for a in tp.__args__)
-    elif is_generic_type(tp):
-        return check_type(obj, get_origin(tp))
     else:
-        return isinstance(obj, tp)
+        origin = get_origin(tp)
+        if origin is None:
+            return isinstance(obj, tp)
+        else:
+            return check_type(obj, origin)
 
 
 def validate_input(func, **kwargs):

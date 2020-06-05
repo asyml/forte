@@ -78,7 +78,8 @@ class RACEMultiChoiceQAReader(PackReader):
                     option_end = offset + len(option_text)
                     option = Option(pack, offset, option_end)
                     offset = option_end + 1
-                    question.add_options(option)
+                    # question.add_options(option)
+                    question.options.append(option)
 
                 answers = dataset['answers'][qid]
                 if not isinstance(answers, list):

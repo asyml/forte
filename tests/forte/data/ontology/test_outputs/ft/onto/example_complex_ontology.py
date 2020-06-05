@@ -57,7 +57,7 @@ class Sentence(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.key_tokens: Optional[FList[Token]] = FList[Token]()
+        self.key_tokens: Optional[FList[Token]] = FList[Token](self)
 
 
 @dataclass

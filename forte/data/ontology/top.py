@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from functools import total_ordering
 from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
@@ -43,6 +44,7 @@ class Generics(Entry):
         super().__init__(pack=pack)
 
 
+# TODO: Annotation is not hashable.
 @total_ordering
 class Annotation(Entry):
     r"""Annotation type entries, such as "token", "entity mention" and
@@ -78,15 +80,16 @@ class Annotation(Entry):
         """
         self._span = Span(begin, end)
 
-    def __hash__(self):
-        r"""The hash function of :class:`Annotation`.
-
-        Users can define their own hash function by themselves but this must
-        be consistent to :meth:`eq`.
-        """
-        return hash(
-            (type(self), self.pack, self.span.begin, self.span.end)
-        )
+    # Not really good to hash a mutable type.
+    # def __hash__(self):
+    #     r"""The hash function of :class:`Annotation`.
+    #
+    #     Users can define their own hash function by themselves but this must
+    #     be consistent to :meth:`eq`.
+    #     """
+    #     return hash(
+    #         (type(self), self.pack, self.span.begin, self.span.end)
+    #     )
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -241,7 +244,7 @@ class Group(BaseGroup[Entry]):
                 f"instances of {self.MemberType}, but got {type(member)}")
         self._members.add(member.tid)
 
-    def get_members(self) -> Set[Entry]:
+    def get_members(self) -> List[Entry]:
         r"""Get the member entries in the group.
 
         Returns:
@@ -251,9 +254,9 @@ class Group(BaseGroup[Entry]):
         if self.pack is None:
             raise ValueError(f"Cannot get members because group is not "
                              f"attached to any data pack.")
-        member_entries = set()
+        member_entries = []
         for m in self._members:
-            member_entries.add(self.pack.get_entry(m))
+            member_entries.append(self.pack.get_entry(m))
         return member_entries
 
 
@@ -424,10 +427,10 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
         self._members.append(
             (self.pack.get_pack_index(member.pack_id), member.tid))
 
-    def get_members(self) -> Set[Entry]:
-        members = set()
+    def get_members(self) -> List[Entry]:
+        members = []
         for pack_idx, member_tid in self._members:
-            members.add(self.pack.get_subentry(pack_idx, member_tid))
+            members.append(self.pack.get_subentry(pack_idx, member_tid))
         return members
 
 

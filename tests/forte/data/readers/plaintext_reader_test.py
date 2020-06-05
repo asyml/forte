@@ -115,9 +115,6 @@ class PlainTextReaderTest(unittest.TestCase):
     @data(
         ([(Span(5, 8), ''), (Span(6, 10), '')], None),  # overlap
         ([(Span(5, 8), ''), (Span(6, 1000), '')], None),  # outside limit
-        ([(Span(-1, 8), '')], None),  # does not support negative indexing
-        ([(Span(8, -1), '')], None),  # does not support negative indexing
-        ([(Span(2, 1), '')], None)  # start should be lesser than end
     )
     def test_reader_replace_error_test(self, value):
         # Read with errors in span replacements

@@ -122,9 +122,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def __del__(self):
         if len(self._pending_entries) > 0:
-            import pdb
-            pdb.set_trace()
-
+            print(self._pending_entries)
             raise ProcessExecutionException(
                 f"There are {len(self._pending_entries)} "
                 f"entries not added to the index correctly.")
@@ -433,8 +431,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self,
             node: Union[int, EntryType],
             as_parent: bool
-    ) -> Set[LinkType]:
-        links: Set[LinkType] = set()
+    ) -> List[LinkType]:
+        links: List[LinkType] = []
         if isinstance(node, Entry):
             tid = node.tid
             if tid is None:
@@ -452,7 +450,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         for tid in self.index.link_index(tid, as_parent=as_parent):
             entry: EntryType = self.get_entry(tid)
             if self.validate_link(entry):
-                links.add(entry)  # type: ignore
+                links.append(entry)  # type: ignore
         return links
 
     def get_links_by_parent(
