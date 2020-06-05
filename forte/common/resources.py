@@ -61,6 +61,8 @@ class Resources:
         if keys is None:
             keys = list(self.resources.keys())
 
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: disable until fix: https://github.com/PyCQA/pylint/issues/3507
         if isinstance(keys, List):
             for key in keys:
                 with open(Path(output_dir, f"{key}.pkl"), "wb") as f:
@@ -110,6 +112,8 @@ class Resources:
         if path is None:
             path = "./"
 
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: disable until fix: https://github.com/PyCQA/pylint/issues/3507
         if isinstance(keys, List):
             for key in keys:
                 with open(Path(path, f"{key}.pkl"), "rb") as f:

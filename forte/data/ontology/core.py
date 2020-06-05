@@ -18,9 +18,10 @@ representation system.
 
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
+from collections.abc import MutableSequence, MutableMapping
 from typing import (
-    Iterable, Optional, Set, Type, Hashable, TypeVar, Generic, MutableSequence,
-    Union, Dict, MutableMapping, Iterator, get_type_hints, Any)
+    Iterable, Optional, Set, Type, Hashable, TypeVar, Generic,
+    Union, Dict, Iterator, get_type_hints, Any)
 
 import numpy as np
 
@@ -354,6 +355,7 @@ class FList(Generic[ParentEntryType], MutableSequence):
 
     def __init__(self, parent_entry: ParentEntryType,
                  data: Iterable[EntryType] = None):
+        super().__init__()
         self.__parent_entry = parent_entry
         self.__data = []
         if data is not None:
@@ -374,6 +376,8 @@ class FList(Generic[ParentEntryType], MutableSequence):
     def __setitem__(
             self, index: Union[int, slice],
             value: Union[EntryType, Iterable[EntryType]]) -> None:
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: Disable until fix: https://github.com/PyCQA/pylint/issues/3507
         if isinstance(value, Iterable):
             d_value = [v.tid for v in value]
         else:
@@ -400,6 +404,8 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
 
     def __init__(self, parent_entry: ParentEntryType,
                  data: Dict[KeyType, ValueType] = None):
+        super().__init__()
+
         self.__parent_entry = parent_entry
         self.__data: Dict[KeyType, Any] = {}
 

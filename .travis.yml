@@ -29,7 +29,7 @@ install:
   # Install faiss-cpu for coverage
   - pip install faiss-cpu
   # Install test tools.
-  - pip install pylint==2.3.1 flake8==3.7.7
+  - pip install pylint==2.5.2 flake8==3.8.2
   - pip install mypy>=0.730
   - pip install pytest==4.3.1
   # Install code coverage tools.

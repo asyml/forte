@@ -75,6 +75,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
 
         # ELMo representation
         if self._hparams.elmo.path is not None:
+            # pylint: disable=import-outside-toplevel
             from allennlp.modules.elmo import Elmo, batch_to_ids
             elmo_hparams = self._hparams.elmo
             self.elmo = Elmo(options_file=elmo_hparams.config,

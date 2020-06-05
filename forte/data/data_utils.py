@@ -25,7 +25,6 @@ from typing import List, Optional, overload
 from forte.utils.types import PathLike
 from forte.utils.utils_io import maybe_create_dir
 
-
 __all__ = [
     "maybe_download"
 ]
@@ -143,6 +142,7 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     r"""Adapted from `https://github.com/saurabhshri/gdrive-downloader`
     """
 
+    # pylint: disable=import-outside-toplevel
     try:
         import requests
     except ImportError:

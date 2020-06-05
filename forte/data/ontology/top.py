@@ -115,8 +115,8 @@ class Annotation(Entry):
     @property
     def text(self):
         if self.pack is None:
-            raise ValueError(f"Cannot get text because annotation is not "
-                             f"attached to any data pack.")
+            raise ValueError("Cannot get text because annotation is not "
+                             "attached to any data pack.")
         return self.pack.get_span_text(self.span)
 
     @property
@@ -196,10 +196,10 @@ class Link(BaseLink):
              An instance of :class:`Entry` that is the parent of the link.
         """
         if self.pack is None:
-            raise ValueError(f"Cannot get parent because link is not "
-                             f"attached to any data pack.")
+            raise ValueError("Cannot get parent because link is not "
+                             "attached to any data pack.")
         if self._parent is None:
-            raise ValueError(f"The parent of this entry is not set.")
+            raise ValueError("The parent of this entry is not set.")
         return self.pack.get_entry(self._parent)
 
     def get_child(self) -> Entry:
@@ -209,10 +209,10 @@ class Link(BaseLink):
              An instance of :class:`Entry` that is the child of the link.
         """
         if self.pack is None:
-            raise ValueError(f"Cannot get child because link is not"
-                             f" attached to any data pack.")
+            raise ValueError("Cannot get child because link is not"
+                             " attached to any data pack.")
         if self._child is None:
-            raise ValueError(f"The child of this entry is not set.")
+            raise ValueError("The child of this entry is not set.")
         return self.pack.get_entry(self._child)
 
 
@@ -252,60 +252,12 @@ class Group(BaseGroup[Entry]):
              group.
         """
         if self.pack is None:
-            raise ValueError(f"Cannot get members because group is not "
-                             f"attached to any data pack.")
+            raise ValueError("Cannot get members because group is not "
+                             "attached to any data pack.")
         member_entries = []
         for m in self._members:
             member_entries.append(self.pack.get_entry(m))
         return member_entries
-
-
-# class MultiEntry(Entry, ABC):
-#     def __setattr__(self, key, value):
-#         """
-#         Handle the special sub-entry case in the multi pack case.
-#
-#         Args:
-#             key:
-#             value:
-#
-#         Returns:
-#
-#         """
-#         self._check_attr_type(key, value)
-#
-#         if isinstance(value, SinglePackEntries):
-#             # Save a sub pointer to this entry if it is a single pack entry.
-#             p_idx = self.pack.get_pack_index(value.pack_id)
-#             tid = value.tid
-#             self.__dict__[key] = MpPointer(p_idx, tid)
-#         elif isinstance(value, MultiPackEntries):
-#             # Save a pointer to this entry if it is a multi pack entry.
-#             self.__dict__[key] = Pointer(value.tid)
-#         elif isinstance(value, Entry):
-#             raise AttributeError(
-#                 f"Encounter entry type that is not a single pack entry "
-#                 f"nor a multi pack entry.")
-#         else:
-#             super().__setattr__(key, value)
-#
-#     def __getattribute__(self, item):
-#         """
-#         Handle the special sub-entry case in the multi pack case.
-#
-#         Returns:
-#
-#         """
-#         v = super().__getattribute__(item)
-#
-#         if isinstance(v, MpPointer):
-#             # Using the multi pack pointer to get the entry.
-#             import pdb
-#             pdb.set_trace()
-#
-#             return self.pack.get_entry(v)
-#         else:
-#             return v
 
 
 class MultiPackGeneric(MultiEntry, Entry):

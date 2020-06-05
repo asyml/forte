@@ -25,8 +25,6 @@ from forte.data.ontology.ontology_code_const import (
     get_ignore_error_lines, AUTO_GEN_SIGNATURE, AUTO_GEN_FILENAME)
 from forte.data.ontology.utils import split_file_path
 
-import pdb
-
 
 class ImportManager:
     r"""A naive implementation that records import strings and imported names
@@ -326,16 +324,6 @@ class Property(Item, ABC):
     def default_value(self) -> str:
         raise NotImplementedError
 
-    # def to_access_functions(self, level):
-    #     """ Some functions to define how to access the property values, such
-    #     as getters, setters, len, etc.
-    #     Args:
-    #         level: The indentation level to format these functions.
-    #
-    #     Returns: The access code generated for this property
-    #     """
-    #     raise NotImplementedError
-
     def to_getstate(self, level):
         return change_get_state(self.name, self.field_name, level)
 
@@ -395,32 +383,6 @@ class NonCompositeProperty(Property):
     def default_value(self) -> str:
         return repr(self.default_val)
 
-    # def to_access_functions(self, level):
-    #     name = self.name
-    #
-    #     # Construct getter.
-    #     lines = getter(name, self.field_name, self.is_forte_type)
-    #
-    #     # Construct setter.
-    #     if self.is_forte_type:
-    #         option_type = self.import_manager.get_name_to_use(self.option_type)
-    #         type_str = self.import_manager.get_name_to_use(self.type_str)
-    #         lines.extend([
-    #             (f"@{self.name}.setter", 0),
-    #             (f"def {name}(self, {name}: {option_type}[{type_str}]):", 0),
-    #             (f"value = self.pack.add_entry({name}) "
-    #              f"if {name} is not None else None", 1),
-    #             (f"self.set_fields({self.field_name}=value)", 1),
-    #         ])
-    #     else:
-    #         lines.extend([
-    #             (f"@{self.name}.setter", 0),
-    #             (f"def {name}(self, {name}: {self.internal_type_str()}):", 0),
-    #             (f"self.set_fields({self.field_name}"
-    #              f"={self.to_field_value()})", 1),
-    #         ])
-    #     return indent_code([indent_line(*line) for line in lines], level)
-
     def to_field_value(self):
         return self.name
 
@@ -462,100 +424,8 @@ class DictProperty(Property):
 
         return f"{composite_type}[{key_type}, {value_type}]"
 
-    # def access_type_str(self) -> str:
-    #     option_type = self.import_manager.get_name_to_use('typing.Optional')
-    #     composite_type = self.import_manager.get_name_to_use(self.type_str)
-    #
-    #     key_type = self.import_manager.get_name_to_use(self.key_type)
-    #     value_type = self.import_manager.get_name_to_use(self.value_type)
-    #
-    #     if self.self_ref:
-    #         value_type = '"' + value_type + '"'
-    #     return f"{option_type}[{composite_type}[{key_type}, {value_type}]]"
-
     def to_field_value(self):
         return self.name
-
-    # def to_access_functions(self, level):
-    #     r"""Generate access function to for Dict types. This extend the base
-    #     function and add some composite specific types.
-    #     Args:
-    #         level: Indent level
-    #     """
-    #     name = self.name
-    #     key_type = self.import_manager.get_name_to_use(self.key_type)
-    #     value_type = self.import_manager.get_name_to_use(self.value_type)
-    #
-    #     if self.self_ref:
-    #         value_type = '"' + value_type + '"'
-    #
-    #     # Construct getter.
-    #     lines = getter(name, self.field_name, self.value_is_forte_type, 'Dict')
-    #
-    #     # Construct setter.
-    #     if self.value_is_forte_type:
-    #         lines.extend([
-    #             (f"@{self.name}.setter", 0),
-    #             (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
-    #             (f"{name} = {{}} if {name} is None else {name}", 1),
-    #             (f"self.set_fields("
-    #              f"{self.field_name}="
-    #              f"dict([(k, v.tid) "
-    #              f"for k, v in {name}.items()]))", 1),
-    #             ('', 0),
-    #         ])
-    #     else:
-    #         lines.extend([
-    #             (f"@{self.name}.setter", 0),
-    #             (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
-    #             (f"{name} = {{}} if {name} is None else {name}", 1),
-    #             (f"self.set_fields("
-    #              f"{self.field_name}={name})", 1),
-    #             ('', 0),
-    #         ])
-    #
-    #     # Construct counter.
-    #     lines.extend([
-    #         (f"def num_{name}(self):", 0),
-    #         (f"return len(self.{self.field_name})", 1),
-    #         ('', 0),
-    #     ])
-    #
-    #     # Construct clear (deletion).
-    #     if self.value_is_forte_type:
-    #         lines.extend([
-    #             # # Probably should not clear the object during clearing list.
-    #             (f"def clear_{name}(self):", 0),
-    #             # (f"[self.pack.delete_entry("
-    #             #  f"self.pack.get_entry(tid)) "
-    #             #  f"for tid in self.{name}.values()]",
-    #             #  1),
-    #             (f"self.{self.field_name}.clear()", 1),
-    #         ])
-    #     else:
-    #         lines.extend([
-    #             (f"def clear_{name}(self):", 0),
-    #             (f"self.{self.field_name}.clear()", 1),
-    #         ])
-    #
-    #     # Construct appender.
-    #     if self.value_is_forte_type:
-    #         lines.extend([
-    #             ('', 0),
-    #             (f"def add_{name}(self, key: {key_type}, value: {value_type}):",
-    #              0),
-    #             (f"self.{self.field_name}[key] = value.tid",
-    #              1),
-    #         ])
-    #     else:
-    #         lines.extend([
-    #             ('', 0),
-    #             (f"def add_{name}(self, key: {key_type}, value: {value_type}):",
-    #              0),
-    #             (f"self.{name}[key] = value", 1),
-    #         ])
-    #
-    #     return indent_code([indent_line(*line) for line in lines], level)
 
 
 class ListProperty(Property):
@@ -592,99 +462,7 @@ class ListProperty(Property):
         item_type = self.import_manager.get_name_to_use(self.item_type)
         return f"{composite_type}[{item_type}]"
 
-    # def access_type_str(self) -> str:
-    #     option_type = self.import_manager.get_name_to_use('typing.Optional')
-    #     composite_type = self.import_manager.get_name_to_use(self.type_str)
-    #     item_type = self.import_manager.get_name_to_use(self.item_type)
-    #
-    #     if self.self_ref:
-    #         item_type = '"' + item_type + '"'
-    #
-    #     return f"{option_type}[{composite_type}[{item_type}]]"
-
-    # def to_access_functions(self, level):
-    #     """ Generate access function to for composite types. This extend the
-    #     base function and add some composite specific types.
-    #     :param level:
-    #     :return:
-    #     """
-    #     name = self.name
-    #
-    #     # Construct getter
-    #     lines = getter(name, self.field_name, self.item_is_forte_type, 'List')
-    #
-    #     # Construct setter.
-    #     if self.item_is_forte_type:
-    #         lines.extend([
-    #             (f"@{self.name}.setter", 0),
-    #             (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
-    #             (f"{name} = [] if {name} is None else {name}", 1),
-    #             (f"self.set_fields("
-    #              f"{self.field_name}="
-    #              f"[obj.tid for obj in {name}])", 1),
-    #             ('', 0),
-    #         ])
-    #     else:
-    #         lines.extend([
-    #             (f"@{self.name}.setter", 0),
-    #             (f"def {name}(self, {name}: {self.access_type_str()}):", 0),
-    #             (f"{name} = [] if {name} is None else {name}", 1),
-    #             (f"self.set_fields("
-    #              f"{self.field_name}={name})", 1),
-    #             ('', 0),
-    #         ])
-    #
-    #     # Construct counter.
-    #     lines.extend([
-    #         (f"def num_{name}(self):", 0),
-    #         (f"return len(self.{self.field_name})", 1),
-    #         ('', 0),
-    #     ])
-    #
-    #     # Construct clear (deletion).
-    #     if self.item_is_forte_type:
-    #         lines.extend([
-    #             # # Probably should not clear the object during clearing list.
-    #             (f"def clear_{name}(self):", 0),
-    #             # (f"[self.pack.delete_entry("
-    #             #  f"self.pack.get_entry(tid)) "
-    #             #  f"for tid in self.{self.field_name}]", 1),
-    #             (f"self.{self.field_name}.clear()", 1),
-    #         ])
-    #     else:
-    #         lines.extend([
-    #             (f"def clear_{name}(self):", 0),
-    #             (f"self.{self.field_name}.clear()", 1),
-    #         ])
-    #
-    #     # Construct appender.
-    #     item_type = self.import_manager.get_name_to_use(self.item_type)
-    #     if self.self_ref:
-    #         item_type = '"' + item_type + '"'
-    #
-    #     if self.item_is_forte_type:
-    #         lines.extend([
-    #             ('', 0),
-    #             (f"def add_{name}(self, a_{name}: {item_type}):", 0),
-    #             (f"self.{self.field_name}.append("
-    #              f"a_{name}.tid)", 1),
-    #         ])
-    #     else:
-    #         lines.extend([
-    #             ('', 0),
-    #             (f"def add_{name}(self, a_{name}: {item_type}):", 0),
-    #             (f"self.{self.field_name}.append(a_{name})", 1),
-    #         ])
-    #
-    #     return indent_code([indent_line(*line) for line in lines], level)
-
     def to_field_value(self):
-        # item_value_str = PrimitiveProperty(self.import_manager, 'item',
-        #                                    self.item_type).to_field_value()
-        # print('field vale')
-        # print(item_value_str)
-        # print(f"[{item_value_str} for item in {self.name}]")
-        # return f"[{item_value_str} for item in {self.name}]"
         return self.name
 
 
@@ -777,9 +555,6 @@ class EntryDefinition(Item):
         lines += [item.to_init_code(2) for item in self.properties]
         lines += ['']
 
-        # lines += [self.to_get_state_code(1)]
-        # lines += [self.to_set_state_code(1)]
-        # lines += [item.to_access_functions(1) for item in self.properties]
         return indent_code(lines, level, False)
 
     @staticmethod

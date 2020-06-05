@@ -237,7 +237,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
             append: Whether to allow appending to the cache.
         """
         if not self._cache_directory:
-            raise ValueError(f"Can not cache without a cache_directory!")
+            raise ValueError("Can not cache without a cache_directory!")
 
         os.makedirs(self._cache_directory, exist_ok=True)
 

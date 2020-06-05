@@ -436,8 +436,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if isinstance(node, Entry):
             tid = node.tid
             if tid is None:
-                raise ValueError(f"The requested node has no tid. "
-                                 f"Have you add this entry into the datapack?")
+                raise ValueError("The requested node has no tid. "
+                                 "Have you add this entry into the datapack?")
         elif isinstance(node, int):
             tid = node
         else:
@@ -466,8 +466,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if isinstance(member, Entry):
             tid = member.tid
             if tid is None:
-                raise ValueError(f"Argument member has no tid. "
-                                 f"Have you add this entry into the datapack?")
+                raise ValueError("Argument member has no tid. "
+                                 "Have you add this entry into the datapack?")
         elif isinstance(member, int):
             tid = member
         else:

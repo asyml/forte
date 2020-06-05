@@ -99,7 +99,7 @@ class OntonotesReader(PackReader):
                 continue
             if field.startswith("*"):
                 if self._star_pos is not None:
-                    raise ValueError(f"Only one field can begin with '*'")
+                    raise ValueError("Only one field can begin with '*'")
                 field = field[1:]
                 if field not in self._STAR_FIELDS:
                     raise ValueError(f"Field '{field}' cannot begin with '*'")

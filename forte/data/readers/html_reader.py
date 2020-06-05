@@ -168,7 +168,6 @@ class ForteHTMLParser(HTMLParser):
                     if not startswith(';', k - 1):
                         k = k - 1
                     i = self.updatepos(i, k)
-                    continue
                 else:
                     if ";" in rawdata[i:]:  # bail by consuming &#
                         self.handle_data(rawdata[i:i + 2])
@@ -193,7 +192,6 @@ class ForteHTMLParser(HTMLParser):
                             k = n
                         i = self.updatepos(i, i + 1)
                     # incomplete
-                    break
                 elif (i + 1) < n:
                     # not the end of the buffer, and can't be confused
                     # with some other construct

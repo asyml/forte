@@ -277,7 +277,7 @@ class Pipeline(Generic[PackType]):
             break
 
         if len(first_pack) == 1:
-            results = [p for p in self._process_packs(iter(first_pack))]
+            results = list(self._process_packs(iter(first_pack)))
             return results[0]
         else:
             raise ValueError("Input data source contains no packs.")

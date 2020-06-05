@@ -18,8 +18,8 @@ from functools import wraps
 from inspect import getfullargspec
 from pydoc import locate
 from typing import Dict, List, Optional, get_type_hints
-from typing_inspect import is_union_type, is_generic_type, get_origin, \
-    is_callable_type, is_optional_type
+
+from typing_inspect import is_union_type, get_origin
 
 __all__ = [
     "get_full_module_name",

@@ -234,13 +234,13 @@ class OntologyCodeGenerator:
         self.exclude_from_writing = set()
 
         if not generate_all:
-            logging.info(f"Checking existing specification "
-                         f"directory: {forte_spec_dir}")
+            logging.info("Checking existing specification "
+                         "directory: %s", forte_spec_dir)
             for existing_spec in os.listdir(forte_spec_dir):
                 if existing_spec.endswith('.json'):
                     logging.info(
-                        f"Forte library contains {existing_spec}, "
-                        f"will skip this one.")
+                        "Forte library contains %s, "
+                        "will skip this one.", existing_spec)
                     self.exclude_from_writing.add(
                         os.path.join(spec_base, existing_spec))
 

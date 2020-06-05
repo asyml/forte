@@ -11,3 +11,4 @@ jsonschema~=3.0.0
 texar-pytorch>=0.1.1
 typing>=3.7.4
 typing-inspect~=0.6.0
+dataclasses~=0.7 # For py3.6
