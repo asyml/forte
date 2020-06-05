@@ -64,9 +64,6 @@ class Entry(Generic[ContainerType]):
     A :class:`forte.data.ontology.top.Group` object represents a
     collection of multiple entries.
 
-    There will be some associated attributes for each entry, which can be
-    set via :meth:`set_fields` and retrieved via :meth:`get_field`.
-
     Attributes:
         self.embedding: The embedding vectors (numpy array of floats) of this
             entry.
