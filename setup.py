@@ -35,7 +35,7 @@ setuptools.setup(
         'texar-pytorch',
         'typing>=3.7.4',
         'typing-inspect>=0.6.0',
-        'dataclasses~=0.7'
+        'dataclasses~=0.7;python_version<"3.7"'
     ],
     extras_require={
         'nltk': ['nltk'],
