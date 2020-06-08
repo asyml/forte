@@ -463,7 +463,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         else:
             return target[target.index(entry)]
 
-    def get(self, entry_type: Type[EntryType],
+    def get(self, entry_type: Type[EntryType],  # type: ignore
             components: Optional[Union[str, List[str]]] = None):
         """ Get ``entry_type`` entries from this multi pack.
 

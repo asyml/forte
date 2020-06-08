@@ -388,28 +388,6 @@ class Query(Generics):
         self.value: Optional[QueryType] = None
         self.results: Dict[str, float] = {}
 
-    # @property
-    # def value(self) -> QueryType:
-    #     return self._value
-    #
-    # @value.setter
-    # def value(self, value: QueryType):
-    #     r"""Sets the value of the query.
-    #
-    #     Args:
-    #         value (numpy array or str): A vector or a string (in case of
-    #         traditional models) representing the query.
-    #     """
-    #     self._value = value
-    #
-    # @property
-    # def results(self):
-    #     return self._results
-    #
-    # @results.setter
-    # def results(self, pid_to_score: Dict[str, float]):
-    #     self._results = pid_to_score
-
     def add_result(self, pid: str, score: float):
         """
         Set the result score for a particular pack (based on the pack id).

@@ -133,6 +133,11 @@ class ElasticSearchIndexer:
             meta data of the search.
         """
         index_name = index_name if index_name else self.hparams.index_name
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: until fix: https://github.com/PyCQA/pylint/issues/3507
+        if not isinstance(query, Dict):
+            raise ValueError(
+                "The query to the elastic indexer need to be a dictionary.")
         return self.elasticsearch.search(index=index_name, body=query, **kwargs)
 
     @property

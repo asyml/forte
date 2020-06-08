@@ -725,7 +725,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             a_dict[key] = np.array(value)
         return a_dict
 
-    def get(self, entry_type: Type[EntryType],
+    def get(self, entry_type: Type[EntryType],  # type: ignore
             range_annotation: Optional[Annotation] = None,
             components: Optional[Union[str, List[str]]] = None
             ) -> Iterable[EntryType]:
