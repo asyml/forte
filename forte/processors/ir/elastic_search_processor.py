@@ -67,7 +67,7 @@ class ElasticSearchProcessor(MultiPackProcessor):
 
         # ElasticSearchQueryCreator adds a Query entry to query pack. We now
         # fetch it as the first element.
-        first_query: Query = query_pack.get_single(Query)
+        first_query: Query = query_pack.get_single(Query)  # type: ignore
         results = self.index.search(first_query.value)
         hits = results["hits"]["hits"]
 

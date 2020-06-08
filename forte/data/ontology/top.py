@@ -362,7 +362,7 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     r"""Group type entries, such as "coreference group". Each group has a set
     of members.
     """
-    MemberType: Type[EntryType] = Entry
+    MemberType: Type[Entry] = Entry
 
     def __init__(
             self, pack: PackType, members: Optional[Iterable[Entry]] = None

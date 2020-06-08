@@ -170,7 +170,7 @@ def main():
     else:
         sys.stderr.write('Error: %s\n' % "wrong usage of the script.")
         OntologyGenerationParser().print_help()
-        exit(2)
+        sys.exit(2)
 
     if __name__ == "__main__":
         main()

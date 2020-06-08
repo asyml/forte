@@ -55,14 +55,14 @@ class Option(Annotation):
 class Question(Annotation):
     """
     Attributes:
-        options (Optional[FList[Option]])
-        answers (Optional[List[int]])
+        options (FList[Option])
+        answers (List[int])
     """
 
-    options: Optional[FList[Option]]
-    answers: Optional[List[int]]
+    options: FList[Option]
+    answers: List[int]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.options: Optional[FList[Option]] = FList[Option](self)
-        self.answers: Optional[List[int]] = []
+        self.options: FList[Option] = FList[Option](self)
+        self.answers: List[int] = []

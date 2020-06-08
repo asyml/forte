@@ -406,8 +406,8 @@ class DictProperty(Property):
         self.self_ref: bool = self_ref
 
     def internal_type_str(self) -> str:
-        option_type = self.import_manager.get_name_to_use('typing.Optional')
-        return f"{option_type}[{self._full_class()}]"
+        # option_type = self.import_manager.get_name_to_use('typing.Optional')
+        return f"{self._full_class()}"
 
     def default_value(self) -> str:
         if self.type_str == 'typing.Dict':
@@ -448,8 +448,8 @@ class ListProperty(Property):
         self.self_ref: bool = self_ref
 
     def internal_type_str(self) -> str:
-        option_type = self.import_manager.get_name_to_use('typing.Optional')
-        return f"{option_type}[{self._full_class()}]"
+        # option_type = self.import_manager.get_name_to_use('typing.Optional')
+        return f"{self._full_class()}"
 
     def default_value(self) -> str:
         if self.type_str == 'typing.List':

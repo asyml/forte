@@ -17,11 +17,11 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
+from collections import MutableSequence, MutableMapping
 from dataclasses import dataclass
-from collections.abc import MutableSequence, MutableMapping
 from typing import (
-    Iterable, Optional, Set, Type, Hashable, TypeVar, Generic,
-    Union, Dict, Iterator, get_type_hints, Any)
+    Iterable, Optional, Type, Hashable, TypeVar, Generic,
+    Union, Dict, Iterator, get_type_hints, overload, List)
 
 import numpy as np
 
@@ -354,19 +354,29 @@ class FList(Generic[ParentEntryType], MutableSequence):
     """
 
     def __init__(self, parent_entry: ParentEntryType,
-                 data: Iterable[EntryType] = None):
+                 data: Optional[Iterable[EntryType]] = None):
         super().__init__()
         self.__parent_entry = parent_entry
-        self.__data = []
+        self.__data: List[BasePointer] = []
         if data is not None:
             self.__data = [
                 self.__parent_entry.relative_pointer(d) for d in data]
 
     def insert(self, index: int, entry: EntryType):
-        self.__data.insert(index, entry.tid)
+        self.__data.insert(index, self.__parent_entry.relative_pointer(entry))
+
+    @overload
+    @abstractmethod
+    def __getitem__(self, i: int) -> EntryType:
+        ...
+
+    @overload
+    @abstractmethod
+    def __getitem__(self, s: slice) -> MutableSequence:
+        ...
 
     def __getitem__(self, index: Union[int, slice]
-                    ) -> Union[EntryType, MutableSequence[EntryType]]:
+                    ) -> Union[EntryType, MutableSequence]:
         if isinstance(index, slice):
             return [self.__parent_entry.from_pointer(d) for d in
                     self.__data[index]]
@@ -378,11 +388,14 @@ class FList(Generic[ParentEntryType], MutableSequence):
             value: Union[EntryType, Iterable[EntryType]]) -> None:
         # pylint: disable=isinstance-second-argument-not-valid-type
         # TODO: Disable until fix: https://github.com/PyCQA/pylint/issues/3507
-        if isinstance(value, Iterable):
-            d_value = [v.tid for v in value]
+        if isinstance(index, int):
+            # Assert for mypy: https://github.com/python/mypy/issues/7858
+            assert isinstance(value, Entry)
+            self.__data[index] = value.create_pointer(self.__parent_entry)
         else:
-            d_value = value.tid
-        self.__data[index] = d_value
+            assert isinstance(value, Iterable)
+            self.__data[index] = [
+                v.create_pointer(self.__parent_entry) for v in value]
 
     def __delitem__(self, index: Union[int, slice]) -> None:
         del self.__data[index]
@@ -403,11 +416,11 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
     """
 
     def __init__(self, parent_entry: ParentEntryType,
-                 data: Dict[KeyType, ValueType] = None):
+                 data: Optional[Dict[KeyType, ValueType]] = None):
         super().__init__()
 
         self.__parent_entry = parent_entry
-        self.__data: Dict[KeyType, Any] = {}
+        self.__data: Dict[KeyType, BasePointer] = {}
 
         if data is not None:
             self.__data = {
@@ -415,7 +428,11 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
                     v) for k, v in data.items()}
 
     def __setitem__(self, k: KeyType, v: ValueType) -> None:
-        self.__data[k] = v.tid
+        try:
+            self.__data[k] = self.__parent_entry.relative_pointer(v)
+        except AttributeError:
+            raise AttributeError(
+                f"Item of the FDict must be of type entry, got {v.__class__}")
 
     def __delitem__(self, k: KeyType) -> None:
         del self.__data[k]
@@ -426,7 +443,7 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
     def __len__(self) -> int:
         return len(self.__data)
 
-    def __iter__(self) -> Iterator[ValueType]:
+    def __iter__(self) -> Iterator[KeyType]:
         yield from self.__data
 
 
@@ -548,7 +565,8 @@ class BaseGroup(Entry, Generic[EntryType]):
     MemberType: Type[EntryType]
 
     def __init__(
-            self, pack: ContainerType, members: Optional[Set[EntryType]] = None
+            self, pack: ContainerType,
+            members: Optional[Iterable[EntryType]] = None
     ):
         super().__init__(pack)
         if members is not None:
@@ -594,11 +612,11 @@ class BaseGroup(Entry, Generic[EntryType]):
             type(other), other.get_members())
 
     @abstractmethod
-    def get_members(self) -> Set[EntryType]:
+    def get_members(self) -> List[EntryType]:
         r"""Get the member entries in the group.
 
         Returns:
-             A set of instances of :class:`Entry` that are the members of the
+             Instances of :class:`Entry` that are the members of the
              group.
         """
         raise NotImplementedError

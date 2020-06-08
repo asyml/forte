@@ -16,6 +16,7 @@ from nltk import pos_tag, ne_chunk, PunktSentenceTokenizer
 from nltk.chunk import RegexpParser
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize.treebank import TreebankWordTokenizer
+from typing import List
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -73,11 +74,17 @@ class NLTKLemmatizer(PackProcessor):
         self.lemmatizer = WordNetLemmatizer()
 
     def _process(self, input_pack: DataPack):
-        token_entries = list(input_pack.get(entry_type=Token,
-                                            components=self.token_component))
-        token_texts = [token.text for token in token_entries]
-        token_pos = [penn2morphy(token.pos) for token in token_entries]
-        lemmas = [self.lemmatizer.lemmatize(token_texts[i], token_pos[i])
+        token_entries: List[Token] = list(input_pack.get(
+            entry_type=Token, components=self.token_component))
+
+        token_texts: List[str] = []
+        token_poses: List[str] = []
+        for token in token_entries:
+            token_texts.append(token.text)
+            assert token.pos is not None
+            token_poses.append(penn2morphy(token.pos))
+
+        lemmas = [self.lemmatizer.lemmatize(token_texts[i], token_poses[i])
                   for i in range(len(token_texts))]
         for token, lemma in zip(token_entries, lemmas):
             token.lemma = lemma

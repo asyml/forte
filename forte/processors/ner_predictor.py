@@ -191,6 +191,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
                 token = orig_token
                 token_ner = token.ner
+                assert isinstance(token_ner, str)
                 if token_ner[0] == "B":
                     current_entity_mention = (token.span.begin, token_ner[2:])
                 elif token_ner[0] == "I":

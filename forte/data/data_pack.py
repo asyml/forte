@@ -23,7 +23,7 @@ from forte.common.exception import ProcessExecutionException
 from forte.data import data_utils_io
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry
+from forte.data.ontology.core import Entry, Pointer
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generics)

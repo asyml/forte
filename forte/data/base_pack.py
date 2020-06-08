@@ -21,9 +21,10 @@ from typing import List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, \
 import jsonpickle
 
 from forte.common import ProcessExecutionException, EntryNotFoundError
-from forte.data.container import EntryContainer, BasePointer
+from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import (Entry, EntryType, GroupType, LinkType)
+from forte.data.ontology.core import (Entry, EntryType, GroupType, LinkType,
+                                      Pointer)
 from forte.pack_manager import PackManager
 
 __all__ = [
@@ -283,7 +284,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self.field_records[c] = {(entry_id, field_name)}
 
     # TODO: how to make this return the precise type here?
-    def get_entry(self, ptr: Union[BasePointer, int]) -> EntryType:
+    def get_entry(self, ptr: Union[Pointer, int]) -> EntryType:
         r"""Look up the entry_index with key ``ptr``. Specific implementation
         depends on the actual class."""
         entry: EntryType = self.index.get_entry(ptr)
@@ -293,12 +294,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return entry
 
     @abstractmethod
-    def get_data(self, **kwargs) -> Iterator[Dict[str, Any]]:
+    def get_data(
+            self, context_type, request, skip_k
+    ) -> Iterator[Dict[str, Any]]:
         raise NotImplementedError
 
     @abstractmethod
-    def get(
-            self, entry_type: Type[EntryType],
+    def get(self, entry_type: Type[EntryType],
             components: Optional[Union[str, List[str]]] = None):
         """ Get ``entry_type`` entries from this multi pack. This is an alias
         to get_entries
@@ -454,10 +456,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return links
 
     def get_links_by_parent(
-            self, parent: Union[int, EntryType]) -> Set[LinkType]:
+            self, parent: Union[int, EntryType]) -> List[LinkType]:
         return self.get_links_from_node(parent, True)
 
-    def get_links_by_child(self, child: Union[int, EntryType]) -> Set[LinkType]:
+    def get_links_by_child(
+            self, child: Union[int, EntryType]) -> List[LinkType]:
         return self.get_links_from_node(child, False)
 
     def get_groups_by_member(

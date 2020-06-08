@@ -19,7 +19,7 @@ Forte Container module.
 # pylint: disable=function-redefined,multiple-statements
 
 from abc import abstractmethod
-from typing import Dict, Generic, Set, Tuple, TypeVar, overload
+from typing import Dict, Generic, Set, Tuple, TypeVar, overload, Union
 
 from forte.data.span import Span
 
@@ -118,14 +118,14 @@ class EntryContainer(Generic[E, L, G]):
 
     @overload
     @abstractmethod
-    def get_entry(self, pointer: BasePointer): ...
+    def get_entry(self, ptr: BasePointer) -> E: ...
 
     @overload
     @abstractmethod
-    def get_entry(self, tid: int): ...
+    def get_entry(self, ptr: int) -> E: ...
 
-    def get_entry(self, p) -> E:
-        pass
+    def get_entry(self, ptr: Union[BasePointer, int]) -> E:
+        raise NotImplementedError
 
     def get_span_text(self, span: Span):
         raise NotImplementedError
