@@ -30,8 +30,8 @@ install:
   - pip install faiss-cpu
   # Install test tools.
   - pip install pylint==2.5.2 flake8==3.8.2
-  - pip install mypy>=0.730
-  - pip install pytest==4.3.1
+  - pip install mypy==0.780
+  - pip install pytest==5.1.3
   # Install code coverage tools.
   - pip install coverage codecov
 

@@ -17,6 +17,7 @@ Unit tests for Pipeline.
 
 import os
 import unittest
+from dataclasses import dataclass
 from typing import Any, Dict, Iterator, Optional, Type
 
 from ddt import ddt, data, unpack
@@ -35,8 +36,10 @@ from tests.dummy_batch_processor import DummyRelationExtractor
 data_samples_root = "data_samples"
 
 
+@dataclass
 class NewType(Generics):
     """A dummy generic type to check the correctness of pipeline execution."""
+    value: Optional[str] = None
 
     def __init__(self, pack, value):
         super().__init__(pack)

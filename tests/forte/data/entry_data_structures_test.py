@@ -15,7 +15,7 @@ from ft.onto.base_ontology import EntityMention
 
 @dataclass
 class ExampleEntry(Generics):
-    secret_number: int = None
+    secret_number: Optional[int] = None
 
     def __init__(self, pack: DataPack):
         super().__init__(pack)
