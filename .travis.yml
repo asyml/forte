@@ -48,7 +48,7 @@ script:
   - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker words
   - export PYTHONPATH=`pwd`
   # unit tests & test coverage
-  - coverage run -m pytest
+  - coverage run -m pytest -s
 
 after_success:
   - codecov

@@ -150,7 +150,7 @@ def check_type(obj, tp):
         return any(check_type(obj, a) for a in tp.__args__)
     else:
         origin = get_origin(tp)
-        if origin is None:
+        if origin is None or origin == tp:
             return isinstance(obj, tp)
         else:
             return check_type(obj, origin)
