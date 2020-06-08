@@ -47,8 +47,8 @@ class Token(Annotation):
         ner (Optional[str])
         sense (Optional[str])
         is_root (Optional[bool])
-        ud_features (Optional[Dict[str, str]])
-        ud_misc (Optional[Dict[str, str]])
+        ud_features (Dict[str, str])
+        ud_misc (Dict[str, str])
     """
 
     pos: Optional[str]
@@ -58,8 +58,8 @@ class Token(Annotation):
     ner: Optional[str]
     sense: Optional[str]
     is_root: Optional[bool]
-    ud_features: Optional[Dict[str, str]]
-    ud_misc: Optional[Dict[str, str]]
+    ud_features: Dict[str, str]
+    ud_misc: Dict[str, str]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
@@ -70,8 +70,8 @@ class Token(Annotation):
         self.ner: Optional[str] = None
         self.sense: Optional[str] = None
         self.is_root: Optional[bool] = None
-        self.ud_features: Optional[Dict[str, str]] = dict()
-        self.ud_misc: Optional[Dict[str, str]] = dict()
+        self.ud_features: Dict[str, str] = dict()
+        self.ud_misc: Dict[str, str] = dict()
 
 
 @dataclass

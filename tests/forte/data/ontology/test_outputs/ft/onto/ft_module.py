@@ -47,14 +47,14 @@ class Token(Annotation):
 class Sentence(Annotation):
     """
     Attributes:
-        tokens (Optional[FList[Token]])
+        tokens (FList[Token])
     """
 
-    tokens: Optional[FList[Token]]
+    tokens: FList[Token]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.tokens: Optional[FList[Token]] = FList[Token](self)
+        self.tokens: FList[Token] = FList[Token](self)
 
 
 @dataclass

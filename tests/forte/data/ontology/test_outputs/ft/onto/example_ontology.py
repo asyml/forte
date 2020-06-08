@@ -27,34 +27,34 @@ __all__ = [
 class Word(Token):
     """
     Attributes:
-        string_features (Optional[List[str]])	To demonstrate the composite type, List.
-        word_forms (Optional[FList[Word]])	To demonstrate that an attribute can be a List of other entries.
-        token_ranks (Optional[FDict[int, "Word"]])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
+        string_features (List[str])	To demonstrate the composite type, List.
+        word_forms (FList[Word])	To demonstrate that an attribute can be a List of other entries.
+        token_ranks (FDict[int, "Word"])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
     """
 
-    string_features: Optional[List[str]]
-    word_forms: Optional[FList[Word]]
-    token_ranks: Optional[FDict[int, "Word"]]
+    string_features: List[str]
+    word_forms: FList[Word]
+    token_ranks: FDict[int, "Word"]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.string_features: Optional[List[str]] = []
-        self.word_forms: Optional[FList[Word]] = FList[Word](self)
-        self.token_ranks: Optional[FDict[int, "Word"]] = FDict[int, "Word"](self)
+        self.string_features: List[str] = []
+        self.word_forms: FList[Word] = FList[Word](self)
+        self.token_ranks: FDict[int, "Word"] = FDict[int, "Word"](self)
 
 
 @dataclass
 class WordLink(Link):
     """
     Attributes:
-        string_features (Optional[List[str]])	To demonstrate the composite type, List.
+        string_features (List[str])	To demonstrate the composite type, List.
     """
 
-    string_features: Optional[List[str]]
+    string_features: List[str]
 
     ParentType = Word
     ChildType = Word
 
     def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
-        self.string_features: Optional[List[str]] = []
+        self.string_features: List[str] = []
