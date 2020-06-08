@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from dataclasses import dataclass
 from functools import total_ordering
 from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
@@ -43,7 +43,6 @@ class Generics(Entry):
         super().__init__(pack=pack)
 
 
-# TODO: Annotation is not hashable.
 @total_ordering
 class Annotation(Entry):
     r"""Annotation type entries, such as "token", "entity mention" and
@@ -78,17 +77,6 @@ class Annotation(Entry):
         r"""Set the span of the annotation.
         """
         self._span = Span(begin, end)
-
-    # Not really good to hash a mutable type.
-    # def __hash__(self):
-    #     r"""The hash function of :class:`Annotation`.
-    #
-    #     Users can define their own hash function by themselves but this must
-    #     be consistent to :meth:`eq`.
-    #     """
-    #     return hash(
-    #         (type(self), self.pack, self.span.begin, self.span.end)
-    #     )
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -385,39 +373,42 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
         return members
 
 
+@dataclass
 class Query(Generics):
     r"""An entry type representing queries for information retrieval tasks.
 
     Args:
         pack (Data pack): Data pack reference to which this query will be added
     """
+    value: Optional[QueryType]
+    results: Dict[str, float]
 
     def __init__(self, pack: PackType):
         super().__init__(pack)
-        self._value: Optional[QueryType] = None
-        self._results: Dict[str, float] = {}
+        self.value: Optional[QueryType] = None
+        self.results: Dict[str, float] = {}
 
-    @property
-    def value(self) -> QueryType:
-        return self._value
-
-    @value.setter
-    def value(self, value: QueryType):
-        r"""Sets the value of the query.
-
-        Args:
-            value (numpy array or str): A vector or a string (in case of
-            traditional models) representing the query.
-        """
-        self._value = value
-
-    @property
-    def results(self):
-        return self._results
-
-    @results.setter
-    def results(self, pid_to_score: Dict[str, float]):
-        self._results = pid_to_score
+    # @property
+    # def value(self) -> QueryType:
+    #     return self._value
+    #
+    # @value.setter
+    # def value(self, value: QueryType):
+    #     r"""Sets the value of the query.
+    #
+    #     Args:
+    #         value (numpy array or str): A vector or a string (in case of
+    #         traditional models) representing the query.
+    #     """
+    #     self._value = value
+    #
+    # @property
+    # def results(self):
+    #     return self._results
+    #
+    # @results.setter
+    # def results(self, pid_to_score: Dict[str, float]):
+    #     self._results = pid_to_score
 
     def add_result(self, pid: str, score: float):
         """
