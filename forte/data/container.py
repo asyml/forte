@@ -19,7 +19,7 @@ Forte Container module.
 # pylint: disable=function-redefined,multiple-statements
 
 from abc import abstractmethod
-from typing import Dict, Generic, Set, Tuple, TypeVar, overload, Union
+from typing import Dict, Generic, Set, Tuple, TypeVar
 
 from forte.data.span import Span
 

@@ -23,8 +23,7 @@ import jsonpickle
 from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import (Entry, EntryType, GroupType, LinkType,
-                                      Pointer)
+from forte.data.ontology.core import (Entry, EntryType, GroupType, LinkType)
 from forte.pack_manager import PackManager
 
 __all__ = [
@@ -123,9 +122,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def __del__(self):
         if len(self._pending_entries) > 0:
-            for e in self._pending_entries.values():
-                print(e)
-
             raise ProcessExecutionException(
                 f"There are {len(self._pending_entries)} "
                 f"entries not added to the index correctly.")

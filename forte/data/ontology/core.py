@@ -192,8 +192,8 @@ class Entry(Generic[ContainerType]):
         if isinstance(ptr, Pointer):
             return self.pack.get_entry(ptr.tid)
         else:
-            raise TypeError("Unsupported pointer type %s for entry",
-                            ptr.__class__)
+            raise TypeError(
+                f"Unsupported pointer type {ptr.__class__} for entry")
 
     def _check_attr_type(self, key, value):
         """
@@ -337,7 +337,7 @@ class MultiEntry(Entry, ABC):
         elif isinstance(ptr, MpPointer):
             return self.pack.packs[ptr.pack_index].get_entry(ptr.tid)
         else:
-            raise TypeError("Unknown pointer type %s", ptr.__class__)
+            raise TypeError(f"Unknown pointer type {ptr.__class__}")
 
 
 EntryType = TypeVar("EntryType", bound=Entry)

@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import List
 
 from nltk import pos_tag, ne_chunk, PunktSentenceTokenizer
 from nltk.chunk import RegexpParser
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize.treebank import TreebankWordTokenizer
-from typing import List
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
