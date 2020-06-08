@@ -121,14 +121,9 @@ class PlainTextReaderTest(unittest.TestCase):
         span_ops, output = value
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
-        try:
-            list(reader.parse_pack(self.file_path))[0]
-        except ValueError:
-            pass
-        except Exception:
-            self.fail('Unexpected exception raised:')
-        else:
-            self.fail('Expected Exception not raised')
+
+        with self.assertRaises(ValueError):
+            _ = list(reader.parse_pack(self.file_path))[0]
 
 
 if __name__ == "__main__":

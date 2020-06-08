@@ -17,7 +17,7 @@ representation system.
 """
 
 from abc import abstractmethod, ABC
-from collections import MutableSequence, MutableMapping
+from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
 from typing import (
     Iterable, Optional, Type, Hashable, TypeVar, Generic,
@@ -160,9 +160,10 @@ class Entry(Generic[ContainerType]):
     def set_pack(self, pack: ContainerType):
         self.__pack = pack
 
-    def create_pointer(self, from_entry: "Entry"):
+    def as_pointer(self, from_entry: "Entry"):
         """
-        Create a pointer of this entry relative to the ``from_entry``.
+        Return this entry as a pointer of this entry relative to the
+        ``from_entry``.
 
         Args:
             from_entry: The entry to point from.
@@ -178,9 +179,9 @@ class Entry(Generic[ContainerType]):
         elif isinstance(from_entry, Entry):
             return Pointer(self.tid)
 
-    def from_pointer(self, ptr: BasePointer):
+    def resolve_pointer(self, ptr: BasePointer):
         """
-        Get the entry via the pointer from this entry.
+        Resolve into an entry on the provided pointer ``ptr`` from this entry.
 
         Args:
             ptr:
@@ -188,7 +189,11 @@ class Entry(Generic[ContainerType]):
         Returns:
 
         """
-        return self.pack.get_entry(ptr)
+        if isinstance(ptr, Pointer):
+            return self.pack.get_entry(ptr.tid)
+        else:
+            raise TypeError("Unsupported pointer type %s for entry",
+                            ptr.__class__)
 
     def _check_attr_type(self, key, value):
         """
@@ -230,7 +235,7 @@ class Entry(Generic[ContainerType]):
         v = super().__getattribute__(item)
         if isinstance(v, BasePointer):
             # Using the pointer to get the entry.
-            return self.pack.get_entry(v)
+            return self.resolve_pointer(v)
         else:
             return v
 
@@ -305,27 +310,12 @@ class MultiEntry(Entry, ABC):
         self._check_attr_type(key, value)
 
         if isinstance(value, Entry):
-            # Save a pointer to the value from this entry.
-            self.__dict__[key] = value.create_pointer(self)
+            # Save a pointer of the value.
+            self.__dict__[key] = value.as_pointer(self)
         else:
             super().__setattr__(key, value)
 
-    def __getattribute__(self, item):
-        """
-        Handle the special sub-entry case in the multi pack case.
-
-        Returns:
-
-        """
-        v = super().__getattribute__(item)
-
-        if isinstance(v, MpPointer):
-            # Using the multi pack pointer to get the entry.
-            return self.pack.get_entry(v)
-        else:
-            return v
-
-    def create_pointer(self, from_entry: "Entry"):
+    def as_pointer(self, from_entry: "Entry") -> "Pointer":
         """
         Get a pointer of the entry relative to this entry
 
@@ -340,6 +330,14 @@ class MultiEntry(Entry, ABC):
         elif isinstance(from_entry, Entry):
             raise ValueError(
                 "Do not support reference a multi pack entry from an entry.")
+
+    def resolve_pointer(self, ptr: BasePointer) -> Entry:
+        if isinstance(ptr, Pointer):
+            return self.pack.get_entry(ptr.tid)
+        elif isinstance(ptr, MpPointer):
+            return self.pack.packs[ptr.pack_index].get_entry(ptr.tid)
+        else:
+            raise TypeError("Unknown pointer type %s", ptr.__class__)
 
 
 EntryType = TypeVar("EntryType", bound=Entry)
@@ -359,11 +357,10 @@ class FList(Generic[ParentEntryType], MutableSequence):
         self.__parent_entry = parent_entry
         self.__data: List[BasePointer] = []
         if data is not None:
-            self.__data = [
-                self.__parent_entry.relative_pointer(d) for d in data]
+            self.__data = [d.as_pointer(self.__parent_entry) for d in data]
 
     def insert(self, index: int, entry: EntryType):
-        self.__data.insert(index, self.__parent_entry.relative_pointer(entry))
+        self.__data.insert(index, entry.as_pointer(self.__parent_entry))
 
     @overload
     @abstractmethod
@@ -378,10 +375,10 @@ class FList(Generic[ParentEntryType], MutableSequence):
     def __getitem__(self, index: Union[int, slice]
                     ) -> Union[EntryType, MutableSequence]:
         if isinstance(index, slice):
-            return [self.__parent_entry.from_pointer(d) for d in
+            return [self.__parent_entry.resolve_pointer(d) for d in
                     self.__data[index]]
         else:
-            return self.__parent_entry.from_pointer(self.__data[index])
+            return self.__parent_entry.resolve_pointer(self.__data[index])
 
     def __setitem__(
             self, index: Union[int, slice],
@@ -391,11 +388,11 @@ class FList(Generic[ParentEntryType], MutableSequence):
         if isinstance(index, int):
             # Assert for mypy: https://github.com/python/mypy/issues/7858
             assert isinstance(value, Entry)
-            self.__data[index] = value.create_pointer(self.__parent_entry)
+            self.__data[index] = value.as_pointer(self.__parent_entry)
         else:
             assert isinstance(value, Iterable)
             self.__data[index] = [
-                v.create_pointer(self.__parent_entry) for v in value]
+                v.as_pointer(self.__parent_entry) for v in value]
 
     def __delitem__(self, index: Union[int, slice]) -> None:
         del self.__data[index]
@@ -424,12 +421,11 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
 
         if data is not None:
             self.__data = {
-                k: self.__parent_entry.relative_pointer(
-                    v) for k, v in data.items()}
+                k: v.as_pointer(self.__parent_entry) for k, v in data.items()}
 
     def __setitem__(self, k: KeyType, v: ValueType) -> None:
         try:
-            self.__data[k] = self.__parent_entry.relative_pointer(v)
+            self.__data[k] = v.as_pointer(self.__parent_entry)
         except AttributeError:
             raise AttributeError(
                 f"Item of the FDict must be of type entry, got {v.__class__}")
@@ -438,7 +434,7 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
         del self.__data[k]
 
     def __getitem__(self, k: KeyType) -> ValueType:
-        return self.__parent_entry.from_pointer(self.__data[k])
+        return self.__parent_entry.resolve_pointer(self.__data[k])
 
     def __len__(self) -> int:
         return len(self.__data)

@@ -73,8 +73,7 @@ class BaseIndex(Generic[EntryType]):
             self._entry_index[entry.tid] = entry
             self._type_index[type(entry)].add(entry.tid)
 
-    def get_entry(self, ptr: Union[Pointer, int]) -> EntryType:
-        tid = ptr.tid if isinstance(ptr, Pointer) else ptr
+    def get_entry(self, tid: int) -> EntryType:
         return self._entry_index[tid]
 
     def iter_type_index(self) -> Iterable[Tuple[Type, Set[int]]]:

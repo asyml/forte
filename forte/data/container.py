@@ -116,15 +116,8 @@ class EntryContainer(Generic[E, L, G]):
         """
         raise NotImplementedError
 
-    @overload
     @abstractmethod
-    def get_entry(self, ptr: BasePointer) -> E: ...
-
-    @overload
-    @abstractmethod
-    def get_entry(self, ptr: int) -> E: ...
-
-    def get_entry(self, ptr: Union[BasePointer, int]) -> E:
+    def get_entry(self, ptr: int) -> E:
         raise NotImplementedError
 
     def get_span_text(self, span: Span):

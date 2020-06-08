@@ -159,6 +159,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 
+    # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
         return self.get_pack_at(pack_idx).get_entry(entry_id)
 

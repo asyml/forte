@@ -123,7 +123,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def __del__(self):
         if len(self._pending_entries) > 0:
-            print(self._pending_entries)
+            for e in self._pending_entries.values():
+                print(e)
+
             raise ProcessExecutionException(
                 f"There are {len(self._pending_entries)} "
                 f"entries not added to the index correctly.")
@@ -284,13 +286,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self.field_records[c] = {(entry_id, field_name)}
 
     # TODO: how to make this return the precise type here?
-    def get_entry(self, ptr: Union[Pointer, int]) -> EntryType:
+    def get_entry(self, tid: int) -> EntryType:
         r"""Look up the entry_index with key ``ptr``. Specific implementation
         depends on the actual class."""
-        entry: EntryType = self.index.get_entry(ptr)
+        entry: EntryType = self.index.get_entry(tid)
         if entry is None:
             raise KeyError(
-                f"There is no entry with tid '{ptr}'' in this datapack")
+                f"There is no entry with tid '{tid}'' in this datapack")
         return entry
 
     @abstractmethod

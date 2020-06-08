@@ -183,7 +183,7 @@ class EntryDataStructure(unittest.TestCase):
 
         # Make sure we stored index instead of raw data in list.
         for v in list_entry.entries.__dict__['_FList__data']:
-            self.assertIsInstance(v, int)
+            self.assertIsInstance(v, Pointer)
 
     def test_entry_dict(self):
         dict_entry: EntryWithDict = self.pack.get_single(EntryWithDict)
@@ -193,9 +193,9 @@ class EntryDataStructure(unittest.TestCase):
             self.assertTrue(isinstance(e, ExampleEntry))
         self.assertEqual(len(dict_entry.entries), 10)
 
-        # Make sure we stored index instead of raw data in dict.
+        # Make sure we stored index (pointers) instead of raw data in dict.
         for v in dict_entry.entries.__dict__['_FDict__data'].values():
-            self.assertTrue(isinstance(v, int))
+            self.assertTrue(isinstance(v, Pointer))
 
 
 class NotHashingTest(unittest.TestCase):
