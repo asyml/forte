@@ -86,7 +86,6 @@ class GenerateOntologyTest(unittest.TestCase):
             with open(expected_code_path, 'r') as f:
                 expected_code = f.read()
 
-            print(generated_file, expected_code_path)
             self.assertEqual(generated_code, expected_code)
 
     def test_dry_run_false(self):
@@ -158,7 +157,6 @@ class GenerateOntologyTest(unittest.TestCase):
                 self.assertEqual(len(w), 1)
                 assert w[0].category, msg_type
         else:
-            print('test file ', file)
             with self.assertRaises(msg_type):
                 self.generator.generate(temp_filename, is_dry_run=True)
 

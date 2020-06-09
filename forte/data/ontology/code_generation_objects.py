@@ -238,45 +238,6 @@ def indent_code(code_lines: List[Optional[str]], level: int = 0,
         [indent_line(line, level) for line in lines]) + ending
 
 
-def getter(name, field_name, is_forte_type=False, composite_type=None):
-    # Construct getter.
-    return_str = f"self.{field_name}"
-    if is_forte_type:
-        composite_type = 'None' if composite_type is None else composite_type
-
-        tid_str_map = {'None': f"self.{field_name}",
-                       'List': 'tid',
-                       'Dict': f'self.{field_name}[key]'}
-
-        tid_str = f"{tid_str_map[composite_type]}"
-        entry_str = f"self.pack.get_entry({tid_str})"
-
-        ret_str_map = {
-            'None': f"{entry_str} if {tid_str} is not None else None",
-            'List': f"[{entry_str} for tid in self.{field_name}]",
-            'Dict': f"{{{entry_str} for key in self.{field_name}}}"
-        }
-        return_str = ret_str_map[composite_type]
-    return [
-        ("@property", 0),
-        (f"def {name}(self):", 0),
-        (f"return {return_str}", 1),
-        ('', 0)
-    ]
-
-
-def change_get_state(name, field_name, level):
-    return [
-        (f"state['{name}'] = state.pop('{field_name}')", level),
-    ]
-
-
-def change_set_state(name, field_name, level):
-    return [
-        (f"self.{field_name} = state.get('{name}', None) ", level)
-    ]
-
-
 class EntryName:
     def __init__(self, entry_name: str):
         entry_splits = entry_name.split('.')
@@ -377,7 +338,8 @@ class NonCompositeProperty(Property):
 
     def internal_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use(self.option_type)
-        type_str = 'int' if self.is_forte_type else self.type_str
+        # type_str = 'int' if self.is_forte_type else self.type_str
+        type_str = self.import_manager.get_name_to_use(self.type_str)
         return f"{option_type}[{type_str}]"
 
     def default_value(self) -> str:
@@ -413,7 +375,7 @@ class DictProperty(Property):
         if self.type_str == 'typing.Dict':
             return 'dict()'
         else:
-            return f"{self._full_class()}(self)"
+            return "FDict(self)"
 
     def _full_class(self) -> str:
         composite_type = self.import_manager.get_name_to_use(self.type_str)
@@ -455,7 +417,7 @@ class ListProperty(Property):
         if self.type_str == 'typing.List':
             return '[]'
         else:
-            return f"{self._full_class()}(self)"
+            return "FList(self)"
 
     def _full_class(self):
         composite_type = self.import_manager.get_name_to_use(self.type_str)

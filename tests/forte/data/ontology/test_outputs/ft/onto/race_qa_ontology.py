@@ -64,5 +64,5 @@ class Question(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.options: FList[Option] = FList[Option](self)
+        self.options: FList[Option] = FList(self)
         self.answers: List[int] = []

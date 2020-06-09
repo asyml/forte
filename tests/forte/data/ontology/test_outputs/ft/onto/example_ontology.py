@@ -39,8 +39,8 @@ class Word(Token):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.string_features: List[str] = []
-        self.word_forms: FList[Word] = FList[Word](self)
-        self.token_ranks: FDict[int, "Word"] = FDict[int, "Word"](self)
+        self.word_forms: FList[Word] = FList(self)
+        self.token_ranks: FDict[int, "Word"] = FDict(self)
 
 
 @dataclass

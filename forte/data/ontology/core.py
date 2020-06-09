@@ -102,7 +102,6 @@ class Entry(Generic[ContainerType]):
         # During serialization, convert the numpy array as a list.
         state["_embedding"] = self._embedding.tolist()
         state.pop('_Entry__pack')
-        # state.pop('_Entry__field_modified')
         return state
 
     def __setstate__(self, state):
@@ -345,6 +344,7 @@ EntryType = TypeVar("EntryType", bound=Entry)
 ParentEntryType = TypeVar("ParentEntryType", bound=Entry)
 
 
+# TODO: Cannot pickle with FList[CorefQuestionAnswers], have generic problems.
 class FList(Generic[ParentEntryType], MutableSequence):
     """
     FList allows the elements to be Forte entries. FList will internally
@@ -358,6 +358,11 @@ class FList(Generic[ParentEntryType], MutableSequence):
         self.__data: List[BasePointer] = []
         if data is not None:
             self.__data = [d.as_pointer(self.__parent_entry) for d in data]
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.pop('_FList__parent_entry')
+        return state
 
     def insert(self, index: int, entry: EntryType):
         self.__data.insert(index, entry.as_pointer(self.__parent_entry))

@@ -43,6 +43,10 @@ class BasePointer:
     def __str__(self):
         raise NotImplementedError
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
 
 class EntryIdManager:
     r"""Control the ids assigned to each entry."""
