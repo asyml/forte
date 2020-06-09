@@ -285,12 +285,6 @@ class Property(Item, ABC):
     def default_value(self) -> str:
         raise NotImplementedError
 
-    def to_getstate(self, level):
-        return change_get_state(self.name, self.field_name, level)
-
-    def to_setstate(self, level):
-        return change_set_state(self.name, self.field_name, level)
-
     def to_init_code(self, level: int) -> str:
         return indent_line(f"self.{self.field_name}: "
                            f"{self.internal_type_str()} = "
@@ -338,7 +332,6 @@ class NonCompositeProperty(Property):
 
     def internal_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use(self.option_type)
-        # type_str = 'int' if self.is_forte_type else self.type_str
         type_str = self.import_manager.get_name_to_use(self.type_str)
         return f"{option_type}[{type_str}]"
 
@@ -459,32 +452,6 @@ class EntryDefinition(Item):
         lines = [item.to_code(0) for item in self.class_attributes]
         return indent_code([indent_line(line, 0) for line in lines], level,
                            False)
-
-    def to_get_state_code(self, level: int) -> Optional[str]:
-        if len(self.properties) == 0:
-            return None
-
-        lines = [
-            ("def __getstate__(self): ", 0),
-            ("state = super().__getstate__()", 1),
-        ]
-
-        for p in self.properties:
-            lines.extend(p.to_getstate(1))
-        lines.append(("return state", 1))
-        return indent_code([indent_line(*line) for line in lines], level)
-
-    def to_set_state_code(self, level: int) -> Optional[str]:
-        if len(self.properties) == 0:
-            return None
-
-        lines = [
-            ("def __setstate__(self, state): ", 0),
-            ("super().__setstate__(state)", 1),
-        ]
-        for p in self.properties:
-            lines.extend(p.to_setstate(1))
-        return indent_code([indent_line(*line) for line in lines], level)
 
     def to_code(self, level: int) -> str:
         super_args = ', '.join([item.split(':')[0].strip()
@@ -637,8 +604,8 @@ class ModuleWriter:
 
     def to_description(self, level):
         quotes = '"""'
-        lines = get_ignore_error_lines(self.source_file) + \
-                [quotes, self.description, quotes]
+        lines = get_ignore_error_lines(
+            self.source_file) + [quotes, self.description, quotes]
         return indent_code(lines, level)
 
     def to_import_code(self, level):
