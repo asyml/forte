@@ -363,10 +363,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         for index_key, index_val in self.index.iter_type_index():
             if issubclass(index_key, entry_type):
                 subclass_index.update(index_val)
-
-        if len(subclass_index) == 0:
-            logging.warning(
-                "There is no %s type entry in this datapack", entry_type)
         return subclass_index
 
     def get_entries_by_type(
