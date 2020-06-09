@@ -100,7 +100,11 @@ class Entry(Generic[ContainerType]):
         """
         state = self.__dict__.copy()
         # During serialization, convert the numpy array as a list.
-        state["_embedding"] = self._embedding.tolist()
+        emb = list(self._embedding.tolist())
+        if len(emb) == 0:
+            state.pop("_embedding")
+        else:
+            state["_embedding"] = emb
         state.pop('_Entry__pack')
         return state
 
@@ -110,7 +114,10 @@ class Entry(Generic[ContainerType]):
         # self.__dict__['_Entry__field_modified'] = set()
 
         # During de-serialization, convert the list back to numpy array.
-        state["_embedding"] = np.array(state["_embedding"])
+        if "_embedding" in state:
+            state["_embedding"] = np.array(state["_embedding"])
+        else:
+            state["_embedding"] = np.empty(0)
         self.__dict__.update(state)
 
     # using property decorator

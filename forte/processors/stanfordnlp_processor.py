@@ -66,19 +66,17 @@ class StandfordNLPProcessor(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         doc = input_pack.text
-        end_pos = 0
 
         if len(doc) == 0:
             logging.warning("Find empty text in doc.")
 
         # sentence parsing
-        sentences = self.nlp(doc).sentences  # type: ignore
+        sentences = self.nlp(doc).sentences
 
         # Iterating through stanfordnlp sentence objects
         for sentence in sentences:
-            sentence_entry = Sentence(
-                input_pack, sentence.tokens[0].start_char,
-                sentence.tokens[-1].end_char)
+            Sentence(input_pack, sentence.tokens[0].start_char,
+                     sentence.tokens[-1].end_char)
 
             tokens: List[Token] = []
             if "tokenize" in self.processors:
