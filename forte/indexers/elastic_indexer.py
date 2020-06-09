@@ -17,7 +17,6 @@ from typing import Optional, Dict, Union, Any, Iterable
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
-from elasticsearch import logger as es_logger
 
 __all__ = [
     "ElasticSearchIndexer"
@@ -25,9 +24,10 @@ __all__ = [
 
 from forte.common.configuration import Config
 
+
 # It seems that elastic search shows a lot of debug message, sometimes can
 # suffocate travis. Trying to depress the logging.
-es_logger.setLevel(logging.INFO)
+# es_logger.setLevel(logging.INFO)
 
 
 class ElasticSearchIndexer:
