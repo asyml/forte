@@ -272,7 +272,12 @@ class MultiPackLink(MultiEntry, BaseLink):
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
 
-        super().__init__(pack, parent, child)
+        super().__init__(pack)
+
+        if parent is not None:
+            self.set_parent(parent)
+        if child is not None:
+            self.set_child(child)
 
     @property
     def parent(self) -> Tuple[int, int]:
@@ -355,7 +360,9 @@ class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
             self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
         self._members: List[Tuple[int, int]] = []
-        super().__init__(pack, members)
+        super().__init__(pack)
+        if members is not None:
+            self.add_members(members)
 
     def add_member(self, member: Entry):
         if not isinstance(member, self.MemberType):
