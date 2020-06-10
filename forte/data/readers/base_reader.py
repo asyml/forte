@@ -90,6 +90,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def new_pack(self, pack_name: Optional[str] = None) -> PackType:
+        raise NotImplementedError
+
+    @abstractmethod
     def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
         r"""Returns an iterator of data objects, and each individual object
         should contain sufficient information needed to construct or locate
@@ -261,9 +265,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
             for line in cache_file:
                 pack = DataPack.deserialize(line.strip())
                 if not isinstance(pack, self.pack_type):
-                    raise TypeError(f"Pack deserialized from {cache_filename} "
-                                    f"is {type(pack)},"
-                                    f"but expect {self.pack_type}")
+                    raise TypeError(
+                        f"Pack deserialized from {cache_filename} "
+                        f"is {type(pack)}, but expect {self.pack_type}")
                 yield pack
 
     def finish(self, resources: Resources):

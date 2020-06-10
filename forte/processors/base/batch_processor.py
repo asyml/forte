@@ -241,6 +241,9 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
                     entry_type
                 )
 
+    def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
+        return DataPack(self._pack_manager, pack_name)
+
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):
     @staticmethod
@@ -257,13 +260,17 @@ class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
         super().__init__()
         self.input_pack_name = None
 
+    # TODO multi pack batcher need to be further studied.
     def prepare_coverage_index(self, input_pack: MultiPack):
         for entry_type in self.input_info.keys():
             if input_pack.packs[self.input_pack_name].index.coverage_index(
                     self.context_type, entry_type) is None:
-                input_pack.packs[
-                    self.input_pack_name].index.build_coverage_index(
-                    self.context_type, entry_type)
+                p = input_pack.packs[self.input_pack_name]
+                p.index.build_coverage_index(
+                    p, self.context_type, entry_type)
+
+    def new_pack(self, pack_name: Optional[str] = None) -> MultiPack:
+        return MultiPack(self._pack_manager, pack_name)
 
 
 class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):

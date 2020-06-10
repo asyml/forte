@@ -71,9 +71,6 @@ class PipelineComponent(Generic[PackType]):
         """
         pack.add_entry(entry, self.name)
 
-    def new_pack(self, pack_name: Optional[str] = None) -> PackType:
-        raise NotImplementedError
-
     @property
     def name(self):
         return get_full_module_name(self)

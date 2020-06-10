@@ -60,7 +60,6 @@ class PackManager:
         Returns:
 
         """
-
         self.remap.clear()
 
     def set_remapped_pack_id(self, pack: ContainerType):

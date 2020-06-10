@@ -41,9 +41,6 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
     contains the original DataPack, indexed by the :attr:`pack_name`.
     """
 
-    def new_pack(self, pack_name: Optional[str] = None):
-        return MultiPack(self._pack_manager)
-
     def cast(self, pack: DataPack) -> MultiPack:
         """
         Args:
@@ -52,7 +49,7 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
         Returns: An iterator that produces the boxed multi pack.
 
         """
-        p = self.new_pack()
+        p = MultiPack(self._pack_manager)
         p.add_pack_(pack, self.configs.pack_name)
         return p
 

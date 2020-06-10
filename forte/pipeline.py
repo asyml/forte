@@ -202,9 +202,8 @@ class Pipeline(Generic[PackType]):
         return self._configs
 
     def add(self, component: PipelineComponent,
-            selector: Optional[Selector] = None,
-            config: Optional[Union[Config, Dict[str, Any]]] = None
-            ):
+            config: Optional[Union[Config, Dict[str, Any]]] = None,
+            selector: Optional[Selector] = None):
         self._processors_index[component.name] = len(self.components)
 
         if isinstance(component, BaseReader):

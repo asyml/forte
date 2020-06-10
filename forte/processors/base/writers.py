@@ -27,7 +27,7 @@ from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.processors.base.base_processor import BaseProcessor
+from forte.processors.base import PackProcessor, MultiPackProcessor
 from forte.utils.utils_io import maybe_create_dir, ensure_dir
 
 logger = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
     return output_path
 
 
-class JsonPackWriter(BaseProcessor[DataPack], ABC):
+class JsonPackWriter(PackProcessor, ABC):
     def __init__(self):
         super().__init__()
         self.zip_pack: bool = False
@@ -132,7 +132,7 @@ class JsonPackWriter(BaseProcessor[DataPack], ABC):
                    self.configs.overwrite)
 
 
-class MultiPackWriter(BaseProcessor[MultiPack]):
+class MultiPackWriter(MultiPackProcessor):
     pack_base_out = 'packs'
     multi_base = 'multi'
     pack_idx = 'pack.idx'

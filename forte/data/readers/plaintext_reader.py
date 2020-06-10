@@ -66,3 +66,4 @@ class PlainTextReader(PackReader):
     def default_configs(cls):
         config = super().default_configs()
         config['file_ext'] = '.txt'
+        return config
