@@ -26,7 +26,6 @@ from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.types import ReplaceOperationsType
-from forte.pack_manager import PackManager
 from forte.pipeline_component import PipelineComponent
 from forte.utils.utils import get_full_module_name
 
@@ -117,7 +116,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 "Got None collection, cannot parse as data pack.")
 
         for p in self._parse_pack(collection):
-            p.add_all_remaining_entries()
+            p.add_all_remaining_entries(self.name)
             yield p
 
     @abstractmethod

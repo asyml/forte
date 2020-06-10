@@ -18,11 +18,13 @@ import os
 import shutil
 import tempfile
 import unittest
+
 from ddt import ddt, data
 
-from forte.data.span import Span
+from forte.data.data_pack import DataPack
 from forte.data.readers import PlainTextReader
-from forte.pack_manager import PackManager
+from forte.data.span import Span
+from forte.pipeline import Pipeline
 
 
 @ddt
@@ -31,9 +33,8 @@ class PlainTextReaderTest(unittest.TestCase):
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()
         self.orig_text = "<title>The Original Title </title>"
-        self.file_path = os.path.join(self.test_dir, 'test.html')
-        self.mod_file_path = os.path.join(self.test_dir, 'mod_test.html')
-        with open(self.file_path, 'w') as f:
+        file_path = os.path.join(self.test_dir, 'test.html')
+        with open(file_path, 'w') as f:
             f.write(self.orig_text)
 
     def tearDown(self):
@@ -42,8 +43,12 @@ class PlainTextReaderTest(unittest.TestCase):
 
     def test_reader_no_replace_test(self):
         # Read with no replacements
+        pipeline = Pipeline()
         reader = PlainTextReader()
-        pack = list(reader.parse_pack(self.file_path))[0]
+        pipeline.set_reader(reader, {'file_ext': '.html'})
+        pipeline.initialize()
+
+        pack = pipeline.process_one(self.test_dir)
         self.assertEqual(pack.text, self.orig_text)
 
     @data(
@@ -59,9 +64,14 @@ class PlainTextReaderTest(unittest.TestCase):
     def test_reader_replace_back_test(self, value):
         # Reading with replacements - replacing a span and changing it back
         span_ops, output = value
+
+        pipeline = Pipeline()
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
-        pack = list(reader.parse_pack(self.file_path))[0]
+        pipeline.set_reader(reader, {'file_ext': '.html'})
+        pipeline.initialize()
+
+        pack: DataPack = pipeline.process_one(self.test_dir)
         self.assertEqual(pack.text, output)
 
         orig_text_from_pack = pack.get_original_text()
@@ -98,9 +108,15 @@ class PlainTextReaderTest(unittest.TestCase):
                              (Span(25, 25), ' Ends')],
                             '<title>The New Shiny Title Ends </title>')
         input_span, expected_span, mode = value
+
+        pipeline = Pipeline()
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
-        pack = list(reader.parse_pack(self.file_path))[0]
+        pipeline.set_reader(reader, {'file_ext': '.html'})
+        pipeline.initialize()
+
+        pack = pipeline.process_one(self.test_dir)
+
         self.assertEqual(pack.text, output)
 
         output_span = pack.get_original_span(input_span, mode)
@@ -117,11 +133,15 @@ class PlainTextReaderTest(unittest.TestCase):
     def test_reader_replace_error_test(self, value):
         # Read with errors in span replacements
         span_ops, output = value
+
+        pipeline = Pipeline()
         reader = PlainTextReader()
         reader.text_replace_operation = lambda _: span_ops
+        pipeline.set_reader(reader, {'file_ext': '.html'})
+        pipeline.initialize()
 
         with self.assertRaises(ValueError):
-            _ = list(reader.parse_pack(self.file_path))[0]
+            pipeline.process(self.test_dir)
 
 
 if __name__ == "__main__":

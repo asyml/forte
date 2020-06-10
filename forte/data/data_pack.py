@@ -64,7 +64,9 @@ class DataPack(BasePack[Entry, Link, Group]):
     language text could be a document617, paragraph or in any other granularity.
 
     Args:
-        doc_id (str, optional): A universal id of this data pack.
+        pack_manager(PackManager): A manager that records global
+          information of packs, such as pack ids.
+        pack_name (str, optional): A name for this data pack.
     """
 
     def __init__(self, pack_manager: PackManager,
@@ -82,7 +84,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.orig_text_len: int = 0
 
         self.index: DataIndex = DataIndex()
-        self.meta: Meta = Meta(pack_name)
 
     def __getstate__(self):
         r"""
@@ -137,6 +138,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         yield from self.links
         yield from self.groups
         yield from self.generics
+
+    def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
+        return Meta(pack_name)
 
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)

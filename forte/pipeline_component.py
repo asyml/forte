@@ -30,8 +30,10 @@ from forte.utils import get_full_module_name
 
 class PipelineComponent(Generic[PackType]):
     def __init__(self):
-        self._process_manager: Optional[ProcessManager] = None
-        self._pack_manager: Optional[PackManager] = None
+        self._process_manager: ProcessManager = None
+        self._pack_manager: PackManager = None
+        self.resources: Optional[Resources] = None
+        self.configs: Config = Config({}, {})
 
     def assign_manager(self,
                        process_manager: ProcessManager,
@@ -51,8 +53,8 @@ class PipelineComponent(Generic[PackType]):
             configs (Config): The configuration passed in to set up this
                 component.
         """
-        self.resources: Optional[Resources] = resources
-        self.configs: Config = configs
+        self.resources = resources
+        self.configs = configs
 
     def add_entry(self, pack: BasePack, entry: Entry):
         """

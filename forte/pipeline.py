@@ -54,7 +54,7 @@ class ProcessBuffer:
         self.__data_iter: Iterator[PackType] = data_iter
         self.__data_exhausted = False
         self.__pipeline = pipeline
-        self.__process_manager: ProcessManager = pipeline.proc_mgr
+        self.__process_manager: ProcessManager = pipeline._proc_mgr
 
     def __iter__(self):
         return self
@@ -106,12 +106,12 @@ class Pipeline(Generic[PackType]):
         self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[Config]] = []
 
-        # Will intialize at `initialize` because the processors length is
-        # unknown.
-        self.proc_mgr: ProcessManager
-
         # This manager controls global pack access information
         self._pack_manager: PackManager = PackManager()
+
+        # Will initialize at `initialize` because the processors length is
+        # unknown.
+        self._proc_mgr: ProcessManager = None  # type: ignore
 
         self.evaluator_indices: List[int] = []
 
@@ -164,10 +164,11 @@ class Pipeline(Generic[PackType]):
 
     def initialize(self):
         # The process manager need to be assigned first.
-        self.proc_mgr = ProcessManager(len(self._components))
+        self._proc_mgr = ProcessManager(len(self._components))
+
+        self._reader.assign_manager(self._proc_mgr, self._pack_manager)
 
         self._reader.initialize(self.resource, self._reader_config)
-
         self.initialize_processors()
 
         self.initialized = True
@@ -176,8 +177,8 @@ class Pipeline(Generic[PackType]):
         self._pack_manager.reset_remap()
         for processor, config in zip(self.components, self.processor_configs):
             try:
+                processor.assign_manager(self._proc_mgr, self._pack_manager)
                 processor.initialize(self.resource, config)
-                processor.assign_manager(self.proc_mgr, self._pack_manager)
             except ProcessorConfigError as e:
                 logging.error("Exception occur when initializing "
                               "processor %s", processor.name)
@@ -187,7 +188,6 @@ class Pipeline(Generic[PackType]):
                    config: Optional[Union[Config, Dict[str, Any]]] = None):
         self._reader = reader
         self._reader_config = reader.make_configs(config)
-        self._reader.assign_manager(self.proc_mgr, self._pack_manager)
 
     @property
     def reader(self):
@@ -202,8 +202,9 @@ class Pipeline(Generic[PackType]):
         return self._configs
 
     def add(self, component: PipelineComponent,
-            config: Optional[Union[Config, Dict[str, Any]]] = None,
-            selector: Optional[Selector] = None):
+            selector: Optional[Selector] = None,
+            config: Optional[Union[Config, Dict[str, Any]]] = None
+            ):
         self._processors_index[component.name] = len(self.components)
 
         if isinstance(component, BaseReader):
@@ -213,7 +214,7 @@ class Pipeline(Generic[PackType]):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
 
-        component.assign_manager(self.proc_mgr, self._pack_manager)
+        component.assign_manager(self._proc_mgr, self._pack_manager)
         self._components.append(component)
         self.processor_configs.append(component.make_configs(config))
 
@@ -270,6 +271,10 @@ class Pipeline(Generic[PackType]):
                 :attr:`_reader` is a file reader, this can point to the file
                 path.
         """
+        if not self.initialized:
+            raise ProcessFlowException(
+                "Please call initialize before running the pipeline")
+
         first_pack = []
 
         for p in self._reader.iter(*args, **kwargs):
@@ -287,6 +292,10 @@ class Pipeline(Generic[PackType]):
         iterator or list of DataPacks. The arguments are directly passed
         to the reader to take data from the source.
         """
+        if not self.initialized:
+            raise ProcessFlowException(
+                "Please call initialize before running the pipeline")
+
         data_iter = self._reader.iter(*args, **kwargs)
         return self._process_packs(data_iter)
 
@@ -429,21 +438,21 @@ class Pipeline(Generic[PackType]):
             # Write return here instead of using if..else to reduce indent.
             return
 
-        while not self.proc_mgr.exhausted():
+        while not self._proc_mgr.exhausted():
             # job has to be the first UNPROCESSED element
             # the status of the job now is UNPROCESSED
             unprocessed_job: ProcessJob = next(buffer)
 
-            processor_index = self.proc_mgr.current_processor_index
+            processor_index = self._proc_mgr.current_processor_index
             processor = self.components[processor_index]
             selector = self._selectors[processor_index]
-            current_queue_index = self.proc_mgr.current_queue_index
-            current_queue = self.proc_mgr.current_queue
-            pipeline_length = self.proc_mgr.pipeline_length
+            current_queue_index = self._proc_mgr.current_queue_index
+            current_queue = self._proc_mgr.current_queue
+            pipeline_length = self._proc_mgr.pipeline_length
             unprocessed_queue_indices = \
-                self.proc_mgr.unprocessed_queue_indices
+                self._proc_mgr.unprocessed_queue_indices
             processed_queue_indices = \
-                self.proc_mgr.processed_queue_indices
+                self._proc_mgr.processed_queue_indices
             next_queue_index = current_queue_index + 1
             should_yield = next_queue_index >= pipeline_length
 
@@ -495,9 +504,9 @@ class Pipeline(Generic[PackType]):
                             unprocessed_queue_indices[current_queue_index] \
                                 = len(current_queue)
 
-                            self.proc_mgr.current_processor_index = 0
+                            self._proc_mgr.current_processor_index = 0
 
-                            self.proc_mgr.current_queue_index = -1
+                            self._proc_mgr.current_queue_index = -1
 
                         else:
                             processed_queue_index = \
@@ -513,7 +522,7 @@ class Pipeline(Generic[PackType]):
                                         self._predict_to_gold.pop(job_i.id)
                                     yield job_i.pack
                                 else:
-                                    self.proc_mgr.add_to_queue(
+                                    self._proc_mgr.add_to_queue(
                                         queue_index=next_queue_index,
                                         job=job_i)
                                 current_queue.popleft()
@@ -526,12 +535,12 @@ class Pipeline(Generic[PackType]):
                                 = -1
 
                             if should_yield:
-                                self.proc_mgr.current_processor_index = 0
-                                self.proc_mgr.current_queue_index = -1
+                                self._proc_mgr.current_processor_index = 0
+                                self._proc_mgr.current_queue_index = -1
                             else:
-                                self.proc_mgr.current_processor_index \
+                                self._proc_mgr.current_processor_index \
                                     = next_queue_index
-                                self.proc_mgr.current_queue_index \
+                                self._proc_mgr.current_queue_index \
                                     = next_queue_index
 
                     # Besides Batch Processors, the other component type only
@@ -553,7 +562,7 @@ class Pipeline(Generic[PackType]):
                                         self._predict_to_gold.pop(job_i.id)
                                     yield job_i.pack
                                 else:
-                                    self.proc_mgr.add_to_queue(
+                                    self._proc_mgr.add_to_queue(
                                         queue_index=next_queue_index,
                                         job=job_i)
                                 current_queue.popleft()
@@ -569,13 +578,13 @@ class Pipeline(Generic[PackType]):
                             # when all the jobs are processed in the current
                             # queue
                             if should_yield:
-                                self.proc_mgr.current_processor_index = 0
-                                self.proc_mgr.current_queue_index = -1
+                                self._proc_mgr.current_processor_index = 0
+                                self._proc_mgr.current_queue_index = -1
 
                             else:
-                                self.proc_mgr.current_processor_index \
+                                self._proc_mgr.current_processor_index \
                                     = next_queue_index
-                                self.proc_mgr.current_queue_index \
+                                self._proc_mgr.current_queue_index \
                                     = next_queue_index
             else:
                 processor.flush()
@@ -594,7 +603,7 @@ class Pipeline(Generic[PackType]):
                         yield job.pack
 
                     elif not should_yield:
-                        self.proc_mgr.add_to_queue(
+                        self._proc_mgr.add_to_queue(
                             queue_index=next_queue_index, job=job)
 
                     if not job.is_poison:
@@ -602,8 +611,8 @@ class Pipeline(Generic[PackType]):
 
                 if not should_yield:
                     # set next processor and queue as current
-                    self.proc_mgr.current_processor_index = next_queue_index
-                    self.proc_mgr.current_queue_index = next_queue_index
+                    self._proc_mgr.current_processor_index = next_queue_index
+                    self._proc_mgr.current_queue_index = next_queue_index
 
     def evaluate(self) -> Iterator[Tuple[str, Any]]:
         for i in self.evaluator_indices:

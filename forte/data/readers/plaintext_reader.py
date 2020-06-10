@@ -40,7 +40,7 @@ class PlainTextReader(PackReader):
 
         Returns: Iterator over paths to .txt files
         """
-        return dataset_path_iterator(text_directory, ".txt")
+        return dataset_path_iterator(text_directory, self.configs.file_ext)
 
     def _cache_key_function(self, text_file: str) -> str:
         return os.path.basename(text_file)
@@ -61,3 +61,8 @@ class PlainTextReader(PackReader):
 
         pack.meta.doc_id = file_path
         yield pack
+
+    @classmethod
+    def default_configs(cls):
+        config = super().default_configs()
+        config['file_ext'] = '.txt'

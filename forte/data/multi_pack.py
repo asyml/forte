@@ -49,9 +49,7 @@ MdRequest = Dict[
 
 class MultiPackMeta(BaseMeta):
     r"""Meta information of a MultiPack."""
-
-    def __init__(self):
-        super().__init__()
+    pass
 
 
 # pylint: disable=too-many-public-methods
@@ -64,6 +62,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def __init__(self, pack_manager: PackManager,
                  pack_name: Optional[str] = None):
         super().__init__(pack_manager, pack_name)
+
         # Store the global ids.
         self._pack_ref: List[int] = []
         # Store the reverse mapping from global id to the pack index.
@@ -78,14 +77,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.groups: SortedList[MultiPackGroup] = SortedList()
         self.generics: SortedList[MultiPackGeneric] = SortedList()
 
-        self.meta: MultiPackMeta = MultiPackMeta()
-
-        self.index: MultiIndex = MultiIndex()
-
         # Used to automatically give name to sub packs.
         self.__default_pack_prefix = '_pack'
 
-        self._pack_manager = pack_manager
+        self.index: MultiIndex = MultiIndex()
 
     def __setstate__(self, state):
         r"""In deserialization, we set up the index and the references to the
@@ -157,6 +152,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         super().__del__()
         for pack_id in self._pack_ref:
             self._pack_manager.dereference_pack(pack_id)
+
+    def _init_meta(self, pack_name: Optional[str] = None) -> MultiPackMeta:
+        return MultiPackMeta(pack_name)
 
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
@@ -320,17 +318,20 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def iter_groups(self):
         yield from self.groups
 
-    def add_all_remaining_entries(self):
+    def add_all_remaining_entries(self, component: Optional[str] = None):
         """
         Calling this function will add the entries that are not added to the
         pack manually.
 
+        Args:
+            component (str): Overwrite the component record with this.
+
         Returns:
 
         """
-        super().add_all_remaining_entries()
+        super().add_all_remaining_entries(component)
         for pack in self.packs:
-            pack.add_all_remaining_entries()
+            pack.add_all_remaining_entries(component)
 
     def get_data(self, context_type,
                  request: Optional[DataRequest] = None,

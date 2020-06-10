@@ -71,7 +71,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     :class:`~forte.data.multi_pack.MultiPack`.
 
     Args:
-        doc_id (str, optional): a string identifier of the pack.
+        pack_manager( PackManager): The pack manager to manage the ids of the
+            packs.
+        pack_name (str, optional): a string name of the pack.
 
     """
 
@@ -79,18 +81,18 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def __init__(self, pack_manager: PackManager,
                  pack_name: Optional[str] = None):
         super().__init__()
-        # Assign a pack id for this pack.
-        pack_manager.set_pack_id(self)
+        self._pack_manager = pack_manager
 
         self.links: List[LinkType] = []
         self.groups: List[GroupType] = []
 
-        self.meta: BaseMeta = BaseMeta(pack_name)
+        self.meta: BaseMeta = self._init_meta(pack_name)
         self.index: BaseIndex = BaseIndex()
 
+        # Assign a pack id for this pack.
+        self._pack_manager.set_pack_id(self)
         self.__control_component: Optional[str] = None
-
-        self._pending_entries: Dict[int, Tuple[Entry, str]] = {}
+        self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
 
     def __getstate__(self):
         state = super().__getstate__()
@@ -104,11 +106,23 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self.__dict__['_pending_entries'] = {}
         self.__control_component: Optional[str] = None
 
+    @abstractmethod
+    def _init_meta(self, pack_name: Optional[str] = None) -> BaseMeta:
+        raise NotImplementedError
+
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
             if not hasattr(self.meta, k):
                 raise AttributeError(f"Meta has no attribute named {k}")
             setattr(self.meta, k, v)
+
+    @property
+    def pack_id(self):
+        return self.meta.pack_id
+
+    @pack_id.setter
+    def pack_id(self, pack_id: int):
+        self.meta.pack_id = pack_id
 
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:
@@ -149,7 +163,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def add_entry(self, entry: EntryType,
+    def add_entry(self, entry: Entry,
                   component_name: Optional[str] = None) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`BasePack` object. Allow duplicate entries in a pack.
@@ -169,7 +183,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         return self._add_entry(entry)
 
     @abstractmethod
-    def _add_entry(self, entry: EntryType) -> EntryType:
+    def _add_entry(self, entry: Entry) -> EntryType:
         r"""Add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`BasePack` object. Allow duplicate entries in a pack.
 
@@ -182,16 +196,20 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def add_all_remaining_entries(self):
+    def add_all_remaining_entries(self, component: Optional[str] = None):
         """
         Calling this function will add the entries that are not added to the
         pack manually.
+
+        Args:
+            component (str): Overwrite the component record with this.
 
         Returns:
 
         """
         for entry, c in list(self._pending_entries.values()):
-            self.add_entry(entry, c)
+            c_ = component if component else c
+            self.add_entry(entry, c_)
         self._pending_entries.clear()
 
     def serialize(self) -> str:
@@ -220,18 +238,18 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.__control_component = component
 
-    def record_entry(self, entry: EntryType,
-                     component_name: Optional[str] = None):
+    def record_entry(self, entry: Entry, component_name: Optional[str] = None):
         c = component_name
 
         if c is None:
             # Use the auto-inferred control component.
             c = self.__control_component
 
-        try:
-            self.creation_records[c].add(entry.tid)
-        except KeyError:
-            self.creation_records[c] = {entry.tid}
+        if c is not None:
+            try:
+                self.creation_records[c].add(entry.tid)
+            except KeyError:
+                self.creation_records[c] = {entry.tid}
 
     def record_field(self, entry_id: int, field_name: str):
         """
@@ -253,7 +271,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             except KeyError:
                 self.field_records[c] = {(entry_id, field_name)}
 
-    def on_entry_creation(self, entry: EntryType,
+    def on_entry_creation(self, entry: Entry,
                           component_name: Optional[str] = None):
         """
         Call this when adding a new entry, will be called
@@ -261,8 +279,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         its `__init__` function is called.
 
         Args:
-            entry: The entry to be added.
-            component_name: A name to record that the entry is created by
+            entry (Entry): The entry to be added.
+            component_name (str): A name to record that the entry is created by
              this component.
 
         Returns:
@@ -274,8 +292,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             # Use the auto-inferred control component.
             c = self.__control_component
 
-        # Record that this entry hasn't been added
-        # to the index yet.
+        # Record that this entry hasn't been added to the index yet.
         self._pending_entries[entry.tid] = entry, c
 
     def regret_creation(self, entry: EntryType):
