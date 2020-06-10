@@ -23,13 +23,14 @@ from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
 from forte.data.ontology.core import (Entry, EntryType, GroupType, LinkType)
-from forte.pack_manager import PackManager
 
 __all__ = [
     "BasePack",
     "BaseMeta",
     "PackType"
 ]
+
+from forte.pack_manager import PackManager
 
 
 class BaseMeta:
@@ -40,12 +41,9 @@ class BaseMeta:
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id: Optional[str] = doc_id
         self._pack_id: int = -1
-        # Obtain the global pack manager.
-        self._pack_manager: PackManager = PackManager()
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        state.pop('_pack_manager')
         return state
 
     def __setstate__(self, state):
@@ -58,7 +56,6 @@ class BaseMeta:
 
         """
         self.__dict__.update(state)
-        self._pack_manager: PackManager = PackManager()
 
     @property
     def pack_id(self) -> int:
@@ -79,17 +76,17 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     """
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, doc_id: Optional[str] = None):
+    def __init__(self, pack_manager: PackManager,
+                 pack_name: Optional[str] = None):
         super().__init__()
+        # Assign a pack id for this pack.
+        pack_manager.set_pack_id(self)
 
         self.links: List[LinkType] = []
         self.groups: List[GroupType] = []
 
-        self.meta: BaseMeta = BaseMeta(doc_id)
+        self.meta: BaseMeta = BaseMeta(pack_name)
         self.index: BaseIndex = BaseIndex()
-
-        # Obtain the global pack manager.
-        self._pack_manager: PackManager = PackManager()
 
         self.__control_component: Optional[str] = None
 
@@ -98,14 +95,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def __getstate__(self):
         state = super().__getstate__()
         state.pop('index')
-        state.pop('_pack_manager')
         state.pop('_pending_entries')
         state.pop('_BasePack__control_component')
         return state
 
     def __setstate__(self, state):
         super().__setstate__(state)
-        self.__dict__['_pack_manager'] = PackManager()
         self.__dict__['_pending_entries'] = {}
         self.__control_component: Optional[str] = None
 
@@ -154,9 +149,28 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
+    def add_entry(self, entry: EntryType,
+                  component_name: Optional[str] = None) -> EntryType:
+        r"""Add an :class:`~forte.data.ontology.top.Entry` object to the
+        :class:`BasePack` object. Allow duplicate entries in a pack.
+
+        Args:
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+                object to be added to the pack.
+            component_name (str): A name to record that the entry is created by
+             this component.
+
+        Returns:
+            The input entry itself
+        """
+        # When added to the pack, make a record.
+        self.record_entry(entry, component_name)
+        # TODO: Returning the entry itself may not be helpful.
+        return self._add_entry(entry)
+
     @abstractmethod
-    def add_entry(self, entry: EntryType) -> EntryType:
-        r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
+    def _add_entry(self, entry: EntryType) -> EntryType:
+        r"""Add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`BasePack` object. Allow duplicate entries in a pack.
 
         Args:
@@ -168,20 +182,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def add_entry_(self, entry: EntryType) -> int:
-        """
-        A slightly different variation from `add_entry` function, it returns
-        the entry id instead.
-
-        Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-                object to be added to the pack.
-
-        Returns:
-            The entry id of the added entry.
-        """
-        return self.add_entry(entry).tid
-
     def add_all_remaining_entries(self):
         """
         Calling this function will add the entries that are not added to the
@@ -190,8 +190,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        for entry, _ in list(self._pending_entries.values()):
-            self.add_entry(entry)
+        for entry, c in list(self._pending_entries.values()):
+            self.add_entry(entry, c)
         self._pending_entries.clear()
 
     def serialize(self) -> str:
@@ -220,45 +220,20 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.__control_component = component
 
-    def record_new_entry(self, entry: EntryType):
-        """
-        Call this when adding a new entry, will be called
-        in :class:`~forte.data.ontology.core.Entry` when
-        its `__init__` function is called.
-
-        Args:
-            entry: The entry to be added.
-
-        Returns:
-
-        """
-        c = self.__control_component
+    def record_entry(self, entry: EntryType,
+                     component_name: Optional[str] = None):
+        c = component_name
 
         if c is None:
-            c = self._pack_manager.get_input_source()
-
-        # Record that this entry hasn't been added
-        # to the index yet.
-        self._pending_entries[entry.tid] = entry, c
+            # Use the auto-inferred control component.
+            c = self.__control_component
 
         try:
             self.creation_records[c].add(entry.tid)
         except KeyError:
             self.creation_records[c] = {entry.tid}
 
-    def regret_record(self, entry: EntryType):
-        """
-
-        Args:
-            entry:
-
-        Returns:
-
-        """
-        entry, c = self._pending_entries.pop(entry.tid)
-        self.creation_records[c].remove(entry.tid)
-
-    def add_field_record(self, entry_id: int, field_name: str):
+    def record_field(self, entry_id: int, field_name: str):
         """
         Record who modifies the entry, will be called
         in :class:`~forte.data.ontology.core.Entry`
@@ -272,13 +247,47 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         c = self.__control_component
 
-        if c is None:
-            c = self._pack_manager.get_input_source()
+        if c is not None:
+            try:
+                self.field_records[c].add((entry_id, field_name))
+            except KeyError:
+                self.field_records[c] = {(entry_id, field_name)}
 
-        try:
-            self.field_records[c].add((entry_id, field_name))
-        except KeyError:
-            self.field_records[c] = {(entry_id, field_name)}
+    def on_entry_creation(self, entry: EntryType,
+                          component_name: Optional[str] = None):
+        """
+        Call this when adding a new entry, will be called
+        in :class:`~forte.data.ontology.core.Entry` when
+        its `__init__` function is called.
+
+        Args:
+            entry: The entry to be added.
+            component_name: A name to record that the entry is created by
+             this component.
+
+        Returns:
+
+        """
+        c = component_name
+
+        if c is None:
+            # Use the auto-inferred control component.
+            c = self.__control_component
+
+        # Record that this entry hasn't been added
+        # to the index yet.
+        self._pending_entries[entry.tid] = entry, c
+
+    def regret_creation(self, entry: EntryType):
+        """
+
+        Args:
+            entry:
+
+        Returns:
+
+        """
+        self._pending_entries.pop(entry.tid)
 
     # TODO: how to make this return the precise type here?
     def get_entry(self, tid: int) -> EntryType:

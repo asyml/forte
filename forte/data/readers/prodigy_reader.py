@@ -60,7 +60,7 @@ class ProdigyReader(PackReader):
 
         Returns: DataPack containing information extracted from `data`.
         """
-        pack = DataPack()
+        pack = self.new_pack()
         text = data['text']
         pack.set_text(text, replace_func=self.text_replace_operation)
 

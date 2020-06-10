@@ -97,15 +97,15 @@ class EntryContainer(Generic[E, L, G]):
         self._id_manager = EntryIdManager(state['serialization']['next_id'])
 
     @abstractmethod
-    def record_new_entry(self, entry: E):
+    def on_entry_creation(self, entry: E):
         raise NotImplementedError
 
     @abstractmethod
-    def regret_record(self, entry: E):
+    def regret_creation(self, entry: E):
         raise NotImplementedError
 
     @abstractmethod
-    def add_field_record(self, entry_id: int, field_name: str):
+    def record_field(self, entry_id: int, field_name: str):
         raise NotImplementedError
 
     @abstractmethod

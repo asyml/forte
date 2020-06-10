@@ -41,7 +41,7 @@ class EvalReader(MultiPackReader):
 
     def _parse_pack(self, data_source: str) -> Iterator[MultiPack]:
         fields = data_source.split("\t")
-        multi_pack = MultiPack()
+        multi_pack = self.new_pack()
 
         data_pack = multi_pack.add_pack(self.config.pack_name)
 

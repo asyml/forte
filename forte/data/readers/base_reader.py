@@ -70,9 +70,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
 
-        self._pack_manager = PackManager()
-        self._pack_manager.reset_remap()
-
     @classmethod
     def default_configs(cls):
         r"""Returns a `dict` of configurations of the reader with default
@@ -120,11 +117,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 "Got None collection, cannot parse as data pack.")
 
         for p in self._parse_pack(collection):
-            # for entry in p:
-            #     # Here the creation will be recorded to the reader because
-            #     # we have set the reader to be the initial_reader in the
-            #     # pack manager.
-            #     entry.record_creation()
+            p.add_all_remaining_entries()
             yield p
 
     @abstractmethod
@@ -286,6 +279,9 @@ class PackReader(BaseReader[DataPack], ABC):
     def pack_type(self):
         return DataPack
 
+    def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
+        return DataPack(self._pack_manager, pack_name)
+
     def set_text(self, pack: DataPack, text: str):
         r"""Assign the text value to the :class:`DataPack`. This function will
         pass the ``text_replace_operation`` to the :class:`DataPack` to conduct
@@ -306,3 +302,6 @@ class MultiPackReader(BaseReader[MultiPack], ABC):
     @property
     def pack_type(self):
         return MultiPack
+
+    def new_pack(self, pack_name: Optional[str] = None) -> MultiPack:
+        return MultiPack(self._pack_manager, pack_name)

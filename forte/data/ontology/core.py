@@ -84,11 +84,10 @@ class Entry(Generic[ContainerType]):
         self._tid: int = self.pack.get_next_id()
         self._embedding: np.ndarray = np.empty(0)
         self.pack.validate(self)
-        self.pack.record_new_entry(self)
-        # self.__field_modified: Set[str] = set()
+        self.pack.on_entry_creation(self)
 
     def regret_creation(self):
-        self.__pack.regret_record(self)
+        self.__pack.regret_creation(self)
 
     def __getstate__(self):
         r"""In serialization, the pack is not serialize, and it will be set
@@ -235,7 +234,7 @@ class Entry(Generic[ContainerType]):
 
         # We add the record to the system.
         if key not in default_entry_fields:
-            self.__pack.add_field_record(self.tid, key)
+            self.__pack.record_field(self.tid, key)
 
     def __getattribute__(self, item):
         v = super().__getattribute__(item)
@@ -244,36 +243,6 @@ class Entry(Generic[ContainerType]):
             return self.resolve_pointer(v)
         else:
             return v
-
-    # TODO: Will replaced by = assignment
-    def set_fields(self, **kwargs):
-        r"""Set the entry fields from the kwargs.
-
-        Args:
-            **kwargs: A set of key word arguments used to set the value. A key
-            must be correspond to a field name of this entry, and a value must
-            match the field's type.
-        """
-        for field_name, field_value in kwargs.items():
-            if field_name in vars(self):
-                # NOTE: hasattr does not work here because it check both
-                #  functions and attributes. We are only interested to see if
-                #  the attributes are there.
-                #  For example, if we use hasattr, is will return True for
-                #  the setter and getter of the attribute name.
-
-                # TODO: convert field value to integer automatically here.
-                if isinstance(field_value, Entry):
-                    setattr(self, field_name, field_value.tid)
-                else:
-                    setattr(self, field_name, field_value)
-            else:
-                raise AttributeError(
-                    f"The entry type [{self.__class__}] does not have an "
-                    f"attribute: '{field_name}'.")
-
-            # We add the record to the system.
-            self.__pack.add_field_record(self.tid, field_name)
 
     def __eq__(self, other):
         r"""The eq function for :class:`Entry` objects.

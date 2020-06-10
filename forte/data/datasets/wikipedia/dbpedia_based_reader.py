@@ -161,7 +161,7 @@ class DBpediaWikiReader(PackReader):
     ) -> Iterator[DataPack]:
         str_data, node_data = doc_data
 
-        pack = DataPack()
+        pack = self.new_pack()
         doc_name: str = str_data['doc_name']
         if doc_name in self.redirects:
             doc_name = self.redirects[doc_name]

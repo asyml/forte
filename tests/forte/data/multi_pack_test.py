@@ -29,8 +29,8 @@ class DataPackTest(unittest.TestCase):
     def setUp(self) -> None:
         # Note: input source is created automatically by the system, but we
         #  can also set it manually at test cases.
-        PackManager().set_input_source('test case')
-        self.multi_pack = MultiPack()
+        pm = PackManager()
+        self.multi_pack = MultiPack(pm)
         self.data_pack1 = self.multi_pack.add_pack(pack_name="left pack")
         self.data_pack2 = self.multi_pack.add_pack(pack_name="right pack")
 

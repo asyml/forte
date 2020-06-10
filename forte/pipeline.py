@@ -34,7 +34,7 @@ from forte.evaluation.base.base_evaluator import Evaluator
 from forte.pack_manager import PackManager
 from forte.pipeline_component import PipelineComponent
 from forte.process_job import ProcessJob
-from forte.process_manager import _ProcessManager, ProcessJobStatus
+from forte.process_manager import ProcessManager, ProcessJobStatus
 from forte.processors.base.base_processor import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs
@@ -54,7 +54,7 @@ class ProcessBuffer:
         self.__data_iter: Iterator[PackType] = data_iter
         self.__data_exhausted = False
         self.__pipeline = pipeline
-        self.__process_manager: _ProcessManager = pipeline.proc_mgr
+        self.__process_manager: ProcessManager = pipeline.proc_mgr
 
     def __iter__(self):
         return self
@@ -108,11 +108,10 @@ class Pipeline(Generic[PackType]):
 
         # Will intialize at `initialize` because the processors length is
         # unknown.
-        self.proc_mgr: _ProcessManager
+        self.proc_mgr: ProcessManager
 
         # This manager controls global pack access information
         self._pack_manager: PackManager = PackManager()
-        self._pack_manager.reset()
 
         self.evaluator_indices: List[int] = []
 
@@ -165,20 +164,20 @@ class Pipeline(Generic[PackType]):
 
     def initialize(self):
         # The process manager need to be assigned first.
-        self.proc_mgr = _ProcessManager(len(self._components))
+        self.proc_mgr = ProcessManager(len(self._components))
 
         self._reader.initialize(self.resource, self._reader_config)
-        self._reader.assign_manager(self.proc_mgr)
 
         self.initialize_processors()
 
         self.initialized = True
 
     def initialize_processors(self):
+        self._pack_manager.reset_remap()
         for processor, config in zip(self.components, self.processor_configs):
             try:
                 processor.initialize(self.resource, config)
-                processor.assign_manager(self.proc_mgr)
+                processor.assign_manager(self.proc_mgr, self._pack_manager)
             except ProcessorConfigError as e:
                 logging.error("Exception occur when initializing "
                               "processor %s", processor.name)
@@ -188,7 +187,7 @@ class Pipeline(Generic[PackType]):
                    config: Optional[Union[Config, Dict[str, Any]]] = None):
         self._reader = reader
         self._reader_config = reader.make_configs(config)
-        self._pack_manager.set_input_source(reader.name)
+        self._reader.assign_manager(self.proc_mgr, self._pack_manager)
 
     @property
     def reader(self):
@@ -214,6 +213,7 @@ class Pipeline(Generic[PackType]):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
 
+        component.assign_manager(self.proc_mgr, self._pack_manager)
         self._components.append(component)
         self.processor_configs.append(component.make_configs(config))
 

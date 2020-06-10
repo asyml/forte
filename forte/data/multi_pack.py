@@ -30,6 +30,7 @@ from forte.data.ontology.top import (
     MultiPackGeneric)
 from forte.data.span import Span
 from forte.data.types import DataRequest
+from forte.pack_manager import PackManager
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +61,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     cross-pack entries (links, and groups)
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pack_manager: PackManager,
+                 pack_name: Optional[str] = None):
+        super().__init__(pack_manager, pack_name)
         # Store the global ids.
         self._pack_ref: List[int] = []
         # Store the reverse mapping from global id to the pack index.
@@ -82,7 +84,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         # Used to automatically give name to sub packs.
         self.__default_pack_prefix = '_pack'
-        self._pack_manager.set_pack_id(self)
+
+        self._pack_manager = pack_manager
 
     def __setstate__(self, state):
         r"""In deserialization, we set up the index and the references to the
@@ -189,7 +192,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"" f"{type(pack_name)}"
             )
 
-        pack: DataPack = DataPack()
+        pack: DataPack = DataPack(self._pack_manager)
         self.add_pack_(pack, pack_name)
         return pack
 
@@ -502,7 +505,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for entry_id in valid_id:
             yield self.get_entry(entry_id)
 
-    def add_entry(self, entry: EntryType) -> EntryType:
+    def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
 
         Allow duplicate entries in a datapack.

@@ -29,6 +29,7 @@ from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generics)
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
+from forte.pack_manager import PackManager
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +67,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         doc_id (str, optional): A universal id of this data pack.
     """
 
-    def __init__(self, doc_id: Optional[str] = None):
-        super().__init__(doc_id)
+    def __init__(self, pack_manager: PackManager,
+                 pack_name: Optional[str] = None):
+        super().__init__(pack_manager, pack_name)
         self._text = ""
 
         self.annotations: SortedList[Annotation] = SortedList()
@@ -80,10 +82,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.orig_text_len: int = 0
 
         self.index: DataIndex = DataIndex()
-        self.meta: Meta = Meta(doc_id)
-
-        # Assign a pack id for this pack.
-        self._pack_manager.set_pack_id(self)
+        self.meta: Meta = Meta(pack_name)
 
     def __getstate__(self):
         r"""
@@ -309,7 +308,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         return Span(orig_begin, orig_end)
 
-    def add_entry(self, entry: EntryType) -> EntryType:
+    def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
 

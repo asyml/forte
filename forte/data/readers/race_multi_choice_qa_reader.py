@@ -60,7 +60,7 @@ class RACEMultiChoiceQAReader(PackReader):
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:
             dataset = json.load(file)
 
-            pack = DataPack()
+            pack = self.new_pack()
             text: str = dataset['article']
             article_end = len(text)
             offset = article_end + 1

@@ -50,7 +50,7 @@ class PlainTextReader(PackReader):
         return []
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = DataPack()
+        pack = self.new_pack()
 
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:
             text = file.read()

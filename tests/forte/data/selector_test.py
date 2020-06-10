@@ -19,12 +19,14 @@ import unittest
 from forte.data.multi_pack import MultiPack
 from forte.data.selector import NameMatchSelector, RegexNameMatchSelector, \
     FirstPackSelector, AllPackSelector
+from forte.pack_manager import PackManager
 
 
 class SelectorTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.multi_pack = MultiPack()
+        pm = PackManager()
+        self.multi_pack = MultiPack(pm)
 
         data_pack1 = self.multi_pack.add_pack(pack_name="pack1")
         data_pack2 = self.multi_pack.add_pack(pack_name="pack2")

@@ -75,7 +75,7 @@ class EmptyReader(PackReader):
         yield from names
 
     def _parse_pack(self, name: str) -> Iterator[DataPack]:
-        p = DataPack()
+        p = self.new_pack()
         p.doc_id = name
         yield p
 
@@ -109,7 +109,7 @@ class EmptyMultiReader(MultiPackReader):
         yield from names
 
     def _parse_pack(self, name: str) -> Iterator[MultiPack]:
-        p = MultiPack()
+        p = self.new_pack()
         p.doc_id = name
         yield p
 
@@ -144,7 +144,8 @@ class MultiEntryStructure(unittest.TestCase):
         self.assertIsInstance(mpe.__dict__['refer_entry'], MpPointer)
 
     def test_wrong_attribute(self):
-        input_pack = MultiPack()
+        manager = PackManager()
+        input_pack = MultiPack(manager)
         mp_entry = ExampleMPEntry(input_pack)
         p1 = input_pack.add_pack('pack1')
         e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
@@ -200,9 +201,9 @@ class EntryDataStructure(unittest.TestCase):
 
 class NotHashingTest(unittest.TestCase):
     def setUp(self):
-        self.pack: DataPack = DataPack()
+        manager = PackManager()
+        self.pack: DataPack = DataPack(manager)
         self.pack.set_text("Some text to test annotations on.")
-        PackManager().set_input_source('hashing_test')
 
     def test_not_hashable(self):
         anno: Annotation = Annotation(self.pack, 0, 5)
