@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+""" This module contains an implementation of the NER trainer.
+"""
+
 # pylint: disable=logging-fstring-interpolation
 import logging
 import pickle
 import random
 import time
 from pathlib import Path
-from typing import List, Tuple, Iterator, Optional
+from typing import List, Tuple, Iterator, Optional, Dict
 
 import numpy as np
 import torch
@@ -38,6 +41,9 @@ logger = logging.getLogger(__name__)
 
 class CoNLLNERTrainer(BaseTrainer):
     def __init__(self):
+        """ Create a NER trainer.
+        """
+
         super().__init__()
 
         self.model = None
@@ -63,7 +69,14 @@ class CoNLLNERTrainer(BaseTrainer):
         self.__past_dev_result = None
 
     def initialize(self, resources: Resources, configs: Config):
+        """
+         The training pipeline will run this initialization method during
+         the initialization phase and send resources in as parameters.
+         Args:
 
+         Returns:
+
+         """
         self.resource = resources
 
         self.word_alphabet = resources.get("word_alphabet")
@@ -94,7 +107,16 @@ class CoNLLNERTrainer(BaseTrainer):
 
         self.resource.update(model=self.model)
 
-    def data_request(self):
+    def data_request(self) -> Dict:
+        """
+        Build a request to a :class:`DataPack <forte.data.data_pack.DataPack>`.
+        The NER trainer will request the ner filed of the tokens, organized
+        by each sentence.
+
+        Returns:
+
+        """
+
         request_string = {
             "context_type": Sentence,
             "request": {
@@ -105,6 +127,18 @@ class CoNLLNERTrainer(BaseTrainer):
         return request_string
 
     def consume(self, instance):
+        """
+        Consumes the next NER instance for training. The instance will be
+        collected until a batch is full.
+
+        Args:
+            instance: An instance contains a sentence, in the form of tokens and
+                their "ner" tag.
+
+        Returns:
+
+        """
+
         tokens = instance["Token"]
         word_ids = []
         char_id_seqs = []
@@ -129,13 +163,11 @@ class CoNLLNERTrainer(BaseTrainer):
 
         self.train_instances_cache.append((word_ids, char_id_seqs, ner_ids))
 
-    def pack_finish_action(self, pack_count):
-        pass
-
     def epoch_finish_action(self, epoch):
         """
-        at the end of each dataset_iteration, we perform the training,
-        and set validation flags
+        At the end of each dataset_iteration, we perform the training,
+        and set validation flags.
+
         :return:
         """
         counter = len(self.train_instances_cache)
@@ -158,7 +190,7 @@ class CoNLLNERTrainer(BaseTrainer):
         data_iterator = torchtext.data.iterator.pool(
             instances, self.config_data.batch_size_tokens,
             key=lambda x: x.length(),  # length of word_ids
-            batch_size_fn=batch_size_fn,
+            batch_size_fn=_batch_size_fn,
             random_shuffler=torchtext.data.iterator.RandomShuffler())
 
         step = 0
@@ -203,6 +235,15 @@ class CoNLLNERTrainer(BaseTrainer):
 
     @torch.no_grad()
     def get_loss(self, instances: Iterator) -> float:
+        """
+        Compute the loss based on the validation data.
+
+        Args:
+            instances:
+
+        Returns:
+
+        """
         losses = 0
         val_data = list(instances)
         for i in tqdm(
@@ -218,12 +259,22 @@ class CoNLLNERTrainer(BaseTrainer):
         return mean_loss
 
     def post_validation_action(self, eval_result):
+        """
+        Log the evaluation results.
+
+        Args:
+            eval_result: The evaluation results.
+
+        Returns:
+
+        """
+
         if self.__past_dev_result is None or \
                 (eval_result["eval"]["f1"] >
                  self.__past_dev_result["eval"]["f1"]):
             self.__past_dev_result = eval_result
             logger.info("Validation f1 increased, saving model")
-            self.save_model_checkpoint()
+            self.__save_model_checkpoint()
 
         best_epoch = self.__past_dev_result["epoch"]
         acc, prec, rec, f1 = (self.__past_dev_result["eval"]["accuracy"],
@@ -243,6 +294,15 @@ class CoNLLNERTrainer(BaseTrainer):
                         f"epoch={best_epoch}")
 
     def finish(self, resources: Resources):  # pylint: disable=unused-argument
+        """
+        Releasing resources and saving models.
+
+        Args:
+            resources: The resources used by the training process.
+
+        Returns:
+
+        """
         if self.resource:
             keys_to_serializers = {}
             for key in resources.keys():
@@ -256,9 +316,9 @@ class CoNLLNERTrainer(BaseTrainer):
             self.resource.save(keys_to_serializers,
                                output_dir=self.config_model.resource_dir)
 
-        self.save_model_checkpoint()
+        self.__save_model_checkpoint()
 
-    def save_model_checkpoint(self):
+    def __save_model_checkpoint(self):
         states = {
             "model": self.model.state_dict(),
             "optimizer": self.optim.state_dict(),
@@ -272,6 +332,12 @@ class CoNLLNERTrainer(BaseTrainer):
             torch.save(states, f)
 
     def load_model_checkpoint(self):
+        """
+        Load the model with a check pointer.
+
+        Returns:
+
+        """
         ckpt = torch.load(self.config_model.model_path)
         logger.info("restoring model from %s",
                     self.config_model.model_path)
@@ -353,11 +419,11 @@ class CoNLLNERTrainer(BaseTrainer):
         return words, chars, ners, masks, lengths
 
 
-def batch_size_fn(new: Tuple, count: int, _: int):
+def _batch_size_fn(new: Tuple, count: int, _: int):
     if count == 1:
-        batch_size_fn.max_length = 0  # type: ignore
+        _batch_size_fn.max_length = 0  # type: ignore
 
-    batch_size_fn.max_length = max(  # type: ignore
-        batch_size_fn.max_length, len(new[0]))  # type: ignore
-    elements = count * batch_size_fn.max_length  # type: ignore
+    _batch_size_fn.max_length = max(  # type: ignore
+        _batch_size_fn.max_length, len(new[0]))  # type: ignore
+    elements = count * _batch_size_fn.max_length  # type: ignore
     return elements
