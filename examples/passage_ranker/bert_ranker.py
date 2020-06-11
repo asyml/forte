@@ -91,6 +91,7 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
 
     def _init_from_checkpoint(self, pretrained_model_name: str,
                               cache_dir: str, **kwargs):
+        # pylint: disable=import-outside-toplevel
         try:
             import numpy as np
             import tensorflow as tf

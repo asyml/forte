@@ -18,7 +18,7 @@ from typing import Deque, List
 from forte.process_job import ProcessJob, ProcessJobStatus
 
 
-class _ProcessManager:
+class ProcessManager:
     r"""A pipeline level manager that manages global processing information,
     such as the current running components. This is an internal class and
     should only be initialized by the system.

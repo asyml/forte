@@ -4,12 +4,11 @@ Unit tests for multi pack related operations.
 import logging
 import unittest
 
-from forte.data.multi_pack import MultiPack, MultiPackLink
 from forte.data.data_pack import DataPack
-from forte.data.ontology import Annotation
+from forte.data.multi_pack import MultiPack, MultiPackLink
+from forte.data.ontology import Annotation, MultiPackGroup
 from forte.pack_manager import PackManager
-from ft.onto.base_ontology import (
-    Token)
+from ft.onto.base_ontology import Token
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -30,8 +29,8 @@ class DataPackTest(unittest.TestCase):
     def setUp(self) -> None:
         # Note: input source is created automatically by the system, but we
         #  can also set it manually at test cases.
-        PackManager().set_input_source('test case')
-        self.multi_pack = MultiPack()
+        pm = PackManager()
+        self.multi_pack = MultiPack(pm)
         self.data_pack1 = self.multi_pack.add_pack(pack_name="left pack")
         self.data_pack2 = self.multi_pack.add_pack(pack_name="right pack")
 
@@ -59,7 +58,51 @@ class DataPackTest(unittest.TestCase):
         self.assertEqual(self.multi_pack.pack_names,
                          {'left pack', 'last pack'})
 
-    def test_entries(self):
+    def test_multipack_groups(self):
+        """
+        Test some multi pack group.
+        Returns:
+
+        """
+        # Add tokens to each pack.
+        for pack in self.multi_pack.packs:
+            _space_token(pack)
+
+        # Create some group.
+        token: Annotation
+        left_tokens = {}
+        for token in self.multi_pack.packs[0].get(Token):
+            left_tokens[token.text] = token
+
+        right_tokens = {}
+        for token in self.multi_pack.packs[1].get(Token):
+            right_tokens[token.text] = token
+
+        for key, lt in left_tokens.items():
+            if key in right_tokens:
+                rt = right_tokens[key]
+                self.multi_pack.add_entry(MultiPackGroup(
+                    self.multi_pack, [lt, rt]))
+
+        # Check the groups.
+        expected_content = [("This", "This"), ("pack", "pack"),
+                            ("contains", "contains"), ("some", "some"),
+                            ("sample", "sample"), ("data.", "data.")]
+
+        group_content = []
+        g: MultiPackGroup
+        for g in self.multi_pack.get(MultiPackGroup):
+            e: Annotation
+            group_content.append(tuple([e.text for e in g.get_members()]))
+
+        self.assertListEqual(expected_content, group_content)
+
+    def test_multipack_entries(self):
+        """
+        Test some multi pack entry.
+        Returns:
+
+        """
         # 1. Add tokens to each pack.
         for pack in self.multi_pack.packs:
             _space_token(pack)

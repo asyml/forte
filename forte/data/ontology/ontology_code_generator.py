@@ -198,13 +198,11 @@ class OntologyCodeGenerator:
         self.initialize_top_entries(self.import_managers.root,
                                     top_ontology_module)
 
-        # A few basic type to support.
+        # A few pre-requesite type to support.
+        self.import_managers.add_default_import("dataclasses.dataclass")
         self.import_managers.root.add_object_to_import('typing.Optional')
 
         for type_class in NON_COMPOSITES.values():
-            self.import_managers.root.add_object_to_import(type_class)
-
-        for type_class in COMPOSITES.values():
             self.import_managers.root.add_object_to_import(type_class)
 
         # Adjacency list to store the allowed types (in-built or user-defined),
@@ -236,8 +234,13 @@ class OntologyCodeGenerator:
         self.exclude_from_writing = set()
 
         if not generate_all:
+            logging.info("Checking existing specification "
+                         "directory: %s", forte_spec_dir)
             for existing_spec in os.listdir(forte_spec_dir):
                 if existing_spec.endswith('.json'):
+                    logging.info(
+                        "Forte library contains %s, "
+                        "will skip this one.", existing_spec)
                     self.exclude_from_writing.add(
                         os.path.join(spec_base, existing_spec))
 
@@ -860,8 +863,6 @@ class OntologyCodeGenerator:
                 f"not declared in ontology.")
 
         # Make sure the import of these related types are handled.
-        full_type = COMPOSITES['Dict']
-        manager.add_object_to_import(full_type)
         manager.add_object_to_import(value_type)
 
         self_ref = entry_name.class_name == value_type
@@ -869,8 +870,8 @@ class OntologyCodeGenerator:
         default_val: Dict = {}
 
         return DictProperty(
-            manager, att_name, key_type, value_type, description=desc,
-            default_val=default_val, self_ref=self_ref)
+            manager, att_name, key_type, value_type,
+            description=desc, default_val=default_val, self_ref=self_ref)
 
     def parse_list(
             self, manager: ImportManager, schema: Dict, entry_name: EntryName,
@@ -897,22 +898,18 @@ class OntologyCodeGenerator:
                 f"{entry_name.name} of the attribute {att_name} "
                 f"not declared in ontology.")
 
-        full_type = COMPOSITES[att_type]
-
         # Make sure the import of these related types are handled.
-        manager.add_object_to_import(full_type)
         manager.add_object_to_import(item_type)
 
         self_ref = entry_name.class_name == item_type
 
         return ListProperty(
-            manager, att_name, full_type, item_type, description=desc,
+            manager, att_name, item_type, description=desc,
             default_val=[], self_ref=self_ref)
 
     def parse_non_composite(
             self, manager: ImportManager, att_name: str, att_type: str,
             desc: str, default_val: str) -> NonCompositeProperty:
-
         manager.add_object_to_import('typing.Optional')
 
         return NonCompositeProperty(

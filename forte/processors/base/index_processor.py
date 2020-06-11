@@ -20,14 +20,14 @@ from typing import Dict, Any, List, Tuple
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
-from forte.processors.base.base_processor import BaseProcessor
+from forte.processors.base.pack_processor import PackProcessor
 
 __all__ = [
     "IndexProcessor"
 ]
 
 
-class IndexProcessor(BaseProcessor[DataPack], ABC):
+class IndexProcessor(PackProcessor, ABC):
     r"""A  base processor for indexing documents into traditional indexers like
     Elasticsearch and/or dense vector indexers like Faiss. Subclasses need to
     implement :meth:`IndexProcessor::_bulk_process`.

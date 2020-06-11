@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import logging
 from typing import List, Any, Dict
 
 import stanza
-
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -28,23 +27,25 @@ __all__ = [
 
 
 class StandfordNLPProcessor(PackProcessor):
-    def __init__(self, models_path: str):
+    def __init__(self):
         super().__init__()
-        self.processors = ""
         self.nlp = None
-        self.MODELS_DIR = models_path
-        self.lang = 'en'  # English is default
+        self.processors = set()
 
     def set_up(self):
-        stanza.download(self.lang, self.MODELS_DIR)
+        stanza.download(self.configs.lang, self.configs.dir)
+        self.processors = set(self.configs.processors.split(','))
 
     # pylint: disable=unused-argument
     def initialize(self, resources: Resources, configs: Config):
-        self.processors = configs.processors
-        self.lang = configs.lang
+        super().initialize(resources, configs)
         self.set_up()
-        self.nlp = stanza.Pipeline(**configs.todict(),
-                                   models_dir=self.MODELS_DIR)
+        self.nlp = stanza.Pipeline(
+            lang=self.configs.lang,
+            dir=self.configs.dir,
+            use_gpu=self.configs.use_gpu,
+            processors=self.configs.processors,
+        )
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -59,37 +60,45 @@ class StandfordNLPProcessor(PackProcessor):
                 'lang': 'en',
                 # Language code for the language to build the Pipeline
                 'use_gpu': False,
+                'dir': '.',
             })
         return config
 
     def _process(self, input_pack: DataPack):
         doc = input_pack.text
-        end_pos = 0
+
+        if len(doc) == 0:
+            logging.warning("Find empty text in doc.")
 
         # sentence parsing
-        sentences = self.nlp(doc).sentences  # type: ignore
+        sentences = self.nlp(doc).sentences
 
         # Iterating through stanfordnlp sentence objects
         for sentence in sentences:
-            begin_pos = doc.find(sentence.words[0].text, end_pos)
-            end_pos = doc.find(sentence.words[-1].text, begin_pos) + len(
-                sentence.words[-1].text)
-            sentence_entry = Sentence(input_pack, begin_pos, end_pos)
+            Sentence(input_pack, sentence.tokens[0].start_char,
+                     sentence.tokens[-1].end_char)
 
             tokens: List[Token] = []
             if "tokenize" in self.processors:
-                offset = sentence_entry.span.begin
-                end_pos_word = 0
-
                 # Iterating through stanfordnlp word objects
                 for word in sentence.words:
-                    begin_pos_word = sentence_entry.text. \
-                        find(word.text, end_pos_word)
-                    end_pos_word = begin_pos_word + len(word.text)
-                    token = Token(input_pack,
-                                  begin_pos_word + offset,
-                                  end_pos_word + offset
-                                  )
+                    misc = word.misc.split('|')
+
+                    t_start = -1
+                    t_end = -1
+                    for m in misc:
+                        k, v = m.split('=')
+                        if k == 'start_char':
+                            t_start = int(v)
+                        elif k == 'end_char':
+                            t_end = int(v)
+
+                    if t_start < 0 or t_end < 0:
+                        raise ValueError(
+                            "Cannot determine word start or end for "
+                            "stanfordnlp.")
+
+                    token = Token(input_pack, t_start, t_end)
 
                     if "pos" in self.processors:
                         token.pos = word.pos
@@ -105,6 +114,6 @@ class StandfordNLPProcessor(PackProcessor):
                 # Iterating through token entries in current sentence
                 for token, word in zip(tokens, sentence.words):
                     child = token  # current token
-                    parent = tokens[word.governor - 1]  # Root token
+                    parent = tokens[word.head - 1]  # Head token
                     relation_entry = Dependency(input_pack, parent, child)
-                    relation_entry.rel_type = word.dependency_relation
+                    relation_entry.rel_type = word.deprel

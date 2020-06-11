@@ -19,7 +19,7 @@ from typing import (Dict, Iterable, Iterator, List, Optional, Type, Union, Any,
 import numpy as np
 from sortedcontainers import SortedList
 
-from forte.common.exception import EntryNotFoundError, ProcessExecutionException
+from forte.common.exception import ProcessExecutionException
 from forte.data import data_utils_io
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
@@ -29,6 +29,7 @@ from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generics)
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
+from forte.pack_manager import PackManager
 
 logger = logging.getLogger(__name__)
 
@@ -63,11 +64,14 @@ class DataPack(BasePack[Entry, Link, Group]):
     language text could be a document617, paragraph or in any other granularity.
 
     Args:
-        doc_id (str, optional): A universal id of this data pack.
+        pack_manager(PackManager): A manager that records global
+          information of packs, such as pack ids.
+        pack_name (str, optional): A name for this data pack.
     """
 
-    def __init__(self, doc_id: Optional[str] = None):
-        super().__init__(doc_id)
+    def __init__(self, pack_manager: PackManager,
+                 pack_name: Optional[str] = None):
+        super().__init__(pack_manager, pack_name)
         self._text = ""
 
         self.annotations: SortedList[Annotation] = SortedList()
@@ -80,10 +84,6 @@ class DataPack(BasePack[Entry, Link, Group]):
         self.orig_text_len: int = 0
 
         self.index: DataIndex = DataIndex()
-        self.meta: Meta = Meta(doc_id)
-
-        # Assign a pack id for this pack.
-        self._pack_manager.set_pack_id(self)
 
     def __getstate__(self):
         r"""
@@ -106,9 +106,6 @@ class DataPack(BasePack[Entry, Link, Group]):
             3) Obtain the pack ids.
         """
         super().__setstate__(state)
-
-        # Obtain a new pack id for this pack, and record the change of id.
-        self._pack_manager.set_remapped_pack_id(self)
 
         self.annotations = SortedList(self.annotations)
         self.links = SortedList(self.links)
@@ -138,6 +135,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         yield from self.links
         yield from self.groups
         yield from self.generics
+
+    def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
+        return Meta(pack_name)
 
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)
@@ -309,7 +309,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         return Span(orig_begin, orig_end)
 
-    def add_entry(self, entry: EntryType) -> EntryType:
+    def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
 
@@ -589,19 +589,23 @@ class DataPack(BasePack[Entry, Link, Group]):
         fields = set()
         if isinstance(a_args, dict):
             components = a_args.get("component")
+            # pylint: disable=isinstance-second-argument-not-valid-type
+            # TODO: until fix: https://github.com/PyCQA/pylint/issues/3507
             if components is not None and not isinstance(components, Iterable):
                 raise TypeError(
-                    f"Invalid request format for 'components'. "
-                    f"The value of 'components' should be of an iterable type."
+                    "Invalid request format for 'components'. "
+                    "The value of 'components' should be of an iterable type."
                 )
             unit = a_args.get("unit")
             if unit is not None and not isinstance(unit, str):
                 raise TypeError(
-                    f"Invalid request format for 'unit'. "
-                    f"The value of 'unit' should be a string."
+                    "Invalid request format for 'unit'. "
+                    "The value of 'unit' should be a string."
                 )
             a_args = a_args.get("fields", set())
 
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: disable until fix: https://github.com/PyCQA/pylint/issues/3507
         if isinstance(a_args, Iterable):
             fields = set(a_args)
         elif a_args is not None:
@@ -721,94 +725,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             a_dict[key] = np.array(value)
         return a_dict
 
-    def get_entries(
-            self, entry_type: Type[EntryType],
-            range_annotation: Optional[Annotation] = None,
-            components: Optional[Union[str, List[str]]] = None
-    ) -> Iterable[EntryType]:
-        r"""Get ``entry_type`` entries from the span of ``range_annotation`` in
-        a DataPack.
-
-        Example:
-
-            .. code-block:: python
-
-                for sentence in input_pack.get_entries(Sentence):
-                    token_entries = input_pack.get_entries(
-                            entry_type=Token,range_annotation=sentence,
-                            component=token_component)
-                    ...
-
-            In the above code snippet, we get entries of type ``Token`` within
-            each ``sentence`` which were generated by ``token_component``
-
-        Args:
-            entry_type (type): The type of entries requested.
-            range_annotation (Annotation, optional): The range of entries
-                requested. If `None`, will return valid entries in the range of
-                whole data_pack.
-            components (str or list, optional): The component generating the
-                entries requested. If `None`, will return valid entries
-                generated by any component.
-        """
-        if range_annotation is not None and len(self.annotations) == 0:
-            yield from []
-            # After yield, don't do real queries.
-            return
-
-        range_begin = range_annotation.span.begin if range_annotation else 0
-        range_end = (range_annotation.span.end if range_annotation else
-                     self.annotations[-1].span.end)
-
-        # valid type
-        valid_id = self.get_ids_by_type(entry_type)
-        # valid component
-        if components is not None:
-            if isinstance(components, str):
-                components = [components]
-            valid_id &= self.get_ids_by_components(components)
-
-        # Generics do not work with range_annotation.
-        if issubclass(entry_type, Generics):
-            for entry_id in valid_id:
-                entry: EntryType = self.get_entry(entry_id)  # type: ignore
-                yield entry
-            return
-
-        # valid span
-        if range_annotation is not None:
-            coverage_index = self.index.coverage_index(type(range_annotation),
-                                                       entry_type)
-            if coverage_index is not None:
-                valid_id &= coverage_index[range_annotation.tid]
-
-        if issubclass(entry_type, Annotation):
-            temp_begin = Annotation(self, range_begin, range_begin)
-            begin_index = self.annotations.bisect(temp_begin)
-
-            temp_end = Annotation(self, range_end, range_end)
-            end_index = self.annotations.bisect(temp_end)
-
-            # Make sure these temporary annotations are not part of the
-            # actual data.
-            temp_begin.regret_creation()
-            temp_end.regret_creation()
-
-            for annotation in self.annotations[begin_index: end_index]:
-                if annotation.tid not in valid_id:
-                    continue
-                if (range_annotation is None or
-                        self.index.in_span(annotation, range_annotation.span)):
-                    yield annotation
-
-        elif issubclass(entry_type, (Link, Group)):
-            for entry_id in valid_id:
-                entry: EntryType = self.get_entry(entry_id)  # type: ignore
-                if (range_annotation is None or
-                        self.index.in_span(entry, range_annotation.span)):
-                    yield entry
-
-    def get(self, entry_type: Type[EntryType],
+    def get(self, entry_type: Type[EntryType],  # type: ignore
             range_annotation: Optional[Annotation] = None,
             components: Optional[Union[str, List[str]]] = None
             ) -> Iterable[EntryType]:
@@ -836,25 +753,63 @@ class DataPack(BasePack[Entry, Link, Group]):
                 entries requested. If `None`, will return valid entries
                 generated by any component.
         """
-        yield from self.get_entries(entry_type, range_annotation, components)
+        # If we don't have any annotations, then we yield an empty list.
+        # Note that generics do not work with annotations.
+        if len(self.annotations) == 0 and not issubclass(entry_type, Generics):
+            yield from []
+            return
 
-    def get_single(self, entry_type: Type[EntryType]) -> EntryType:
-        r"""Take a single entry of type :attr:`entry_type` from this data
-        pack. This is useful when the target entry type appears only one
-        time in the :class:`DataPack` for e.g., a Document entry. Or you just
-        intended to take the first one.
+        # valid type
+        valid_id = self.get_ids_by_type(entry_type)
+        # valid component
+        if components is not None:
+            if isinstance(components, str):
+                components = [components]
+            valid_id &= self.get_ids_by_components(components)
 
-        Args:
-            entry_type: The entry type to be retrieved.
+        # Generics do not work with range_annotation.
+        if issubclass(entry_type, Generics):
+            for entry_id in valid_id:
+                entry: EntryType = self.get_entry(entry_id)  # type: ignore
+                yield entry
+            return
 
-        Returns:
-            A single data entry.
-        """
-        for a in self.get(entry_type):
-            return a
+        # valid span
+        if range_annotation is not None:
+            coverage_index = self.index.coverage_index(type(range_annotation),
+                                                       entry_type)
+            if coverage_index is not None:
+                valid_id &= coverage_index[range_annotation.tid]
 
-        raise EntryNotFoundError(
-            f"The entry {entry_type} is not found in the provided data pack.")
+        range_begin = range_annotation.span.begin if range_annotation else 0
+        range_end = (range_annotation.span.end if range_annotation else
+                     self.annotations[-1].span.end)
+
+        if issubclass(entry_type, Annotation):
+            temp_begin = Annotation(self, range_begin, range_begin)
+            begin_index = self.annotations.bisect(temp_begin)
+
+            temp_end = Annotation(self, range_end, range_end)
+            end_index = self.annotations.bisect(temp_end)
+
+            # Make sure these temporary annotations are not part of the
+            # actual data.
+            temp_begin.regret_creation()
+            temp_end.regret_creation()
+
+            for annotation in self.annotations[begin_index: end_index]:
+                if annotation.tid not in valid_id:
+                    continue
+                if (range_annotation is None or
+                        self.index.in_span(annotation, range_annotation.span)):
+                    yield annotation
+
+        elif issubclass(entry_type, (Link, Group)):
+            for entry_id in valid_id:
+                entry: EntryType = self.get_entry(entry_id)  # type: ignore
+                if (range_annotation is None or
+                        self.index.in_span(entry, range_annotation.span)):
+                    yield entry
 
 
 class DataIndex(BaseIndex):

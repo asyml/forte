@@ -26,6 +26,7 @@ from forte.pipeline import Pipeline
 from forte.data.readers import MultiPackSentenceReader
 from forte.processors import MicrosoftBingTranslator
 
+
 @unittest.skip("BingTranslator will be moved into examples. A texar model will "
                "be used to write NMT processor.")
 @ddt
@@ -42,7 +43,7 @@ class TestMachineTranslationProcessor(unittest.TestCase):
     @unpack
     def test_pipeline(self, texts):
         for idx, text in enumerate(texts):
-            file_path = os.path.join(self.test_dir, f"{idx+1}.txt")
+            file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
             with open(file_path, 'w') as f:
                 f.write(text)
 

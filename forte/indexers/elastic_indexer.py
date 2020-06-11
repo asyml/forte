@@ -11,18 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import logging
 from copy import deepcopy
 from typing import Optional, Dict, Union, Any, Iterable
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
+from elasticsearch import logger as es_logger
 
 __all__ = [
     "ElasticSearchIndexer"
 ]
 
 from forte.common.configuration import Config
+
+# It seems that elastic search shows a lot of debug message, sometimes can
+# suffocate travis. Trying to depress the logging.
+es_logger.setLevel(logging.INFO)
 
 
 class ElasticSearchIndexer:
@@ -106,8 +111,8 @@ class ElasticSearchIndexer:
             for document in documents:
                 new_document = deepcopy(document)
                 new_document.update(
-                    {"_index": index_name if index_name else
-                    self.hparams.index_name,
+                    {"_index":
+                         index_name if index_name else self.hparams.index_name,
                      "_type": "document"})
                 yield new_document
 
@@ -133,6 +138,11 @@ class ElasticSearchIndexer:
             meta data of the search.
         """
         index_name = index_name if index_name else self.hparams.index_name
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: until fix: https://github.com/PyCQA/pylint/issues/3507
+        if not isinstance(query, Dict):
+            raise ValueError(
+                "The query to the elastic indexer need to be a dictionary.")
         return self.elasticsearch.search(index=index_name, body=query, **kwargs)
 
     @property

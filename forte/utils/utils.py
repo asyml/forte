@@ -14,8 +14,12 @@
 """
 Utility functions
 """
+from functools import wraps
+from inspect import getfullargspec
 from pydoc import locate
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, get_type_hints
+
+from typing_inspect import is_union_type, get_origin
 
 __all__ = [
     "get_full_module_name",
@@ -23,6 +27,7 @@ __all__ = [
     "get_class",
     "get_qual_name",
     "create_class_with_kwargs",
+    "check_type",
 ]
 
 
@@ -138,3 +143,41 @@ def create_class_with_kwargs(class_name: str, class_args: Dict):
     obj = cls(**class_args)
 
     return obj
+
+
+def check_type(obj, tp):
+    if is_union_type(tp):
+        return any(check_type(obj, a) for a in tp.__args__)
+    else:
+        origin = get_origin(tp)
+        if origin is None or origin == tp:
+            return isinstance(obj, tp)
+        else:
+            return check_type(obj, origin)
+
+
+def validate_input(func, **kwargs):
+    hints = get_type_hints(func)
+
+    # iterate all type hints
+    for attr_name, attr_type in hints.items():
+        if attr_name == 'return':
+            continue
+
+        if not isinstance(kwargs[attr_name], attr_type):
+            raise TypeError(
+                f'{attr_name} should be of type {attr_type}, '
+                f'got type {type(kwargs[attr_name])}'
+            )
+
+
+def type_check(func):
+    @wraps(func)
+    def wrapped_decorator(*args, **kwargs):
+        # translate *args into **kwargs
+        func_args = getfullargspec(func)[0]
+        kwargs.update(dict(zip(func_args, args)))
+        validate_input(func, **kwargs)
+        return func(**kwargs)
+
+    return wrapped_decorator

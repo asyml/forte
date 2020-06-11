@@ -17,11 +17,12 @@ Unit tests for RACEMultiChoiceQAReader.
 import json
 import unittest
 import os
-from typing import Iterator
+from typing import Iterator, Iterable
 
 from forte.data.readers import RACEMultiChoiceQAReader
 from forte.data.data_pack import DataPack
 from forte.pack_manager import PackManager
+from forte.pipeline import Pipeline
 from ft.onto.race_multi_choice_qa_ontology import RaceDocument, Question
 
 
@@ -35,10 +36,13 @@ class RACEMultiChoiceQAReaderTest(unittest.TestCase):
 
     def test_reader_no_replace_test(self):
         # Read with no replacements
+        pipeline = Pipeline()
         reader = RACEMultiChoiceQAReader()
-        PackManager().set_input_source(reader.name)
+        pipeline.set_reader(reader)
+        pipeline.initialize()
 
-        data_packs: Iterator[DataPack] = reader.iter(self.dataset_path)
+        data_packs: Iterable[DataPack] = pipeline.process_dataset(
+            self.dataset_path)
         file_paths: Iterator[str] = reader._collect(self.dataset_path)
 
         count_packs = 0

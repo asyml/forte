@@ -11,15 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from dataclasses import dataclass
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type, Any, Dict, Union
+from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base_pack import PackType
+from forte.data.ontology.core import Entry, BaseLink, BaseGroup, MultiEntry
 from forte.data.span import Span
 
 __all__ = [
@@ -57,8 +57,9 @@ class Annotation(Entry):
     """
 
     def __init__(self, pack: PackType, begin: int, end: int):
-        super().__init__(pack)
+        self._span: Optional[Span]
         self.set_span(begin, end)
+        super().__init__(pack)
 
     @property
     def span(self):
@@ -75,29 +76,7 @@ class Annotation(Entry):
     def set_span(self, begin: int, end: int):
         r"""Set the span of the annotation.
         """
-        if not isinstance(begin, int) or not isinstance(end, int):
-            raise ValueError(
-                f"Begin and End for an annotation must be integer, "
-                f"got {begin}:{type(begin)} and {end}:{type(end)}")
-
-        if begin > end:
-            raise ValueError(
-                f"The begin {begin} of span is greater than the end {end}")
-
-        if begin < 0:
-            raise ValueError('The begin cannot be negative.')
-
         self._span = Span(begin, end)
-
-    def __hash__(self):
-        r"""The hash function of :class:`Annotation`.
-
-        Users can define their own hash function by themselves but this must
-        be consistent to :meth:`eq`.
-        """
-        return hash(
-            (type(self), self.pack, self.span.begin, self.span.end)
-        )
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -123,8 +102,8 @@ class Annotation(Entry):
     @property
     def text(self):
         if self.pack is None:
-            raise ValueError(f"Cannot get text because annotation is not "
-                             f"attached to any data pack.")
+            raise ValueError("Cannot get text because annotation is not "
+                             "attached to any data pack.")
         return self.pack.get_span_text(self.span)
 
     @property
@@ -204,10 +183,10 @@ class Link(BaseLink):
              An instance of :class:`Entry` that is the parent of the link.
         """
         if self.pack is None:
-            raise ValueError(f"Cannot get parent because link is not "
-                             f"attached to any data pack.")
+            raise ValueError("Cannot get parent because link is not "
+                             "attached to any data pack.")
         if self._parent is None:
-            raise ValueError(f"The parent of this entry is not set.")
+            raise ValueError("The parent of this entry is not set.")
         return self.pack.get_entry(self._parent)
 
     def get_child(self) -> Entry:
@@ -217,10 +196,10 @@ class Link(BaseLink):
              An instance of :class:`Entry` that is the child of the link.
         """
         if self.pack is None:
-            raise ValueError(f"Cannot get child because link is not"
-                             f" attached to any data pack.")
+            raise ValueError("Cannot get child because link is not"
+                             " attached to any data pack.")
         if self._child is None:
-            raise ValueError(f"The child of this entry is not set.")
+            raise ValueError("The child of this entry is not set.")
         return self.pack.get_entry(self._child)
 
 
@@ -237,15 +216,43 @@ class Group(BaseGroup[Entry]):
             pack: PackType,
             members: Optional[Set[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
+        self._members: Set[int] = set()
         super().__init__(pack, members)
 
+    def add_member(self, member: Entry):
+        r"""Add one entry to the group.
 
-class MultiPackGeneric(Entry):
+        Args:
+            member: One member to be added to the group.
+        """
+        if not isinstance(member, self.MemberType):
+            raise TypeError(
+                f"The members of {type(self)} should be "
+                f"instances of {self.MemberType}, but got {type(member)}")
+        self._members.add(member.tid)
+
+    def get_members(self) -> List[Entry]:
+        r"""Get the member entries in the group.
+
+        Returns:
+             A set of instances of :class:`Entry` that are the members of the
+             group.
+        """
+        if self.pack is None:
+            raise ValueError("Cannot get members because group is not "
+                             "attached to any data pack.")
+        member_entries = []
+        for m in self._members:
+            member_entries.append(self.pack.get_entry(m))
+        return member_entries
+
+
+class MultiPackGeneric(MultiEntry, Entry):
     def __init__(self, pack: PackType):
         super(MultiPackGeneric, self).__init__(pack=pack)
 
 
-class MultiPackLink(BaseLink):
+class MultiPackLink(MultiEntry, BaseLink):
     r"""This is used to link entries in a :class:`MultiPack`, which is
     designed to support cross pack linking, this can support applications such
     as sentence alignment and cross-document coreference. Each link should have
@@ -265,7 +272,12 @@ class MultiPackLink(BaseLink):
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
 
-        super().__init__(pack, parent, child)
+        super().__init__(pack)
+
+        if parent is not None:
+            self.set_parent(parent)
+        if child is not None:
+            self.set_child(child)
 
     @property
     def parent(self) -> Tuple[int, int]:
@@ -338,52 +350,50 @@ class MultiPackLink(BaseLink):
 
 
 # pylint: disable=duplicate-bases
-class MultiPackGroup(BaseGroup[Entry]):
+class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     r"""Group type entries, such as "coreference group". Each group has a set
     of members.
     """
+    MemberType: Type[Entry] = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            members: Optional[Set[Entry]],
+            self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
-        super().__init__(pack, members)
+        self._members: List[Tuple[int, int]] = []
+        super().__init__(pack)
+        if members is not None:
+            self.add_members(members)
+
+    def add_member(self, member: Entry):
+        if not isinstance(member, self.MemberType):
+            raise TypeError(
+                f"The members of {type(self)} should be "
+                f"instances of {self.MemberType}, but got {type(member)}")
+
+        self._members.append(
+            (self.pack.get_pack_index(member.pack_id), member.tid))
+
+    def get_members(self) -> List[Entry]:
+        members = []
+        for pack_idx, member_tid in self._members:
+            members.append(self.pack.get_subentry(pack_idx, member_tid))
+        return members
 
 
+@dataclass
 class Query(Generics):
     r"""An entry type representing queries for information retrieval tasks.
 
     Args:
         pack (Data pack): Data pack reference to which this query will be added
     """
+    value: Optional[QueryType]
+    results: Dict[str, float]
 
     def __init__(self, pack: PackType):
         super().__init__(pack)
-        self._value: QueryType = None
-        self._results: Dict[str, float] = {}
-
-    @property
-    def value(self) -> QueryType:
-        return self._value
-
-    @value.setter
-    def value(self, value: QueryType):
-        r"""Sets the value of the query.
-
-        Args:
-            value (numpy array or str): A vector or a string (in case of
-            traditional models) representing the query.
-        """
-        self._value = value
-
-    @property
-    def results(self):
-        return self._results
-
-    @results.setter
-    def results(self, pid_to_score: Dict[str, float]):
-        self._results = pid_to_score
+        self.value: Optional[QueryType] = None
+        self.results: Dict[str, float] = {}
 
     def add_result(self, pid: str, score: float):
         """

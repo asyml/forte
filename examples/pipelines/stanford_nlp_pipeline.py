@@ -35,7 +35,7 @@ def stanford_nlp_example(lang: str, text: str):
         # Language code for the language to build the Pipeline
         'use_gpu': False
     }, StandfordNLPProcessor.default_configs())
-    pl.add(component=StandfordNLPProcessor(models_path),
+    pl.add(component=StandfordNLPProcessor(),
            config=config)
 
     pl.initialize()

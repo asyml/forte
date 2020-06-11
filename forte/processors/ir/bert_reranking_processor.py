@@ -26,7 +26,7 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
 
-from examples.passage_ranker.bert import (
+from examples.passage_ranker.bert_ranker import (
     BERTClassifier, BERTEncoder)
 
 __all__ = [
@@ -63,17 +63,19 @@ class BertRerankingProcessor(MultiPackProcessor):
             cache_dir=cache_dir,
             hparams=None)
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        configs = super().default_configs()
         pretrained_model_name = "bert-large-uncased"
-        return {
+        configs.update({
             "size": 5,
             "query_pack_name": "query",
             "field": "content",
             "pretrained_model_name": pretrained_model_name,
             "model_dir": os.path.join(os.path.dirname(__file__), "models"),
             "max_seq_length": 512
-        }
+        })
+        return configs
 
     def _process(self, input_pack: MultiPack):
         max_len = self.config.max_seq_length

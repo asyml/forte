@@ -15,6 +15,7 @@ from typing import Optional
 
 import spacy
 from spacy.language import Language
+from spacy.cli.download import download
 
 from forte.common import ProcessExecutionException
 from forte.common.configuration import Config
@@ -43,7 +44,6 @@ class SpacyProcessor(PackProcessor):
         try:
             self.nlp = spacy.load(self.lang_model)
         except OSError:
-            from spacy.cli.download import download
             download(self.lang_model)
             self.nlp = spacy.load(self.lang_model)
 

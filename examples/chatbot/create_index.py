@@ -79,8 +79,7 @@ class Indexer:
                                   sequence_length=batch["sent_b_seq_len"],
                                   segment_ids=batch["sent_b_segment_ids"])
             cls_tokens = output[:, 0, :]  # CLS token is first token
-            self.index.add(vectors=cls_tokens,
-                           meta_data={k: v for k, v in zip(ids, text)})
+            self.index.add(vectors=cls_tokens, meta_data=dict(zip(ids, text)))
 
             start += len(batch)
 

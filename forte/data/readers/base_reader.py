@@ -26,7 +26,6 @@ from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.types import ReplaceOperationsType
-from forte.pack_manager import PackManager
 from forte.pipeline_component import PipelineComponent
 from forte.utils.utils import get_full_module_name
 
@@ -70,9 +69,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
 
-        self._pack_manager = PackManager()
-        self._pack_manager.reset_remap()
-
     @classmethod
     def default_configs(cls):
         r"""Returns a `dict` of configurations of the reader with default
@@ -91,6 +87,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
     @property
     def pack_type(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def new_pack(self, pack_name: Optional[str] = None) -> PackType:
         raise NotImplementedError
 
     @abstractmethod
@@ -120,11 +120,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 "Got None collection, cannot parse as data pack.")
 
         for p in self._parse_pack(collection):
-            # for entry in p:
-            #     # Here the creation will be recorded to the reader because
-            #     # we have set the reader to be the initial_reader in the
-            #     # pack manager.
-            #     entry.record_creation()
+            p.add_all_remaining_entries(self.name)
             yield p
 
     @abstractmethod
@@ -237,7 +233,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
             append: Whether to allow appending to the cache.
         """
         if not self._cache_directory:
-            raise ValueError(f"Can not cache without a cache_directory!")
+            raise ValueError("Can not cache without a cache_directory!")
 
         os.makedirs(self._cache_directory, exist_ok=True)
 
@@ -269,9 +265,9 @@ class BaseReader(PipelineComponent[PackType], ABC):
             for line in cache_file:
                 pack = DataPack.deserialize(line.strip())
                 if not isinstance(pack, self.pack_type):
-                    raise TypeError(f"Pack deserialized from {cache_filename} "
-                                    f"is {type(pack)},"
-                                    f"but expect {self.pack_type}")
+                    raise TypeError(
+                        f"Pack deserialized from {cache_filename} "
+                        f"is {type(pack)}, but expect {self.pack_type}")
                 yield pack
 
     def finish(self, resources: Resources):
@@ -285,6 +281,9 @@ class PackReader(BaseReader[DataPack], ABC):
     @property
     def pack_type(self):
         return DataPack
+
+    def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
+        return DataPack(self._pack_manager, pack_name)
 
     def set_text(self, pack: DataPack, text: str):
         r"""Assign the text value to the :class:`DataPack`. This function will
@@ -306,3 +305,6 @@ class MultiPackReader(BaseReader[MultiPack], ABC):
     @property
     def pack_type(self):
         return MultiPack
+
+    def new_pack(self, pack_name: Optional[str] = None) -> MultiPack:
+        return MultiPack(self._pack_manager, pack_name)

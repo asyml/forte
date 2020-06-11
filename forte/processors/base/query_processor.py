@@ -16,12 +16,13 @@ Processors that handle query
 """
 from abc import ABC
 from typing import Union, Tuple, Dict, Any
+
 import numpy as np
 
-from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Query
-from forte.processors.base.pack_processor import BasePackProcessor
+from forte.processors.base.pack_processor import MultiPackProcessor
 
 __all__ = [
     "QueryProcessor"
@@ -30,7 +31,7 @@ __all__ = [
 QueryType = Union[Dict[str, Any], np.ndarray]
 
 
-class QueryProcessor(BasePackProcessor[PackType], ABC):
+class QueryProcessor(MultiPackProcessor, ABC):
     r"""A base class for all processors that handle query creation for
     information retrieval."""
 
@@ -47,7 +48,7 @@ class QueryProcessor(BasePackProcessor[PackType], ABC):
         """
         raise NotImplementedError
 
-    def _process_query(self, input_pack: PackType) \
+    def _process_query(self, input_pack: MultiPack) \
             -> Tuple[DataPack, QueryType]:
         r"""Subclasses of QueryProcessor should implement this method which
         takes in an `input_pack` and processes it to generate a query.
@@ -67,7 +68,7 @@ class QueryProcessor(BasePackProcessor[PackType], ABC):
         """
         raise NotImplementedError
 
-    def _process(self, input_pack: PackType):
+    def _process(self, input_pack: MultiPack):
         query_pack, query_value = self._process_query(input_pack)
         query = Query(pack=query_pack)
         query.value = query_value

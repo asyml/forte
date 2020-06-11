@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class ElasticSearchQueryCreator(QueryProcessor[MultiPack]):
+class ElasticSearchQueryCreator(QueryProcessor):
     r"""This processor creates a Elasticsearch query and adds it as Query entry
     in the data pack. This query will later used by a Search processor to
     retrieve documents."""

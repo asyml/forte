@@ -102,7 +102,7 @@ def main(config: Config):
             for link in pack.get(PredicateLink, sentence):
                 parent = link.get_parent()
                 child = link.get_child()
-                print(f"  - \"{child.text}\" is role "  # type: ignore
+                print(f"  - \"{child.text}\" is role "
                       f"{link.arg_type} of "
                       f"predicate \"{parent.text}\"")
             print()

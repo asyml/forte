@@ -109,7 +109,7 @@ class FirstPackSelector(SinglePackSelector):
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
-            raise ValueError(f"Multi-pack has no data packs.")
+            raise ValueError("Multi-pack has no data packs.")
 
         else:
             yield m_pack.packs[0]
@@ -121,7 +121,7 @@ class AllPackSelector(SinglePackSelector):
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
-            raise ValueError(f"Multi-pack has no data packs.")
+            raise ValueError("Multi-pack has no data packs.")
 
         else:
             yield from m_pack.packs

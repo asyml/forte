@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-class BertBasedQueryCreator(QueryProcessor[MultiPack]):
+class BertBasedQueryCreator(QueryProcessor):
     r"""This processor searches relevant documents for a query"""
 
     # pylint: disable=useless-super-delegation

@@ -30,6 +30,7 @@ from forte.data.ontology.top import (
     MultiPackGeneric)
 from forte.data.span import Span
 from forte.data.types import DataRequest
+from forte.pack_manager import PackManager
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +49,7 @@ MdRequest = Dict[
 
 class MultiPackMeta(BaseMeta):
     r"""Meta information of a MultiPack."""
-
-    def __init__(self):
-        super().__init__()
+    pass
 
 
 # pylint: disable=too-many-public-methods
@@ -60,8 +59,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     cross-pack entries (links, and groups)
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pack_manager: PackManager,
+                 pack_name: Optional[str] = None):
+        super().__init__(pack_manager, pack_name)
+
         # Store the global ids.
         self._pack_ref: List[int] = []
         # Store the reverse mapping from global id to the pack index.
@@ -76,13 +77,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.groups: SortedList[MultiPackGroup] = SortedList()
         self.generics: SortedList[MultiPackGeneric] = SortedList()
 
-        self.meta: MultiPackMeta = MultiPackMeta()
-
-        self.index: BaseIndex = BaseIndex()
-
         # Used to automatically give name to sub packs.
         self.__default_pack_prefix = '_pack'
-        self._pack_manager.set_pack_id(self)
+
+        self.index: MultiIndex = MultiIndex()
 
     def __setstate__(self, state):
         r"""In deserialization, we set up the index and the references to the
@@ -94,7 +92,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.groups = SortedList(self.groups)
         self.generics = SortedList(self.generics)
 
-        self.index = BaseIndex()
+        self.index = MultiIndex()
+        # TODO: index those pointers?
         self.index.update_basic_index(list(self.links))
         self.index.update_basic_index(list(self.groups))
         self.index.update_basic_index(list(self.generics))
@@ -154,9 +153,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for pack_id in self._pack_ref:
             self._pack_manager.dereference_pack(pack_id)
 
+    def _init_meta(self, pack_name: Optional[str] = None) -> MultiPackMeta:
+        return MultiPackMeta(pack_name)
+
     def validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 
+    # TODO: get_subentry maybe useless
     def get_subentry(self, pack_idx: int, entry_id: int):
         return self.get_pack_at(pack_idx).get_entry(entry_id)
 
@@ -187,7 +190,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"" f"{type(pack_name)}"
             )
 
-        pack: DataPack = DataPack()
+        pack: DataPack = DataPack(self._pack_manager)
         self.add_pack_(pack, pack_name)
         return pack
 
@@ -315,17 +318,26 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def iter_groups(self):
         yield from self.groups
 
-    def add_all_remaining_entries(self):
+    def add_all_remaining_entries(self, component: Optional[str] = None):
         """
         Calling this function will add the entries that are not added to the
         pack manually.
 
+        Args:
+            component (str): Overwrite the component record with this.
+
         Returns:
 
         """
-        super().add_all_remaining_entries()
+        super().add_all_remaining_entries(component)
         for pack in self.packs:
-            pack.add_all_remaining_entries()
+            pack.add_all_remaining_entries(component)
+
+    def get_data(self, context_type,
+                 request: Optional[DataRequest] = None,
+                 skip_k: int = 0) -> Iterator[Dict[str, Any]]:
+        raise NotImplementedError(
+            "We haven't implemented get data for multi pack data yet.")
 
     def get_single_pack_data(
             self,
@@ -338,7 +350,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         equivalent to calling the :meth: `get_data` in :class: `DataPack`.
 
         Args:
-            pack_index (str): The name to identify the single pack.
+            pack_index (int): The index of a single pack.
             context_type (str): The granularity of the data context, which
                 could be any Annotation type.
             request (dict): The entry types and fields required.
@@ -411,8 +423,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         pass
 
-    def __add_entry_with_check(self, entry: EntryType,
-                               allow_duplicate: bool = True) -> EntryType:
+    def __add_entry_with_check(
+            self, entry: EntryType, allow_duplicate: bool = True) -> EntryType:
         r"""Internal method to add an :class:`Entry` object to the
         :class:`MultiPack` object.
 
@@ -441,6 +453,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if add_new:
             target.add(entry)
 
+            # TODO: add the pointers?
+
             # update the data pack index if needed
             self.index.update_basic_index([entry])
             if self.index.link_index_on and isinstance(entry, MultiPackLink):
@@ -453,8 +467,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         else:
             return target[target.index(entry)]
 
-    def get_entries(
-            self, entry_type: Type[EntryType],
+    def get(self, entry_type: Type[EntryType],  # type: ignore
             components: Optional[Union[str, List[str]]] = None):
         """ Get ``entry_type`` entries from this multi pack.
 
@@ -493,38 +506,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for entry_id in valid_id:
             yield self.get_entry(entry_id)
 
-    def get(
-            self, entry_type: Type[EntryType],
-            components: Optional[Union[str, List[str]]] = None):
-        """ Get ``entry_type`` entries from this multi pack.
-
-        Example:
-
-            .. code-block:: python
-
-                for relation in pack.get_entries(
-                                    CrossDocEntityRelation,
-                                    component=entity_component
-                                    ):
-                    print(relation.parent)
-                    ...
-
-            In the above code snippet, we get entries of type
-            ``CrossDocEntityRelation`` within each ``sentence`` which were
-            generated by ``entity_component``
-
-        Args:
-            entry_type (type): The type of the entries requested.
-            components (str or list, optional): The component generating the
-                entries requested. If `None`, all valid entries generated by
-                any component will be returned.
-
-        Returns:
-
-        """
-        yield from self.get_entries(entry_type, components)
-
-    def add_entry(self, entry: EntryType) -> EntryType:
+    def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
 
         Allow duplicate entries in a datapack.
@@ -536,14 +518,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             The input entry itself
         """
         return self.__add_entry_with_check(entry, True)
-
-    def get_entry(self, tid: int) -> EntryType:
-        r"""Look up the entry_index with key ``tid``."""
-        entry = self.index.get_entry(tid)
-        if entry is None:
-            raise KeyError(
-                f"There is no entry with tid '{tid}'' in this datapack")
-        return entry
 
     def delete_entry(self, entry: EntryType):
         r"""Delete an :class:`~forte.data.ontology.top.Entry` object from the
@@ -589,3 +563,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
     def view(self):
         return copy.deepcopy(self)
+
+
+class MultiIndex(BaseIndex):
+    pass

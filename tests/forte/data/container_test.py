@@ -27,13 +27,13 @@ from forte.data.span import Span
 
 
 class DummyContainer(EntryContainer):
-    def regret_record(self, entry: E):
+    def regret_creation(self, entry: E):
         pass
 
-    def record_new_entry(self, entry: Entry):
+    def on_entry_creation(self, entry: Entry):
         pass
 
-    def add_field_record(self, entry_id: int, field_name: str):
+    def record_field(self, entry_id: int, field_name: str):
         pass
 
     def get_entry(self, tid: int):

@@ -140,7 +140,7 @@ def multi_example(input_path, output_path):
 
     coref_pl.add(
         MultiPackWriter(),
-        {
+        config={
             'output_dir': output_path,
             'indent': 2,
             'overwrite': True,

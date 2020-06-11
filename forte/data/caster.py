@@ -17,6 +17,7 @@ middle of a pipeline flow. The main difference of this from Selector is that
 the returned pack will be used to replaced the original pack, while in Selector,
 the original pack is kept unchanged.
 """
+from abc import ABC
 from typing import Generic, TypeVar
 
 from forte.data.base_pack import BasePack
@@ -29,7 +30,7 @@ OutputPackType = TypeVar('OutputPackType', bound=BasePack)
 
 
 class Caster(PipelineComponent[InputPackType],
-             Generic[InputPackType, OutputPackType]):
+             Generic[InputPackType, OutputPackType], ABC):
     def cast(self, pack: InputPackType) -> OutputPackType:
         raise NotImplementedError
 
@@ -48,7 +49,7 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
         Returns: An iterator that produces the boxed multi pack.
 
         """
-        p = MultiPack()
+        p = MultiPack(self._pack_manager)
         p.add_pack_(pack, self.configs.pack_name)
         return p
 

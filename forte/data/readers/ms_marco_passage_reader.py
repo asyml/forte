@@ -69,7 +69,7 @@ class MSMarcoPassageReader(PackReader):
 
         Returns: query or document data_pack.
         """
-        data_pack: DataPack = DataPack()
+        data_pack: DataPack = self.new_pack()
 
         doc_id, doc_text = doc_info
         data_pack.meta.doc_id = doc_id

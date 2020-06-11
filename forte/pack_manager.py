@@ -19,61 +19,39 @@ from forte.data.container import ContainerType
 
 
 class PackManager:
-    r""" A global manager that manages global pack information, this manager
-    does not assume any pipelines or specific information. This allows some
-    information to be passed around the pipeline implicitly.
+    r""" A manager that manages global pack information.
 
-    At the moment, this pack manager controls the implicit pack IDs (especially
+    This pack manager controls the implicit pack IDs (especially
     during serialization and de-serialization). Further, it also controls
     which component is taking control of which data pack.
 
     """
 
-    default_id_session: int = 0
-
-    # A singleton pattern.
-    class __PackManager:
-        def __init__(self):
-            # In this attribute we store a mapping from a unique identifier
-            # to the data packs. However, importing DataPack or even PackType
-            # will create cyclic imports, so we only import ContainerType.
-            #
-            # This pool is used to hold the packs that need to be used. In
-            # a single pack case, the pack can be removed once used. In a multi
-            # pack case, this can hold the packs until the life cycle of the
-            # multi pack. Note that if the pack pool is not release, there may
-            # be memory leakage.
-            self.pack_references: Counter = Counter()
-            self.pack_pool: Dict[int, ContainerType] = {}
-
-            # A global ID counter.
-            self.next_id: int = 0
-
-            # This is the initial reader component.
-            self.initial_reader: Optional[str] = None
-
-            # This creates a re-mapping of some deserialized data packs to
-            # their new id.
-            self.remap: Dict[int, int] = {}
-
-    __instance: Optional[__PackManager] = None
-
     def __init__(self):
-        if not PackManager.__instance:
-            PackManager.__instance = PackManager.__PackManager()
+        # In this attribute we store a mapping from a unique identifier
+        # to the data packs. However, importing DataPack or even PackType
+        # will create cyclic imports, so we only import ContainerType.
+        #
+        # This pool is used to hold the packs that need to be used. In
+        # a single pack case, the pack can be removed once used. In a multi
+        # pack case, this can hold the packs until the life cycle of the
+        # multi pack. Note that if the pack pool is not release, there may
+        # be memory leakage.
+        self.pack_references: Counter = Counter()
+        self.pack_pool: Dict[int, ContainerType] = {}
+
+        # A global ID counter.
+        self.next_id: int = 0
+
+        # This is the initial reader component.
+        self.initial_reader: Optional[str] = None
+
+        # This creates a re-mapping of some deserialized data packs to
+        # their new id.
+        self.remap: Dict[int, int] = {}
 
     def reset(self):
-        if self.__instance is not None:
-            self.__instance.__init__()
-
-    def set_input_source(self, input_component: str):
-        self.instance().initial_reader = input_component
-
-    def get_input_source(self) -> str:
-        if self.instance().initial_reader is None:
-            raise ProcessFlowException("Input source is not set.")
-
-        return self.instance().initial_reader
+        self.__init__()
 
     def reset_remap(self):
         """
@@ -82,8 +60,7 @@ class PackManager:
         Returns:
 
         """
-
-        self.instance().remap.clear()
+        self.remap.clear()
 
     def set_remapped_pack_id(self, pack: ContainerType):
         """
@@ -101,13 +78,13 @@ class PackManager:
         pid = get_pack_id(pack)
 
         # Record this remapping, and assign a new id to the pack.
-        if pid in self.instance().remap:
+        if pid in self.remap:
             raise ProcessFlowException(f"The pack id {pid} "
                                        f"has already been remapped.")
 
-        self.instance().remap[pid] = self.instance().next_id
-        pack.meta.pack_id = self.instance().next_id  # type: ignore
-        self.instance().next_id += 1
+        self.remap[pid] = self.next_id
+        pack.meta.pack_id = self.next_id  # type: ignore
+        self.next_id += 1
 
     def get_remapped_id(self, old_id: int) -> int:
         """
@@ -119,7 +96,7 @@ class PackManager:
         Returns: The remapped id. -1 if not found.
 
         """
-        return self.instance().remap.get(old_id, -1)
+        return self.remap.get(old_id, -1)
 
     def set_pack_id(self, pack: ContainerType):
         """
@@ -133,8 +110,8 @@ class PackManager:
         """
         # Negative pack id means this is a new pack.
         assert get_pack_id(pack) < 0
-        pack.meta.pack_id = self.instance().next_id  # type: ignore
-        self.instance().next_id += 1
+        pack.meta.pack_id = self.next_id  # type: ignore
+        self.next_id += 1
 
     def reference_pack(self, pack: ContainerType):
         """
@@ -153,8 +130,8 @@ class PackManager:
         """
         pid: int = get_pack_id(pack)
         # Increment the reference and store the pack itself.
-        self.instance().pack_references[pid] += 1
-        self.instance().pack_pool[pid] = pack
+        self.pack_references[pid] += 1
+        self.pack_pool[pid] = pack
 
     def dereference_pack(self, pack_id: int):
         """
@@ -170,25 +147,25 @@ class PackManager:
         Returns:
 
         """
-        if pack_id not in self.instance().pack_references:
+        if pack_id not in self.pack_references:
             # This can happen when the instance is reset by the pipeline.
             return
 
-        if self.instance().pack_references[pack_id] < 0:
+        if self.pack_references[pack_id] < 0:
             # I am not sure if there are cases that can deduct the reference
             # count too much, but we'd put a check here just in case.
             raise ProcessFlowException(
                 f"Pack reference count for pack [{pack_id}] is only "
-                f"{self.instance().pack_references[pack_id]},"
+                f"{self.pack_references[pack_id]},"
                 f" which is invalid.")
 
         # Reduce the reference count.
-        self.instance().pack_references[pack_id] -= 1
+        self.pack_references[pack_id] -= 1
 
         # If the reference count reaches 0, then we can remove the pack from
         # the pool and allow Python to garbage collect it.
-        if self.instance().pack_references[pack_id] == 0:
-            self.instance().pack_pool.pop(pack_id)
+        if self.pack_references[pack_id] == 0:
+            self.pack_pool.pop(pack_id)
 
     def get_from_pool(self, pack_id: int) -> ContainerType:
         r"""Return the data pack corresponding to the id.
@@ -198,13 +175,7 @@ class PackManager:
         Returns: The pack indexed by this pack id.
 
         """
-        return self.instance().pack_pool[pack_id]
-
-    def instance(self):  # I don't know how to specify type __PackManager.
-        if self.__instance is None:
-            raise ProcessFlowException("The pack manager is not initialized.")
-
-        return self.__instance
+        return self.pack_pool[pack_id]
 
 
 def get_pack_id(pack: ContainerType) -> int:

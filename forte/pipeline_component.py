@@ -21,20 +21,25 @@ from forte.common import ProcessorConfigError
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.base_pack import PackType
+from forte.data.base_pack import PackType, BasePack
+from forte.data.ontology.core import Entry
 from forte.pack_manager import PackManager
-from forte.process_manager import _ProcessManager
+from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
 
 
 class PipelineComponent(Generic[PackType]):
     def __init__(self):
-        self._process_manager: _ProcessManager
-        self._pack_manager: PackManager = PackManager()
+        self._process_manager: ProcessManager = None
+        self._pack_manager: PackManager = None
+        self.resources: Optional[Resources] = None
+        self.configs: Config = Config({}, {})
 
-    # pylint: disable=attribute-defined-outside-init
-    def assign_manager(self, process_manager: _ProcessManager):
+    def assign_manager(self,
+                       process_manager: ProcessManager,
+                       pack_manager: PackManager):
         self._process_manager = process_manager
+        self._pack_manager = pack_manager
 
     def initialize(self, resources: Resources, configs: Config):
         r"""The pipeline will call the initialize method at the start of a
@@ -48,8 +53,23 @@ class PipelineComponent(Generic[PackType]):
             configs (Config): The configuration passed in to set up this
                 component.
         """
-        self.resources: Optional[Resources] = resources
-        self.configs: Config = configs
+        self.resources = resources
+        self.configs = configs
+
+    def add_entry(self, pack: BasePack, entry: Entry):
+        """
+        The component can manually call this function to add the entry into
+        the data pack immediately. Otherwise, the system will add the entries
+        automatically when this component finishes.
+
+        Args:
+            pack (BasePack): The pack to add the entry into.
+            entry (Entry):  The entry to be added.
+
+        Returns:
+
+        """
+        pack.add_entry(entry, self.name)
 
     @property
     def name(self):

@@ -13,25 +13,24 @@
 # limitations under the License.
 
 import copy
-import logging
 from abc import abstractmethod
 from typing import List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, \
-    Tuple
+    Tuple, Any
 
 import jsonpickle
-from forte.common import ProcessExecutionException
 
+from forte.common import ProcessExecutionException, EntryNotFoundError
 from forte.data.container import EntryContainer
 from forte.data.index import BaseIndex
-from forte.data.ontology.core import Entry
-from forte.data.ontology.core import EntryType, GroupType, LinkType
-from forte.pack_manager import PackManager
+from forte.data.ontology.core import (Entry, EntryType, GroupType, LinkType)
 
 __all__ = [
     "BasePack",
     "BaseMeta",
     "PackType"
 ]
+
+from forte.pack_manager import PackManager
 
 
 class BaseMeta:
@@ -42,12 +41,9 @@ class BaseMeta:
     def __init__(self, doc_id: Optional[str] = None):
         self.doc_id: Optional[str] = doc_id
         self._pack_id: int = -1
-        # Obtain the global pack manager.
-        self._pack_manager: PackManager = PackManager()
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        state.pop('_pack_manager')
         return state
 
     def __setstate__(self, state):
@@ -60,7 +56,6 @@ class BaseMeta:
 
         """
         self.__dict__.update(state)
-        self._pack_manager: PackManager = PackManager()
 
     @property
     def pack_id(self) -> int:
@@ -76,46 +71,58 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     :class:`~forte.data.multi_pack.MultiPack`.
 
     Args:
-        doc_id (str, optional): a string identifier of the pack.
+        pack_manager( PackManager): The pack manager to manage the ids of the
+            packs.
+        pack_name (str, optional): a string name of the pack.
 
     """
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, doc_id: Optional[str] = None):
+    def __init__(self, pack_manager: PackManager,
+                 pack_name: Optional[str] = None):
         super().__init__()
+        self._pack_manager = pack_manager
 
         self.links: List[LinkType] = []
         self.groups: List[GroupType] = []
 
-        self.meta: BaseMeta = BaseMeta(doc_id)
+        self.meta: BaseMeta = self._init_meta(pack_name)
         self.index: BaseIndex = BaseIndex()
 
-        # Obtain the global pack manager.
-        self._pack_manager: PackManager = PackManager()
-
+        # Assign a pack id for this pack.
+        self._pack_manager.set_pack_id(self)
         self.__control_component: Optional[str] = None
-
-        self._pending_entries: Dict[int, Tuple[Entry, str]] = {}
+        self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
 
     def __getstate__(self):
         state = super().__getstate__()
         state.pop('index')
-        state.pop('_pack_manager')
         state.pop('_pending_entries')
         state.pop('_BasePack__control_component')
         return state
 
     def __setstate__(self, state):
         super().__setstate__(state)
-        self.__dict__['_pack_manager'] = PackManager()
         self.__dict__['_pending_entries'] = {}
         self.__control_component: Optional[str] = None
+
+    @abstractmethod
+    def _init_meta(self, pack_name: Optional[str] = None) -> BaseMeta:
+        raise NotImplementedError
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
             if not hasattr(self.meta, k):
                 raise AttributeError(f"Meta has no attribute named {k}")
             setattr(self.meta, k, v)
+
+    @property
+    def pack_id(self):
+        return self.meta.pack_id
+
+    @pack_id.setter
+    def pack_id(self, pack_id: int):
+        self.meta.pack_id = pack_id
 
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:
@@ -156,9 +163,28 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
+    def add_entry(self, entry: Entry,
+                  component_name: Optional[str] = None) -> EntryType:
+        r"""Add an :class:`~forte.data.ontology.top.Entry` object to the
+        :class:`BasePack` object. Allow duplicate entries in a pack.
+
+        Args:
+            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+                object to be added to the pack.
+            component_name (str): A name to record that the entry is created by
+             this component.
+
+        Returns:
+            The input entry itself
+        """
+        # When added to the pack, make a record.
+        self.record_entry(entry, component_name)
+        # TODO: Returning the entry itself may not be helpful.
+        return self._add_entry(entry)
+
     @abstractmethod
-    def add_entry(self, entry: EntryType) -> EntryType:
-        r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
+    def _add_entry(self, entry: Entry) -> EntryType:
+        r"""Add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`BasePack` object. Allow duplicate entries in a pack.
 
         Args:
@@ -170,52 +196,20 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         raise NotImplementedError
 
-    def add_entry_(self, entry: EntryType) -> int:
-        """
-        A slightly different variation from `add_entry` function, it returns
-        the entry id instead.
-
-        Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-                object to be added to the pack.
-
-        Returns:
-            The entry id of the added entry.
-        """
-        return self.add_entry(entry).tid
-
-    # @abstractmethod
-    # def add_or_get_entry(self, entry: EntryType) -> EntryType:
-    #     r"""Try to add an :class:`~forte.data.ontology.top.Entry` object to
-    #     the :class:`BasePack` object.
-    #
-    #     If a same entry already exists, will return the existing entry
-    #     instead of adding the new one. Note that we regard two entries as the
-    #     same if their :meth:`~forte.data.ontology.top.Entry.eq` have
-    #     the same return value, and users could
-    #     override :meth:`~forte.data.ontology.top.Entry.eq` in their
-    #     custom entry classes.
-    #
-    #     Args:
-    #         entry (Entry): An :class:`~forte.data.ontology.top.Entry`
-    #             object to be added to the pack.
-    #
-    #     Returns:
-    #         If a same entry already exists, returns the existing
-    #         entry. Otherwise, return the (input) entry just added.
-    #     """
-    #     raise NotImplementedError
-
-    def add_all_remaining_entries(self):
+    def add_all_remaining_entries(self, component: Optional[str] = None):
         """
         Calling this function will add the entries that are not added to the
         pack manually.
 
+        Args:
+            component (str): Overwrite the component record with this.
+
         Returns:
 
         """
-        for entry, _ in list(self._pending_entries.values()):
-            self.add_entry(entry)
+        for entry, c in list(self._pending_entries.values()):
+            c_ = component if component else c
+            self.add_entry(entry, c_)
         self._pending_entries.clear()
 
     def serialize(self) -> str:
@@ -244,45 +238,20 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.__control_component = component
 
-    def record_new_entry(self, entry: EntryType):
-        """
-        Call this when adding a new entry, will be called
-        in :class:`~forte.data.ontology.core.Entry` when
-        its `__init__` function is called.
-
-        Args:
-            entry: The entry to be added.
-
-        Returns:
-
-        """
-        c = self.__control_component
+    def record_entry(self, entry: Entry, component_name: Optional[str] = None):
+        c = component_name
 
         if c is None:
-            c = self._pack_manager.get_input_source()
+            # Use the auto-inferred control component.
+            c = self.__control_component
 
-        # Record that this entry hasn't been added
-        # to the index yet.
-        self._pending_entries[entry.tid] = entry, c
+        if c is not None:
+            try:
+                self.creation_records[c].add(entry.tid)
+            except KeyError:
+                self.creation_records[c] = {entry.tid}
 
-        try:
-            self.creation_records[c].add(entry.tid)
-        except KeyError:
-            self.creation_records[c] = {entry.tid}
-
-    def regret_record(self, entry: EntryType):
-        """
-
-        Args:
-            entry:
-
-        Returns:
-
-        """
-        entry, c = self._pending_entries.pop(entry.tid)
-        self.creation_records[c].remove(entry.tid)
-
-    def add_field_record(self, entry_id: int, field_name: str):
+    def record_field(self, entry_id: int, field_name: str):
         """
         Record who modifies the entry, will be called
         in :class:`~forte.data.ontology.core.Entry`
@@ -296,30 +265,88 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         c = self.__control_component
 
-        if c is None:
-            c = self._pack_manager.get_input_source()
+        if c is not None:
+            try:
+                self.field_records[c].add((entry_id, field_name))
+            except KeyError:
+                self.field_records[c] = {(entry_id, field_name)}
 
-        try:
-            self.field_records[c].add((entry_id, field_name))
-        except KeyError:
-            self.field_records[c] = {(entry_id, field_name)}
+    def on_entry_creation(self, entry: Entry,
+                          component_name: Optional[str] = None):
+        """
+        Call this when adding a new entry, will be called
+        in :class:`~forte.data.ontology.core.Entry` when
+        its `__init__` function is called.
+
+        Args:
+            entry (Entry): The entry to be added.
+            component_name (str): A name to record that the entry is created by
+             this component.
+
+        Returns:
+
+        """
+        c = component_name
+
+        if c is None:
+            # Use the auto-inferred control component.
+            c = self.__control_component
+
+        # Record that this entry hasn't been added to the index yet.
+        self._pending_entries[entry.tid] = entry, c
+
+    def regret_creation(self, entry: EntryType):
+        """
+
+        Args:
+            entry:
+
+        Returns:
+
+        """
+        self._pending_entries.pop(entry.tid)
 
     # TODO: how to make this return the precise type here?
     def get_entry(self, tid: int) -> EntryType:
-        r"""Look up the entry_index with key ``tid``."""
+        r"""Look up the entry_index with key ``ptr``. Specific implementation
+        depends on the actual class."""
         entry: EntryType = self.index.get_entry(tid)
         if entry is None:
             raise KeyError(
                 f"There is no entry with tid '{tid}'' in this datapack")
         return entry
 
+    @abstractmethod
+    def get_data(
+            self, context_type, request, skip_k
+    ) -> Iterator[Dict[str, Any]]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self, entry_type: Type[EntryType], **kwargs):
+        raise NotImplementedError
+
+    def get_single(self, entry_type: Type[EntryType]) -> EntryType:
+        r"""Take a single entry of type :attr:`entry_type` from this data
+        pack. This is useful when the target entry type appears only one
+        time in the :class:`DataPack` for e.g., a Document entry. Or you just
+        intended to take the first one.
+
+        Args:
+            entry_type: The entry type to be retrieved.
+
+        Returns:
+            A single data entry.
+        """
+        for a in self.get(entry_type):
+            return a
+
+        raise EntryNotFoundError(
+            f"The entry {entry_type} is not found in the provided pack.")
+
     def get_ids_by_component(self, component: str) -> Set[int]:
         r"""Look up the component_index with key ``component``."""
         entry_set: Set[int] = self.creation_records[component]
-
-        if len(entry_set) == 0:
-            logging.warning("There is no entry generated by '%s' "
-                            "in this datapack", component)
         return entry_set
 
     def get_entries_by_component(self, component: str) -> Set[EntryType]:
@@ -357,14 +384,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         for index_key, index_val in self.index.iter_type_index():
             if issubclass(index_key, entry_type):
                 subclass_index.update(index_val)
-
-        if len(subclass_index) == 0:
-            logging.warning(
-                "There is no %s type entry in this datapack", entry_type)
         return subclass_index
 
     def get_entries_by_type(
-            self, entry_type: Type[EntryType]) -> Set[EntryType]:
+            self, entry_type: Type[EntryType]) -> List[EntryType]:
         """
         Return all entries of this particular type without orders. If you
         need to use natural order of the annotations, use
@@ -376,11 +399,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        entries: Set[EntryType] = set()
+        entries: List[EntryType] = []
         for tid in self.get_ids_by_type(entry_type):
             entry: EntryType = self.get_entry(tid)
             if isinstance(entry, entry_type):
-                entries.add(entry)
+                entries.append(entry)
         return entries
 
     @classmethod
@@ -397,13 +420,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self,
             node: Union[int, EntryType],
             as_parent: bool
-    ) -> Set[LinkType]:
-        links: Set[LinkType] = set()
+    ) -> List[LinkType]:
+        links: List[LinkType] = []
         if isinstance(node, Entry):
             tid = node.tid
             if tid is None:
-                raise ValueError(f"The requested node has no tid. "
-                                 f"Have you add this entry into the datapack?")
+                raise ValueError("The requested node has no tid. "
+                                 "Have you add this entry into the datapack?")
         elif isinstance(node, int):
             tid = node
         else:
@@ -416,14 +439,15 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         for tid in self.index.link_index(tid, as_parent=as_parent):
             entry: EntryType = self.get_entry(tid)
             if self.validate_link(entry):
-                links.add(entry)  # type: ignore
+                links.append(entry)  # type: ignore
         return links
 
     def get_links_by_parent(
-            self, parent: Union[int, EntryType]) -> Set[LinkType]:
+            self, parent: Union[int, EntryType]) -> List[LinkType]:
         return self.get_links_from_node(parent, True)
 
-    def get_links_by_child(self, child: Union[int, EntryType]) -> Set[LinkType]:
+    def get_links_by_child(
+            self, child: Union[int, EntryType]) -> List[LinkType]:
         return self.get_links_from_node(child, False)
 
     def get_groups_by_member(
@@ -432,8 +456,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         if isinstance(member, Entry):
             tid = member.tid
             if tid is None:
-                raise ValueError(f"Argument member has no tid. "
-                                 f"Have you add this entry into the datapack?")
+                raise ValueError("Argument member has no tid. "
+                                 "Have you add this entry into the datapack?")
         elif isinstance(member, int):
             tid = member
         else:

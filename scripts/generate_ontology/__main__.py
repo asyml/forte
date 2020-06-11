@@ -141,9 +141,8 @@ def main():
                                default=False,
                                action='store_true',
                                help='If True, will generate all the ontology,'
-                                    'including the existing ones shipped with'
-                                    'Forte.'
-                               )
+                                    'including the existing ones shipped with '
+                                    'Forte.')
 
     create_parser.set_defaults(func=create)
 
@@ -171,7 +170,7 @@ def main():
     else:
         sys.stderr.write('Error: %s\n' % "wrong usage of the script.")
         OntologyGenerationParser().print_help()
-        exit(2)
+        sys.exit(2)
 
     if __name__ == "__main__":
         main()

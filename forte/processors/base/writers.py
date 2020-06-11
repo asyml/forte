@@ -27,7 +27,8 @@ from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.processors.base.base_processor import BaseProcessor
+from forte.processors.base.pack_processor import PackProcessor, \
+    MultiPackProcessor
 from forte.utils.utils_io import maybe_create_dir, ensure_dir
 
 logger = logging.getLogger(__name__)
@@ -80,7 +81,7 @@ def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
     return output_path
 
 
-class JsonPackWriter(BaseProcessor[DataPack], ABC):
+class JsonPackWriter(PackProcessor, ABC):
     def __init__(self):
         super().__init__()
         self.zip_pack: bool = False
@@ -132,7 +133,7 @@ class JsonPackWriter(BaseProcessor[DataPack], ABC):
                    self.configs.overwrite)
 
 
-class MultiPackWriter(BaseProcessor[MultiPack]):
+class MultiPackWriter(MultiPackProcessor):
     pack_base_out = 'packs'
     multi_base = 'multi'
     pack_idx = 'pack.idx'
@@ -142,9 +143,9 @@ class MultiPackWriter(BaseProcessor[MultiPack]):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(resources, configs)
 
-        pack_index = os.path.join(self.configs.output_dir, self.pack_idx)
-        ensure_dir(pack_index)
-        self.pack_idx_out = open(pack_index, 'w')
+        pack_paths = os.path.join(self.configs.output_dir, self.pack_idx)
+        ensure_dir(pack_paths)
+        self.pack_idx_out = open(pack_paths, 'w')
 
         multi_index = os.path.join(self.configs.output_dir, self.multi_idx)
         ensure_dir(multi_index)

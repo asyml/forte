@@ -14,10 +14,9 @@
 """
 The reader that reads RACE multi choice QA data into Datapacks.
 """
-import os
 import json
-
-from typing import Any, Iterator, List
+import os
+from typing import Any, Iterator
 
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
@@ -61,7 +60,7 @@ class RACEMultiChoiceQAReader(PackReader):
         with open(file_path, "r", encoding="utf8", errors='ignore') as file:
             dataset = json.load(file)
 
-            pack = DataPack()
+            pack = self.new_pack()
             text: str = dataset['article']
             article_end = len(text)
             offset = article_end + 1
@@ -72,15 +71,13 @@ class RACEMultiChoiceQAReader(PackReader):
                 question = Question(pack, offset, ques_end)
                 offset = ques_end + 1
 
-                options: List[Option] = []
                 options_text = dataset['options'][qid]
                 for option_text in options_text:
                     text += '\n' + option_text
                     option_end = offset + len(option_text)
                     option = Option(pack, offset, option_end)
-                    options.append(option)
                     offset = option_end + 1
-                question.options = options
+                    question.options.append(option)
 
                 answers = dataset['answers'][qid]
                 if not isinstance(answers, list):

@@ -17,6 +17,7 @@ Unit tests for Pipeline.
 
 import os
 import unittest
+from dataclasses import dataclass
 from typing import Any, Dict, Iterator, Optional, Type
 
 from ddt import ddt, data, unpack
@@ -35,8 +36,10 @@ from tests.dummy_batch_processor import DummyRelationExtractor
 data_samples_root = "data_samples"
 
 
+@dataclass
 class NewType(Generics):
     """A dummy generic type to check the correctness of pipeline execution."""
+    value: Optional[str] = None
 
     def __init__(self, pack, value):
         super().__init__(pack)
@@ -62,7 +65,7 @@ class SentenceReader(PackReader):
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         with open(file_path, "r", encoding="utf8") as doc:
             for line in doc:
-                pack = DataPack(doc_id=file_path)
+                pack = self.new_pack(file_path)
                 line = line.strip()
                 if len(line) == 0:
                     continue
@@ -97,7 +100,7 @@ class MultiPackSentenceReader(MultiPackReader):
                 if len(line) == 0:
                     continue
 
-                m_pack = MultiPack()
+                m_pack = self.new_pack()
                 pack = m_pack.add_pack('pack')
                 pack.set_text(line)
 
@@ -374,8 +377,6 @@ class PipelineTest(unittest.TestCase):
 
 @ddt
 class MultiPackPipelineTest(unittest.TestCase):
-
-    #  TODO: This is not a multi pack test.
     def test_process_multi_next(self):
         from forte.data.readers import OntonotesReader
 

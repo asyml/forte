@@ -244,7 +244,6 @@ class AutoPopBuffer:
                 self.__data_idx += 1
                 if k_ == key:
                     value = data
-                    break
                 else:
                     self.buf_data[k_] = (data, self.__data_idx)
                     if self.__data_idx - self.__lookup_idx > self.__window_size:

@@ -34,7 +34,7 @@ class TestStanfordNLPProcessor(unittest.TestCase):
             # Language code for the language to build the Pipeline
             "use_gpu": False
         }
-        self.stanford_nlp.add(StandfordNLPProcessor(models_path),
+        self.stanford_nlp.add(StandfordNLPProcessor(),
                               config=config)
         self.stanford_nlp.initialize()
 

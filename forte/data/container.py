@@ -15,6 +15,9 @@
 Forte Container module.
 """
 
+# Disable some pylint check for stub and overloads.
+# pylint: disable=function-redefined,multiple-statements
+
 from abc import abstractmethod
 from typing import Dict, Generic, Set, Tuple, TypeVar
 
@@ -24,11 +27,25 @@ __all__ = [
     "EntryIdManager",
     "EntryContainer",
     "ContainerType",
+    "BasePointer",
 ]
 
 E = TypeVar('E')
 L = TypeVar('L')
 G = TypeVar('G')
+
+
+class BasePointer:
+    """
+    Objects to point to other objects in the data pack.
+    """
+
+    def __str__(self):
+        raise NotImplementedError
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
 
 
 class EntryIdManager:
@@ -80,15 +97,15 @@ class EntryContainer(Generic[E, L, G]):
         self._id_manager = EntryIdManager(state['serialization']['next_id'])
 
     @abstractmethod
-    def record_new_entry(self, entry: E):
+    def on_entry_creation(self, entry: E):
         raise NotImplementedError
 
     @abstractmethod
-    def regret_record(self, entry: E):
+    def regret_creation(self, entry: E):
         raise NotImplementedError
 
     @abstractmethod
-    def add_field_record(self, entry_id: int, field_name: str):
+    def record_field(self, entry_id: int, field_name: str):
         raise NotImplementedError
 
     @abstractmethod
@@ -103,7 +120,8 @@ class EntryContainer(Generic[E, L, G]):
         """
         raise NotImplementedError
 
-    def get_entry(self, tid: int):
+    @abstractmethod
+    def get_entry(self, ptr: int) -> E:
         raise NotImplementedError
 
     def get_span_text(self, span: Span):
