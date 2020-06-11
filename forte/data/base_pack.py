@@ -155,7 +155,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        self.pack_name = pack_name
+        self.meta.pack_name = pack_name
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):

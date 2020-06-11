@@ -45,7 +45,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
         Args:
             pack_name (str, Optional): The name to be used for the pack. If not
-              set, the pack name will remained un-set.
+              set, the pack name will remained unset.
 
         Returns:
 
