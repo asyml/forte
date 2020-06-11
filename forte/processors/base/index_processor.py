@@ -20,7 +20,7 @@ from typing import Dict, Any, List, Tuple
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
-from forte.processors.base import PackProcessor
+from forte.processors.base.pack_processor import PackProcessor
 
 __all__ = [
     "IndexProcessor"

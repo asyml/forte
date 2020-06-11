@@ -242,11 +242,13 @@ class Pipeline(Generic[PackType]):
         return self.process_one(*args, **kwargs)
 
     def run(self, *args, **kwargs):
-        r"""Run the whole pipeline and ignore all returned DataPack. Calling
-        this function will automatically call the :func:``initialize`` at the
-        beginning, and call the :func:``finish`` at the end. This is
-        used when the users are relying on the side effect of the processors
-        (e.g. a process that will write Packs to disk).
+        r"""Run the whole pipeline and ignore all returned DataPack. This is
+        mostly used when you need to run the pipeline and do not require the
+        output but rely on the side-effect. For example, if the pipeline
+        writes some data to disk.
+
+        Calling this function will automatically call the :meth:`initialize`
+        at the beginning, and call the :meth:`finish` at the end.
 
         Args:
             args: The positional arguments used to get the initial data.
