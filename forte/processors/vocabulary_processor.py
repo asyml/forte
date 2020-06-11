@@ -19,7 +19,7 @@ from typing import Counter as CounterType, Dict, List, Optional
 
 import texar.torch as tx
 
-from forte.processors.base import BaseProcessor
+from forte.processors.base import PackProcessor
 
 __all__ = [
     "Alphabet",
@@ -163,7 +163,7 @@ class Alphabet:
         self.keep_growing = False
 
 
-class VocabularyProcessor(BaseProcessor, ABC):
+class VocabularyProcessor(PackProcessor, ABC):
     """
     Build vocabulary from the input DataPack, write the result into the
     shared resources.

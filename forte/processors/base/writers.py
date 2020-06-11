@@ -27,7 +27,8 @@ from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.processors.base import PackProcessor, MultiPackProcessor
+from forte.processors.base.pack_processor import PackProcessor, \
+    MultiPackProcessor
 from forte.utils.utils_io import maybe_create_dir, ensure_dir
 
 logger = logging.getLogger(__name__)

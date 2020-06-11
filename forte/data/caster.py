@@ -18,7 +18,7 @@ the returned pack will be used to replaced the original pack, while in Selector,
 the original pack is kept unchanged.
 """
 from abc import ABC
-from typing import Generic, TypeVar, Optional
+from typing import Generic, TypeVar
 
 from forte.data.base_pack import BasePack
 from forte.data.data_pack import DataPack
