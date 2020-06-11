@@ -73,7 +73,7 @@ class MultiPackSentenceReaderTest(unittest.TestCase):
         m_pack: MultiPack
         for m_pack in nlp.process_dataset(self.test_dir):
             # Recover the test sentence order from the doc id.
-            docid = m_pack.get_pack("input").meta.doc_id
+            docid = m_pack.get_pack("input").pack_name
             idx = int(os.path.basename(docid).rstrip('.txt')) - 1
             self.assertEqual(m_pack._pack_names, ["input", "output"])
             self.assertEqual(m_pack.get_pack("input").text, texts[idx] + "\n")

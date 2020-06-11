@@ -84,7 +84,7 @@ class WikiArticleWriter(JsonPackWriter):
             out_path = out_path + '.gz'
 
         # Write the index
-        self.csv_writer.writerow([input_pack.meta.doc_id, out_path])
+        self.csv_writer.writerow([input_pack.meta.pack_name, out_path])
         self.article_count += 1
 
         if self.article_count % 1000 == 0:

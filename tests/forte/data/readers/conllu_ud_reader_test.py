@@ -61,7 +61,7 @@ class ConllUDReaderTest(unittest.TestCase):
 
         for doc_index, expected_doc_id in enumerate(self.doc_ids):
             data_pack = self.data_packs[doc_index]
-            self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
+            self.assertTrue(data_pack.pack_name == expected_doc_id)
 
             doc_entry = None
             for d in data_pack.get(Document):
@@ -81,7 +81,7 @@ class ConllUDReaderTest(unittest.TestCase):
         doc_index = 1
         data_pack = self.data_packs[doc_index]
         expected_doc_id = self.doc_ids[doc_index]
-        self.assertTrue(data_pack.meta.doc_id == expected_doc_id)
+        self.assertTrue(data_pack.pack_name == expected_doc_id)
         self.assertEqual(len(list(data_pack.get(Sentence))), 1)
         dependencies = data_pack.get(Dependency)
         for link in dependencies:

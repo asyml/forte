@@ -79,6 +79,6 @@ class ProdigyReader(PackReader):
             annotation_entry = EntityMention(pack, begin, end)
             annotation_entry.ner_type = span_items['label']
 
-        pack.meta.doc_id = data['meta']['id']
+        pack.pack_name = data['meta']['id']
 
         yield pack

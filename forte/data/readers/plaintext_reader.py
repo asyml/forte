@@ -59,7 +59,7 @@ class PlainTextReader(PackReader):
 
         Document(pack, 0, len(pack.text))
 
-        pack.meta.doc_id = file_path
+        pack.pack_name = file_path
         yield pack
 
     @classmethod

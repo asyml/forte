@@ -36,10 +36,16 @@ from forte.pack_manager import PackManager
 class BaseMeta:
     r"""Basic Meta information for both :class:`~forte.data.data_pack.DataPack`
     and :class:`~forte.data.multi_pack.MultiPack`.
+
+    Args:
+        pack_name:  An name to identify the data pack, which is helpful in
+           situation like serialization. It is suggested that the packs should
+           have different doc ids.
+
     """
 
-    def __init__(self, doc_id: Optional[str] = None):
-        self.doc_id: Optional[str] = doc_id
+    def __init__(self, pack_name: Optional[str] = None):
+        self.pack_name: Optional[str] = pack_name
         self._pack_id: int = -1
 
     def __getstate__(self):
@@ -135,21 +141,21 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 f"entries not added to the index correctly.")
 
     @property
-    def doc_id(self):
-        return self.meta.doc_id
+    def pack_name(self):
+        return self.meta.pack_name
 
-    @doc_id.setter
-    def doc_id(self, doc_id: str):
+    @pack_name.setter
+    def pack_name(self, pack_name: str):
         """
-        Update the doc id of this pack.
+        Update the pack name of this pack.
 
         Args:
-            doc_id: The new doc id.
+            pack_name: The new doc id.
 
         Returns:
 
         """
-        self.meta.doc_id = doc_id
+        self.pack_name = pack_name
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):

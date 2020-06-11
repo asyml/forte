@@ -183,7 +183,7 @@ class DBpediaWikiReader(PackReader):
         else:
             logging.warning('Links for [%s] not found.', doc_name)
 
-        pack.meta.doc_id = doc_name
+        pack.pack_name = doc_name
 
         yield pack
 

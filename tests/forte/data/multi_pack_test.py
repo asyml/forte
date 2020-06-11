@@ -31,13 +31,13 @@ class DataPackTest(unittest.TestCase):
         #  can also set it manually at test cases.
         pm = PackManager()
         self.multi_pack = MultiPack(pm)
-        self.data_pack1 = self.multi_pack.add_pack(pack_name="left pack")
-        self.data_pack2 = self.multi_pack.add_pack(pack_name="right pack")
+        self.data_pack1 = self.multi_pack.add_pack(ref_name="left pack")
+        self.data_pack2 = self.multi_pack.add_pack(ref_name="right pack")
 
-        self.data_pack1.doc_id = "some pack"
+        self.data_pack1.pack_name = "some pack"
         self.data_pack1.set_text("This pack contains some sample data.")
 
-        self.data_pack2.doc_id = "another pack"
+        self.data_pack2.pack_name = "another pack"
         self.data_pack2.set_text("This pack contains some other sample data.")
 
     def test_serialization(self):
@@ -45,8 +45,8 @@ class DataPackTest(unittest.TestCase):
         print(ser_str)
 
     def test_add_pack(self):
-        data_pack3 = self.multi_pack.add_pack(pack_name="new pack")
-        data_pack3.doc_id = "the third pack"
+        data_pack3 = self.multi_pack.add_pack(ref_name="new pack")
+        data_pack3.pack_name = "the third pack"
         data_pack3.set_text("Test to see if we can add new packs..")
 
         self.assertEqual(len(self.multi_pack.packs), 3)

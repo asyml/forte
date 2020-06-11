@@ -274,7 +274,7 @@ class OntonotesReader(PackReader):
 
             _ = Document(pack, 0, len(text))
             if document_id is not None:
-                pack.doc_id = document_id
+                pack.pack_name = document_id
         yield pack
 
     def _process_entity_annotations(

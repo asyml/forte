@@ -44,15 +44,17 @@ class Meta(BaseMeta):
     :class:`~forte.data.data_pack.DataPack`.
 
     Args:
-        doc_id:  An unique ID assigned to identify the data pack.
+        pack_name:  An name to identify the data pack, which is helpful in
+           situation like serialization. It is suggested that the packs should
+           have different doc ids.
         language: The language used by this data pack, default is English.
         span_unit: The unit used for interpreting the Span object of this
           data pack. Default is character.
     """
 
-    def __init__(self, doc_id: Optional[str] = None,
+    def __init__(self, pack_name: Optional[str] = None,
                  language: str = 'eng', span_unit: str = 'character'):
-        super().__init__(doc_id)
+        super().__init__(pack_name)
         self.language = language
         self.span_unit = span_unit
 
