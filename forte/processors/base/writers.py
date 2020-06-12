@@ -24,7 +24,7 @@ from typing import Optional, Any, Dict
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.base_pack import PackType, BasePack
+from forte.data.base_pack import BasePack
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base.pack_processor import PackProcessor, \
