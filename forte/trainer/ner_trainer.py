@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 class CoNLLNERTrainer(BaseTrainer):
     def __init__(self):
-        """ Create a NER trainer.
+        """ Create an NER trainer.
         """
 
         super().__init__()
