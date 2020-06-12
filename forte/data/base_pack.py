@@ -105,6 +105,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         state.pop('index')
         state.pop('_pending_entries')
         state.pop('_BasePack__control_component')
+        state.pop('_pack_manager')
+
         return state
 
     def __setstate__(self, state):
@@ -218,16 +220,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self.add_entry(entry, c_)
         self._pending_entries.clear()
 
-    def serialize(self) -> str:
+    def serialize(self, drop_record: Optional[bool] = False) -> str:
         r"""Serializes a pack to a string."""
-        return jsonpickle.encode(self, unpicklable=True)
+        if drop_record:
+            self.creation_records.clear()
+            self.field_records.clear()
 
-    @staticmethod
-    def deserialize(string: str):
-        r"""Deserialize a pack from a string.
-        """
-        pack = jsonpickle.decode(string)
-        return pack
+        return jsonpickle.encode(self, unpicklable=True)
 
     def view(self):
         return copy.deepcopy(self)
