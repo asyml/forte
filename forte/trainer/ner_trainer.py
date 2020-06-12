@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 class CoNLLNERTrainer(BaseTrainer):
     def __init__(self):
-        """ Create a NER trainer.
+        """ Create an NER trainer.
         """
 
         super().__init__()
@@ -70,13 +70,16 @@ class CoNLLNERTrainer(BaseTrainer):
 
     def initialize(self, resources: Resources, configs: Config):
         """
-         The training pipeline will run this initialization method during
-         the initialization phase and send resources in as parameters.
-         Args:
+        The training pipeline will run this initialization method during
+        the initialization phase and send resources in as parameters.
 
-         Returns:
+        Args:
+            resources: The resources shared in the pipeline.
+            configs: configuration object for this trainer.
 
-         """
+        Returns:
+
+        """
         self.resource = resources
 
         self.word_alphabet = resources.get("word_alphabet")

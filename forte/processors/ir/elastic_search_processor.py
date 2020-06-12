@@ -83,7 +83,7 @@ class ElasticSearchProcessor(MultiPackProcessor):
             pack: DataPack = input_pack.add_pack(
                 f"{self.config.response_pack_name_prefix}_{idx}"
             )
-            pack.doc_id = document["doc_id"]
+            pack.pack_name = document["doc_id"]
 
             content = document[self.config.field]
             pack.set_text(content)

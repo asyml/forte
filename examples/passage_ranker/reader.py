@@ -45,7 +45,7 @@ class EvalReader(MultiPackReader):
 
         data_pack = multi_pack.add_pack(self.config.pack_name)
 
-        data_pack.doc_id = fields[0]
+        data_pack.pack_name = fields[0]
         data_pack.set_text(fields[1])
 
         Document(pack=data_pack, begin=0, end=len(fields[1]))

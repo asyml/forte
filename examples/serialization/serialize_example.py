@@ -37,10 +37,10 @@ class PackCopier(MultiPackProcessor):
 
         copy_pack.set_text(from_pack.text)
 
-        if from_pack.doc_id is not None:
-            copy_pack.doc_id = from_pack.doc_id + '_copy'
+        if from_pack.pack_name is not None:
+            copy_pack.pack_name = from_pack.pack_name + '_copy'
         else:
-            copy_pack.doc_id = 'copy'
+            copy_pack.pack_name = 'copy'
 
         ent: EntityMention
         for ent in from_pack.get(EntityMention):

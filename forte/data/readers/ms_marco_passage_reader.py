@@ -72,7 +72,7 @@ class MSMarcoPassageReader(PackReader):
         data_pack: DataPack = self.new_pack()
 
         doc_id, doc_text = doc_info
-        data_pack.meta.doc_id = doc_id
+        data_pack.pack_name = doc_id
 
         data_pack.set_text(doc_text)
         # add documents
@@ -81,6 +81,6 @@ class MSMarcoPassageReader(PackReader):
         yield data_pack
 
     def _cache_key_function(self, data_pack: DataPack) -> str:
-        if data_pack.meta.doc_id is None:
+        if data_pack.pack_name is None:
             raise ValueError("Data pack does not have a document id.")
-        return data_pack.meta.doc_id
+        return data_pack.pack_name

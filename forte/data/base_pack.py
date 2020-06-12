@@ -36,10 +36,16 @@ from forte.pack_manager import PackManager
 class BaseMeta:
     r"""Basic Meta information for both :class:`~forte.data.data_pack.DataPack`
     and :class:`~forte.data.multi_pack.MultiPack`.
+
+    Args:
+        pack_name:  An name to identify the data pack, which is helpful in
+           situation like serialization. It is suggested that the packs should
+           have different doc ids.
+
     """
 
-    def __init__(self, doc_id: Optional[str] = None):
-        self.doc_id: Optional[str] = doc_id
+    def __init__(self, pack_name: Optional[str] = None):
+        self.pack_name: Optional[str] = pack_name
         self._pack_id: int = -1
 
     def __getstate__(self):
@@ -99,6 +105,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         state.pop('index')
         state.pop('_pending_entries')
         state.pop('_BasePack__control_component')
+        state.pop('_pack_manager')
+
         return state
 
     def __setstate__(self, state):
@@ -135,21 +143,21 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 f"entries not added to the index correctly.")
 
     @property
-    def doc_id(self):
-        return self.meta.doc_id
+    def pack_name(self):
+        return self.meta.pack_name
 
-    @doc_id.setter
-    def doc_id(self, doc_id: str):
+    @pack_name.setter
+    def pack_name(self, pack_name: str):
         """
-        Update the doc id of this pack.
+        Update the pack name of this pack.
 
         Args:
-            doc_id: The new doc id.
+            pack_name: The new doc id.
 
         Returns:
 
         """
-        self.meta.doc_id = doc_id
+        self.meta.pack_name = pack_name
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):
@@ -212,16 +220,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             self.add_entry(entry, c_)
         self._pending_entries.clear()
 
-    def serialize(self) -> str:
+    def serialize(self, drop_record: Optional[bool] = False) -> str:
         r"""Serializes a pack to a string."""
-        return jsonpickle.encode(self, unpicklable=True)
+        if drop_record:
+            self.creation_records.clear()
+            self.field_records.clear()
 
-    @staticmethod
-    def deserialize(string: str):
-        r"""Deserialize a pack from a string.
-        """
-        pack = jsonpickle.decode(string)
-        return pack
+        return jsonpickle.encode(self, unpicklable=True)
 
     def view(self):
         return copy.deepcopy(self)

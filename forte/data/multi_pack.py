@@ -168,50 +168,51 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             "MultiPack objects do not contain text, please refer to a "
             "specific data pack to get text.")
 
-    def add_pack(self, pack_name: Optional[str] = None) -> DataPack:
+    def add_pack(self, ref_name: Optional[str] = None) -> DataPack:
         """
-        Create a data pack and add it to this multi pack. If pack_name is not
-        None, it will be used to index the data pack. Otherwise, a default name
-        based on the pack id will be created for this data pack. The created
-        data pack will be returned.
+        Create a data pack and add it to this multi pack. If `ref_name` is
+        proviated, it will be used to index the data pack. Otherwise, a default
+        name based on the pack id will be created for this data pack. The
+        created data pack will be returned.
 
         Args:
-            pack_name (str): The pack name used for the new created pack
+            ref_name (str): The pack name used to reference this data pack from
+              the multi pack.
 
         Returns: The newly created data pack.
 
         """
-        if pack_name in self._name_index:
+        if ref_name in self._name_index:
             raise ValueError(
-                f"The name {pack_name} has already been taken.")
-        if pack_name is not None and not isinstance(pack_name, str):
+                f"The name {ref_name} has already been taken.")
+        if ref_name is not None and not isinstance(ref_name, str):
             raise ValueError(
                 f"key of the pack should be str, but got "
-                f"" f"{type(pack_name)}"
+                f"" f"{type(ref_name)}"
             )
 
         pack: DataPack = DataPack(self._pack_manager)
-        self.add_pack_(pack, pack_name)
+        self.add_pack_(pack, ref_name)
         return pack
 
-    def add_pack_(self, pack: DataPack, pack_name: Optional[str] = None):
+    def add_pack_(self, pack: DataPack, ref_name: Optional[str] = None):
         """
         Add a existing data pack to the multi pack.
 
         Args:
             pack (DataPack): The existing data pack.
-            pack_name (str): The name to used in this multi pack.
+            ref_name (str): The name to used in this multi pack.
 
         Returns:
 
         """
-        if pack_name in self._name_index:
+        if ref_name in self._name_index:
             raise ValueError(
-                f"The name {pack_name} has already been taken.")
-        if pack_name is not None and not isinstance(pack_name, str):
+                f"The name {ref_name} has already been taken.")
+        if ref_name is not None and not isinstance(ref_name, str):
             raise ValueError(
                 f"key of the pack should be str, but got "
-                f"" f"{type(pack_name)}"
+                f"" f"{type(ref_name)}"
             )
         if not isinstance(pack, DataPack):
             raise ValueError(
@@ -224,16 +225,16 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Tell the system that this multi pack is referencing this data pack.
         self._pack_manager.reference_pack(pack)
 
-        if pack_name is None:
+        if ref_name is None:
             # Create a default name based on the pack id.
-            pack_name = f'{self.__default_pack_prefix}_{pid}'
+            ref_name = f'{self.__default_pack_prefix}_{pid}'
 
         # Record the pack's global id and names. Also the reverse lookup map.
         self._pack_ref.append(pid)
         self._inverse_pack_ref[pid] = len(self._pack_ref) - 1
 
-        self._pack_names.append(pack_name)
-        self._name_index[pack_name] = len(self._pack_ref) - 1
+        self._pack_names.append(ref_name)
+        self._name_index[ref_name] = len(self._pack_ref) - 1
 
     def get_pack_at(self, index: int) -> DataPack:
         """

@@ -19,25 +19,26 @@ from forte.processors.base.writers import JsonPackWriter, MultiPackWriter
 
 class DocIdJsonPackWriter(JsonPackWriter):
     def sub_output_path(self, pack: DataPack) -> str:
-        if pack.meta.doc_id is None:
+        if pack.pack_name is None:
             raise ValueError(
-                "Cannot use DocIdJsonPackWriter when doc id is not set.")
-        return pack.meta.doc_id
+                "Cannot use DocIdJsonPackWriter when [pack_name] of the pack "
+                "is not set.")
+        return pack.pack_name
 
 
 class DocIdMultiPackWriter(MultiPackWriter):
     def pack_name(self, pack: DataPack) -> str:
-        name = pack.meta.doc_id
+        name = pack.pack_name
         if name is None:
             raise ProcessExecutionException(
-                'Cannot used the DocIdMultiPackWriter because the doc id '
-                'is not assigned for the pack %d.' % pack.meta.pack_id)
+                'Cannot used the DocIdMultiPackWriter because the [pack_name] '
+                'is not assigned for the pack %d.' % pack.pack_id)
         return name
 
     def multipack_name(self, pack: MultiPack) -> str:
-        name = pack.meta.doc_id
+        name = pack.pack_name
         if name is None:
             raise ProcessExecutionException(
                 'Cannot used the DocIdMultiPackWriter because the doc id is '
-                'not assigned for the pack %d.' % pack.meta.pack_id)
+                'not assigned for the pack %d.' % pack.pack_id)
         return name

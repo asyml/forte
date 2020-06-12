@@ -101,7 +101,7 @@ class CoNLL03Reader(PackReader):
 
         Document(pack, 0, len(text))
 
-        pack.meta.doc_id = file_path
+        pack.pack_name = file_path
         doc.close()
 
         yield pack

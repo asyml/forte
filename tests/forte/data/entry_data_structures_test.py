@@ -76,7 +76,7 @@ class EmptyReader(PackReader):
 
     def _parse_pack(self, name: str) -> Iterator[DataPack]:
         p = self.new_pack()
-        p.doc_id = name
+        p.pack_name = name
         yield p
 
 
@@ -110,7 +110,7 @@ class EmptyMultiReader(MultiPackReader):
 
     def _parse_pack(self, name: str) -> Iterator[MultiPack]:
         p = self.new_pack()
-        p.doc_id = name
+        p.pack_name = name
         yield p
 
 

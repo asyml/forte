@@ -20,7 +20,6 @@ import logging
 
 import torch
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -67,7 +66,7 @@ def allowed_transitions(constraint_type: str,
                 to_tag = to_label[0]
                 to_entity = to_label[1:]
             if is_transition_allowed(
-                constraint_type, from_tag, from_entity, to_tag, to_entity
+                    constraint_type, from_tag, from_entity, to_tag, to_entity
             ):
                 allowed.append((from_label_index, to_label_index))
     return allowed
@@ -189,17 +188,16 @@ class ConditionalRandomField(torch.nn.Module):
 
     See, e.g. http://www.cs.columbia.edu/~mcollins/fb.pdf
 
-    Parameters
-    ----------
-    num_tags : int, required
-        The number of tags.
-    constraints : List[Tuple[int, int]], optional (default: None)
-        An optional list of allowed transitions (from_tag_id, to_tag_id).
-        These are applied to ``viterbi_tags()`` but do not affect ``forward()``.
-        These should be derived from `allowed_transitions` so that the
-        start and end transitions are handled correctly for your tag type.
-    include_start_end_transitions : bool, optional (default: True)
-        Whether to include the start and end transition parameters.
+    Args:
+        num_tags (int) : The number of tags.
+        constraints (List[Tuple[int, int]]):
+            An optional list of allowed transitions (from_tag_id, to_tag_id).
+            These are applied to ``viterbi_tags()`` but do not affect
+            ``forward()``. These should be derived from `allowed_transitions`
+            so that the start and end transitions are handled correctly for
+            your tag type.
+        include_start_end_transitions (bool):
+            Whether to include the start and end transition parameters.
     """
 
     def __init__(self, num_tags: int,
@@ -341,7 +339,8 @@ class ConditionalRandomField(torch.nn.Module):
             # Include transition score if next element is unmasked,
             # input_score if this element is unmasked.
             score = (
-                score + transition_score * mask[i + 1] + emit_score * mask[i]
+                    score + transition_score * mask[i + 1] + emit_score * mask[
+                i]
             )
 
         # Transition from last state to "stop" state. To start with, we need
@@ -406,31 +405,33 @@ class ConditionalRandomField(torch.nn.Module):
 
         # Apply transition constraints
         constrained_transitions = self.transitions * self._constraint_mask[
-            :num_tags, :num_tags
-        ] + -10000.0 * (1 - self._constraint_mask[:num_tags, :num_tags])
+                                                     :num_tags, :num_tags
+                                                     ] + -10000.0 * (
+                                          1 - self._constraint_mask[
+                                              :num_tags, :num_tags])
         transitions[:num_tags, :num_tags] = constrained_transitions.data
 
         if self.include_start_end_transitions:
             transitions[
-                start_tag, :num_tags
+            start_tag, :num_tags
             ] = self.start_transitions.detach() * self._constraint_mask[
-                start_tag, :num_tags
-            ].data + -10000.0 * (
-                1 - self._constraint_mask[start_tag, :num_tags].detach()
-            )
+                                                  start_tag, :num_tags
+                                                  ].data + -10000.0 * (
+                        1 - self._constraint_mask[start_tag, :num_tags].detach()
+                )
             transitions[
-                :num_tags, end_tag
+            :num_tags, end_tag
             ] = self.end_transitions.detach() * self._constraint_mask[
-                :num_tags, end_tag
-            ].data + -10000.0 * (
-                1 - self._constraint_mask[:num_tags, end_tag].detach()
-            )
+                                                :num_tags, end_tag
+                                                ].data + -10000.0 * (
+                        1 - self._constraint_mask[:num_tags, end_tag].detach()
+                )
         else:
             transitions[start_tag, :num_tags] = -10000.0 * (
-                1 - self._constraint_mask[start_tag, :num_tags].detach()
+                    1 - self._constraint_mask[start_tag, :num_tags].detach()
             )
             transitions[:num_tags, end_tag] = -10000.0 * (
-                1 - self._constraint_mask[:num_tags, end_tag].detach()
+                    1 - self._constraint_mask[:num_tags, end_tag].detach()
             )
 
         best_paths = []
@@ -447,8 +448,8 @@ class ConditionalRandomField(torch.nn.Module):
             # At steps 1, ..., sequence_length we just use the
             # incoming prediction
             tag_sequence[1:(sequence_length + 1), :num_tags] = prediction[
-                :sequence_length
-            ]
+                                                               :sequence_length
+                                                               ]
             # And at the last timestep we must have the END_TAG
             tag_sequence[sequence_length + 1, end_tag] = 0.0
 
@@ -524,7 +525,7 @@ def viterbi_decode(tag_sequence: torch.Tensor, transition_matrix: torch.Tensor,
     for timestep in range(1, sequence_length):
         # Add pairwise potentials to current scores.
         summed_potentials = (
-            path_scores[timestep - 1].unsqueeze(-1) + transition_matrix
+                path_scores[timestep - 1].unsqueeze(-1) + transition_matrix
         )
         scores, paths = torch.max(summed_potentials, 0)
 
@@ -535,8 +536,9 @@ def viterbi_decode(tag_sequence: torch.Tensor, transition_matrix: torch.Tensor,
         # invalid/extremely unlikely evidence.
         if tag_observations[timestep - 1] != -1:
             if (
-                transition_matrix[tag_observations[timestep - 1], observation]
-                < -10000
+                    transition_matrix[
+                        tag_observations[timestep - 1], observation]
+                    < -10000
             ):
                 logger.warning(
                     "The pairwise potential between tags you have passed as "

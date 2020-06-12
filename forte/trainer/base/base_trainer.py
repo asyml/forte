@@ -41,7 +41,10 @@ class BaseTrainer(PipelineComponent):
         """
         The training pipeline will run this initialization method during
         the initialization phase and send resources in as parameters.
+
         Args:
+            resources: The resources shared in the pipeline
+            configs: configuration object for this trainer.
 
         Returns:
 
@@ -54,7 +57,7 @@ class BaseTrainer(PipelineComponent):
         Return a request to a :class:`DataPack <forte.data.data_pack.DataPack>`.
         The trainer will use the data returned from the request for training.
 
-        See :func: `get_data <forte.data.data_pack.DataPack.get_data>` for the
+        See :func:`get_data <forte.data.data_pack.DataPack.get_data>` for the
         request details.
 
         Returns:
@@ -127,10 +130,11 @@ class BaseTrainer(PipelineComponent):
     def epoch_finish_action(self, epoch_num: int):
         """
         This function will be called by the pipeline when one epoch is
-        finished. For example, the trainer can call request_stop_train()
+        finished. For example, the trainer can call :meth:`request_stop_train`
         when the number of epoch reaches a predefined value.
+
         Args:
-            epoch_num:
+            epoch_num: The current number of epoch.
 
         Returns:
 
@@ -141,6 +145,7 @@ class BaseTrainer(PipelineComponent):
         """
         The trainer should call this method to inform the pipeline to
         conduct evaluation.
+
         Returns:
 
         """

@@ -70,7 +70,7 @@ class MultiPackSentenceReader(MultiPackReader):
             doc_id = doc_id.strip(os.path.sep)
 
             input_pack = m_pack.add_pack(input_pack_name)
-            input_pack.doc_id = doc_id
+            input_pack.pack_name = doc_id
 
             for line in doc:
                 line = line.strip()

@@ -49,7 +49,7 @@ class MSMarcoPassageReaderTest(unittest.TestCase):
             self.assertTrue(len(doc_entries) == 1)
             doc_entry: Document = doc_entries[0]
             self.assertIsInstance(doc_entry, Document)
-            actual_content[data_pack.meta.doc_id] = doc_entry.text
+            actual_content[data_pack.pack_name] = doc_entry.text
 
         self.assertDictEqual(actual_content, self.expected_content)
 

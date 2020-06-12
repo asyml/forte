@@ -59,8 +59,8 @@ class IndexProcessor(PackProcessor, ABC):
         raise NotImplementedError
 
     def _process(self, input_pack: DataPack):
-        if input_pack.meta.doc_id:
-            self.documents.append((input_pack.meta.doc_id, input_pack.text))
+        if input_pack.pack_name:
+            self.documents.append((input_pack.pack_name, input_pack.text))
         else:
             self.documents.append(("DOC", input_pack.text))
 

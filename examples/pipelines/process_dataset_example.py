@@ -48,7 +48,7 @@ def main(dataset_dir: str):
     pl.initialize()
 
     for pack in pl.process_dataset(dataset_dir):
-        print(colored("Document", 'red'), pack.meta.doc_id)
+        print(colored("Document", 'red'), pack.meta.pack_name)
         for sentence in pack.get(Sentence):
             sent_text = sentence.text
             print(colored("Sentence:", 'red'), sent_text, "\n")

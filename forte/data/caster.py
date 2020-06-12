@@ -43,6 +43,8 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
 
     def cast(self, pack: DataPack) -> MultiPack:
         """
+        Auto-box the data-pack into a multi-pack by simple wrapping.
+
         Args:
             pack: The data pack to be boxed
 

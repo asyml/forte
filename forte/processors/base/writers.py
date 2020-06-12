@@ -24,7 +24,7 @@ from typing import Optional, Any, Dict
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.base_pack import PackType
+from forte.data.base_pack import BasePack
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base.pack_processor import PackProcessor, \
@@ -39,9 +39,9 @@ __all__ = [
 ]
 
 
-def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
+def write_pack(input_pack: BasePack, output_dir: str, sub_path: str,
                indent: Optional[int] = None, zip_pack: bool = False,
-               overwrite: bool = False) -> str:
+               overwrite: bool = False, drop_record: bool = False) -> str:
     """
     Write a pack to a path.
 
@@ -52,6 +52,7 @@ def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
         indent: Whether to format JSON with an indent.
         zip_pack: Whether to zip the output JSON.
         overwrite: Whether to overwrite the file if already exists.
+        drop_record: Whether to drop the creation records in the serialization.
 
     Returns:
         If successfully written, will return the path of the output file.
@@ -65,7 +66,7 @@ def write_pack(input_pack: PackType, output_dir: str, sub_path: str,
 
         ensure_dir(output_path)
 
-        out_str: str = input_pack.serialize()
+        out_str: str = input_pack.serialize(drop_record)
 
         if indent:
             out_str = json.dumps(json.loads(out_str), indent=indent)
@@ -118,6 +119,7 @@ class JsonPackWriter(PackProcessor, ABC):
             'output_dir': None,
             'zip_pack': False,
             'indent': None,
+            'drop_record': False
         })
         return config
 
@@ -130,7 +132,7 @@ class JsonPackWriter(PackProcessor, ABC):
         maybe_create_dir(self.configs.output_dir)
         write_pack(input_pack, self.configs.output_dir, sub_path,
                    self.configs.indent, self.configs.zip_pack,
-                   self.configs.overwrite)
+                   self.configs.overwrite, self.configs.drop_record)
 
 
 class MultiPackWriter(MultiPackProcessor):
@@ -174,7 +176,8 @@ class MultiPackWriter(MultiPackProcessor):
         for pack in input_pack.packs:
             pack_out = write_pack(
                 pack, pack_out_dir, self.pack_name(pack), self.configs.indent,
-                self.configs.zip_pack, self.configs.overwrite)
+                self.configs.zip_pack, self.configs.overwrite,
+                self.configs.drop_record)
 
             self.pack_idx_out.write(
                 f'{pack.meta.pack_id}\t'
@@ -183,7 +186,8 @@ class MultiPackWriter(MultiPackProcessor):
         multi_out = write_pack(
             input_pack, multi_out_dir,
             self.multipack_name(input_pack), self.configs.indent,
-            self.configs.zip_pack, self.configs.overwrite
+            self.configs.zip_pack, self.configs.overwrite,
+            self.configs.drop_record
         )
 
         self.multi_idx_out.write(
@@ -201,5 +205,6 @@ class MultiPackWriter(MultiPackProcessor):
             'output_dir': None,
             'zip_pack': False,
             'indent': None,
+            'drop_record': False
         })
         return config

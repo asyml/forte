@@ -40,6 +40,16 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
     @abstractmethod
     def new_pack(self, pack_name: Optional[str] = None) -> PackType:
+        """
+        Create a new pack using the current pack manager.
+
+        Args:
+            pack_name (str, Optional): The name to be used for the pack. If not
+              set, the pack name will remained unset.
+
+        Returns:
+
+        """
         raise NotImplementedError
 
     def process(self, input_pack: PackType):
