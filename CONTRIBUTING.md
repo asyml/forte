@@ -46,9 +46,7 @@ Following the feature template, fill in the information in more details:
 ### Pull Requests
 When you have fixed a bug or implemented a new feature, you can create a pull request for review. Use the following simple PR templates to structure the PR:
 
-* [Bug fixes](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE/bug_fix.md)
-* [Documentation](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE/doc_fix.md)
-* [New feature](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE/new_feature.md)
+* [PR Template](https://github.com/asyml/forte/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
 
 ### Using Labels
 We use standard issue labels such as priority, bug, enhancement, etc. We have a few topic labels to identify the type of the issue. Currently the topics are `data` (problems in our data system), `docs` (problems about documentation), `examples` (problems about the examples), `interface` (the interfaces between different modules), `model` (machine learning models), `ontology` (the ontology system). We may have more topic labels in the future.
