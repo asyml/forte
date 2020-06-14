@@ -5,7 +5,7 @@ This PR fixes [issue link].
 Describe what are the changes, and how they solve the problem.
 
 ### Possible influences of this PR.
-Describe what are the possible side-deffects of the code chagne.
+Describe what are the possible side-effects of the code change.
 
 ### Test Conducted
-Describe what test cases are inlucded for the PR.
+Describe what test cases are included for the PR.
