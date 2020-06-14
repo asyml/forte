@@ -155,7 +155,9 @@ pip install .
 * [Documentation](https://asyml-forte.readthedocs.io/)
 * And we are working one some interesting [tutorials](https://github.com/asyml/forte/wiki)
 
-### Reference
+
+### Contributing
+If you are interested in making enhancement to Forte, please quickly go over our [Code of Conduct](https://github.com/asyml/forte/blob/master/CODE_OF_CONDUCT.md) and [Contribution Guideline](https://github.com/asyml/forte/blob/master/CONTRIBUTING.md)
 
 ### License
 
