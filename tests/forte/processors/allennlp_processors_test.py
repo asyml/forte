@@ -19,14 +19,14 @@ from forte.common import ProcessorConfigError, ProcessExecutionException
 class TestAllenNLPProcessor(unittest.TestCase):
     def setUp(self):
         self.allens = {
-            'universal_dependencies': Predictor.from_path(
-                MODEL2URL['universal_dependencies']),
-            'stanford_dependencies': Predictor.from_path(
-                MODEL2URL['stanford_dependencies'])
+            # TODO: Current download model is wrong on Allennlp.
+            # 'universal': Predictor.from_path(MODEL2URL['universal']),
+            'stanford': Predictor.from_path(MODEL2URL['stanford'])
         }
 
-        univ = Predictor.from_path(MODEL2URL['universal_dependencies'])
-        stan = Predictor.from_path(MODEL2URL['stanford_dependencies'])
+        self.results = {}
+        for k in self.allens:
+            self.results[k] = {}
 
         sentences = [
             "This tool is called Forte.",
@@ -35,36 +35,22 @@ class TestAllenNLPProcessor(unittest.TestCase):
         ]
         self.document = ' '.join(sentences)
 
-        self.tokens = []
-        self.pos = {
-            'stanford_dependencies': [],
-            'universal_dependencies': []
-        }
-        self.dep_types = {
-            'stanford_dependencies': [],
-            'universal_dependencies': []
-        }
-        self.dep_heads = {
-            'stanford_dependencies': [],
-            'universal_dependencies': []
-        }
+        for k in self.allens:
+            self.results[k]['tokens'] = []
+            self.results[k]['pos'] = []
+            self.results[k]['dep_types'] = []
+            self.results[k]['dep_heads'] = []
 
-        for sent in sentences:
-            univ_results = univ.predict(sentence=sent)
-            stan_results = stan.predict(sentence=sent)
-            self.tokens.append(univ_results['words'])
+        for dep_type in self.allens.keys():
+            for sent in sentences:
+                results = self.allens[dep_type].predict(sentence=sent)
 
-            self.pos['universal_dependencies'].append(univ_results['pos'])
-            self.dep_types['universal_dependencies'].append(
-                univ_results['predicted_dependencies'])
-            self.dep_heads['universal_dependencies'].append(
-                univ_results['predicted_heads'])
-
-            self.pos['stanford_dependencies'].append(stan_results['pos'])
-            self.dep_types['stanford_dependencies'].append(
-                stan_results['predicted_dependencies'])
-            self.dep_heads['stanford_dependencies'].append(
-                stan_results['predicted_heads'])
+                self.results[dep_type]['tokens'].append(results['words'])
+                self.results[dep_type]['pos'].append(results['pos'])
+                self.results[dep_type]['dep_types'].append(
+                    results['predicted_dependencies'])
+                self.results[dep_type]['dep_heads'].append(
+                    results['predicted_heads'])
 
     @data(
         "tokenize",
@@ -88,8 +74,8 @@ class TestAllenNLPProcessor(unittest.TestCase):
         self._check_results(pack, processors, tag_format)
 
     @data(
-        "stanford_dependencies",
-        "universal_dependencies",
+        "stanford",
+        # "universal",  # TODO: Current download model is wrong on Allennlp.
         "random_dependencies",
     )
     def test_allennlp_processor_with_different_tag_formats(self, format):
@@ -205,14 +191,15 @@ class TestAllenNLPProcessor(unittest.TestCase):
         tokens = []
         for j, token in enumerate(
                 pack.get(entry_type=Token, range_annotation=sentence)):
-            self.assertEqual(token.text, self.tokens[sent_idx][j])
+            self.assertEqual(
+                token.text, self.results[tag_format]['tokens'][sent_idx][j])
             self._test_pos(sent_idx, token, j, processors, tag_format)
             tokens.append(token)
         return tokens
 
     def _test_pos(self, sent_idx, token, token_idx,
                   processors, tag_format):
-        exp_pos = self.pos[tag_format][sent_idx][token_idx] \
+        exp_pos = self.results[tag_format]['pos'][sent_idx][token_idx] \
             if "pos" in processors else None
         self.assertEqual(token.pos, exp_pos)
 
@@ -221,7 +208,7 @@ class TestAllenNLPProcessor(unittest.TestCase):
         for j, dep in enumerate(deps):
             self.assertEqual(
                 dep.get_parent(),
-                tokens[self.dep_heads[tag_format][sent_idx][j] - 1])
+                tokens[self.results[tag_format]['dep_heads'][sent_idx][j] - 1])
             self.assertEqual(
                 dep.rel_type,
-                self.dep_types[tag_format][sent_idx][j])
+                self.results[tag_format]['dep_types'][sent_idx][j])

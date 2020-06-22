@@ -372,7 +372,7 @@ class ConditionalRandomField(torch.nn.Module):
 
         return score
 
-    def forward(self,  # type: ignore
+    def forward(self,
                 inputs: torch.Tensor, tags: torch.Tensor,
                 mask: Optional[torch.ByteTensor] = None) -> torch.Tensor:
         """
