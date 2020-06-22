@@ -48,7 +48,8 @@ setuptools.setup(
         'wikipedia': ['rdflib==4.2.2'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch==7.5.1'],
         'spacy': ['spacy==2.3.0'],
-        'allennlp': ['allennlp==1.0.0', 'torch>=1.5.0,<1.6.0']
+        'allennlp': ['allennlp==1.0.0', 'allennlp-models==1.0.0',
+                     'torch>=1.5.0,<1.6.0']
     },
     entry_points={
         'console_scripts': [
