@@ -31,7 +31,8 @@ class TestAllenNLPProcessor(unittest.TestCase):
         sentences = [
             "This tool is called Forte.",
             "The goal of this project to help you build NLP pipelines.",
-            "NLP has never been made this easy before."
+            "NLP has never been made this easy before.",
+            "Forte is named Forte because it is designed for text."
         ]
         self.document = ' '.join(sentences)
 
@@ -127,23 +128,6 @@ class TestAllenNLPProcessor(unittest.TestCase):
                         self._check_results(pack, processors, tag_format)
             else:
                 self._check_results(pack, processors, tag_format)
-
-    @data(
-        "This tool is called Forte.",
-        "Here is an example sentence."
-    )
-    def test_allennlp_processor_with_repeating_words(self, sentence):
-        processors = "tokenize"
-        nlp = self._create_pipeline({
-            'processors': processors
-        })
-        self.document = sentence
-        self.tokens = [sentence.replace('.', ' .').split()]
-        pack = nlp.process(self.document)
-
-        tag_format = AllenNLPProcessor.default_configs()['tag_formalism']
-
-        self._check_results(pack, processors, tag_format)
 
     def _check_results(self, pack, processors, tag_format):
         # checking the whole datapack text
