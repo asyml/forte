@@ -19,6 +19,7 @@ import gzip
 import json
 import logging
 import os
+import posixpath
 from abc import abstractmethod, ABC
 from typing import Optional, Any, Dict
 
@@ -181,7 +182,7 @@ class MultiPackWriter(MultiPackProcessor):
 
             self.pack_idx_out.write(
                 f'{pack.meta.pack_id}\t'
-                f'{os.path.relpath(pack_out, self.configs.output_dir)}\n')
+                f'{posixpath.relpath(pack_out, self.configs.output_dir)}\n')
 
         multi_out = write_pack(
             input_pack, multi_out_dir,
@@ -192,7 +193,7 @@ class MultiPackWriter(MultiPackProcessor):
 
         self.multi_idx_out.write(
             f'{input_pack.meta.pack_id}\t'
-            f'{os.path.relpath(multi_out, self.configs.output_dir)}\n')
+            f'{posixpath.relpath(multi_out, self.configs.output_dir)}\n')
 
     def finish(self, _):
         self.pack_idx_out.close()

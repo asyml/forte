@@ -95,7 +95,7 @@ class BertBasedQueryCreator(QueryProcessor):
         input_ids = torch.LongTensor(input_ids).unsqueeze(0).to(self.device)
         segment_ids = torch.LongTensor(segment_ids).unsqueeze(0).to(self.device)
         input_mask = torch.LongTensor(input_mask).unsqueeze(0).to(self.device)
-        sequence_length = (1 - (input_mask == 0)).sum(dim=1)
+        sequence_length = (~(input_mask == 0)).sum(dim=1)
         query_vector = self.get_embeddings(inputs=input_ids,
                                            sequence_length=sequence_length,
                                            segment_ids=segment_ids)
