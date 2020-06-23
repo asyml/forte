@@ -211,7 +211,7 @@ if __name__ == "__main__":
         opt_params, betas=(0.9, 0.999), eps=1e-6, lr=static_lr)
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(
-        optim, functools.partial(get_lr_multiplier,  # type: ignore
+        optim, functools.partial(get_lr_multiplier,
                                  total_steps=num_train_steps,
                                  warmup_steps=num_warmup_steps))
 

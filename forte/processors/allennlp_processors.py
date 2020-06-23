@@ -31,8 +31,9 @@ __all__ = [
 
 # pylint: disable=line-too-long
 MODEL2URL = {
-    'stanford_dependencies': "https://allennlp.s3.amazonaws.com/models/biaffine-dependency-parser-ptb-2018.08.23.tar.gz",
-    'universal_dependencies': "https://allennlp.s3.amazonaws.com/models/biaffine-dependency-parser-ud-2018.08.23.tar.gz",
+    'stanford': "https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ptb-2020.04.06.tar.gz",
+    # TODO: The UD model seems to be broken at this moment.
+    # 'universal': "https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ud-2020.02.10.tar.gz",
 }
 
 
@@ -80,20 +81,19 @@ class AllenNLPProcessor(PackProcessor):
         Following are the keys for this dictionary:
             - processors: defines what operations to be done on the sentence,
                 default value is "tokenize,pos,depparse" which performs all the
-                three operations
+                three operations.
             - tag_formalism: format of the POS tags and dependency parsing,
-                can be "universal_dependencies" or "stanford_dependencies",
-                default value is "universal_dependencies"
+                can be "universal" or "stanford", default value is "stanford".
             - overwrite_entries: whether to overwrite the entries of the same
-                type as produced by this processor, default value is False
+                type as produced by this processor, default value is False.
             - allow_parallel_entries: whether to allow similar new entries when
                 they already exist, e.g. allowing new tokens with same spans,
-                used only when `overwrite_entries` is False
+                used only when `overwrite_entries` is False.
         """
         config = super().default_configs()
         config.update({
             'processors': "tokenize,pos,depparse",
-            'tag_formalism': "universal_dependencies",
+            'tag_formalism': "stanford",
             'overwrite_entries': False,
             'allow_parallel_entries': True
         })
