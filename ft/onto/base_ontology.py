@@ -24,6 +24,7 @@ __all__ = [
     "Document",
     "Sentence",
     "Phrase",
+    "UtteranceContext",
     "Utterance",
     "PredicateArgument",
     "EntityMention",
@@ -123,6 +124,16 @@ class Phrase(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.phrase_type: Optional[str] = None
+
+
+@dataclass
+class UtteranceContext(Annotation):
+    """
+    `UtteranceContext` represents the context part in dialogue.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 @dataclass

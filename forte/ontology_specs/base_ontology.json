@@ -88,6 +88,11 @@
       ]
     },
     {
+      "entry_name": "ft.onto.base_ontology.UtteranceContext",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "`UtteranceContext` represents the context part in dialogue."
+    },
+    {
       "entry_name": "ft.onto.base_ontology.Utterance",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Utterance`, normally used to represent an utterance in dialogue."
