@@ -18,19 +18,12 @@ from examples.generators.content_rewriter.reader import TableReader
 from examples.generators.content_rewriter.rewriter import ContentRewriter
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
+
+# Let's create a pipeline that accept a Json string.
 from forte.processors.writers import PackNameJsonPackWriter
 
-
-def main():
-    pipeline = Pipeline[DataPack]()
-    pipeline.set_reader(TableReader())
-    pipeline.add(ContentRewriter())
-    pipeline.add(
-        PackNameJsonPackWriter(),
-        {'indent': 2,
-         'output_dir': '.'})
-    pipeline.run('| this | is | a | table', 'This is the sample sentence.')
-
-
-if __name__ == '__main__':
-    main()
+pipeline = Pipeline[DataPack]()
+pipeline.set_reader(TableReader())
+pipeline.add(ContentRewriter())
+pipeline.add(PackNameJsonPackWriter(), {'indent': 2, 'output_dir': '.'})
+pipeline.run('| this | is | a | table', 'This is the sample sentence.')

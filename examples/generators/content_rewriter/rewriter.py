@@ -20,6 +20,14 @@ from ft.onto.base_ontology import Utterance, UtteranceContext
 
 
 class ContentRewriter(PackProcessor):
+    def new_utternace(self, input_pack: DataPack, text: str, speaker: str):
+        input_pack.set_text(input_pack.text + '\n' + text)
+        # And then mark this as a new utterance.
+        u = Utterance(input_pack,
+                      len(input_pack.text) - len(text),
+                      len(input_pack.text))
+        u.speaker = speaker
+
     def _process(self, input_pack: DataPack):
         context = input_pack.get_single(UtteranceContext)
         utterance = input_pack.get_single(Utterance)
@@ -33,11 +41,9 @@ class ContentRewriter(PackProcessor):
         print(utterance.text)
 
         print('You can generate a new utterance like this.')
-        response = "This is a sample response."
 
-        # First add the text here.
-        input_pack.set_text(input_pack.text + '\n' + response)
-        # And then mark this as a new utterance.
-        Utterance(input_pack,
-                  len(input_pack.text) - len(response),
-                  len(input_pack.text))
+        self.new_utternace(input_pack, "This is a sample response", 'ai')
+
+        self.new_utternace(input_pack, "This is a sample user response", 'user')
+
+        self.new_utternace(input_pack, "This is another sample response", 'ai')

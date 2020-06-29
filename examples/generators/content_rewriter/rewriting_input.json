@@ -1,0 +1,124 @@
+{
+  "py/object": "forte.data.data_pack.DataPack",
+  "py/state": {
+    "creation_records": {
+      "examples.generators.content_rewriter.reader.TableReader": {
+        "py/set": [
+          0,
+          1
+        ]
+      },
+      "examples.generators.content_rewriter.rewriter.ContentRewriter": {
+        "py/set": [
+          8,
+          6,
+          7
+        ]
+      }
+    },
+    "field_records": {
+      "examples.generators.content_rewriter.rewriter.ContentRewriter": {
+        "py/set": [
+          {
+            "py/tuple": [
+              8,
+              "speaker"
+            ]
+          },
+          {
+            "py/tuple": [
+              6,
+              "speaker"
+            ]
+          },
+          {
+            "py/tuple": [
+              7,
+              "speaker"
+            ]
+          }
+        ]
+      }
+    },
+    "links": [],
+    "groups": [],
+    "meta": {
+      "py/object": "forte.data.data_pack.Meta",
+      "py/state": {
+        "pack_name": "rewriting_example",
+        "_pack_id": 0,
+        "language": "eng",
+        "span_unit": "character"
+      }
+    },
+    "_text": "| this | is | a | table\nThis is the sample sentence.\nThis is a sample response\nThis is a sample user response\nThis is another sample response",
+    "annotations": [
+      {
+        "py/object": "ft.onto.base_ontology.UtteranceContext",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 0,
+            "end": 23
+          },
+          "_tid": 0
+        }
+      },
+      {
+        "py/object": "ft.onto.base_ontology.Utterance",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 24,
+            "end": 52
+          },
+          "_tid": 1,
+          "speaker": "user"
+        }
+      },
+      {
+        "py/object": "ft.onto.base_ontology.Utterance",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 53,
+            "end": 78
+          },
+          "_tid": 6,
+          "speaker": "ai"
+        }
+      },
+      {
+        "py/object": "ft.onto.base_ontology.Utterance",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 79,
+            "end": 109
+          },
+          "_tid": 7,
+          "speaker": "user"
+        }
+      },
+      {
+        "py/object": "ft.onto.base_ontology.Utterance",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 110,
+            "end": 141
+          },
+          "_tid": 8,
+          "speaker": "ai"
+        }
+      }
+    ],
+    "generics": [],
+    "replace_back_operations": [],
+    "processed_original_spans": [],
+    "orig_text_len": 141,
+    "serialization": {
+      "next_id": 9
+    }
+  }
+}

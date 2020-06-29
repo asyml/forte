@@ -32,6 +32,7 @@ class TableReader(PackReader):
         # Create the table.
         UtteranceContext(p, 0, len(table))
         # Create the sample sentence.
-        Utterance(p, len(table) + 1, len(p.text))
+        u = Utterance(p, len(table) + 1, len(p.text))
+        u.speaker = 'user'
 
         yield p
