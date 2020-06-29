@@ -15,7 +15,6 @@
 The main running pipeline for the rewriter.
 """
 from examples.generators.content_rewriter.reader import TableReader
-from examples.generators.content_rewriter.rewriter import ContentRewriter
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 
@@ -24,6 +23,5 @@ from forte.processors.writers import PackNameJsonPackWriter
 
 pipeline = Pipeline[DataPack]()
 pipeline.set_reader(TableReader())
-pipeline.add(ContentRewriter())
 pipeline.add(PackNameJsonPackWriter(), {'indent': 2, 'output_dir': '.'})
 pipeline.run('| this | is | a | table', 'This is the sample sentence.')

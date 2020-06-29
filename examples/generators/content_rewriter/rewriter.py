@@ -14,12 +14,30 @@
 """
 The re-writer processor
 """
+from forte.common import Resources
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance, UtteranceContext
 
 
+class Model:
+    """This is a dummy model that always return the same string."""
+
+    def __init__(self):
+        self.model_str = "this content is from the model."
+
+    def response(self):
+        return self.model_str
+
+
 class ContentRewriter(PackProcessor):
+    def initialize(self, resources: Resources, configs: Config):
+        # pylint: disable=attribute-defined-outside-init
+
+        # Make sure the initialize model here.
+        self.model = Model()
+
     def new_utternace(self, input_pack: DataPack, text: str, speaker: str):
         input_pack.set_text(input_pack.text + '\n' + text)
         # And then mark this as a new utterance.
@@ -30,7 +48,11 @@ class ContentRewriter(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         context = input_pack.get_single(UtteranceContext)
-        utterance = input_pack.get_single(Utterance)
+
+        # Make sure we take the last utterance.
+        utterance: Utterance
+        for u in input_pack.get(Utterance):
+            utterance = u
 
         print('Now you can use the utterance and context to do prediction')
 
@@ -42,8 +64,4 @@ class ContentRewriter(PackProcessor):
 
         print('You can generate a new utterance like this.')
 
-        self.new_utternace(input_pack, "This is a sample response", 'ai')
-
-        self.new_utternace(input_pack, "This is a sample user response", 'user')
-
-        self.new_utternace(input_pack, "This is another sample response", 'ai')
+        self.new_utternace(input_pack, self.model.response(), 'ai')

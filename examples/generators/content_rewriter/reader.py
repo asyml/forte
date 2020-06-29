@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Iterator
+from typing import Iterator, Tuple
 
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
@@ -20,17 +20,19 @@ from ft.onto.base_ontology import UtteranceContext, Utterance
 
 
 class TableReader(PackReader):
-    def _collect(self, table: str, sentence: str) -> Iterator[Any]:
+    def _collect(self, table: str, sentence: str  # type: ignore
+                 ) -> Iterator[Tuple[str, str]]:
         yield table, sentence
 
     def _parse_pack(self, collection) -> Iterator[DataPack]:
         table, sentence = collection
 
-        p: DataPack = self.new_pack(pack_name='rewriting_example')
+        p: DataPack = self.new_pack(pack_name='rewriting_input')
         p.set_text(table + '\n' + sentence)
 
         # Create the table.
         UtteranceContext(p, 0, len(table))
+
         # Create the sample sentence.
         u = Utterance(p, len(table) + 1, len(p.text))
         u.speaker = 'user'
