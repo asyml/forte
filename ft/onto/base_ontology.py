@@ -140,10 +140,15 @@ class UtteranceContext(Annotation):
 class Utterance(Annotation):
     """
     A span based annotation `Utterance`, normally used to represent an utterance in dialogue.
+    Attributes:
+        speaker (Optional[str])
     """
+
+    speaker: Optional[str]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.speaker: Optional[str] = None
 
 
 @dataclass
