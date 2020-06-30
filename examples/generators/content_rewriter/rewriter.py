@@ -28,6 +28,10 @@ class Model:
         self.model_str = "this content is from the model."
 
     def response(self):
+        # Pretend the model is running for 5 seconds.
+        print('model is computing...')
+        import time
+        time.sleep(5)
         return self.model_str
 
 
@@ -54,14 +58,10 @@ class ContentRewriter(PackProcessor):
         for u in input_pack.get(Utterance):
             utterance = u
 
-        print('Now you can use the utterance and context to do prediction')
-
         print('The input context is:')
         print(context.text)
 
         print('The utterance is:')
         print(utterance.text)
-
-        print('You can generate a new utterance like this.')
 
         self.new_utternace(input_pack, self.model.response(), 'ai')

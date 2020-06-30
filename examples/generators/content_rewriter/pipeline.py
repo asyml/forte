@@ -39,4 +39,5 @@ def do_process(input_pack_str: str):
 
 if __name__ == '__main__':
     with open('rewriting_input.json') as f:
-        do_process(f.read())
+        test_str = f.read()
+        do_process(test_str)

@@ -35,6 +35,6 @@ class TableReader(PackReader):
 
         # Create the sample sentence.
         u = Utterance(p, len(table) + 1, len(p.text))
-        u.speaker = 'user'
+        u.speaker = 'ai'
 
         yield p

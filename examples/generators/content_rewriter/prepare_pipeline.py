@@ -23,5 +23,6 @@ from forte.processors.writers import PackNameJsonPackWriter
 
 pipeline = Pipeline[DataPack]()
 pipeline.set_reader(TableReader())
-pipeline.add(PackNameJsonPackWriter(), {'indent': 2, 'output_dir': '.'})
-pipeline.run('| this | is | a | table', 'This is the sample sentence.')
+pipeline.add(PackNameJsonPackWriter(),
+             {'indent': 2, 'output_dir': '.', 'overwrite': True})
+pipeline.run('| this | is | a | table', 'You can ask me questions.')

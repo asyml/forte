@@ -19,9 +19,9 @@ import gzip
 import json
 import logging
 import os
-import posixpath
 from abc import abstractmethod, ABC
 from typing import Optional, Any, Dict
+import posixpath
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -78,6 +78,8 @@ def write_pack(input_pack: BasePack, output_dir: str, sub_path: str,
         else:
             with open(output_path, 'w') as out:
                 out.write(out_str)
+    else:
+        logging.info("Will not overwrite existing path %s", output_path)
 
     logging.info("Writing a pack to %s", output_path)
     return output_path
