@@ -9,17 +9,13 @@ from __future__ import division
 from __future__ import print_function
 
 import importlib
-
+import os
 import numpy as np
 import tensorflow as tf
 from texar.core import get_train_op
 
 from examples.generators.content_rewriter.model.copy_net import CopyNetWrapper
-from examples.generators.content_rewriter.model.get_xx import get_match
-from examples.generators.content_rewriter.model.get_xy import get_align
 from examples.generators.content_rewriter.model.utils_e2e_clean import *
-
-from ie import get_precrec
 
 # pylint: disable=invalid-name, no-member, too-many-locals
 
@@ -40,9 +36,6 @@ flags.DEFINE_boolean("add_bleu_weight", False, "Whether to multiply BLEU weight"
 flags.DEFINE_string("expr_name", "model/e2e_model/demo",
                     "The experiment name. "
                     "Used as the directory name of run.")
-# flags.DEFINE_string("expr_name", "e2e_model/demo", "The experiment name. "
-#                      "Used as the directory name of run.")
-
 flags.DEFINE_string("restore_from", "",
                     "The specific checkpoint path to "
                     "restore from. If not specified, the latest checkpoint in "
@@ -60,8 +53,6 @@ flags.DEFINE_boolean("sd_path", False, "Whether to add structured data path.")
 flags.DEFINE_float("sd_path_multiplicator", 1.,
                    "Structured data path multiplicator.")
 flags.DEFINE_float("sd_path_addend", 0., "Structured data path addend.")
-flags.DEFINE_boolean("align", False, "Whether it is to get alignment.")
-flags.DEFINE_boolean("output_align", False, "Whether to output alignment.")
 flags.DEFINE_boolean("verbose", False, "verbose.")
 flags.DEFINE_boolean("eval_ie", False, "Whether evaluate IE.")
 flags.DEFINE_integer("eval_ie_gpuid", 0, "ID of GPU on which IE runs.")
@@ -69,9 +60,6 @@ FLAGS = flags.FLAGS
 
 copy_flag = FLAGS.copy_x or FLAGS.copy_y_
 attn_flag = FLAGS.attn_x or FLAGS.attn_y_
-
-if FLAGS.output_align:
-    FLAGS.align = True
 
 config_model = importlib.import_module(FLAGS.config_model)
 config_train = importlib.import_module(FLAGS.config_train)
@@ -105,58 +93,6 @@ def get_optimistic_restore_variables(ckpt_path, graph=tf.get_default_graph()):
 def get_optimistic_saver(ckpt_path, graph=tf.get_default_graph()):
     return tf.train.Saver(
         get_optimistic_restore_variables(ckpt_path, graph=graph))
-
-
-def print_alignment(data, sent, score):
-    print(' ' * 20 + ' '.join(map('{:>12}'.format, data[0])))
-    for j, sent_token in enumerate(sent[0]):
-        print('{:>20}'.format(sent_token) + ' '.join(map(
-            lambda x: '{:12.2e}'.format(x) if x != 0 else ' ' * 12,
-            score[:, j])))
-
-
-def batch_print_alignment(datas, sents, scores):
-    datas, sents = map(
-        lambda texts_lengths: map(
-            lambda text_length:
-            (text_length[0][:text_length[1]], text_length[1]),
-            zip(*texts_lengths)),
-        (datas, sents))
-    for data, sent, score in zip(datas, sents, scores):
-        score = score[:data[1], :sent[1]]
-        print_alignment(data, sent, score)
-
-
-def get_match_align(text00, text01, text02, text10, text11, text12, sent_text):
-    """Combining match and align. All texts must not contain BOS.
-    """
-    matches = get_match(text00, text01, text02, text10, text11, text12)
-    aligns = get_align(text10, text11, text12, sent_text)
-    match = {i: j for i, j in matches}
-    n = len(text00)
-    m = len(sent_text)
-    ret = np.zeros([n, m], dtype=np.float32)
-    for i in range(n):
-        try:
-            k = match[i]
-        except KeyError:
-            continue
-        align = aligns[k]
-        ret[i][:len(align)] = align
-
-    if FLAGS.verbose:
-        print(' ' * 20 + ' '.join(map(
-            '{:>12}'.format, strip_special_tokens_of_list(text00))))
-        for j, sent_token in enumerate(strip_special_tokens_of_list(sent_text)):
-            print('{:>20}'.format(sent_token) + ' '.join(map(
-                lambda x: '{:>12}'.format(x) if x != 0 else ' ' * 12,
-                ret[:, j])))
-
-    return ret
-
-
-def batch_get_match_align(*texts):
-    return np.array(batchize(get_match_align)(*texts), dtype=np.float32)
 
 
 def build_model(data_batch, data, step):
@@ -342,13 +278,6 @@ def build_model(data_batch, data, step):
                         ret_x = tf.einsum("bim,bm->bi", memory, query)
                         ret.append(ret_x)
 
-                    if FLAGS.sd_path:
-                        ret_sd_path = FLAGS.sd_path_multiplicator * \
-                                      tf.einsum("bi,bij->bj", ret_x,
-                                                match_align) \
-                                      + FLAGS.sd_path_addend
-                        ret.append(ret_sd_path)
-
                     return ret
 
                 return get_copy_scores
@@ -456,61 +385,6 @@ def build_model(data_batch, data, step):
 
         return decoder, bs_outputs
 
-    def build_align():
-        ref_str = ref_strs[1]
-        sent_str = 'y{}'.format(ref_str)
-        sent_texts = data_batch['{}_text'.format(sent_str)][:, 1:-1]
-        sent_ids = data_batch['{}_text_ids'.format(sent_str)][:, 1:-1]
-        # TODO: Here we simply use the embedder previously constructed,
-        # therefore it's shared. We have to construct a new one here if we'd
-        # like to get align on the fly.
-        sent_embeds = embedders['y_aux'](sent_ids)
-        sent_sequence_length = data_batch['{}_length'.format(sent_str)] - 2
-        sent_enc_outputs, _ = y_encoder(
-            sent_embeds, sequence_length=sent_sequence_length)
-        sent_enc_outputs = concat_encoder_outputs(sent_enc_outputs)
-
-        sd_field = x_fields[0]
-        sd_str = 'x{}_{}'.format(ref_str, sd_field)
-        sd_texts = data_batch['{}_text'.format(sd_str)][:, :-1]
-        sd_ids = data_batch['{}_text_ids'.format(sd_str)]
-        tgt_sd_ids = sd_ids[:, 1:]
-        sd_ids = sd_ids[:, :-1]
-        sd_sequence_length = data_batch['{}_length'.format(sd_str)] - 1
-        sd_embedder = embedders['x_' + sd_field]
-
-        rnn_cell = tx.core.layers.get_rnn_cell(config_model.align_rnn_cell)
-        attention_decoder = tx.modules.AttentionRNNDecoder(
-            cell=rnn_cell,
-            memory=sent_enc_outputs,
-            memory_sequence_length=sent_sequence_length,
-            vocab_size=vocab.size,
-            hparams=config_model.align_attention_decoder)
-
-        tf_outputs, _, tf_sequence_length = attention_decoder(
-            decoding_strategy='train_greedy',
-            inputs=sd_ids,
-            embedding=sd_embedder,
-            sequence_length=sd_sequence_length)
-
-        loss = tx.losses.sequence_sparse_softmax_cross_entropy(
-            labels=tgt_sd_ids,
-            logits=tf_outputs.logits,
-            sequence_length=sd_sequence_length)
-
-        start_tokens = tf.ones_like(sd_sequence_length) * vocab.bos_token_id
-        end_token = vocab.eos_token_id
-        bs_outputs, _, _ = tx.modules.beam_search_decode(
-            decoder_or_cell=attention_decoder,
-            embedding=sd_embedder,
-            start_tokens=start_tokens,
-            end_token=end_token,
-            max_decoding_length=config_train.infer_max_decoding_length,
-            beam_width=config_train.infer_beam_width)
-
-        return (sent_texts, sent_sequence_length), (
-            sd_texts, sd_sequence_length), \
-               loss, tf_outputs, bs_outputs
 
     decoder, tf_outputs, loss = teacher_forcing(rnn_cell, 1, 0, 'MLE')
     rec_decoder, _, rec_loss = teacher_forcing(rnn_cell, 1, 1, 'REC')
@@ -529,16 +403,12 @@ def build_model(data_batch, data, step):
     tiled_decoder, bs_outputs = beam_searching(
         rnn_cell, 1, 0, config_train.infer_beam_width)
 
-    align_sents, align_sds, align_loss, align_tf_outputs, align_bs_outputs = \
-        build_align()
-    losses['align'] = align_loss
 
     train_ops = {
         name: get_train_op(losses[name], hparams=config_train.train[name])
         for name in config_train.train}
 
-    return train_ops, bs_outputs, \
-           align_sents, align_sds, align_tf_outputs, align_bs_outputs
+    return train_ops, bs_outputs
 
 
 class Rewriter():
@@ -553,7 +423,7 @@ class Rewriter():
 
         self.global_step = tf.train.get_or_create_global_step()
 
-        self.train_ops, self.bs_outputs, _, _, _, _ \
+        self.train_ops, self.bs_outputs \
             = build_model(self.data_batch, self.datasets['train'],
                           self.global_step)
 
@@ -696,15 +566,6 @@ class Rewriter():
 
         hypo_file.close()
 
-        if FLAGS.eval_ie:
-            gold_file_name = os.path.join(
-                config_data.dst_dir, "gold.{}.txt".format(
-                    config_data.mode_to_filemode[mode]))
-            inter_file_name = "{}.h5".format(hypo_file_name[:-len(".txt")])
-            prec, rec = get_precrec(
-                gold_file_name, hypo_file_name, inter_file_name,
-                gpuid=FLAGS.eval_ie_gpuid)
-
         refs, entrys, hypos = zip(*ref_hypo_pairs)
 
         bleus = []
@@ -720,10 +581,7 @@ class Rewriter():
         for i, bleu in enumerate(bleus):
             summary.value.add(
                 tag='{}/{}'.format(mode, get_bleu_name(i)), simple_value=bleu)
-        if FLAGS.eval_ie:
-            for name, value in {'precision': prec, 'recall': rec}.items():
-                summary.value.add(tag='{}/{}'.format(mode, name),
-                                  simple_value=value)
+
         self.summary_writer.add_summary(summary, step)
         self.summary_writer.flush()
 
@@ -754,18 +612,12 @@ class Rewriter():
 
         epoch = 0
         while epoch < config_train.max_epochs:
-            name = 'align' if FLAGS.align else 'joint'
+            name = 'joint'
             train_op = self.train_ops[name]
             summary_op = self.summary_ops[name]
 
-            # val_bleu = self.eval_epoch(self.sess, self.summary_writer, 'val')
-            # test_bleu = self.eval_epoch(self.sess, self.summary_writer, 'test')
 
             step = tf.train.global_step(self.sess, self.global_step)
-
-            # print('epoch: {} ({}), step: {}, '
-            #       'val BLEU: {:.2f}, test BLEU: {:.2f}'.format(
-            #     epoch, name, step, val_bleu, test_bleu))
 
             self.train_epoch(self.sess, self.summary_writer, 'train', train_op,
                              summary_op)
@@ -775,16 +627,9 @@ class Rewriter():
             step = tf.train.global_step(self.sess, self.global_step)
             self.save_to(ckpt_model, step)
 
-        # self.eval_epoch(self.sess, self.summary_writer, 'test')
-        # print('epoch: {}, test BLEU: {}'.format(epoch, test_bleu))
-
 
 if __name__ == '__main__':
-    # flags = tf.flags
-    # content_rewritter_instance = Content_Rewritter()
-    # for i in range(FLAGS.times):
-    #     content_rewritter_instance.eval_epoch()
-    # main()
+
     model = Rewriter()
     model.load_model()
     # model.eval_epoch(model.sess, model.summary_writer, 'test')

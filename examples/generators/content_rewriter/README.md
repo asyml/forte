@@ -29,8 +29,8 @@ cd texar && pip3 install .
 ### Downloading the models and data
 
 Before we run the rewriting demo, we need to download models and data from the 
-[link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i) 
-and put the three directories(i.e., data2text, e2e_data, e2e_model) under the 
+[link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i?usp=sharing) 
+and put the two directories(i.e., e2e_data, e2e_model) under the 
 `text_content_manipulation/` directory.  
 
 ### Running the example

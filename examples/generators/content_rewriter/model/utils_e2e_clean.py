@@ -20,7 +20,6 @@ from examples.generators.content_rewriter.model.data2text.data_utils import get_
 e2e_ents = set()
 with open('model/e2e_data/x_value.vocab.txt', 'r') as f:
 # with open('e2e_data/x_value.vocab.txt', 'r') as f:
-
     all_vocb = f.readlines()
     for vocab in all_vocb:
         e2e_ents.add(vocab.strip('\n'))
@@ -76,22 +75,6 @@ def read_sents_from_file(file_name):
     with open(file_name, 'r') as f:
         return list(map(str.split, f))
 
-def read_x(data_prefix, ref_flag, stage):
-    ref_str = ref_strs[ref_flag]
-    return list(map(
-        lambda paired_sents: list(map(
-            lambda tup: DataItem(*tup),
-            zip(*paired_sents))),
-        zip(*map(
-            lambda field: read_sents_from_file(
-                '{}{}{}.{}.txt'.format(data_prefix, field, ref_str, stage)),
-            sd_fields))))
-
-def read_y(data_prefix, ref_flag, stage):
-    ref_str = ref_strs[ref_flag]
-    field = sent_fields[0]
-    return read_sents_from_file(
-        '{}{}{}.{}.txt'.format(data_prefix, field, ref_str, stage))
 
 def divide_or_const(a, b, c=0.):
     try:
