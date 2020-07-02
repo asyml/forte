@@ -19,20 +19,20 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance, UtteranceContext
-
-
-class Model:
-    """This is a dummy model that always return the same string."""
-
-    def __init__(self):
-        self.model_str = "this content is from the model."
-
-    def response(self):
-        # Pretend the model is running for 5 seconds.
-        print('model is computing...')
-        import time
-        time.sleep(5)
-        return self.model_str
+import os
+import sys
+# class Model:
+#     """This is a dummy model that always return the same string."""
+#
+#     def __init__(self):
+#         self.model_str = "this content is from the model."
+#
+#     def response(self):
+#         # Pretend the model is running for 5 seconds.
+#         print('model is computing...')
+#         import time
+#         time.sleep(5)
+#         return self.model_str
 
 
 class ContentRewriter(PackProcessor):
@@ -40,11 +40,24 @@ class ContentRewriter(PackProcessor):
         # pylint: disable=attribute-defined-outside-init
 
         # Make sure the initialize model here.
-        self.model = Model()
+        # Note: here we first need to set the path for reading data later.
+        # print('[info]{}'.format(os.getcwd()))
+
+        os.chdir('../../forte-rewriter/examples/generators/content_rewriter')
+
+        from examples.generators.content_rewriter.text_content_manipulation.manip import Rewriter
+        #initialize model
+        self.model = Rewriter()
+        self.model.load_model()
 
     def new_utternace(self, input_pack: DataPack, text: str, speaker: str):
+        # os.system('./forte.sh')
+        print(text)
         input_pack.set_text(input_pack.text + '\n' + text)
         # And then mark this as a new utterance.
+        print('The response is:')
+        print(text)
+
         u = Utterance(input_pack,
                       len(input_pack.text) - len(text),
                       len(input_pack.text))
@@ -64,4 +77,5 @@ class ContentRewriter(PackProcessor):
         print('The utterance is:')
         print(utterance.text)
 
-        self.new_utternace(input_pack, self.model.response(), 'ai')
+        # self.new_utternace(input_pack, self.model.eval_epoch(self.model.sess, self.model.summary_writer, 'test'), 'ai')
+        self.new_utternace(input_pack, self.model.eval_epoch('test'), 'ai')
