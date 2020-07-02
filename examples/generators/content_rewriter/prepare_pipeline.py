@@ -25,5 +25,8 @@ pipeline = Pipeline[DataPack]()
 pipeline.set_reader(TableReader())
 pipeline.add(PackNameJsonPackWriter(),
              {'indent': 2, 'output_dir': '.', 'overwrite': True})
-pipeline.run('The_Mill|name|The_Mill pub|eatType|The_Mill French|food|The_Mill £20-25|priceRange|The_Mill riverside|area|The_Mill The_Sorrento|near|The_Mill', \
-             'In the city_centre lies Aromi , a French coffee_shop for adults with a low customer rating.')
+pipeline.run('The_Mill|name|The_Mill pub|eatType|The_Mill French|food|'
+             'The_Mill £20-25|priceRange|The_Mill riverside|area|'
+             'The_Mill The_Sorrento|near|The_Mill',
+             'In the city_centre lies Aromi , a French coffee_shop for '
+             'adults with a low customer rating.')

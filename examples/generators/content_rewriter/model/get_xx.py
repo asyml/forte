@@ -2,16 +2,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# pylint: disable=invalid-name, no-member, too-many-locals
-
 import importlib
-import os
-import numpy as np
-import tensorflow as tf
-import texar as tx
 import pickle
-from examples.generators.content_rewriter.text_content_manipulation.utils_e2e_clean import *
-from munkres import *
+
+import tensorflow as tf
+
+from examples.generators.content_rewriter.model.utils_e2e_clean import *
+
+# pylint: disable=invalid-name, no-member, too-many-locals
 
 
 inf = int(1e9)

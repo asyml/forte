@@ -1,4 +1,6 @@
-from examples.generators.content_rewriter.text_content_manipulation.utils_e2e_clean import get_scope_name_of_train_op
+from examples.generators.content_rewriter.model.utils_e2e_clean import (
+    get_scope_name_of_train_op
+)
 
 max_epochs = int(0)  # int(0)
 steps_per_eval = int(600)

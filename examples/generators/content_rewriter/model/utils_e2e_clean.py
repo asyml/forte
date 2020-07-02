@@ -12,13 +12,13 @@ import random
 import texar as tx
 import sys
 from tensorflow.contrib.seq2seq import tile_batch
-from examples.generators.content_rewriter.text_content_manipulation.data2text.data_utils import get_train_ents, extract_entities
+from examples.generators.content_rewriter.model.data2text.data_utils import get_train_ents, extract_entities
 
 
 # load all entities
 #all_ents, players, teams, cities = get_train_ents(path=os.path.join("data2text", "rotowire"), connect_multiwords=True)
 e2e_ents = set()
-with open('text_content_manipulation/e2e_data/x_value.vocab.txt', 'r') as f:
+with open('model/e2e_data/x_value.vocab.txt', 'r') as f:
 # with open('e2e_data/x_value.vocab.txt', 'r') as f:
 
     all_vocb = f.readlines()

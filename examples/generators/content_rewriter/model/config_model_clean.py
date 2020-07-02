@@ -78,7 +78,6 @@ coverage_rnn_cell = {
     },
 }
 
-
 align_rnn_cell = {
     'type': 'LSTMBlockCell',
     'kwargs': {

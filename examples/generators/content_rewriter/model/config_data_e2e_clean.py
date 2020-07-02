@@ -1,6 +1,6 @@
 import os
 
-dataset_dir = 'text_content_manipulation/e2e_data'#'e2ev14_demo'#'e2e_0512_max5'
+dataset_dir = 'model/e2e_data'  # 'e2ev14_demo'#'e2e_0512_max5'
 
 modes = ['train', 'val', 'test']
 mode_to_filemode = {
@@ -24,7 +24,7 @@ eval_batch_size = 32
 batch_sizes = {
     'train': train_batch_size,
     'val': eval_batch_size,
-    'test': 1, #eval_batch_size,
+    'test': 1,  # eval_batch_size,
 }
 
 datas = {
@@ -36,9 +36,9 @@ datas = {
         'datasets': [
             {
                 'files': [os.path.join(
-                        dataset_dir, mode,
-                        '{}.{}.txt'.format(field, mode_to_filemode[mode])
-                    )],
+                    dataset_dir, mode,
+                    '{}.{}.txt'.format(field, mode_to_filemode[mode])
+                )],
                 'vocab_file': os.path.join(
                     dataset_dir,
                     '{}.vocab.txt'.format(field_to_vocabname[field])),

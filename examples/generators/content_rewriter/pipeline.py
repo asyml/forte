@@ -15,10 +15,10 @@
 The main running pipeline for the rewriter.
 """
 from examples.generators.content_rewriter.rewriter import ContentRewriter
-from forte.data.readers import RawDataDeserializeReader
 from forte.data.data_pack import DataPack
+from forte.data.readers import RawDataDeserializeReader
 from forte.pipeline import Pipeline
-import json
+
 # Let's create a pipeline first.
 pipeline = Pipeline[DataPack]()
 pipeline.set_reader(RawDataDeserializeReader())
@@ -37,6 +37,7 @@ def do_process(input_pack_str: str):
     print(data_json)
     with open('generation.txt', 'w') as f:
         f.write(data_json)
+
 
 if __name__ == '__main__':
     with open('rewriting_input.json') as f:
