@@ -8,8 +8,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import importlib
 import os
+import importlib
+
 import numpy as np
 import tensorflow as tf
 from texar.core import get_train_op
@@ -20,19 +21,24 @@ from examples.generators.content_rewriter.model.utils_e2e_clean import *
 # pylint: disable=invalid-name, no-member, too-many-locals
 
 flags = tf.flags
-flags.DEFINE_string("config_data",
-                    "examples.generators.content_rewriter.model.config_data_e2e_clean",
-                    "The data config.")
-flags.DEFINE_string("config_model",
-                    "examples.generators.content_rewriter.model.config_model_clean",
-                    "The model config.")
-flags.DEFINE_string("config_train",
-                    "examples.generators.content_rewriter.model.config_train",
-                    "The training config.")
+flags.DEFINE_string(
+    "config_data",
+    "examples.generators.content_rewriter.model.config_data_e2e_clean",
+    "The data config.")
+flags.DEFINE_string(
+    "config_model",
+    "examples.generators.content_rewriter.model.config_model_clean",
+    "The model config.")
+flags.DEFINE_string(
+    "config_train",
+    "examples.generators.content_rewriter.model.config_train",
+    "The training config.")
 flags.DEFINE_float("rec_w", 0.8, "Weight of reconstruction loss.")
 flags.DEFINE_float("rec_w_rate", 0., "Increasing rate of rec_w.")
-flags.DEFINE_boolean("add_bleu_weight", False, "Whether to multiply BLEU weight"
-                                               " onto the first loss.")
+flags.DEFINE_boolean("add_bleu_weight",
+                     False,
+                     "Whether to multiply BLEU weight"
+                     " onto the first loss.")
 flags.DEFINE_string("expr_name", "model/e2e_model/demo",
                     "The experiment name. "
                     "Used as the directory name of run.")
@@ -363,7 +369,6 @@ def build_model(data_batch, data, step):
                                         'exact coverage loss {:d}:'.format(i),
                                         exact_coverage_loss)
                     with tf.control_dependencies([print_op]):
-                        # exact_cover_w = FLAGS.exact_cover_w + FLAGS.exact_cover_w * tf.cast(step, tf.float32)
                         loss += FLAGS.exact_cover_w * exact_coverage_loss
 
         losses[loss_name] = loss
@@ -385,7 +390,6 @@ def build_model(data_batch, data, step):
 
         return decoder, bs_outputs
 
-
     decoder, tf_outputs, loss = teacher_forcing(rnn_cell, 1, 0, 'MLE')
     rec_decoder, _, rec_loss = teacher_forcing(rnn_cell, 1, 1, 'REC')
     rec_weight = FLAGS.rec_w
@@ -402,7 +406,6 @@ def build_model(data_batch, data, step):
 
     tiled_decoder, bs_outputs = beam_searching(
         rnn_cell, 1, 0, config_train.infer_beam_width)
-
 
     train_ops = {
         name: get_train_op(losses[name], hparams=config_train.train[name])
@@ -616,7 +619,6 @@ class Rewriter():
             train_op = self.train_ops[name]
             summary_op = self.summary_ops[name]
 
-
             step = tf.train.global_step(self.sess, self.global_step)
 
             self.train_epoch(self.sess, self.summary_writer, 'train', train_op,
@@ -629,7 +631,6 @@ class Rewriter():
 
 
 if __name__ == '__main__':
-
     model = Rewriter()
     model.load_model()
     # model.eval_epoch(model.sess, model.summary_writer, 'test')

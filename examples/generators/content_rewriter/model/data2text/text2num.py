@@ -1,5 +1,3 @@
-# copied from: https://github.com/exogen/text2num/blob/289745aebaf91e312fa8f8d86e04c17d7a3771af/text2num.py
-
 # This library is a simple implementation of a function to convert textual
 # numbers written in English into their integer representations.
 #
@@ -26,6 +24,7 @@
 # THE SOFTWARE.
 """
 Convert textual numbers written in English into their integer representations.
+Adapted from : https://github.com/exogen/text2num
 
 >>> text2num("zero")
 0

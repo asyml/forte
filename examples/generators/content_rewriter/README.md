@@ -19,7 +19,7 @@ cd model
 pip3 install -r requirements.txt
 ```
 
-You also need to install texar-tf:
+You also need to install texar-tf
 
 ```bash
 git clone https://github.com/asyml/texar.git
@@ -31,7 +31,7 @@ cd texar && pip3 install .
 Before we run the rewriting demo, we need to download models and data from the 
 [link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i?usp=sharing) 
 and put the two directories(i.e., e2e_data, e2e_model) under the 
-`text_content_manipulation/` directory.  
+`model/` directory.  
 
 ### Running the example
 
