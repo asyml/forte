@@ -37,4 +37,8 @@ class TableReader(PackReader):
         u = Utterance(p, len(table) + 1, len(p.text))
         u.speaker = 'ai'
 
+        print('table', table)
+        print('sentence', sentence)
+        print('utterance', u.text)
+
         yield p

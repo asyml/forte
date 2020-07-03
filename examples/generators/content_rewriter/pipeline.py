@@ -34,7 +34,6 @@ def do_process(input_pack_str: str):
     # You can get the JSON form like this.
     data_json = datapack.serialize()
     # Let's print it out.
-    print(data_json)
     with open('generation.txt', 'w') as f:
         f.write(data_json)
 

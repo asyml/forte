@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Textontent Manipulation
 3-gated copy net.
@@ -13,6 +12,7 @@ import importlib
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.contrib.seq2seq.python.ops.beam_search_decoder import tile_batch
 from texar.core import get_train_op
 
 from examples.generators.content_rewriter.model.copy_net import CopyNetWrapper
@@ -294,13 +294,14 @@ def build_model(data_batch, data, step):
                     tuple(kwargs['{}_{}'.format(prefix, s)]
                           for s in ('ids', 'states', 'lengths'))
                     for prefix in memory_prefixes],
-                input_ids= \
-                    kwargs['input_ids'] if tgt_ref_flag is not None else None,
+                input_ids=kwargs[
+                    'input_ids'] if tgt_ref_flag is not None else None,
                 get_get_copy_scores=get_get_copy_scores,
                 coverity_dim=config_model.coverage_state_dim if FLAGS.coverage else None,
                 coverity_rnn_cell_hparams=config_model.coverage_rnn_cell if FLAGS.coverage else None,
                 disabled_vocab_size=FLAGS.disabled_vocab_size,
-                eps=FLAGS.eps)
+                eps=FLAGS.eps
+            )
 
         decoder = tx.modules.BasicRNNDecoder(
             cell=cell, hparams=config_model.decoder,
