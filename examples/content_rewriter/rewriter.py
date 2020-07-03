@@ -30,7 +30,7 @@ from examples.content_rewriter.model import manip
 
 
 class ContentRewriter(PackProcessor):
-    def initialize(self, resources: Resources, configs: Config):
+    def initialize(self, _: Resources, configs: Config):
         # Setup model path.
         utils_e2e_clean.load_e2e_ents(
             os.path.join(configs.model_dir, 'e2e_data', 'x_value.vocab.txt'))
