@@ -31,16 +31,6 @@ def divide_or_const(a, b, c=0.):
         return c
 
 
-try:
-    import codecs
-
-
-    def open(*args, **kwargs):
-        return codecs.open(encoding="utf-8", *args, **kwargs)
-
-except NameError:
-    pass
-
 random.seed(2)
 
 Ent = namedtuple("Ent", ["start", "end", "s", "is_pron"])
@@ -1011,7 +1001,7 @@ def linearized_preproc(srcs):
 
 def fix_target_idx(summ, assumed_idx, word, neighborhood=5):
     """
-    tokenization can mess stuff up, so look around
+    Tokenization can mess stuff up, so look around
     """
     for i in range(1, neighborhood + 1):
         if assumed_idx + i < len(summ) and summ[assumed_idx + i] == word:
@@ -1333,6 +1323,10 @@ def save_ent(output_path, trdata):
         json.dump(list(all_ents), f)
 
 
+def read_trdata():
+    return get_json_dataset(args.input_path, 'train')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Utility Functions')
     parser.add_argument('mode', type=str, default='ptrs',
@@ -1352,13 +1346,7 @@ if __name__ == '__main__':
                         help="file as reference in prep_gen_data mode, "
                              "of which every entry is in the form "
                              "entry|attribute|value")
-
     args = parser.parse_args()
-
-
-    def read_trdata():
-        return get_json_dataset(args.input_path, 'train')
-
 
     if args.mode == 'ptrs':
         make_pointerfi(args.output, read_trdata())

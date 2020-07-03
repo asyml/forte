@@ -436,9 +436,9 @@ def build_model(data_batch, data, step):
 
     step_stage = tf.cast(step, tf.float32) / tf.constant(800.0)
     rec_weight = tf.case([(tf.less_equal(step_stage, tf.constant(1.0)),
-                           lambda: tf.constant(1.0)), \
+                           lambda: tf.constant(1.0)),
                           (tf.greater(step_stage, tf.constant(2.0)),
-                           lambda: FLAGS.rec_w)], \
+                           lambda: FLAGS.rec_w)],
                          default=lambda: tf.constant(1.0) - (step_stage - 1) * (
                                  1 - FLAGS.rec_w))
     joint_loss = (1 - rec_weight) * loss + rec_weight * rec_loss
