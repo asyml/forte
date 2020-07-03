@@ -30,6 +30,7 @@ batch_sizes = {
 datas = {}
 
 
+# pylint: disable=global-statement
 def set_datas():
     global datas
     datas = {

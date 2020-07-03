@@ -3,29 +3,31 @@
 This example implements a content rewriter. Given a table and a sentence, this
 will rewrite the sentence based on the table.
 
-Run `pipeline.py` to execute the rewriter. The other files are:
- - `reader.py`: reads the data.
- - `reweriter.py`: conducts the actual rewriting.
-
 ### Prerequisites
 
 The code has been tested on:
-`Python==3.6.0, tensorflow-gpu==1.12.0, texar==0.2.1, texar-pytorch==0.1.1`
+ - Python 3.6.0 and Python 3.7.6
+ - tensorflow-gpu==1.14.0
+ - texar-pytorch==0.1.1
+ - texar==0.2.1
+ - cuda 10.0
+
+** NOTE **: 
+Due to some historical texar compatibility issue, the model is only compatible
+by installing texar 0.2.1 from source, which can be installed via the following
+command.
+
+```bash
+wget https://github.com/asyml/texar/archive/v0.2.1.zip
+cd texar && pip install .
+```
 
 Run the following commands:
 
 ```bash
 cd model
-pip3 install -r requirements.txt
-```
-
-This model is built on a source version of texar 0.2.1, you can install this 
- via :
- 
-```bash
-wget https://github.com/asyml/texar/archive/v0.2.1.zip
-cd texar && pip3 install .
-```
+pip install -r requirements.txt
+``` 
 
 ### Downloading the models and data
 

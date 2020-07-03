@@ -2,15 +2,15 @@ dim = 384
 coverage_state_dim = 128
 
 
-def get_embedder_hparams(dim, name):
+def get_embedder_hparams(dimension, name):
     return {
         'name': name,
-        'dim': dim,
+        'dim': dimension,
         'initializer': {
             'type': 'random_normal_initializer',
             'kwargs': {
                 'mean': 0.0,
-                'stddev': dim ** -0.5,
+                'stddev': dimension ** -0.5,
             },
         }
     }

@@ -15,24 +15,36 @@ import tensorflow as tf
 from tensorflow.contrib.seq2seq.python.ops.beam_search_decoder import tile_batch
 from texar.core import get_train_op
 
-from examples.generators.content_rewriter.model.copy_net import CopyNetWrapper
-from examples.generators.content_rewriter.model.utils_e2e_clean import *
+from examples.content_rewriter.model.copy_net import CopyNetWrapper
+from examples.content_rewriter.model.utils_e2e_clean import (
+    tx,
+    x_strs,
+    x_fields,
+    y_strs,
+    get_scope_name_of_train_op,
+    get_scope_name_of_summary_op,
+    corpus_bleu
+)
 
-# pylint: disable=invalid-name, no-member, too-many-locals
+# pylint: disable=invalid-name, no-member, too-many-locals, global-statement
+# pylint: disable=undefined-loop-variable, unused-variable, chained-comparison
+# pylint: disable=unexpected-keyword-arg, no-value-for-parameter,
+# pylint: disable=protected-access, unused-argument, global-variable-undefined
+# pylint: disable=attribute-defined-outside-init
 
 flags = tf.flags
 
 flags.DEFINE_string(
     "config_data",
-    "examples.generators.content_rewriter.model.config_data_e2e_clean",
+    "examples.content_rewriter.model.config_data_e2e_clean",
     "The data config.")
 flags.DEFINE_string(
     "config_model",
-    "examples.generators.content_rewriter.model.config_model_clean",
+    "examples.content_rewriter.model.config_model_clean",
     "The model config.")
 flags.DEFINE_string(
     "config_train",
-    "examples.generators.content_rewriter.model.config_train",
+    "examples.content_rewriter.model.config_train",
     "The training config.")
 flags.DEFINE_float("rec_w", 0.8, "Weight of reconstruction loss.")
 flags.DEFINE_float("rec_w_rate", 0., "Increasing rate of rec_w.")
@@ -311,6 +323,10 @@ def build_model(data_batch, data, step):
 
                 return get_copy_scores
 
+            covrity_dim = config_model.coverage_state_dim \
+                if FLAGS.coverage else None
+            coverity_rnn_cell_hparams = config_model.coverage_rnn_cell \
+                if FLAGS.coverage else None
             cell = CopyNetWrapper(
                 cell=cell, vocab_size=vocab.size,
                 memory_ids_states_lengths=[
@@ -320,8 +336,8 @@ def build_model(data_batch, data, step):
                 input_ids=kwargs[
                     'input_ids'] if tgt_ref_flag is not None else None,
                 get_get_copy_scores=get_get_copy_scores,
-                coverity_dim=config_model.coverage_state_dim if FLAGS.coverage else None,
-                coverity_rnn_cell_hparams=config_model.coverage_rnn_cell if FLAGS.coverage else None,
+                coverity_dim=covrity_dim,
+                coverity_rnn_cell_hparams=coverity_rnn_cell_hparams,
                 disabled_vocab_size=FLAGS.disabled_vocab_size,
                 eps=FLAGS.eps
             )

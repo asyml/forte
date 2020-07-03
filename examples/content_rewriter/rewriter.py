@@ -15,7 +15,7 @@
 The re-writer processor
 """
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import logging
 
 from forte.common import Resources
@@ -23,11 +23,10 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance, UtteranceContext
-from examples.generators.content_rewriter. \
-    model.manip import Rewriter
-from examples.generators.content_rewriter.model import utils_e2e_clean
-from examples.generators.content_rewriter.model import config_data_e2e_clean
-from examples.generators.content_rewriter.model import manip
+from examples.content_rewriter.model.manip import Rewriter
+from examples.content_rewriter.model import utils_e2e_clean
+from examples.content_rewriter.model import config_data_e2e_clean
+from examples.content_rewriter.model import manip
 
 
 class ContentRewriter(PackProcessor):
@@ -38,7 +37,7 @@ class ContentRewriter(PackProcessor):
         config_data_e2e_clean.dataset_dir = os.path.join(
             configs.model_dir, 'e2e_data')
         config_data_e2e_clean.set_datas()
-        manip.config_data.dataset_dir = os.path.join(
+        manip.config_data.dataset_dir = os.path.join(  # type: ignore
             configs.model_dir, 'e2e_data')
         manip.expr_name = os.path.join(configs.model_dir, "e2e_model", "demo")
 
@@ -49,11 +48,11 @@ class ContentRewriter(PackProcessor):
         self.model.load_model()
 
     def new_utternace(self, input_pack: DataPack, text: str, speaker: str):
-        # os.system('./forte.sh')
-        print(text)
         input_pack.set_text(input_pack.text + '\n' + text)
-        # And then mark this as a new utterance.
-        print('The response is:')
+        logging.info('The response is:')
+        logging.info(text)
+
+        print("The response is:")
         print(text)
 
         u = Utterance(input_pack,
@@ -62,21 +61,32 @@ class ContentRewriter(PackProcessor):
         u.speaker = speaker
 
     def _process(self, input_pack: DataPack):
-        context = input_pack.get_single(UtteranceContext)
+        context: UtteranceContext = input_pack.get_single(  # type: ignore
+            UtteranceContext)
 
-        # Make sure we take the last utterance.
-        utterance: Utterance
+        # Make sure we take the last utterance from the user.
+        utterance: Optional[Utterance] = None
+        u: Utterance
         for u in input_pack.get(Utterance):
-            utterance = u
+            if u.speaker == 'user':
+                utterance = u
 
-        self.prepare_data(context, utterance)
+        if utterance:
+            logging.info("The content is %s", context.text)
+            logging.info("The sample utterance is %s", utterance)
 
-        self.new_utternace(input_pack, self.model.eval_epoch('test'), 'ai')
+            self.prepare_data(context, utterance)
+            self.new_utternace(input_pack, self.model.eval_epoch('test'), 'ai')
+        else:
+            logging.info("Cannot get another utterance.")
+            self.new_utternace(
+                input_pack,
+                "Hey, I didn't get what you say, could you try again?", 'ai')
 
     def prepare_data(self, context: UtteranceContext, utterance: Utterance):
         logging.info("Preparing test data with the context and utterance")
-        logging.info("Context is : " + context.text)
-        logging.info("Utterance is : " + utterance.text)
+        logging.info("Context is : %s", context.text)
+        logging.info("Utterance is : %s", utterance.text)
 
         type = []
         val = []
@@ -91,7 +101,7 @@ class ContentRewriter(PackProcessor):
                 else:
                     asso.append(i)
         data_dir = os.path.join(config_data_e2e_clean.dataset_dir, 'test')
-        logging.info('Writing to data dir: {}'.format(data_dir))
+        logging.info('Writing to data dir: %s', data_dir)
 
         with open('{}/x_type.test.txt'.format(data_dir), 'w') as f_type, \
                 open('{}/x_value.test.txt'.format(data_dir), 'w') as f_val, \
@@ -107,3 +117,4 @@ class ContentRewriter(PackProcessor):
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
         config['model_dir'] = 'content_rewriter/model'
+        return config

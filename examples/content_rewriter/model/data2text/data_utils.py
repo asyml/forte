@@ -8,12 +8,19 @@ import random
 import math
 import argparse
 from collections import Counter, defaultdict, namedtuple
+from typing import Dict, List, Set, Any
 
 from nltk import sent_tokenize, word_tokenize
 import numpy as np
 import h5py
 
-from examples.generators.content_rewriter.model.data2text.text2num import (
+# pylint: disable=unused-variable,redefined-outer-name,unused-argument
+# pylint: disable=dangerous-default-value,unnecessary-lambda, cell-var-from-loop
+# pylint: disable=undefined-loop-variable,expression-not-assigned
+# pylint: disable=consider-using-enumerate
+
+
+from examples.content_rewriter.model.data2text.text2num import (
     text2num, NumberException)
 
 
@@ -53,7 +60,7 @@ number_words = {"one", "two", "three", "four", "five", "six", "seven", "eight",
                 "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
                 "hundred", "thousand"}
 
-line_score_words = {
+line_score_words: Dict[str, List[str]] = {
     'TEAM-AST': ['assist'],
     'TEAM-FG3_PCT': ['percent'],
     'TEAM-FG_PCT': ['percent'],
@@ -90,13 +97,14 @@ box_score_words = {
     'STL': ['steal'],
     'TO': ['turnover'],
 }
-box_score_words = {'PLAYER-{}'.format(name): value for name, value in
-                   box_score_words.items()}
+box_score_words: Dict[str, Any] = {
+    'PLAYER-{}'.format(name): value for name, value in
+    box_score_words.items()}
 
-score_words = line_score_words.copy()
+score_words: Dict[str, List[str]] = line_score_words.copy()
 score_words.update(box_score_words)
 
-indicating_words = set()
+indicating_words: Set[str] = set()
 for words in score_words.values():
     indicating_words.update(words)
 
@@ -329,7 +337,8 @@ def get_rels(entry, tokens, ents, nums, players, teams, cities,
         entname = ent.s
         # assume if a player has a city or team name as his name,
         # they won't use that one (e.g., Orlando Johnson)
-        if entname in players and entname not in cities and entname not in teams:
+        if entname in players and entname not in cities \
+                and entname not in teams:
             pidx = get_player_idx(bs, entname)
             for j, numtup in enumerate(nums):
                 found = False
@@ -1280,7 +1289,7 @@ def save_coref_task_data(outfile, in_file="full_newnba_prepdata2.json"):
 
 def mask_output(input_path, trdata):
     all_ents, players, teams, cities = get_ents(trdata)
-    all_ents = set([x.replace(' ', '_') for x in all_ents])
+    all_ents = {x.replace(' ', '_') for x in all_ents}
 
     with open(input_path, "r") as f:
         sents = f.readlines()
@@ -1318,7 +1327,7 @@ def mask_output(input_path, trdata):
 
 def save_ent(output_path, trdata):
     all_ents, players, teams, cities = get_ents(trdata)
-    all_ents = set([x.replace(' ', '_') for x in all_ents])
+    all_ents = {x.replace(' ', '_') for x in all_ents}
 
     with open(output_path, 'w') as f:
         json.dump(list(all_ents), f)

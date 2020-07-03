@@ -300,18 +300,18 @@ SMALL = {
 }
 
 MAGNITUDE = {
-    'hundred':      100,
-    'thousand':     1000,
-    'million':      1000000,
-    'billion':      1000000000,
-    'trillion':     1000000000000,
-    'quadrillion':  1000000000000000,
-    'quintillion':  1000000000000000000,
-    'sextillion':   1000000000000000000000,
-    'septillion':   1000000000000000000000000,
-    'octillion':    1000000000000000000000000000,
-    'nonillion':    1000000000000000000000000000000,
-    'decillion':    1000000000000000000000000000000000,
+    'hundred': 100,
+    'thousand': 1000,
+    'million': 1000000,
+    'billion': 1000000000,
+    'trillion': 1000000000000,
+    'quadrillion': 1000000000000000,
+    'quintillion': 1000000000000000000,
+    'sextillion': 1000000000000000000000,
+    'septillion': 1000000000000000000000000,
+    'octillion': 1000000000000000000000000000,
+    'nonillion': 1000000000000000000000000000000,
+    'decillion': 1000000000000000000000000000000000,
 }
 
 
@@ -345,10 +345,9 @@ def text2num(s):
                 # If this isn't the first word, and `g` was multiplied by 100
                 # or reset to 0, then we're in a spot where 'and' is allowed.
                 continue
-            else:
-                fmt = (word, " but got {!r}".format(words[i - 1]) if i else "")
-                raise NumberException("{!r} must be preceeded by a magnitude"
-                                      "{}".format(*fmt))
+            fmt = (word, " but got {!r}".format(words[i - 1]) if i else "")
+            raise NumberException("{!r} must be preceeded by a magnitude"
+                                  "{}".format(*fmt))
 
         x = SMALL.get(word, None)
         if x is not None:

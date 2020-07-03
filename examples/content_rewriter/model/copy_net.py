@@ -7,6 +7,8 @@ from tensorflow.contrib.framework.python.framework import tensor_util
 import texar as tx
 
 
+# pylint: disable=too-many-function-args, unused-argument
+
 def update_coverity(coverity, probs, h, cell):
     shape = tf.shape(probs)
     coverity_shape = tf.shape(coverity)
@@ -22,8 +24,8 @@ def update_coverity(coverity, probs, h, cell):
 
 class CopyNetWrapperState(collections.namedtuple(
     "CopyNetWrapperState", (
-    "cell_state", "time", "last_ids", "copy_probs", "sum_copy_probs",
-    "coverities"))):
+            "cell_state", "time", "last_ids", "copy_probs", "sum_copy_probs",
+            "coverities"))):
 
     def clone(self, **kwargs):
         def with_same_shape(old, new):
