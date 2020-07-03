@@ -16,6 +16,7 @@ The re-writer processor
 """
 import os
 from typing import Dict, Any
+import logging
 
 from forte.common import Resources
 from forte.common.configuration import Config
@@ -68,13 +69,39 @@ class ContentRewriter(PackProcessor):
         for u in input_pack.get(Utterance):
             utterance = u
 
-        print('The input context is:')
-        print(context.text)
-
-        print('The utterance is:')
-        print(utterance.text)
+        self.prepare_data(context, utterance)
 
         self.new_utternace(input_pack, self.model.eval_epoch('test'), 'ai')
+
+    def prepare_data(self, context: UtteranceContext, utterance: Utterance):
+        logging.info("Preparing test data with the context and utterance")
+        logging.info("Context is : " + context.text)
+        logging.info("Utterance is : " + utterance.text)
+
+        type = []
+        val = []
+        asso = []
+
+        for triple in context.text.split():
+            for idx, i in enumerate(triple.split('|')):
+                if not idx:
+                    val.append(i)
+                elif idx == 1:
+                    type.append(i)
+                else:
+                    asso.append(i)
+        data_dir = os.path.join(config_data_e2e_clean.dataset_dir, 'test')
+        logging.info('Writing to data dir: {}'.format(data_dir))
+
+        with open('{}/x_type.test.txt'.format(data_dir), 'w') as f_type, \
+                open('{}/x_value.test.txt'.format(data_dir), 'w') as f_val, \
+                open('{}/x_associated.test.txt'.format(data_dir),
+                     'w') as f_asso, \
+                open('{}/y_ref.test.txt'.format(data_dir), 'w') as f_ref:
+            f_type.write(' '.join(type))
+            f_val.write(' '.join(val))
+            f_asso.write(' '.join(asso))
+            f_ref.write(utterance.text)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
