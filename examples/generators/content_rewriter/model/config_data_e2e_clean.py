@@ -27,24 +27,32 @@ batch_sizes = {
     'test': 1,  # eval_batch_size,
 }
 
-datas = {
-    mode: {
-        'num_epochs': 1,
-        'shuffle': mode == 'train',
-        'batch_size': batch_sizes[mode],
-        'allow_smaller_final_batch': mode != 'train',
-        'datasets': [
-            {
-                'files': [os.path.join(
-                    dataset_dir, mode,
-                    '{}.{}.txt'.format(field, mode_to_filemode[mode])
-                )],
-                'vocab_file': os.path.join(
-                    dataset_dir,
-                    '{}.vocab.txt'.format(field_to_vocabname[field])),
-                'data_name': field,
-            }
-            for field in fields]
+datas = {}
+
+
+def set_datas():
+    global datas
+    datas = {
+        mode: {
+            'num_epochs': 1,
+            'shuffle': mode == 'train',
+            'batch_size': batch_sizes[mode],
+            'allow_smaller_final_batch': mode != 'train',
+            'datasets': [
+                {
+                    'files': [os.path.join(
+                        dataset_dir, mode,
+                        '{}.{}.txt'.format(field, mode_to_filemode[mode])
+                    )],
+                    'vocab_file': os.path.join(
+                        dataset_dir,
+                        '{}.vocab.txt'.format(field_to_vocabname[field])),
+                    'data_name': field,
+                }
+                for field in fields]
+        }
+        for mode in modes
     }
-    for mode in modes
-}
+
+
+set_datas()

@@ -21,6 +21,7 @@ from examples.generators.content_rewriter.model.utils_e2e_clean import *
 # pylint: disable=invalid-name, no-member, too-many-locals
 
 flags = tf.flags
+
 flags.DEFINE_string(
     "config_data",
     "examples.generators.content_rewriter.model.config_data_e2e_clean",
@@ -62,6 +63,7 @@ flags.DEFINE_float("sd_path_addend", 0., "Structured data path addend.")
 flags.DEFINE_boolean("verbose", False, "verbose.")
 flags.DEFINE_boolean("eval_ie", False, "Whether evaluate IE.")
 flags.DEFINE_integer("eval_ie_gpuid", 0, "ID of GPU on which IE runs.")
+flags.DEFINE_boolean("nothreading", False, "Django work around.")
 FLAGS = flags.FLAGS
 
 copy_flag = FLAGS.copy_x or FLAGS.copy_y_
@@ -79,6 +81,27 @@ dir_model = os.path.join(expr_name, 'ckpt')
 dir_best = os.path.join(expr_name, 'ckpt-best')
 ckpt_model = os.path.join(dir_model, 'model.ckpt')
 ckpt_best = os.path.join(dir_best, 'model.ckpt')
+
+
+def set_model_dir(para_expr_name):
+    global expr_name
+
+    global dir_summary
+    global dir_model
+    global dir_best
+    global ckpt_model
+    global ckpt_best
+
+    expr_name = para_expr_name
+
+    dir_summary = os.path.join(expr_name, 'log')
+    dir_model = os.path.join(expr_name, 'ckpt')
+    dir_best = os.path.join(expr_name, 'ckpt-best')
+    ckpt_model = os.path.join(dir_model, 'model.ckpt')
+    ckpt_best = os.path.join(dir_best, 'model.ckpt')
+
+
+set_model_dir(FLAGS.expr_name)
 
 
 def get_optimistic_restore_variables(ckpt_path, graph=tf.get_default_graph()):
@@ -417,7 +440,6 @@ def build_model(data_batch, data, step):
 
 class Rewriter():
     def __init__(self):
-
         self.sess = tf.Session()
         # data batch
         self.datasets = {mode: tx.data.MultiAlignedData(hparams)

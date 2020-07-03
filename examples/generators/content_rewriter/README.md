@@ -31,13 +31,12 @@ cd texar && pip3 install .
 
 Before we run the rewriting demo, we need to download models and data from the 
 [link](https://drive.google.com/drive/folders/1jNaJ_R_f89G8xbAC8iwe49Yx_Z-LXr0i?usp=sharing) 
-and put the two directories(e2e_data, e2e_model) under the 
-`model/` directory.  
+and put the two directories(e2e_data, e2e_model) under the same directory [model_dir]
 
 ### Running the example
 
 Now to see the example in action, just run
 
 ```bash
-python pipline.py
+python pipline.py [model_dir]
 ```

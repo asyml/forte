@@ -14,6 +14,8 @@
 """
 The main running pipeline for the rewriter.
 """
+import sys
+
 from examples.generators.content_rewriter.rewriter import ContentRewriter
 from forte.data.data_pack import DataPack
 from forte.data.readers import RawDataDeserializeReader
@@ -21,11 +23,6 @@ from forte.pipeline import Pipeline
 
 # Let's create a pipeline first.
 pipeline = Pipeline[DataPack]()
-pipeline.set_reader(RawDataDeserializeReader())
-pipeline.add(ContentRewriter())
-
-# You should initialize the model here, so we only do it once.
-pipeline.initialize()
 
 
 def do_process(input_pack_str: str):
@@ -39,6 +36,14 @@ def do_process(input_pack_str: str):
 
 
 if __name__ == '__main__':
+    pipeline.set_reader(RawDataDeserializeReader())
+    pipeline.add(ContentRewriter(), config={
+        'model_dir': sys.argv[1]
+    })
+
+    # You should initialize the model here, so we only do it once.
+    pipeline.initialize()
+
     with open('rewriting_input.json') as f:
         test_str = f.read()
         do_process(test_str)

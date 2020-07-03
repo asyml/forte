@@ -16,10 +16,6 @@ from examples.generators.content_rewriter.model.data2text.data_utils import \
 # load all entities
 
 e2e_ents = set()
-with open('model/e2e_data/x_value.vocab.txt', 'r') as f:
-    all_vocb = f.readlines()
-    for vocab in all_vocb:
-        e2e_ents.add(vocab.strip('\n'))
 
 get_scope_name_of_train_op = 'train_{}'.format
 get_scope_name_of_summary_op = 'summary_{}'.format
@@ -31,6 +27,13 @@ x_fields = ['value', 'type', 'associated']
 x_strs = ['x', 'x_ref']
 y_strs = ['y_aux', 'y_ref']
 y_tgt_strs = ['y_ref']
+
+
+def load_e2e_ents(e2e_vocab_path: str):
+    with open(e2e_vocab_path, 'r') as f:
+        all_vocb = f.readlines()
+        for vocab in all_vocb:
+            e2e_ents.add(vocab.strip('\n'))
 
 
 class DataItem(collections.namedtuple('DataItem', x_fields)):

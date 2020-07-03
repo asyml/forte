@@ -14,6 +14,9 @@
 """
 The re-writer processor
 """
+import os
+from typing import Dict, Any
+
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -21,13 +24,26 @@ from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance, UtteranceContext
 from examples.generators.content_rewriter. \
     model.manip import Rewriter
+from examples.generators.content_rewriter.model import utils_e2e_clean
+from examples.generators.content_rewriter.model import config_data_e2e_clean
+from examples.generators.content_rewriter.model import manip
 
 
 class ContentRewriter(PackProcessor):
     def initialize(self, resources: Resources, configs: Config):
-        # pylint: disable=attribute-defined-outside-init
+        # Setup model path.
+        utils_e2e_clean.load_e2e_ents(
+            os.path.join(configs.model_dir, 'e2e_data', 'x_value.vocab.txt'))
+        config_data_e2e_clean.dataset_dir = os.path.join(
+            configs.model_dir, 'e2e_data')
+        config_data_e2e_clean.set_datas()
+        manip.config_data.dataset_dir = os.path.join(
+            configs.model_dir, 'e2e_data')
+        manip.expr_name = os.path.join(configs.model_dir, "e2e_model", "demo")
 
-        # initialize model
+        manip.set_model_dir(manip.expr_name)
+
+        # pylint: disable=attribute-defined-outside-init
         self.model = Rewriter()
         self.model.load_model()
 
@@ -59,3 +75,8 @@ class ContentRewriter(PackProcessor):
         print(utterance.text)
 
         self.new_utternace(input_pack, self.model.eval_epoch('test'), 'ai')
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config['model_dir'] = 'content_rewriter/model'
