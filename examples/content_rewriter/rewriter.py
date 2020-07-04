@@ -37,11 +37,9 @@ class ContentRewriter(PackProcessor):
         config_data_e2e_clean.dataset_dir = os.path.join(
             configs.model_dir, 'e2e_data')
         config_data_e2e_clean.set_datas()
-        manip.config_data.dataset_dir = os.path.join(  # type: ignore
-            configs.model_dir, 'e2e_data')
-        manip.expr_name = os.path.join(configs.model_dir, "e2e_model", "demo")
 
-        manip.set_model_dir(manip.expr_name)
+        manip.Config.set_path(
+            os.path.join(configs.model_dir, "e2e_model", "demo"))
 
         # pylint: disable=attribute-defined-outside-init
         self.model = Rewriter()

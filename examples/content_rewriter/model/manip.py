@@ -14,10 +14,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.seq2seq.python.ops.beam_search_decoder import tile_batch
 from texar.core import get_train_op
+import texar as tx
 
 from examples.content_rewriter.model.copy_net import CopyNetWrapper
 from examples.content_rewriter.model.utils_e2e_clean import (
-    tx,
     x_strs,
     x_fields,
     y_strs,
@@ -26,85 +26,28 @@ from examples.content_rewriter.model.utils_e2e_clean import (
     corpus_bleu
 )
 
+
 # pylint: disable=invalid-name, no-member, too-many-locals, global-statement
 # pylint: disable=undefined-loop-variable, unused-variable, chained-comparison
 # pylint: disable=unexpected-keyword-arg, no-value-for-parameter,
 # pylint: disable=protected-access, unused-argument, global-variable-undefined
 # pylint: disable=attribute-defined-outside-init
 
-flags = tf.flags
 
-flags.DEFINE_string(
-    "config_data",
-    "examples.content_rewriter.model.config_data_e2e_clean",
-    "The data config.")
-flags.DEFINE_string(
-    "config_model",
-    "examples.content_rewriter.model.config_model_clean",
-    "The model config.")
-flags.DEFINE_string(
-    "config_train",
-    "examples.content_rewriter.model.config_train",
-    "The training config.")
-flags.DEFINE_float("rec_w", 0.8, "Weight of reconstruction loss.")
-flags.DEFINE_float("rec_w_rate", 0., "Increasing rate of rec_w.")
-flags.DEFINE_boolean("add_bleu_weight",
-                     False,
-                     "Whether to multiply BLEU weight"
-                     " onto the first loss.")
-flags.DEFINE_string("expr_name", "model/e2e_model/demo",
-                    "The experiment name. "
-                    "Used as the directory name of run.")
-flags.DEFINE_string("restore_from", "",
-                    "The specific checkpoint path to "
-                    "restore from. If not specified, the latest checkpoint in "
-                    "expr_name is used.")
-flags.DEFINE_boolean("copy_x", True, "Whether to copy from x.")
-flags.DEFINE_boolean("copy_y_", False, "Whether to copy from y'.")
-flags.DEFINE_boolean("coverage", True,
-                     "Whether to add coverage onto the copynets.")
-flags.DEFINE_float("exact_cover_w", 2.5, "Weight of exact coverage loss.")
-flags.DEFINE_float("eps", 1e-10, "epsilon used to avoid log(0).")
-flags.DEFINE_integer("disabled_vocab_size", 0, "Disabled vocab size.")
-flags.DEFINE_boolean("attn_x", True, "Whether to attend x.")
-flags.DEFINE_boolean("attn_y_", True, "Whether to attend y'.")
-flags.DEFINE_boolean("sd_path", False, "Whether to add structured data path.")
-flags.DEFINE_float("sd_path_multiplicator", 1.,
-                   "Structured data path multiplicator.")
-flags.DEFINE_float("sd_path_addend", 0., "Structured data path addend.")
-flags.DEFINE_boolean("verbose", False, "verbose.")
-flags.DEFINE_boolean("eval_ie", False, "Whether evaluate IE.")
-flags.DEFINE_integer("eval_ie_gpuid", 0, "ID of GPU on which IE runs.")
-flags.DEFINE_boolean("nothreading", False, "Django work around.")
-FLAGS = flags.FLAGS
+class Config:
+    copy_x = True
+    copy_y_ = False
+    attn_x = True
+    attn_y_ = True
+    expr_name = "model/e2e_model/demo"
+    disabled_vocab_size = 0
+    eps = 1e-10
+    add_bleu_weight = False
+    exact_cover_w = 2.5
 
-copy_flag = FLAGS.copy_x or FLAGS.copy_y_
-attn_flag = FLAGS.attn_x or FLAGS.attn_y_
-
-config_model = importlib.import_module(FLAGS.config_model)
-config_train = importlib.import_module(FLAGS.config_train)
-config_data = importlib.import_module(FLAGS.config_data)
-
-expr_name = FLAGS.expr_name
-restore_from = FLAGS.restore_from
-
-dir_summary = os.path.join(expr_name, 'log')
-dir_model = os.path.join(expr_name, 'ckpt')
-dir_best = os.path.join(expr_name, 'ckpt-best')
-ckpt_model = os.path.join(dir_model, 'model.ckpt')
-ckpt_best = os.path.join(dir_best, 'model.ckpt')
-
-
-def set_model_dir(para_expr_name):
-    global expr_name
-
-    global dir_summary
-    global dir_model
-    global dir_best
-    global ckpt_model
-    global ckpt_best
-
-    expr_name = para_expr_name
+    coverage = True
+    restore_from = ""
+    rec_w = 0.8
 
     dir_summary = os.path.join(expr_name, 'log')
     dir_model = os.path.join(expr_name, 'ckpt')
@@ -112,8 +55,24 @@ def set_model_dir(para_expr_name):
     ckpt_model = os.path.join(dir_model, 'model.ckpt')
     ckpt_best = os.path.join(dir_best, 'model.ckpt')
 
+    copy_flag = copy_x or copy_y_
+    attn_flag = attn_x or attn_y_
 
-set_model_dir(FLAGS.expr_name)
+    config_model = importlib.import_module(
+        "examples.content_rewriter.model.config_model_clean")
+    config_train = importlib.import_module(
+        "examples.content_rewriter.model.config_train")
+    config_data = importlib.import_module(
+        "examples.content_rewriter.model.config_data_e2e_clean")
+
+    @classmethod
+    def set_path(cls, path: str):
+        cls.expr_name = path
+        cls.dir_summary = os.path.join(cls.expr_name, 'log')
+        cls.dir_model = os.path.join(cls.expr_name, 'ckpt')
+        cls.dir_best = os.path.join(cls.expr_name, 'ckpt-best')
+        cls.ckpt_model = os.path.join(cls.dir_model, 'model.ckpt')
+        cls.ckpt_best = os.path.join(cls.dir_best, 'model.ckpt')
 
 
 def get_optimistic_restore_variables(ckpt_path, graph=tf.get_default_graph()):
@@ -166,7 +125,7 @@ def build_model(data_batch, data, step):
         if step_stage <= 1:
             rec_weight = 1
         elif step_stage > 1 and step_stage < 2:
-            rec_weight = FLAGS.rec_w - step_stage * 0.1
+            rec_weight = Config.rec_w - step_stage * 0.1
         return np.array(rec_weight, dtype=tf.float32)
 
     # losses
@@ -176,13 +135,14 @@ def build_model(data_batch, data, step):
     embedders = {
         name: tx.modules.WordEmbedder(
             vocab_size=data.vocab(name).size, hparams=hparams)
-        for name, hparams in config_model.embedders.items()}
+        for name, hparams in Config.config_model.embedders.items()
+    }
 
     # encoders
     y_encoder = tx.modules.BidirectionalRNNEncoder(
-        hparams=config_model.y_encoder)
+        hparams=Config.config_model.y_encoder)
     x_encoder = tx.modules.BidirectionalRNNEncoder(
-        hparams=config_model.x_encoder)
+        hparams=Config.config_model.x_encoder)
 
     def concat_encoder_outputs(outputs):
         return tf.concat(outputs, -1)
@@ -219,25 +179,25 @@ def build_model(data_batch, data, step):
         zip(*encode_results)
 
     # get rnn cell
-    rnn_cell = tx.core.layers.get_rnn_cell(config_model.rnn_cell)
+    rnn_cell = tx.core.layers.get_rnn_cell(Config.config_model.rnn_cell)
 
     def get_decoder(cell, y__ref_flag, x_ref_flag, tgt_ref_flag,
                     beam_width=None):
         output_layer_params = \
-            {'output_layer': tf.identity} if copy_flag else \
+            {'output_layer': tf.identity} if Config.copy_flag else \
                 {'vocab_size': vocab.size}
 
-        if attn_flag:  # attention
-            if FLAGS.attn_x and FLAGS.attn_y_:
+        if Config.attn_flag:  # attention
+            if Config.attn_x and Config.attn_y_:
                 memory = tf.concat(
                     [sent_enc_outputs[y__ref_flag],
                      sd_enc_outputs[x_ref_flag]],
                     axis=1)
                 memory_sequence_length = None
-            elif FLAGS.attn_y_:
+            elif Config.attn_y_:
                 memory = sent_enc_outputs[y__ref_flag]
                 memory_sequence_length = sent_sequence_length[y__ref_flag]
-            elif FLAGS.attn_x:
+            elif Config.attn_x:
                 memory = sd_enc_outputs[x_ref_flag]
                 memory_sequence_length = sd_sequence_length[x_ref_flag]
             else:
@@ -247,14 +207,14 @@ def build_model(data_batch, data, step):
                 cell=cell,
                 memory=memory,
                 memory_sequence_length=memory_sequence_length,
-                hparams=config_model.attention_decoder,
+                hparams=Config.config_model.attention_decoder,
                 **output_layer_params)
-            if not copy_flag:
+            if not Config.copy_flag:
                 return attention_decoder
             cell = attention_decoder.cell if beam_width is None else \
                 attention_decoder._get_beam_search_cell(beam_width)
 
-        if copy_flag:  # copynet
+        if Config.copy_flag:  # copynet
             kwargs = {
                 'y__ids': sent_ids[y__ref_flag][:, 1:],
                 'y__states': sent_enc_outputs[y__ref_flag][:, 1:],
@@ -272,10 +232,10 @@ def build_model(data_batch, data, step):
 
             memory_prefixes = []
 
-            if FLAGS.copy_y_:
+            if Config.copy_y_:
                 memory_prefixes.append('y_')
 
-            if FLAGS.copy_x:
+            if Config.copy_x:
                 memory_prefixes.append('x')
 
             if beam_width is not None:
@@ -295,7 +255,7 @@ def build_model(data_batch, data, step):
                 def get_copy_scores(query, coverities=None):
                     ret = []
 
-                    if FLAGS.copy_y_:
+                    if Config.copy_y_:
                         memory = memory_copy_states[len(ret)]
                         if coverities is not None:
                             memory = memory + tf.layers.dense(
@@ -307,7 +267,7 @@ def build_model(data_batch, data, step):
                         ret_y_ = tf.einsum("bim,bm->bi", memory, query)
                         ret.append(ret_y_)
 
-                    if FLAGS.copy_x:
+                    if Config.copy_x:
                         memory = memory_copy_states[len(ret)]
                         if coverities is not None:
                             memory = memory + tf.layers.dense(
@@ -323,10 +283,10 @@ def build_model(data_batch, data, step):
 
                 return get_copy_scores
 
-            covrity_dim = config_model.coverage_state_dim \
-                if FLAGS.coverage else None
-            coverity_rnn_cell_hparams = config_model.coverage_rnn_cell \
-                if FLAGS.coverage else None
+            covrity_dim = Config.config_model.coverage_state_dim \
+                if Config.coverage else None
+            coverity_rnn_cell_hparams = Config.config_model.coverage_rnn_cell \
+                if Config.coverage else None
             cell = CopyNetWrapper(
                 cell=cell, vocab_size=vocab.size,
                 memory_ids_states_lengths=[
@@ -338,12 +298,12 @@ def build_model(data_batch, data, step):
                 get_get_copy_scores=get_get_copy_scores,
                 coverity_dim=covrity_dim,
                 coverity_rnn_cell_hparams=coverity_rnn_cell_hparams,
-                disabled_vocab_size=FLAGS.disabled_vocab_size,
-                eps=FLAGS.eps
+                disabled_vocab_size=Config.disabled_vocab_size,
+                eps=Config.eps
             )
 
         decoder = tx.modules.BasicRNNDecoder(
-            cell=cell, hparams=config_model.decoder,
+            cell=cell, hparams=Config.config_model.decoder,
             **output_layer_params)
         return decoder
 
@@ -381,7 +341,7 @@ def build_model(data_batch, data, step):
             logits=tf_outputs.logits,
             sequence_length=sequence_length,
             average_across_batch=False)
-        if FLAGS.add_bleu_weight and y__ref_flag is not None \
+        if Config.add_bleu_weight and y__ref_flag is not None \
                 and tgt_ref_flag is not None and y__ref_flag != tgt_ref_flag:
             w = tf.py_func(
                 batch_bleu, [sent_ids[y__ref_flag], tgt_sent_ids],
@@ -390,7 +350,7 @@ def build_model(data_batch, data, step):
             loss = w * loss
         loss = tf.reduce_mean(loss, 0)
 
-        if copy_flag and FLAGS.exact_cover_w != 0:
+        if Config.copy_flag and Config.exact_cover_w != 0:
             sum_copy_probs = list(map(lambda t: tf.cast(t, tf.float32),
                                       final_state.sum_copy_probs))
             memory_lengths = [lengths for _, _, lengths in
@@ -409,7 +369,7 @@ def build_model(data_batch, data, step):
                                         'exact coverage loss {:d}:'.format(i),
                                         exact_coverage_loss)
                     with tf.control_dependencies([print_op]):
-                        loss += FLAGS.exact_cover_w * exact_coverage_loss
+                        loss += Config.exact_cover_w * exact_coverage_loss
 
         losses[loss_name] = loss
 
@@ -422,34 +382,39 @@ def build_model(data_batch, data, step):
 
         decoder, bs_outputs, _, _ = get_decoder_and_outputs(
             cell, y__ref_flag, x_ref_flag, None,
-            {'embedding': embedders['y_aux'],
-             'start_tokens': start_tokens,
-             'end_token': end_token,
-             'max_decoding_length': config_train.infer_max_decoding_length},
-            beam_width=config_train.infer_beam_width)
+            {
+                'embedding': embedders['y_aux'],
+                'start_tokens': start_tokens,
+                'end_token': end_token,
+                'max_decoding_length':
+                    Config.config_train.infer_max_decoding_length
+            },
+            beam_width=Config.config_train.infer_beam_width
+        )
 
         return decoder, bs_outputs
 
     decoder, tf_outputs, loss = teacher_forcing(rnn_cell, 1, 0, 'MLE')
     rec_decoder, _, rec_loss = teacher_forcing(rnn_cell, 1, 1, 'REC')
-    rec_weight = FLAGS.rec_w
+    rec_weight = Config.rec_w
 
     step_stage = tf.cast(step, tf.float32) / tf.constant(800.0)
     rec_weight = tf.case([(tf.less_equal(step_stage, tf.constant(1.0)),
                            lambda: tf.constant(1.0)),
                           (tf.greater(step_stage, tf.constant(2.0)),
-                           lambda: FLAGS.rec_w)],
+                           lambda: Config.rec_w)],
                          default=lambda: tf.constant(1.0) - (step_stage - 1) * (
-                                 1 - FLAGS.rec_w))
+                                 1 - Config.rec_w))
     joint_loss = (1 - rec_weight) * loss + rec_weight * rec_loss
     losses['joint'] = joint_loss
 
     tiled_decoder, bs_outputs = beam_searching(
-        rnn_cell, 1, 0, config_train.infer_beam_width)
+        rnn_cell, 1, 0, Config.config_train.infer_beam_width)
 
     train_ops = {
-        name: get_train_op(losses[name], hparams=config_train.train[name])
-        for name in config_train.train}
+        name: get_train_op(
+            losses[name], hparams=Config.config_train.train[name])
+        for name in Config.config_train.train}
 
     return train_ops, bs_outputs
 
@@ -459,7 +424,7 @@ class Rewriter():
         self.sess = tf.Session()
         # data batch
         self.datasets = {mode: tx.data.MultiAlignedData(hparams)
-                         for mode, hparams in config_data.datas.items()}
+                         for mode, hparams in Config.config_data.datas.items()}
         self.data_iterator = tx.data.FeedableDataIterator(self.datasets)
         self.data_batch = self.data_iterator.get_next()
 
@@ -545,8 +510,8 @@ class Rewriter():
         self.data_iterator.restart_dataset(self.sess, mode)
 
         feed_dict = {
-            self.data_iterator.handle: self.data_iterator.get_handle(self.sess,
-                                                                     mode),
+            self.data_iterator.handle: self.data_iterator.get_handle(
+                self.sess, mode),
             tx.global_mode(): tf.estimator.ModeKeys.EVAL,
         }
 
@@ -560,11 +525,11 @@ class Rewriter():
             self.bs_outputs.predicted_ids,
         ]
 
-        if not os.path.exists(dir_model):
-            os.makedirs(dir_model)
+        if not os.path.exists(Config.dir_model):
+            os.makedirs(Config.dir_model)
 
         hypo_file_name = os.path.join(
-            dir_model, "hypos.step{}.{}.txt".format(step, mode))
+            Config.dir_model, "hypos.step{}.{}.txt".format(step, mode))
         hypo_file = open(hypo_file_name, "w")
 
         cnt = 0
@@ -633,7 +598,7 @@ class Rewriter():
                 best_ever_val_bleu = bleu
                 print('updated best val bleu: {}'.format(bleu))
 
-                self.save_to(ckpt_best, step)
+                self.save_to(Config.ckpt_best, step)
 
         print('end _eval_epoch')
         return
@@ -644,16 +609,16 @@ class Rewriter():
         self.sess.run(tf.tables_initializer())
         # self.sess.run(self.data_iterator)
 
-        if restore_from:
-            self.restore_from_path(restore_from)
+        if Config.restore_from:
+            self.restore_from_path(Config.restore_from)
         else:
-            self.restore_from(dir_model)
+            self.restore_from(Config.dir_model)
 
         self.summary_writer = tf.summary.FileWriter(
-            dir_summary, self.sess.graph, flush_secs=30)
+            Config.dir_summary, self.sess.graph, flush_secs=30)
 
         epoch = 0
-        while epoch < config_train.max_epochs:
+        while epoch < Config.config_train.max_epochs:
             name = 'joint'
             train_op = self.train_ops[name]
             summary_op = self.summary_ops[name]
@@ -666,10 +631,4 @@ class Rewriter():
             epoch += 1
 
             step = tf.train.global_step(self.sess, self.global_step)
-            self.save_to(ckpt_model, step)
-
-
-if __name__ == '__main__':
-    model = Rewriter()
-    model.load_model()
-    # model.eval_epoch(model.sess, model.summary_writer, 'test')
+            self.save_to(Config.ckpt_model, step)
