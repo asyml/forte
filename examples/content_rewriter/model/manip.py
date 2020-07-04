@@ -7,14 +7,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import importlib
+import os
 
 import numpy as np
 import tensorflow as tf
+import texar as tx
 from tensorflow.contrib.seq2seq.python.ops.beam_search_decoder import tile_batch
 from texar.core import get_train_op
-import texar as tx
 
 from examples.content_rewriter.model.copy_net import CopyNetWrapper
 from examples.content_rewriter.model.utils_e2e_clean import (
@@ -419,7 +419,7 @@ def build_model(data_batch, data, step):
     return train_ops, bs_outputs
 
 
-class Rewriter():
+class Rewriter:
     def __init__(self):
         self.sess = tf.Session()
         # data batch
@@ -444,7 +444,7 @@ class Rewriter():
 
         self.saver = tf.train.Saver(max_to_keep=None)
 
-        global best_ever_val_bleu
+        # global best_ever_val_bleu
         self.best_ever_val_bleu = 0.
 
     def save_to(self, directory, step):
@@ -503,132 +503,147 @@ class Rewriter():
         print('end _train_epoch')
 
     def eval_epoch(self, mode):
-        global best_ever_val_bleu
 
-        print('in _eval_epoch with mode {}'.format(mode))
+        # As discussed in this thread, to use this model in an multi-thread
+        # environment (such as a web server). We need to explicitly use the
+        # default session:
+        # https://github.com/keras-team/keras/issues/2397#issuecomment-254919212
+        with self.sess.graph.as_default():
+            print('in _eval_epoch with mode {}'.format(mode))
 
-        self.data_iterator.restart_dataset(self.sess, mode)
+            self.data_iterator.restart_dataset(self.sess, mode)
 
-        feed_dict = {
-            self.data_iterator.handle: self.data_iterator.get_handle(
-                self.sess, mode),
-            tx.global_mode(): tf.estimator.ModeKeys.EVAL,
-        }
+            feed_dict = {
+                self.data_iterator.handle: self.data_iterator.get_handle(
+                    self.sess, mode),
+                tx.global_mode(): tf.estimator.ModeKeys.EVAL,
+            }
 
-        step = tf.train.global_step(self.sess, self.global_step)
+            step = tf.train.global_step(self.sess, self.global_step)
 
-        ref_hypo_pairs = []
-        fetches = [
-            [self.data_batch['y_aux_text'], self.data_batch['y_ref_text']],
-            [self.data_batch['x_value_text'],
-             self.data_batch['x_ref_value_text']],
-            self.bs_outputs.predicted_ids,
-        ]
+            ref_hypo_pairs = []
+            fetches = [
+                [self.data_batch['y_aux_text'], self.data_batch['y_ref_text']],
+                [self.data_batch['x_value_text'],
+                 self.data_batch['x_ref_value_text']],
+                self.bs_outputs.predicted_ids,
+            ]
 
-        if not os.path.exists(Config.dir_model):
-            os.makedirs(Config.dir_model)
+            if not os.path.exists(Config.dir_model):
+                os.makedirs(Config.dir_model)
 
-        hypo_file_name = os.path.join(
-            Config.dir_model, "hypos.step{}.{}.txt".format(step, mode))
-        hypo_file = open(hypo_file_name, "w")
+            hypo_file_name = os.path.join(
+                Config.dir_model, "hypos.step{}.{}.txt".format(step, mode))
+            hypo_file = open(hypo_file_name, "w")
 
-        cnt = 0
-        while True:
-            try:
-                target_texts, entry_texts, output_ids = self.sess.run(fetches,
-                                                                      feed_dict)
-                target_texts = [
-                    tx.utils.strip_special_tokens(
-                        texts[:, 1:].tolist(), is_token_list=True)
-                    for texts in target_texts]
-                entry_texts = [
-                    tx.utils.strip_special_tokens(
-                        texts[:, 1:].tolist(), is_token_list=True)
-                    for texts in entry_texts]
+            cnt = 0
+            while True:
+                try:
+                    target_texts, entry_texts, output_ids = self.sess.run(
+                        fetches,
+                        feed_dict)
+                    target_texts = [
+                        tx.utils.strip_special_tokens(
+                            texts[:, 1:].tolist(), is_token_list=True)
+                        for texts in target_texts]
+                    entry_texts = [
+                        tx.utils.strip_special_tokens(
+                            texts[:, 1:].tolist(), is_token_list=True)
+                        for texts in entry_texts]
 
-                output_ids = output_ids[:, :, 0]
-                output_texts = tx.utils.map_ids_to_strs(
-                    ids=output_ids.tolist(),
-                    vocab=self.datasets[mode].vocab('y_aux'),
-                    join=False)
+                    output_ids = output_ids[:, :, 0]
+                    output_texts = tx.utils.map_ids_to_strs(
+                        ids=output_ids.tolist(),
+                        vocab=self.datasets[mode].vocab('y_aux'),
+                        join=False)
 
-                target_texts = list(zip(*target_texts))
-                entry_texts = list(zip(*entry_texts))
-                for ref, hypo in zip(target_texts, output_texts):
-                    if cnt < 10:
-                        print('cnt = {}'.format(cnt))
-                        for i, s in enumerate(ref):
-                            print('ref{}: {}'.format(i, ' '.join(s)))
-                        print('hypo: {}'.format(' '.join(hypo)))
-                        return '{}'.format(' '.join(hypo))
-                    print(' '.join(hypo), file=hypo_file)
-                    cnt += 1
-                print('processed {} samples'.format(cnt))
+                    target_texts = list(zip(*target_texts))
+                    entry_texts = list(zip(*entry_texts))
+                    for ref, hypo in zip(target_texts, output_texts):
+                        if cnt < 10:
+                            print('cnt = {}'.format(cnt))
+                            for i, s in enumerate(ref):
+                                print('ref{}: {}'.format(i, ' '.join(s)))
+                            print('hypo: {}'.format(' '.join(hypo)))
+                            return '{}'.format(' '.join(hypo))
+                        print(' '.join(hypo), file=hypo_file)
+                        cnt += 1
+                    print('processed {} samples'.format(cnt))
 
-                ref_hypo_pairs.extend(
-                    zip(target_texts, entry_texts, output_texts))
+                    ref_hypo_pairs.extend(
+                        zip(target_texts, entry_texts, output_texts))
 
-            except tf.errors.OutOfRangeError:
-                break
+                except tf.errors.OutOfRangeError:
+                    break
 
-        hypo_file.close()
+            hypo_file.close()
 
-        refs, entrys, hypos = zip(*ref_hypo_pairs)
+            refs, entrys, hypos = zip(*ref_hypo_pairs)
 
-        bleus = []
-        get_bleu_name = '{}_BLEU'.format
-        for i in range(1, 2):
-            refs_ = list(map(lambda ref: ref[i:i + 1], refs))
-            ents_ = list(map(lambda ent: ent[i:i + 1], entrys))
-            entrys = list(zip(*entrys))
-            bleu = corpus_bleu(refs_, hypos)
-            bleus.append(bleu)
+            bleus = []
+            get_bleu_name = '{}_BLEU'.format
+            for i in range(1, 2):
+                refs_ = list(map(lambda ref: ref[i:i + 1], refs))
+                ents_ = list(map(lambda ent: ent[i:i + 1], entrys))
+                entrys = list(zip(*entrys))
+                bleu = corpus_bleu(refs_, hypos)
+                bleus.append(bleu)
 
-        summary = tf.Summary()
-        for i, bleu in enumerate(bleus):
-            summary.value.add(
-                tag='{}/{}'.format(mode, get_bleu_name(i)), simple_value=bleu)
+            summary = tf.Summary()
+            for i, bleu in enumerate(bleus):
+                summary.value.add(
+                    tag='{}/{}'.format(mode, get_bleu_name(i)),
+                    simple_value=bleu)
 
-        self.summary_writer.add_summary(summary, step)
-        self.summary_writer.flush()
+            self.summary_writer.add_summary(summary, step)
+            self.summary_writer.flush()
 
-        bleu = bleus[0]
-        if mode == 'val':
-            if bleu > best_ever_val_bleu:
-                best_ever_val_bleu = bleu
-                print('updated best val bleu: {}'.format(bleu))
+            bleu = bleus[0]
+            if mode == 'val':
+                if bleu > self.best_ever_val_bleu:
+                    self.best_ever_val_bleu = bleu
+                    print('updated best val bleu: {}'.format(bleu))
 
-                self.save_to(Config.ckpt_best, step)
+                    self.save_to(Config.ckpt_best, step)
 
-        print('end _eval_epoch')
-        return
+            print('end _eval_epoch')
+            return
 
     def load_model(self):
-        self.sess.run(tf.global_variables_initializer())
-        self.sess.run(tf.local_variables_initializer())
-        self.sess.run(tf.tables_initializer())
-        # self.sess.run(self.data_iterator)
 
-        if Config.restore_from:
-            self.restore_from_path(Config.restore_from)
-        else:
-            self.restore_from(Config.dir_model)
+        # As discussed in this thread, to use this model in an multi-thread
+        # environment (such as a web server). We need to explicitly use the
+        # default session:
+        # https://github.com/keras-team/keras/issues/2397#issuecomment-254919212
+        with self.sess.graph.as_default():
+            self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.local_variables_initializer())
+            self.sess.run(tf.tables_initializer())
+            # self.sess.run(self.data_iterator)
 
-        self.summary_writer = tf.summary.FileWriter(
-            Config.dir_summary, self.sess.graph, flush_secs=30)
+            print('loading model ', Config.restore_from, Config.dir_model)
 
-        epoch = 0
-        while epoch < Config.config_train.max_epochs:
-            name = 'joint'
-            train_op = self.train_ops[name]
-            summary_op = self.summary_ops[name]
+            if Config.restore_from:
+                self.restore_from_path(Config.restore_from)
+            else:
+                self.restore_from(Config.dir_model)
 
-            step = tf.train.global_step(self.sess, self.global_step)
+            self.summary_writer = tf.summary.FileWriter(
+                Config.dir_summary, self.sess.graph, flush_secs=30)
 
-            self.train_epoch(self.sess, self.summary_writer, 'train', train_op,
-                             summary_op)
+            epoch = 0
+            while epoch < Config.config_train.max_epochs:
+                name = 'joint'
+                train_op = self.train_ops[name]
+                summary_op = self.summary_ops[name]
 
-            epoch += 1
+                step = tf.train.global_step(self.sess, self.global_step)
 
-            step = tf.train.global_step(self.sess, self.global_step)
-            self.save_to(Config.ckpt_model, step)
+                self.train_epoch(self.sess, self.summary_writer, 'train',
+                                 train_op,
+                                 summary_op)
+
+                epoch += 1
+
+                step = tf.train.global_step(self.sess, self.global_step)
+                self.save_to(Config.ckpt_model, step)
