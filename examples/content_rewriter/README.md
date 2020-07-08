@@ -45,7 +45,7 @@ python pipline.py [model_dir]
 
 ### Using in Stave Front-End
 
-We have developed a simple Front End for this using [stave](https://github.com/asyml/stave/blob/master/src/plugins/dialogue_box/READEME.md). To prepare tables to be used by Stave, just run
+We have developed a simple Front End for this using [stave](https://github.com/asyml/stave/blob/master/src/plugins/dialogue_box/READEME.md). You can use the data in `table_inputs` folder to play with the bot. If you would like to regenerate the preprocessing data, just run
 
 ```bash
 python prepare_pipele.py

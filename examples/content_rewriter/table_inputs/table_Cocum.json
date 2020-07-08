@@ -1,0 +1,45 @@
+{
+  "py/object": "forte.data.data_pack.DataPack",
+  "py/state": {
+    "creation_records": {
+      "examples.content_rewriter.reader.TableReader": {
+        "py/set": [
+          0
+        ]
+      }
+    },
+    "field_records": {},
+    "links": [],
+    "groups": [],
+    "meta": {
+      "py/object": "forte.data.data_pack.Meta",
+      "py/state": {
+        "pack_name": "table_Cocum",
+        "_pack_id": 1,
+        "language": "eng",
+        "span_unit": "character"
+      }
+    },
+    "_text": "Cocum|name|Cocum coffee_shop|eatType|Cocum Japanese|food|Cocum less_than_\u00a320|priceRange|Cocum riverside|area|Cocum family_friendly|family-friendly|Cocum Raja_Indian_Cuisine|near|Cocum",
+    "annotations": [
+      {
+        "py/object": "ft.onto.base_ontology.UtteranceContext",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 0,
+            "end": 183
+          },
+          "_tid": 0
+        }
+      }
+    ],
+    "generics": [],
+    "replace_back_operations": [],
+    "processed_original_spans": [],
+    "orig_text_len": 183,
+    "serialization": {
+      "next_id": 1
+    }
+  }
+}
