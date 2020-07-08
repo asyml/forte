@@ -42,3 +42,11 @@ Now to see the example in action, just run
 ```bash
 python pipline.py [model_dir]
 ```
+
+### Using in Stave Front-End
+
+We have developed a simple Front End for this using [stave](https://github.com/asyml/stave/blob/master/src/plugins/dialogue_box/READEME.md). To prepare tables to be used by Stave, just run
+
+```bash
+python prepare_pipele.py
+```

@@ -22,21 +22,17 @@ from ft.onto.base_ontology import UtteranceContext, Utterance
 
 
 class TableReader(PackReader):
-    def _collect(self, table: str, sentence: str  # type: ignore
-                 ) -> Iterator[Tuple[str, str]]:
-        yield table, sentence
+    def _collect(self, file_path: str) -> Iterator[str]:  # type: ignore
+        with open('table_samples.txt') as f:
+            for line in f:
+                if line.startswith('Context:'):
+                    yield line.split(':', 1)[1].strip()
 
-    def _parse_pack(self, collection) -> Iterator[DataPack]:
-        table, sentence = collection
-
-        p: DataPack = self.new_pack(pack_name='rewriting_input')
-        p.set_text(table + '\n' + sentence)
+    def _parse_pack(self, table: str) -> Iterator[DataPack]:
+        p: DataPack = self.new_pack(pack_name='table_' + table.split("|")[0])
+        p.set_text(table)
 
         # Create the table.
         UtteranceContext(p, 0, len(table))
-
-        # Create the sample sentence.
-        u = Utterance(p, len(table) + 1, len(p.text))
-        u.speaker = 'user'
 
         yield p

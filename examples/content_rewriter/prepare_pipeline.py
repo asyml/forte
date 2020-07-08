@@ -24,9 +24,14 @@ from forte.processors.writers import PackNameJsonPackWriter
 pipeline = Pipeline[DataPack]()
 pipeline.set_reader(TableReader())
 pipeline.add(PackNameJsonPackWriter(),
-             {'indent': 2, 'output_dir': '.', 'overwrite': True})
-pipeline.run('The_Mill|name|The_Mill pub|eatType|The_Mill French|food|'
-             'The_Mill £20-25|priceRange|The_Mill riverside|area|'
-             'The_Mill The_Sorrento|near|The_Mill',
-             'In the city_centre lies Aromi , a French coffee_shop for '
-             'adults with a low customer rating.')
+             {'indent': 2, 'output_dir': 'table_inputs', 'overwrite': True})
+
+
+def get_contexts():
+    with open('table_samples.txt') as f:
+        for line in f:
+            if line.startswith('Context:'):
+                yield line
+
+
+pipeline.run(get_contexts)
