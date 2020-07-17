@@ -12,7 +12,10 @@
 
 
 **Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task 
-interaction, adaptable data-model interfaces and many more. It provides a platform to assemble
+interaction, adaptable data-model interfaces and many more. Forte was originally developed and is 
+actively contributed by Petuum in collaboration with other institutes.
+
+It provides a platform to assemble
 state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide 
 spectrum of tasks ranging from Information Retrieval, Natural Language Understanding to Natural 
 Language Generation.  
