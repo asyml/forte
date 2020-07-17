@@ -49,7 +49,7 @@ Users can simply specify the type declaratively through JSON files. Our Code Gen
 will automatically generate python files ready to be used into your project. Check out our 
 [Ontology Generation documentation](./docs/ontology_generation.md) for more details.
 
-* **Transparent Data Flow**: Central to Forte's composable architecture is a universal data 
+* **Universal Data Flow**: Central to Forte's composable architecture is a universal data 
 format that supports seamless data flow between different steps. Forte advocates a transparent 
 data flow to facilitate flexible process intervention and simple pipeline control. Combined with 
 the general data format, Forte makes a perfect tool for data inspection, component swapping and 
