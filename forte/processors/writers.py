@@ -17,7 +17,7 @@ from forte.data.multi_pack import MultiPack
 from forte.processors.base.writers import JsonPackWriter, MultiPackWriter
 
 
-class DocIdJsonPackWriter(JsonPackWriter):
+class PackNameJsonPackWriter(JsonPackWriter):
     def sub_output_path(self, pack: DataPack) -> str:
         if pack.pack_name is None:
             raise ValueError(
@@ -26,13 +26,13 @@ class DocIdJsonPackWriter(JsonPackWriter):
         return pack.pack_name
 
 
-class DocIdMultiPackWriter(MultiPackWriter):
+class PackNameMultiPackWriter(MultiPackWriter):
     def pack_name(self, pack: DataPack) -> str:
         name = pack.pack_name
         if name is None:
             raise ProcessExecutionException(
                 'Cannot used the DocIdMultiPackWriter because the [pack_name] '
-                'is not assigned for the pack %d.' % pack.pack_id)
+                'is not assigned for the pack.')
         return name
 
     def multipack_name(self, pack: MultiPack) -> str:
@@ -40,5 +40,5 @@ class DocIdMultiPackWriter(MultiPackWriter):
         if name is None:
             raise ProcessExecutionException(
                 'Cannot used the DocIdMultiPackWriter because the doc id is '
-                'not assigned for the pack %d.' % pack.pack_id)
+                'not assigned for the pack.')
         return name

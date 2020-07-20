@@ -1,0 +1,45 @@
+{
+  "py/object": "forte.data.data_pack.DataPack",
+  "py/state": {
+    "creation_records": {
+      "examples.content_rewriter.reader.TableReader": {
+        "py/set": [
+          0
+        ]
+      }
+    },
+    "field_records": {},
+    "links": [],
+    "groups": [],
+    "meta": {
+      "py/object": "forte.data.data_pack.Meta",
+      "py/state": {
+        "pack_name": "table_The_Mill",
+        "_pack_id": 3,
+        "language": "eng",
+        "span_unit": "character"
+      }
+    },
+    "_text": "The_Mill|name|The_Mill pub|eatType|The_Mill French|food|The_Mill \u00a320-25|priceRange|The_Mill riverside|area|The_Mill The_Sorrento|near|The_Mill",
+    "annotations": [
+      {
+        "py/object": "ft.onto.base_ontology.UtteranceContext",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 0,
+            "end": 142
+          },
+          "_tid": 0
+        }
+      }
+    ],
+    "generics": [],
+    "replace_back_operations": [],
+    "processed_original_spans": [],
+    "orig_text_len": 142,
+    "serialization": {
+      "next_id": 1
+    }
+  }
+}

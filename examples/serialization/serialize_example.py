@@ -22,7 +22,7 @@ from forte.pipeline import Pipeline
 from forte.processors.base import MultiPackProcessor, MultiPackWriter
 from forte.processors.nltk_processors import (
     NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
-from forte.processors.writers import DocIdJsonPackWriter
+from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import EntityMention, CrossDocEntityRelation
 
 
@@ -104,7 +104,7 @@ def pack_example(input_path, output_path):
     # This is a simple writer that serialize the result to the current
     # directory and will use the DocID field in the data pack as the file name.
     nlp.add(
-        DocIdJsonPackWriter(),
+        PackNameJsonPackWriter(),
         {
             'output_dir': output_path,
             'indent': 2,

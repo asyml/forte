@@ -27,7 +27,7 @@ from forte.pipeline import Pipeline
 from forte.processors.annotation_remover import AnnotationRemover
 from forte.processors.nltk_processors import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
-from forte.processors.writers import DocIdJsonPackWriter
+from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import Token
 
 
@@ -51,7 +51,7 @@ class TestLowerCaserProcessor(unittest.TestCase):
         output_path = tempfile.mkdtemp()
 
         pipe_serialize.add(
-            DocIdJsonPackWriter(), {
+            PackNameJsonPackWriter(), {
                 'output_dir': output_path,
                 'indent': 2,
             }

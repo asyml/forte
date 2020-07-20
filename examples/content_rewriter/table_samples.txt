@@ -1,0 +1,38 @@
+Context: The_Vaults|name|The_Vaults pub|eatType|The_Vaults more_than_£30|priceRange|The_Vaults 5_out_of_5|customerRating|The_Vaults Café_Adriatic|near|The_Vaults,
+
+Sample 1: Loch_Fyne is a coffee_shop that is in the £20-25 price range, it has a 1_out_of_5 customer rating and is near Browns_Cambridge .
+Generation 1: The_Vaults is a pub that is in the more_than_£30 price . it has a 5_out_of_5 customer rating and is near Café_Adriatic .
+
+Sample 2: Near Blue_Spice there is a restaurant called Alimentum in the price range of less_than_£20 and it has a 1_out_of_5 customer rating.
+Generation 2: Near Café_Adriatic there is a restaurant called The_Vaults in the price range of more_than_£30 and it has a 5_out_of_5 customer rating.
+
+Sample 3: Highly rated by its customers , Cocum coffee_shop near Raja_Indian_Cuisine serves meals in the £20-25 price range.
+Generation 3: Highly rated by its customers , The_Vaults pub near Café_Adriatic serves meals in the more_than_£30 price.
+
+Sample 4: There is a highly-rated restaurant called The_Dumpling_Tree that serves fine food with an expensive price , nearby The_Rice_Boat .
+Generation 4: There is a Pub restaurant called The_Vaults that serves delicious food with an expensive price , nearby Café_Adriatic .
+
+Sample 4: You can find the French Aromi coffee_shop near Clowns. It is a family_friendly place with a 3_out_of_5 customer rating .
+Generation 4: You can find the more_than_£30 The_Vaults pub near near Café_Adriatic It is a family_friendly place with a 5_out_of_5 customer rating .
+
+======
+Context: Cocum|name|Cocum coffee_shop|eatType|Cocum Japanese|food|Cocum less_than_£20|priceRange|Cocum riverside|area|Cocum family_friendly|family-friendly|Cocum Raja_Indian_Cuisine|near|Cocum
+
+Sample 1: The_Wrestlers is a family_friendly pub that is priced £20-25 and serves Italian food . It is located next to the Fitzbillies near the city_centre.
+Generation 1: Cocum is a family_friendly coffee_shop that is priced less_than_£20 and serves Japanese food . It is located next to the Raja_Indian_Cuisine near the river.
+
+Sample 2: Near Blue_Spice is a not_family_friendly place in the city_centre area . It is a pub with French food and a more_than_£30 price range named Strada .
+Generation 2: Near Raja_Indian_Cuisine is a family_friendly place in the riverside area . It is a coffee_shop with Japanese food and a less_than_£20 price range named Cocum .
+
+======
+Context: Loch_Fyne|name|Loch_Fyne coffee_shop|eatType|Loch_Fyne fast|food|Loch_Fyne cheap|priceRange|Loch_Fyne 5_out_of_5|customerRating|Loch_Fyne riverside|area|Loch_Fyne
+
+Sample 1: The Rainbow_Vegetarian_Café is a £20-25 priced pub at the riverside area that serves Italian food . It is highly rated by its customers.
+Generation 1: The Loch_Fyne is a cheap priced restaurant at the riverside area that serves fast food . It is highly rated by its kids .
+
+======
+Context:  The_Mill|name|The_Mill pub|eatType|The_Mill French|food|The_Mill £20-25|priceRange|The_Mill riverside|area|The_Mill The_Sorrento|near|The_Mill
+
+Sample 1: In the city_centre lies Aromi , a French coffee_shop for adults with a low customer rating.
+Generation 1: In the city_centre lies The_Mill , a French pub for adults with a low customer ratings .
+

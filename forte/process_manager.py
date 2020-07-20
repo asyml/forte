@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import deque
-from typing import Deque, List
+from typing import List
 
 from forte.process_job import ProcessJob, ProcessJobStatus
 
@@ -70,12 +70,14 @@ class ProcessManager:
 
     def __init__(self, pipeline_length):
         self._pipeline_length: int = pipeline_length
-        self._queues: List[Deque[ProcessJob]] = [
-            deque() for _ in range(pipeline_length)]
+        self.reset()
+
+    def reset(self):
+        self._queues = [deque() for _ in range(self._pipeline_length)]
         self._current_queue_index: int = -1
         self._current_processor_index: int = 0
-        self._unprocessed_queue_indices: List[int] = [0] * pipeline_length
-        self._processed_queue_indices: List[int] = [-1] * pipeline_length
+        self._unprocessed_queue_indices: List[int] = [0] * self._pipeline_length
+        self._processed_queue_indices: List[int] = [-1] * self._pipeline_length
 
     @property
     def current_processor_index(self):

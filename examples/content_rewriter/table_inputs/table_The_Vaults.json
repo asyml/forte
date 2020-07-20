@@ -1,0 +1,45 @@
+{
+  "py/object": "forte.data.data_pack.DataPack",
+  "py/state": {
+    "creation_records": {
+      "examples.content_rewriter.reader.TableReader": {
+        "py/set": [
+          0
+        ]
+      }
+    },
+    "field_records": {},
+    "links": [],
+    "groups": [],
+    "meta": {
+      "py/object": "forte.data.data_pack.Meta",
+      "py/state": {
+        "pack_name": "table_The_Vaults",
+        "_pack_id": 0,
+        "language": "eng",
+        "span_unit": "character"
+      }
+    },
+    "_text": "The_Vaults|name|The_Vaults pub|eatType|The_Vaults more_than_\u00a330|priceRange|The_Vaults 5_out_of_5|customerRating|The_Vaults Caf\u00e9_Adriatic|near|The_Vaults,",
+    "annotations": [
+      {
+        "py/object": "ft.onto.base_ontology.UtteranceContext",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 0,
+            "end": 153
+          },
+          "_tid": 0
+        }
+      }
+    ],
+    "generics": [],
+    "replace_back_operations": [],
+    "processed_original_spans": [],
+    "orig_text_len": 153,
+    "serialization": {
+      "next_id": 1
+    }
+  }
+}

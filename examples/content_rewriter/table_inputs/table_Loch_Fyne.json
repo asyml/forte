@@ -1,0 +1,45 @@
+{
+  "py/object": "forte.data.data_pack.DataPack",
+  "py/state": {
+    "creation_records": {
+      "examples.content_rewriter.reader.TableReader": {
+        "py/set": [
+          0
+        ]
+      }
+    },
+    "field_records": {},
+    "links": [],
+    "groups": [],
+    "meta": {
+      "py/object": "forte.data.data_pack.Meta",
+      "py/state": {
+        "pack_name": "table_Loch_Fyne",
+        "_pack_id": 2,
+        "language": "eng",
+        "span_unit": "character"
+      }
+    },
+    "_text": "Loch_Fyne|name|Loch_Fyne coffee_shop|eatType|Loch_Fyne fast|food|Loch_Fyne cheap|priceRange|Loch_Fyne 5_out_of_5|customerRating|Loch_Fyne riverside|area|Loch_Fyne",
+    "annotations": [
+      {
+        "py/object": "ft.onto.base_ontology.UtteranceContext",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 0,
+            "end": 162
+          },
+          "_tid": 0
+        }
+      }
+    ],
+    "generics": [],
+    "replace_back_operations": [],
+    "processed_original_spans": [],
+    "orig_text_len": 162,
+    "serialization": {
+      "next_id": 1
+    }
+  }
+}
