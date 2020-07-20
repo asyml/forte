@@ -23,7 +23,7 @@ from ft.onto.base_ontology import UtteranceContext
 
 class TableReader(PackReader):
     def _collect(self, file_path: str) -> Iterator[str]:  # type: ignore
-        with open('table_samples.txt') as f:
+        with open(file_path) as f:
             for line in f:
                 if line.startswith('Context:'):
                     yield line.split(':', 1)[1].strip()
