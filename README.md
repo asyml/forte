@@ -8,10 +8,14 @@
 [![codecov](https://codecov.io/gh/asyml/forte/branch/master/graph/badge.svg)](https://codecov.io/gh/asyml/forte)
 [![Documentation Status](https://readthedocs.org/projects/asyml-forte/badge/?version=latest)](https://asyml-forte.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/asyml/forte/blob/master/LICENSE)
+[![Chat](http://img.shields.io/badge/gitter.im-asyml/forte-blue.svg)](https://gitter.im/asyml/community)
 
 
 **Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task 
-interaction, adaptable data-model interfaces and many more. It provides a platform to assemble
+interaction, adaptable data-model interfaces and many more. Forte was originally developed and is 
+actively contributed by [Petuum](https://petuum.com/) in collaboration with other institutes.
+
+It provides a platform to assemble
 state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide 
 spectrum of tasks ranging from Information Retrieval, Natural Language Understanding to Natural 
 Language Generation.  
@@ -45,7 +49,7 @@ Users can simply specify the type declaratively through JSON files. Our Code Gen
 will automatically generate python files ready to be used into your project. Check out our 
 [Ontology Generation documentation](./docs/ontology_generation.md) for more details.
 
-* **Transparent Data Flow**: Central to Forte's composable architecture is a universal data 
+* **Universal Data Flow**: Central to Forte's composable architecture is a universal data 
 format that supports seamless data flow between different steps. Forte advocates a transparent 
 data flow to facilitate flexible process intervention and simple pipeline control. Combined with 
 the general data format, Forte makes a perfect tool for data inspection, component swapping and 
@@ -162,3 +166,11 @@ If you are interested in making enhancement to Forte, please quickly go over our
 ### License
 
 [Apache License 2.0](./LICENSE)
+
+### Companies and Universities Supporting Forte
+<p float="left">
+   <img src="https://petuum.com/wp-content/themes/petuum/img/logo_white.gif" width="200" align="top">
+   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <img src="https://asyml.io/assets/institutions/cmu.png", width="200" align="top">
+</p>
+
