@@ -169,7 +169,7 @@ If you are interested in making enhancement to Forte, please quickly go over our
 
 ### Companies and Universities Supporting Forte
 <p float="left">
-   <img src="https://petuum.com/wp-content/themes/petuum/img/logo_white.gif" width="200" align="top">
+   <img src="./docs/_static/img/Petuum.png" width="200" align="top">
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
    <img src="https://asyml.io/assets/institutions/cmu.png", width="200" align="top">
 </p>
