@@ -18,20 +18,35 @@ from examples.content_rewriter.reader import TableReader
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 
-# Let's create a pipeline that accept a Json string.
+from forte.processors.base import PackProcessor
 from forte.processors.writers import PackNameJsonPackWriter
+from ft.onto.base_ontology import Utterance
+
+
+class Instructor(PackProcessor):
+    def __init__(self, instruction: str):
+        super().__init__()
+        self.instruction = instruction
+
+    def _process(self, input_pack: DataPack):
+        input_pack.set_text(input_pack.text + '\n' + self.instruction)
+        u = Utterance(input_pack,
+                      len(input_pack.text) - len(self.instruction),
+                      len(input_pack.text))
+        u.speaker = 'ai'
+
+
+instruct_text = 'This is an example to use the chatbot interface with the ' \
+                'content rewriter model. To run this example, follow the ' \
+                'instructions here "https://github.com/asyml/forte' \
+                '/tree/master/examples/content_rewriter" to obtain ' \
+                'the models and make sure Forte is in your Python Path.'
 
 pipeline = Pipeline[DataPack]()
 pipeline.set_reader(TableReader())
+pipeline.add(Instructor(instruct_text))
 pipeline.add(PackNameJsonPackWriter(),
-             {'indent': 2, 'output_dir': 'table_inputs', 'overwrite': True})
+             {'indent': 2, 'output_dir': 'table_inputs', 'overwrite': True,
+              'drop_record': True})
 
-
-def get_contexts():
-    with open('table_samples.txt') as f:
-        for line in f:
-            if line.startswith('Context:'):
-                yield line
-
-
-pipeline.run(get_contexts)
+pipeline.run('table_samples.txt')
