@@ -1,13 +1,7 @@
 {
   "py/object": "forte.data.data_pack.DataPack",
   "py/state": {
-    "creation_records": {
-      "examples.content_rewriter.reader.TableReader": {
-        "py/set": [
-          0
-        ]
-      }
-    },
+    "creation_records": {},
     "field_records": {},
     "links": [],
     "groups": [],
@@ -20,7 +14,7 @@
         "span_unit": "character"
       }
     },
-    "_text": "The_Vaults|name|The_Vaults pub|eatType|The_Vaults more_than_\u00a330|priceRange|The_Vaults 5_out_of_5|customerRating|The_Vaults Caf\u00e9_Adriatic|near|The_Vaults,",
+    "_text": "The_Vaults|name|The_Vaults pub|eatType|The_Vaults more_than_\u00a330|priceRange|The_Vaults 5_out_of_5|customerRating|The_Vaults Caf\u00e9_Adriatic|near|The_Vaults,\nThis is an example to use the chatbot interface with the content rewriter model. To run this example, follow the instructions here \"https://github.com/asyml/forte/tree/master/examples/content_rewriter\" to obtain the models and make sure Forte is in your Python Path.",
     "annotations": [
       {
         "py/object": "ft.onto.base_ontology.UtteranceContext",
@@ -32,14 +26,26 @@
           },
           "_tid": 0
         }
+      },
+      {
+        "py/object": "ft.onto.base_ontology.Utterance",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 154,
+            "end": 420
+          },
+          "_tid": 1,
+          "speaker": "ai"
+        }
       }
     ],
     "generics": [],
     "replace_back_operations": [],
     "processed_original_spans": [],
-    "orig_text_len": 153,
+    "orig_text_len": 420,
     "serialization": {
-      "next_id": 1
+      "next_id": 2
     }
   }
 }
