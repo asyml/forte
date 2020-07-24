@@ -55,6 +55,7 @@ script:
 
 after_success:
   - codecov
+  - ./scripts/travis_after_sucess.sh
 
 jobs:
   include:
