@@ -1,0 +1,6 @@
+nltk
+numpy
+scipy
+scikit-learn
+marisa-trie
+repoze.lru

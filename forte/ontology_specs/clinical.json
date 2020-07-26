@@ -1,0 +1,19 @@
+{
+  "name": "clinical",
+  "imports": [
+    "forte/ontology_specs/base_ontology.json"
+  ],
+  "definitions": [
+    {
+      "entry_name": "ft.onto.clinical.ClinicalEntityMention",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `ClinicalEntityMention`, normally used to represent an Entity Mention in a piece of clinical text.",
+      "attributes": [
+        {
+          "name": "cliner_type",
+          "type": "str"
+        }
+      ]
+    }
+  ]
+}

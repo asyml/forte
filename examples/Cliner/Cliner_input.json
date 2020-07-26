@@ -1,0 +1,45 @@
+{
+  "py/object": "forte.data.data_pack.DataPack",
+  "py/state": {
+    "creation_records": {
+      "examples.Cliner.reader.ClinerReader": {
+        "py/set": [
+          0
+        ]
+      }
+    },
+    "field_records": {},
+    "links": [],
+    "groups": [],
+    "meta": {
+      "py/object": "forte.data.data_pack.Meta",
+      "py/state": {
+        "pack_name": "Cliner_input",
+        "_pack_id": 0,
+        "language": "eng",
+        "span_unit": "character"
+      }
+    },
+    "_text": "DATE OF ADMISSION : MM/DD/YYYY\r\nDATE OF DISCHARGE : MM/DD/YYYY\r\nDISCHARGE DIAGNOSES :\r\n1 . Vasovagal syncope , status post fall .\r\n2 . Traumatic arthritis , right knee .\r\n3 . Hypertension .\r\n4 . History of recurrent urinary tract infection .\r\n5 . History of renal carcinoma , stable .\r\n6 .\r\nHistory of chronic obstructive pulmonary disease .\r\nCONSULTANTS : None .\r\nPROCEDURES : None .\r\nBRIEF HISTORY : The patient is an ( XX ) -year-old female with history of previous stroke ; hypertension ; COPD , stable ; renal carcinoma ; presenting after a fall and possible syncope .\r\nWhile walking , she accidentally fell to her knees and did hit her head on the ground , near her left eye .\r\nHer fall was not observed , but the patient does not profess any loss of consciousness , recalling the entire event .\r\nThe patient does have a history of previous falls , one of which resulted in a hip fracture .\r\nShe has had physical therapy and recovered completely from that .\r\nInitial examination showed bruising around the left eye , normal lung examination , normal heart examination , normal neurologic function with a baseline decreased mobility of her left arm .\r\nThe patient was admitted for evaluation of her fall and to rule out syncope and possible stroke with her positive histories .\r\nDIAGNOSTIC STUDIES : All x-rays including left foot , right knee , left shoulder and cervical spine showed no acute fractures .\r\nThe left shoulder did show old healed left humeral head and neck fracture with baseline anterior dislocation .\r\nCT of the brain showed no acute changes , left periorbital soft tissue swelling .\r\nCT of the maxillofacial area showed no facial bone fracture .\r\nEchocardiogram showed normal left ventricular function , ejection fraction estimated greater than 65 % .\r\nHOSPITAL COURSE :\r\n1 .\r\nFall : The patient was admitted and ruled out for syncopal episode .\r\nEchocardiogram was normal , and when the patient was able , her orthostatic blood pressures were within normal limits .\r\nAny serious conditions were quickly ruled out .\r\n2 .\r\nStatus post fall with trauma : The patient was unable to walk normally secondary to traumatic injury of her knee , causing significant pain and swelling .\r\nAlthough a scan showed no acute fractures , the patients frail status and previous use of cane prevented her regular abilities .\r\nShe was set up with a skilled nursing facility , which took several days to arrange , where she was to be given daily physical therapy and rehabilitation until appropriate for her previous residence .\r\nDISCHARGE DISPOSITION : Discharged to skilled nursing facility .\r\nACTIVITY : Per physical therapy and rehabilitation .\r\nDIET : General cardiac .\r\nMEDICATIONS : Darvocet-N 100 one tablet p.o .\r\nq.4-6 h. p.r.n .\r\nand Colace 100 mg p.o .\r\nb.i.d .\r\nMedications at Home : Zestril 40 mg p.o .\r\ndaily , Plavix 75 mg p.o .\r\ndaily , Norvasc 5 mg p.o .\r\ndaily , hydrochlorothiazide 50 mg p.o .\r\ndaily , potassium chloride 40 mEq p.o .\r\ndaily , Atrovent inhaler 2 puffs q.i.d. , albuterol inhaler 2 puffs q.4-6 h .\r\np.r.n. , clonidine 0.1 mg p.o .\r\nb.i.d. , Cardura 2 mg p.o .\r\ndaily , and Macrobid for prophylaxis , 100 mg p.o .\r\ndaily .\r\nFOLLOWUP :\r\n1 .\r\nFollow up per skilled nursing facility until discharged to regular residence .\r\n2 .\r\nFollow up with primary provider within 2-3 weeks on arriving to home .\r\n",
+    "annotations": [
+      {
+        "py/object": "ft.onto.base_ontology.Document",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 0,
+            "end": 3337
+          },
+          "_tid": 0
+        }
+      }
+    ],
+    "generics": [],
+    "replace_back_operations": [],
+    "processed_original_spans": [],
+    "orig_text_len": 3337,
+    "serialization": {
+      "next_id": 1
+    }
+  }
+}
