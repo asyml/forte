@@ -24,6 +24,7 @@ __all__ = [
     "Document",
     "Sentence",
     "Phrase",
+    "UtteranceContext",
     "Utterance",
     "PredicateArgument",
     "EntityMention",
@@ -126,13 +127,28 @@ class Phrase(Annotation):
 
 
 @dataclass
-class Utterance(Annotation):
+class UtteranceContext(Annotation):
     """
-    A span based annotation `Utterance`, normally used to represent an utterance in dialogue.
+    `UtteranceContext` represents the context part in dialogue.
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+
+
+@dataclass
+class Utterance(Annotation):
+    """
+    A span based annotation `Utterance`, normally used to represent an utterance in dialogue.
+    Attributes:
+        speaker (Optional[str])
+    """
+
+    speaker: Optional[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.speaker: Optional[str] = None
 
 
 @dataclass

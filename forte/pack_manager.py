@@ -77,13 +77,11 @@ class PackManager:
 
         pid = get_pack_id(pack)
 
-        # Record this remapping, and assign a new id to the pack.
-        if pid in self.remap:
-            raise ProcessFlowException(f"The pack id {pid} "
-                                       f"has already been remapped.")
+        # Assign a new id to the pack.
+        if pid not in self.remap:
+            self.remap[pid] = self.next_id
 
-        self.remap[pid] = self.next_id
-        pack.meta.pack_id = self.next_id  # type: ignore
+        pack.meta.pack_id = self.remap[pid]  # type: ignore
         self.next_id += 1
 
     def get_remapped_id(self, old_id: int) -> int:
