@@ -70,9 +70,9 @@ def display_enabled_modules():
     print
     for module,status in enabled.items():
         if status:
-            print '\t', module, '\t', ' ENABLED'
+            print('\t', module, '\t', ' ENABLED')
         else:
-            print '\t', module, '\t', 'DISABLED'
+            print('\t', module, '\t', 'DISABLED')
     print
 
 

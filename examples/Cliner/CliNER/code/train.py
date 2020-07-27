@@ -49,7 +49,7 @@ class CliNERTrain():
             print >>sys.stderr, '\n\tError: Must specify output format'
             print >>sys.stderr,   '\tAvailable formats: i2b2'
             sys.stderr.write('\n')
-            exit(1)
+            sys.exit()
 
 
         # Collect training data file paths
@@ -133,9 +133,3 @@ class CliNERTrain():
 
         model.log(logfile   , model_file=self.model_path)
         model.log(sys.stdout, model_file=self.model_path)
-
-
-
-if __name__ == '__main__':
-    Model = CliNERTrain()
-    Model.train()

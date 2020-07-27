@@ -58,9 +58,7 @@ def is_number(s):
         return False
     
 def is_boolean(s):
-    if s in ['True','False']:
-            return True
-    else: return False
+    return bool(s in ['True', 'False'])
         
 
 

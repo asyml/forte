@@ -31,10 +31,10 @@ class func_cache(lru_cache):
 
     def ShowInfo(self):
         # This function is only implicitly called if verbose flag is set.
-        print "Cache results for:", self.FuncName
-        print "   hits:", self.cache.hits
-        print "   misses:", self.cache.misses
-        print "   lookups:", self.cache.lookups, "\n"
+        print("Cache results for:", self.FuncName)
+        print("   hits:", self.cache.hits)
+        print("   misses:", self.cache.misses)
+        print("   lookups:{}", self.cache.lookups, "\n")
     
     def __call__(self, f):
         lru_cached = super(func_cache, self).__call__(f)

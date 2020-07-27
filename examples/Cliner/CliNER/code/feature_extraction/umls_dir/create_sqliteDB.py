@@ -72,13 +72,13 @@ def create_db():
     global MRREL_TABLE_FILE
     global LRABR_TABLE_FILE
 
-    print "\ncreating umls.db"
+    print("\ncreating umls.db")
     #connect to the .db file we are creating.
     db_path = os.path.join(umls_tables, 'umls.db')
     conn = sqlite3.connect( db_path )
     conn.text_factory = str
 
-    print "opening files"
+    print("opening files")
     #load data in files.
     try:
         mrsty_path = os.path.join(umls_tables, 'MRSTY.RRF')

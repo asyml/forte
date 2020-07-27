@@ -17,8 +17,8 @@ The re-writer processor
 
 from forte.processors.base import PackProcessor
 
-from examples.Cliner.CliNER.code.train import *
-from examples.Cliner.CliNER.code.model import *
+from examples.Cliner.CliNER.code.train import CliNERTrain
+import os
 
 class CliTrain(PackProcessor):
     def __init__(self):
@@ -27,9 +27,9 @@ class CliTrain(PackProcessor):
             'CliNER/data/train_data/*.txt')
         self.con = os.path.join(
             'CliNER/data/train_data/*.con')
-        self.output = os.path.join(  # type: ignore
+        self.output = os.path.join(
             'CliNER/data/test_predictions')
-        self.model_path = os.path.join(  # type: ignore
+        self.model_path = os.path.join(
             'CliNER/models/train_full.model')
         self.format = 'i2b2'
         # pylint: disable=attribute-defined-outside-init

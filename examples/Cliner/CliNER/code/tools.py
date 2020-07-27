@@ -156,10 +156,8 @@ def is_prose_sentence(sentence):
 
 def is_at_least_half_nonprose(sentence):
     count = len(filter(is_prose_word, sentence))
-    if count >= len(sentence)/2:
-        return True
-    else:
-        return False
+    return bool(count >= len(sentence)/2)
+
 
 
 
@@ -234,9 +232,7 @@ def print_files(f, file_names):
 
 
 # python2 needs to convert to unicdode, but thats default for python3
-if sys.version_info.major == 2:
-    tostr = unicode
-else:
+if sys.version_info.major == 3:
     tostr = str
 
 def write(f, s):

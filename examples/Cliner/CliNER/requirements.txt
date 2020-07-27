@@ -4,3 +4,4 @@ scipy
 scikit-learn
 marisa-trie
 repoze.lru
+tensorflow-gpu

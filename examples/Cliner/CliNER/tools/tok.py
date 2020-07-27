@@ -60,17 +60,8 @@ def tokenize(filename):
 
 
 def clean_text(text):
-    try:
-        return text.decode('ascii', 'ignore')
-    except UnicodeDecodeError, e:
-        chars = []
-        for c in text:
-            try:
-                c.decode('ascii', 'ignore')
-                chars.append(c)
-            except UnicodeDecodeError, f:
-                pass
-        return ''.join(chars)
+    return text.decode('ascii', 'ignore')
+
 
 
 def replace_phi(text, phi):

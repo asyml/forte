@@ -34,9 +34,8 @@ class CliNERPredict():
         if self.format:
             pass
         else:
-            parser.print_help(sys.stderr)
             sys.stderr.write('\n\tERROR: must provide "format" argument\n\n')
-            exit(1)
+            sys.exit()
 
     # Predict
     def predict(self):
@@ -45,7 +44,7 @@ class CliNERPredict():
             sys.stderr.write('\n\tError: Must specify output format\n')
             sys.stderr.write('\tAvailable formats: i2b2\n')
             sys.stderr.write('\n')
-            exit(1)
+            sys.exit()
 
         # Load model
         #if use_lstm==False:
@@ -72,7 +71,7 @@ class CliNERPredict():
         # Tell user if not predicting
         if not self.files:
             sys.stderr.write("\n\tNote: You did not supply any input files\n\n")
-            exit()
+            sys.exit()
 
         n = len(self.files)
 
@@ -104,10 +103,4 @@ class CliNERPredict():
             with open(out_path, 'w') as f:
                 f.write('%s\n' % output)
             sys.stdout.write('\n')
-
-
-
-if __name__ == '__main__':
-    Model = CliNERPredict()
-    Model.predict()
 

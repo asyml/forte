@@ -11,7 +11,7 @@ import re
 import pickle
 import os
 import sys
-
+import nltk
 
 # used as a default path for stashing pos tagger.
 dname = os.path.dirname
@@ -100,10 +100,10 @@ def is_at_least_half_nonprose(sentence):
     """
     count = len(  [ w  for  w  in  sentence  if is_prose_word(w) ]  )
 
-    if count >= len(sentence)/2:
-        return True
-    else:
-        return False
+    return bool(count >= len(sentence)/2)
+    #     return True
+    # else:
+    #     return False
 
 
 def is_prose_word(word):

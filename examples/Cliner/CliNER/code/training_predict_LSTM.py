@@ -49,7 +49,7 @@ def predict_labels(sess, model, transition_params_trained, parameters, dataset, 
     for dataset_type in ['train', 'valid', 'test', 'deploy']:
         if dataset_type not in dataset_filepaths.keys():
             continue
-        prediction_output = prediction_step(sess, dataset, dataset_type, model, transition_params_trained, stats_graph_folder, epoch_number, parameters, dataset_filepaths)
+        prediction_output = prediction_step(sess, dataset, dataset_type, model, epoch_number, stats_graph_folder, transition_params_trained)
         y_pred[dataset_type], y_true[dataset_type], output_filepaths[dataset_type] = prediction_output
     return y_pred, y_true, output_filepaths
 
@@ -87,7 +87,7 @@ def train_step(sess, dataset, sequence_number, model):
     #print loss
     return loss,accuracy, transition_params_trained
                     
-def prediction_step(sess, dataset, dataset_type, model,epoch_number,results_folder,transition_params_trained,use_crf=True):
+def prediction_step(sess, dataset, dataset_type, model, epoch_number, results_folder, transition_params_trained, use_crf=True):
     print('Evaluate model on the {0} set'.format(dataset_type))
     all_predictions = []
     all_y_true = []

@@ -33,41 +33,35 @@ def lists_to_dataset_structure(sentences_tokens,sentence_tags,total_token_counte
     feature_vector_size=0
     
     for idx,sentence in enumerate(sentences_tokens):
-        for  token_idx,token_i in enumerate(sentence):
-                new_token_sequence.append(token_i)
-                new_label_sequence.append(sentence_tags[idx][token_idx])
-                
-                token_count[token_i] += 1
-                label_count[sentence_tags[idx][token_idx]] += 1
-                                
-                if token_idx == len(sentence) - 1:
-                        labels.append(new_label_sequence)   
-                        tokens.append(new_token_sequence)
-                        new_token_sequence = []
-                        new_label_sequence = []
-                # FEATURES ARE NOT SUPPORTED:  Can be done if we are getting a third list that looks like [[f1,f2,f3],[f1,f2,f3]... for each token]
-                token_features=[]
-                features_as_array=np.array(token_features,dtype=np.dtype('int32'))
-                features_as_array=features_as_array.reshape((features_as_array.shape[0],1))
-                features_as_array=np.transpose(features_as_array)
-                
-                features=""
-                feature_file_name=""
-                feature_vector_size=0
-                
-                
-                total_token_counter+=1
-                for character in token_i:
-                    character_count[character] += 1  
+        for token_idx,token_i in enumerate(sentence):
+            new_token_sequence.append(token_i)
+            new_label_sequence.append(sentence_tags[idx][token_idx])
+
+            token_count[token_i] += 1
+            label_count[sentence_tags[idx][token_idx]] += 1
+
+            if token_idx == len(sentence) - 1:
+                    labels.append(new_label_sequence)
+                    tokens.append(new_token_sequence)
+                    new_token_sequence = []
+                    new_label_sequence = []
+            # FEATURES ARE NOT SUPPORTED:  Can be done if we are getting a third list that looks like [[f1,f2,f3],[f1,f2,f3]... for each token]
+            token_features=[]
+            features_as_array=np.array(token_features,dtype=np.dtype('int32'))
+            features_as_array=features_as_array.reshape((features_as_array.shape[0],1))
+            features_as_array=np.transpose(features_as_array)
+
+            features=""
+            feature_file_name=""
+            feature_vector_size=0
+
+            total_token_counter+=1
+            for character in token_i:
+                character_count[character] += 1
                     
     return labels, tokens, token_count, label_count, character_count,features,feature_file_name,feature_vector_size  
 
-
-
-
-
-
-class Dataset(object):
+class Dataset():
     """A class for handling data sets."""
 
     def __init__(self, name='', verbose=False, debug=False):

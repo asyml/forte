@@ -307,7 +307,7 @@ def normalize_phrase(phrase, PyPwl=None):
 
         phrase = spellCheck(phrase, PyPwl=PyPwl)
 
-        print time.time() - init_time
+        print(time.time() - init_time)
 
     return phrase
 

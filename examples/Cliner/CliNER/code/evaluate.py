@@ -40,13 +40,13 @@ def main():
         sys.stderr.write('\n\tERROR: must provide --pred argument\n\n')
         parser.print_help(sys.stderr)
         sys.stderr.write('\n')
-        exit(1)
+        sys.exit()
 
     if not args.gold:
         sys.stderr.write('\n\tERROR: must provide --gold argument\n\n')
         parser.print_help(sys.stderr)
         sys.stderr.write('\n')
-        exit(1)
+        sys.exit()
 
     if args.format:
         format = args.format
@@ -54,7 +54,7 @@ def main():
         sys.stderr.write('\n\tERROR: must provide --format argument\n\n')
         parser.print_help(sys.stderr)
         sys.stderr.write('\n')
-        exit(1)
+        sys.exit()
 
 
     # Must specify output format
@@ -64,16 +64,16 @@ def main():
         sys.stderr.write('\n')
         parser.print_help(sys.stderr)
         sys.stderr.write('\n')
-        exit(1)
+        sys.exit()
 
 
-    ref_files  = os.listdir(args.gold)
+    ref_files = os.listdir(args.gold)
     ref_files = map(lambda f: os.path.join(args.gold, f), ref_files)
 
     pred_files = os.listdir(args.pred)
     pred_files = map(lambda f: os.path.join(args.pred, f), pred_files)
 
-    ref_files_map  = tools.map_files( ref_files)
+    ref_files_map  = tools.map_files(ref_files)
     pred_files_map = tools.map_files(pred_files)
 
     files = []

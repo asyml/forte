@@ -66,34 +66,34 @@ def main():
     if not txt:
         print >>sys.stderr, '\n\tError: Must supply text file'
         print >>sys.stderr
-        exit(1)
+        sys.exit()
     elif not os.path.exists(txt):
         print >>sys.stderr, '\n\tError: Given text file does not exist'
         print >>sys.stderr
-        exit(1)
+        sys.exit()
 
     # Ensure annotations are specified
     extensions = Note.supportedFormatExtensions()
     if not annotations:
         print >>sys.stderr, '\n\tError: Must supply annotations'
         print >>sys.stderr
-        exit(2)
+        sys.exit()
     elif not os.path.exists(txt):
         print >>sys.stderr, '\n\tError: Given annotation file does not exist'
         print >>sys.stderr
-        exit(2)
+        sys.exit()
     elif os.path.splitext(annotations)[1][1:] not in extensions:
         print >>sys.stderr, '\n\tError: annotation must be a supported format'
         print >>sys.stderr, '\t\t(.%s)' %str(' or .'.join(extensions) )
         print >>sys.stderr
-        exit(2)
+        sys.exit()
 
     # Ensure output format is specified
     if (not format) or (format not in Note.supportedFormats()):
         print >>sys.stderr, '\n\tError: Must specify supported output format'
         print >>sys.stderr, '\t\t(%s)' %str(' or '.join(Note.supportedFormats()))
         print >>sys.stderr
-        exit(3)
+        sys.exit()
 
 
     # Automatically find the input file format

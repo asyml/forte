@@ -98,7 +98,7 @@ def bidirectional_LSTM(input, hidden_state_dimension, initializer, sequence_leng
 
 
 
-class EntityLSTM(object):
+class EntityLSTM():
     """
     An LSTM architecture for named entity recognition.
     Uses a character embedding layer followed by an LSTM to generate vector representation from characters for each token.

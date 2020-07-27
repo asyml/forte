@@ -154,8 +154,3 @@ def genia(geniatagger, data):
 
     return retlist
 
-
-
-
-if __name__ == '__main__':
-    main()

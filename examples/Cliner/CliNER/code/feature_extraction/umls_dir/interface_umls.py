@@ -38,7 +38,7 @@ def SQLConnect():
     # if database does not exit. Make one.
     db_path = os.path.join(umls_tables, "umls.db")
     if not os.path.isfile(db_path):
-        print "\n\tdb doesn't exist (creating one now)\n"
+        print("\n\tdb doesn't exist (creating one now)")
         create_sqliteDB.create_db()
 
     db = sqlite3.connect( db_path )
@@ -68,11 +68,8 @@ trie = create_trie.create_trie()
 
 def string_lookup( string ):
     """ Get sty for a given string """
-    try:
-        c.execute( "SELECT sty FROM MRCON a, MRSTY b WHERE a.cui = b.cui AND str = ?; " , (string,) )
-        return c.fetchall()
-    except sqlite3.ProgrammingError, e:
-        return []
+    c.execute( "SELECT sty FROM MRCON a, MRSTY b WHERE a.cui = b.cui AND str = ?; " , (string,) )
+    return c.fetchall()
 
 
 def cui_lookup( string ):
