@@ -8,7 +8,7 @@ python:
 env:
   matrix:
   - TORCH_VER="1.5.0" TENSORFLOW_VER="1.15.0"
-  - secure: ZdQxr4RFzdGJBEpWVcPx5F5giI95pPK0pEAciFprjd7XSbv8BbnmOXM/qvNU0yXuGCoCAJqrrw/dGurq7a8TxASDl6ddZZ1UIs1qz0G8EXxWIHYemwlAqdeKkAUtoWSZn4+ApNxddwMflqvpe0olzuwpo1PVh2hKYG+hLyXa34/LYxLuQcIMjvnmiKThAuh/aowAjXQCaCsA+FlJJdOo146IPAGXEnS19L7eVnEMxwll+B9+j5+45y6BXcis5bbPmhZ/yrh5LAZ0RkyeUs9QzHNQlvhTLut3ek4zEnQdimkG4Shg77wVt1OBnMTk0TmzpHatxiBSJW0cvJp11Sz3vY9b31JeqjnQ1cBRu8CQoB7oNKxn9XZ6uIYFFk9PmoKTjisUneMt1+TE0YoZ1NeqoDKmfB74/eSYG4e/eu6RCU/2EECShemC88xEeZ2MvGyiJCTjpJusJUcg50ppcCY+pygQnpqRX4f2jjXpbm1HuQHpp/lndZT7cO1BPL9EUD6kumuWwLSp/N0wNsZETBtJf7B4kXtVR0YQf8ytFEVGprGe+X10cVK+9jF4JaxSuO3bVSDJJHCkjCM1zFMvQ0RA73BvRxpSY3+VB5fh5Y35pH7BvJ4mazoUH+AUURPmR3Rz5cFkxBDfKLpywfmUaBuEgxcWBq6Qv9WT3DO6hBG2rbo=
+  - secure: K5vR0V3lWvDhWWUPlnSi+ZeZs4aqHe8//T81PAOEWfGXJnmGGpn7jipHhIBA+sS2lRJDirKzr6VMaa0O8h9ccxgDyLb/UiGoD/aXL66pAD8NrhbYjWkuqpTclcQ0c8sLvSfYATt/zeQR5BWSE67ftzYtPCx6VpvecCjAjaxchaVowQp0aLe5Cse5V+PVwsfwA8DpisllIiECPNl45Im0CBQEgoWV7/RJVGejn0Vt6NI2ixViF8sTwnLDekV6p46L5yIZrA95ZyoO2MewPUxvTtOnFCoCO08oFsiNkVT9s+Rkva6QCT8+kLQud3L2IU4ugO0eZRohIeGPEhF3BkdLTnpItgbHIUQpeWTndPN/tnFwrp7YLx7VAeyLK5rQ5TpfimQc00OSsx040QRGz+AHknc8Um3mcRBykDjvitWBSySFeDfBK5km73L6LsN0SQ2sZbVpiFzbcUga5ZpUfxR/zQnz25BijZr81KNhpIBipYBkExA+pftjqfLhNxMKaC1jbfTveyVmpe7mF3VPLOJU96/z6B7ZKmhmgYMHHqOKkyGLyzo4j84AV5OSzlBahPoy+9F+AMMA8uDvZBBnMz0Lu1B6kWRh5KWsMJnAeUj1MviA0uhIAzgZi4aNtmkfXufx2n99ubmwNhcp+zvtsfUzQND8Qs0881Cltx7rDuI+ayw=
 install:
 - pip install --upgrade pip
 - pip install --progress-bar off torch==$TORCH_VER
@@ -41,7 +41,7 @@ script:
 - coverage run -m pytest
 after_success:
 - codecov
-- "./scripts/travis_after_sucess.sh"
+- "./scripts/travis_after_success.sh"
 jobs:
   include:
   - stage: docs
