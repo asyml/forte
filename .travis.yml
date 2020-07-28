@@ -1,85 +1,64 @@
 sudo: required
 language: python
-dist: xenial  # Required for Python 3.7
+dist: xenial
 cache: pip
-
 python:
-  - "3.6"
-  - "3.7"
-
+- '3.6'
+- '3.7'
 env:
+  matrix:
   - TORCH_VER="1.5.0" TENSORFLOW_VER="1.15.0"
-
+  - secure: K5vR0V3lWvDhWWUPlnSi+ZeZs4aqHe8//T81PAOEWfGXJnmGGpn7jipHhIBA+sS2lRJDirKzr6VMaa0O8h9ccxgDyLb/UiGoD/aXL66pAD8NrhbYjWkuqpTclcQ0c8sLvSfYATt/zeQR5BWSE67ftzYtPCx6VpvecCjAjaxchaVowQp0aLe5Cse5V+PVwsfwA8DpisllIiECPNl45Im0CBQEgoWV7/RJVGejn0Vt6NI2ixViF8sTwnLDekV6p46L5yIZrA95ZyoO2MewPUxvTtOnFCoCO08oFsiNkVT9s+Rkva6QCT8+kLQud3L2IU4ugO0eZRohIeGPEhF3BkdLTnpItgbHIUQpeWTndPN/tnFwrp7YLx7VAeyLK5rQ5TpfimQc00OSsx040QRGz+AHknc8Um3mcRBykDjvitWBSySFeDfBK5km73L6LsN0SQ2sZbVpiFzbcUga5ZpUfxR/zQnz25BijZr81KNhpIBipYBkExA+pftjqfLhNxMKaC1jbfTveyVmpe7mF3VPLOJU96/z6B7ZKmhmgYMHHqOKkyGLyzo4j84AV5OSzlBahPoy+9F+AMMA8uDvZBBnMz0Lu1B6kWRh5KWsMJnAeUj1MviA0uhIAzgZi4aNtmkfXufx2n99ubmwNhcp+zvtsfUzQND8Qs0881Cltx7rDuI+ayw=
 install:
-  - pip install --upgrade pip
-  - pip install --progress-bar off torch==$TORCH_VER
-  - pip install --progress-bar off tensorflow==$TENSORFLOW_VER
-  - pip install --progress-bar off .[nltk,ner,srl,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp]
-  # Install texar-pytorch.
-  - git clone https://github.com/asyml/texar-pytorch.git
-  - cd texar-pytorch
-  - pip install --progress-bar off .
-  - cd ..
-  - rm -rf texar-pytorch
-  # Install Elasticsearch indexer
-  - wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.4.2-linux-x86_64.tar.gz
-  - tar -zxf elasticsearch-7.4.2-linux-x86_64.tar.gz
-  - rm -rf elasticsearch-7.4.2-linux-x86_64.tar.gz
-  # start Elasticserver before pytest
-  - elasticsearch-7.4.2/bin/elasticsearch -d
-  # Install faiss-cpu for coverage
-  - pip install faiss-cpu
-  # Install test tools.
-  - pip install pylint==2.5.2 flake8==3.8.2
-  - pip install mypy==0.780
-  - pip install pytest==5.1.3
-  # Install code coverage tools.
-  - pip install coverage codecov
-
+- pip install --upgrade pip
+- pip install --progress-bar off torch==$TORCH_VER
+- pip install --progress-bar off tensorflow==$TENSORFLOW_VER
+- pip install --progress-bar off .[nltk,ner,srl,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp]
+- git clone https://github.com/asyml/texar-pytorch.git
+- cd texar-pytorch
+- pip install --progress-bar off .
+- cd ..
+- rm -rf texar-pytorch
+- wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.4.2-linux-x86_64.tar.gz
+- tar -zxf elasticsearch-7.4.2-linux-x86_64.tar.gz
+- rm -rf elasticsearch-7.4.2-linux-x86_64.tar.gz
+- elasticsearch-7.4.2/bin/elasticsearch -d
+- pip install faiss-cpu
+- pip install pylint==2.5.2 flake8==3.8.2
+- pip install mypy==0.780
+- pip install pytest==5.1.3
+- pip install coverage codecov
 script:
-  # generating ontology from ontology_specs
-  - ./scripts/build_ontology_specs.sh
-  # linting
-  - pylint forte/ examples/ ft/ scripts/ tests/
-  - flake8 forte/ examples/ ft/ scripts/ tests/
-  # type checking
-  - mypy .
-  # after update, there are issues to get the right model programmatically, so let's download explicitly here
-  - spacy download en_core_web_sm
-  - spacy download xx_ent_wiki_sm
-  # needed for test cases
-  - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker words
-  - export PYTHONPATH=`pwd`
-  # unit tests & test coverage
-  - coverage run -m pytest
-
+- "./scripts/build_ontology_specs.sh"
+- pylint forte/ examples/ ft/ scripts/ tests/
+- flake8 forte/ examples/ ft/ scripts/ tests/
+- mypy .
+- spacy download en_core_web_sm
+- spacy download xx_ent_wiki_sm
+- python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker
+  words
+- export PYTHONPATH=`pwd`
+- coverage run -m pytest
 after_success:
-  - codecov
-  - ./scripts/travis_after_sucess.sh
-
+- codecov
+- "./scripts/travis_after_success.sh"
 jobs:
   include:
-    - stage: docs
-      python: "3.7"
-      install:
-        - pip install --upgrade pip
-        - pip install --progress-bar off -r requirements.txt
-        # install library required for spellcheck
-        - sudo apt-get install libenchant1c2a myspell-en-us
-        - pip install --progress-bar off -r docs/requirements.txt
-        # Install texar-pytorch.
-        - git clone https://github.com/asyml/texar-pytorch.git
-        - cd texar-pytorch
-        - pip install --progress-bar off .
-        - cd ..
-        - rm -rf texar-pytorch
-      script:
-        - cd docs
-        # build documents
-        - sphinx-build -W -b html -d _build/doctrees . _build/html
-        # check for typos
-        - sphinx-build -b spelling -d _build/doctrees . _build/spelling
-
+  - stage: docs
+    python: '3.7'
+    install:
+    - pip install --upgrade pip
+    - pip install --progress-bar off -r requirements.txt
+    - sudo apt-get install libenchant1c2a myspell-en-us
+    - pip install --progress-bar off -r docs/requirements.txt
+    - git clone https://github.com/asyml/texar-pytorch.git
+    - cd texar-pytorch
+    - pip install --progress-bar off .
+    - cd ..
+    - rm -rf texar-pytorch
+    script:
+    - cd docs
+    - sphinx-build -W -b html -d _build/doctrees . _build/html
+    - sphinx-build -b spelling -d _build/doctrees . _build/spelling
 notifications:
   email: false
-
