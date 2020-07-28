@@ -18,8 +18,8 @@ if [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${TRAVIS_PULL_REQUEST} == "false" ]]
   	echo "Host github.com" > ~/.ssh/config
   	echo "  IdentityFile $(pwd)/travis_key" >> ~/.ssh/config
 
-  	git clone --bare ${mirror_from} forte_bare
-  	if cd forte_bare; then
+  	git clone --bare ${mirror_from} bare
+  	if cd bare; then
     	git push --mirror ${mirror_to}
   	else
    		echo "Cannot cd into forte_bare, clone may be unsuccessful."
