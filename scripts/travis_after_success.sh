@@ -10,8 +10,9 @@ if [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${TRAVIS_PULL_REQUEST} == "false" ]]
 
   # Decrypt the private key.
   openssl aes-256-cbc -k "$travis_key_password" -md sha256 -iter 100000 -d -a -in travis_key.enc -out ./travis_key
-  echo "Host github.com" > ~/.ssh/config
   chmod 400 ./travis_key
+  echo "Host github.com" > ~/.ssh/config
+  echo "  IdentityFile $(pwd)/travis_key" >> ~/.ssh/config
 
   git clone --bare ${mirror_from} forte_bare
   if cd forte_bare; then
