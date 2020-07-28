@@ -12,7 +12,7 @@ if [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${TRAVIS_PULL_REQUEST} == "false" ]]
   # Decrypt the private key.
   openssl aes-256-cbc -k "$travis_key_password" -md sha256 -d -a -in travis_key.enc -out ./travis_key
 
-  if [ -s ./travis_key ]
+  if [[ -s ./travis_key && $? == 0 ]]
   then
 	chmod 400 ./travis_key
   	echo "Host github.com" > ~/.ssh/config
@@ -25,7 +25,7 @@ if [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${TRAVIS_PULL_REQUEST} == "false" ]]
    		echo "Cannot cd into forte_bare, clone may be unsuccessful."
   	fi
   else
-	echo "Decrypted key is empty, will not try to push."
+	echo "Decrypted key is empty or invalid, will not try to push."
   fi
    
 else
