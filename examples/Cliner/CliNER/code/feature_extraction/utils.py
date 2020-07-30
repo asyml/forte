@@ -7,11 +7,12 @@
 ######################################################################
 
 
-import re
-import pickle
 import os
+import pickle
+import re
 import sys
 
+import nltk
 
 # used as a default path for stashing pos tagger.
 dname = os.path.dirname
@@ -29,13 +30,16 @@ def load_pickled_obj(path_to_pickled_obj):
 
 def pickle_dump(obj, path_to_obj):
     f = open(path_to_obj, "wb")
-    # NOTE: using highest priority makes loading TRAINED models load really slowly.
-    # use this function for anything BUT THAT!. I mainly made this for loading pos tagger...
+    # NOTE: using highest priority makes loading TRAINED models load really
+    # slowly.
+    # use this function for anything BUT THAT!. I mainly made this for
+    # loading pos tagger...
     pickle.dump(obj, f, -1)
     f.close()
 
 
 def dump_pos_tagger(path_to_obj):
+    # pylint: disable=protected-access
     tagger = nltk.data.load(nltk.tag._POS_TAGGER)
     pickle_dump(tagger, path_to_obj)
 
@@ -79,31 +83,32 @@ def is_prose_sentence(sentence):
         return False
 
 
-
 def is_at_least_half_nonprose(sentence):
     """
     is_at_least_half_nonprose(sentence)
 
-    Purpose: Checks if at least half of the sentence is considered to be 'nonprose'
+    Purpose: Checks if at least half of the sentence is considered to be
+    'nonprose'
 
     @param sentence. A list of words
     @return          A boolean
 
     >>> is_at_least_half_nonprose(['1','2','and','some','words'])
     True
-    >>> is_at_least_half_nonprose(['1', '2', '3', '4', 'and', 'some', 'words', '5'])
+    >>> is_at_least_half_nonprose(['1', '2', '3', '4', 'and', 'some',
+    'words', '5'])
     False
     >>> is_at_least_half_nonprose(['word'])
     True
     >>> is_at_least_half_nonprose([' '])
     True
     """
-    count = len(  [ w  for  w  in  sentence  if is_prose_word(w) ]  )
+    count = len([w for w in sentence if is_prose_word(w)])
 
-    if count >= len(sentence)/2:
-        return True
-    else:
-        return False
+    return bool(count >= len(sentence) / 2)
+    #     return True
+    # else:
+    #     return False
 
 
 def is_prose_word(word):
@@ -130,6 +135,7 @@ def is_prose_word(word):
             return False
 
     # Digit
+    # pylint: disable=anomalous-backslash-in-string
     if re.match('\d', word):
         return False
 
@@ -140,5 +146,4 @@ def is_prose_word(word):
     # Else
     return True
 
-
-#EOF
+# EOF

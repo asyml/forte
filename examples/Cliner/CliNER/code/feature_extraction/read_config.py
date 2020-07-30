@@ -8,11 +8,12 @@
 ######################################################################
 
 
-
 import os
 import sys
 
-CLINER_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), *["..", ".."])
+CLINER_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+    *["..", ".."])
+
 
 def enabled_modules():
     """
@@ -26,7 +27,7 @@ def enabled_modules():
     True
     """
     # Open config file
-    filename = os.path.join(CLINER_DIR, 'config.txt' )
+    filename = os.path.join(CLINER_DIR, 'config.txt')
     f = open(filename, 'r')
 
     specs = {}
@@ -40,7 +41,8 @@ def enabled_modules():
                 if words[1] == 'None':
                     specs[words[0]] = None
                 else:
-                    specs[words[0]]=os.path.expandvars(words[1]).strip('\"').strip('\'')
+                    specs[words[0]] = os.path.expandvars(words[1]).strip(
+                        '\"').strip('\'')
 
     # check if paths are actually valid
     if specs["GENIA"] is not None:
@@ -49,7 +51,8 @@ def enabled_modules():
 
     if specs["UMLS"] is not None:
         if os.path.isdir(specs["UMLS"]) is False:
-            sys.exit("Invalid path to directory containing UMLS database tables.")
+            sys.exit(
+                "Invalid path to directory containing UMLS database tables.")
 
     return specs
 

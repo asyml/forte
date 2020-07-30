@@ -23,12 +23,12 @@ from ft.onto.base_ontology import Document
 
 
 class ClinerReader(PackReader):
-    def _collect(self, txt_path: str, con_path: str  # type: ignore
+    def _collect(self, txt_path: str
                  ) -> Iterator[Tuple[str, str]]:
-        yield txt_path, con_path
+        yield txt_path
 
     def _parse_pack(self, collection) -> Iterator[DataPack]:
-        txt_path, con_path = collection
+        txt_path = collection
 
         pack = self.new_pack(pack_name='Cliner_input')
         doc = codecs.open(txt_path, "r", encoding="utf8")
@@ -38,7 +38,7 @@ class ClinerReader(PackReader):
         text = ""
         text_lines = []
 
-        for i, line in enumerate(doc):
+        for line in doc:
             text += line
             offsets.append(offset)  # the begin of the text
             offset += len(line) + 1

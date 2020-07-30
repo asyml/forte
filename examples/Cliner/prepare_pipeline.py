@@ -24,5 +24,6 @@ from forte.processors.writers import PackNameJsonPackWriter
 pipeline = Pipeline[DataPack]()
 pipeline.set_reader(ClinerReader())
 pipeline.add(PackNameJsonPackWriter(),
-             {'indent': 2, 'output_dir': '.', 'overwrite': True})
-pipeline.run('CliNER/data/examples/ex_doc.txt','CliNER/data/examples/ex_doc.con')
+    {'indent': 2, 'output_dir': '.', 'overwrite': True})
+pipeline.run('CliNER/data/examples/ex_doc.txt',
+    'CliNER/data/examples/ex_doc.con')

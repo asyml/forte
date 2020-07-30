@@ -1,8 +1,8 @@
+# pylint: disable=invalid-syntax
 cdef extern from "<marisa/key.h>" namespace "marisa" nogil:
-
     cdef cppclass Key:
         Key()
-        Key(Key &query)
+        Key(Key & query)
 
         #Key &operator=(Key &query)
 
@@ -19,4 +19,4 @@ cdef extern from "<marisa/key.h>" namespace "marisa" nogil:
         float weight()
 
         void clear()
-        void swap(Key &rhs)
+        void swap(Key & rhs)

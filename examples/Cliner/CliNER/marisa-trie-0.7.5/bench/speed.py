@@ -3,8 +3,10 @@
 
 from __future__ import absolute_import, unicode_literals, division
 
+import cProfile
 import gzip
 import os
+import pstats
 import random
 import string
 import struct
@@ -41,6 +43,7 @@ def prefixes1k(words, prefix_len):
     _words = [w[:prefix_len] for w in words[::every_nth]]
     return _words[:1000]
 
+
 WORDS100k = words100k()
 MIXED_WORDS100k = truncated_words(WORDS100k)
 NON_WORDS100k = random_words(100000)
@@ -56,10 +59,10 @@ def format_result(key, value, text_width):
 
 
 def bench(name, timer, descr='M ops/sec', op_count=0.1, repeats=3, runs=5,
-          text_width=33):
+        text_width=33):
     try:
         times = []
-        for x in range(runs):
+        for _ in range(runs):
             times.append(timer.timeit(repeats))
 
         def op_time(time):
@@ -192,17 +195,14 @@ def check_trie(trie, words):
 
 
 def profiling():
-    import pstats
-    import cProfile
     print('\n====== Profiling =======\n')
-    trie = create_trie()
-    WORDS = WORDS100k
 
-#    def check_prefixes(trie, words):
-#        for word in words:
-#            trie.keys(word)
-#    cProfile.runctx("check_prefixes(trie, NON_WORDS_1k)", globals(), locals(), "Profile.prof")
-#
+    #    def check_prefixes(trie, words):
+    #        for word in words:
+    #            trie.keys(word)
+    #    cProfile.runctx("check_prefixes(trie, NON_WORDS_1k)", globals(),
+    #    locals(), "Profile.prof")
+    #
     cProfile.runctx(
         "check_trie(trie, WORDS)", globals(), locals(), "Profile.prof")
 

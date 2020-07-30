@@ -8,39 +8,42 @@
 
 
 __author__ = 'Willie Boag'
-__date__   = 'Apr 27, 2014'
+__date__ = 'Apr 27, 2014'
 
 import re
-import os
-import sys
+
+from nltk import LancasterStemmer, PorterStemmer
 
 from .wordshape import getWordShapes
-from nltk import LancasterStemmer, PorterStemmer
 
 lancaster_st = LancasterStemmer()
 porter_st = PorterStemmer()
 
+
 def feature_word(word):
     return {('word', word.lower()): 1}
 
+
 def feature_stem_lancaster(word):
     return {('stem_lancaster', lancaster_st.stem(word.lower())): 1}
+
 
 def feature_generic(word):
     generic = re.sub('[0-9]', '0', word)
     return {('Generic#', generic): 1}
 
+
 def feature_last_two_letters(word):
     return {('last_two_letters', word[-2:]): 1}
+
 
 def feature_length(word):
     return {('length', ''): len(word)}
 
+
 def feature_stem_porter(word):
-    try:
-        return {('stem_porter', porter_st.stem(word)): 1}
-    except Exception as e:
-        return {}
+    return {('stem_porter', porter_st.stem(word)): 1}
+
 
 def feature_mitre(word):
     features = {}
@@ -49,12 +52,14 @@ def feature_mitre(word):
             features[('mitre', f)] = 1
     return features
 
+
 def feature_word_shape(word):
     features = {}
     wordShapes = getWordShapes(word)
     for shape in wordShapes:
         features[('word_shape', shape)] = 1
     return features
+
 
 def feature_metric_unit(word):
     unit = ''
@@ -66,9 +71,11 @@ def feature_metric_unit(word):
         unit = 'volume'
     return {('metric_unit', unit): 1}
 
+
 def feature_prefix(word):
     prefix = word[:4].lower()
     return {("prefix", prefix): 1}
+
 
 def QANN_features(word):
     """
@@ -86,57 +93,74 @@ def QANN_features(word):
     features = {}
 
     # Feature: test result
-    if is_test_result(word):    features[('test_result','')] = 1
+    if is_test_result(word):
+        features[('test_result', '')] = 1
 
     # Feature: measurements
-    if is_measurement(word):    features[('measurement','')] = 1
+    if is_measurement(word):
+        features[('measurement', '')] = 1
 
     # Feature: directive
-    if is_directive(word):      features[('directive',  '')] = 1
+    if is_directive(word):
+        features[('directive', '')] = 1
 
     # Feature: date
-    if is_date(word):           features[('date',       '')] = 1
+    if is_date(word):
+        features[('date', '')] = 1
 
     # Feature: volume
-    if is_volume(word):         features[('volume',     '')] = 1
+    if is_volume(word):
+        features[('volume', '')] = 1
 
     # Feature: weight
-    if is_weight(word):         features[('weight',     '')] = 1
+    if is_weight(word):
+        features[('weight', '')] = 1
 
     # Feature: size
-    if is_size(word):           features[('size',       '')] = 1
+    if is_size(word):
+        features[('size', '')] = 1
 
     # Feature: prognosis location
-    if is_prognosis_location:   features[('prog_location', '')] = 1
+    # pylint: disable=using-constant-test
+    if is_prognosis_location:
+        features[('prog_location', '')] = 1
 
     # Feature: problem form
-    if has_problem_form(word):  features[('problem_form',     '')] = 1
+    if has_problem_form(word):
+        features[('problem_form', '')] = 1
 
     # Feature: concept class
-    if is_weight(word):         features[('weight',     '')] = 1
+    if is_weight(word):
+        features[('weight', '')] = 1
 
     return features
+
 
 def feature_prev_word_stem(sentence, ind):
     if ind != 0:
         prev_ind = ind - 1
         prev_chunk = sentence[prev_ind].split()
-        prev_word = porter_st.stem( prev_chunk[-1] )
+        prev_word = porter_st.stem(prev_chunk[-1])
         return {('prev_word_stem', prev_word): 1}
     else:
         return {('prev_word_stem', '<START>'): 1}
 
+
 def feature_next_word_stem(sentence, ind):
-    if ind != len(sentence)-1:
+    if ind != len(sentence) - 1:
         next_ind = ind + 1
         next_chunk = sentence[next_ind].split()
-        next_word = porter_st.stem( next_chunk[0] )
+        next_word = porter_st.stem(next_chunk[0])
         return {('next_word_stem', next_word): 1}
     else:
         return {('next_word_stem', '<END>'): 1}
 
 
-enabled_IOB_prose_word_features = frozenset( [feature_generic, feature_last_two_letters, feature_word, feature_length, feature_stem_porter, feature_mitre, feature_stem_lancaster, feature_word_shape, feature_metric_unit] )
+enabled_IOB_prose_word_features = frozenset(
+    [feature_generic, feature_last_two_letters, feature_word, feature_length,
+     feature_stem_porter, feature_mitre,
+     feature_stem_lancaster, feature_word_shape, feature_metric_unit])
+
 
 def IOB_prose_features(word):
     """
@@ -162,7 +186,9 @@ def IOB_prose_features(word):
     return features
 
 
-enabled_IOB_nonprose_word_features = frozenset( [feature_word, feature_word_shape, feature_mitre, QANN_features] )
+enabled_IOB_nonprose_word_features = frozenset(
+    [feature_word, feature_word_shape, feature_mitre, QANN_features])
+
 
 def IOB_nonprose_features(word):
     """
@@ -188,11 +214,15 @@ def IOB_nonprose_features(word):
     return features
 
 
-enabled_word_concept_features = frozenset( [feature_word, feature_prefix, feature_stem_porter, feature_stem_lancaster, feature_word_shape, feature_metric_unit, feature_mitre] )
+enabled_word_concept_features = frozenset(
+    [feature_word, feature_prefix, feature_stem_porter, feature_stem_lancaster,
+     feature_word_shape, feature_metric_unit,
+     feature_mitre])
 
-# Note: most of this function is currently commented out so the doctests should be fixed if this is ever changed
+
+# Note: most of this function is currently commented out so the doctests
+# should be fixed if this is ever changed
 def concept_features_for_word(word):
-
     """
     concept_features_for_word()
 
@@ -215,20 +245,22 @@ def concept_features_for_word(word):
     return features
 
 
-enabled_chunk_concept_features = frozenset( [ feature_prev_word_stem, feature_next_word_stem] )
+enabled_chunk_concept_features = frozenset(
+    [feature_prev_word_stem, feature_next_word_stem])
+
 
 def concept_features_for_chunk(sentence, ind):
-
     """
     concept_features_for_chunk()
 
     @param  sentence    A sentence that has been chunked into vectors
-            ind         The index of the concept in question within the sentence vector
+            ind         The index of the concept in question within the
+            sentence vector
     @return             A dictionary of features
 
     """
 
-    features = {'dummy':1}
+    features = {'dummy': 1}
 
     # Word-level features for each word of the chunk
     for w in sentence[ind].split():
@@ -241,7 +273,6 @@ def concept_features_for_chunk(sentence, ind):
         features.update(current_feat)
 
     return features
-
 
 
 mitre_features = {
@@ -275,7 +306,8 @@ def is_test_result(context):
     Purpose: Checks if the context is a test result.
 
     @param context. A string.
-    @return         it returns the matching object of '[blank] was positive/negative' or None if it cannot find it.
+    @return         it returns the matching object of '[blank] was
+    positive/negative' or None if it cannot find it.
                     otherwise, it will return True.
 
     >>> is_test_result('test was 10%')
@@ -289,10 +321,12 @@ def is_test_result(context):
     >>> is_test_result(' ')
     None
     """
-    regex = r"^[A-Za-z]+( )*(-|--|:|was|of|\*|>|<|more than|less than)( )*[0-9]+(%)*"
+    regex = r"^[A-Za-z]+( )*(-|--|:|was|of|\*|>|<|more than|less than)( )*[" \
+            r"0-9]+(%)*"
     if not re.search(regex, context):
         return re.search(r"^[A-Za-z]+ was (positive|negative)", context)
     return True
+
 
 def is_measurement(word):
     """
@@ -325,6 +359,7 @@ def is_measurement(word):
     regex = r"^[0-9]*( )?(unit(s)|cc|L|mL|dL)$"
     return re.search(regex, word)
 
+
 def is_directive(word):
     """
     is_directive()
@@ -354,6 +389,7 @@ def is_directive(word):
     regex = r"^(q\..*|q..|PRM|bid|prm|p\..*)$"
     return re.search(regex, word)
 
+
 def is_date(word):
     """
     is_date()
@@ -374,8 +410,9 @@ def is_date(word):
     >>> is_date('0') is not None
     False
     """
-    regex= r'^(\d\d\d\d-\d\d-\d|\d\d?-\d\d?-\d\d\d\d?|\d\d\d\d-\d\d?-\d\d?)$'
-    return re.search(regex,word)
+    regex = r'^(\d\d\d\d-\d\d-\d|\d\d?-\d\d?-\d\d\d\d?|\d\d\d\d-\d\d?-\d\d?)$'
+    return re.search(regex, word)
+
 
 def is_volume(word):
     """
@@ -399,6 +436,7 @@ def is_volume(word):
     """
     regex = r"^[0-9]*( )?(ml|mL|dL)$"
     return re.search(regex, word)
+
 
 def is_weight(word):
     """
@@ -427,6 +465,7 @@ def is_weight(word):
     regex = r"^[0-9]*( )?(mg|g|mcg|milligrams|grams)$"
     return re.search(regex, word)
 
+
 def is_size(word):
     """
     is_size()
@@ -454,6 +493,7 @@ def is_size(word):
     regex = r"^[0-9]*( )?(mm|cm|millimeters|centimeters)$"
     return re.search(regex, word)
 
+
 def is_prognosis_location(word):
     """
     is_prognosis_location()
@@ -461,7 +501,8 @@ def is_prognosis_location(word):
     Purpose: Checks if the word is a prognosis location
 
     @param word. A string.
-    @return      the matched object if it is a prognosis location, otherwise None.
+    @return      the matched object if it is a prognosis location, otherwise
+    None.
 
     >>> is_prognosis_location('c9-c5') is not None
     True
@@ -474,6 +515,7 @@ def is_prognosis_location(word):
     """
     regex = r"^(c|C)[0-9]+(-(c|C)[0-9]+)*$"
     return re.search(regex, word)
+
 
 def has_problem_form(word):
     """
@@ -499,6 +541,7 @@ def has_problem_form(word):
     """
     regex = r".*(ic|is)$"
     return re.search(regex, word)
+
 
 def get_def_class(word):
     """
@@ -557,7 +600,7 @@ def get_def_class(word):
         "bacterial", "viral",
         "syndrome", "syndromes",
         "pain", "pains"
-        "burns", "burned",
+                "burns", "burned",
         "broken", "fractured"
     }
     treatment_terms = {
@@ -566,7 +609,7 @@ def get_def_class(word):
         "anesthesia",
         "supplement", "supplemental",
         "vaccine", "vaccines"
-        "dose", "doses",
+                   "dose", "doses",
         "shot", "shots",
         "medication", "medicine",
         "treatment", "treatments"
@@ -578,4 +621,3 @@ def get_def_class(word):
     elif word.lower() in treatment_terms:
         return 3
     return 0
-

@@ -7,10 +7,8 @@
 ######################################################################
 
 
-import os
-import os.path
 import glob
-import argparse
+import os.path
 import pickle
 import sys
 
@@ -20,6 +18,7 @@ from examples.Cliner.CliNER.code.notes.documents import Document
 
 # base directory
 CLINER_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 class CliNERTrain():
     def __init__(self, txt, con, output, model_path, format):
@@ -46,11 +45,8 @@ class CliNERTrain():
 
         # Must specify output format
         if self.format not in ['i2b2']:
-            print >>sys.stderr, '\n\tError: Must specify output format'
-            print >>sys.stderr,   '\tAvailable formats: i2b2'
             sys.stderr.write('\n')
-            exit(1)
-
+            sys.exit()
 
         # Collect training data file paths
         train_txt_files_map = tools.map_files(train_txt_files)
@@ -59,7 +55,8 @@ class CliNERTrain():
         self.training_list = []
         for k in train_txt_files_map:
             if k in train_con_files_map:
-                self.training_list.append((train_txt_files_map[k], train_con_files_map[k]))
+                self.training_list.append(
+                    (train_txt_files_map[k], train_con_files_map[k]))
 
         # If validation data was specified
         if self.val_txt and self.val_con:
@@ -72,9 +69,10 @@ class CliNERTrain():
             val_list = []
             for k in val_txt_files_map:
                 if k in val_con_files_map:
-                    val_list.append((val_txt_files_map[k], val_con_files_map[k]))
+                    val_list.append(
+                        (val_txt_files_map[k], val_con_files_map[k]))
         else:
-            val_list=[]
+            val_list = []
 
         # If test data was specified
         if self.test_txt and self.test_con:
@@ -87,37 +85,35 @@ class CliNERTrain():
             test_list = []
             for k in test_txt_files_map:
                 if k in test_con_files_map:
-                    test_list.append((test_txt_files_map[k], test_con_files_map[k]))
+                    test_list.append(
+                        (test_txt_files_map[k], test_con_files_map[k]))
         else:
-            test_list=[]
-
-
-
+            test_list = []
 
     def train(self):
         val = []
         test = []
-        logfile='CliNER/models/train.log'
+        logfile = 'CliNER/models/train.log'
 
         # Read the data into a Document object
         train_docs = []
         for txt, con in self.training_list:
-            doc_tmp = Document(txt,con)
+            doc_tmp = Document(txt, con)
             train_docs.append(doc_tmp)
 
         val_docs = []
         for txt, con in val:
-            doc_tmp = Document(txt,con)
+            doc_tmp = Document(txt, con)
             val_docs.append(doc_tmp)
 
         test_docs = []
         for txt, con in test:
-            doc_tmp = Document(txt,con)
+            doc_tmp = Document(txt, con)
             test_docs.append(doc_tmp)
 
         # file names
         if not train_docs:
-            print( 'Error: Cannot train on 0 files. Terminating train.')
+            print('Error: Cannot train on 0 files. Terminating train.')
             return 1
 
         # Create a Machine Learning model
@@ -131,11 +127,5 @@ class CliNERTrain():
         with open(self.model_path, "wb") as m_file:
             pickle.dump(model, m_file)
 
-        model.log(logfile   , model_file=self.model_path)
+        model.log(logfile, model_file=self.model_path)
         model.log(sys.stdout, model_file=self.model_path)
-
-
-
-if __name__ == '__main__':
-    Model = CliNERTrain()
-    Model.train()

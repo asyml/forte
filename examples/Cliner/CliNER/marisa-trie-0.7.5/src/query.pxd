@@ -1,8 +1,8 @@
+# pylint: disable=invalid-syntax
 cdef extern from "<marisa/query.h>" namespace "marisa" nogil:
-
     cdef cppclass Query:
         Query()
-        Query(Query &query)
+        Query(Query & query)
 
         #Query &operator=(Query &query)
 
@@ -17,4 +17,4 @@ cdef extern from "<marisa/query.h>" namespace "marisa" nogil:
         int id()
 
         void clear()
-        void swap(Query &rhs)
+        void swap(Query & rhs)

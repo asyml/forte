@@ -1,12 +1,11 @@
+# pylint: disable=invalid-syntax
 cdef extern from "<marisa/base.h>":
-
     # A dictionary consists of 3 tries in default. Usually more tries make a
     # dictionary space-efficient but time-inefficient.
     ctypedef enum marisa_num_tries:
         MARISA_MIN_NUM_TRIES
         MARISA_MAX_NUM_TRIES
         MARISA_DEFAULT_NUM_TRIES
-
 
     # This library uses a cache technique to accelerate search functions. The
     # following enumerated type marisa_cache_level gives a list of available cache

@@ -7,63 +7,47 @@
 ######################################################################
 
 
-import sys
 import os
 import tempfile
+
 import pycrfsuite
 
-
+from examples.Cliner.CliNER.code.feature_extraction.read_config \
+    import enabled_modules
 from examples.Cliner.CliNER.code.tools import compute_performance_stats
-from examples.Cliner.CliNER.code.feature_extraction.read_config import enabled_modules
 
-cliner_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+cliner_dir = os.path.dirname(os.path.dirname(os.path.dirname( \
+    os.path.abspath(__file__))))
 tmp_dir = os.path.join(cliner_dir, 'data', 'tmp')
 
-def format_features(rows, labels=None):
 
+def format_features(rows, labels=None):
     retVal = []
 
     # For each line
-    for i,line in enumerate(rows):
+    for i, line in enumerate(rows):
 
         # For each word in the line
-        for j,features in enumerate(line):
+        for j, features in enumerate(line):
 
             # Nonzero dimensions
-            inds  = features.nonzero()[1]
+            inds = features.nonzero()[1]
 
             # If label exists
             values = []
             if labels:
-                values.append( str(labels[i][j]) )
+                values.append(str(labels[i][j]))
 
             # Value for each dimension
             for k in inds:
-                values.append( '%d=%d' %  (k, features[0,k]) )
+                values.append('%d=%d' % (k, features[0, k]))
 
             retVal.append("\t".join(values).strip())
 
         # Sentence boundary seperator
         retVal.append('')
 
-    '''
-    # Sanity check
-    global count
-    if labels:
-        out_f = 'a.txt' + str(count)
-        start =  0 # 2
-    else:
-        out_f = 'b.txt' + str(count)
-        start = 0
-    count += 1
-    with open(out_f, 'w') as f:
-        for line in retVal:
-            print >>f, line[start:]
-    '''
-
     return retVal
-
-
 
 
 def pycrf_instances(fi, labeled):
@@ -100,27 +84,18 @@ def pycrf_instances(fi, labeled):
         if labeled:
             yseq.append(fields[0])
 
+
 def train(X, Y, val_X=None, val_Y=None, test_X=None, test_Y=None):
-    '''
-    train()
-    Train a Conditional Random Field for sequence tagging.
-    
-    @param X.     List of sparse-matrix sequences. Each sequence is one sentence.
-    @param Y.     List of sequence tags. Each sequence is the sentence's per-token tags.
-    @param val_X. More X data, but a heldout dev set.
-    @param val_Y. More Y data, but a heldout dev set.
-    @return A tuple of encoded parameter weights and hyperparameters for predicting.
-    '''
 
     # Sanity Check detection: features & label
-    #with open('a','w') as f:
+    # with open('a','w') as f:
     #    for xline,yline in zip(X,Y):
     #        for x,y in zip(xline,yline):
     #            print >>f, y, '\t', x.nonzero()[1][0]
     #        print >>f
 
     # Format features fot crfsuite
-    feats = format_features(X,Y)
+    feats = format_features(X, Y)
 
     # Create a Trainer object.
     trainer = pycrfsuite.Trainer(verbose=False)
@@ -128,7 +103,7 @@ def train(X, Y, val_X=None, val_Y=None, test_X=None, test_Y=None):
         trainer.append(xseq, yseq)
 
     # Train the model
-    os_handle,tmp_file = tempfile.mkstemp(dir=tmp_dir, suffix="crf_temp")
+    os_handle, tmp_file = tempfile.mkstemp(dir=tmp_dir, suffix="crf_temp")
     trainer.train(tmp_file)
 
     # Read the trained model into a string (so it can be pickled)
@@ -146,24 +121,24 @@ def train(X, Y, val_X=None, val_Y=None, test_X=None, test_Y=None):
     scores = {}
 
     # how well does the model fir the training data?
-    train_pred = predict(model,     X)
+    train_pred = predict(model, X)
     train_stats = compute_performance_stats('train', train_pred, Y)
     scores['train'] = train_stats
 
     if val_X:
-        val_pred  = predict(model, val_X)
+        val_pred = predict(model, val_X)
         val_stats = compute_performance_stats('dev', val_pred, val_Y)
         scores['dev'] = val_stats
 
     if test_X:
-        test_pred  = predict(model, test_X)
+        test_pred = predict(model, test_X)
         test_stats = compute_performance_stats('test', test_pred, test_Y)
         scores['test'] = test_stats
 
     # keep track of which external modules were used for building this model!
     scores['hyperparams'] = {}
     enabled_mods = enabled_modules()
-    for module,enabled in enabled_mods.items():
+    for module, enabled in enabled_mods.items():
         e = bool(enabled)
         scores['hyperparams'][module] = e
 
@@ -171,14 +146,13 @@ def train(X, Y, val_X=None, val_Y=None, test_X=None, test_Y=None):
 
 
 def predict(clf, X):
-
     # Format features fot crfsuite
     feats = format_features(X)
 
     # Dump the model into a temp file
-    os_handle,tmp_file = tempfile.mkstemp(dir=tmp_dir, suffix="crf_temp")
+    os_handle, tmp_file = tempfile.mkstemp(dir=tmp_dir, suffix="crf_temp")
     with open(tmp_file, 'wb') as f:
-        clf_byte = bytearray(clf)#, 'latin1')
+        clf_byte = bytearray(clf)  # , 'latin1')
         f.write(clf_byte)
 
     # Create the Tagger object
@@ -188,16 +162,16 @@ def predict(clf, X):
     # Remove the temp file
     os.close(os_handle)
     os.remove(tmp_file)
-    
+
     # Tag the sequence
     retVal = []
     Y = []
     for xseq in pycrf_instances(feats, labeled=False):
-        yseq = [ int(n) for n in tagger.tag(xseq) ]
+        yseq = [int(n) for n in tagger.tag(xseq)]
         retVal += list(yseq)
         Y.append(list(yseq))
     # Sanity Check detection: feature & label predictions
-    #with open('a','w') as f:
+    # with open('a','w') as f:
     #    for x,y in zip(xseq,Y):
     #        x = x[0]
     #        print >>f, y, '\t', x[:-2]

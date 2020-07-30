@@ -19,10 +19,10 @@ import os
 from typing import Optional, cast
 
 import torch
-from torch.nn import Parameter
-from texar.torch.modules.pretrained import PretrainedBERTMixin
-from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
 from texar.torch.modules.classifiers import BERTClassifier as TxBERTClassifier
+from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
+from texar.torch.modules.pretrained import PretrainedBERTMixin
+from torch.nn import Parameter
 
 from forte.common.configuration import Config
 
@@ -222,10 +222,12 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
 
 
 class BERTEncoder(TxBERTEncoder):
+    # pylint: disable=unused-argument
     def load_pretrained_config(self,
                                pretrained_model_name: Optional[str] = None,
                                cache_dir: Optional[str] = None,
                                hparams=None):
+        # pylint: disable=attribute-defined-outside-init
         self.pretrained_model_name = pretrained_model_name
         self.cache_dir = cache_dir
 

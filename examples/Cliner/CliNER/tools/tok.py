@@ -1,5 +1,6 @@
-import sys
 import re
+import sys
+
 import nltk
 
 
@@ -11,7 +12,8 @@ def file_tokenize(filename, outfile):
     toks = tokenize(filename)
     with open(outfile, 'w') as f:
         for sent in toks:
-            print >>f, ' '.join(sent)
+            # pylint: disable=expression-not-assigned
+            print >> f, ' '.join(sent)
 
 
 def tokenize(filename):
@@ -22,9 +24,10 @@ def tokenize(filename):
     text = re.sub('\n\n+', '\n\n', text)
 
     # remove PHI
+    # pylint: disable=anomalous-backslash-in-string
     phis = re.findall('(\[\*\*.*?\*\*\])', text)
     for phi in phis:
-        new = replace_phi(text, phi)
+        new = replace_phi()
         text = text.replace(phi, new)
 
     # break into sentences
@@ -41,7 +44,7 @@ def tokenize(filename):
             line = section[:index]
             sents.append(line)
 
-            section = section[index+1:]
+            section = section[index + 1:]
             if '\n' in section:
                 index = section.index('\n')
             else:
@@ -60,23 +63,12 @@ def tokenize(filename):
 
 
 def clean_text(text):
-    try:
-        return text.decode('ascii', 'ignore')
-    except UnicodeDecodeError, e:
-        chars = []
-        for c in text:
-            try:
-                c.decode('ascii', 'ignore')
-                chars.append(c)
-            except UnicodeDecodeError, f:
-                pass
-        return ''.join(chars)
+    return text.decode('ascii', 'ignore')
 
 
-def replace_phi(text, phi):
+def replace_phi():
     return '__phi__'
 
 
 if __name__ == '__main__':
     main()
-

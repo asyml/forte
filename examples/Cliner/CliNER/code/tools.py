@@ -7,13 +7,14 @@
 ######################################################################
 
 
-import os
-import sys
 import errno
-import string
 import math
-import re
+import os
 import pickle
+import re
+import string
+import sys
+
 import numpy as np
 
 
@@ -24,7 +25,7 @@ import numpy as np
 def map_files(files):
     """Maps a list of files to basename -> path."""
     output = {}
-    for f in files: #pylint: disable=invalid-name
+    for f in files:  # pylint: disable=invalid-name
         basename = os.path.splitext(os.path.basename(f))[0]
         output[basename] = f
     return output
@@ -53,7 +54,9 @@ def normalize_tokens(toks):
     # todo: normalize dosages (icluding 8mg -> mg)
     # replace number tokens
     def num_normalize(w):
+        # pylint: disable=anomalous-backslash-in-string
         return '__num__' if re.search('\d', w) else w
+
     toks = list(map(num_normalize, toks))
     return toks
 
@@ -74,11 +77,11 @@ def flatten(list_of_lists):
     return sum(list_of_lists, [])
 
 
-
 def save_list_structure(list_of_lists):
     '''
     save_list_structure()
-    Purpose: Given a list of lists, save way to recover structure from flattended
+    Purpose: Given a list of lists, save way to recover structure from
+    flattended
     @param list_of_lists. <list-of-lists> of objects.
     @return               <list> of indices, where each index refers to the
                                  beginning of a line in the orig list-of-lists
@@ -86,20 +89,18 @@ def save_list_structure(list_of_lists):
     [3, 5, 8]
     '''
 
-    offsets = [ len(sublist) for sublist in list_of_lists ]
+    offsets = [len(sublist) for sublist in list_of_lists]
     for i in range(1, len(offsets)):
-        offsets[i] += offsets[i-1]
+        offsets[i] += offsets[i - 1]
 
     return offsets
 
 
-
-
 def reconstruct_list(flat_list, offsets):
-
     '''
     save_list_structure()
-    Purpose: This undoes a list flattening. Uses value from save_list_structure()
+    Purpose: This undoes a list flattening. Uses value from
+    save_list_structure()
     @param flat_list. <list> of objects
     @param offsets    <list> of indices, where each index refers to the
                                  beginning of a line in the orig list-of-lists
@@ -108,9 +109,7 @@ def reconstruct_list(flat_list, offsets):
     [['a', 'b', 'c'], ['d', 'e'], ['f', 'g', 'h']]
     '''
 
-    return [ flat_list[i:j] for i, j in zip([0] + offsets, offsets)]
-
-
+    return [flat_list[i:j] for i, j in zip([0] + offsets, offsets)]
 
 
 #############################################################
@@ -130,17 +129,17 @@ def pickle_dump(obj, path_to_obj):
         pickle.dump(obj, f, -1)
 
 
-
 #############################################################
 #  prose v nonprose
 #############################################################
 
 
 def is_prose_sentence(sentence):
+    # pylint: disable=unidiomatic-typecheck
     assert type(sentence) == type([]), 'is_prose_sentence() must take list arg'
     if sentence == []:
         return False
-    #elif sentence[-1] == '.' or sentence[-1] == '?':
+    # elif sentence[-1] == '.' or sentence[-1] == '?':
     elif sentence[-1] == '?':
         return True
     elif sentence[-1] == ':':
@@ -153,14 +152,9 @@ def is_prose_sentence(sentence):
         return False
 
 
-
 def is_at_least_half_nonprose(sentence):
     count = len(filter(is_prose_word, sentence))
-    if count >= len(sentence)/2:
-        return True
-    else:
-        return False
-
+    return bool(count >= len(sentence) / 2)
 
 
 def is_prose_word(word):
@@ -169,6 +163,7 @@ def is_prose_word(word):
         if punc in word:
             return False
     # Digit
+    # pylint: disable=anomalous-backslash-in-string
     if re.match('\d', word):
         return False
     # All uppercase
@@ -178,16 +173,14 @@ def is_prose_word(word):
     return True
 
 
-
-
 def prose_partition(tokenized_sents, labels=None):
-    prose_sents     = []
-    nonprose_sents  = []
-    prose_labels    = []
+    prose_sents = []
+    nonprose_sents = []
+    prose_labels = []
     nonprose_labels = []
 
     # partition the sents & labels into EITHER prose OR nonprose groups
-    for i in range(len(tokenized_sents)):
+    for _, i in enumerate(range(len(tokenized_sents))):
         if is_prose_sentence(tokenized_sents[i]):
             prose_sents.append(tokenized_sents[i])
             if labels:
@@ -199,49 +192,34 @@ def prose_partition(tokenized_sents, labels=None):
 
     # group data appropriately (note, labels might not be provided)
     if labels:
-        prose    = (   prose_sents,    prose_labels)
+        prose = (prose_sents, prose_labels)
         nonprose = (nonprose_sents, nonprose_labels)
     else:
-        prose    = (   prose_sents, None)
+        prose = (prose_sents, None)
         nonprose = (nonprose_sents, None)
 
     return prose, nonprose
 
 
-
-
-
 def print_files(f, file_names):
-    '''
-    print_files()
-
-    Pretty formatting for listing the training files in a 
-    log.
-
-    @param f.           An open file stream to write to.
-    @param file_names.  A list of filename strings.
-    '''
     COLUMNS = 4
     file_names = sorted(file_names)
     start = 0
-    for row in range(int(math.ceil(float(len(file_names))/COLUMNS))):
+    for _ in range(int(math.ceil(float(len(file_names)) / COLUMNS))):
         write(f, u'\t\t')
-        for featname in file_names[start:start+COLUMNS]:
+        for featname in file_names[start:start + COLUMNS]:
             write(f, '%-15s' % featname)
         write(f, u'\n')
         start += COLUMNS
 
 
-
 # python2 needs to convert to unicdode, but thats default for python3
-if sys.version_info.major == 2:
-    tostr = unicode
-else:
+if sys.version_info.major == 3:
     tostr = str
+
 
 def write(f, s):
     f.write(tostr(s))
-
 
 
 def print_vec(f, label, vec):
@@ -257,18 +235,17 @@ def print_vec(f, label, vec):
     COLUMNS = 7
     start = 0
     write(f, '\t%-10s: ' % label)
+    # pylint: disable=unidiomatic-typecheck
     if type(vec) != type([]):
         vec = vec.tolist()
-    for row in range(int(math.ceil(float(len(vec))/COLUMNS))):
-        for featname in vec[start:start+COLUMNS]:
+    for _ in range(int(math.ceil(float(len(vec)) / COLUMNS))):
+        for featname in vec[start:start + COLUMNS]:
             write(f, '%7.3f' % featname)
         write(f, u'\n')
         start += COLUMNS
 
-        
-        
-def print_str(f, label, names):
 
+def print_str(f, label, names):
     '''
     print_str()
     Pretty formatting for displaying a list of strings in a log
@@ -278,18 +255,17 @@ def print_str(f, label, names):
     '''
     COLUMNS = 4
     start = 0
-    for row in range(int(math.ceil(float(len(names))/COLUMNS))):
+    for row in range(int(math.ceil(float(len(names)) / COLUMNS))):
         if row == 0:
             write(f, '\t%-10s: ' % label)
         else:
             write(f, '\t%-10s  ' % '')
 
-        for featname in names[start:start+COLUMNS]:
+        for featname in names[start:start + COLUMNS]:
             write(f, '%-16s ' % featname)
-            
+
         write(f, u'\n')
         start += COLUMNS
-
 
 
 #############################################################
@@ -306,51 +282,50 @@ def compute_performance_stats(label, pred, ref):
     @param pred.   A list of list of true      labels.
     '''
 
-    num_tags = max(set(sum( ref,[])) | set(sum(pred,[]))) +1
+    num_tags = max(set(sum(ref, [])) | set(sum(pred, []))) + 1
     # confusion matrix
-    confusion = np.zeros( (num_tags,num_tags) )
-    for tags,yseq in zip(pred,ref):
-        for y,p in zip(yseq, tags):
-            confusion[p,y] += 1
+    confusion = np.zeros((num_tags, num_tags))
+    for tags, yseq in zip(pred, ref):
+        for y, p in zip(yseq, tags):
+            confusion[p, y] += 1
 
     # print confusion matrix
     conf_str = ''
     conf_str += '\n\n'
     conf_str += label + '\n'
-    conf_str += ' '*6
+    conf_str += ' ' * 6
     for i in range(num_tags):
         conf_str += '%4d ' % i
     conf_str += ' (gold)\n'
     for i in range(num_tags):
-        conf_str +=  '%2d    ' % i
+        conf_str += '%2d    ' % i
         for j in range(num_tags):
             conf_str += '%4d ' % confusion[i][j]
         conf_str += '\n'
     conf_str += '(pred)\n'
     conf_str += '\n\n'
-    conf_str = conf_str
-    #print conf_str
+    # print conf_str
 
     precision = np.zeros(num_tags)
-    recall    = np.zeros(num_tags)
-    f1        = np.zeros(num_tags)
+    recall = np.zeros(num_tags)
+    f1 = np.zeros(num_tags)
 
     for i in range(num_tags):
-        correct    =     confusion[i,i]
-        num_pred   = sum(confusion[i,:])
-        num_actual = sum(confusion[:,i])
+        correct = confusion[i, i]
+        num_pred = sum(confusion[i, :])
+        num_actual = sum(confusion[:, i])
 
-        p  = correct / (num_pred   + 1e-9)
-        r  = correct / (num_actual + 1e-9)
+        p = correct / (num_pred + 1e-9)
+        r = correct / (num_actual + 1e-9)
 
         precision[i] = p
-        recall[i]    = r
-        f1[i]        = (2*p*r) / (p + r + 1e-9)
+        recall[i] = r
+        f1[i] = (2 * p * r) / (p + r + 1e-9)
 
     scores = {}
     scores['precision'] = precision
-    scores['recall'   ] = recall
-    scores['f1'       ] = f1
-    scores['conf'     ] = conf_str
+    scores['recall'] = recall
+    scores['f1'] = f1
+    scores['conf'] = conf_str
 
     return scores

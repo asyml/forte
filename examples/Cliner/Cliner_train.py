@@ -14,27 +14,26 @@
 """
 The re-writer processor
 """
+import os
 
-from forte.processors.base import PackProcessor
+from examples.Cliner.CliNER.code.train import CliNERTrain
 
-from examples.Cliner.CliNER.code.train import *
-from examples.Cliner.CliNER.code.model import *
 
-class CliTrain(PackProcessor):
+class CliTrain():
     def __init__(self):
         # Setup model path.
         self.txt = os.path.join(
             'CliNER/data/train_data/*.txt')
         self.con = os.path.join(
             'CliNER/data/train_data/*.con')
-        self.output = os.path.join(  # type: ignore
+        self.output = os.path.join(
             'CliNER/data/test_predictions')
-        self.model_path = os.path.join(  # type: ignore
+        self.model_path = os.path.join(
             'CliNER/models/train_full.model')
         self.format = 'i2b2'
         # pylint: disable=attribute-defined-outside-init
-        self.model = CliNERTrain(self.txt, self.con, self.output, self.model_path, self.format)
-
+        self.model = CliNERTrain(self.txt, self.con, self.output,
+                                 self.model_path, self.format)
 
     def train(self):
         self.model.train()

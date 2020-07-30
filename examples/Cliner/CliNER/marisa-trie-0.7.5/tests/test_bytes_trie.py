@@ -5,11 +5,11 @@ from __future__ import absolute_import, unicode_literals
 import io
 import pickle
 
-import pytest
 import hypothesis.strategies as st
+import pytest
 from hypothesis import assume, given
-
 import marisa_trie
+
 from .utils import text
 
 
@@ -20,7 +20,7 @@ def test_contains(keys, values, missing_key):
     data = zip(keys, values)
     trie = marisa_trie.BytesTrie(data)
 
-    for word, value in data:
+    for word, _ in data:
         assert word in trie
 
     assert missing_key not in trie
@@ -37,6 +37,7 @@ def test_getitem(keys, values, missing_key):
         assert trie[key] == [value]
 
     with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
         trie[missing_key]
 
 
@@ -45,15 +46,17 @@ def test_getitem(keys, values, missing_key):
     [("foo", b"bar")]
 ])
 def test_getitem_missing(data):
+    # pylint: disable=pointless-statement
     trie = marisa_trie.BytesTrie(data)
     with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
         trie["missing"]
 
 
 def test_getitem_multiple():
     data = [
         ("foo", b"x"),
-        ("fo",  b"y"),
+        ("fo", b"y"),
         ("foo", b"a"),
     ]
     trie = marisa_trie.BytesTrie(data)
@@ -71,7 +74,7 @@ def test_null_bytes_in_values():
 
 def test_items():
     data = [
-        ("fo",  b"y"),
+        ("fo", b"y"),
         ("foo", b"x"),
         ("foo", b"a"),
     ]
@@ -97,7 +100,7 @@ def test_iteritems(keys, values):
 def test_keys():
     trie = marisa_trie.BytesTrie([
         ("foo", b"x"),
-        ("fo",  b"y"),
+        ("fo", b"y"),
         ("foo", b"a"),
     ])
 

@@ -8,10 +8,11 @@ Automatically generated ontology clinical. Do not change manually.
 """
 
 from dataclasses import dataclass
+from typing import Optional
+
 from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation
 from forte.data.ontology.top import Generics
-from typing import Optional
 
 __all__ = [
     "ClinicalEntityMention",
@@ -31,4 +32,3 @@ class ClinicalEntityMention(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.cliner_type: Optional[str] = None
-

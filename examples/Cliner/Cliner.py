@@ -14,40 +14,37 @@
 """
 The clinical ner processor
 """
-from typing import Dict, Any, Optional
 import codecs
-
-from forte.common import Resources
-from forte.common.configuration import Config
+import os
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.clinical import ClinicalEntityMention
 
-from examples.Cliner.CliNER.code.predict import *
-from examples.Cliner.CliNER.code.model import *
+from examples.Cliner.CliNER.code.predict import CliNERPredict
+
 
 class ClinicalNER(PackProcessor):
-    def initialize(self, resources: Resources, configs: Config):
+    def initialize(self):
         # Setup model path.
+        # pylint: disable=attribute-defined-outside-init
         self.txt = os.path.join(
             'CliNER/data/examples/ex_doc.txt')
-        self.output = os.path.join(  # type: ignore
+        self.output = os.path.join(
             'CliNER/data/test_predictions')
-        self.model_path = os.path.join(  # type: ignore
+        self.model_path = os.path.join(
             'CliNER/models/train_full.model')
         self.format = 'i2b2'
-        # pylint: disable=attribute-defined-outside-init
-        self.model = CliNERPredict(self.txt, self.output, self.model_path, self.format)
-
-
+        self.model = CliNERPredict(self.txt, self.output, self.model_path, \
+                                   self.format)
 
     def _process(self, input_pack: DataPack):
         with open(self.txt, 'r') as fin:
             doc = fin.readlines()
 
         self.model.predict()
-        
-        con = codecs.open(os.path.join(self.output, 'ex_doc.con'), "r", encoding="utf8")
+
+        con = codecs.open(os.path.join(self.output, 'ex_doc.con'), "r", \
+                          encoding="utf8")
 
         ner_labels = []
         for line in con:
@@ -58,15 +55,16 @@ class ClinicalNER(PackProcessor):
             labels['name'] = name_and_span[1][0:]
             labels['span_begin'] = name_and_span[2].split()[0]
             labels['span_end'] = name_and_span[2].split()[1]
-            labels['line_num'] = name_and_span[2].split()[0].split(':')[0]
+            labels['line_num'] = \
+                name_and_span[2].split()[0].split(':')[0]
             ner_labels.append(labels)
-    
+
         offsets = []
         offset = 0
         text = ""
         text_lines = []
-    
-        for i, line in enumerate(doc):
+
+        for line in doc:
             text += line
             offsets.append(offset)  # the begin of the text
             offset += len(line) + 1
@@ -75,9 +73,9 @@ class ClinicalNER(PackProcessor):
         for labels in ner_labels:
             line_num = int(labels['line_num']) - 1
             text_line = text_lines[line_num]
-            span_begin = text_line.split()[int(labels['span_begin'].split(':')[1])]
+            span_begin = \
+                text_line.split()[int(labels['span_begin'].split(':')[1])]
             word_begin = offsets[line_num] + text_line.index(span_begin)
-    
             word_end = word_begin + len(labels['name'])
             entity = ClinicalEntityMention(input_pack, word_begin,
                                            word_end)

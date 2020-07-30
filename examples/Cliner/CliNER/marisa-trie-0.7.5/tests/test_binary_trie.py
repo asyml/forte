@@ -5,12 +5,10 @@ from __future__ import absolute_import, unicode_literals
 import pickle
 from collections import Mapping
 
-import pytest
 import hypothesis.strategies as st
+import pytest
 from hypothesis import given, assume
-
 import marisa_trie
-
 
 text = st.binary()
 
@@ -58,9 +56,11 @@ def test_getitem(keys, missing_key):
     non_existing_id = max(key_ids) + 1
 
     with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
         trie.restore_key(non_existing_id)
 
     with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
         trie[missing_key]
 
 
@@ -76,7 +76,7 @@ def test_get(keys):
 
     assert trie.get(b"non_existing_bytes_key") is None
     assert trie.get(b"non_existing_bytes_key",
-                    "default value") == "default value"
+        "default value") == "default value"
 
 
 @given(st.sets(text))
@@ -146,7 +146,6 @@ def test_contains_singleton():
 
 def test_eq_self():
     trie = marisa_trie.BinaryTrie()
-    assert trie == trie
     assert trie == marisa_trie.BinaryTrie()
 
 
@@ -160,18 +159,13 @@ def test_neq_different_type():
     assert marisa_trie.BinaryTrie([b"foo", b"bar"]) != {}
 
 
-def test_eq_neq_different_order():
-    lo_trie = marisa_trie.BinaryTrie(order=marisa_trie.LABEL_ORDER)
-    wo_trie = marisa_trie.BinaryTrie(order=marisa_trie.WEIGHT_ORDER)
-    assert lo_trie == lo_trie and wo_trie == wo_trie
-    assert lo_trie != wo_trie
-
-
 def test_gt_lt_exceptions():
     with pytest.raises(TypeError):
+        # pylint: disable=expression-not-assigned
         marisa_trie.BinaryTrie() < marisa_trie.BinaryTrie()
 
     with pytest.raises(TypeError):
+        # pylint: disable=expression-not-assigned
         marisa_trie.BinaryTrie() > marisa_trie.BinaryTrie()
 
 

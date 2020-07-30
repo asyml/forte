@@ -5,11 +5,11 @@ from __future__ import absolute_import, unicode_literals
 import pickle
 from collections import Mapping
 
-import pytest
 import hypothesis.strategies as st
+import pytest
 from hypothesis import given, assume
-
 import marisa_trie
+
 from .utils import text
 
 
@@ -59,6 +59,7 @@ def test_getitem(keys, missing_key):
         trie.restore_key(non_existing_id)
 
     with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
         trie[missing_key]
 
 
@@ -149,7 +150,6 @@ def test_contains_singleton():
 
 def test_eq_self():
     trie = marisa_trie.Trie()
-    assert trie == trie
     assert trie == marisa_trie.Trie()
 
 
@@ -163,18 +163,13 @@ def test_neq_different_type():
     assert marisa_trie.Trie(["foo", "bar"]) != {}
 
 
-def test_eq_neq_different_order():
-    lo_trie = marisa_trie.Trie(order=marisa_trie.LABEL_ORDER)
-    wo_trie = marisa_trie.Trie(order=marisa_trie.WEIGHT_ORDER)
-    assert lo_trie == lo_trie and wo_trie == wo_trie
-    assert lo_trie != wo_trie
-
-
 def test_gt_lt_exceptions():
     with pytest.raises(TypeError):
+        # pylint: disable=expression-not-assigned
         marisa_trie.Trie() < marisa_trie.Trie()
 
     with pytest.raises(TypeError):
+        # pylint: disable=expression-not-assigned
         marisa_trie.Trie() > marisa_trie.Trie()
 
 
