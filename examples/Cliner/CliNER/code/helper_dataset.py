@@ -61,13 +61,6 @@ def is_number(s):
         return True
     except ValueError:
         return False
-<<<<<<< HEAD
-=======
-    
-def is_boolean(s):
-    return bool(s in ['True', 'False'])
-        
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
 
 def is_boolean(s):

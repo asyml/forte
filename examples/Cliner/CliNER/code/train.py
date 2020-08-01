@@ -47,10 +47,6 @@ class CliNERTrain():
         if self.format not in ['i2b2']:
             sys.stderr.write('\n')
             sys.exit()
-<<<<<<< HEAD
-=======
-
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
         # Collect training data file paths
         train_txt_files_map = tools.map_files(train_txt_files)

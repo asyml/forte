@@ -116,11 +116,6 @@ def bidirectional_LSTM(input, hidden_state_dimension, initializer,
     return output
 
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 class EntityLSTM():
     """
     An LSTM architecture for named entity recognition.
@@ -138,10 +133,10 @@ class EntityLSTM():
         # Placeholders for input, output and dropout
         self.input_token_indices = tf.placeholder(tf.int32, [None], name =
             "input_token_indices")
-        self.input_label_indices_vector = tf.placeholder(tf.float32,
-            [None,
-             dataset.number_of_classes],
+        self.placeholder = tf.placeholder(tf.float32,
+            [None, dataset.number_of_classes],
             name="input_label_indices_vector")
+        self.input_label_indices_vector = self.placeholder
         self.input_label_indices_flat = \
             tf.placeholder(tf.int32, [None], name="input_label_indices_flat")
         self.input_token_character_indices = \
@@ -419,7 +414,6 @@ class EntityLSTM():
         if parameters['token_pretrained_embedding_filepath'] == '':
             return
         # Load embeddings
-        start_time = time.time()
         print('Load token embeddings... ', end='', flush=True)
         if token_to_vector is None:
             token_to_vector = hd.load_pretrained_token_embeddings(parameters)
@@ -458,7 +452,7 @@ class EntityLSTM():
             else:
                 continue
             number_of_loaded_word_vectors += 1
-        elapsed_time = time.time() - start_time
+        # elapsed_time = time.time() - start_time
 
         sess.run(self.token_embedding_weights.assign(initial_weights))
 

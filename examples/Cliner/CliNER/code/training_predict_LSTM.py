@@ -46,16 +46,11 @@ def predict_labels(sess, model, transition_params_trained, dataset,
     for dataset_type in ['train', 'valid', 'test', 'deploy']:
         if dataset_type not in dataset_filepaths.keys():
             continue
-<<<<<<< HEAD
         prediction_output = prediction_step(sess, dataset, dataset_type, model,
             epoch_number, stats_graph_folder,
             transition_params_trained)
         y_pred[dataset_type], y_true[dataset_type], output_filepaths[
             dataset_type] = prediction_output
-=======
-        prediction_output = prediction_step(sess, dataset, dataset_type, model, epoch_number, stats_graph_folder, transition_params_trained)
-        y_pred[dataset_type], y_true[dataset_type], output_filepaths[dataset_type] = prediction_output
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     return y_pred, y_true, output_filepaths
 
 
@@ -93,7 +88,6 @@ def train_step(sess, dataset, sequence_number, model):
         # model.input_label_indices_flat: dataset.label_indices['train'][
         # sequence_number],
     }
-<<<<<<< HEAD
     # loss=sess.run([model.loss],feed_dict)
     _, _, loss, accuracy, transition_params_trained = sess.run(
         [model.train_op, model.global_step, model.loss, model.accuracy,
@@ -105,14 +99,6 @@ def train_step(sess, dataset, sequence_number, model):
 def prediction_step(sess, dataset, dataset_type, model, epoch_number,
         results_folder, transition_params_trained,
         use_crf=True):
-=======
-   #loss=sess.run([model.loss],feed_dict)
-    _,_,loss,accuracy,transition_params_trained=sess.run([model.train_op, model.global_step, model.loss, model.accuracy,model.transition_parameters],feed_dict)
-    #print loss
-    return loss,accuracy, transition_params_trained
-                    
-def prediction_step(sess, dataset, dataset_type, model, epoch_number, results_folder, transition_params_trained, use_crf=True):
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     print('Evaluate model on the {0} set'.format(dataset_type))
     all_predictions = []
     all_y_true = []

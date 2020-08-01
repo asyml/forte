@@ -13,11 +13,7 @@ class func_cache(lru_cache):
         print("   hits:", self.cache.hits)
         print("   misses:", self.cache.misses)
         print("   lookups:{}", self.cache.lookups, "\n")
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     def __call__(self, f):
         lru_cached = super(func_cache, self).__call__(f)
         lru_cached.ShowInfo = self.ShowInfo

@@ -312,17 +312,6 @@ def normalize_phrase(phrase):
 
     phrase = nltk.PorterStemmer().stem(phrase)
 
-<<<<<<< HEAD
-=======
-    if PyPwl is not None:
-
-        init_time = time.time()
-
-        phrase = spellCheck(phrase, PyPwl=PyPwl)
-
-        print(time.time() - init_time)
-
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     return phrase
 
 

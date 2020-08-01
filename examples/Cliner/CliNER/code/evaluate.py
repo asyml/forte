@@ -53,10 +53,6 @@ def main():
         parser.print_help(sys.stderr)
         sys.stderr.write('\n')
         sys.exit()
-<<<<<<< HEAD
-=======
-
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
     # Must specify output format
     if format not in ['i2b2']:
@@ -67,21 +63,13 @@ def main():
         sys.stderr.write('\n')
         sys.exit()
 
-<<<<<<< HEAD
-=======
-
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     ref_files = os.listdir(args.gold)
     ref_files = map(lambda f: os.path.join(args.gold, f), ref_files)
 
     pred_files = os.listdir(args.pred)
     pred_files = map(lambda f: os.path.join(args.pred, f), pred_files)
 
-<<<<<<< HEAD
     ref_files_map = tools.map_files(ref_files)
-=======
-    ref_files_map  = tools.map_files(ref_files)
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     pred_files_map = tools.map_files(pred_files)
 
     files = []

@@ -163,14 +163,6 @@ def test_neq_different_type():
     assert marisa_trie.Trie(["foo", "bar"]) != {}
 
 
-<<<<<<< HEAD
-=======
-def test_eq_neq_different_order():
-    lo_trie = marisa_trie.Trie(order=marisa_trie.LABEL_ORDER)
-    wo_trie = marisa_trie.Trie(order=marisa_trie.WEIGHT_ORDER)
-
-
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 def test_gt_lt_exceptions():
     with pytest.raises(TypeError):
         # pylint: disable=expression-not-assigned

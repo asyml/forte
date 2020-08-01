@@ -14,7 +14,7 @@
 """
 The reader to read a table and example utterance.
 """
-from typing import Iterator, Tuple
+from typing import Iterator
 import codecs
 
 from forte.data.data_pack import DataPack

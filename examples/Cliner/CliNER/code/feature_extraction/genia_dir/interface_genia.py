@@ -156,7 +156,3 @@ def genia(geniatagger, data):
     # print 'retlist: ', retlist
 
     return retlist
-<<<<<<< HEAD
-=======
-
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32

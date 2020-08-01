@@ -154,13 +154,7 @@ def is_prose_sentence(sentence):
 
 def is_at_least_half_nonprose(sentence):
     count = len(filter(is_prose_word, sentence))
-<<<<<<< HEAD
     return bool(count >= len(sentence) / 2)
-=======
-    return bool(count >= len(sentence)/2)
-
-
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
 
 def is_prose_word(word):

@@ -53,13 +53,8 @@ def create_trie():
 
     print("\ncreating concept-trie")
 
-<<<<<<< HEAD
     # load data in files.
-=======
-    print("\ncreating concept-trie")
 
-    #load data in files.
->>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     print("opening file")
     try:
         mrcon_path = os.path.join(umls_tables, 'MRCONSO.RRF')
