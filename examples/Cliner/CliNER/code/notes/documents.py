@@ -6,22 +6,25 @@
 #  Purpose: Build model for given training data.                     #
 ######################################################################
 
-
 import os
 import re
 
 from examples.Cliner.CliNER.code.tools import clean_text, normalize_tokens
 
-labels = {'O': 0,
-          'B-problem': 1, 'B-test': 2, 'B-treatment': 3,
-          'I-problem': 4, 'I-test': 5, 'I-treatment': 6,
-          }
+labels = {
+    'O': 0,
+    'B-problem': 1,
+    'B-test': 2,
+    'B-treatment': 3,
+    'I-problem': 4,
+    'I-test': 5,
+    'I-treatment': 6,
+}
 
 id2tag = {v: k for k, v in labels.items()}
 
 
 class Document:
-
     def __init__(self, txt, con=None):
         # read data
         retVal = read_i2b2(txt, con)
@@ -187,6 +190,7 @@ def read_i2b2(txt, con):
                 # error-check info
                 assert start_lineno == end_lineno, 'concept must span single \
                 line'
+
                 # assert concept_text==matching_text, 'something wrong with \
                 # inds'
 

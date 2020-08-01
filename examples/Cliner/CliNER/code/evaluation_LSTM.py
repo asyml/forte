@@ -14,25 +14,26 @@ def assess_model(y_pred, y_true, labels, target_names):
     assert len(y_true) == len(y_pred)
 
     # Classification report
-    classification_report = sklearn.metrics.classification_report(y_true,
-        y_pred, labels=labels,
-        target_names=target_names, sample_weight=None,
+    classification_report = sklearn.metrics.classification_report(
+        y_true,
+        y_pred,
+        labels=labels,
+        target_names=target_names,
+        sample_weight=None,
         digits=4)
     results['classification_report'] = classification_report
 
     # F1 scores
     results['f1_score'] = {}
     for f1_average_style in ['weighted', 'micro', 'macro']:
-        results['f1_score'][f1_average_style] = sklearn.metrics.f1_score(y_true,
-            y_pred, average=f1_average_style,
-            labels=labels) * 100
-    results['f1_score']['per_label'] = [x * 100 for x in
-                                        sklearn.metrics. \
-                                            precision_recall_fscore_support(
-                                            y_true, y_pred, average=None,
-                                            labels=labels)[2].tolist()]
+        results['f1_score'][f1_average_style] = sklearn.metrics.f1_score(
+            y_true, y_pred, average=f1_average_style, labels=labels) * 100
+    results['f1_score']['per_label'] = [
+        x * 100 for x in sklearn.metrics.precision_recall_fscore_support(
+            y_true, y_pred, average=None, labels=labels)[2].tolist()
+    ]
     results['accuracy_score'] = sklearn.metrics.accuracy_score(y_true,
-        y_pred) * 100
+                                                               y_pred) * 100
 
     print(results['classification_report'])
     print(results['f1_score']['per_label'])

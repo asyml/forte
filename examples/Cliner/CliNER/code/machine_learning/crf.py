@@ -6,7 +6,6 @@
 #  Purpose: Implement CRF (using python-crfsuite)                    #
 ######################################################################
 
-
 import os
 import tempfile
 

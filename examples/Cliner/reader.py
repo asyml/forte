@@ -24,7 +24,7 @@ from ft.onto.base_ontology import Document
 
 class ClinerReader(PackReader):
     def _collect(self, txt_path: str
-                 ) -> Iterator[Tuple[str, str]]:
+                 ) -> Iterator[str]:
         yield txt_path
 
     def _parse_pack(self, collection) -> Iterator[DataPack]:
