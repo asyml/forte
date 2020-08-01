@@ -25,7 +25,7 @@ def tokenize(filename):
 
     # remove PHI
     # pylint: disable=anomalous-backslash-in-string
-    phis = re.findall('(\[\*\*.*?\*\*\])', text)
+    phis = re.findall('(\\[\\*\\*.*?\\*\\*\\])', text)
     for phi in phis:
         new = replace_phi()
         text = text.replace(phi, new)

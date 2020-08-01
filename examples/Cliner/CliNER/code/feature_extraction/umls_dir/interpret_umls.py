@@ -62,13 +62,13 @@ def umls_semantic_context_of_words(umls_string_cache, sentence):
             if umls_string_cache.get_map(rawstring):
                 for i in range(ti, ti + currentWindowSize):
                     if len(umls_context_list[i]) == 0:
-                        umls_context_list[i].append([ti, ti + \
+                        umls_context_list[i].append([ti, ti +
                                                      currentWindowSize - 1])
 
                     else:
                         updated = 0
                         for j in umls_context_list[i]:
-                            if j[0] >= ti and j[1] <= (ti + \
+                            if j[0] >= ti and j[1] <= (ti +
                                                        currentWindowSize - 1):
                                 j[0] = ti
                                 j[1] = (ti + currentWindowSize - 1)
@@ -312,6 +312,17 @@ def normalize_phrase(phrase):
 
     phrase = nltk.PorterStemmer().stem(phrase)
 
+<<<<<<< HEAD
+=======
+    if PyPwl is not None:
+
+        init_time = time.time()
+
+        phrase = spellCheck(phrase, PyPwl=PyPwl)
+
+        print(time.time() - init_time)
+
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     return phrase
 
 
@@ -355,15 +366,15 @@ def obtain_concept_ids(cache, phrase, cui_freq={}):
             cuis = cuis.union(conceptId["mappings"][key])
 
         for normPhrase in conceptId["norms"]:
-            cuis = cuis.union( \
-                get_list_all_possible_cuis_for_abrv(cache, normPhrase) + \
+            cuis = cuis.union(
+                get_list_all_possible_cuis_for_abrv(cache, normPhrase) +
                 get_cui(cache, normPhrase))
 
         if (len(cuis) == 1 and 'CUI-less' in cuis):
             for corrected_phrase in normalize_phrase(phrase):
                 cuis = cuis.union(
-                    get_list_all_possible_cuis_for_abrv(cache, \
-                        corrected_phrase) + \
+                    get_list_all_possible_cuis_for_abrv(cache,
+                        corrected_phrase) +
                     get_cui(cache, corrected_phrase))
 
     cuis = filter_cuis_by_tui(cache, cuis)

@@ -55,7 +55,7 @@ def normalize_tokens(toks):
     # replace number tokens
     def num_normalize(w):
         # pylint: disable=anomalous-backslash-in-string
-        return '__num__' if re.search('\d', w) else w
+        return '__num__' if re.search('\\d', w) else w
 
     toks = list(map(num_normalize, toks))
     return toks
@@ -136,7 +136,7 @@ def pickle_dump(obj, path_to_obj):
 
 def is_prose_sentence(sentence):
     # pylint: disable=unidiomatic-typecheck
-    assert type(sentence) == type([]), 'is_prose_sentence() must take list arg'
+    assert isinstance(sentence) == isinstance([]), 'is_prose_sentence() must take list arg'
     if sentence == []:
         return False
     # elif sentence[-1] == '.' or sentence[-1] == '?':
@@ -154,7 +154,13 @@ def is_prose_sentence(sentence):
 
 def is_at_least_half_nonprose(sentence):
     count = len(filter(is_prose_word, sentence))
+<<<<<<< HEAD
     return bool(count >= len(sentence) / 2)
+=======
+    return bool(count >= len(sentence)/2)
+
+
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
 
 def is_prose_word(word):
@@ -164,7 +170,7 @@ def is_prose_word(word):
             return False
     # Digit
     # pylint: disable=anomalous-backslash-in-string
-    if re.match('\d', word):
+    if re.match('\\d', word):
         return False
     # All uppercase
     if word == word.upper():
@@ -236,7 +242,7 @@ def print_vec(f, label, vec):
     start = 0
     write(f, '\t%-10s: ' % label)
     # pylint: disable=unidiomatic-typecheck
-    if type(vec) != type([]):
+    if isinstance(vec) != isinstance([]):
         vec = vec.tolist()
     for _ in range(int(math.ceil(float(len(vec)) / COLUMNS))):
         for featname in vec[start:start + COLUMNS]:

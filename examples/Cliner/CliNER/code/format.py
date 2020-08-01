@@ -60,17 +60,27 @@ def main():
     # pylint: disable=pointless-statement
     # Ensure annotations are specified
     if not txt:
+<<<<<<< HEAD
         print >> sys.stderr, '\n\tError: Must supply text file'
         print >> sys.stderr
         sys.exit()
     elif not os.path.exists(txt):
         print >> sys.stderr, '\n\tError: Given text file does not exist'
         print >> sys.stderr
+=======
+        print >>sys.stderr, '\n\tError: Must supply text file'
+        print >>sys.stderr
+        sys.exit()
+    elif not os.path.exists(txt):
+        print >>sys.stderr, '\n\tError: Given text file does not exist'
+        print >>sys.stderr
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
         sys.exit()
 
     # Ensure annotations are specified
     extensions = Note.supportedFormatExtensions()
     if not annotations:
+<<<<<<< HEAD
         print >> sys.stderr, '\n\tError: Must supply annotations'
         print >> sys.stderr
         sys.exit()
@@ -84,10 +94,24 @@ def main():
         print >> sys.stderr, '\t\t(.%s)' % str(' or .'.join(extensions))
         # pylint: disable=expression-not-assigned
         print >> sys.stderr
+=======
+        print >>sys.stderr, '\n\tError: Must supply annotations'
+        print >>sys.stderr
+        sys.exit()
+    elif not os.path.exists(txt):
+        print >>sys.stderr, '\n\tError: Given annotation file does not exist'
+        print >>sys.stderr
+        sys.exit()
+    elif os.path.splitext(annotations)[1][1:] not in extensions:
+        print >>sys.stderr, '\n\tError: annotation must be a supported format'
+        print >>sys.stderr, '\t\t(.%s)' %str(' or .'.join(extensions) )
+        print >>sys.stderr
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
         sys.exit()
 
     # Ensure output format is specified
     if (not format) or (format not in Note.supportedFormats()):
+<<<<<<< HEAD
         print >> sys.stderr, '\n\tError: Must specify supported output format'
         # pylint: disable=expression-not-assigned
         print >> sys.stderr, '\t\t(%s)' % str(
@@ -95,6 +119,13 @@ def main():
         # pylint: disable=expression-not-assigned
         print >> sys.stderr
         sys.exit()
+=======
+        print >>sys.stderr, '\n\tError: Must specify supported output format'
+        print >>sys.stderr, '\t\t(%s)' %str(' or '.join(Note.supportedFormats()))
+        print >>sys.stderr
+        sys.exit()
+
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
     # Automatically find the input file format
     in_extension = os.path.splitext(annotations)[1][1:]

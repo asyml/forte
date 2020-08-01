@@ -16,9 +16,29 @@ import sys
 from time import localtime, strftime
 
 import numpy as np
+<<<<<<< HEAD
 from sklearn.feature_extraction import DictVectorizer
 
 import tensorflow as tf
+=======
+import pickle
+import tensorflow as tf
+
+
+import pickle
+import copy
+import shutil
+from time        import localtime, strftime
+from collections import defaultdict
+
+from examples.Cliner.CliNER.code import DatasetCliner_experimental as Exp
+from examples.Cliner.CliNER.code import entity_lstm as entity_model
+from examples.Cliner.CliNER.code import training_predict_LSTM
+from examples.Cliner.CliNER.code import helper_dataset as hd
+from examples.Cliner.CliNER.code.notes.documents import labels as tag2id, id2tag
+from examples.Cliner.CliNER.code.tools           import flatten, save_list_structure, reconstruct_list
+from examples.Cliner.CliNER.code.tools           import print_str, print_vec, print_files, write
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
 from examples.Cliner.CliNER.code import DatasetCliner_experimental as Exp
 from examples.Cliner.CliNER.code import entity_lstm as entity_model
@@ -164,6 +184,16 @@ class ClinerModel:
         # Import the tools for either CRF or LSTM
         if use_lstm:
             # NEW
+<<<<<<< HEAD
+=======
+                    
+            self._pretrained_dataset=None
+            self._pretrained_wordvectors=None
+            
+            self._current_model=None
+            self._parameters=None
+        
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
             self._pretrained_dataset = None
             self._pretrained_wordvectors = None
@@ -251,9 +281,6 @@ class ClinerModel:
             # metadata
             self._time_train_end = strftime("%Y-%m-%d %H:%M:%S", localtime())
 
-
-
-
         else:
             print("IN ERROR CHECK")
             print(dev_split)
@@ -308,6 +335,7 @@ class ClinerModel:
         @return                  List of predictions
         """
 
+<<<<<<< HEAD
         # Predict labels for prose
         vectorized_pred = generic_predict('all',
             tokenized_sents,
@@ -320,6 +348,32 @@ class ClinerModel:
         # parameters=self.parameters)
 
         # self._current_model=model
+=======
+        global hyperparams = {}
+
+        # Predict labels for prose
+        if self._use_lstm:
+            # if self.parameters==None:
+            #     hyperprams['parameters'] = hd.load_parameters_from_file("LSTM_parameters.txt")
+
+            if self._pretrained_dataset==None:
+                temp_pretrained_dataset = os.path.join(hyperparams['parameters']['model_folder'], 
+                                                       "dataset.pickle")
+                hyperparams['pretrained_dataset'] = pickle.load(open(temp_pretrained_dataset, 'rb'))
+
+        vectorized_pred = generic_predict('all'                    ,
+                                          tokenized_sents          ,
+                                          vocab    = self._vocab   ,
+                                          clf      = self._clf     ,
+                                          use_lstm = self._use_lstm,
+                                          hyperparams = hyperparams)
+                                          #pretrained_dataset=self._pretrained_dataset,
+                                          #tokens_to_vec=self._pretrained_wordvector,
+                                          #current_model=self._current_model,
+                                          #parameters=self.parameters)
+
+        #self._current_model=model
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
         if self._use_lstm:
             iob_pred = vectorized_pred
@@ -330,7 +384,7 @@ class ClinerModel:
 
 
 ############################################################################
-###               Lowest-level (interfaces to ML modules)                ###
+#               Lowest-level (interfaces to ML modules)                #
 ############################################################################
 
 def generic_train(p_or_n, train_sents, train_labels, use_lstm, val_sents=None,
@@ -383,6 +437,7 @@ def generic_train(p_or_n, train_sents, train_labels, use_lstm, val_sents=None,
     if use_lstm:
         print("TESTING NEW DATSET OBJECT")
         dataset = Exp.Dataset()
+<<<<<<< HEAD
 
         parameters = hd.load_parameters_from_file("LSTM_parameters.txt")
         parameters['use_pretrained_model'] = False
@@ -411,6 +466,38 @@ def generic_train(p_or_n, train_sents, train_labels, use_lstm, val_sents=None,
         parameters['Feature_vector_length'] = dataset.feature_vector_size
         parameters['use_features_before_final_lstm'] = False
         parameters['learning_rate'] = 0.005
+=======
+        
+        parameters=hd.load_parameters_from_file("LSTM_parameters.txt")
+        parameters['use_pretrained_model']=False
+        
+
+        
+        Datasets_tokens={}
+        Datasets_labels={}
+               
+        Datasets_tokens['train']=train_sents
+        Datasets_labels['train']=train_labels
+        
+        if  val_sents!=None:
+            Datasets_tokens['valid']=val_sents
+            Datasets_labels['valid']=val_labels
+            
+        if test_sents!=None:
+            Datasets_tokens['test']=test_sents
+            Datasets_labels['test']=test_labels
+
+        dataset.load_dataset(Datasets_tokens,Datasets_labels,"",parameters)
+        pickle.dump(dataset, open(os.path.join(parameters['model_folder'], 'dataset.pickle'), 'wb'))
+        
+        print (Datasets_tokens['valid'][0])
+        print (Datasets_tokens['test'][0])
+        
+
+        parameters['Feature_vector_length']=dataset.feature_vector_size
+        parameters['use_features_before_final_lstm']=False 
+        parameters['learning_rate']=0.005
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
         sess = tf.Session()
         number_of_sent = list(range(len(dataset.token_indices['train'])))
@@ -428,6 +515,7 @@ def generic_train(p_or_n, train_sents, train_labels, use_lstm, val_sents=None,
             f1_dictionary['best'] = 0
 
             model_saver = tf.train.Saver(max_to_keep=100)
+<<<<<<< HEAD
 
         print("START TRAINING")
 
@@ -442,6 +530,19 @@ def generic_train(p_or_n, train_sents, train_labels, use_lstm, val_sents=None,
         valid_temp = os.path.join(parameters['conll_like_result_folder'],
             'valid/')
 
+=======
+            
+        print ("START TRAINING")    
+        
+        eval_dir = os.path.join(tmp_dir, 'cliner_eval_%d' % random.randint(0,256)+os.sep)
+        parameters['conll_like_result_folder']=eval_dir
+        
+    
+        test_temp = os.path.join(parameters['conll_like_result_folder'], 'test/')
+        train_temp = os.path.join(parameters['conll_like_result_folder'], 'train/')
+        valid_temp = os.path.join(parameters['conll_like_result_folder'], 'valid/')
+        
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
         os.mkdir(parameters['conll_like_result_folder'])
         os.mkdir(test_temp)
         os.mkdir(train_temp)
@@ -529,8 +630,6 @@ def generic_train(p_or_n, train_sents, train_labels, use_lstm, val_sents=None,
         # CRF
         ########
 
-
-
         # vectorize tokenized sentences
         text_features = extract_features(train_sents)
         # type(text_features): <type 'list'>
@@ -587,8 +686,12 @@ def generic_train(p_or_n, train_sents, train_labels, use_lstm, val_sents=None,
 
     if use_lstm:
         # train using lstm
+<<<<<<< HEAD
         # clf, dev_score  = keras_ml.train(X_seq_ids, Y_labels, tag2id,
         # len(vocab),
+=======
+        # clf, dev_score  = keras_ml.train(X_seq_ids, Y_labels, tag2id, len(vocab),
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
         #                                  val_X_ids=val_X, val_Y_ids=val_Y,
         #                                  test_X_ids=test_X, test_Y_ids=test_Y)
         clf, dev_score = None, None
@@ -620,6 +723,7 @@ def generic_predict(p_or_n, tokenized_sents, vocab, clf, use_lstm):
     '''
     # use_lstm=self._use_lstm
     if use_lstm:
+<<<<<<< HEAD
 
         parameters = hd.load_parameters_from_file("LSTM_parameters.txt")
         parameters['use_pretrained_model'] = True
@@ -683,6 +787,64 @@ def generic_predict(p_or_n, tokenized_sents, vocab, clf, use_lstm):
                 "deploy", model, 0,
                 parameters['conll_like_result_folder'],
                 transition_params_trained)
+=======
+                   
+       parameters=hd.load_parameters_from_file("LSTM_parameters.txt")
+       parameters['use_pretrained_model']=True
+       
+       #model_folder="./models/NN_models"
+       predictions=[]
+       sys.stdout.write('\n use_lstm \n')
+       dataset = Exp.Dataset()     
+       
+       fictional_labels= copy.deepcopy(tokenized_sents)
+       for idx,x in enumerate(fictional_labels):
+           for val_id,value in enumerate(x):
+                fictional_labels[idx][val_id]='O'
+       
+       Datasets_tokens={}
+       Datasets_labels={}
+       
+       Datasets_tokens['deploy']=tokenized_sents
+       Datasets_labels['deploy']=fictional_labels
+       
+       token_to_vector=dataset.load_dataset(Datasets_tokens, Datasets_labels, "", parameters,token_to_vector=None, pretrained_dataset=None)
+
+       print (dataset.token_indices.keys())
+
+       parameters['Feature_vector_length']=dataset.feature_vector_size
+       parameters['use_features_before_final_lstm']=False 
+       
+       
+       dataset.update_dataset("", ['deploy'],Datasets_tokens,Datasets_labels)
+       
+       del Datasets_tokens
+       del Datasets_labels
+       
+       
+       #model=current_model
+       model=entity_model.EntityLSTM(dataset,parameters)
+
+       os.mkdir(parameters['conll_like_result_folder'])
+       
+           
+       test_temp = os.path.join(parameters['conll_like_result_folder'], 'test/')
+       train_temp = os.path.join(parameters['conll_like_result_folder'], 'train/')
+       valid_temp = os.path.join(parameters['conll_like_result_folder'], 'valid/')
+       
+       
+       os.mkdir(test_temp)
+       os.mkdir(train_temp)
+       os.mkdir(valid_temp)
+        
+       sess = tf.Session()
+       with sess.as_default():      
+           
+            #model=entity_model.EntityLSTM(dataset,parameters)
+            transition_params_trained=model.restore_from_pretrained_model(parameters, dataset, sess, token_to_vector=token_to_vector,pretrained_dataset=None)
+            del token_to_vector           
+            predictions=training_predict_LSTM.prediction_step(sess,dataset,"deploy",model,0,parameters['conll_like_result_folder'],transition_params_trained)  
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
             sess.close()
 
         tf.reset_default_graph()
@@ -720,10 +882,15 @@ def generic_predict(p_or_n, tokenized_sents, vocab, clf, use_lstm):
 
     # Predict labels
     if use_lstm:
+<<<<<<< HEAD
         print("TEST_PREDICT")
         sys.exit()
 
 
+=======
+       print ("TEST_PREDICT")
+       sys.exit()
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     else:
         predictions = crf.predict(clf, X)
 

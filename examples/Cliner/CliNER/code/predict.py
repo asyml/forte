@@ -102,3 +102,7 @@ class CliNERPredict():
             with open(out_path, 'w') as f:
                 f.write('%s\n' % output)
             sys.stdout.write('\n')
+<<<<<<< HEAD
+=======
+
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32

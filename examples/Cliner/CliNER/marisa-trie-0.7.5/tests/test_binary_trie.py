@@ -159,6 +159,16 @@ def test_neq_different_type():
     assert marisa_trie.BinaryTrie([b"foo", b"bar"]) != {}
 
 
+<<<<<<< HEAD
+=======
+def test_eq_neq_different_order():
+    lo_trie = marisa_trie.BinaryTrie(order=marisa_trie.LABEL_ORDER)
+    wo_trie = marisa_trie.BinaryTrie(order=marisa_trie.WEIGHT_ORDER)
+    # assert lo_trie == lo_trie and wo_trie == wo_trie
+    # assert lo_trie != wo_trie
+
+
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 def test_gt_lt_exceptions():
     with pytest.raises(TypeError):
         # pylint: disable=expression-not-assigned

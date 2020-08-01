@@ -21,7 +21,10 @@ from forte.processors.base import PackProcessor
 from ft.onto.clinical import ClinicalEntityMention
 
 from examples.Cliner.CliNER.code.predict import CliNERPredict
+<<<<<<< HEAD
 
+=======
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
 class ClinicalNER(PackProcessor):
     def initialize(self):
@@ -34,7 +37,7 @@ class ClinicalNER(PackProcessor):
         self.model_path = os.path.join(
             'CliNER/models/train_full.model')
         self.format = 'i2b2'
-        self.model = CliNERPredict(self.txt, self.output, self.model_path, \
+        self.model = CliNERPredict(self.txt, self.output, self.model_path,
                                    self.format)
 
     def _process(self, input_pack: DataPack):
@@ -42,8 +45,12 @@ class ClinicalNER(PackProcessor):
             doc = fin.readlines()
 
         self.model.predict()
+<<<<<<< HEAD
 
-        con = codecs.open(os.path.join(self.output, 'ex_doc.con'), "r", \
+=======
+        
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
+        con = codecs.open(os.path.join(self.output, 'ex_doc.con'), "r",
                           encoding="utf8")
 
         ner_labels = []
@@ -63,8 +70,13 @@ class ClinicalNER(PackProcessor):
         offset = 0
         text = ""
         text_lines = []
+<<<<<<< HEAD
 
         for line in doc:
+=======
+    
+        for line in enumerate(doc):
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
             text += line
             offsets.append(offset)  # the begin of the text
             offset += len(line) + 1

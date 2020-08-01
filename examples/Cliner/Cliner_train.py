@@ -18,6 +18,11 @@ import os
 
 from examples.Cliner.CliNER.code.train import CliNERTrain
 
+<<<<<<< HEAD
+=======
+from examples.Cliner.CliNER.code.train import CliNERTrain
+import os
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
 class CliTrain():
     def __init__(self):

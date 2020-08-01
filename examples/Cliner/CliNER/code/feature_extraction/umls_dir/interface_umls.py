@@ -62,9 +62,13 @@ trie = create_trie.create_trie()
 # pylint: disable=redefined-outer-name
 def string_lookup(string):
     """ Get sty for a given string """
+<<<<<<< HEAD
     c.execute(
         "SELECT sty FROM MRCON a, MRSTY b WHERE a.cui = b.cui AND str = ?; ",
         (string,))
+=======
+    c.execute( "SELECT sty FROM MRCON a, MRSTY b WHERE a.cui = b.cui AND str = ?; " , (string,) )
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     return c.fetchall()
 
 

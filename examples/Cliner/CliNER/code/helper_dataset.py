@@ -61,6 +61,13 @@ def is_number(s):
         return True
     except ValueError:
         return False
+<<<<<<< HEAD
+=======
+    
+def is_boolean(s):
+    return bool(s in ['True', 'False'])
+        
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
 
 def is_boolean(s):
@@ -202,7 +209,7 @@ def reverse_dictionary(dictionary):
 def is_token_in_pretrained_embeddings(token, all_pretrained_tokens):
     # return token in all_pretrained_tokens or \
     # pylint: disable=anomalous-backslash-in-string
-    return re.sub('\d', '0', token.lower()) in all_pretrained_tokens
+    return re.sub('\\d', '0', token.lower()) in all_pretrained_tokens
 
 
 def remove_bio_from_label_name(label_name):

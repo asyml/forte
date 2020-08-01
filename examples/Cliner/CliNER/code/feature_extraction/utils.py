@@ -11,7 +11,10 @@ import os
 import pickle
 import re
 import sys
+<<<<<<< HEAD
 
+=======
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 import nltk
 
 # used as a default path for stashing pos tagger.
@@ -105,7 +108,11 @@ def is_at_least_half_nonprose(sentence):
     """
     count = len([w for w in sentence if is_prose_word(w)])
 
+<<<<<<< HEAD
     return bool(count >= len(sentence) / 2)
+=======
+    return bool(count >= len(sentence)/2)
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
     #     return True
     # else:
     #     return False
@@ -136,7 +143,7 @@ def is_prose_word(word):
 
     # Digit
     # pylint: disable=anomalous-backslash-in-string
-    if re.match('\d', word):
+    if re.match('\\d', word):
         return False
 
     # All uppercase

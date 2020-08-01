@@ -55,11 +55,16 @@ def lookupShaper(name):
 
 
 def dontUseLC(shape):
+<<<<<<< HEAD
     return shape in (
         WORDSHAPEDAN2, WORDSHAPEDAN2BIO, WORDSHAPEJENNY1, WORDSHAPECHRIS2,
         WORDSHAPECHRIS3)
 
 
+=======
+    return shape in (WORDSHAPEDAN2, WORDSHAPEDAN2BIO, WORDSHAPEJENNY1, WORDSHAPECHRIS2, WORDSHAPECHRIS3)
+
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 def wordShapeNext(inStr, wordShaper, knownLCWords):
     if knownLCWords is not None and dontUseLC(wordShaper):
         knownLCWords = None
@@ -95,7 +100,10 @@ def wordShapeNext(inStr, wordShaper, knownLCWords):
 def wordShape(inStr, wordShaper):
     return wordShapeNext(inStr, wordShaper, None)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 def wordShapeDan1(s):
     digit = True
     upper = True
@@ -296,12 +304,20 @@ def wordShapeChris2Long(s, omitIfInBoundary, length, knownLCWords):
             sb += 'k'
     return sb
 
+<<<<<<< HEAD
 
 def wordShapeDan2Bio(s, knownLCWords):
     if containsGreekLetter(s):
         return wordShapeDan2(s, knownLCWords) + "-GREEK"
     else:
         return wordShapeDan2(s, knownLCWords)
+=======
+def wordShapeDan2Bio( s,  knownLCWords):
+   if containsGreekLetter(s):
+       return wordShapeDan2(s, knownLCWords) + "-GREEK"
+   else:
+       return wordShapeDan2(s, knownLCWords)
+>>>>>>> e78f80917a86d64548654b9a210433c91a359f32
 
 
 def containsGreekLetter(s):
