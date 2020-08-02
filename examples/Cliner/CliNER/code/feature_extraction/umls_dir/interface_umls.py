@@ -26,7 +26,7 @@ umls_tables = enabled['UMLS']
 
 
 ############################################
-###          Setups / Handshakes         ###
+#          Setups / Handshakes         #
 ############################################
 
 
@@ -44,7 +44,7 @@ def SQLConnect():
 
 
 ############################################
-###      Global reource connections      ###
+#      Global reource connections          #
 ############################################
 
 
@@ -56,7 +56,7 @@ trie = create_trie.create_trie()
 
 
 ############################################
-###           Query Operations           ###
+#           Query Operations               #
 ############################################
 
 # pylint: disable=redefined-outer-name

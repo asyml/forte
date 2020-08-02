@@ -26,7 +26,11 @@ Please note that the example data is simply one of many examples that can found 
 
 ### Running with the example data
 
-First, we need to download the pre-trained model from the [link](https://drive.google.com/file/d/1Jlm2wdmNA-GotTWF60zZRUs1MbnzYox2/view?usp=sharing) and put the model under the directory: `../CliNER/models`
+First, we need to download the pre-trained model as follows:
+
+```bash
+sh download_model.sh
+```
 
 Then we can prepare data as follows:
 

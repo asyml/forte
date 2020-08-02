@@ -131,8 +131,8 @@ class EntityLSTM():
         self.feature_vector_length = parameters['Feature_vector_length']
 
         # Placeholders for input, output and dropout
-        self.input_token_indices = tf.placeholder(tf.int32, [None], name =
-            "input_token_indices")
+        self.input_token_indices = tf.placeholder(tf.int32, [None],
+        name="input_token_indices")
         self.placeholder = tf.placeholder(tf.float32,
             [None, dataset.number_of_classes],
             name="input_label_indices_vector")

@@ -170,7 +170,7 @@ def read_i2b2(txt, con):
 
                 # parse concept line
                 # pylint: disable=anomalous-backslash-in-string
-                concept_regex = '^c="(.*)" (\d+):(\d+) (\d+):(\d+)\|\|t="(.*)"$'
+                concept_regex = '^c="(.*)" (\\d+):(\\d+) (\\d+):(\\d+)\\|\\|t="(.*)"$'
                 match = re.search(concept_regex, line.strip())
                 groups = match.groups()
 
@@ -221,7 +221,7 @@ def read_i2b2(txt, con):
                     error5 = '\tentity 2: c="%s" %d:%d %d:%d||t="%s"' % (
                         ' '.join(tokenized_sents[c2[1] - 1][c2[2]:c2[3] + 1]),
                         c2[1], c2[2], c2[1], c2[3], c2[0])
-                    error_msg = '\n\n%s\n%s\n\n%s\n\n%s\n%s\n' % (error1, \
+                    error_msg = '\n\n%s\n%s\n\n%s\n\n%s\n%s\n' % (error1,
                                                                   error2,
                                                                   error3,
                                                                   error4,
@@ -314,12 +314,12 @@ def tok_labels_to_concepts(tokenized_sents, tok_labels):
     # test it out
     test_tok_labels = tok_concepts_to_labels(tokenized_sents, concepts)
     # '''
-    for lineno, (test, gold, sent) in enumerate(zip(test_tok_labels, \
+    for lineno, (test, gold, sent) in enumerate(zip(test_tok_labels,
                                                     tok_labels,
                                                     tokenized_sents)):
         for i, (a, b) in enumerate(zip(test, gold)):
             # '''
-            if not ((a == b) or (a[0] == 'B' and b[0] == 'I' and \
+            if not ((a == b) or (a[0] == 'B' and b[0] == 'I' and
                                  a[1:] == b[1:])):
                 print()
                 print('lineno:    ', lineno)

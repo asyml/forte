@@ -15,7 +15,7 @@ from examples.Cliner.CliNER.code.feature_extraction.read_config \
     import enabled_modules
 from examples.Cliner.CliNER.code.tools import compute_performance_stats
 
-cliner_dir = os.path.dirname(os.path.dirname(os.path.dirname( \
+cliner_dir = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
 tmp_dir = os.path.join(cliner_dir, 'data', 'tmp')
 

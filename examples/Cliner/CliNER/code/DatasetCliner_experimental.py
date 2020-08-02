@@ -20,8 +20,8 @@ import helper_dataset as hd
 
 
 def lists_to_dataset_structure(sentences_tokens, sentence_tags,
-        total_token_counter, token_count, label_count,
-        character_count):
+                               total_token_counter, token_count, label_count,
+                               character_count):
     labels = []
     tokens = []
     new_label_sequence = []
@@ -49,7 +49,7 @@ def lists_to_dataset_structure(sentences_tokens, sentence_tags,
             # token]
             token_features = []
             features_as_array = np.array(token_features,
-                dtype=np.dtype('int32'))
+                                         dtype=np.dtype('int32'))
             features_as_array = features_as_array.reshape(
                 (features_as_array.shape[0], 1))
             features_as_array = np.transpose(features_as_array)
@@ -65,9 +65,9 @@ def lists_to_dataset_structure(sentences_tokens, sentence_tags,
     return labels, tokens, token_count, label_count, character_count, \
            features, feature_file_name, feature_vector_size
 
+
 class Dataset():
     """A class for handling data sets."""
-
     def __init__(self, name='', verbose=False, debug=False):
         self.name = name
         self.verbose = verbose
@@ -122,30 +122,33 @@ class Dataset():
             character_indices_padded[dataset_type] = []
 
             for token_sequence in tokens[dataset_type]:
-                token_indices[dataset_type].append(
-                    [token_to_index.get(token, self.UNK_TOKEN_INDEX)
-                     for token in token_sequence])
-                characters[dataset_type].append([list(token)
-                                                 for token in token_sequence])
-                character_indices[dataset_type].append(
-                    [[character_to_index.get(character, random.randint(1, max(
-                        self.index_to_character.keys()))) for character in
-                      token]
-                     for token in token_sequence])
+                token_indices[dataset_type].append([
+                    token_to_index.get(token, self.UNK_TOKEN_INDEX)
+                    for token in token_sequence
+                ])
+                characters[dataset_type].append(
+                    [list(token) for token in token_sequence])
+                character_indices[dataset_type].append([[
+                    character_to_index.get(
+                        character,
+                        random.randint(1, max(self.index_to_character.keys())))
+                    for character in token
+                ] for token in token_sequence])
                 token_lengths[dataset_type].append(
                     [len(token) for token in token_sequence])
                 longest_token_length_in_sequence = \
                     max(token_lengths[dataset_type][-1])
-                character_indices_padded[dataset_type].append(
-                    [hd.pad_list(temp_token_indices,
-                        longest_token_length_in_sequence,
-                        self.PADDING_CHARACTER_INDEX) for
-                     temp_token_indices in character_indices[dataset_type][-1]])
+                character_indices_padded[dataset_type].append([
+                    hd.pad_list(temp_token_indices,
+                                longest_token_length_in_sequence,
+                                self.PADDING_CHARACTER_INDEX) for
+                    temp_token_indices in character_indices[dataset_type][-1]
+                ])
 
             label_indices[dataset_type] = []
             for label_sequence in labels[dataset_type]:
-                label_indices[dataset_type].append([label_to_index[label] for
-                                                    label in label_sequence])
+                label_indices[dataset_type].append(
+                    [label_to_index[label] for label in label_sequence])
 
         label_binarizer = sklearn.preprocessing.LabelBinarizer()
         label_binarizer.fit(range(max(index_to_label.keys()) + 1))
@@ -193,11 +196,14 @@ class Dataset():
         self.characters.update(characters)
         self.label_vector_indices.update(label_vector_indices)
 
-    def load_dataset(self, avaliable_datasets_sent, avaliable_datasets_labels,
-            parameters,
-            token_to_vector=None, pretrained_dataset=None):
+    def load_dataset(self,
+                     avaliable_datasets_sent,
+                     avaliable_datasets_labels,
+                     parameters,
+                     token_to_vector=None,
+                     pretrained_dataset=None):
         '''
-        dataset_filepaths : dictionary with keys 'train', 'valid', 'test', 
+        dataset_filepaths : dictionary with keys 'train', 'valid', 'test',
         'deploy'
         '''
         start_time = time.time()
@@ -258,11 +264,10 @@ class Dataset():
                 character_count[dataset_type], features[dataset_type], \
                 features_file_names[dataset_type], \
                 feature_vector_size[dataset_type] \
-                    = self._parse_dataset(sentences_list=
-                    avaliable_datasets_sent[
-                        dataset_type],
-                    tags_list= \
-                        avaliable_datasets_labels[
+                    = self._parse_dataset(
+                        sentences_list=avaliable_datasets_sent
+                            [dataset_type],
+                    tags_list=avaliable_datasets_labels[
                             dataset_type])
 
             if Not_here:
@@ -320,11 +325,14 @@ class Dataset():
                     character]
 
         token_count['all'] = hd.order_dictionary(token_count['all'],
-            'value_key', reverse=True)
+                                                 'value_key',
+                                                 reverse=True)
         label_count['all'] = hd.order_dictionary(label_count['all'],
-            'key', reverse=False)
+                                                 'key',
+                                                 reverse=False)
         character_count['all'] = hd.order_dictionary(character_count['all'],
-            'value', reverse=True)
+                                                     'value',
+                                                     reverse=True)
         if self.verbose:
             print('character_count[\'all\']: {0}'.format(
                 character_count['all']))
@@ -334,9 +342,8 @@ class Dataset():
         iteration_number = 0
         number_of_unknown_tokens = 0
         if self.verbose:
-            print(
-                "parameters['remap_unknown_tokens_to_unk']: {0}".format(
-                    parameters['remap_unknown_tokens_to_unk']))
+            print("parameters['remap_unknown_tokens_to_unk']: {0}".format(
+                parameters['remap_unknown_tokens_to_unk']))
         if self.verbose:
             print("len(token_count['train'].keys()): {0}".format(
                 len(token_count['train'].keys())))
@@ -380,22 +387,24 @@ class Dataset():
                 if l not in label_count['all']:
                     label_count['all'][l] = 0
         label_count['all'] = hd.order_dictionary(label_count['all'],
-            'key', reverse=False)
+                                                 'key',
+                                                 reverse=False)
 
         if parameters['use_pretrained_model']:
 
             print("USE_PRETRAINED_MODEL ACTIVE")
             # pylint: disable=attribute-defined-outside-init
-            self.unique_labels = sorted(list( \
+            self.unique_labels = sorted(list(
                 pretraining_dataset.label_to_index.keys()))
             # Make sure labels are compatible with the pretraining dataset.
             for label in label_count['all']:
                 if label not in pretraining_dataset.label_to_index:
-                    raise AssertionError("The label {0} does not exist in"
-                    "the pretraining dataset. ".format(label) +
-                                             "Please ensure that only the"
-                    "following labels exist in the dataset: {0}".format(
-                                              ', '.join(self.unique_labels)))
+                    raise AssertionError(
+                        "The label {0} does not exist in"
+                        "the pretraining dataset. ".format(label) +
+                        "Please ensure that only the"
+                        "following labels exist in the dataset: {0}".format(
+                            ', '.join(self.unique_labels)))
         else:
             label_to_index = {}
             iteration_number = 0
@@ -407,13 +416,14 @@ class Dataset():
         character_to_index = {}
         iteration_number = 0
         for character, count in character_count['all'].items():
-            if iteration_number == self.PADDING_CHARACTER_INDEX: \
-                    iteration_number += 1
+            if iteration_number == self.PADDING_CHARACTER_INDEX:
+                iteration_number += 1
             character_to_index[character] = iteration_number
             iteration_number += 1
 
-        token_to_index = hd.order_dictionary(token_to_index, 'value',
-            reverse=False)
+        token_to_index = hd.order_dictionary(token_to_index,
+                                             'value',
+                                             reverse=False)
         if self.verbose:
             print('token_to_index: {0}'.format(token_to_index))
         index_to_token = hd.reverse_dictionary(token_to_index)
@@ -422,12 +432,14 @@ class Dataset():
         if self.verbose:
             print('index_to_token: {0}'.format(index_to_token))
 
-        label_to_index = hd.order_dictionary(label_to_index, 'value',
-            reverse=False)
+        label_to_index = hd.order_dictionary(label_to_index,
+                                             'value',
+                                             reverse=False)
         index_to_label = hd.reverse_dictionary(label_to_index)
 
-        character_to_index = hd.order_dictionary(character_to_index, 'value',
-            reverse=False)
+        character_to_index = hd.order_dictionary(character_to_index,
+                                                 'value',
+                                                 reverse=False)
         index_to_character = hd.reverse_dictionary(character_to_index)
         # pylint: disable=attribute-defined-outside-init
         self.token_to_index = token_to_index
