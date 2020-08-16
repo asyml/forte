@@ -30,7 +30,7 @@ class ClinerReader(PackReader):
         txt_path = collection
 
         pack = self.new_pack(pack_name='Cliner_input')
-        doc = codecs.open(txt_path, "r", encoding="utf8")
+        doc = codecs.open(txt_path, "rb+", encoding="utf8")
 
         offsets = []
         offset = 0
@@ -38,9 +38,10 @@ class ClinerReader(PackReader):
         text_lines = []
 
         for line in doc:
-            text += line
+            text += line.strip() + '\n'
             offsets.append(offset)  # the begin of the text
-            offset += len(line) + 1
+            offset += len(line)
+            print(offsets)
             text_lines.append(line)
 
         pack.set_text(text, replace_func=self.text_replace_operation)

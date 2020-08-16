@@ -15,7 +15,6 @@
 The main running pipeline for the rewriter.
 """
 import sys
-import json
 
 from examples.Cliner.Cliner import ClinicalNER
 from examples.Cliner.Cliner_train import CliTrain
@@ -28,13 +27,10 @@ pipeline = Pipeline[DataPack]()
 
 
 def do_process(input_pack_str: str):
-    # Let's assume there is a JSON string for us to use.
     datapack: DataPack = pipeline.process([input_pack_str])
-    # You can get the JSON form like this.
     data_json = datapack.serialize()
-    # Let's write it out.
     with open('generation.json', 'w') as fo:
-        fo.write(json.dumps(data_json, indent=2))
+        fo.write(data_json)
 
 
 if __name__ == '__main__':
@@ -43,9 +39,11 @@ if __name__ == '__main__':
         model.train()
     else:                            # inference mode
         pipeline.set_reader(RawDataDeserializeReader())
-        pipeline.add(ClinicalNER())
+        pipeline.add(ClinicalNER(), config={
+            'config_output': sys.argv[3],
+            'config_data': sys.argv[4]
+        })
 
-        # You should initialize the model here, so we only do it once.
         pipeline.initialize()
 
         with open('Cliner_input.json') as fi:

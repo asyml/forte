@@ -41,5 +41,7 @@ python prepare_pipline.py
 To inference with the example data, just run:
 
 ```bash
-python pipline.py predict
+python pipeline.py predict [config_model] [config_output] [config_data]
 ```
+
+Note that three config directories are optional and the default ones can be found in Cliner.py

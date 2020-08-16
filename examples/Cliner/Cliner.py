@@ -16,6 +16,10 @@ The clinical ner processor
 """
 import codecs
 import os
+
+from typing import Dict, Any
+from forte.common import Resources
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.clinical import ClinicalEntityMention
@@ -24,12 +28,12 @@ from examples.Cliner.CliNER.code.predict import CliNERPredict
 
 
 class ClinicalNER(PackProcessor):
-    def initialize(self):
+    def initialize(self, _: Resources, configs: Config):
         # Setup model path.
         # pylint: disable=attribute-defined-outside-init
-        self.txt = os.path.join('CliNER/data/examples/ex_doc.txt')
-        self.output = os.path.join('CliNER/data/test_predictions')
-        self.model_path = os.path.join('CliNER/models/train_full.model')
+        self.txt = configs.config_data
+        self.output = configs.config_output
+        self.model_path = configs.config_model
         self.format = 'i2b2'
         self.model = CliNERPredict(self.txt, self.output, self.model_path,
                                    self.format)
@@ -40,7 +44,8 @@ class ClinicalNER(PackProcessor):
 
         self.model.predict()
 
-        con = codecs.open(os.path.join(self.output, 'ex_doc.con'),
+        fname = os.path.splitext(os.path.basename(self.txt))[0] + '.' + 'con'
+        con = codecs.open(os.path.join(self.output, fname),
                           "r",
                           encoding="utf8")
         ner_labels = []
@@ -63,16 +68,26 @@ class ClinicalNER(PackProcessor):
 
         for line in doc:
             text += line
-            offsets.append(offset)  # the begin of the text
-            offset += len(line) + 1
+            offsets.append(offset)  # the begin idx of each line
+            offset += len(line)
             text_lines.append(line)
 
         for labels in ner_labels:
             line_num = int(labels['line_num']) - 1
             text_line = text_lines[line_num]
-            span_begin = \
-                text_line.split()[int(labels['span_begin'].split(':')[1])]
-            word_begin = offsets[line_num] + text_line.index(span_begin)
+            new_text_line = text_line.lower()  # ignore the Uppercase and
+            # lowercase
+            word_begin = offsets[line_num] + new_text_line.index(
+                labels['name'])
             word_end = word_begin + len(labels['name'])
+
             entity = ClinicalEntityMention(input_pack, word_begin, word_end)
-            entity.cliner_type = labels['type']
+            entity.ner_type = labels['type']
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config['config_model'] = 'CliNER/models/train_full.model'
+        config['config_output'] = 'CliNER/data/examples'
+        config['config_data'] = 'CliNER/data/examples/ex_doc.txt'
+        return config

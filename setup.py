@@ -49,7 +49,10 @@ setuptools.setup(
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch==7.5.1'],
         'spacy': ['spacy==2.3.0'],
         'allennlp': ['allennlp==1.0.0', 'allennlp-models==1.0.0',
-                     'torch>=1.5.0,<1.6.0']
+                     'torch>=1.5.0,<1.6.0'],
+        'cliner': ['marisa-trie==0.7.4', 'scipy==1.5.0',
+                   'scikit-learn==0.23.1', 'repoze.lru==0.7',
+                   'tensorflow-gpu==1.12.0']
     },
     entry_points={
         'console_scripts': [

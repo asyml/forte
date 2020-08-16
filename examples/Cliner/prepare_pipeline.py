@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-The main running pipeline for the rewriter.
+The preparing pipeline for the clinical ner.
 """
 from examples.Cliner.reader import ClinerReader
 from forte.data.data_pack import DataPack
@@ -25,5 +25,4 @@ pipeline = Pipeline[DataPack]()
 pipeline.set_reader(ClinerReader())
 pipeline.add(PackNameJsonPackWriter(),
     {'indent': 2, 'output_dir': '.', 'overwrite': True})
-pipeline.run('CliNER/data/examples/ex_doc.txt',
-    'CliNER/data/examples/ex_doc.con')
+pipeline.run('CliNER/data/examples/ex_doc.txt')
