@@ -14,17 +14,15 @@
 """
 The clinical ner processor
 """
-import codecs
 import os
-
 from typing import Dict, Any
+
+from examples.Cliner.CliNER.code.predict import CliNERPredict
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.clinical import ClinicalEntityMention
-
-from examples.Cliner.CliNER.code.predict import CliNERPredict
 
 
 class ClinicalNER(PackProcessor):
@@ -36,7 +34,7 @@ class ClinicalNER(PackProcessor):
         self.model_path = configs.config_model
         self.format = 'i2b2'
         self.model = CliNERPredict(self.txt, self.output, self.model_path,
-                                   self.format)
+            self.format)
 
     def _process(self, input_pack: DataPack):
         with open(self.txt, 'r') as fin:
@@ -45,44 +43,44 @@ class ClinicalNER(PackProcessor):
         self.model.predict()
 
         fname = os.path.splitext(os.path.basename(self.txt))[0] + '.' + 'con'
-        con = codecs.open(os.path.join(self.output, fname),
-                          "r",
-                          encoding="utf8")
-        ner_labels = []
-        for line in con:
-            labels = {}
-            temp_labels = line[2:].strip().split('||')
-            labels['type'] = temp_labels[1][3:-1]
-            name_and_span = temp_labels[0].split('"')
-            labels['name'] = name_and_span[1][0:]
-            labels['span_begin'] = name_and_span[2].split()[0]
-            labels['span_end'] = name_and_span[2].split()[1]
-            labels['line_num'] = \
-                name_and_span[2].split()[0].split(':')[0]
-            ner_labels.append(labels)
+        with open(os.path.join(self.output, fname), "r", encoding="utf-8") \
+                as con_file:
+            con = con_file.readlines()
+            ner_labels = []
+            for line in con:
+                labels = {}
+                temp_labels = line[2:].strip().split('||')
+                labels['type'] = temp_labels[1][3:-1]
+                name_and_span = temp_labels[0].split('"')
+                labels['name'] = name_and_span[1][0:]
+                labels['span_begin'] = name_and_span[2].split()[0]
+                labels['span_end'] = name_and_span[2].split()[1]
+                labels['line_num'] = \
+                    name_and_span[2].split()[0].split(':')[0]
+                ner_labels.append(labels)
 
-        offsets = []
-        offset = 0
-        text = ""
-        text_lines = []
+            offsets = []
+            offset = 0
+            text = ""
+            text_lines = []
 
-        for line in doc:
-            text += line
-            offsets.append(offset)  # the begin idx of each line
-            offset += len(line)
-            text_lines.append(line)
+            for line in doc:
+                text += line
+                offsets.append(offset)  # the begin idx of each line
+                offset += len(line)
+                text_lines.append(line)
 
-        for labels in ner_labels:
-            line_num = int(labels['line_num']) - 1
-            text_line = text_lines[line_num]
-            new_text_line = text_line.lower()  # ignore the Uppercase and
-            # lowercase
-            word_begin = offsets[line_num] + new_text_line.index(
-                labels['name'])
-            word_end = word_begin + len(labels['name'])
+            for labels in ner_labels:
+                line_num = int(labels['line_num']) - 1
+                text_line = text_lines[line_num]
+                new_text_line = text_line.lower()  # ignore the Uppercase and
+                # lowercase
+                word_begin = offsets[line_num] + new_text_line.index(
+                    labels['name'])
+                word_end = word_begin + len(labels['name'])
 
-            entity = ClinicalEntityMention(input_pack, word_begin, word_end)
-            entity.ner_type = labels['type']
+                entity = ClinicalEntityMention(input_pack, word_begin, word_end)
+                entity.ner_type = labels['type']
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

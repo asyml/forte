@@ -15,7 +15,6 @@
 The reader to read a table and example utterance.
 """
 from typing import Iterator
-import codecs
 
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
@@ -30,24 +29,24 @@ class ClinerReader(PackReader):
         txt_path = collection
 
         pack = self.new_pack(pack_name='Cliner_input')
-        doc = codecs.open(txt_path, "rb+", encoding="utf8")
+        with open(txt_path, "r", encoding="utf-8") as doc_file:
+            doc = doc_file.readlines()
+            offsets = []
+            offset = 0
+            text = ""
+            text_lines = []
 
-        offsets = []
-        offset = 0
-        text = ""
-        text_lines = []
+            for line in doc:
+                text += line.strip() + '\n'
+                offsets.append(offset)  # the begin of the text
+                offset += len(line)
+                print(offsets)
+                text_lines.append(line)
 
-        for line in doc:
-            text += line.strip() + '\n'
-            offsets.append(offset)  # the begin of the text
-            offset += len(line)
-            print(offsets)
-            text_lines.append(line)
+            pack.set_text(text, replace_func=self.text_replace_operation)
 
-        pack.set_text(text, replace_func=self.text_replace_operation)
+            Document(pack, 0, len(text))
 
-        Document(pack, 0, len(text))
+            pack.pack_name = 'Cliner_input'
 
-        pack.pack_name = 'Cliner_input'
-
-        yield pack
+            yield pack

@@ -44,4 +44,10 @@ To inference with the example data, just run:
 python pipeline.py predict [config_model] [config_output] [config_data]
 ```
 
-Note that three config directories are optional and the default ones can be found in Cliner.py
+Note that the default values of these config directories are as follows: 
+
+```bash
+[config_model]: CliNER/models/train_full.model
+[config_output]: CliNER/data/examples
+[config_data]: CliNER/data/examples/ex_doc.txt
+```

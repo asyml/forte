@@ -11,10 +11,9 @@ import os
 import pickle
 import sys
 
+from examples.Cliner.CliNER.code import helper_dataset
 from examples.Cliner.CliNER.code import tools
 from examples.Cliner.CliNER.code.notes.documents import Document
-
-import helper_dataset as hd
 
 
 class CliNERPredict():
@@ -49,7 +48,8 @@ class CliNERPredict():
             Model = pickle.load(f, encoding='latin1')
         # pylint: disable=protected-access
         if Model._use_lstm:
-            parameters = hd.load_parameters_from_file("LSTM_parameters.txt")
+            parameters = helper_dataset.load_parameters_from_file(
+                "LSTM_parameters.txt")
             parameters['use_pretrained_model'] = True
 
             temp_pretrained_dataset_adress = parameters[
@@ -58,7 +58,8 @@ class CliNERPredict():
             # pylint: disable=protected-access
             Model._pretrained_dataset = pickle.load(
                 open(temp_pretrained_dataset_adress, 'rb'))
-            Model._pretrained_wordvector = hd.load_pretrained_token_embeddings(
+            Model._pretrained_wordvector = \
+                helper_dataset.load_pretrained_token_embeddings(
                 parameters)
             Model._current_model = None
 

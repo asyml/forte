@@ -21,16 +21,17 @@ from examples.Cliner.Cliner_train import CliTrain
 from forte.data.data_pack import DataPack
 from forte.data.readers import RawDataDeserializeReader
 from forte.pipeline import Pipeline
+from forte.processors.writers import PackNameJsonPackWriter
 
 # Let's create a pipeline first.
 pipeline = Pipeline[DataPack]()
 
 
 def do_process(input_pack_str: str):
-    datapack: DataPack = pipeline.process([input_pack_str])
-    data_json = datapack.serialize()
-    with open('generation.json', 'w') as fo:
-        fo.write(data_json)
+    pipeline.process([input_pack_str])
+    # data_json = datapack.serialize()
+    # with open('generation.json', 'w') as fo:
+    #     fo.write(data_json)
 
 
 if __name__ == '__main__':
@@ -43,6 +44,14 @@ if __name__ == '__main__':
             'config_output': sys.argv[3],
             'config_data': sys.argv[4]
         })
+        pipeline.add(
+            PackNameJsonPackWriter(),
+            {
+                'output_dir': 'output',
+                'indent': 2,
+                'overwrite': True,
+            }
+        )
 
         pipeline.initialize()
 
