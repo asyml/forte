@@ -41,6 +41,7 @@ class ClinicalNER(PackProcessor):
             doc = fin.readlines()
 
         self.model.predict()
+        input_pack.pack_name = 'new_datapack_cliner'
 
         fname = os.path.splitext(os.path.basename(self.txt))[0] + '.' + 'con'
         with open(os.path.join(self.output, fname), "r", encoding="utf-8") \

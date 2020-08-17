@@ -51,3 +51,10 @@ Note that the default values of these config directories are as follows:
 [config_output]: CliNER/data/examples
 [config_data]: CliNER/data/examples/ex_doc.txt
 ```
+Then the new datapack is serilized in `output/new_datapack_cliner.json`.
+
+
+### Reference
+
+More details about the clinical ner model can be found in the `CliNER/README
+.md`.
