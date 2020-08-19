@@ -1,4 +1,6 @@
 #!/bin/bash
+mkdir examples/Cliner/CliNER/models/
+
 # download the pre-trained model
 wget https://drive.google.com/file/d/1Jlm2wdmNA-GotTWF60zZRUs1MbnzYox2 -O examples/Cliner/CliNER/models/train_full.model
 
