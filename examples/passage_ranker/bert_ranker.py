@@ -19,10 +19,10 @@ import os
 from typing import Optional, cast
 
 import torch
-from texar.torch.modules.classifiers import BERTClassifier as TxBERTClassifier
-from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
-from texar.torch.modules.pretrained import PretrainedBERTMixin
 from torch.nn import Parameter
+from texar.torch.modules.pretrained import PretrainedBERTMixin
+from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
+from texar.torch.modules.classifiers import BERTClassifier as TxBERTClassifier
 
 from forte.common.configuration import Config
 
