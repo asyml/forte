@@ -33,12 +33,12 @@ class TestClinicalNER(unittest.TestCase):
             ClinicalNER(),
             config={
                 'config_model':
-                '../../../examples/Cliner/CliNER/models/train_full'
+                'examples/Cliner/CliNER/models/train_full'
                 '.model',
                 'config_data':
-                '../../../examples/Cliner/CliNER/data/examples/test.txt',
+                'examples/Cliner/CliNER/data/examples/test.txt',
                 'config_output':
-                '../../../examples/Cliner/CliNER/data/examples',
+                'examples/Cliner/CliNER/data/examples',
             })
         self.cliner.initialize()
 
@@ -55,7 +55,7 @@ class TestClinicalNER(unittest.TestCase):
             "mobility of her left arm . ",
         ]
         document = '\n'.join(sentences)
-        with open('../../../examples/Cliner/CliNER/data/examples/test.txt',
+        with open('examples/Cliner/CliNER/data/examples/test.txt',
                   'w') as fo:
             fo.write(document)
         pack = self.cliner.process(document)
