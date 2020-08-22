@@ -29,7 +29,7 @@ Please note that the example data is simply one of many examples that can found 
 First, we need to download the pre-trained model as follows:
 
 ```bash
-sh download_model.sh
+python download_model.py
 ```
 
 Then we can prepare data as follows:

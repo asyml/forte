@@ -39,7 +39,7 @@ script:
   - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker
     words
   - export PYTHONPATH=`pwd`
-  - sh ./examples/Cliner/download_model.sh
+  - python examples/Cliner/download_model.py
   - coverage run -m pytest
 after_success:
   - codecov
