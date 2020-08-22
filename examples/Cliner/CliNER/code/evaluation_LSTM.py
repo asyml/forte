@@ -6,7 +6,7 @@ Created on Tue Aug  8 13:38:57 2017
 @author: elena
 """
 import sklearn.metrics
-import helper_dataset as hd
+from examples.Cliner.CliNER.code import helper_dataset
 
 
 def assess_model(y_pred, y_true, labels, target_names):
@@ -58,7 +58,7 @@ dataset.unique_label_indices_of_interest).
         new_label_names = all_unique_labels[:]
         new_label_names.remove('O')
         new_label_names.sort(
-            key=lambda x: (hd.remove_bio_from_label_name(x), x))
+            key=lambda x: (helper_dataset.remove_bio_from_label_name(x), x))
         new_label_names.append('O')
         new_label_indices = list(range(len(new_label_names)))
         new_label_to_index = dict(zip(new_label_names, new_label_indices))

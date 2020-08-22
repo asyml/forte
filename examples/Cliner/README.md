@@ -54,7 +54,7 @@ Note that the default values of these config directories are as follows:
 Then the new datapack is serilized in `output/new_datapack_cliner.json`.
 
 
-### Reference
+### Acknowledgement
 
-More details about the clinical ner model can be found in the `CliNER/README
-.md`.
+This example is built on the [text-machine-lab/CliNER](https://github.com/text-machine-lab/CliNER) repo. More details about
+ the clinical ner model can be found in the `CliNER/README.md`.

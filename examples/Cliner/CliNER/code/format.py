@@ -12,7 +12,7 @@ import os
 import sys
 import tempfile
 
-from notes.note import Note
+from examples.Cliner.CliNER.code.notes.note import Note
 
 cliner_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 tmp_dir = os.path.join(cliner_dir, 'data', 'tmp')

@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import sys
 
-import tools
+from examples.Cliner.CliNER.code import tools
 
 
 def main():

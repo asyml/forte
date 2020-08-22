@@ -9,7 +9,7 @@ from __future__ import print_function
 
 import os
 import numpy as np
-import helper_dataset as hd
+from examples.Cliner.CliNER.code import helper_dataset
 import tensorflow as tf
 from evaluation_LSTM import remap_labels
 
@@ -207,7 +207,8 @@ def prediction_step(sess, dataset, dataset_type, model, epoch_number,
         shell_read, conll_output_filepath)
     # print('shell_command: {0}'.format(shell_command))
     os.system(shell_command)
-    conll_parsed_output = hd.get_parsed_conll_output(conll_output_filepath)
+    conll_parsed_output = helper_dataset.get_parsed_conll_output(
+        conll_output_filepath)
     # print ("Test F1")
     # print (conll_parsed_output['all']['f1'])
 

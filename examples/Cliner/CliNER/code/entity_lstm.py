@@ -3,11 +3,12 @@ import pickle
 import re
 import time
 
-# import utils_tf
-# import utils_nlp
-import helper_dataset as hd
 import tensorflow as tf
 import utils_tf
+
+# import utils_tf
+# import utils_nlp
+from examples.Cliner.CliNER.code import helper_dataset
 
 
 # TO DO: ADD CNN LAYER
@@ -82,8 +83,8 @@ def bidirectional_LSTM(input, hidden_state_dimension, initializer,
                     dtype=tf.float32,
                     initializer=initializer)
                 initial_output_state = tf.get_variable("initial_output_state",
-                shape=[1,
-                             hidden_state_dimension],
+                    shape=[1,
+                           hidden_state_dimension],
                     dtype=tf.float32,
                     initializer=initializer)
                 c_states = \
@@ -132,7 +133,7 @@ class EntityLSTM():
 
         # Placeholders for input, output and dropout
         self.input_token_indices = tf.placeholder(tf.int32, [None],
-        name="input_token_indices")
+            name="input_token_indices")
         self.placeholder = tf.placeholder(tf.float32,
             [None, dataset.number_of_classes],
             name="input_label_indices_vector")
@@ -416,7 +417,8 @@ class EntityLSTM():
         # Load embeddings
         print('Load token embeddings... ', end='', flush=True)
         if token_to_vector is None:
-            token_to_vector = hd.load_pretrained_token_embeddings(parameters)
+            token_to_vector = helper_dataset.load_pretrained_token_embeddings(
+                parameters)
 
         initial_weights = sess.run(self.token_embedding_weights.read_value())
         number_of_loaded_word_vectors = 0
