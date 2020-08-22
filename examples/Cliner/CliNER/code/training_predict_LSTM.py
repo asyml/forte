@@ -8,10 +8,12 @@ Created on Wed Oct 25 14:02:11 2017
 from __future__ import print_function
 
 import os
+
 import numpy as np
-from examples.Cliner.CliNER.code import helper_dataset
 import tensorflow as tf
-from evaluation_LSTM import remap_labels
+
+from examples.Cliner.CliNER.code import helper_dataset
+from examples.Cliner.CliNER.code.evaluation_LSTM import remap_labels
 
 
 # import model_lstm as used_model
@@ -158,8 +160,8 @@ def prediction_step(sess, dataset, dataset_type, model, epoch_number,
             for prediction, token, gold_label in zip(prediction_labels,
                     dataset.tokens[dataset_type][i], gold_labels):
                 results = (
-                            token + " " + "true " + gold_label + " " +
-                            prediction)
+                        token + " " + "true " + gold_label + " " +
+                        prediction)
 
                 if dataset_type == "test":
                     f_store.write(results + "\n")

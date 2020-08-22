@@ -4,11 +4,11 @@ import re
 import time
 
 import tensorflow as tf
-import utils_tf
 
 # import utils_tf
 # import utils_nlp
 from examples.Cliner.CliNER.code import helper_dataset
+from examples.Cliner.CliNER.code import utils_tf
 
 
 # TO DO: ADD CNN LAYER

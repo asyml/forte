@@ -7,10 +7,12 @@
 ######################################################################
 
 
-from . import word_features as feat_word
-from .read_config import enabled_modules
+from examples.Cliner.CliNER.code.feature_extraction import \
+    word_features as feat_word
+from examples.Cliner.CliNER.code.feature_extraction.read_config import \
+    enabled_modules
 # What modules are available
-from .utils import load_pos_tagger
+from examples.Cliner.CliNER.code.feature_extraction.utils import load_pos_tagger
 
 ################################################
 # Build a few expensive one-time objects
@@ -22,12 +24,15 @@ enabled = enabled_modules()
 # Import feature modules
 feat_genia = None
 if enabled['GENIA']:
-    from .genia_dir.genia_features import GeniaFeatures
+    from examples.Cliner.CliNER.code.feature_extraction.genia_dir\
+        .genia_features import \
+        GeniaFeatures
 
 # Only create UMLS cache if module is available
 if enabled['UMLS']:
     import umls_dir.umls_features as feat_umls
-    from umls_dir.umls_cache import UmlsCache
+    from examples.Cliner.CliNER.code.feature_extraction.umls_dir.umls_cache \
+        import UmlsCache
 
     umls_cache = UmlsCache()
 
