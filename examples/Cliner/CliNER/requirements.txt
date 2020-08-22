@@ -5,3 +5,4 @@ scikit-learn
 marisa-trie
 repoze.lru
 tensorflow-gpu
+python-crfsuite
