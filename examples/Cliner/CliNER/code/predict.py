@@ -68,9 +68,9 @@ class CliNERPredict():
             # model.parameters=None
 
         # Tell user if not predicting
-        if not self.files:
-            sys.stderr.write("\n\tNote: You did not supply any input files\n\n")
-            sys.exit()
+        # if not self.files:
+        #     sys.stderr.write("\n\tNote: You did not supply any input files\n\n")
+        #     sys.exit()
 
         n = len(self.files)
 
