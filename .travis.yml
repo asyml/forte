@@ -40,6 +40,7 @@ script:
     words
   - export PYTHONPATH=`pwd`
   - python examples/Cliner/download_model.py
+  - pip install python-crfsuite==0.9.7
   - coverage run -m pytest
 after_success:
   - codecov
