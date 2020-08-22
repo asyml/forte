@@ -20,3 +20,15 @@ if __name__ == "__main__":
         "https://drive.google.com/file/d/1ZVgJ7EQtMjPpg_v-lCycCLdFgVzmdTxI"],
         path=pkg_path,
         filenames=["i2b2va-eval.jar"])
+
+    maybe_download(urls=[
+        "https://drive.google.com/file/d/1QvenOvRx7R9XjA5tUxeZnDdoroW94R-N"
+        "/view?usp=sharing"],
+        path=pkg_path,
+        filenames=["py3_maxent_treebank_pos_tagger.pickle"])
+
+    maybe_download(urls=[
+        "https://drive.google.com/file/d/162jCbpzf5Jez8h0zzA-lAyMkCLcjgAep"
+        "/view?usp=sharing"],
+        path=pkg_path,
+        filenames=["py2_maxent_treebank_pos_tagger.pickle"])
