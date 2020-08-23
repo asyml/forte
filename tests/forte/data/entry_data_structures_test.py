@@ -7,7 +7,6 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Generics, MultiPackGeneric, Annotation
 from forte.data.ontology.core import FList, FDict, MpPointer, Pointer
 from forte.data.readers.base_reader import PackReader, MultiPackReader
-from forte.pack_manager import PackManager
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, MultiPackProcessor
 from ft.onto.base_ontology import EntityMention
@@ -144,8 +143,7 @@ class MultiEntryStructure(unittest.TestCase):
         self.assertIsInstance(mpe.__dict__['refer_entry'], MpPointer)
 
     def test_wrong_attribute(self):
-        manager = PackManager()
-        input_pack = MultiPack(manager)
+        input_pack = MultiPack()
         mp_entry = ExampleMPEntry(input_pack)
         p1 = input_pack.add_pack('pack1')
         e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
@@ -201,8 +199,7 @@ class EntryDataStructure(unittest.TestCase):
 
 class NotHashingTest(unittest.TestCase):
     def setUp(self):
-        manager = PackManager()
-        self.pack: DataPack = DataPack(manager)
+        self.pack: DataPack = DataPack()
         self.pack.set_text("Some text to test annotations on.")
 
     def test_not_hashable(self):

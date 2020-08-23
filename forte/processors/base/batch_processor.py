@@ -242,7 +242,7 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
                 )
 
     def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
-        return DataPack(self._pack_manager, pack_name)
+        return DataPack(pack_name)
 
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):
@@ -270,7 +270,7 @@ class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
                     p, self.context_type, entry_type)
 
     def new_pack(self, pack_name: Optional[str] = None) -> MultiPack:
-        return MultiPack(self._pack_manager, pack_name)
+        return MultiPack(pack_name)
 
 
 class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):

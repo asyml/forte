@@ -24,7 +24,6 @@ from typing import List, Optional, overload
 
 import jsonpickle
 
-from forte.pack_manager import PackManager
 from forte.utils.types import PathLike
 from forte.utils.utils_io import maybe_create_dir
 
@@ -183,13 +182,13 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     return filepath
 
 
-def deserialize(pack_manager: PackManager, string: str):
+def deserialize(string: str):
     r"""Deserialize a pack from a string.
     """
     pack = jsonpickle.decode(string)
     # Need to assign the pack manager to the pack to control it after reading
     #  the raw data.
     # pylint: disable=protected-access
-    pack._pack_manager = pack_manager
-    pack_manager.set_remapped_pack_id(pack)
+    # pack._pack_manager = pack_manager
+    # pack_manager.set_remapped_pack_id(pack)
     return pack

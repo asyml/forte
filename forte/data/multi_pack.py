@@ -30,7 +30,6 @@ from forte.data.ontology.top import (
     MultiPackGeneric)
 from forte.data.span import Span
 from forte.data.types import DataRequest
-from forte.pack_manager import PackManager
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +58,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     cross-pack entries (links, and groups)
     """
 
-    def __init__(self, pack_manager: PackManager,
-                 pack_name: Optional[str] = None):
-        super().__init__(pack_manager, pack_name)
+    def __init__(self, pack_name: Optional[str] = None):
+        super().__init__(pack_name)
 
         # Store the global ids.
         self._pack_ref: List[int] = []
@@ -72,6 +70,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._pack_names: List[str] = []
         # Store the reverse mapping from name to the pack index.
         self._name_index: Dict[str, int] = {}
+
+        # Reference to the real packs.
+        self._packs: List[DataPack] = []
 
         self.links: SortedList[MultiPackLink] = SortedList()
         self.groups: SortedList[MultiPackGroup] = SortedList()
@@ -110,6 +111,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Rebuild the name to index lookup.
         self._name_index = {n: i for (i, n) in enumerate(self._pack_names)}
 
+        # Create the pack list for adding them back.
+        self._packs = []
+
     def __getstate__(self):
         r"""
         Pop some recoverable information in serialization.
@@ -118,8 +122,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         """
         state = super().__getstate__()
-        state.pop('_inverse_pack_ref')
-        state.pop('_name_index')
+        # Do not directly serialize the pack itself.
+        state.pop('_packs')
 
         state['links'] = list(state['links'])
         state['groups'] = list(state['groups'])
@@ -127,31 +131,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         return state
 
-    def realign_packs(self):
-        """Need to call this after reading the relevant data packs"""
-        # pylint: disable=protected-access
-        new_pack_refs: List[int] = []
-        new_inverse_refs: Dict[int, int] = {}
-        for pid in self._pack_ref:
-            remapped_id = self._pack_manager.get_remapped_id(pid)
-            new_pack_refs.append(remapped_id)
-            new_inverse_refs[remapped_id] = len(new_pack_refs) - 1
-
-        self._pack_ref = new_pack_refs
-        self._inverse_pack_ref = new_inverse_refs
-
     def __iter__(self):
         yield from self.links
         yield from self.groups
         yield from self.generics
-
-    def __del__(self):
-        """ A destructor for the MultiPack. During destruction, the Multi Pack
-        will inform the PackManager that it won't need the DataPack anymore.
-        """
-        super().__del__()
-        for pack_id in self._pack_ref:
-            self._pack_manager.dereference_pack(pack_id)
 
     def _init_meta(self, pack_name: Optional[str] = None) -> MultiPackMeta:
         return MultiPackMeta(pack_name)
@@ -171,7 +154,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def add_pack(self, ref_name: Optional[str] = None) -> DataPack:
         """
         Create a data pack and add it to this multi pack. If `ref_name` is
-        proviated, it will be used to index the data pack. Otherwise, a default
+        provided, it will be used to index the data pack. Otherwise, a default
         name based on the pack id will be created for this data pack. The
         created data pack will be returned.
 
@@ -191,7 +174,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"" f"{type(ref_name)}"
             )
 
-        pack: DataPack = DataPack(self._pack_manager)
+        pack: DataPack = DataPack()
         self.add_pack_(pack, ref_name)
         return pack
 
@@ -222,9 +205,6 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         pid = pack.meta.pack_id
 
-        # Tell the system that this multi pack is referencing this data pack.
-        self._pack_manager.reference_pack(pack)
-
         if ref_name is None:
             # Create a default name based on the pack id.
             ref_name = f'{self.__default_pack_prefix}_{pid}'
@@ -236,6 +216,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._pack_names.append(ref_name)
         self._name_index[ref_name] = len(self._pack_ref) - 1
 
+        self._packs.append(pack)
+
     def get_pack_at(self, index: int) -> DataPack:
         """
         Get data pack at provided index.
@@ -246,7 +228,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: The pack at the index.
 
         """
-        return self._pack_manager.get_from_pool(self._pack_ref[index])
+        # return self._pack_manager.get_from_pool(self._pack_ref[index])
+        return self.packs[index]
 
     def get_pack_index(self, pack_id: int) -> int:
         """
@@ -273,8 +256,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: The pack that has that name.
 
         """
-        return self._pack_manager.get_from_pool(
-            self._pack_ref[self._name_index[name]])
+        return self._packs[self._name_index[name]]
 
     @property
     def packs(self) -> List[DataPack]:
@@ -284,7 +266,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         Returns: List of data packs contained in this multi-pack.
 
         """
-        return [self._pack_manager.get_from_pool(r) for r in self._pack_ref]
+        return self._packs
 
     @property
     def pack_names(self) -> Set[str]:

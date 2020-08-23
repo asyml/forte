@@ -264,7 +264,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         logger.info("reading from cache file %s", cache_filename)
         with open(cache_filename, "r") as cache_file:
             for line in cache_file:
-                pack = data_utils.deserialize(self._pack_manager, line.strip())
+                pack = data_utils.deserialize(line.strip())
                 if not isinstance(pack, self.pack_type):
                     raise TypeError(
                         f"Pack deserialized from {cache_filename} "
@@ -284,7 +284,7 @@ class PackReader(BaseReader[DataPack], ABC):
         return DataPack
 
     def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
-        return DataPack(self._pack_manager, pack_name)
+        return DataPack(pack_name)
 
     def set_text(self, pack: DataPack, text: str):
         r"""Assign the text value to the :class:`DataPack`. This function will
@@ -308,4 +308,4 @@ class MultiPackReader(BaseReader[MultiPack], ABC):
         return MultiPack
 
     def new_pack(self, pack_name: Optional[str] = None) -> MultiPack:
-        return MultiPack(self._pack_manager, pack_name)
+        return MultiPack(pack_name)

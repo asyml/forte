@@ -7,7 +7,6 @@ import unittest
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack, MultiPackLink
 from forte.data.ontology import Annotation, MultiPackGroup
-from forte.pack_manager import PackManager
 from ft.onto.base_ontology import Token
 
 logging.basicConfig(level=logging.DEBUG)
@@ -29,8 +28,7 @@ class DataPackTest(unittest.TestCase):
     def setUp(self) -> None:
         # Note: input source is created automatically by the system, but we
         #  can also set it manually at test cases.
-        pm = PackManager()
-        self.multi_pack = MultiPack(pm)
+        self.multi_pack = MultiPack()
         self.data_pack1 = self.multi_pack.add_pack(ref_name="left pack")
         self.data_pack2 = self.multi_pack.add_pack(ref_name="right pack")
 

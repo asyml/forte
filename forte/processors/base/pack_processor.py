@@ -56,7 +56,7 @@ class PackProcessor(BaseProcessor[DataPack], ABC):
         Returns:
 
         """
-        return DataPack(self._pack_manager, pack_name)
+        return DataPack(pack_name)
 
 
 class MultiPackProcessor(BaseProcessor[MultiPack], ABC):
@@ -77,7 +77,7 @@ class MultiPackProcessor(BaseProcessor[MultiPack], ABC):
         Returns:
 
         """
-        return MultiPack(self._pack_manager, pack_name)
+        return MultiPack(pack_name)
 
     def new_data_pack(self, pack_name: Optional[str] = None) -> DataPack:
         """
@@ -90,4 +90,4 @@ class MultiPackProcessor(BaseProcessor[MultiPack], ABC):
         Returns:
 
         """
-        return DataPack(self._pack_manager, pack_name)
+        return DataPack(pack_name)
