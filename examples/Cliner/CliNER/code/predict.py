@@ -25,6 +25,8 @@ class CliNERPredict():
         self.format = format
 
         self.files = glob.glob(self.txt)
+        print('[info] self.files are:{}, self.txt is:{}'.format(self.files,
+            self.txt))
         tools.mkpath(self.output)
 
         if self.format:
@@ -68,9 +70,9 @@ class CliNERPredict():
             # model.parameters=None
 
         # Tell user if not predicting
-        # if not self.files:
-        #     sys.stderr.write("\n\tNote: You did not supply any input files\n\n")
-        #     sys.exit()
+        if not self.files:
+            sys.stderr.write("\n\tNote: You did not supply any input files\n\n")
+            sys.exit()
 
         n = len(self.files)
 
