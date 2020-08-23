@@ -24,9 +24,6 @@ class CliNERPredict():
         self.model_path = model_path
         self.format = format
 
-        self.files = glob.glob(self.txt)
-        print('[info] self.files are:{}, self.txt is:{}'.format(self.files,
-            self.txt))
         tools.mkpath(self.output)
 
         if self.format:
@@ -37,6 +34,10 @@ class CliNERPredict():
 
     # Predict
     def predict(self):
+        # Put it here to make sure the existance of the file for glob.
+        # pylint: disable=attribute-defined-outside-init
+        self.files = glob.glob(self.txt)
+
         # Must specify output format
         if self.format not in ['i2b2']:
             sys.stderr.write('\n\tError: Must specify output format\n')
