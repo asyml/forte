@@ -1,9 +1,8 @@
 import sys
 import setuptools
+from pathlib import Path
 
-long_description = '''
-NLP pipeline project to facilitate the production usage of NLP techniques.
-'''
+long_description = (Path(__file__).parent / 'README.md').read_text()
 
 if sys.version_info < (3, 6):
     sys.exit('Python>=3.6 is required by Forte.')
@@ -63,5 +62,6 @@ setuptools.setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ]
 )
