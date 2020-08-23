@@ -1,5 +1,5 @@
 <div align="center">
-   <img src="./docs/_static/img/logo_h.png"><br><br>
+   <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/logo_h.png"><br><br>
 </div>
 
 -----------------
@@ -57,21 +57,13 @@ the general data format, Forte makes a perfect tool for data inspection, compone
 result sharing. This is particularly helpful during team collaborations!
 
 -----------------
-
-<figure class="image">
-   <img src="./docs/_static/img/forte_arch.png"><br><br>
-   <figcaption>A high level Architecture of Forte showing how ontology and entries work with the 
-   pipeline.</figcaption>
-</figure>
-
+| ![forte_arch.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_arch.png) | 
+|:--:| 
+| *A high level Architecture of Forte showing how ontology and entries work with the pipeline.* |
 -----------------
-
-<figure class="image">
-   <img src="./docs/_static/img/forte_results.png"><br><br>
-   <figcaption>Forte stores results in data packs and use the ontology to represent task logic
-   </figcaption>
-</figure>
-
+| ![forte_results.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_results.png) | 
+|:--:| 
+| *Forte stores results in data packs and use the ontology to represent task logic.* |
 -----------------
 
 ## Package Overview
@@ -142,15 +134,15 @@ Many more examples are available [here](./examples).
 
 ### Download and Installation
 
-Download the repository through
-
+To install the released version from PyPI:
 ```bash
-git clone https://github.com/asyml/forte.git
+pip install forte
 ```
 
-After `cd` into `forte`, you can install it through
-
+To install from source, 
 ```bash
+git clone https://github.com/asyml/forte.git
+cd forte
 pip install .
 ```
 
@@ -170,7 +162,7 @@ If you are interested in making enhancement to Forte, please quickly go over our
 
 ### Companies and Universities Supporting Forte
 <p float="left">
-   <img src="./docs/_static/img/Petuum.png" width="200" align="top">
+   <img src="https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/Petuum.png" width="200" align="top">
    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
    <img src="https://asyml.io/assets/institutions/cmu.png", width="200" align="top">
 </p>

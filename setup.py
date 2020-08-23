@@ -1,20 +1,21 @@
 import sys
 import setuptools
+from pathlib import Path
 
-long_description = '''
-NLP pipeline project to facilitate the production usage of NLP techniques.
-'''
+long_description = (Path(__file__).parent / "README.md").read_text()
 
 if sys.version_info < (3, 6):
     sys.exit('Python>=3.6 is required by Forte.')
 
 setuptools.setup(
     name="forte",
-    version="0.0.1",
+    version="0.0.1a1",
     url="https://github.com/asyml/forte",
 
-    description="NLP pipeline",
+    description="Forte is extensible framework for building composable and "
+                "modularized NLP workflows.",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     license='Apache License Version 2.0',
     packages=setuptools.find_packages(exclude=["scripts", "examples"]),
     include_package_data=True,
@@ -63,5 +64,6 @@ setuptools.setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ]
 )
