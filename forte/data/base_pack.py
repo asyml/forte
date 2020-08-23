@@ -14,8 +14,9 @@
 
 import copy
 from abc import abstractmethod
-from typing import List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, \
-    Tuple, Any
+from typing import (
+    List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, Tuple, Any)
+import uuid
 
 import jsonpickle
 
@@ -29,8 +30,6 @@ __all__ = [
     "BaseMeta",
     "PackType"
 ]
-
-from forte.pack_manager import PackManager
 
 
 class BaseMeta:
@@ -46,7 +45,7 @@ class BaseMeta:
 
     def __init__(self, pack_name: Optional[str] = None):
         self.pack_name: Optional[str] = pack_name
-        self._pack_id: int = -1
+        self._pack_id: int = uuid.uuid4().int
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -67,36 +66,25 @@ class BaseMeta:
     def pack_id(self) -> int:
         return self._pack_id
 
-    @pack_id.setter
-    def pack_id(self, pid: int):
-        self._pack_id = pid
-
 
 class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     r"""The base class of :class:`~forte.data.data_pack.DataPack` and
     :class:`~forte.data.multi_pack.MultiPack`.
 
     Args:
-        pack_manager( PackManager): The pack manager to manage the ids of the
-            packs.
         pack_name (str, optional): a string name of the pack.
 
     """
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, pack_manager: PackManager,
-                 pack_name: Optional[str] = None):
+    def __init__(self, pack_name: Optional[str] = None):
         super().__init__()
-        self._pack_manager = pack_manager
-
         self.links: List[LinkType] = []
         self.groups: List[GroupType] = []
 
         self.meta: BaseMeta = self._init_meta(pack_name)
         self.index: BaseIndex = BaseIndex()
 
-        # Assign a pack id for this pack.
-        self._pack_manager.set_pack_id(self)
         self.__control_component: Optional[str] = None
         self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
 
@@ -105,8 +93,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         state.pop('index')
         state.pop('_pending_entries')
         state.pop('_BasePack__control_component')
-        state.pop('_pack_manager')
-
         return state
 
     def __setstate__(self, state):
@@ -127,10 +113,6 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     @property
     def pack_id(self):
         return self.meta.pack_id
-
-    @pack_id.setter
-    def pack_id(self, pack_id: int):
-        self.meta.pack_id = pack_id
 
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:

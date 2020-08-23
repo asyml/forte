@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Pipeline component module.
 """
@@ -23,7 +24,6 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType, BasePack
 from forte.data.ontology.core import Entry
-from forte.pack_manager import PackManager
 from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
 
@@ -31,15 +31,11 @@ from forte.utils import get_full_module_name
 class PipelineComponent(Generic[PackType]):
     def __init__(self):
         self._process_manager: ProcessManager = None
-        self._pack_manager: PackManager = None
         self.resources: Optional[Resources] = None
         self.configs: Config = Config({}, {})
 
-    def assign_manager(self,
-                       process_manager: ProcessManager,
-                       pack_manager: PackManager):
+    def assign_manager(self, process_manager: ProcessManager):
         self._process_manager = process_manager
-        self._pack_manager = pack_manager
 
     def initialize(self, resources: Resources, configs: Config):
         r"""The pipeline will call the initialize method at the start of a

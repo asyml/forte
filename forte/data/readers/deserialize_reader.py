@@ -42,7 +42,7 @@ class BaseDeserializeReader(PackReader, ABC):
                 "Data source is None, cannot deserialize.")
 
         # pack: DataPack = DataPack.deserialize(data_source)
-        pack: DataPack = deserialize(self._pack_manager, data_source)
+        pack: DataPack = deserialize(data_source)
 
         if pack is None:
             raise ProcessExecutionException(
@@ -137,25 +137,15 @@ class MultiPackDiskReader(MultiPackReader):
         # pylint: disable=protected-access
         with open(os.path.join(
                 self.configs.data_path, multi_pack_path)) as m_data:
-            # m_pack: MultiPack = MultiPack.deserialize(m_data.read())
-            m_pack: MultiPack = deserialize(self._pack_manager, m_data.read())
+            m_pack: MultiPack = deserialize(m_data.read())
 
             for pid in m_pack._pack_ref:
                 sub_pack_path = self.__pack_index[pid]
-                if self._pack_manager.get_remapped_id(pid) >= 0:
-                    # This pid is already been read.
-                    continue
 
                 with open(os.path.join(
                         self.configs.data_path, sub_pack_path)) as pack_data:
-                    # pack: DataPack = DataPack.deserialize(pack_data.read())
-                    pack: DataPack = deserialize(self._pack_manager,
-                                                 pack_data.read())
-
-                    # Add a reference count to this pack, because the multipack
-                    # needs it.
-                    self._pack_manager.reference_pack(pack)
-            m_pack.realign_packs()
+                    pack: DataPack = deserialize(pack_data.read())
+                    m_pack._packs.append(pack)
             yield m_pack
 
     def __get_pack_paths(self):

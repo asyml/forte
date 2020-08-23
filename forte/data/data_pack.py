@@ -29,7 +29,6 @@ from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generics)
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
-from forte.pack_manager import PackManager
 
 logger = logging.getLogger(__name__)
 
@@ -66,14 +65,11 @@ class DataPack(BasePack[Entry, Link, Group]):
     language text could be a document617, paragraph or in any other granularity.
 
     Args:
-        pack_manager(PackManager): A manager that records global
-          information of packs, such as pack ids.
         pack_name (str, optional): A name for this data pack.
     """
 
-    def __init__(self, pack_manager: PackManager,
-                 pack_name: Optional[str] = None):
-        super().__init__(pack_manager, pack_name)
+    def __init__(self, pack_name: Optional[str] = None):
+        super().__init__(pack_name)
         self._text = ""
 
         self.annotations: SortedList[Annotation] = SortedList()

@@ -15,13 +15,12 @@
 Unit tests for RACEMultiChoiceQAReader.
 """
 import json
-import unittest
 import os
+import unittest
 from typing import Iterator, Iterable
 
-from forte.data.readers import RACEMultiChoiceQAReader
 from forte.data.data_pack import DataPack
-from forte.pack_manager import PackManager
+from forte.data.readers import RACEMultiChoiceQAReader
 from forte.pipeline import Pipeline
 from ft.onto.race_multi_choice_qa_ontology import RaceDocument, Question
 
