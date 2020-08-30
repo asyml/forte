@@ -151,6 +151,8 @@ def predict(clf, X):
     feats = format_features(X)
 
     # Dump the model into a temp file
+    if not os.path.exists(tmp_dir):
+        os.mkdirs(tmp_dir)
     os_handle, tmp_file = tempfile.mkstemp(dir=tmp_dir, suffix="crf_temp")
     with open(tmp_file, 'wb') as f:
         clf_byte = bytearray(clf)  # , 'latin1')
