@@ -103,7 +103,7 @@ def train(X, Y, val_X=None, val_Y=None, test_X=None, test_Y=None):
 
     # Train the model
     if not os.path.exists(tmp_dir):
-        os.mkdirs(tmp_dir)
+        os.makedirs(tmp_dir)
     os_handle, tmp_file = tempfile.mkstemp(dir=tmp_dir, suffix="crf_temp")
     trainer.train(tmp_file)
 
@@ -152,7 +152,7 @@ def predict(clf, X):
 
     # Dump the model into a temp file
     if not os.path.exists(tmp_dir):
-        os.mkdirs(tmp_dir)
+        os.makedirs(tmp_dir)
     os_handle, tmp_file = tempfile.mkstemp(dir=tmp_dir, suffix="crf_temp")
     with open(tmp_file, 'wb') as f:
         clf_byte = bytearray(clf)  # , 'latin1')
