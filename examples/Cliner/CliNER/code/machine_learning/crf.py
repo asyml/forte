@@ -102,6 +102,8 @@ def train(X, Y, val_X=None, val_Y=None, test_X=None, test_Y=None):
         trainer.append(xseq, yseq)
 
     # Train the model
+    if not os.path.exists(tmp_dir):
+        os.mkdirs(tmp_dir)
     os_handle, tmp_file = tempfile.mkstemp(dir=tmp_dir, suffix="crf_temp")
     trainer.train(tmp_file)
 

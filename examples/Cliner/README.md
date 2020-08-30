@@ -5,7 +5,7 @@ This example implements a Clinical NER model. Given a clinical document, this ex
 ### Prerequisites
 
 ```
-cd CliNER && pip install requirements.txt
+cd ../../ && pip install .[cliner]
 ```
 
 ### Example Data

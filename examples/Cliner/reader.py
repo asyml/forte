@@ -40,7 +40,6 @@ class ClinerReader(PackReader):
                 text += line.strip() + '\n'
                 offsets.append(offset)  # the begin of the text
                 offset += len(line)
-                print(offsets)
                 text_lines.append(line)
 
             pack.set_text(text, replace_func=self.text_replace_operation)
