@@ -3,63 +3,65 @@ language: python
 dist: xenial
 cache: pip
 python:
-- '3.6'
-- '3.7'
+  - '3.6'
+  - '3.7'
 env:
-  global: 
-  - secure: ST/+iBBrcHuCMgKpXj8jfvBgOdjc0TgXEP6urdVLMTCVhzGgSwn+gUtMgoW5TzS+doFhvkotEs37izYLJF5pqIlD3yUxCxjLVZj4McIszAecV+3UjVZCIt6sjsv5igUHqF2aXRJT9TvVddHaa6V1yi6DM2Pe5+W+sXU2ni9tbL67Hm2+rut/J5x1G6ZrTveAlsAk/RcT25DzmjiYPT/9OOThzkSIYYiiETraFQtRG+4eKO9U75QXCbmzJnM6/qESWGcQmvMLRo91Ur91GHT1uicCQYt8QqfKyeNcyKyi/nRlFgKL3swpAlfp8868nCR8rRFuOufqsDxq5iFFs5BPi0HWM5E7hxiPllRxlm5VcqDm5WE1ZCRbpRHLnY/73zCUQy+ex/Z7WVoQAMlRvKsJ/SQHCXmLP97JW0+YQFjtIODyIslRNSnElpVV+5lmsMmsEu8J+uBQCUaqsVPP/DBfRQu4rbt9q9yFc1QXO0BrMdWQ/NuxlEdzj8Lw1rTJrUtFSdC8VMtbkARufk8AVXem5wk7gI8h9R3JONBX2dkVIJK4VM8DK473V0LjdXvldZW688H9RBVZtUIPnZRH7E/4uvqiLh2UjDPL/pE7xW3AyxpBQj34Yh2/b3pdLpiLZ7ohVz/F2EVu//J8q8L5T/S5vBENqF9RWkfdkOkDwuTb8So=
+  global:
+    - secure: ST/+iBBrcHuCMgKpXj8jfvBgOdjc0TgXEP6urdVLMTCVhzGgSwn+gUtMgoW5TzS+doFhvkotEs37izYLJF5pqIlD3yUxCxjLVZj4McIszAecV+3UjVZCIt6sjsv5igUHqF2aXRJT9TvVddHaa6V1yi6DM2Pe5+W+sXU2ni9tbL67Hm2+rut/J5x1G6ZrTveAlsAk/RcT25DzmjiYPT/9OOThzkSIYYiiETraFQtRG+4eKO9U75QXCbmzJnM6/qESWGcQmvMLRo91Ur91GHT1uicCQYt8QqfKyeNcyKyi/nRlFgKL3swpAlfp8868nCR8rRFuOufqsDxq5iFFs5BPi0HWM5E7hxiPllRxlm5VcqDm5WE1ZCRbpRHLnY/73zCUQy+ex/Z7WVoQAMlRvKsJ/SQHCXmLP97JW0+YQFjtIODyIslRNSnElpVV+5lmsMmsEu8J+uBQCUaqsVPP/DBfRQu4rbt9q9yFc1QXO0BrMdWQ/NuxlEdzj8Lw1rTJrUtFSdC8VMtbkARufk8AVXem5wk7gI8h9R3JONBX2dkVIJK4VM8DK473V0LjdXvldZW688H9RBVZtUIPnZRH7E/4uvqiLh2UjDPL/pE7xW3AyxpBQj34Yh2/b3pdLpiLZ7ohVz/F2EVu//J8q8L5T/S5vBENqF9RWkfdkOkDwuTb8So=
   matrix:
-  - TORCH_VER="1.5.0" TENSORFLOW_VER="1.15.0"
+    - TORCH_VER="1.5.0" TENSORFLOW_VER="1.15.0"
 install:
-- pip install --upgrade pip
-- pip install --progress-bar off torch==$TORCH_VER
-- pip install --progress-bar off tensorflow==$TENSORFLOW_VER
-- pip install --progress-bar off .[nltk,ner,srl,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp]
-- git clone https://github.com/asyml/texar-pytorch.git
-- cd texar-pytorch
-- pip install --progress-bar off .
-- cd ..
-- rm -rf texar-pytorch
-- wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.4.2-linux-x86_64.tar.gz
-- tar -zxf elasticsearch-7.4.2-linux-x86_64.tar.gz
-- rm -rf elasticsearch-7.4.2-linux-x86_64.tar.gz
-- elasticsearch-7.4.2/bin/elasticsearch -d
-- pip install faiss-cpu
-- pip install pylint==2.5.2 flake8==3.8.2
-- pip install mypy==0.780
-- pip install pytest==5.1.3
-- pip install coverage codecov
+  - pip install --upgrade pip
+  - pip install --progress-bar off torch==$TORCH_VER
+  - pip install --progress-bar off tensorflow==$TENSORFLOW_VER
+  - pip install --progress-bar off .[nltk,ner,srl,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp]
+  - git clone https://github.com/asyml/texar-pytorch.git
+  - cd texar-pytorch
+  - pip install --progress-bar off .
+  - cd ..
+  - rm -rf texar-pytorch
+  - wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.4.2-linux-x86_64.tar.gz
+  - tar -zxf elasticsearch-7.4.2-linux-x86_64.tar.gz
+  - rm -rf elasticsearch-7.4.2-linux-x86_64.tar.gz
+  - elasticsearch-7.4.2/bin/elasticsearch -d
+  - pip install faiss-cpu
+  - pip install pylint==2.5.2 flake8==3.8.2
+  - pip install mypy==0.780
+  - pip install pytest==5.1.3
+  - pip install coverage codecov
 script:
-- "./scripts/build_ontology_specs.sh"
-- pylint forte/ examples/ ft/ scripts/ tests/
-- flake8 forte/ examples/ ft/ scripts/ tests/
-- mypy .
-- spacy download en_core_web_sm
-- spacy download xx_ent_wiki_sm
-- python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker
-  words
-- export PYTHONPATH=`pwd`
-- coverage run -m pytest
+  - "./scripts/build_ontology_specs.sh"
+  - pylint forte/ examples/ ft/ scripts/ tests/
+  - flake8 forte/ examples/ ft/ scripts/ tests/
+  - mypy .
+  - spacy download en_core_web_sm
+  - spacy download xx_ent_wiki_sm
+  - python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker
+    words
+  - export PYTHONPATH=`pwd`
+  - python examples/Cliner/download_model.py
+  - pip install python-crfsuite==0.9.7
+  - coverage run -m pytest
 after_success:
-- codecov
-- "./scripts/travis_after_success.sh"
+  - codecov
+  - "./scripts/travis_after_success.sh"
 jobs:
   include:
-  - stage: docs
-    python: '3.7'
-    install:
-    - pip install --upgrade pip
-    - pip install --progress-bar off -r requirements.txt
-    - sudo apt-get install libenchant1c2a myspell-en-us
-    - pip install --progress-bar off -r docs/requirements.txt
-    - git clone https://github.com/asyml/texar-pytorch.git
-    - cd texar-pytorch
-    - pip install --progress-bar off .
-    - cd ..
-    - rm -rf texar-pytorch
-    script:
-    - cd docs
-    - sphinx-build -W -b html -d _build/doctrees . _build/html
-    - sphinx-build -b spelling -d _build/doctrees . _build/spelling
+    - stage: docs
+      python: '3.7'
+      install:
+        - pip install --upgrade pip
+        - pip install --progress-bar off -r requirements.txt
+        - sudo apt-get install libenchant1c2a myspell-en-us
+        - pip install --progress-bar off -r docs/requirements.txt
+        - git clone https://github.com/asyml/texar-pytorch.git
+        - cd texar-pytorch
+        - pip install --progress-bar off .
+        - cd ..
+        - rm -rf texar-pytorch
+      script:
+        - cd docs
+        - sphinx-build -W -b html -d _build/doctrees . _build/html
+        - sphinx-build -b spelling -d _build/doctrees . _build/spelling
 notifications:
   email: false

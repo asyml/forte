@@ -222,10 +222,12 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
 
 
 class BERTEncoder(TxBERTEncoder):
+    # pylint: disable=unused-argument
     def load_pretrained_config(self,
                                pretrained_model_name: Optional[str] = None,
                                cache_dir: Optional[str] = None,
                                hparams=None):
+        # pylint: disable=attribute-defined-outside-init
         self.pretrained_model_name = pretrained_model_name
         self.cache_dir = cache_dir
 

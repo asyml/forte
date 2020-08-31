@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 
 from termcolor import colored
 
@@ -28,7 +27,6 @@ def stanford_nlp_example(lang: str, text: str):
     pl = Pipeline[DataPack]()
     pl.set_reader(StringReader())
 
-    models_path = os.getcwd()
     config = Config({
         'processors': 'tokenize,pos,lemma,depparse',
         'lang': lang,
@@ -62,7 +60,6 @@ def stanford_nlp_example(lang: str, text: str):
 
 
 def main():
-
     eng_text = "The plain green Norway spruce is displayed in the gallery's " \
                "foyer. Wentworth worked as an assistant to sculptor Henry " \
                "Moore in the late 1960s. His reputation as a sculptor grew " \
