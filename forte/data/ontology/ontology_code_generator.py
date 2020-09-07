@@ -812,6 +812,10 @@ class OntologyCodeGenerator:
                 constraint_type_ = schema[schema_key]
                 constraint_type_name = this_manager.get_name_to_use(
                     constraint_type_)
+
+                # TODO: cannot handle constraints that contain self-references.
+                # self_ref = entry_name.class_name == constraint_type_
+
                 class_att_items.append(
                     ClassTypeDefinition(class_key, constraint_type_name))
 
@@ -909,20 +913,22 @@ class OntologyCodeGenerator:
 
     def parse_non_composite(
             self, manager: ImportManager, att_name: str, att_type: str,
-            desc: str, default_val: str) -> NonCompositeProperty:
+            desc: str, default_val: str, self_ref: bool = False
+    ) -> NonCompositeProperty:
         manager.add_object_to_import('typing.Optional')
 
         return NonCompositeProperty(
             manager, att_name, att_type, description=desc,
-            default_val=default_val)
+            default_val=default_val, self_ref=self_ref)
 
     def parse_property(self, entry_name: EntryName, schema: Dict) -> Property:
         """
         Parses instance and class properties defined in an entry schema and
         checks for the constraints allowed by the ontology generation system.
+
         Args:
             entry_name: Entry Name object that contains various form of the
-            entry's name.
+              entry's name.
             schema: Entry definition schema
         Returns: An object of class `code_generation_util.FileItem` containing
          the generated code.
@@ -953,8 +959,10 @@ class OntologyCodeGenerator:
                 return self.parse_dict(
                     manager, schema, entry_name, att_name, att_type, desc)
         elif att_type in NON_COMPOSITES or manager.is_imported(att_type):
+            self_ref = entry_name.class_name == att_type
             return self.parse_non_composite(
-                manager, att_name, att_type, desc, default_val)
+                manager, att_name, att_type, desc, default_val,
+                self_ref=self_ref)
 
         raise UnsupportedTypeException(
             f"{att_type} is not a supported type.")
