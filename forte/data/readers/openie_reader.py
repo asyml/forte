@@ -18,8 +18,11 @@ https://github.com/gabrielStanovsky/oie-benchmark/tree/master/oie_corpus
 """
 import logging
 import os
-
 from typing import Iterator, Any
+
+from forte.common.exception import ProcessorConfigError
+from forte.common.configuration import Config
+from forte.common.resources import Resources
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
@@ -32,7 +35,16 @@ __all__ = [
 
 
 class OpenIEReader(PackReader):
-    r""":class:`OpenIEReader` is designed to read in the Open IE dataset.
+    r""":class:`OpenIEReader` is designed to read in the Open IE dataset used
+        by Open Information Extraction task. The related paper can be found
+        `here
+        <https://gabrielstanovsky.github.io/assets/papers/emnlp16a/paper.pdf>`__.
+        The related source code for generating this dataset can be found
+        `here
+        <https://github.com/gabrielStanovsky/oie-benchmark>`__.
+        To use this Reader, you must follow the dataset format described
+        `here
+        <https://github.com/gabrielStanovsky/oie-benchmark/tree/master/oie_corpus>`__.
     """
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
@@ -47,8 +59,10 @@ class OpenIEReader(PackReader):
         Returns: Iterator over files in the path with oie extensions.
         """
         oie_directory = args[0]
-        logging.info("Reading .oie from %s", oie_directory)
-        return dataset_path_iterator(oie_directory, "oie")
+        oie_file_extension = self.configs.oie_file_extension
+        logging.info("Reading dataset from %s with extension %s",
+                     oie_directory, oie_file_extension)
+        return dataset_path_iterator(oie_directory, oie_file_extension)
 
     def _cache_key_function(self, oie_file: str) -> str:
         return os.path.basename(oie_file)
@@ -102,4 +116,16 @@ class OpenIEReader(PackReader):
 
     @classmethod
     def default_configs(cls):
-        return {}
+        config = super().default_configs()
+
+        # Add OIE dataset file extension. The default is '.oie'
+        config.update({
+            'oie_file_extension': 'oie'
+        })
+        return config
+
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+
+        if configs.oie_file_extension is None:
+            raise ProcessorConfigError("OIE dataset file extension not found")
