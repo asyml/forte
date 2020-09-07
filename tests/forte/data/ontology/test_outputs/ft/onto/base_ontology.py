@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/base_ontology.json***
+# ***source json:forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -9,10 +9,13 @@ Automatically generated ontology base_ontology. Do not change manually.
 
 from dataclasses import dataclass
 from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import Entry
+from forte.data.ontology.core import FList
 from forte.data.ontology.top import Annotation
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
+from forte.data.ontology.top import MultiPackLink
 from typing import Dict
 from typing import Optional
 from typing import Set
@@ -20,18 +23,23 @@ from typing import Set
 __all__ = [
     "Token",
     "Document",
-    "SpecialDocument",
     "Sentence",
     "Phrase",
+    "UtteranceContext",
     "Utterance",
     "PredicateArgument",
     "EntityMention",
+    "EventMention",
     "PredicateMention",
     "PredicateLink",
     "Dependency",
     "EnhancedDependency",
     "RelationLink",
+    "CrossDocEntityRelation",
     "CoreferenceGroup",
+    "EventRelation",
+    "CrossDocEventRelation",
+    "ConstituentNode",
 ]
 
 
@@ -85,28 +93,24 @@ class Document(Annotation):
 
 
 @dataclass
-class SpecialDocument(Document):
-
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
-
-
-@dataclass
 class Sentence(Annotation):
     """
     A span based annotation `Sentence`, normally used to represent a sentence.
     Attributes:
         speaker (Optional[str])
         part_id (Optional[int])
+        sentiment (Dict[str, float])
     """
 
     speaker: Optional[str]
     part_id: Optional[int]
+    sentiment: Dict[str, float]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.speaker: Optional[str] = None
         self.part_id: Optional[int] = None
+        self.sentiment: Dict[str, float] = dict()
 
 
 @dataclass
@@ -125,13 +129,28 @@ class Phrase(Annotation):
 
 
 @dataclass
-class Utterance(Annotation):
+class UtteranceContext(Annotation):
     """
-    A span based annotation `Utterance`, normally used to represent an utterance in dialogue.
+    `UtteranceContext` represents the context part in dialogue.
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+
+
+@dataclass
+class Utterance(Annotation):
+    """
+    A span based annotation `Utterance`, normally used to represent an utterance in dialogue.
+    Attributes:
+        speaker (Optional[str])
+    """
+
+    speaker: Optional[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.speaker: Optional[str] = None
 
 
 @dataclass
@@ -168,6 +187,21 @@ class EntityMention(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.ner_type: Optional[str] = None
+
+
+@dataclass
+class EventMention(Annotation):
+    """
+    A span based annotation `EventMention`, used to refer to a mention of an event.
+    Attributes:
+        event_type (Optional[str])
+    """
+
+    event_type: Optional[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.event_type: Optional[str] = None
 
 
 @dataclass
@@ -252,7 +286,7 @@ class EnhancedDependency(Link):
 @dataclass
 class RelationLink(Link):
     """
-    A `Link` type entry which represent a relation.
+    A `Link` type entry which represent a relation between two entity mentions
     Attributes:
         rel_type (Optional[str])	The type of the relation.
     """
@@ -268,6 +302,24 @@ class RelationLink(Link):
 
 
 @dataclass
+class CrossDocEntityRelation(MultiPackLink):
+    """
+    A `Link` type entry which represent a relation between two entity mentions across the packs.
+    Attributes:
+        rel_type (Optional[str])	The type of the relation.
+    """
+
+    rel_type: Optional[str]
+
+    ParentType = EntityMention
+    ChildType = EntityMention
+
+    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self.rel_type: Optional[str] = None
+
+
+@dataclass
 class CoreferenceGroup(Group):
     """
     A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.
@@ -275,3 +327,69 @@ class CoreferenceGroup(Group):
 
     def __init__(self, pack: DataPack, members: Optional[Set[Entry]] = None):
         super().__init__(pack, members)
+
+
+@dataclass
+class EventRelation(Link):
+    """
+    A `Link` type entry which represent a relation between two event mentions.
+    Attributes:
+        rel_type (Optional[str])	The type of the relation.
+    """
+
+    rel_type: Optional[str]
+
+    ParentType = EventMention
+    ChildType = EventMention
+
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self.rel_type: Optional[str] = None
+
+
+@dataclass
+class CrossDocEventRelation(MultiPackLink):
+    """
+    A `Link` type entry which represent a relation between two event mentions across the packs.
+    Attributes:
+        rel_type (Optional[str])	The type of the relation.
+    """
+
+    rel_type: Optional[str]
+
+    ParentType = EventMention
+    ChildType = EventMention
+
+    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self.rel_type: Optional[str] = None
+
+
+@dataclass
+class ConstituentNode(Annotation):
+    """
+    A span based annotation `ConstituentNode` to represent constituents in constituency parsing. This can also sentiment values annotated on the nodes.
+    Attributes:
+        label (Optional[str])
+        sentiment (Dict[str, float])
+        is_root (Optional[bool])
+        is_leaf (Optional[bool])
+        parent_node (Optional['ConstituentNode'])
+        children_nodes (FList['ConstituentNode'])
+    """
+
+    label: Optional[str]
+    sentiment: Dict[str, float]
+    is_root: Optional[bool]
+    is_leaf: Optional[bool]
+    parent_node: Optional['ConstituentNode']
+    children_nodes: FList['ConstituentNode']
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.label: Optional[str] = None
+        self.sentiment: Dict[str, float] = dict()
+        self.is_root: Optional[bool] = None
+        self.is_leaf: Optional[bool] = None
+        self.parent_node: Optional['ConstituentNode'] = None
+        self.children_nodes: FList['ConstituentNode'] = FList(self)
