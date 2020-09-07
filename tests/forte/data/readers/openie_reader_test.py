@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for CoNLL03Reader.
+Unit tests for OpenIEReader.
 """
 import os
 import unittest
@@ -28,7 +28,7 @@ from ft.onto.base_ontology import Sentence, PredicateMention, Document, \
 class OpenIEReaderTest(unittest.TestCase):
 
     def setUp(self):
-        # Define and config the Pipeline
+        # Define and config the pipeline.
         self.dataset_path = os.path.abspath(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             *([os.path.pardir] * 4),
@@ -52,7 +52,7 @@ class OpenIEReaderTest(unittest.TestCase):
             with open(file_path, "r", encoding="utf8", errors='ignore') as file:
                 expected_doc = file.read()
 
-            # Test document
+            # Test document.
             actual_docs = list(pack.get(Document))
             self.assertEqual(len(actual_docs), 1)
             actual_doc = actual_docs[0]
@@ -67,22 +67,22 @@ class OpenIEReaderTest(unittest.TestCase):
             for line in lines:
                 line = line.strip().split('\t')
 
-                # Test sentence
+                # Test sentence.
                 expected_sentence = line[0]
                 actual_sentence = next(actual_sentences)
                 self.assertEqual(actual_sentence.text, expected_sentence)
 
-                # Test predicate
+                # Test predicate.
                 expected_predicate = line[1]
                 actual_predicate = next(actual_predicates)
                 self.assertEqual(actual_predicate.text, expected_predicate)
 
-                # Test argument
+                # Test argument.
                 for expected_arg in line[2:]:
                     actual_arg = next(actual_args)
                     self.assertEqual(actual_arg.text, expected_arg)
 
-                    # Test predicate relation link
+                    # Test predicate relation link.
                     actual_link = next(actual_links)
                     self.assertEqual(actual_link.get_parent().text, expected_predicate)
                     self.assertEqual(actual_link.get_child().text, expected_arg)

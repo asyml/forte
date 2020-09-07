@@ -16,9 +16,9 @@ The reader that reads Open-IE extractions data into data pack.
 Format:
 https://github.com/gabrielStanovsky/oie-benchmark/tree/master/oie_corpus
 """
-import codecs
 import logging
 import os
+
 from typing import Iterator, Any
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
@@ -55,7 +55,8 @@ class OpenIEReader(PackReader):
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = self.new_pack()
-        doc = codecs.open(file_path, "r", encoding="utf8")
+        with open(file_path, "r", encoding="utf8") as f:
+            doc = f.readlines()
 
         text = ""
         offset = 0
@@ -66,14 +67,14 @@ class OpenIEReader(PackReader):
                 oie_component = line.split("\t")
                 sentence = oie_component[0]
 
-                # add sentence
+                # Add sentence.
                 Sentence(pack, offset, offset + len(sentence))
                 offset += len(sentence) + 1
                 text += sentence + " "
 
                 predicate = oie_component[1]
 
-                # add predicate
+                # Add predicate.
                 predicate_mention = PredicateMention(pack,
                                                      offset,
                                                      offset + len(predicate))
@@ -81,14 +82,14 @@ class OpenIEReader(PackReader):
                 text += predicate + " "
 
                 for arg in oie_component[2:]:
-                    # add predicate argument
+                    # Add predicate argument.
                     predicate_arg = PredicateArgument(pack,
                                                       offset,
                                                       offset + len(arg))
                     offset += len(arg) + 1
                     text += arg + " "
 
-                    # add predicate link
+                    # Add predicate link.
                     PredicateLink(pack, predicate_mention, predicate_arg)
 
         pack.set_text(text, replace_func=self.text_replace_operation)
@@ -96,7 +97,6 @@ class OpenIEReader(PackReader):
         Document(pack, 0, len(text))
 
         pack.pack_name = file_path
-        doc.close()
 
         yield pack
 
