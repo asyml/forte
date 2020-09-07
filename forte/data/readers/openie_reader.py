@@ -42,10 +42,22 @@ class OpenIEReader(PackReader):
         The related source code for generating this dataset can be found
         `here
         <https://github.com/gabrielStanovsky/oie-benchmark>`__.
-        To use this Reader, you must follow the dataset format described
-        `here
+        To use this Reader, you must follow the dataset format. Each line in
+        the dataset should contain following fields:
+
+        .. code-block:: none
+
+            <sentence>\t<predicate_head>\t<full_predicate>\t<arg1>\t<arg2>....
+
+        You can also find the dataset format `here
         <https://github.com/gabrielStanovsky/oie-benchmark/tree/master/oie_corpus>`__.
     """
+
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+
+        if configs.oie_file_extension is None:
+            raise ProcessorConfigError("OIE dataset file extension not found")
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument
@@ -69,42 +81,41 @@ class OpenIEReader(PackReader):
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = self.new_pack()
-        with open(file_path, "r", encoding="utf8") as f:
-            doc = f.readlines()
-
         text = ""
         offset = 0
 
-        for line in doc:
-            line = line.strip()
-            if line != "":
-                oie_component = line.split("\t")
-                sentence = oie_component[0]
+        with open(file_path, "r", encoding="utf8") as f:
+            for line in f:
+                line = line.strip()
+                if line != "":
+                    oie_component = line.split("\t")
+                    sentence = oie_component[0]
 
-                # Add sentence.
-                Sentence(pack, offset, offset + len(sentence))
-                offset += len(sentence) + 1
-                text += sentence + " "
+                    # Add sentence.
+                    Sentence(pack, offset, offset + len(sentence))
+                    offset += len(sentence) + 1
+                    text += sentence + " "
 
-                predicate = oie_component[1]
+                    predicate = oie_component[1]
 
-                # Add predicate.
-                predicate_mention = PredicateMention(pack,
-                                                     offset,
-                                                     offset + len(predicate))
-                offset += len(predicate) + 1
-                text += predicate + " "
+                    # Add predicate.
+                    predicate_mention = PredicateMention(pack,
+                                                         offset,
+                                                         offset
+                                                         + len(predicate))
+                    offset += len(predicate) + 1
+                    text += predicate + " "
 
-                for arg in oie_component[2:]:
-                    # Add predicate argument.
-                    predicate_arg = PredicateArgument(pack,
-                                                      offset,
-                                                      offset + len(arg))
-                    offset += len(arg) + 1
-                    text += arg + " "
+                    for arg in oie_component[2:]:
+                        # Add predicate argument.
+                        predicate_arg = PredicateArgument(pack,
+                                                          offset,
+                                                          offset + len(arg))
+                        offset += len(arg) + 1
+                        text += arg + " "
 
-                    # Add predicate link.
-                    PredicateLink(pack, predicate_mention, predicate_arg)
+                        # Add predicate link.
+                        PredicateLink(pack, predicate_mention, predicate_arg)
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
@@ -123,9 +134,3 @@ class OpenIEReader(PackReader):
             'oie_file_extension': 'oie'
         })
         return config
-
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-
-        if configs.oie_file_extension is None:
-            raise ProcessorConfigError("OIE dataset file extension not found")
