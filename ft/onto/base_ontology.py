@@ -361,3 +361,33 @@ class CrossDocEventRelation(MultiPackLink):
     def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None
+
+
+@dataclass
+class ConstituentNode(Annotation):
+    """
+    A span based annotation `ConstituentNode` for Context-Free Grammar parsing.
+    Attributes:
+        label (Optional[str])
+        sentiment (Dict[str, float])
+        is_root (Optional[bool])
+        is_leaf (Optional[bool])
+        parent_node (Optional[ConstituentNode])
+        children_nodes (FList[ConstituentNode])
+    """
+
+    label: Optional[str]
+    sentiment: Dict[str, float]
+    is_root: Optional[bool]
+    is_leaf: Optional[bool]
+    parent_node: Optional["ConstituentNode"]
+    children_nodes: FList["ConstituentNode"]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.label: Optional[str] = None
+        self.sentiment: Dict[str, float] = dict()
+        self.is_root: Optional[bool] = None
+        self.is_leaf: Optional[bool] = None
+        self.parent_node: Optional["ConstituentNode"] = None
+        self.children_nodes: FList["ConstituentNode"] = FList(self)
