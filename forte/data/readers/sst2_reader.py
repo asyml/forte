@@ -33,7 +33,7 @@ __all__ = [
 
 
 class SST2Reader(PackReader):
-    r""":class:`SST2Reader` is designed to read in the 
+    r""":class:`SST2Reader` is designed to read in the
     Stanford Sentiment Treebank 2 dataset from
     https://nlp.stanford.edu/sentiment/treebank.html
     To use the dataset, please download it from the webpage.
