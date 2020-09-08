@@ -71,20 +71,17 @@ class OpenIEReaderTest(unittest.TestCase):
             actual_link_ids: Iterator[int] = \
                 iter(sorted(pack.get_ids_by_type(PredicateLink)))
 
-            for line in lines:
+            for line, actual_sentence, actual_full_predicate in \
+                    zip(lines, actual_sentences, actual_predicates):
                 line: str = line.strip()
                 line: List[str] = line.split('\t')
 
                 # Test sentence.
                 expected_sentence: str = line[0]
-                actual_sentence: Sentence = next(actual_sentences)
                 self.assertEqual(actual_sentence.text, expected_sentence)
 
-                actual_full_predicate: PredicateMention = \
-                    next(actual_predicates)
-                actual_head_predicate: Token = actual_full_predicate.headword
-
                 # Test head predicate.
+                actual_head_predicate: Token = actual_full_predicate.headword
                 expected_head_predicate: str = line[1]
                 self.assertEqual(actual_head_predicate.text,
                                  expected_head_predicate)
