@@ -56,10 +56,6 @@
       "description": "A span based annotation `Document`, normally used to represent a document."
     },
     {
-      "entry_name": "ft.onto.base_ontology.SpecialDocument",
-      "parent_entry": "ft.onto.base_ontology.Document"
-    },
-    {
       "entry_name": "ft.onto.base_ontology.Sentence",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Sentence`, normally used to represent a sentence.",
@@ -71,6 +67,12 @@
         {
           "name": "part_id",
           "type": "int"
+        },
+        {
+          "name": "sentiment",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "float"
         }
       ]
     },
@@ -86,9 +88,20 @@
       ]
     },
     {
+      "entry_name": "ft.onto.base_ontology.UtteranceContext",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "`UtteranceContext` represents the context part in dialogue."
+    },
+    {
       "entry_name": "ft.onto.base_ontology.Utterance",
       "parent_entry": "forte.data.ontology.top.Annotation",
-      "description": "A span based annotation `Utterance`, normally used to represent an utterance in dialogue."
+      "description": "A span based annotation `Utterance`, normally used to represent an utterance in dialogue.",
+      "attributes" : [
+        {
+          "name": "speaker",
+          "type": "str"
+        }
+      ]
     },
     {
       "entry_name": "ft.onto.base_ontology.PredicateArgument",
@@ -116,6 +129,17 @@
       "attributes": [
         {
           "name": "ner_type",
+          "type": "str"
+        }
+      ]
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.EventMention",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `EventMention`, used to refer to a mention of an event.",
+      "attributes": [
+        {
+          "name": "event_type",
           "type": "str"
         }
       ]
@@ -188,7 +212,21 @@
     {
       "entry_name": "ft.onto.base_ontology.RelationLink",
       "parent_entry": "forte.data.ontology.top.Link",
-      "description": "A `Link` type entry which represent a relation.",
+      "description": "A `Link` type entry which represent a relation between two entity mentions",
+      "attributes": [
+        {
+          "name": "rel_type",
+          "type": "str",
+          "description": "The type of the relation."
+        }
+      ],
+      "parent_type": "ft.onto.base_ontology.EntityMention",
+      "child_type": "ft.onto.base_ontology.EntityMention"
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.CrossDocEntityRelation",
+      "parent_entry": "forte.data.ontology.top.MultiPackLink",
+      "description": "A `Link` type entry which represent a relation between two entity mentions across the packs.",
       "attributes": [
         {
           "name": "rel_type",
@@ -204,6 +242,68 @@
       "parent_entry": "forte.data.ontology.top.Group",
       "description": "A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.",
       "member_type": "ft.onto.base_ontology.EntityMention"
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.EventRelation",
+      "parent_entry": "forte.data.ontology.top.Link",
+      "description": "A `Link` type entry which represent a relation between two event mentions.",
+      "attributes": [
+        {
+          "name": "rel_type",
+          "type": "str",
+          "description": "The type of the relation."
+        }
+      ],
+      "parent_type": "ft.onto.base_ontology.EventMention",
+      "child_type": "ft.onto.base_ontology.EventMention"
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.CrossDocEventRelation",
+      "parent_entry": "forte.data.ontology.top.MultiPackLink",
+      "description": "A `Link` type entry which represent a relation between two event mentions across the packs.",
+      "attributes": [
+        {
+          "name": "rel_type",
+          "type": "str",
+          "description": "The type of the relation."
+        }
+      ],
+      "parent_type": "ft.onto.base_ontology.EventMention",
+      "child_type": "ft.onto.base_ontology.EventMention"
+    },
+    {
+     "entry_name": "ft.onto.base_ontology.ConstituentNode",
+     "parent_entry": "forte.data.ontology.top.Annotation",
+     "description": "A span based annotation `ConstituentNode` to represent constituents in constituency parsing. This can also sentiment values annotated on the nodes.",
+     "attributes": [
+       {
+         "name": "label",
+         "type": "str"
+       },
+       {
+         "name": "sentiment",
+         "type": "Dict",
+         "key_type": "str",
+         "value_type": "float"
+       },
+       {
+         "name": "is_root",
+         "type": "bool"
+       },
+       {
+         "name": "is_leaf",
+         "type": "bool"
+       },
+       {
+         "name": "parent_node",
+         "type": "ft.onto.base_ontology.ConstituentNode"
+       },
+       {
+         "name": "children_nodes",
+         "type": "List",
+         "item_type": "ft.onto.base_ontology.ConstituentNode"
+       }
+     ]
     }
   ]
 }

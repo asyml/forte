@@ -28,19 +28,19 @@ class Word(Token):
     """
     Attributes:
         string_features (List[str])	To demonstrate the composite type, List.
-        word_forms (FList[Word])	To demonstrate that an attribute can be a List of other entries.
-        token_ranks (FDict[int, "Word"])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
+        word_forms (FList['Word'])	To demonstrate that an attribute can be a List of other entries.
+        token_ranks (FDict[int, 'Word'])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
     """
 
     string_features: List[str]
-    word_forms: FList[Word]
-    token_ranks: FDict[int, "Word"]
+    word_forms: FList['Word']
+    token_ranks: FDict[int, 'Word']
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.string_features: List[str] = []
-        self.word_forms: FList[Word] = FList(self)
-        self.token_ranks: FDict[int, "Word"] = FDict(self)
+        self.word_forms: FList['Word'] = FList(self)
+        self.token_ranks: FDict[int, 'Word'] = FDict(self)
 
 
 @dataclass

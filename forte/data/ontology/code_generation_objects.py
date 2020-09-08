@@ -319,7 +319,7 @@ class ClassTypeDefinition:
 class NonCompositeProperty(Property):
     def __init__(self, import_manager: ImportManager,
                  name: str, type_str: str, description: Optional[str] = None,
-                 default_val: Any = None):
+                 default_val: Any = None, self_ref: bool = False):
         super(NonCompositeProperty, self).__init__(
             import_manager, name, type_str, description, default_val)
 
@@ -329,10 +329,13 @@ class NonCompositeProperty(Property):
         import_manager.add_object_to_import(self.option_type)
 
         self.is_forte_type = import_manager.is_imported(type_str)
+        self.self_ref = self_ref
 
     def internal_type_str(self) -> str:
         option_type = self.import_manager.get_name_to_use(self.option_type)
         type_str = self.import_manager.get_name_to_use(self.type_str)
+        if self.self_ref:
+            type_str = f"'{type_str}'"
         return f"{option_type}[{type_str}]"
 
     def default_value(self) -> str:
@@ -375,7 +378,7 @@ class DictProperty(Property):
         key_type = self.import_manager.get_name_to_use(self.key_type)
         value_type = self.import_manager.get_name_to_use(self.value_type)
         if self.self_ref:
-            value_type = '"' + value_type + '"'
+            value_type = f"'{value_type}'"
 
         return f"{composite_type}[{key_type}, {value_type}]"
 
@@ -398,8 +401,6 @@ class ListProperty(Property):
                          description=description,
                          default_val=default_val)
         self.item_type: str = item_type
-        # self_ref would probably not happen, because we are using int for
-        # entry types.
         self.self_ref: bool = self_ref
 
     def internal_type_str(self) -> str:
@@ -415,6 +416,9 @@ class ListProperty(Property):
     def _full_class(self):
         composite_type = self.import_manager.get_name_to_use(self.type_str)
         item_type = self.import_manager.get_name_to_use(self.item_type)
+        if self.self_ref:
+            item_type = f"'{item_type}'"
+
         return f"{composite_type}[{item_type}]"
 
     def to_field_value(self):
