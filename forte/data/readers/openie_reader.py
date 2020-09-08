@@ -18,7 +18,7 @@ https://github.com/gabrielStanovsky/oie-benchmark/tree/master/oie_corpus
 """
 import logging
 import os
-from typing import Iterator, Any
+from typing import Iterator, List
 
 from forte.common.exception import ProcessorConfigError
 from forte.common.configuration import Config
@@ -57,9 +57,10 @@ class OpenIEReader(PackReader):
         super().initialize(resources, configs)
 
         if configs.oie_file_extension is None:
-            raise ProcessorConfigError("OIE dataset file extension not found")
+            raise ProcessorConfigError(
+                "Configuration oie_file_extension not provided.")
 
-    def _collect(self, *args, **kwargs) -> Iterator[Any]:
+    def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
         r"""Should be called with param ``oie_directory`` which is a path to a
         folder containing json files.
@@ -70,8 +71,8 @@ class OpenIEReader(PackReader):
 
         Returns: Iterator over files in the path with oie extensions.
         """
-        oie_directory = args[0]
-        oie_file_extension = self.configs.oie_file_extension
+        oie_directory: str = args[0]
+        oie_file_extension: str = self.configs.oie_file_extension
         logging.info("Reading dataset from %s with extension %s",
                      oie_directory, oie_file_extension)
         return dataset_path_iterator(oie_directory, oie_file_extension)
@@ -80,32 +81,34 @@ class OpenIEReader(PackReader):
         return os.path.basename(oie_file)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = self.new_pack()
-        text = ""
-        offset = 0
+        pack: DataPack = self.new_pack()
+        text: str = ""
+        offset: int = 0
 
         with open(file_path, "r", encoding="utf8") as f:
             for line in f:
                 line = line.strip()
                 if line != "":
-                    oie_component = line.split("\t")
-                    sentence = oie_component[0]
+                    oie_component: List[str] = line.split("\t")
+                    sentence: str = oie_component[0]
 
                     # Add sentence.
                     Sentence(pack, offset, offset + len(sentence))
                     offset += len(sentence) + 1
                     text += sentence + " "
 
-                    head_predicate = oie_component[1]
-                    full_predicate = oie_component[2]
+                    head_predicate: str = oie_component[1]
+                    full_predicate: str = oie_component[2]
 
                     # Add head predicate.
-                    token = Token(pack, offset, offset + len(head_predicate))
+                    token: Token = Token(pack,
+                                         offset,
+                                         offset + len(head_predicate))
                     offset += len(head_predicate) + 1
                     text += head_predicate + " "
 
                     # Add full predicate.
-                    predicate_mention = PredicateMention(pack,
+                    predicate_mention: PredicateMention = PredicateMention(pack,
                                                          offset,
                                                          offset
                                                          + len(full_predicate))
@@ -115,9 +118,10 @@ class OpenIEReader(PackReader):
 
                     for arg in oie_component[3:]:
                         # Add predicate argument.
-                        predicate_arg = PredicateArgument(pack,
-                                                          offset,
-                                                          offset + len(arg))
+                        predicate_arg: PredicateArgument = \
+                            PredicateArgument(pack,
+                                              offset,
+                                              offset + len(arg))
                         offset += len(arg) + 1
                         text += arg + " "
 
@@ -134,7 +138,7 @@ class OpenIEReader(PackReader):
 
     @classmethod
     def default_configs(cls):
-        config = super().default_configs()
+        config: dict = super().default_configs()
 
         # Add OIE dataset file extension. The default is '.oie'
         config.update({
