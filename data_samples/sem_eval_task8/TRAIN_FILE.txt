@@ -1,0 +1,239 @@
+1	"The system as described above has its greatest application in an arrayed <e1>configuration</e1> of antenna <e2>elements</e2>."
+Component-Whole(e2,e1)
+Comment: Not a collection: there is structure here, organisation.
+
+2	"The <e1>child</e1> was carefully wrapped and bound into the <e2>cradle</e2> by means of a cord."
+Other
+Comment:
+
+3	"The <e1>author</e1> of a keygen uses a <e2>disassembler</e2> to look at the raw assembly code."
+Instrument-Agency(e2,e1)
+Comment:
+
+4	"A misty <e1>ridge</e1> uprises from the <e2>surge</e2>."
+Other
+Comment:
+
+5	"The <e1>student</e1> <e2>association</e2> is the voice of the undergraduate student population of the State University of New York at Buffalo."
+Member-Collection(e1,e2)
+Comment:
+
+6	"This is the sprawling <e1>complex</e1> that is Peru's largest <e2>producer</e2> of silver."
+Other
+Comment:
+
+7	"The current view is that the chronic <e1>inflammation</e1> in the distal part of the stomach caused by Helicobacter pylori <e2>infection</e2> results in an increased acid production from the non-infected upper corpus region of the stomach."
+Cause-Effect(e2,e1)
+Comment:
+
+8	"<e1>People</e1> have been moving back into <e2>downtown</e2>."
+Entity-Destination(e1,e2)
+Comment:
+
+9	"The <e1>lawsonite</e1> was contained in a <e2>platinum crucible</e2> and the counter-weight was a plastic crucible with metal pieces."
+Content-Container(e1,e2)
+Comment: prototypical example
+
+10	"The solute was placed inside a beaker and 5 mL of the <e1>solvent</e1> was pipetted into a 25 mL glass <e2>flask</e2> for each trial."
+Entity-Destination(e1,e2)
+Comment:
+
+11	"The fifty <e1>essays</e1> collected in this <e2>volume</e2> testify to most of the prominent themes from Professor Quispel's scholarly career."
+Member-Collection(e1,e2)
+Comment:
+
+12	"Their <e1>composer</e1> has sunk into <e2>oblivion</e2>."
+Other
+Comment: violates b.1 and c.3
+
+13	"The Pulitzer Committee issues an official <e1>citation</e1> explaining the <e2>reasons</e2> for the award."
+Message-Topic(e1,e2)
+Comment:
+
+14	"The <e1>burst</e1> has been caused by water hammer <e2>pressure</e2>."
+Cause-Effect(e2,e1)
+Comment:
+
+15	"Even commercial <e1>networks</e1> have moved into <e2>high-definition broadcast</e2>."
+Instrument-Agency(e2,e1)
+Comment:
+
+16	"It was a friendly <e1>call</e1> to remind them about the <e2>bill</e2> and make sure they have a copy of the invoice."
+Message-Topic(e1,e2)
+Comment:
+
+17	"Texas-born <e1>virtuoso</e1> finds harmony, sophistication in Appalachian <e2>instrument</e2>."
+Instrument-Agency(e2,e1)
+Comment:
+
+18	"The <e1>factory</e1>'s products have included flower pots, Finnish rooster-whistles, pans, <e2>trays</e2>, tea pots, ash trays and air moisturisers."
+Product-Producer(e2,e1)
+Comment: (a) is satisfied
+
+19	"The girl showed a photo of apple <e1>tree</e1> <e2>blossom</e2> on a fruit tree in the Central Valley."
+Component-Whole(e2,e1)
+Comment:
+
+20	"They tried an assault of their own an hour later, with two columns of sixteen tanks backed by a <e1>battalion</e1> of Panzer <e2>grenadiers</e2>."
+Member-Collection(e2,e1)
+Comment:
+
+21	"Their <e1>knowledge</e1> of the power and rank symbols of the Continental empires was gained from the numerous Germanic <e2>recruits</e2> in the Roman army, and from the Roman practice of enfeoffing various Germanic warrior groups with land in the imperial provinces."
+Entity-Origin(e1,e2)
+Comment:
+
+22	"She soon had a <e1>stable</e1> of her own rescued <e2>hounds</e2>."
+Member-Collection(e2,e1)
+Comment:
+
+23	"The <e1>singer</e1>, who performed three of the nominated songs, also caused a <e2>commotion</e2> on the red carpet."
+Cause-Effect(e1,e2)
+Comment:
+
+24	"His intellectually engaging books and <e1>essays</e1> remain pertinent to illuminating contemporary <e2>history</e2>."
+Other
+Comment: "pertinent to" is not necessarily about
+
+25	"Poor hygiene controls, reports of a <e1>brace</e1> of gamey <e2>grouse</e2> and what looked like a skinned fox all amounted to a pie that was unfit for human consumption."
+Member-Collection(e2,e1)
+Comment: modality is outside
+
+26	"This sweet <e1>dress</e1> is made with a <e2>blend</e2> of cotton and silk, and the crochet flower necklace is the perfect accessory."
+Other
+Comment: the blend is the material out of which the dress is made; can't be Entity-Origin because the material is still present in the dress
+
+27	"<e1>Suicide</e1> is one of the leading causes of <e2>death</e2> among pre-adolescents and teens, and victims of bullying are at an increased risk for committing suicide."
+Cause-Effect(e1,e2)
+Comment:
+
+28	"This <e1>article</e1> gives details on 2004 in <e2>music</e2> in the United Kingdom, including the official charts from that year."
+Message-Topic(e1,e2)
+Comment:
+
+29	"We have therefore taken the initiative to convene the first international open <e1>meeting</e1> dedicated solely to <e2>rural history</e2>."
+Message-Topic(e1,e2)
+Comment:
+
+30	"The <e1>timer</e1> of the <e2>device</e2> automatically eliminates wasted "standby power" consumption by automatically turn off electronics plugged into the "auto off" outlets."
+Component-Whole(e1,e2)
+Comment: "by turn off" should be "by turning off", error is in the source text.
+
+31	"Bob Parks made a similar <e1>offer</e1> in a <e2>phone call</e2> made earlier this week."
+Message-Topic(e2,e1)
+Comment:
+
+32	"He had chest pains and <e1>headaches</e1> from <e2>mold</e2> in the bedrooms."
+Cause-Effect(e2,e1)
+Comment:
+
+33	"The silver-haired author was not just laying India's politician saint to rest but healing a generations-old rift in the family of the <e1>country</e1>'s founding <e2>father</e2>."
+Product-Producer(e1,e2)
+Comment: in an abstract way the country is built/founded/produced by the father
+
+34	"It describes a method for loading a horizontal <e1>stack</e1> of containers into a <e2>carton</e2>."
+Entity-Destination(e1,e2)
+Comment: the carton holds the containers
+
+35	"The Foundation decided to repurpose the building in order to reduce wear and tear on the <e1>plumbing</e1> in the <e2>manor house</e2> by redirecting visitors during restoration projects and beyond."
+Component-Whole(e1,e2)
+Comment:
+
+36	"The technology is available to produce and transmit <e1>electricity</e1> economically from OTEC <e2>systems</e2>."
+Entity-Origin(e1,e2)
+Comment:
+
+37	"The Medicare buy-in <e1>plan</e1> ran into Senate <e2>resistance</e2>."
+Other
+Comment: violates c.3
+
+38	"The <e1>provinces</e1> are divided into <e2>counties</e2> (shahrestan), and subdivided into districts (bakhsh) and sub-districts (dehestan)."
+Component-Whole(e2,e1)
+Comment:
+
+39	"Financial <e1>stress</e1> is one of the main causes of <e2>divorce</e2>."
+Cause-Effect(e1,e2)
+Comment:
+
+40	"<e1>Newspapers</e1> swap content via widgets with the help of the newsgator <e2>service</e2>."
+Instrument-Agency(e2,e1)
+Comment:
+
+41	"The <e1>women</e1> that caused the <e2>accident</e2> was on the cell phone and ran thru the intersection without pausing on the median."
+Cause-Effect(e1,e2)
+Comment:
+
+42	"The <e1>transmitter</e1> was discovered inside a bed settee <e2>suite</e2> on which he had been sitting."
+Content-Container(e1,e2)
+Comment: prototypical example
+
+43	"The Kerala backwaters are a <e1>chain</e1> of brackish <e2>lagoons</e2> and lakes lying parallel to the Arabian Sea coast of Kerala state in southern India."
+Member-Collection(e2,e1)
+Comment:
+
+44	"A St. Paul College <e1>student</e1> was released from <e2>jail</e2> Wednesday night, after his arrest Tuesday in the alleged rape of another student on campus."
+Entity-Origin(e1,e2)
+Comment:
+
+45	"<e1>Calluses</e1> are caused by improperly fitting shoes or by a <e2>skin abnormality</e2>."
+Cause-Effect(e2,e1)
+Comment:
+
+46	"<e1>Adults</e1> use <e2>drugs</e2> for this purpose."
+Instrument-Agency(e2,e1)
+Comment:
+
+47	"The <e1>councilor</e1> proposed assessing infinitival complements through <e2>elicitation</e2>."
+Instrument-Agency(e2,e1)
+Comment:
+
+48	"As in the popular movie "Deep Impact", the action of the Perseid <e1>meteor shower</e1> is caused by a <e2>comet</e2>, in this case periodic comet Swift-Tuttle."
+Cause-Effect(e2,e1)
+Comment:
+
+49	"The following information appeared in the <e1>notes</e1> to consolidated financial <e2>statements</e2> of some corporate annual reports."
+Other
+Comment: We do not know what the notes are talking about; we only know that the notes are somehow connected to the statement.
+
+50	"HipHop appropriates the symbols of a consumer society: oversized <e1>diamond</e1> <e2>colliers</e2> are worn."
+Other
+Comment:
+
+51	"The <e1>radiation</e1> from the atomic <e2>bomb explosion</e2> is a typical acute radiation."
+Cause-Effect(e2,e1)
+Comment:
+
+52	"The ride-on <e1>boat</e1> <e2>tiller</e2> was developed by engineers Arnold S. Juliano and Dr. Eulito U. Bautista."
+Component-Whole(e2,e1)
+Comment:
+
+53	"A neoplastic <e1>recurrence</e1> arose from an extensive <e2>radiation</e2> induced ulceration."
+Cause-Effect(e2,e1)
+Comment:
+
+54	"He has a tattoo on his right arm and <e1>scars</e1> from <e2>stitches</e2> on his right elbow."
+Cause-Effect(e2,e1)
+Comment:
+
+55	"Whether your home includes a charm of finches, a sute of bloodhounds, or a <e1>knob</e1> of <e2>toads</e2>, I think it's important to keep the numbers within reason."
+Member-Collection(e2,e1)
+Comment:
+
+56	"Furthermore, these INGO practitioners constructed a <e1>discourse</e1> around <e2>participation</e2> which distorted the real significance of participation."
+Message-Topic(e1,e2)
+Comment:
+
+57	"Kelvin bought a <e1>silver</e1> <e2>ring</e2> which he was so happy with and he keeps wearing it now even though its abit too big haha."
+Other
+Comment:
+
+58	"Scientists are in the midst of an ongoing <e1>debate</e1> about the relative <e2>value</e2> of openness and collaboration in their profession."
+Message-Topic(e1,e2)
+Comment: A debate is a multi-way message. (Debatable, I know.)
+
+59	"This cut blue and white striped cotton <e1>dress</e1> with red bands on the bodice was in a <e2>trunk</e2> of vintage Barbie clothing."
+Content-Container(e1,e2)
+Comment: prototypical example
+
+60	"My major <e1>disagreement</e1> with Lyons concerns the <e2>causal part</e2> of his theory."
+Other
+Comment:
