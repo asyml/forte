@@ -24,12 +24,14 @@ from forte.data.readers import SST2Reader
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import ConstituentNode
 
+
 class SST2ReaderTest(unittest.TestCase):
     def setUp(self):
         self.dataset_path = os.path.abspath(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             *([os.path.pardir] * 4),
             'data_samples/sst2'))
+        self.n_samples_per_pack = 100
 
     def test_reader(self):
         pipeline = Pipeline()
@@ -38,14 +40,10 @@ class SST2ReaderTest(unittest.TestCase):
         pipeline.initialize()
 
         data_packs: Iterable[DataPack] = pipeline.process_dataset(
-            self.dataset_path)
-        file_paths: Iterator[str] = reader._collect(self.dataset_path)
+            self.dataset_path, self.n_samples_per_pack)
 
-        # test the count of all sentences
-        count_pack: int = 0
         for i, pack in enumerate(data_packs):
-            count_pack += 1
-            # test a simple case
+            # Test a simple case
             """
                                 0
                                 |
@@ -55,12 +53,13 @@ class SST2ReaderTest(unittest.TestCase):
                           6            5
                      _____|____   _____|_____
                      |        |   |         |
-                Effective   but  too-tepid  biopic 
+                Effective   but  too-tepid  biopic
             """
             if i == 0:
                 count_root: int = 0
                 count_leaf: int = 0
                 root: ConstituentNode = None
+
                 for cnode in pack.get(ConstituentNode):
                     if cnode.is_root:
                         root = cnode
@@ -112,7 +111,6 @@ class SST2ReaderTest(unittest.TestCase):
                 self.assertEqual(leaf_node_4.text, "biopic")
                 self.assertEqual(leaf_node_4.is_leaf, True)
                 self.assertEqual(leaf_node_4.parent_node, right_subtree)
-        self.assertEqual(count_pack, 1)
 
 
 if __name__ == "__main__":

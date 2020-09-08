@@ -19,7 +19,7 @@ into data_pack format
 import os
 import errno
 
-from typing import Iterator, Dict, List
+from typing import Iterator, Dict, List, Tuple
 
 from ft.onto.base_ontology import (
     Sentence, ConstituentNode)
@@ -38,7 +38,7 @@ class SST2Reader(PackReader):
     https://nlp.stanford.edu/sentiment/treebank.html
     To use the dataset, please download it from the webpage.
 
-    Provided the ss2_dir_path, the _collect function will look for the following files:
+    Provided the ss2_dir_path, the _collect function will look for files:
         "dictionary.txt": a mapping from phrase text to phrase id
         "sentiment_labels": a mapping from phrase id to sentiment score
         "datasetSentences.txt": original text for the sentence
@@ -61,16 +61,18 @@ class SST2Reader(PackReader):
             raise FileNotFoundError(
                 errno.ENOENT, os.strerror(errno.ENOENT), filename)
 
-    def _collect(self, *args, **kwargs) -> Iterator[DataPack]:
+    def _collect(self, *args, **kwargs) \
+        -> Iterator[List[Tuple[str, str, List[int]]]]:
         # pylint: disable = unused-argument
         r"""Iterator over sst files in the data_source.
         The directory should at least have the following files:
             "dictionary.txt": a mapping from phrase text to phrase id
             "sentiment_labels": a mapping from phrase id to sentiment score
             "datasetSentences.txt": original text for the sentence
-            "STree.txt": parent pointer list of constituency tree for each sentence
+            "STree.txt": parent pointer list of constituency tree
         Args:
             args: args[0] is the directory to the sst2 files.
+                args[1] is the number of sentences in a data pack
             kwargs:
         Returns: data packs obtained from each sentence from the sst2 file.
         """
@@ -79,8 +81,10 @@ class SST2Reader(PackReader):
         parent_pointer_list: List[int]
 
         sst2_dir_path: str = args[0]
+        n_samples: int = args[1]
         phrase_to_id_path: str = os.path.join(sst2_dir_path, "dictionary.txt")
-        id_to_senti_path: str = os.path.join(sst2_dir_path, "sentiment_labels.txt")
+        id_to_senti_path: str = os.path.join(
+            sst2_dir_path, "sentiment_labels.txt")
         text_path: str = os.path.join(sst2_dir_path, "datasetSentences.txt")
         tree_path: str = os.path.join(sst2_dir_path, "STree.txt")
         self._check_file_exist(phrase_to_id_path)
@@ -102,16 +106,29 @@ class SST2Reader(PackReader):
                 id, score = line.split("|")
                 self.id_to_senti[int(id)] = float(score)
 
+        sent_lines = []
         # Read the text and tree structure.
-        with open(text_path, "r", encoding="utf8") as ftext, open(tree_path, "r", encoding="utf8") as ftree:
+        with open(text_path, "r", encoding="utf8") as ftext, \
+                open(tree_path, "r", encoding="utf8") as ftree:
             ftext.readline()  # Skip the headers.
             for line_text, line_tree in zip(ftext, ftree):
+                line_text = line_text.strip()
                 sent_id, sent_text = line_text.split("\t")
-                parent_pointer_list = line_tree.split("|")
-                parent_pointer_list = list(map(int, parent_pointer_list))
-                yield (sent_id, sent_text, parent_pointer_list)
+                parent_pointer_list = list(map(int, line_tree.split("|")))
+                sent_lines.append((sent_id, sent_text, parent_pointer_list))
+                # Yield a batch of sentences.
+                if len(sent_lines) == n_samples:
+                    yield sent_lines
+                    sent_lines = []
+            if len(sent_lines) > 0:
+                yield sent_lines
 
-    def _get_span_with_dfs(self, span_begin_end: List[List[int]], children_nodes: List[List[int]], cur_node: int):
+    def _get_span_with_dfs(
+            self,
+            span_begin_end: List[List[int]],
+            children_nodes: List[List[int]],
+            cur_node: int
+    ):
         r"""Recursively get the span for each node in the tree
         Args:
             span_begin_end: stores the span (begin, end) posititon
@@ -131,40 +148,51 @@ class SST2Reader(PackReader):
                 end = span_begin_end[child][1]
         span_begin_end[cur_node] = [begin, end]
 
-
-    def _parse_parent_pointer_list(self, data_pack: DataPack, sent_text: str, parent_pointer_list: List[int]):
+    def _parse_parent_pointer_list(
+            self,
+            data_pack: DataPack,
+            sent_bias: int,
+            sent_text: str,
+            parent_pointer_list: List[int]
+    ):
         r"""Build the ConstituentNode objects from parent pointer list.
         Args:
             data_pack: the data_pack to add ConstituentNode
+            sent_bias: the start position of the sentence in the pack
             sent_text: the whitespace-splitted sentence text
-            parent_pointer_list: the parent pointer list is a format to store the constituency tree
+            parent_pointer_list: a format to store the constituency tree
         Returns: None
         """
 
         tokens: List[str] = sent_text.split()
         n_nodes: int = len(parent_pointer_list) + 1
-        span_begin_end: List[List[int]] = [None] * n_nodes
-        node_list: List[ConstituentNode] = [None] * n_nodes
+        span_begin_end: List[List[int]] = [[] for _ in range(n_nodes)]
+        node_list: List[ConstituentNode]
 
         # Get the children node ids for each node, node 0 is the root.
         children_nodes: List[List[int]] = [[] for _ in range(n_nodes)]
         for i in range(1, n_nodes):
-            parent = parent_pointer_list[i-1]
+            parent = parent_pointer_list[i - 1]
             children_nodes[parent].append(i)
 
         # Get the begin/end index of spans for leaf nodes.
-        for i in range(1, len(tokens)+1):
+        for i in range(1, len(tokens) + 1):
             span_begin = 0
             if i > 1:
-                span_begin = span_begin_end[i-1][1] + 1  # plus 1 for the whitespace separator
-            span_end = span_begin + len(tokens[i-1])
+                # Plus 1 for the whitespace separator
+                span_begin = span_begin_end[i - 1][1] + 1
+            span_end = span_begin + len(tokens[i - 1])
             span_begin_end[i] = [span_begin, span_end]
 
         # Get the spans recursively and store in "span_begin_end".
         self._get_span_with_dfs(span_begin_end, children_nodes, 0)
 
         # Create the constituency Tree.
-        node_list = [ConstituentNode(data_pack, begin, end) for (begin, end) in span_begin_end]
+        node_list = [ConstituentNode(
+            data_pack,
+            begin + sent_bias,
+            end + sent_bias
+        ) for (begin, end) in span_begin_end]
         # Get the sentiment scores.
         for i in range(n_nodes):
             phrase = node_list[i].text
@@ -173,7 +201,7 @@ class SST2Reader(PackReader):
 
         # Link the parent and children nodes.
         for i in range(1, n_nodes):
-            parent = parent_pointer_list[i-1]
+            parent = parent_pointer_list[i - 1]
             node_list[i].parent_node = node_list[parent]
 
         for i in range(n_nodes):
@@ -187,22 +215,34 @@ class SST2Reader(PackReader):
             node_list[i].is_leaf = False
             node_list[i].is_root = False
 
-        for i in range(1, len(tokens)+1):
+        for i in range(1, len(tokens) + 1):
             node_list[i].is_leaf = True
         node_list[0].is_root = True
 
-    def _parse_pack(self, sent_line) -> Iterator[DataPack]:
+    def _parse_pack(self, sent_lines) -> Iterator[DataPack]:
         data_pack: DataPack = self.new_pack()
+        sent_bias: int = 0
+        batch_text: str = "\n".join(
+            [sent_text for _, sent_text, _ in sent_lines]
+        )
+        data_pack.set_text(batch_text)
 
-        sent_id: str = sent_line[0]
-        sent_text: str = sent_line[1].strip()
-        parent_pointer_list: List[int] = sent_line[2]
+        for i, sent_line in enumerate(sent_lines):
+            sent_id: str = sent_line[0]
+            sent_text: str = sent_line[1].strip()
+            parent_pointer_list: List[int] = sent_line[2]
+            # Name the data_pack with the first sentence id.
+            if i == 0:
+                data_pack.pack_name = sent_id
+            # Add sentence to data_pack.
+            Sentence(data_pack, sent_bias, sent_bias + len(sent_text))
+            self._parse_parent_pointer_list(
+                data_pack,
+                sent_bias,
+                sent_text,
+                parent_pointer_list
+            )
 
-        data_pack.pack_name = sent_id
-        data_pack.set_text(sent_text)
+            sent_bias += len(sent_text) + 1
 
-        # Add sentence to data_pack.
-        Sentence(data_pack, 0, len(sent_text))
-
-        self._parse_parent_pointer_list(data_pack, sent_text, parent_pointer_list)
         yield data_pack
