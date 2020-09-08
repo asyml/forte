@@ -133,7 +133,7 @@ class SST2Reader(PackReader):
 
 
     def _parse_parent_pointer_list(self, data_pack: DataPack, sent_text: str, parent_pointer_list: List[int]):
-        r"""build the ConstituentNode objects from parent pointer list.
+        r"""Build the ConstituentNode objects from parent pointer list.
         Args:
             data_pack: the data_pack to add ConstituentNode
             sent_text: the whitespace-splitted sentence text

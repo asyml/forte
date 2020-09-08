@@ -57,7 +57,7 @@ class SST2ReaderTest(unittest.TestCase):
                      |        |   |         |
                 Effective   but  too-tepid  biopic 
             """
-            if i == 2:
+            if i == 0:
                 count_root: int = 0
                 count_leaf: int = 0
                 root: ConstituentNode = None
@@ -112,8 +112,7 @@ class SST2ReaderTest(unittest.TestCase):
                 self.assertEqual(leaf_node_4.text, "biopic")
                 self.assertEqual(leaf_node_4.is_leaf, True)
                 self.assertEqual(leaf_node_4.parent_node, right_subtree)
-            print(i)
-        self.assertEqual(count_pack, 11855)
+        self.assertEqual(count_pack, 1)
 
 
 if __name__ == "__main__":
