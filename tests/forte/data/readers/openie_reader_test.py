@@ -56,13 +56,17 @@ class OpenIEReaderTest(unittest.TestCase):
             actual_docs = list(pack.get(Document))
             self.assertEqual(len(actual_docs), 1)
             actual_doc = actual_docs[0]
-            self.assertEqual(actual_doc.text, expected_doc.replace('\t', ' ').replace('\n', ' ') + ' ')
+            self.assertEqual(actual_doc.text,
+                             expected_doc.replace('\t', ' ').replace('\n', ' ')
+                             + ' ')
 
             lines = expected_doc.split('\n')
             actual_sentences = pack.get(Sentence)
             actual_predicates = pack.get(PredicateMention)
             actual_args = pack.get(PredicateArgument)
-            actual_links = pack.get(PredicateLink)
+            # Force sorting as Link entries have no order when retrieving from
+            # data pack.
+            actual_link_ids = iter(sorted(pack.get_ids_by_type(PredicateLink)))
 
             for line in lines:
                 line = line.strip().split('\t')
@@ -72,19 +76,28 @@ class OpenIEReaderTest(unittest.TestCase):
                 actual_sentence = next(actual_sentences)
                 self.assertEqual(actual_sentence.text, expected_sentence)
 
-                # Test predicate.
-                expected_predicate = line[1]
-                actual_predicate = next(actual_predicates)
-                self.assertEqual(actual_predicate.text, expected_predicate)
+                actual_full_predicate = next(actual_predicates)
+                actual_head_predicate = actual_full_predicate.headword
+
+                # Test head predicate.
+                expected_head_predicate = line[1]
+                self.assertEqual(actual_head_predicate.text,
+                                 expected_head_predicate)
+
+                # Test full predicate.
+                expected_full_predicate = line[2]
+                self.assertEqual(actual_full_predicate.text,
+                                 expected_full_predicate)
 
                 # Test argument.
-                for expected_arg in line[2:]:
+                for expected_arg in line[3:]:
                     actual_arg = next(actual_args)
                     self.assertEqual(actual_arg.text, expected_arg)
 
                     # Test predicate relation link.
-                    actual_link = next(actual_links)
-                    self.assertEqual(actual_link.get_parent().text, expected_predicate)
+                    actual_link = pack.get_entry(next(actual_link_ids))
+                    self.assertEqual(actual_link.get_parent().text,
+                                     expected_full_predicate)
                     self.assertEqual(actual_link.get_child().text, expected_arg)
 
         self.assertEqual(count_packs, 1)

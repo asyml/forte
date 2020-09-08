@@ -84,6 +84,10 @@
         {
           "name": "phrase_type",
           "type": "str"
+        },
+        {
+          "name": "headword",
+          "type": "ft.onto.base_ontology.Token"
         }
       ]
     },
@@ -146,7 +150,7 @@
     },
     {
       "entry_name": "ft.onto.base_ontology.PredicateMention",
-      "parent_entry": "forte.data.ontology.top.Annotation",
+      "parent_entry": "ft.onto.base_ontology.Phrase",
       "description": "A span based annotation `PredicateMention`, normally used to represent a predicate (normally verbs) in a piece of text.",
       "attributes": [
         {

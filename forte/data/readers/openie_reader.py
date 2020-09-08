@@ -27,7 +27,7 @@ from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from ft.onto.base_ontology import Sentence, PredicateMention, \
-    PredicateArgument, PredicateLink, Document
+    PredicateArgument, PredicateLink, Document, Token
 
 __all__ = [
     "OpenIEReader"
@@ -96,17 +96,24 @@ class OpenIEReader(PackReader):
                     offset += len(sentence) + 1
                     text += sentence + " "
 
-                    predicate = oie_component[1]
+                    head_predicate = oie_component[1]
+                    full_predicate = oie_component[2]
 
-                    # Add predicate.
+                    # Add head predicate.
+                    token = Token(pack, offset, offset + len(head_predicate))
+                    offset += len(head_predicate) + 1
+                    text += head_predicate + " "
+
+                    # Add full predicate.
                     predicate_mention = PredicateMention(pack,
                                                          offset,
                                                          offset
-                                                         + len(predicate))
-                    offset += len(predicate) + 1
-                    text += predicate + " "
+                                                         + len(full_predicate))
+                    predicate_mention.headword = token
+                    offset += len(full_predicate) + 1
+                    text += full_predicate + " "
 
-                    for arg in oie_component[2:]:
+                    for arg in oie_component[3:]:
                         # Add predicate argument.
                         predicate_arg = PredicateArgument(pack,
                                                           offset,
