@@ -171,6 +171,11 @@ Readers
 .. autoclass:: forte.data.readers.string_reader.StringReader
     :members:
 
+:hidden:`OpenIEReader`
+------------------------
+.. autoclass:: forte.data.readers.openie_reader.OpenIEReader
+    :members:
+
 Batchers
 ==========
 
