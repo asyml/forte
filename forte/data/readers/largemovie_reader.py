@@ -119,6 +119,5 @@ class LargeMovieReader(PackReader):
         yield data_pack
 
     def _cache_key_function(self, movie_file: str) -> str:
-        # pos0_9.txt, neg3_4.txt
         return os.path.basename(os.path.dirname(movie_file)) + \
                os.path.basename(movie_file)
