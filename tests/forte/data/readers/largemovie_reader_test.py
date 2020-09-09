@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2020 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,22 +37,28 @@ class LargeMovieReaderTest(unittest.TestCase):
              "neg": os.path.abspath(os.path.join(file_dir_path,
                                                  *([os.path.pardir] * 4),
                                                  movie_dir, 'neg'))}
-        self.doc_ids: Dict[str,Tuple[str, str]] = \
+        self.doc_ids: Dict[str, Tuple[str, str]] = \
             {"pos": ("pos3", "pos0"),
              "neg": ("neg3", "neg1")}
         # pos0 doc's leading text, neg1 doc's ending text.
         self.doc_text: Dict[str, str] = \
-            {"pos": "bromwell high is a cartoon comedy it ran at the same time as some other programs "
-                    "about school life such as teachers my 35 years in the teaching profession "
-                    "lead me to believe that bromwell highs satire is much closer to reality than is teachers",
-             "neg": "this new imdb rule of requiring ten lines for every review when a movie is "
-                    "this worthless it doesnt require ten lines of text to let other readers know that it is "
-                    "a waste of time and tape avoid this movie"}
+        {"pos":
+             "bromwell high is a cartoon comedy it ran at the same time as "
+             "some other programs about school life such as teachers my 35 "
+             "years in the teaching profession lead me to believe that "
+             "bromwell highs satire is much closer to reality than is",
+         "neg":
+             "this new imdb rule of requiring ten lines for every review "
+             "when a movie is this worthless it doesnt require ten lines of "
+             "text to let other readers know that it is a waste of time "
+             "and tape avoid this movie"}
         # pos3 sentence #1, neg3 sentence #5.
         self.sent_text: Dict[str, str] = \
-            {"pos": "all the worlds a stage and its people actors in it",
-             "neg": "i was put through tears repulsion shock anger sympathy and misery "
-                    "when reading about the women of union street"}
+            {"pos":
+                 "all the worlds a stage and its people actors in it",
+             "neg":
+                 "i was put through tears repulsion shock anger sympathy "
+                 "and misery when reading about the women of union street"}
         # pos0 doc's score, neg1 doc's score.
         self.score: Dict[str, float] = \
             {"pos": 0.9,
@@ -70,21 +76,23 @@ class LargeMovieReaderTest(unittest.TestCase):
 
             count_packs = 0
             for pack in data_packs:
-                # test doc_ids.
+                # Test doc_ids.
                 self.assertTrue(pack.pack_name in self.doc_ids[dir])
 
-                # test documents.
+                # Test documents.
                 docid0 = self.doc_ids[dir][0]
                 docid1 = self.doc_ids[dir][1]
                 if pack.pack_name == docid1:
                     for doc in pack.get(Document):
                         self.assertIn(self.doc_text[dir], doc.text)
                         # test sentiments.
-                        self.assertEqual(doc.sentiment[docid1], self.score[dir])
-                # test sentences.
+                        self.assertEqual(
+                            doc.sentiment[docid1], self.score[dir])
+                # Test sentences.
                 elif pack.pack_name == docid0:
                     sents = pack.get(Sentence)
-                    self.assertTrue(self.sent_text[dir] in [sent.text for sent in sents])
+                    self.assertTrue(self.sent_text[dir] in
+                                    [sent.text for sent in sents])
 
                 count_packs += 1
 
