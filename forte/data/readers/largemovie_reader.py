@@ -16,6 +16,10 @@
 A reader to read reviews and IMDb scores from
 `Large Movie Reviews` dataset for sentiment classification.
 
+There are two directories [pos/, neg/] for the reviews.
+When using this reader, pass in 'data_dir/pos' and 'data_dir/neg',
+respectively, as the file_path, to generate datapacks.
+
 Dataset download link -
 https://ai.stanford.edu/~amaas/data/sentiment/
 Dataset Paper Citation -
@@ -52,8 +56,7 @@ __all__ = [
 class LargeMovieReader(PackReader):
     r""":class:`LargeMovieReader` is designed to read in
         the Large Movie Review Dataset v1.0.
-        There are two directories [pos/, neg/] for the reviews.
-        Within these directories, reviews are stored in text files named
+        Reviews are stored in text files named
         following the convention [[id]_[rating].txt].
     """
 
