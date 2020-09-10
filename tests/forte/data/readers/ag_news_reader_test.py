@@ -19,8 +19,8 @@ import unittest
 from typing import Dict
 
 from forte.pipeline import Pipeline
-from ft.onto.ag_news import (
-    Article, Title, Description)
+from ft.onto.ag_news import Title, Description
+from ft.onto.base_ontology import Document
 
 from forte.data.readers import AGNewsReader
 from forte.data.data_pack import DataPack
@@ -40,23 +40,34 @@ class AGNewsReaderTest(unittest.TestCase):
             'data_samples/ag_news/sample.csv'))
 
         self.expected_content: Dict[int, str] = {}
-        with open(self.sample_file, 'r') as f:
-            for line_id, line in enumerate(f):
+        with open(self.sample_file, 'r') as file:
+            for line_id, line in enumerate(file):
                 data = line.strip().split(',')
                 class_id, title, description = int(data[0].replace("\"", "")), data[1], data[2]
                 self.expected_content[line_id] = (class_id, title, description)
 
+        self.class_idx_to_name = {
+            1: 'World',
+            2: 'Sports',
+            3: 'Business',
+            4: 'Sci/Tech'
+        }
+
     def test_ag_news_reader(self):
         for data_pack in self.pipeline.process_dataset(self.sample_file):
-            expected_class_id, expected_title, expected_desc = self.expected_content[data_pack.pack_name]
+            expected_class_id, expected_title, expected_desc = \
+                self.expected_content[data_pack.pack_name]
             self.assertIsInstance(data_pack, DataPack)
             # Test Article
-            doc_entries = list(data_pack.get(Article))
+            doc_entries = list(data_pack.get(Document))
             self.assertTrue(len(doc_entries) == 1)
-            article: Article = doc_entries[0]
-            self.assertIsInstance(article, Article)
+            article: Document = doc_entries[0]
+            self.assertIsInstance(article, Document)
             self.assertEqual(article.text, expected_title + "\n" + expected_desc)
-            self.assertEqual(article.class_id, expected_class_id)
+            # Test Document Class
+            doc_class = article.document_class
+            self.assertTrue(len(doc_class) == 1)
+            self.assertEqual(doc_class[0], self.class_idx_to_name[expected_class_id])
             # Test Title
             title_entries = list(data_pack.get(Title))
             self.assertTrue(len(title_entries) == 1)

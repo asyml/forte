@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-The reader that reads RACE multi choice QA data into Datapacks.
+The reader that reads AG News data into Datapacks.
 """
-import os
 from typing import Iterator, Tuple
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from ft.onto.ag_news import (
-    Article, Title, Description)
+from ft.onto.ag_news import Title, Description
+from ft.onto.base_ontology import Document
 
 __all__ = [
     "AGNewsReader",
@@ -42,7 +41,7 @@ class AGNewsReader(PackReader):
         # pylint: disable = unused-argument
         self.configs = configs
 
-    def _collect(self, csv_file: str) -> Iterator[Tuple[int, str]]:  # type: ignore
+    def _collect(self, csv_file: str) -> Iterator[Tuple[int, str]]:
         r"""Collects from a CSV file path and returns an iterator of AG News
         data. The elements in the iterator correspond to each line
         in the csv file. One line is expected to be parsed as one
@@ -57,13 +56,11 @@ class AGNewsReader(PackReader):
             for line_id, line in enumerate(f):
                 yield (line_id, line)
 
-    def _cache_key_function(self, data_pack: DataPack) -> str:
-        if data_pack.pack_name is None:
-            raise ValueError("Data pack does not have a document id.")
-        return data_pack.pack_name
+    def _cache_key_function(self, line_info: Tuple[int, str]) -> str:
+        return line_info[0]
 
     def _parse_pack(self, line_info: Tuple[int, str]) -> Iterator[DataPack]:
-        line_id, line= line_info
+        line_id, line = line_info
 
         pack = self.new_pack()
         text: str = ""
@@ -82,9 +79,8 @@ class AGNewsReader(PackReader):
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
-        doc = Article(pack, 0, description_end)
-        doc.class_id = class_id
-        doc.class_name = self.configs.class_names[class_id]
+        doc = Document(pack, 0, description_end)
+        doc.document_class = [self.configs.class_names[class_id]]
         Title(pack, 0, title_end)
         Description(pack, description_start, description_end)
 
@@ -95,7 +91,6 @@ class AGNewsReader(PackReader):
     def default_configs(cls):
         config: dict = super().default_configs()
 
-        # Add OIE dataset file extension. The default is '.oie'
         config.update({
             'class_names': {
                 1: 'World',

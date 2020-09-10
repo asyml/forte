@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/base_ontology.json***
+# ***source json:../../../../../../capstone/forte/forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -17,6 +17,7 @@ from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Set
 
@@ -86,10 +87,15 @@ class Token(Annotation):
 class Document(Annotation):
     """
     A span based annotation `Document`, normally used to represent a document.
+    Attributes:
+        document_class (List[str])	A list of class names that the document belongs to.
     """
+
+    document_class: List[str]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.document_class: List[str] = []
 
 
 @dataclass

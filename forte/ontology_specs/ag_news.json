@@ -5,22 +5,6 @@
     ],
     "definitions": [
       {
-        "entry_name": "ft.onto.ag_news.Article",
-        "parent_entry": "ft.onto.base_ontology.Document",
-        "attributes": [
-            {
-              "name": "class_id",
-              "description": "The class ids are numbered 1-4 where 1 represents World, 2 represents Sports, 3 represents Business and 4 represents Sci/Tech.",
-              "type": "int"
-            },
-            {
-                "name": "class_name",
-                "description": "The name of the class.",
-                "type": "str"
-            }
-        ]
-      },
-      {
         "entry_name": "ft.onto.ag_news.Title",
         "parent_entry": "forte.data.ontology.top.Annotation"
       },
