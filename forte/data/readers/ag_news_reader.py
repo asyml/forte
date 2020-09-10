@@ -41,7 +41,7 @@ class AGNewsReader(PackReader):
         # pylint: disable = unused-argument
         self.configs = configs
 
-    def _collect(self, # type: ignore
+    def _collect(self,  # type: ignore
                 csv_file: str) -> Iterator[Tuple[int, str]]:
         r"""Collects from a CSV file path and returns an iterator of AG News
         data. The elements in the iterator correspond to each line
