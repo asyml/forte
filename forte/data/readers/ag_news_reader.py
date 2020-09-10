@@ -41,7 +41,8 @@ class AGNewsReader(PackReader):
         # pylint: disable = unused-argument
         self.configs = configs
 
-    def _collect(self, csv_file: str) -> Iterator[Tuple[int, str]]:
+    def _collect(self, # type: ignore
+                csv_file: str) -> Iterator[Tuple[int, str]]:
         r"""Collects from a CSV file path and returns an iterator of AG News
         data. The elements in the iterator correspond to each line
         in the csv file. One line is expected to be parsed as one
@@ -57,7 +58,7 @@ class AGNewsReader(PackReader):
                 yield (line_id, line)
 
     def _cache_key_function(self, line_info: Tuple[int, str]) -> str:
-        return line_info[0]
+        return str(line_info[0])
 
     def _parse_pack(self, line_info: Tuple[int, str]) -> Iterator[DataPack]:
         line_id, line = line_info
