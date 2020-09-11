@@ -25,8 +25,8 @@ from forte.data.readers import SemEvalTask8Reader
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence, RelationLink
 
-class SemEvalTask8ReaderTest(unittest.TestCase):
 
+class SemEvalTask8ReaderTest(unittest.TestCase):
     def setUp(self):
         self.dataset_path = os.path.abspath(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
