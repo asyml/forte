@@ -50,9 +50,13 @@ class SemEvalTask8Reader(PackReader):
     def _cache_key_function(self, file_path: str) -> str:
         return os.path.basename(file_path)
 
-    def _collect(self, sem_file_dir: str) -> Iterator[Any]:
+    def _collect(self, *args, **kwargs) -> Iterator[Any]:
+        # args[0] should be the floder where
+        # SemEval Task8 dataset is stored.
+        # Files ended with .txt are exptected here.
+        sem_file_dir = args[0]
         return dataset_path_iterator(sem_file_dir,
-        self.configs.sem_eval_task8_file_extension)
+            self.configs.sem_eval_task8_file_extension)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = self.new_pack()
