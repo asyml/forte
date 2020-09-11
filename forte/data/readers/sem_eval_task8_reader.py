@@ -51,6 +51,7 @@ class SemEvalTask8Reader(PackReader):
         return os.path.basename(file_path)
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
+        # pylint: disable = unused-argument
         # args[0] should be the floder where
         # SemEval Task8 dataset is stored.
         # Files ended with .txt are exptected here.
