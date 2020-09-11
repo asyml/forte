@@ -103,7 +103,7 @@ class SemEvalTask8ReaderTest(unittest.TestCase):
                 self.assertEqual(r.get_parent().text,
                                 expected_relations[index][0])
                 self.assertEqual(r.get_child().text,
-                                expected_relations[index][1])     
+                                expected_relations[index][1])
                 self.assertEqual(r.rel_type,
                                 expected_relations[index][2])
 
