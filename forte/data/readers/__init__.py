@@ -24,10 +24,7 @@ from forte.data.readers.plaintext_reader import *
 from forte.data.readers.prodigy_reader import *
 from forte.data.readers.race_multi_choice_qa_reader import *
 from forte.data.readers.string_reader import *
-<<<<<<< HEAD
 from forte.data.readers.sem_eval_task8_reader import *
-=======
 from forte.data.readers.sst2_reader import *
 from forte.data.readers.openie_reader import *
 from forte.data.readers.largemovie_reader import *
->>>>>>> 7d9def631533713aa5a562962fae5d6c3af037ca
