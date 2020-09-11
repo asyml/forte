@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/base_ontology.json***
+# ***source json:../../../../../../Desktop/forte/forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -86,10 +86,15 @@ class Token(Annotation):
 class Document(Annotation):
     """
     A span based annotation `Document`, normally used to represent a document.
+    Attributes:
+        sentiment (Dict[str, float])
     """
+
+    sentiment: Dict[str, float]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.sentiment: Dict[str, float] = dict()
 
 
 @dataclass
@@ -119,13 +124,16 @@ class Phrase(Annotation):
     A span based annotation `Phrase`.
     Attributes:
         phrase_type (Optional[str])
+        headword (Optional[Token])
     """
 
     phrase_type: Optional[str]
+    headword: Optional[Token]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.phrase_type: Optional[str] = None
+        self.headword: Optional[Token] = None
 
 
 @dataclass
@@ -205,7 +213,7 @@ class EventMention(Annotation):
 
 
 @dataclass
-class PredicateMention(Annotation):
+class PredicateMention(Phrase):
     """
     A span based annotation `PredicateMention`, normally used to represent a predicate (normally verbs) in a piece of text.
     Attributes:

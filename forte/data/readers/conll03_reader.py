@@ -105,7 +105,3 @@ class CoNLL03Reader(PackReader):
         doc.close()
 
         yield pack
-
-    @classmethod
-    def default_configs(cls):
-        return {}
