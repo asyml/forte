@@ -23,8 +23,7 @@ from typing import Iterator, Iterable
 from forte.data.data_pack import DataPack
 from forte.data.readers import SemEvalTask8Reader
 from forte.pipeline import Pipeline
-from ft.onto.race_multi_choice_qa_ontology import RaceDocument, Question
-
+from ft.onto.base_ontology import Sentence, RelationLink
 
 class SemEvalTask8ReaderTest(unittest.TestCase):
 
@@ -47,38 +46,70 @@ class SemEvalTask8ReaderTest(unittest.TestCase):
         count_packs = 0
 
         for pack, file_path in zip(data_packs, file_paths):
-            print(pack)
             count_packs += 1
 
-        #     expected_text: str = ""
-        #     with open(file_path, "r", encoding="utf8", errors='ignore') as file:
-        #         expected = file.readlines()
+            expected_text: str = ""
+            expected_sents = []
+            expected_relations = []
 
-        #     articles = list(pack.get(RaceDocument))
-        #     self.assertEqual(len(articles), 1)
-        #     expected_article = expected['article']
-        #     self.assertEqual(articles[0].text, expected_article)
-        #     expected_text += expected_article
+            fp = open(file_path, 'r', encoding='utf-8')
+            while True:
+                sent_line = fp.readline()
+                if not sent_line:
+                    break
+                if len(sent_line.split()) == 0:
+                    continue
+                relation_line = fp.readline()
+                # command line is not used
+                _ = fp.readline()
 
-        #     for qid, question in enumerate(pack.get(Question)):
-        #         expected_question = expected['questions'][qid]
-        #         self.assertEqual(question.text, expected_question)
-        #         expected_answers = expected['answers'][qid]
-        #         if not isinstance(expected_answers, list):
-        #             expected_answers = [expected_answers]
-        #         expected_answers = [reader._convert_to_int(ans)
-        #                             for ans in expected_answers]
-        #         self.assertEqual(question.answers, expected_answers)
-        #         expected_text += '\n' + expected_question
+                sent_line = sent_line[sent_line.find('"') + 1:
+                                    sent_line.rfind('"')]
+                e1 = sent_line[sent_line.find("<e1>"):
+                                    sent_line.find("</e1>") + 5]
+                e2 = sent_line[sent_line.find("<e2>"):
+                                    sent_line.find("</e2>") + 5]
+                sent_line = sent_line.replace(e1, e1[4:-5])
+                sent_line = sent_line.replace(e2, e2[4:-5])
+                e1 = e1[4:-5]
+                e2 = e2[4:-5]
+                expected_text += sent_line + " "
 
-        #         for oid, option in enumerate(question.options):
-        #             expected_option = expected['options'][qid][oid]
-        #             self.assertEqual(option.text, expected_option)
-        #             expected_text += '\n' + expected_option
+                pair = relation_line[relation_line.find("(") + 1:
+                            relation_line.find(")")]
+                if "," in pair:
+                    if pair.split(",")[0] == 'e1':
+                        parent = e1
+                        child = e2
+                    else:
+                        parent = e2
+                        child = e1
+                    rel_type = relation_line[:relation_line.find("(")]
+                else:
+                    parent, child = e1, e2
+                    rel_type = relation_line.strip()
 
-        #     self.assertEqual(pack.text, expected_text)
+                expected_sents.append(sent_line)
+                expected_relations.append((parent, child, rel_type))
 
-        self.assertEqual(count_packs, 0)
+            sents = list(pack.get(Sentence))
+            relations = list(pack.get(RelationLink))
+
+            for s, r in zip(sents, relations):
+                self.assertIn(s.text, expected_sents)
+                index = expected_sents.index(s.text)
+                r = pack.get(RelationLink, s)
+                r = next(r)
+                self.assertEqual(r.get_parent().text,
+                                expected_relations[index][0])
+                self.assertEqual(r.get_child().text,
+                                expected_relations[index][1])           
+                self.assertEqual(r.rel_type,
+                                expected_relations[index][2])
+
+            self.assertEqual(expected_text, pack.text)
+
+        self.assertEqual(count_packs, 1)
 
 
 if __name__ == "__main__":
