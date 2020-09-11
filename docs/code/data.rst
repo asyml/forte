@@ -172,7 +172,7 @@ Readers
     :members:
 
 :hidden:`SemEvalTask8Reader`
-------------------------
+------------------------------
 .. autoclass:: forte.data.readers.sem_eval_task8_reader.SemEvalTask8Reader
     :members:
 
