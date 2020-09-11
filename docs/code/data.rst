@@ -171,9 +171,15 @@ Readers
 .. autoclass:: forte.data.readers.string_reader.StringReader
     :members:
 
+<<<<<<< HEAD
 :hidden: `SemEvalTask8Reader`
 ------------------------
 .. autoclass:: forte.data.readers.sem_eval_task8_reader.SemEvalTask8Reader
+=======
+:hidden:`OpenIEReader`
+------------------------
+.. autoclass:: forte.data.readers.openie_reader.OpenIEReader
+>>>>>>> 7d9def631533713aa5a562962fae5d6c3af037ca
     :members:
 
 Batchers

@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/base_ontology.json***
+# ***source json:../../../../../../Desktop/forte/forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.core import Entry
+from forte.data.ontology.core import FList
 from forte.data.ontology.top import Annotation
 from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
@@ -38,6 +39,7 @@ __all__ = [
     "CoreferenceGroup",
     "EventRelation",
     "CrossDocEventRelation",
+    "ConstituentNode",
 ]
 
 
@@ -84,10 +86,15 @@ class Token(Annotation):
 class Document(Annotation):
     """
     A span based annotation `Document`, normally used to represent a document.
+    Attributes:
+        sentiment (Dict[str, float])
     """
+
+    sentiment: Dict[str, float]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.sentiment: Dict[str, float] = dict()
 
 
 @dataclass
@@ -117,13 +124,16 @@ class Phrase(Annotation):
     A span based annotation `Phrase`.
     Attributes:
         phrase_type (Optional[str])
+        headword (Optional[Token])
     """
 
     phrase_type: Optional[str]
+    headword: Optional[Token]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.phrase_type: Optional[str] = None
+        self.headword: Optional[Token] = None
 
 
 @dataclass
@@ -203,7 +213,7 @@ class EventMention(Annotation):
 
 
 @dataclass
-class PredicateMention(Annotation):
+class PredicateMention(Phrase):
     """
     A span based annotation `PredicateMention`, normally used to represent a predicate (normally verbs) in a piece of text.
     Attributes:
@@ -361,3 +371,33 @@ class CrossDocEventRelation(MultiPackLink):
     def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None
+
+
+@dataclass
+class ConstituentNode(Annotation):
+    """
+    A span based annotation `ConstituentNode` to represent constituents in constituency parsing. This can also sentiment values annotated on the nodes.
+    Attributes:
+        label (Optional[str])
+        sentiment (Dict[str, float])
+        is_root (Optional[bool])
+        is_leaf (Optional[bool])
+        parent_node (Optional['ConstituentNode'])
+        children_nodes (FList['ConstituentNode'])
+    """
+
+    label: Optional[str]
+    sentiment: Dict[str, float]
+    is_root: Optional[bool]
+    is_leaf: Optional[bool]
+    parent_node: Optional['ConstituentNode']
+    children_nodes: FList['ConstituentNode']
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.label: Optional[str] = None
+        self.sentiment: Dict[str, float] = dict()
+        self.is_root: Optional[bool] = None
+        self.is_leaf: Optional[bool] = None
+        self.parent_node: Optional['ConstituentNode'] = None
+        self.children_nodes: FList['ConstituentNode'] = FList(self)
