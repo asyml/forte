@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2020 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,8 +29,16 @@ __all__ = [
 
 
 class AGNewsReader(PackReader):
-    r""":class:`AGNewsReaderr` is designed to read in AG News
+    r""":class:`AGNewsReader` is designed to read in AG News
     text classification dataset.
+    The AG's news topic classification dataset is constructed by Xiang Zhang
+    (xiang.zhang@nyu.edu) from the AG corpus. It is used as a text 
+    classification benchmark in the following paper: 
+    https://arxiv.org/abs/1509.01626
+    The dataset can be downloaded from:
+    https://github.com/mhjabreel/CharCnn_Keras/tree/master/data/ag_news_csv
+
+    The input to this reader is the path to the CSV file. 
     """
 
     def __init__(self):
