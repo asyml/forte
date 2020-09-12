@@ -30,21 +30,21 @@ __all__ = [
 class SemEvalTask8Reader(PackReader):
     r""":class:`SemEvalTask8Reader` is designed to read in
         Sem Eval Task8 dataset.
-            http://www.kozareva.com/downloads.html
+        http://www.kozareva.com/downloads.html
 
         An example of the dataset is
         '''
         8	"<e1>People</e1> have been moving back \
-            into <e2>downtown</e2>."
+        into <e2>downtown</e2>."
         Entity-Destination(e1,e2)
         Comment:
         '''
 
         This example will be converted to one Sencetence,
-            "People have been moving back into downtown."
+        "People have been moving back into downtown."
         and one RelationLink,
-            link = RelationLink(parent=Peopel, child=downtown)
-            link.rel_type = Entity-Destination
+        link = RelationLink(parent=Peopel, child=downtown)
+        link.rel_type = Entity-Destination
         into the DataPack
     """
     def _cache_key_function(self, file_path: str) -> str:
