@@ -34,9 +34,6 @@ __all__ = [
     "QASRLReader"
 ]
 
-print("zzzzzzzzzzzzzzzzzz")
-
-
 class QASRLReader(PackReader):
     r""":class:`QASRLReader` is designed to read in the QA-SRL Bank 2.0 dataset used
         by Question-Answer driven Semantic Role Labeling (QA-SRL) annotations task. 
@@ -48,12 +45,12 @@ class QASRLReader(PackReader):
     """
 
     def initialize(self, resources: Resources, configs: Config):
-        print("CHUSHIHUA")
+        print("INIT")
         super().initialize(resources, configs)
 
-        if configs.oie_file_extension is None:
+        if configs.qa_file_extension is None:
             raise ProcessorConfigError(
-                "Configuration oie_file_extension not provided.")
+                "Configuration qa_file_extension not provided.")
 
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
@@ -67,7 +64,6 @@ class QASRLReader(PackReader):
         """
 
         qa_directory: str = args[0]
-        print("qa_directory: ", qa_directory)
 
         qa_file_extension: str = self.configs.qa_file_extension
 
@@ -82,11 +78,8 @@ class QASRLReader(PackReader):
         text: str = ""
         offset: int = 0
 
-        print("++file_path++: ", file_path)
-
         with open(file_path, "r", encoding="utf8") as f:
             for line in f:
-                print("+line+: ", line)
                 line = line.strip()
                 if line != "":
                     sentence: str = line
