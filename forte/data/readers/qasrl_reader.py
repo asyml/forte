@@ -45,7 +45,6 @@ class QASRLReader(PackReader):
     """
 
     def initialize(self, resources: Resources, configs: Config):
-        print("INIT")
         super().initialize(resources, configs)
 
         if configs.qa_file_extension is None:
