@@ -20,7 +20,7 @@ https://github.com/uwnlp/qasrl-bank/blob/master/FORMAT.md
 """
 import logging
 import os
-from typing import Iterator, List
+from typing import Iterator
 
 from forte.common.exception import ProcessorConfigError
 from forte.common.configuration import Config
@@ -36,11 +36,13 @@ __all__ = [
 
 
 class QASRLReader(PackReader):
-    r""":class:`QASRLReader` is designed to read in the QA-SRL Bank 2.0 dataset used
-        by Question-Answer driven Semantic Role Labeling (QA-SRL) annotations task.
+    r""":class:`QASRLReader` is designed to read
+        in the QA-SRL Bank 2.0 dataset used
+        by Question-Answer driven Semantic Role
+        Labeling (QA-SRL) annotations task.
         The related paper can be found here
         https://arxiv.org/pdf/1805.05377.pdf
-        The Original data format is somewhat complex, you can find it here:
+        The Original data format can be found it here:
         https://github.com/uwnlp/qasrl-bank/blob/master/FORMAT.md
     """
 
@@ -66,7 +68,8 @@ class QASRLReader(PackReader):
 
         qa_file_extension: str = self.configs.qa_file_extension
 
-        logging.info("Reading dataset from %s with extension %s", qa_directory, qa_file_extension)
+        logging.info("Reading dataset from %s with extension %s",
+                     qa_directory, qa_file_extension)
         return dataset_path_iterator(qa_directory, qa_file_extension)
 
     def _cache_key_function(self, qa_file: str) -> str:
