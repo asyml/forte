@@ -21,14 +21,17 @@ from typing import Iterator, Iterable, List
 from forte.data.readers.qasrl_reader import QASRLReader
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Sentence, PredicateMention, Document, PredicateArgument, PredicateLink, Token
+from ft.onto.base_ontology import Sentence, Document
 
 
 class QASRLReaderTest(unittest.TestCase):
 
     def setUp(self):
         # Define and config the pipeline.
-        self.dataset_path: str = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), *([os.path.pardir] * 4), 'data_samples/qa_srl_bank'))
+        self.dataset_path: str = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            *([os.path.pardir] * 4),
+            'data_samples/qa_srl_bank'))
 
         self.pipeline: Pipeline = Pipeline[DataPack]()
         self.reader: QASRLReader = QASRLReader()
