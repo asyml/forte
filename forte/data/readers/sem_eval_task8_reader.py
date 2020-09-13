@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-The reader that reads prodigy text data with annotations into Datapacks.
+The reader that reads SemEval Task8 data with annotations into Datapacks.
 """
 
 import os
@@ -30,6 +30,12 @@ __all__ = [
 class SemEvalTask8Reader(PackReader):
     r""":class:`SemEvalTask8Reader` is designed to read in
         Sem Eval Task8 dataset.
+        
+        Hendrickx, Iris, et al. "Semeval-2010 task 8: Multi-way 
+        classification of semantic relations between pairs of nominals." 
+        arXiv preprint arXiv:1911.10422 (2019).
+        
+        https://www.aclweb.org/anthology/S10-1006.pdf
         http://www.kozareva.com/downloads.html
 
         An example of the dataset is
@@ -52,9 +58,15 @@ class SemEvalTask8Reader(PackReader):
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument
-        # args[0] should be the floder where
-        # SemEval Task8 dataset is stored.
-        # Files ended with .txt are exptected here.
+        r'''args[0] should be the floder where
+        SemEval Task8 dataset is stored.
+        Files ended with .txt are exptected here.
+
+        Args:
+            args: args[0] is the directory to the dataset.
+        
+        Returns: Iterator ove the file name (str).
+        '''
         sem_file_dir = args[0]
         return dataset_path_iterator(sem_file_dir,
             self.configs.sem_eval_task8_file_extension)
@@ -120,7 +132,7 @@ class SemEvalTask8Reader(PackReader):
                 relation.rel_type = relation_line.strip()
 
         pack.set_text(txt, replace_func=self.text_replace_operation)
-        pack.pack_name = file_path
+        pack.pack_name = os.path.basename(file_path)
 
         yield pack
 
