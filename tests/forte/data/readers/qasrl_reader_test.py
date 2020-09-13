@@ -18,7 +18,7 @@ import os
 import unittest
 from typing import Iterator, Iterable, List
 
-from forte.data.readers import QASRLReader
+from forte.data.readers.qasrl_reader import QASRLReader
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence, PredicateMention, Document, PredicateArgument, PredicateLink, Token
@@ -29,11 +29,6 @@ class QASRLReaderTest(unittest.TestCase):
     def setUp(self):
         # Define and config the pipeline.
         self.dataset_path: str = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),*([os.path.pardir] * 4),'data_samples/qa_srl_bank'))
-        
-        print(os.path.realpath(__file__))
-        print(os.path.dirname(os.path.realpath(__file__)))
-        print([os.path.pardir])
-        print(self.dataset_path)
 
         self.pipeline: Pipeline = Pipeline[DataPack]()
         self.reader: QASRLReader = QASRLReader()
@@ -42,70 +37,39 @@ class QASRLReaderTest(unittest.TestCase):
 
     def test_process_next(self):
         data_packs: Iterable[DataPack] = self.pipeline.process_dataset(self.dataset_path)
-        print("type(self.dataset_path) ", type(self.dataset_path))
         file_paths: Iterator[str] = self.reader._collect(self.dataset_path)
 
-        print(file_paths)
 
         count_packs: int = 0
 
-        #each .oie file is corresponding to an Iterable Obj
+        #each .qa file is corresponding to an Iterable Obj
         for pack, file_path in zip(data_packs, file_paths):
-            print("pack: ", pack)
-            print("file_path: ", file_path)
+
             count_packs += 1
             expected_doc: str = ""
             with open(file_path, "r", encoding="utf8", errors='ignore') as file:
                 expected_doc = file.read()
-            print("expected_doc: ", expected_doc)
 
             # Test document.
             actual_docs: List[Document] = list(pack.get(Document))
-            print(type(actual_docs[0]))
             self.assertEqual(len(actual_docs), 1)
             actual_doc: Document = actual_docs[0]
-            print("actual_doc.text: ", actual_doc.text)
 
-            self.assertEqual(actual_doc.text,expected_doc.replace('\t', ' ').replace('\n', ' ') + ' ')
+            self.assertEqual(actual_doc.text,expected_doc.replace('\n', ' ') + ' ')
 
             lines: List[str] = expected_doc.split('\n')
             actual_sentences: Iterator[Sentence] = pack.get(Sentence)
-            actual_predicates: Iterator[PredicateMention] = pack.get(PredicateMention)
-            actual_args: Iterator[PredicateArgument] = pack.get(PredicateArgument)
             # Force sorting as Link entries have no order when retrieving from
             # data pack.
-            actual_link_ids: Iterator[int] = iter(sorted(pack.get_ids_by_type(PredicateLink)))
 
-            for line, actual_sentence, actual_full_predicate in zip(lines, actual_sentences, actual_predicates):
+            for line, actual_sentence in zip(lines, actual_sentences):
                 line: str = line.strip()
-                line: List[str] = line.split('\t')
 
                 # Test sentence.
-                expected_sentence: str = line[0]
+                expected_sentence: str = line
                 self.assertEqual(actual_sentence.text, expected_sentence)
 
-                # Test head predicate.
-                actual_head_predicate: Token = actual_full_predicate.headword
-                expected_head_predicate: str = line[1]
-                self.assertEqual(actual_head_predicate.text,
-                                 expected_head_predicate)
 
-                # Test full predicate.
-                expected_full_predicate: str = line[2]
-                self.assertEqual(actual_full_predicate.text,
-                                 expected_full_predicate)
-
-                # Test argument.
-                for expected_arg in line[3:]:
-                    actual_arg: PredicateArgument = next(actual_args)
-                    self.assertEqual(actual_arg.text, expected_arg)
-
-                    # Test predicate relation link.
-                    actual_link: PredicateLink = \
-                        pack.get_entry(next(actual_link_ids))
-                    self.assertEqual(actual_link.get_parent().text,
-                                     expected_full_predicate)
-                    self.assertEqual(actual_link.get_child().text, expected_arg)
 
         self.assertEqual(count_packs, 1)
 
