@@ -34,6 +34,7 @@ __all__ = [
     "QASRLReader"
 ]
 
+
 class QASRLReader(PackReader):
     r""":class:`QASRLReader` is designed to read in the QA-SRL Bank 2.0 dataset used
         by Question-Answer driven Semantic Role Labeling (QA-SRL) annotations task.
