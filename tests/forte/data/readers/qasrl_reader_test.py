@@ -28,7 +28,7 @@ class QASRLReaderTest(unittest.TestCase):
 
     def setUp(self):
         # Define and config the pipeline.
-        self.dataset_path: str = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),*([os.path.pardir] * 4),'data_samples/qa_srl_bank'))
+        self.dataset_path: str = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), *([os.path.pardir] * 4), 'data_samples/qa_srl_bank'))
 
         self.pipeline: Pipeline = Pipeline[DataPack]()
         self.reader: QASRLReader = QASRLReader()
@@ -39,10 +39,9 @@ class QASRLReaderTest(unittest.TestCase):
         data_packs: Iterable[DataPack] = self.pipeline.process_dataset(self.dataset_path)
         file_paths: Iterator[str] = self.reader._collect(self.dataset_path)
 
-
         count_packs: int = 0
 
-        #each .qa file is corresponding to an Iterable Obj
+        # Each .qa file is corresponding to an Iterable Obj
         for pack, file_path in zip(data_packs, file_paths):
 
             count_packs += 1
@@ -55,7 +54,7 @@ class QASRLReaderTest(unittest.TestCase):
             self.assertEqual(len(actual_docs), 1)
             actual_doc: Document = actual_docs[0]
 
-            self.assertEqual(actual_doc.text,expected_doc.replace('\n', ' ') + ' ')
+            self.assertEqual(actual_doc.text, expected_doc.replace('\n', ' ') + ' ')
 
             lines: List[str] = expected_doc.split('\n')
             actual_sentences: Iterator[Sentence] = pack.get(Sentence)
@@ -69,10 +68,7 @@ class QASRLReaderTest(unittest.TestCase):
                 expected_sentence: str = line
                 self.assertEqual(actual_sentence.text, expected_sentence)
 
-
-
         self.assertEqual(count_packs, 1)
-
 
 if __name__ == '__main__':
     unittest.main()
