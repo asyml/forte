@@ -60,6 +60,12 @@
           "type": "List",
           "item_type": "str",
           "description": "A list of class names that the document belongs to."
+        },
+        {
+          "name": "sentiment",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "float"
         }
       ]
     },

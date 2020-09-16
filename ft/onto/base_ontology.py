@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:../../../../../../capstone/forte/forte/ontology_specs/base_ontology.json***
+# ***source json: forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -89,13 +89,16 @@ class Document(Annotation):
     A span based annotation `Document`, normally used to represent a document.
     Attributes:
         document_class (List[str])	A list of class names that the document belongs to.
+        sentiment (Dict[str, float])
     """
 
     document_class: List[str]
+    sentiment: Dict[str, float]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.document_class: List[str] = []
+        self.sentiment: Dict[str, float] = dict()
 
 
 @dataclass
