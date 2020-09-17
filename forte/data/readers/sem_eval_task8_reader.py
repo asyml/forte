@@ -30,11 +30,11 @@ __all__ = [
 class SemEvalTask8Reader(PackReader):
     r""":class:`SemEvalTask8Reader` is designed to read in
         Sem Eval Task8 dataset.
-        
-        Hendrickx, Iris, et al. "Semeval-2010 task 8: Multi-way 
-        classification of semantic relations between pairs of nominals." 
+
+        Hendrickx, Iris, et al. "Semeval-2010 task 8: Multi-way
+        classification of semantic relations between pairs of nominals."
         arXiv preprint arXiv:1911.10422 (2019).
-        
+
         https://www.aclweb.org/anthology/S10-1006.pdf
         http://www.kozareva.com/downloads.html
 
@@ -64,7 +64,7 @@ class SemEvalTask8Reader(PackReader):
 
         Args:
             args: args[0] is the directory to the dataset.
-        
+
         Returns: Iterator ove the file name (str).
         '''
         sem_file_dir = args[0]
