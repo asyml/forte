@@ -32,13 +32,13 @@ class AGNewsReader(PackReader):
     r""":class:`AGNewsReader` is designed to read in AG News
     text classification dataset.
     The AG's news topic classification dataset is constructed by Xiang Zhang
-    (xiang.zhang@nyu.edu) from the AG corpus. It is used as a text 
-    classification benchmark in the following paper: 
+    (xiang.zhang@nyu.edu) from the AG corpus. It is used as a text
+    classification benchmark in the following paper:
     https://arxiv.org/abs/1509.01626
     The dataset can be downloaded from:
     https://github.com/mhjabreel/CharCnn_Keras/tree/master/data/ag_news_csv
 
-    The input to this reader is the path to the CSV file. 
+    The input to this reader is the path to the CSV file.
     """
 
     def __init__(self):
