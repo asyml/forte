@@ -40,8 +40,11 @@ class BaseDataAugmentProcessor(MultiPackProcessor):
 
     def get_augmenter(self):
         r"""
-        This function parse the augment algorithm and
-        instantiate an augmenter.
+        This function parse the augment algorithm and instantiate an augmenter.
+        The replacement level of processor must be supported by the augmenter.
+
+        For example, we cannot do sentence replacement with a DictionaryReplacementAugmenter,
+        because it is based on synonyms substitution.
         :return: an instance of data augmenter.
         """
         algorithm = self.configs.augment_algorithm
@@ -50,6 +53,9 @@ class BaseDataAugmentProcessor(MultiPackProcessor):
             augmenter = DictionaryReplacementAugmenter(configs={"lang": lang})
         else:
             raise ModuleNotFoundError("The augment algorithm {} is not implemented!".format(algorithm))
+
+        if self.configs.replacement_level not in augmenter.replacement_level:
+            raise LookupError("The replacement level is not supported by the provided augmenter!")
         return augmenter
 
 
