@@ -14,100 +14,64 @@
 """
 Processors that augment the data.
 """
-from typing import Iterable, Tuple
 from abc import abstractmethod
-from forte.data.caster import Caster
-from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
-
-
+from forte.common.resources import Resources
+from forte.common.configuration import Config
+from forte.processors.data_augment.algorithms.dictionary_replacement_augmenter import DictionaryReplacementAugmenter
+from forte.processors.base.pack_processor import MultiPackProcessor
 __all__ = [
     "BaseDataAugmentProcessor"
 ]
 
 
-class BaseDataAugmentProcessor(Caster[DataPack, MultiPack]):
+class BaseDataAugmentProcessor(MultiPackProcessor):
     r"""The base class of processors that augment data.
-    This processor will call :func:'augment_algo' to get the
-    augmented texts which are semantically similar to the original texts.
+    This processor instantiates an augmenter where specific
+    data augmentation algorithms are embedded. The augmenter
+    will run the algorithms and the processor will pack the
+    strings.
 
-    With the augmented texts, :func:'build_pack' builds the data packs by either
-        (1) Copying the original data pack and modifying it, or
-        (2) Building a new data pack from the augmented texts.
-    The implementation of :func:'build_pack' varies for different types of datasets.
-    For example, option (2) is available for datasets like sentiment analysis
-    where we can rebuild the annotations easily. But for treebanks where structure
-    information is stored in the original data pack, we can only rely on the option(1).
+    The DA methods can all be considered as replacement-based
+    methods with different levels: character, word, sentence.
     """
-    def __init__(self):
-        super().__init__()
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+        self.augmenter = self.get_augmenter()
 
-    def cast(self, pack: DataPack) -> MultiPack:
+    def get_augmenter(self):
+        r"""
+        This function parse the augment algorithm and
+        instantiate an augmenter.
+        :return: an instance of data augmenter.
         """
-        Augment the data-pack into a multi-pack.
+        algorithm = self.configs.augment_algorithm
+        if algorithm == "DictionaryReplacement":
+            lang = self.configs.get("lang", "eng")
+            augmenter = DictionaryReplacementAugmenter(configs={"lang": lang})
+        else:
+            raise ModuleNotFoundError("The augment algorithm {} is not implemented!".format(algorithm))
+        return augmenter
 
-        Args:
-            pack: The data pack to be augmented
-
-        Returns: An iterator that produces the augmented multi pack.
-
-        """
-        p = MultiPack()
-        p.add_pack_(pack, "original")
-        augmented_texts: Iterable[Tuple[str, str]] = self.augment_algo(pack)
-        for pack_name, text in augmented_texts:
-            new_pack: DataPack = self.build_pack(pack, text)
-            p.add_pack_(new_pack, pack_name)
-        return p
-
-    @abstractmethod
-    def augment_algo(self, pack: DataPack) -> Iterable[Tuple[str, str]]:
-        r"""The method that augments the input data pack.
-        Different algorithms can be inserted here,
-        such as word replacement or back-translation.
-        The outputs are raw strings, instead of Forte data structures.
-
-        Args:
-            pack: The data pack to be augmented.
-
-        Returns: An iterator of tuples [pack_name, augmented_text].
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def build_pack(self, original_pack: DataPack, augmented_text: str):
-        r"""The method that builds a data pack
-        from both original data pack and augmented text.
-
-        For data pack where only annotations like Token, Sentence and Document
-        are included, it is simple to build a data pack only from the augmented text.
-
-        However, for datasets like treebanks, we need the tree structure information
-        embedded in the original data pack. We cannot infer that from the augmented text.
-        Instead of building a new data pack, We can only copy the original one and modify
-        it based on the augmented text. This will impose some constraints on the augmentation
-        algorithm, for example, only replacement-based methods can be used for treebanks
-        to preserve its original structure.
-        """
-        raise NotImplementedError
 
     @classmethod
     def default_configs(cls):
         """
-        This defines a basic config structure for AllenNLP.
         :return: A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - pack_builder_type: defines how :func:'build_pack' build new packs from
-            original data pack and augmented texts, e.g., it will build the annotations
-            only from the augmented text when pack_builder_type="plainText".
-            - augment_ontologies: defines what are the ontologies to build in
-            :func:'build_pack'. This should align with the "pack_builder_type".
-            For example, when the pack_builder_type="plainText", the augment_ontologies
-            must not include Link or ConstituencyNode.
+            - augment_algorithm: defines the augmenter to use
+            - augment_ontologies: defines the ontologies that will be returned
+            - replacement_prob: defines the probability of replacement
+            - replacement_prob: defines the type of replacement(char/word/sentence),
+            must align with(is included in) the replacement levels of the augmenter.
+            - kwargs: augmenter-specific parameters
         """
         config = super().default_configs()
         config.update({
-            'pack_builder_type': "plainText",
-            'augment_ontologies': ["Token", "Sentence", "Document"]
+            'augment_algorithm': "DictionaryReplacement",
+            'augment_ontologies': ["Sentence", "Document"],
+            'replacement_prob': 0.1,
+            'replacement_level': 'word',
+            'type': "",
+            'kwargs': {}
         })
         return config
