@@ -64,12 +64,14 @@ class TextGenerationDataAugmentProcessor(BaseDataAugmentProcessor):
             self.configs.aug_output_pack_name: aug_output_pack
         })
 
-    def _process_pack(self, pack: DataPack):
+    def _process_pack(self, pack: DataPack) -> DataPack:
         r"""
         This function process a single datapack with an augmenter.
         It processes one sentence at a time.
-        :param pack: a datapack with original texts and annotations
-        :return: a datapack with augmented texts and annotations
+        Args:
+            pack: a datapack with original texts and annotations
+        Returns:
+            a datapack with augmented texts and annotations
         """
         data_pack: DataPack = DataPack()
         if len(pack.text) == 0:
@@ -125,5 +127,6 @@ class TextGenerationDataAugmentProcessor(BaseDataAugmentProcessor):
             'output_pack_name': 'output_tgt',
             'aug_input_pack_name': 'aug_input_src',
             'aug_output_pack_name': 'aug_output_tgt',
+            'replacement_prob': 0.1,
         })
         return config

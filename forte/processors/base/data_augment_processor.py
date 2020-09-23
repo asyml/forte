@@ -27,12 +27,13 @@ __all__ = [
 class BaseDataAugmentProcessor(MultiPackProcessor):
     r"""The base class of processors that augment data.
     This processor instantiates an augmenter where specific
-    data augmentation algorithms are embedded. The augmenter
-    will run the algorithms and the processor will pack the
-    strings.
+    data augmentation algorithms are implemented. The augmenter
+    will run the algorithms and the processor will create Forte
+    data structures based on the strings.
 
-    The DA methods can all be considered as replacement-based
-    methods with different levels: character, word, sentence.
+    Most of the Data Augmentation(DA) methods can be
+    considered as replacement-based methods with different
+    levels: character, word, sentence.
     """
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -45,7 +46,9 @@ class BaseDataAugmentProcessor(MultiPackProcessor):
 
         For example, we cannot do sentence replacement with a DictionaryReplacementAugmenter,
         because it is based on synonyms substitution.
-        :return: an instance of data augmenter.
+
+        Returns:
+            an instance of data augmenter.
         """
         algorithm = self.configs.augment_algorithm
         if algorithm == "DictionaryReplacement":
@@ -62,20 +65,22 @@ class BaseDataAugmentProcessor(MultiPackProcessor):
     @classmethod
     def default_configs(cls):
         """
-        :return: A dictionary with the default config for this processor.
+        Returns:
+            A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
             - augment_algorithm: defines the augmenter to use
             - augment_ontologies: defines the ontologies that will be returned
             - replacement_prob: defines the probability of replacement
-            - replacement_prob: defines the type of replacement(char/word/sentence),
-            must align with(is included in) the replacement levels of the augmenter.
+            - replacement_level: defines the type of replacement(char/word/sentence),
+            must be allowed by the the augmenter's algorithm. Specifically, the augmenter
+            also has a list of allowed replacement_levels, and it must include this
+            processor's replacement_level.
             - kwargs: augmenter-specific parameters
         """
         config = super().default_configs()
         config.update({
             'augment_algorithm': "DictionaryReplacement",
             'augment_ontologies': ["Sentence", "Document"],
-            'replacement_prob': 0.1,
             'replacement_level': 'word',
             'type': "",
             'kwargs': {}

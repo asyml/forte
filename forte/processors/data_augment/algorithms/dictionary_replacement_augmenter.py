@@ -71,9 +71,11 @@ class DictionaryReplacementAugmenter(BaseDataAugmenter):
     def augment(self, word: str, additional_info: Dict[str, str] = {}) -> str:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
-        :param word: input
-        :param additional_info: contains pos_tag of the word, optional
-        :return: a synonym of the word
+        Args:
+            word: input
+            additional_info: contains pos_tag of the word, optional
+        Returns:
+            a synonym of the word
         """
         res: List = []
         pos = None
