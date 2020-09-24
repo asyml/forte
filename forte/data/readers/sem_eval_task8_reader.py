@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2020 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ class SemEvalTask8Reader(PackReader):
         This example will be converted to one Sencetence,
         "People have been moving back into downtown."
         and one RelationLink,
-        link = RelationLink(parent=Peopel, child=downtown)
+        link = RelationLink(parent=People, child=downtown)
         link.rel_type = Entity-Destination
         into the DataPack
     """
@@ -58,14 +58,15 @@ class SemEvalTask8Reader(PackReader):
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument
-        r'''args[0] should be the floder where
-        SemEval Task8 dataset is stored.
-        Files ended with .txt are exptected here.
+        r'''args[0] should be the folder where
+        the SemEval Task8 dataset is stored.
+        Files ended with sem_eval_task8_file_extension (.txt)
+        are exptected here.
 
         Args:
             args: args[0] is the directory to the dataset.
 
-        Returns: Iterator ove the file name (str).
+        Returns: Iterator over the file name (str).
         '''
         sem_file_dir = args[0]
         return dataset_path_iterator(sem_file_dir,
@@ -73,63 +74,69 @@ class SemEvalTask8Reader(PackReader):
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = self.new_pack()
-        fp = open(file_path, 'r', encoding='utf8')
-        txt = ""
-        offset = 0
 
-        while True:
-            sent_line = fp.readline()
-            if not sent_line:
-                break
+        with open(file_path, 'r', encoding='utf8') as fp:
+            txt = ""
+            offset = 0
 
-            if len(sent_line.split()) == 0:
-                continue
+            while True:
+                sent_line = fp.readline()
+                if not sent_line:
+                    break
 
-            relation_line = fp.readline()
-            # command line is not used
-            _ = fp.readline()
+                if len(sent_line.split()) == 0:
+                    continue
 
-            sent_line = sent_line[sent_line.find('"') + 1:
-                                sent_line.rfind('"')]
-            index1 = sent_line.find("<e1>")
-            index2 = sent_line.find("<e2>")
-            e1 = sent_line[index1:sent_line.find("</e1>") + 5]
-            e2 = sent_line[index2:sent_line.find("</e2>") + 5]
-            sent_line = sent_line.replace(e1, e1[4:-5])
-            sent_line = sent_line.replace(e2, e2[4:-5])
-            e1 = e1[4:-5]
-            e2 = e2[4:-5]
+                relation_line = fp.readline()
+                # Command line is not used
+                _ = fp.readline()
 
-            if index1 < index2:
-                diff1 = 0
-                diff2 = 9
-            else:
-                diff1 = 9
-                diff2 = 0
-            index1 += offset - diff1
-            index2 += offset - diff2
-
-            Sentence(pack, offset, offset + len(sent_line))
-            entry1 = EntityMention(pack, index1, index1 + len(e1))
-            entry2 = EntityMention(pack, index2, index2 + len(e2))
-            offset += len(sent_line) + 1
-            txt += sent_line + " "
-
-            pair = relation_line[relation_line.find("(") + 1:
-                        relation_line.find(")")]
-
-            if "," in pair:
-                parent, _ = pair.split(",")
-                if parent == "e1":
-                    relation = RelationLink(pack, entry1, entry2)
+                sent_line = sent_line[sent_line.find('"') + 1:
+                                    sent_line.rfind('"')]
+                index1 = sent_line.find("<e1>")
+                index2 = sent_line.find("<e2>")
+                # 5 is the length of "</e1>", include both <e1> and
+                # </e1> when extracting the string.
+                e1 = sent_line[index1:sent_line.find("</e1>") + 5]
+                e2 = sent_line[index2:sent_line.find("</e2>") + 5]
+                # Remove <e1> and </e1> in the sentence.
+                sent_line = sent_line.replace(e1, e1[4:-5])
+                sent_line = sent_line.replace(e2, e2[4:-5])
+                # Remove <e1> and </e1> in e1
+                e1 = e1[4:-5]
+                e2 = e2[4:-5]
+                # Re-calculate the index after removing <e1>, </e1> in
+                # in the sentence.
+                if index1 < index2:
+                    diff1 = 0
+                    diff2 = 9
                 else:
-                    relation = RelationLink(pack, entry2, entry1)
-                relation.rel_type = relation_line[:relation_line.find("(")]
-            else:
-                # for "Other" relation, just set parent as e1
-                # set child as e2
-                relation = RelationLink(pack, entry1, entry2)
-                relation.rel_type = relation_line.strip()
+                    diff1 = 9
+                    diff2 = 0
+                index1 += offset - diff1
+                index2 += offset - diff2
+
+                Sentence(pack, offset, offset + len(sent_line))
+                entry1 = EntityMention(pack, index1, index1 + len(e1))
+                entry2 = EntityMention(pack, index2, index2 + len(e2))
+                offset += len(sent_line) + 1
+                txt += sent_line + " "
+
+                pair = relation_line[relation_line.find("(") + 1:
+                            relation_line.find(")")]
+
+                if "," in pair:
+                    parent, _ = pair.split(",")
+                    if parent == "e1":
+                        relation = RelationLink(pack, entry1, entry2)
+                    else:
+                        relation = RelationLink(pack, entry2, entry1)
+                    relation.rel_type = relation_line[:relation_line.find("(")]
+                else:
+                    # For "Other" relation, just set parent as e1
+                    # set child as e2
+                    relation = RelationLink(pack, entry1, entry2)
+                    relation.rel_type = relation_line.strip()
 
         pack.set_text(txt, replace_func=self.text_replace_operation)
         pack.pack_name = os.path.basename(file_path)

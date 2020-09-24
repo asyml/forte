@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2020 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,7 @@
 """
 Unit tests for SemEvalTask8Reader.
 """
-import json
 import os
-import logging
 import unittest
 from typing import Iterator, Iterable
 
@@ -39,58 +37,30 @@ class SemEvalTask8ReaderTest(unittest.TestCase):
         pipeline.set_reader(reader)
         pipeline.initialize()
 
+        expected_sents = [
+            "The system as described above has its greatest application" +
+            " in an arrayed configuration of antenna elements.",
+            "The child was carefully wrapped and bound into the cradle by means of a cord.",
+            "The author of a keygen uses a disassembler to look at the raw assembly code.",
+            "A misty ridge uprises from the surge.",
+            "The student association is the voice of the undergraduate student" +
+            " population of the State University of New York at Buffalo."
+        ]
+        expected_relations = [
+            ("Component-Whole", "elements", "configuration"),
+            ("Other", "child", "cradle"),
+            ("Instrument-Agency", "disassembler", "author"),
+            ("Other", "ridge", "surge"),
+            ("Member-Collection", "student", "association")
+        ]
+        expected_text = " ".join(expected_sents) + " "
+
         data_packs: Iterable[DataPack] = pipeline.process_dataset(
             self.dataset_path)
-        file_paths: Iterator[str] = reader._collect(self.dataset_path)
 
         count_packs = 0
-
-        for pack, file_path in zip(data_packs, file_paths):
+        for pack in data_packs:
             count_packs += 1
-
-            expected_text: str = ""
-            expected_sents = []
-            expected_relations = []
-
-            fp = open(file_path, 'r', encoding='utf-8')
-            while True:
-                sent_line = fp.readline()
-                if not sent_line:
-                    break
-                if len(sent_line.split()) == 0:
-                    continue
-                relation_line = fp.readline()
-                # command line is not used
-                _ = fp.readline()
-
-                sent_line = sent_line[sent_line.find('"') + 1:
-                                    sent_line.rfind('"')]
-                e1 = sent_line[sent_line.find("<e1>"):
-                                    sent_line.find("</e1>") + 5]
-                e2 = sent_line[sent_line.find("<e2>"):
-                                    sent_line.find("</e2>") + 5]
-                sent_line = sent_line.replace(e1, e1[4:-5])
-                sent_line = sent_line.replace(e2, e2[4:-5])
-                e1 = e1[4:-5]
-                e2 = e2[4:-5]
-                expected_text += sent_line + " "
-
-                pair = relation_line[relation_line.find("(") + 1:
-                            relation_line.find(")")]
-                if "," in pair:
-                    if pair.split(",")[0] == 'e1':
-                        parent = e1
-                        child = e2
-                    else:
-                        parent = e2
-                        child = e1
-                    rel_type = relation_line[:relation_line.find("(")]
-                else:
-                    parent, child = e1, e2
-                    rel_type = relation_line.strip()
-
-                expected_sents.append(sent_line)
-                expected_relations.append((parent, child, rel_type))
 
             sents = list(pack.get(Sentence))
             relations = list(pack.get(RelationLink))
@@ -100,11 +70,11 @@ class SemEvalTask8ReaderTest(unittest.TestCase):
                 index = expected_sents.index(s.text)
                 r = pack.get(RelationLink, s)
                 r = next(r)
-                self.assertEqual(r.get_parent().text,
-                                expected_relations[index][0])
-                self.assertEqual(r.get_child().text,
-                                expected_relations[index][1])
                 self.assertEqual(r.rel_type,
+                                expected_relations[index][0])
+                self.assertEqual(r.get_parent().text,
+                                expected_relations[index][1])
+                self.assertEqual(r.get_child().text,
                                 expected_relations[index][2])
 
             self.assertEqual(expected_text, pack.text)
