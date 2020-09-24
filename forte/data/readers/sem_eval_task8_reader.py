@@ -44,14 +44,14 @@ class SemEvalTask8Reader(PackReader):
         into <e2>downtown</e2>."
         Entity-Destination(e1,e2)
         Comment:
-        '''
+        '''.
 
         This example will be converted to one Sencetence,
         "People have been moving back into downtown."
         and one RelationLink,
         link = RelationLink(parent=People, child=downtown)
         link.rel_type = Entity-Destination
-        into the DataPack
+        into the DataPack.
     """
     def _cache_key_function(self, file_path: str) -> str:
         return os.path.basename(file_path)
@@ -88,7 +88,7 @@ class SemEvalTask8Reader(PackReader):
                     continue
 
                 relation_line = fp.readline()
-                # Command line is not used
+                # Command line is not used.
                 _ = fp.readline()
 
                 sent_line = sent_line[sent_line.find('"') + 1:
@@ -102,7 +102,7 @@ class SemEvalTask8Reader(PackReader):
                 # Remove <e1> and </e1> in the sentence.
                 sent_line = sent_line.replace(e1, e1[4:-5])
                 sent_line = sent_line.replace(e2, e2[4:-5])
-                # Remove <e1> and </e1> in e1
+                # Remove <e1> and </e1> in e1.
                 e1 = e1[4:-5]
                 e2 = e2[4:-5]
                 # Re-calculate the index after removing <e1>, </e1> in
@@ -134,7 +134,7 @@ class SemEvalTask8Reader(PackReader):
                     relation.rel_type = relation_line[:relation_line.find("(")]
                 else:
                     # For "Other" relation, just set parent as e1
-                    # set child as e2
+                    # set child as e2.
                     relation = RelationLink(pack, entry1, entry2)
                     relation.rel_type = relation_line.strip()
 
