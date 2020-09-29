@@ -24,9 +24,9 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.common.resources import Resources
 from forte.common.configuration import Config
-from forte.processors.base.data_augment_processor import BaseDataAugmentProcessor
+from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
 from ft.onto.base_ontology import (
-    Token, Sentence, Document
+    Token, Sentence, Document, MultiPackLink
 )
 
 
@@ -36,7 +36,7 @@ __all__ = [
 
 random.seed(0)
 
-class TextGenerationDataAugmentProcessor(BaseDataAugmentProcessor):
+class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
     r"""
     The data augmentation processor for text generation data.
     The multipack contains two datapacks: source and target.
@@ -52,17 +52,55 @@ class TextGenerationDataAugmentProcessor(BaseDataAugmentProcessor):
         except:
             nltk.download('averaged_perceptron_tagger')
 
+    def new_pack(self):
+        return multipack()
+
     def _process(self, multipack: MultiPack):
         r"""
         This function processes the source and target datapack separately,
         then insert the new datapacks to the multipack.
+        Each pair of source and target document is linked with a MultiPackLink.
         """
-        aug_input_pack: DataPack = self._process_pack(multipack.get_pack(self.configs.input_pack_name))
-        aug_output_pack: DataPack = self._process_pack(multipack.get_pack(self.configs.output_pack_name))
-        multipack.update_pack({
-            self.configs.aug_input_pack_name: aug_input_pack,
-            self.configs.aug_output_pack_name: aug_output_pack
-        })
+        if not self.augmenter:
+            raise KeyError("The processor has not been assigned an augmenter!")
+
+        input_pack: DataPack = multipack.get_pack(self.configs.input_pack_name)
+        output_pack: DataPack = multipack.get_pack(self.configs.output_pack_name)
+        self._create_multipack_link(multipack, input_pack, output_pack)
+
+        # Create aug_num pairs of augmented source & target datapacks
+        for i in range(self.configs.aug_num):
+            aug_input_pack: DataPack = self._process_pack(multipack.get_pack(self.configs.input_pack_name))
+            aug_output_pack: DataPack = self._process_pack(multipack.get_pack(self.configs.output_pack_name))
+            multipack.update_pack({
+                "{}_{}".format(self.configs.aug_input_pack_name, str(i)): aug_input_pack,
+                "{}_{}".format(self.configs.aug_output_pack_name, str(i)): aug_output_pack,
+            })
+            # Create a link between the source and target.
+            self._create_multipack_link(multipack, aug_input_pack, aug_output_pack)
+
+    def _create_multipack_link(self, multipack: MultiPack, src: DataPack, tgt: DataPack):
+        r"""
+        Create a multipack link between the source and target document
+        within a multipack.
+        """
+        src_docs: List[Document] = list(src.get(Document))
+        tgt_docs: List[Document] = list(tgt.get(Document))
+        # If the document is not included in the datapack, create a new one.
+        if len(src_docs) == 0:
+            src_docs.append(Document(src, 0, len(src.text)))
+        if len(tgt_docs) == 0:
+            tgt_docs.append(Document(tgt, 0, len(tgt.text)))
+
+        # The datpack should only contains one document.
+        assert len(src_docs) == 1
+        assert len(tgt_docs) == 1
+        src_doc: Document = src_docs[0]
+        tgt_doc: Document = tgt_docs[0]
+        # Link the source and target document.
+        cross_link = MultiPackLink(multipack, src_doc, tgt_doc)
+        multipack.add_entry(cross_link)
+
 
     def _process_pack(self, pack: DataPack) -> DataPack:
         r"""
@@ -95,7 +133,7 @@ class TextGenerationDataAugmentProcessor(BaseDataAugmentProcessor):
                 pos_tags: List[Tuple[str, str]] = nltk.pos_tag(tokens)
                 for i, token in enumerate(tokens):
                     if token not in string.punctuation and random.random() < replacement_prob:
-                        tokens[i] = self.augmenter.augment(token, {"pos_tag": pos_tags[i][1]})
+                        tokens[i] = self.augmenter.augment(token, pos_tag = pos_tags[i][1])
                 sent_text = self.detokenizer.detokenize(tokens)
             elif replacement_level == 'character':
                 sent_text_: str = ""
@@ -109,11 +147,11 @@ class TextGenerationDataAugmentProcessor(BaseDataAugmentProcessor):
             # Build the pack text and sentence annotation.
             start_index: int = len(pack_text)
             pack_text += " " + sent_text if len(pack_text) > 0 else sent_text
-            if "Sentence" in self.configs.augment_ontologies:
+            if "Sentence" in self.configs.augment_entries:
                 Sentence(data_pack, start_index, len(pack_text))
 
         # Build the Document annotation
-        if "Document" in self.configs.augment_ontologies:
+        if "Document" in self.configs.augment_entries:
             Document(data_pack, 0, len(pack_text))
         data_pack.set_text(pack_text)
         return data_pack
@@ -127,6 +165,5 @@ class TextGenerationDataAugmentProcessor(BaseDataAugmentProcessor):
             'output_pack_name': 'output_tgt',
             'aug_input_pack_name': 'aug_input_src',
             'aug_output_pack_name': 'aug_output_tgt',
-            'replacement_prob': 0.1,
         })
         return config
