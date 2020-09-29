@@ -144,7 +144,7 @@ class SemEvalTask8Reader(PackReader):
         yield pack
 
     @classmethod
-    def default_configs(cls) -> Dict[str,Any]:
+    def default_configs(cls) -> Dict[str, Any]:
         configs: Dict = super().default_configs()
 
         configs.update({
