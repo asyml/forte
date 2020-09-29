@@ -16,7 +16,7 @@ The reader that reads SemEval Task8 data with annotations into Datapacks.
 """
 
 import os
-from typing import Any, Iterator
+from typing import Any, Iterator, Dict
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from forte.data.data_utils_io import dataset_path_iterator
@@ -68,26 +68,26 @@ class SemEvalTask8Reader(PackReader):
 
         Returns: Iterator over the file name (str).
         '''
-        sem_file_dir = args[0]
+        sem_file_dir: str = args[0]
         return dataset_path_iterator(sem_file_dir,
             self.configs.sem_eval_task8_file_extension)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = self.new_pack()
+        pack: DataPack = self.new_pack()
 
         with open(file_path, 'r', encoding='utf8') as fp:
             txt = ""
             offset = 0
 
             while True:
-                sent_line = fp.readline()
+                sent_line: str = fp.readline()
                 if not sent_line:
                     break
 
                 if len(sent_line.split()) == 0:
                     continue
 
-                relation_line = fp.readline()
+                relation_line: str = fp.readline()
                 # Command line is not used.
                 _ = fp.readline()
 
@@ -144,8 +144,8 @@ class SemEvalTask8Reader(PackReader):
         yield pack
 
     @classmethod
-    def default_configs(cls):
-        configs = super().default_configs()
+    def default_configs(cls) -> Dict[str,Any]:
+        configs: Dict = super().default_configs()
 
         configs.update({
             'sem_eval_task8_file_extension': 'txt'
