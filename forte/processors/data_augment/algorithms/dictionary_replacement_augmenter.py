@@ -14,7 +14,7 @@
 
 import random
 from typing import Dict, List
-from forte.processors.data_augment.algorithms.base_augmenter import BaseDataAugmenter
+from forte.processors.data_augment.algorithms.base_augmenter import ReplacementDataAugmenter
 
 __all__ = [
     "DictionaryReplaceAugmenter",
@@ -22,7 +22,7 @@ __all__ = [
 
 random.seed(0)
 
-class DictionaryReplacementAugmenter(BaseDataAugmenter):
+class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
     r"""
     This class is a data augmenter utilizing the dictionaries,
     such as WORDNET, to replace the input word with an synonym.
@@ -30,7 +30,7 @@ class DictionaryReplacementAugmenter(BaseDataAugmenter):
     retrieving synonyms with the same POS.
     """
     def __init__(self, configs: Dict[str, str]):
-        self.configs = configs
+        super().__init__(configs)
         # check if the nltk is properly installed
         try:
             import nltk
@@ -68,7 +68,7 @@ class DictionaryReplacementAugmenter(BaseDataAugmenter):
             return self.model.NOUN
 
 
-    def augment(self, word: str, additional_info: Dict[str, str] = {}) -> str:
+    def augment(self, word: str, pos_tag: str = '') -> str:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
         Args:
@@ -78,12 +78,12 @@ class DictionaryReplacementAugmenter(BaseDataAugmenter):
             a synonym of the word
         """
         res: List = []
-        pos = None
+        pos_wordnet = None
         # The POS property is used for retrieving synonyms with the same POS.
-        if 'pos_tag' in additional_info:
-            pos = self._get_wordnet_pos(additional_info['pos_tag'])
+        if len(pos_tag) > 0:
+            pos_wordnet = self._get_wordnet_pos(pos_tag)
 
-        for synonym in self.model.synsets(word, pos=pos, lang=self.configs['lang']):
+        for synonym in self.model.synsets(word, pos=pos_wordnet, lang=self.configs['lang']):
             for lemma in synonym.lemmas(lang=self.configs['lang']):
                 res.append(lemma.name())
         if len(res) == 0:

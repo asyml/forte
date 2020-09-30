@@ -17,49 +17,35 @@ Processors that augment the data.
 from abc import abstractmethod
 from forte.common.resources import Resources
 from forte.common.configuration import Config
-from forte.processors.data_augment.algorithms.dictionary_replacement_augmenter import DictionaryReplacementAugmenter
-from forte.processors.base.pack_processor import MultiPackProcessor
+from forte.processors.base.base_processor import BaseProcessor
 __all__ = [
-    "BaseDataAugmentProcessor"
+    "BaseDataAugmentProcessor",
+    "ReplacementDataAugmentProcessor"
 ]
 
 
-class BaseDataAugmentProcessor(MultiPackProcessor):
+class BaseDataAugmentProcessor(BaseProcessor):
     r"""The base class of processors that augment data.
     This processor instantiates an augmenter where specific
     data augmentation algorithms are implemented. The augmenter
     will run the algorithms and the processor will create Forte
-    data structures based on the strings.
-
-    Most of the Data Augmentation(DA) methods can be
-    considered as replacement-based methods with different
-    levels: character, word, sentence.
+    data structures based on the augmented inputs.
     """
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        self.augmenter = self.get_augmenter()
 
-    def get_augmenter(self):
+    @property
+    def augmenter(self):
+        return self._augmenter
+
+    @augmenter.setter
+    def augmenter(self, augmenter):
         r"""
-        This function parse the augment algorithm and instantiate an augmenter.
-        The replacement level of processor must be supported by the augmenter.
-
-        For example, we cannot do sentence replacement with a DictionaryReplacementAugmenter,
-        because it is based on synonyms substitution.
-
-        Returns:
-            an instance of data augmenter.
+        This function takes in the instantiated augmenter
+        and bounds it to the processor.
         """
-        algorithm = self.configs.augment_algorithm
-        if algorithm == "DictionaryReplacement":
-            lang = self.configs.get("lang", "eng")
-            augmenter = DictionaryReplacementAugmenter(configs={"lang": lang})
-        else:
-            raise ModuleNotFoundError("The augment algorithm {} is not implemented!".format(algorithm))
-
-        if self.configs.replacement_level not in augmenter.replacement_level:
-            raise LookupError("The replacement level is not supported by the provided augmenter!")
-        return augmenter
+        # self.augmenter = augmenter
+        self._augmenter = augmenter
 
 
     @classmethod
@@ -68,21 +54,44 @@ class BaseDataAugmentProcessor(MultiPackProcessor):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - augment_algorithm: defines the augmenter to use
-            - augment_ontologies: defines the ontologies that will be returned
-            - replacement_prob: defines the probability of replacement
-            - replacement_level: defines the type of replacement(char/word/sentence),
-            must be allowed by the the augmenter's algorithm. Specifically, the augmenter
-            also has a list of allowed replacement_levels, and it must include this
-            processor's replacement_level.
+            - augment_entries: defines the entries that will be returned
+            - aug_num: The number of augmented data for data augmentation. For example,
+            if aug_num = 5, the processor will output a multipack with 1 original
+            input + 5 augmented inputs.
             - kwargs: augmenter-specific parameters
         """
         config = super().default_configs()
         config.update({
-            'augment_algorithm': "DictionaryReplacement",
-            'augment_ontologies': ["Sentence", "Document"],
-            'replacement_level': 'word',
+            'augment_entries': ["Sentence", "Document"],
+            'aug_num': 5,
             'type': "",
             'kwargs': {}
+        })
+        return config
+
+
+class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
+    r"""
+    Most of the Data Augmentation(DA) methods can be
+    considered as replacement-based methods with different
+    levels: character, word, sentence.
+    """
+
+    @classmethod
+    def default_configs(cls):
+        """
+        Returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            - replacement_level: defines the type of replacement(char/word/sentence),
+            must be allowed by the the augmenter's algorithm. Specifically, the augmenter
+            also has a list of allowed replacement_levels, and it must include this
+            processor's replacement_level.
+            - replacement_prob: defines the probability of replacing the original input.
+        """
+        config = super().default_configs()
+        config.update({
+            'replacement_level': 'word',
+            'replacement_prob': 0.1,
         })
         return config

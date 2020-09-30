@@ -24,6 +24,7 @@ from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackSentenceReader
 from forte.processors.data_augment.text_generation_augment_processor import TextGenerationDataAugmentProcessor
+from forte.processors.data_augment.algorithms.dictionary_replacement_augmenter import DictionaryReplacementAugmenter
 from ft.onto.base_ontology import Sentence
 
 from ddt import ddt, data, unpack
@@ -49,17 +50,22 @@ class TestTextGenerationAugmentProcessor(unittest.TestCase):
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
 
         data_augment_config = {
-            'augment_algorithm': "DictionaryReplacement",
-            'augment_ontologies': ["Sentence"],
+            'augment_entries': ["Sentence"],
             'replacement_prob': 0.9,
             'replacement_level': 'word',
             'input_pack_name': 'input_src',
             'output_pack_name': 'output_tgt',
-            'kwargs': {
-                "lang": "eng"
-            }
+            'aug_input_pack_name': 'aug_input_src',
+            'aug_output_pack_name': 'aug_output_tgt',
+            'aug_num': 1,
         }
-        nlp.add(TextGenerationDataAugmentProcessor(),
+
+        augmenter = DictionaryReplacementAugmenter({"lang": "eng"})
+
+        processor = TextGenerationDataAugmentProcessor()
+        processor.augmenter = augmenter
+
+        nlp.add(processor,
                 config=data_augment_config)
         nlp.initialize()
 
@@ -68,7 +74,7 @@ class TestTextGenerationAugmentProcessor(unittest.TestCase):
         ]
 
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
-            self.assertEqual(m_pack.get_pack("aug_input_src").text, expected_outputs[idx])
+            self.assertEqual(m_pack.get_pack("aug_input_src_0").text, expected_outputs[idx])
 
 
 
