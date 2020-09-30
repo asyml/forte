@@ -5,10 +5,6 @@
     ],
     "definitions": [
       {
-        "entry_name": "ft.onto.ag_news.Title",
-        "parent_entry": "forte.data.ontology.top.Annotation"
-      },
-      {
         "entry_name": "ft.onto.ag_news.Description",
         "parent_entry": "forte.data.ontology.top.Annotation"
       }

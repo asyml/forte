@@ -20,8 +20,8 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from ft.onto.ag_news import Title, Description
-from ft.onto.base_ontology import Document
+from ft.onto.ag_news import Description
+from ft.onto.base_ontology import Document, Title
 
 __all__ = [
     "AGNewsReader",

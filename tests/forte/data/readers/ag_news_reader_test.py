@@ -19,8 +19,8 @@ import unittest
 from typing import Dict
 
 from forte.pipeline import Pipeline
-from ft.onto.ag_news import Title, Description
-from ft.onto.base_ontology import Document
+from ft.onto.ag_news import Description
+from ft.onto.base_ontology import Document, Title
 
 from forte.data.readers import AGNewsReader
 from forte.data.data_pack import DataPack

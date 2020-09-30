@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:../../../../../../capstone/forte/forte/ontology_specs/ag_news.json***
+# ***source json:forte/ontology_specs/ag_news.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -12,16 +12,8 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology.top import Annotation
 
 __all__ = [
-    "Title",
     "Description",
 ]
-
-
-@dataclass
-class Title(Annotation):
-
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
 
 
 @dataclass

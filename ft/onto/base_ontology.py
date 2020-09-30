@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json: forte/ontology_specs/base_ontology.json***
+# ***source json:forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -41,6 +41,7 @@ __all__ = [
     "EventRelation",
     "CrossDocEventRelation",
     "ConstituentNode",
+    "Title",
 ]
 
 
@@ -405,3 +406,13 @@ class ConstituentNode(Annotation):
         self.is_leaf: Optional[bool] = None
         self.parent_node: Optional['ConstituentNode'] = None
         self.children_nodes: FList['ConstituentNode'] = FList(self)
+
+
+@dataclass
+class Title(Annotation):
+    """
+    A span based annotation `Title`, normally used to represent a title.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
