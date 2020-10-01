@@ -13,15 +13,14 @@
 # limitations under the License.
 import os
 from abc import ABC, abstractmethod
-from typing import Iterator, List, Any, Dict
 
-from forte.common import Resources
-from forte.common.configuration import Config
+from typing import Iterator, List, Any
+
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
+from forte.data.data_utils import deserialize
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
-from forte.data.data_utils import deserialize
 
 __all__ = [
     'RawDataDeserializeReader',
@@ -111,13 +110,7 @@ class MultiPackDeserializerBase(MultiPackReader):
       information.
     """
 
-    def __init__(self):
-        super().__init__()
-
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-
-    def _collect(self) -> Iterator[Any]:
+    def _collect(self) -> Iterator[Any]:  # type: ignore
         """
         This collect actually do not need any data source, it directly reads
         the data from the configurations.
@@ -171,12 +164,6 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
     the multipack are stored in a directory, and the data packs are stored in
     a directory too (they can be the same directory).
     """
-
-    def __init__(self):
-        super().__init__()
-
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
 
     def _get_multipack_content(self) -> Iterator[str]:
         # pylint: disable=protected-access
