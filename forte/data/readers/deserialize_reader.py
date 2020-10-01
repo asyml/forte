@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 from abc import ABC, abstractmethod
+from typing import Iterator, List, Any, Dict
 
 from typing import Iterator, List, Any
 
@@ -110,10 +111,7 @@ class MultiPackDeserializerBase(MultiPackReader):
       information.
     """
 
-    def __init__(self):
-        super().__init__()
-
-    def _collect(self) -> Iterator[Any]:
+    def _collect(self) -> Iterator[Any]:  # type: ignore
         """
         This collect actually do not need any data source, it directly reads
         the data from the configurations.
