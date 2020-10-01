@@ -17,7 +17,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     license='Apache License Version 2.0',
-    packages=setuptools.find_packages(exclude=["scripts", "examples"]),
+    packages=setuptools.find_packages(exclude=["scripts", "examples", "tests"]),
     include_package_data=True,
     platforms='any',
 
