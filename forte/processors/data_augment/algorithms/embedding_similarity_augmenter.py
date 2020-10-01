@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import random
+
 from typing import Dict, List
 import numpy as np
 from tensorflow import gfile
 from texar.tf.data import Embedding, load_glove
-from forte.processors.data_augment.algorithms.base_augmenter import BaseDataAugmenter
+
+from forte.processors.data_augment.algorithms.base_augmenter import ReplacementDataAugmenter
 
 __all__ = [
     "EmbeddingSimilarityAugmenter",
@@ -46,7 +48,7 @@ def l2_norm(word_vecs):
     norm = np.sqrt((word_vecs * word_vecs).sum(axis=1))
     return word_vecs / norm[:, np.newaxis]
 
-class EmbeddingSimilarityAugmenter(BaseDataAugmenter):
+class EmbeddingSimilarityAugmenter(ReplacementDataAugmenter):
     r"""
     This class is a data augmenter leveraging pre-trained word
     embeddings, such as word2vec and glove, to replace the input
@@ -60,7 +62,7 @@ class EmbeddingSimilarityAugmenter(BaseDataAugmenter):
         emb_dim: Dimension of the embedding
     """
     def __init__(self, emb_path, emb_type, emb_dim, configs: Dict[str, str]):
-        self.configs = configs
+        super().__init__(configs)
         self.emb_path = emb_path
         self.emb_type = emb_type
         self.top_k = int(self.configs["top_k"]) if "top_k" in self.configs else 100
@@ -82,7 +84,7 @@ class EmbeddingSimilarityAugmenter(BaseDataAugmenter):
         return ["word"]
 
 
-    def augment(self, word: str, additional_info: Dict[str, str] = {}) -> str:
+    def augment(self, word: str) -> str:
         r"""
         This function replaces a word with words with similar
         pretrained embeddings.
