@@ -110,7 +110,10 @@ class MultiPackDeserializerBase(MultiPackReader):
       information.
     """
 
-    def _collect(self) -> Iterator[Any]:  # type: ignore
+    def __init__(self):
+        super().__init__()
+
+    def _collect(self) -> Iterator[Any]:
         """
         This collect actually do not need any data source, it directly reads
         the data from the configurations.
