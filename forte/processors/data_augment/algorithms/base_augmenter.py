@@ -17,30 +17,25 @@ Class for data augmentation algorithm.
 from typing import List, Dict, Any
 from abc import abstractmethod, ABC
 
-
 __all__ = [
     "BaseDataAugmenter",
     "ReplacementDataAugmenter"
 ]
 
+
 class BaseDataAugmenter(ABC):
     r"""
     The base class holds the data augmentation algorithm.
+    We leave the :func: augment method to be implemented
+    by subclasses because the function signature might be
+    different.
     """
-    def __init__(self, configs: Dict[str, Any], *args, **kwargs):
+    def __init__(self, configs: Dict[str, Any]):
         r"""
         Set the configuration for the data augmenter.
         """
         self.configs = configs
 
-    @abstractmethod
-    def augment(self, *args, **kwargs):
-        r"""
-        The abstract method for data augmentation.
-        The input might be strings with additional information
-        or a datapack, depending on the implementation of subclasses.
-        """
-        raise NotImplementedError
 
 class ReplacementDataAugmenter(BaseDataAugmenter):
     r"""
@@ -57,10 +52,10 @@ class ReplacementDataAugmenter(BaseDataAugmenter):
         raise NotImplementedError
 
     @abstractmethod
-    def augment(self, input: str, **kwargs) -> str:
+    def augment(self, input: str, *args, **kwargs) -> str:
         r"""
         This function takes in a raw string as input, for the
         replacement-based augmenters. Additional information may
-        be passes in with the args and kwargs.
+        be passes in the kwargs.
         """
         raise NotImplementedError
