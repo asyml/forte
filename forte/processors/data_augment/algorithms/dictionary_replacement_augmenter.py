@@ -14,10 +14,17 @@
 
 import random
 from typing import Dict, List
-from forte.processors.data_augment.algorithms.base_augmenter import ReplacementDataAugmenter
+
+import nltk
+from nltk.corpus import wordnet
+
+from forte.processors.data_augment.algorithms.base_augmenter \
+    import ReplacementDataAugmenter
+
+
 
 __all__ = [
-    "DictionaryReplaceAugmenter",
+    "DictionaryReplacementAugmenter",
 ]
 
 random.seed(0)
@@ -31,15 +38,9 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
     """
     def __init__(self, configs: Dict[str, str]):
         super().__init__(configs)
-        # check if the nltk is properly installed
         try:
-            import nltk
-            from nltk.corpus import wordnet
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError("Missed nltk library. Please install it by 'pip install nltk'")
-
-        try:
-            # Check if the wordnet package and pos_tag package are downloaded.
+            # Check if the wordnet package and
+            # pos_tag package are downloaded.
             wordnet.synsets('computer')
             nltk.pos_tag('computer')
         except LookupError:
@@ -83,7 +84,11 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
         if len(pos_tag) > 0:
             pos_wordnet = self._get_wordnet_pos(pos_tag)
 
-        for synonym in self.model.synsets(word, pos=pos_wordnet, lang=self.configs['lang']):
+        for synonym in self.model.synsets(
+                word,
+                pos=pos_wordnet,
+                lang=self.configs['lang']
+        ):
             for lemma in synonym.lemmas(lang=self.configs['lang']):
                 res.append(lemma.name())
         if len(res) == 0:
