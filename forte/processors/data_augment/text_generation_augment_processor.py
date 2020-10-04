@@ -135,7 +135,7 @@ class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for sent in pack.get(Sentence):
             sent_text: str = sent.text
-            sent_text_: str = "" # new sentence text
+            sent_text_: str = ""   # new sentence text
             # Replace the whole sentence.
             if replacement_level == 'sentence':
                 if random.random() < replacement_prob:

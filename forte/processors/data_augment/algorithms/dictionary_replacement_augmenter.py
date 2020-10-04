@@ -21,13 +21,12 @@ from nltk.corpus import wordnet
 from forte.processors.data_augment.algorithms.base_augmenter \
     import ReplacementDataAugmenter
 
-
-
 __all__ = [
     "DictionaryReplacementAugmenter",
 ]
 
 random.seed(0)
+
 
 class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
     r"""
@@ -67,7 +66,6 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
         else:
             # As default pos in lemmatization is Noun
             return self.model.NOUN
-
 
     def augment(self, word: str, pos_tag: str = '') -> str:
         r"""
