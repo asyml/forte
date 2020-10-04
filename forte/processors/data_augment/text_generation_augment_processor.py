@@ -16,15 +16,11 @@ Processors that augment the data.
 """
 import random
 import string
-import nltk
-from nltk.tokenize.treebank import TreebankWordTokenizer, TreebankWordDetokenizer
-from typing import Iterable, Tuple, Dict
-from abc import abstractmethod, ABC
+from typing import List
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.common.resources import Resources
-from forte.common.configuration import Config
-from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
+from forte.processors.base.data_augment_processor \
+    import ReplacementDataAugmentProcessor
 from ft.onto.base_ontology import (
     Token, Sentence, Document, MultiPackLink
 )
@@ -36,6 +32,7 @@ __all__ = [
 
 random.seed(0)
 
+
 class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
     r"""
     The data augmentation processor for text generation data.
@@ -43,17 +40,8 @@ class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
     This class augment both datapacks and add the new datapacks to
     the original multipack as augmented source and target.
     """
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-        self.tokenizer = TreebankWordTokenizer()
-        self.detokenizer = TreebankWordDetokenizer()
-        try:
-            nltk.pos_tag("apple")
-        except:
-            nltk.download('averaged_perceptron_tagger')
-
     def new_pack(self):
-        return multipack()
+        return MultiPack()
 
     def _process(self, multipack: MultiPack):
         r"""
@@ -64,22 +52,49 @@ class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
         if not self.augmenter:
             raise KeyError("The processor has not been assigned an augmenter!")
 
-        input_pack: DataPack = multipack.get_pack(self.configs.input_pack_name)
-        output_pack: DataPack = multipack.get_pack(self.configs.output_pack_name)
-        self._create_multipack_link(multipack, input_pack, output_pack)
+        input_pack: DataPack = multipack.get_pack(
+            self.configs.input_pack_name
+        )
+        output_pack: DataPack = multipack.get_pack(
+            self.configs.output_pack_name
+        )
+        self._create_multipack_link(
+            multipack,
+            input_pack,
+            output_pack
+        )
 
         # Create aug_num pairs of augmented source & target datapacks
         for i in range(self.configs.aug_num):
-            aug_input_pack: DataPack = self._process_pack(multipack.get_pack(self.configs.input_pack_name))
-            aug_output_pack: DataPack = self._process_pack(multipack.get_pack(self.configs.output_pack_name))
+            aug_input_pack: DataPack = self._process_pack(
+                multipack.get_pack(self.configs.input_pack_name)
+            )
+            aug_output_pack: DataPack = self._process_pack(
+                multipack.get_pack(self.configs.output_pack_name)
+            )
             multipack.update_pack({
-                "{}_{}".format(self.configs.aug_input_pack_name, str(i)): aug_input_pack,
-                "{}_{}".format(self.configs.aug_output_pack_name, str(i)): aug_output_pack,
+                "{}_{}".format(
+                    self.configs.aug_input_pack_name,
+                    str(i)
+                ): aug_input_pack,
+                "{}_{}".format(
+                    self.configs.aug_output_pack_name,
+                    str(i)
+                ): aug_output_pack,
             })
             # Create a link between the source and target.
-            self._create_multipack_link(multipack, aug_input_pack, aug_output_pack)
+            self._create_multipack_link(
+                multipack,
+                aug_input_pack,
+                aug_output_pack
+            )
 
-    def _create_multipack_link(self, multipack: MultiPack, src: DataPack, tgt: DataPack):
+    def _create_multipack_link(
+            self,
+            multipack: MultiPack,
+            src: DataPack,
+            tgt: DataPack
+    ):
         r"""
         Create a multipack link between the source and target document
         within a multipack.
@@ -101,7 +116,6 @@ class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
         cross_link = MultiPackLink(multipack, src_doc, tgt_doc)
         multipack.add_entry(cross_link)
 
-
     def _process_pack(self, pack: DataPack) -> DataPack:
         r"""
         This function process a single datapack with an augmenter.
@@ -121,41 +135,67 @@ class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for sent in pack.get(Sentence):
             sent_text: str = sent.text
+            sent_text_: str = "" # new sentence text
             # Replace the whole sentence.
             if replacement_level == 'sentence':
                 if random.random() < replacement_prob:
                     sent_text = self.augmenter.augment(sent_text)
             # Replace each words.
             elif replacement_level == 'word':
-                # Tokenize the sentence at first.
-                tokens: List[str] = self.tokenizer.tokenize(sent_text)
-                # Get the POS tags for synonym retreival.
-                pos_tags: List[Tuple[str, str]] = nltk.pos_tag(tokens)
+                # The Token must be built in the preceeding pipeline.
+                if len(list(pack.get(Token))) == 0 and len(pack.text) > 0:
+                    raise KeyError("Tokens not found in the pack!")
+
+                # Get the Tokens.
+                tokens: List[Token] = list(pack.get(Token, sent))
+                # Replace the words with the augmenter.
                 for i, token in enumerate(tokens):
-                    if token not in string.punctuation and random.random() < replacement_prob:
-                        tokens[i] = self.augmenter.augment(token, pos_tag = pos_tags[i][1])
-                sent_text = self.detokenizer.detokenize(tokens)
+                    new_token_text: str = token.text
+                    if token.text not in string.punctuation \
+                            and random.random() < replacement_prob:
+                        pos_tag: str = token.pos if token.pos else ''
+                        new_token_text = self.augmenter.augment(
+                            token.text,
+                            pos_tag
+                        )
+
+                    # Get the gap span(might be spaces between tokens)
+                    # between two tokens.
+                    gap_begin: int = token.end
+                    gap_end: int = tokens[i + 1].begin if i < len(tokens) - 1 \
+                        else len(sent_text)
+                    gap_text: str = pack.text[gap_begin:gap_end]
+
+                    # Get the span of the new token.
+                    new_token_begin: int = len(pack_text) + len(sent_text_)
+                    sent_text_ += new_token_text
+                    new_token_end: int = len(pack_text) + len(sent_text_)
+                    Token(data_pack, new_token_begin, new_token_end)
+                    # Append the gap text.
+                    sent_text_ += gap_text
+                sent_text = sent_text_
+
             elif replacement_level == 'character':
-                sent_text_: str = ""
                 for char in sent_text:
-                    if random.rand() < replacement_prob \
+                    if random.random() < replacement_prob \
                         and char not in string.punctuation and char != ' ':
                         char = self.augmenter.augment(char)
-                    sent_text_.append(char)
+                    sent_text_ += char
                 sent_text = sent_text_
 
             # Build the pack text and sentence annotation.
             start_index: int = len(pack_text)
-            pack_text += " " + sent_text if len(pack_text) > 0 else sent_text
+            pack_text += sent_text
             if "Sentence" in self.configs.augment_entries:
                 Sentence(data_pack, start_index, len(pack_text))
+            pack_text += " "
 
+        pack_text = pack_text[:-1]
         # Build the Document annotation
         if "Document" in self.configs.augment_entries:
             Document(data_pack, 0, len(pack_text))
         data_pack.set_text(pack_text)
         return data_pack
-
 
     @classmethod
     def default_configs(cls):
