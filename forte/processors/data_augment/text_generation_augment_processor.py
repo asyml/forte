@@ -153,7 +153,6 @@ class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     new_token_text: str = token.text
                     if token.text not in string.punctuation \
                             and random.random() < replacement_prob:
-                        pos_tag: str = token.pos if token.pos else ''
                         new_token_text = self.augmenter.augment(
                             token
                         )

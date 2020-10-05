@@ -19,77 +19,16 @@ import unittest
 import tempfile
 import os
 
-from forte.data.data_pack import DataPack
+from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackSentenceReader
 from forte.processors.data_augment.text_generation_augment_processor import TextGenerationDataAugmentProcessor
 from forte.processors.data_augment.algorithms.dictionary_replacement_augmenter import DictionaryReplacementAugmenter
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
-from ft.onto.base_ontology import Sentence
 
 from ddt import ddt, data, unpack
 
-# Manually test
-
-
-from ft.onto.base_ontology import Token, Sentence
-data_pack = DataPack()
-data_pack.set_text("Mary and Samantha. I love NLP.")
-data_pack.add_entry(Token(data_pack, 0, 4))
-data_pack.add_entry(Token(data_pack, 5, 8))
-data_pack.add_entry(Token(data_pack, 9, 17))
-data_pack.add_entry(Token(data_pack, 17, 18))
-data_pack.add_entry(Token(data_pack, 19, 20))
-data_pack.add_entry(Token(data_pack, 21, 25))
-data_pack.add_entry(Token(data_pack, 26, 29))
-data_pack.add_entry(Token(data_pack, 29, 30))
-data_pack.add_entry(Sentence(data_pack, 0, 18))
-data_pack.add_entry(Sentence(data_pack, 18, 30))
-
-
-
-class Config:
-    def __init__(self):
-        self.augment_entries = ["Token", "Sentence", "Document"]
-        self.replacement_prob =  0.9
-        self.replacement_level = 'word'
-        self.input_pack_name = 'input_src'
-        self.output_pack_name =  'output_tgt'
-        self.aug_input_pack_name = 'aug_input_src'
-        self.aug_output_pack_name = 'aug_output_tgt'
-        self.aug_num = 1
-
-data_augment_config = {
-    'augment_entries': ["Token", "Sentence", "Document"],
-    'replacement_prob': 0.9,
-    'replacement_level': 'word',
-    'input_pack_name': 'input_src',
-    'output_pack_name': 'output_tgt',
-    'aug_input_pack_name': 'aug_input_src',
-    'aug_output_pack_name': 'aug_output_tgt',
-    'aug_num': 1,
-}
-
-data_augment_config = Config()
-
-augmenter = DictionaryReplacementAugmenter({"lang": "eng"})
-
-processor = TextGenerationDataAugmentProcessor()
-processor.initialize(resources=None, configs=data_augment_config)
-processor.augmenter = augmenter
-new_pack = processor._process_pack(data_pack)
-new_pack.add_all_remaining_entries()
-print(new_pack.text)
-for token in new_pack.get(Token):
-    print(token.text)
-for sent in new_pack.get(Sentence):
-    print(sent.text)
-
-exit()
-
-
-### Manual test end.
 
 @ddt
 class TestTextGenerationAugmentProcessor(unittest.TestCase):
@@ -110,8 +49,9 @@ class TestTextGenerationAugmentProcessor(unittest.TestCase):
             "output_pack_name": "output_tgt"
         }
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
-        nlp.add(NLTKWordTokenizer())
-        nlp.add(NLTKPOSTagger())
+
+        nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
+        nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
 
         data_augment_config = {
             'augment_entries': ["Token", "Sentence", "Document"],
@@ -139,7 +79,6 @@ class TestTextGenerationAugmentProcessor(unittest.TestCase):
 
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
             self.assertEqual(m_pack.get_pack("aug_input_src_0").text, expected_outputs[idx])
-
 
 
 if __name__ == "__main__":
