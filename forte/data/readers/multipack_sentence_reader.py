@@ -47,7 +47,8 @@ class MultiPackSentenceReader(MultiPackReader):
         self.config = configs
 
     def _collect(self, text_directory: str) -> Iterator[Any]:  # type: ignore
-        return dataset_path_iterator_with_base(text_directory, '')
+        return dataset_path_iterator_with_base(
+            text_directory, self.config.suffix)
 
     def _cache_key_function(self, txt_path: str) -> str:
         return os.path.basename(txt_path)
@@ -113,9 +114,19 @@ class MultiPackSentenceReader(MultiPackReader):
         `"output_pack_name"`: str
             Name of the output pack. This name can be used to retrieve the
             output pack from the multipack.
+
+        `"suffix"`: str
+            The suffix of the file to be read in. If not provided,
+            all files under this directory will be read.
+
         """
-        return {
-            "name": "multipack_sentence_reader",
-            "input_pack_name": "input_src",
-            "output_pack_name": "output_tgt"
-        }
+        params = super().default_configs()
+        params.update(
+            {
+                "name": "multipack_sentence_reader",
+                "input_pack_name": "input_src",
+                "output_pack_name": "output_tgt",
+                "suffix": '',
+            }
+        )
+        return params
