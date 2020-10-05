@@ -16,6 +16,7 @@ Class for data augmentation algorithm.
 """
 from typing import List, Dict, Any
 from abc import abstractmethod, ABC
+from forte.data.ontology.core import Entry
 
 __all__ = [
     "BaseDataAugmenter",
@@ -52,7 +53,7 @@ class ReplacementDataAugmenter(BaseDataAugmenter):
         raise NotImplementedError
 
     @abstractmethod
-    def augment(self, input: str, *args, **kwargs) -> str:
+    def augment(self, input: Entry, *args, **kwargs) -> str:
         r"""
         This function takes in a raw string as input, for the
         replacement-based augmenters. Additional information may
