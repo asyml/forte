@@ -152,12 +152,10 @@ class MultiPackWriter(MultiPackProcessor):
         ensure_dir(pack_paths)
         self.pack_idx_out = open(pack_paths, 'w')
 
-        multi_index = os.path.join(self.configs.output_dir, self.multi_idx)
-        ensure_dir(multi_index)
-        self.multi_idx_out = open(multi_index, 'w')
-
     def pack_name(self, pack: DataPack) -> str:
-        r"""Allow defining output name using the information of the datapack.
+        r"""This function defines the output file name using the
+          information of the datapack. The default is to use
+          the `pack_id` of this `pack`.
 
         Args:
             pack: The input datapack.
@@ -165,12 +163,14 @@ class MultiPackWriter(MultiPackProcessor):
         return f"{pack.pack_id}"
 
     def multipack_name(self, pack: MultiPack) -> str:
-        r"""Allow defining output path using the information of the multipack.
+        r"""This function defines the output path using the information of
+        the multipack. The default implementation here is to use the `pack_id`
+        of this `pack`.
 
         Args:
             pack: The input multipack.
         """
-        return f"mult_pack_{pack.pack_id}"
+        return f"multi_pack_{pack.pack_id}"
 
     def _process(self, input_pack: MultiPack):
         multi_out_dir = os.path.join(self.configs.output_dir, self.multi_base)
@@ -186,20 +186,15 @@ class MultiPackWriter(MultiPackProcessor):
                 f'{pack.meta.pack_id}\t'
                 f'{posixpath.relpath(pack_out, self.configs.output_dir)}\n')
 
-        multi_out = write_pack(
+        write_pack(
             input_pack, multi_out_dir,
             self.multipack_name(input_pack), self.configs.indent,
             self.configs.zip_pack, self.configs.overwrite,
             self.configs.drop_record
         )
 
-        self.multi_idx_out.write(
-            f'{input_pack.meta.pack_id}\t'
-            f'{posixpath.relpath(multi_out, self.configs.output_dir)}\n')
-
     def finish(self, _):
         self.pack_idx_out.close()
-        self.multi_idx_out.close()
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

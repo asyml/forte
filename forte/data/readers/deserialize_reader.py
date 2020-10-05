@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import sqlite3
 from abc import ABC, abstractmethod
-
-from typing import Iterator, List, Any
+from typing import Iterator, List, Any, Tuple
 
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
@@ -136,7 +136,8 @@ class MultiPackDeserializerBase(MultiPackReader):
         Implementation of this method should be responsible for yielding
          the raw content of the multi packs.
 
-        Returns:
+        Returns: An iterator of raw strings, each string is the content of a
+         particular multi-pack.
 
         """
         raise NotImplementedError
@@ -150,7 +151,8 @@ class MultiPackDeserializerBase(MultiPackReader):
         Args:
             pack_id: representing the id of the data pack.
 
-        Returns:
+        Returns: Return raw string that contains the data pack content
+         corresponding to the `pack_id`.
 
         """
         raise NotImplementedError
@@ -180,11 +182,58 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
 
     @classmethod
     def default_configs(cls):
-        return {
+        config = super().default_configs()
+
+        config.update({
             "multi_pack_dir": None,
             "data_pack_dir": None,
             "pack_suffix": '.json'
-        }
+        })
+        return config
+
+
+def dump_packs_from_database(
+        database_path: str, output_path: str,
+        datapack_table_name='nlpviewer_backend_document',
+        multipack_table_name='nlpviewer_backend_crossdoc'
+):
+    """
+    This helper function convert the multi pack data from a database to disk.
+
+    This reader is useful for reading data from the early version of
+    the Stave annotation tool: https://github.com/asyml/stave.
+    """
+
+    pack_sub_dir = "packs"
+    multi_sub_dir = "multi"
+
+    conn = sqlite3.connect(database_path)
+    c = conn.cursor()
+
+    multi_pack_output = os.path.join(output_path, multi_sub_dir)
+
+    if not os.path.exists(multi_pack_output):
+        os.makedirs(multi_pack_output)
+
+    for name, m_pack in load_packs(c, multipack_table_name):
+        with open(os.path.join(multi_pack_output, name) + '.json',
+                  'w') as mp_out:
+            mp_out.write(m_pack)
+
+    pack_output = os.path.join(output_path, pack_sub_dir)
+
+    if not os.path.exists(pack_output):
+        os.makedirs(pack_output)
+
+    for name, pack_str in load_packs(c, datapack_table_name):
+        with open(os.path.join(pack_output, name) + '.json', 'w') as pack_out:
+            pack_out.write(pack_str)
+
+
+def load_packs(cursor: sqlite3.Cursor, table_name) -> Tuple[str, str]:
+    for _, name, pack_str, _ in cursor.execute(
+            f'SELECT * FROM {table_name}'):
+        yield name, pack_str
 
 
 # A short name for this class.
