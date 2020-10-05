@@ -20,14 +20,26 @@ import unittest
 from forte.processors.data_augment.algorithms.dictionary_replacement_augmenter \
     import DictionaryReplacementAugmenter
 
+from ft.onto.base_ontology import Token
+from forte.data.data_pack import DataPack
+
 
 class TestDictionaryReplacementAugmenter(unittest.TestCase):
     def setUp(self):
         self.dra = DictionaryReplacementAugmenter(configs={"lang": "eng"})
 
     def test_segmenter(self):
+        data_pack = DataPack()
+        data_pack.set_text("eat phone")
+        token_1 = Token(data_pack, 0, 3)
+        token_2 = Token(data_pack, 4, 9)
+        token_1.pos = "VB"
+        token_2.pos = None
+        data_pack.add_entry(token_1)
+        data_pack.add_entry(token_2)
+
         self.assertIn(
-            self.dra.augment("eat", {"pos_tag": "VB"}),
+            self.dra.augment(token_1),
             [
                 'eat', 'feed', 'eat on', 'consume',
                 'eat up', 'use up', 'deplete', 'exhaust',
@@ -35,7 +47,7 @@ class TestDictionaryReplacementAugmenter(unittest.TestCase):
             ]
         )
         self.assertIn(
-            self.dra.augment("phone"),
+            self.dra.augment(token_2),
             [
                 'telephone', 'phone', 'telephone set',
                 'speech sound', 'sound', 'earphone', 'earpiece',

@@ -17,6 +17,7 @@ from typing import Dict, List
 
 import nltk
 from nltk.corpus import wordnet
+from ft.onto.base_ontology import Token
 
 from forte.processors.data_augment.algorithms.base_augmenter \
     import ReplacementDataAugmenter
@@ -67,7 +68,7 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
             # As default pos in lemmatization is Noun
             return self.model.NOUN
 
-    def augment(self, word: str, pos_tag: str = '') -> str:
+    def augment(self, token: Token) -> str:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
         Args:
@@ -76,6 +77,8 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
         Returns:
             a synonym of the word
         """
+        word = token.text
+        pos_tag = token.pos
         res: List = []
         pos_wordnet = None
         # The POS property is used for retrieving synonyms with the same POS.

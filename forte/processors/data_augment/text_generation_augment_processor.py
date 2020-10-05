@@ -139,7 +139,7 @@ class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
             # Replace the whole sentence.
             if replacement_level == 'sentence':
                 if random.random() < replacement_prob:
-                    sent_text = self.augmenter.augment(sent_text)
+                    sent_text = self.augmenter.augment(sent)
             # Replace each words.
             elif replacement_level == 'word':
                 # The Token must be built in the preceeding pipeline.
@@ -155,8 +155,7 @@ class TextGenerationDataAugmentProcessor(ReplacementDataAugmentProcessor):
                             and random.random() < replacement_prob:
                         pos_tag: str = token.pos if token.pos else ''
                         new_token_text = self.augmenter.augment(
-                            token.text,
-                            pos_tag
+                            token
                         )
 
                     # Get the gap span(might be spaces between tokens)
