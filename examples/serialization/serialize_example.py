@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from typing import Any, Dict
+import os
 
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import OntonotesReader, DirPackReader
-from forte.data.readers.deserialize_reader import MultiPackDiskReader
+from forte.data.readers.deserialize_reader import MultiPackDirectoryReader
 from forte.pipeline import Pipeline
 from forte.processors.base import MultiPackProcessor, MultiPackWriter
 from forte.processors.nltk_processors import (
@@ -152,7 +153,13 @@ def multi_example(input_path, output_path):
     print("We can then load the saved results, and see if everything is OK. "
           "We should see the same number of multi packs there. ")
     reading_pl = Pipeline()
-    reading_pl.set_reader(MultiPackDiskReader(), {'data_path': output_path})
+    reading_pl.set_reader(
+        MultiPackDirectoryReader(),
+        config={
+            "multi_pack_dir": os.path.join(output_path, "multi"),
+            "data_pack_dir": os.path.join(output_path, "packs")
+        }
+    )
     reading_pl.add(ExampleCorefCounter())
     reading_pl.run()
 

@@ -1,0 +1,19 @@
+1	"The system as described above has its greatest application in an arrayed <e1>configuration</e1> of antenna <e2>elements</e2>."
+Component-Whole(e2,e1)
+Comment: Not a collection: there is structure here, organisation.
+
+2	"The <e1>child</e1> was carefully wrapped and bound into the <e2>cradle</e2> by means of a cord."
+Other
+Comment:
+
+3	"The <e1>author</e1> of a keygen uses a <e2>disassembler</e2> to look at the raw assembly code."
+Instrument-Agency(e2,e1)
+Comment:
+
+4	"A misty <e1>ridge</e1> uprises from the <e2>surge</e2>."
+Other
+Comment:
+
+5	"The <e1>student</e1> <e2>association</e2> is the voice of the undergraduate student population of the State University of New York at Buffalo."
+Member-Collection(e1,e2)
+Comment:
