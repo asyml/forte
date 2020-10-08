@@ -31,7 +31,7 @@ class TestDictionaryReplacementAugmenter(unittest.TestCase):
                                              "sample_unigram.txt")})
 
     def test_unigram_distribution(self):
-        word = "computer"
+        word: str = "computer"
         unigram = ['apple', 'banana', 'watermelon', 'lemon', 'orange']
         self.assertIn(self.augmenter.augment(word), unigram)
 

@@ -17,7 +17,6 @@ from typing import Dict, List
 
 import nltk
 from nltk.corpus import words, stopwords
-from ft.onto.base_ontology import Token
 
 from forte.processors.data_augment.algorithms.base_augmenter \
     import ReplacementDataAugmenter
@@ -56,7 +55,7 @@ class DistributionReplacementAugmenter(ReplacementDataAugmenter):
         """
         return a random word from vocab
         """
-        word = random.choice(self.vocab - self.stop_words)
+        word: str = random.choice(self.vocab - self.stop_words)[0]
         return word
 
     def _unigram_sample(self) -> str:
@@ -74,25 +73,25 @@ class DistributionReplacementAugmenter(ReplacementDataAugmenter):
                     cnt.append(int(count))
         return random.choices(vocab, cnt)[0]
 
-    def augment(self, word: str) -> str:
+    def augment(self) -> str:
         r"""
-        This function replaces a word with synonyms from a WORDNET dictionary.
+        This function replaces a word from sampling a distribution.
         Args:
-            word: input
-            additional_info: contains pos_tag of the word, optional
         Returns:
-            a synonym of the word
+            a word sampled from distribution
         """
         if self.configs['distribution'] == "uniform":
             return self._uniform_sample()
         elif self.configs['distribution'] == "unigram":
             if self.configs['unigram'] == "":
-                raise KeyError("Unigram distribution is not provided in config.")
+                raise KeyError("Unigram distribution is not "
+                               "provided in config.")
             else:
                 return self._unigram_sample()
         else:
             raise NotImplementedError
 
+    @classmethod
     def default_configs(cls):
         """
         :return: A dictionary with the default config for this processor.
@@ -100,7 +99,8 @@ class DistributionReplacementAugmenter(ReplacementDataAugmenter):
             - distribution: defines what types of distribution to be used.
                 Options are uniform, unigram, etc.
             - unigram: An input file with unigram stats of the specific dataset.
-                if distribution type is set to "unigram" and "unigram" is not provided,
+                if distribution type is set to "unigram" and "unigram"
+                file is not provided,
                 then simply use _generate_unigram function to generate one
                 from the given text.
         """
