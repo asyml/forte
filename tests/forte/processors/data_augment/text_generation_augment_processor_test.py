@@ -19,15 +19,16 @@ import unittest
 import tempfile
 import os
 
-from forte.data.data_pack import DataPack
+from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackSentenceReader
 from forte.processors.data_augment.text_generation_augment_processor import TextGenerationDataAugmentProcessor
 from forte.processors.data_augment.algorithms.dictionary_replacement_augmenter import DictionaryReplacementAugmenter
-from ft.onto.base_ontology import Sentence
+from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
 
 from ddt import ddt, data, unpack
+
 
 @ddt
 class TestTextGenerationAugmentProcessor(unittest.TestCase):
@@ -49,8 +50,11 @@ class TestTextGenerationAugmentProcessor(unittest.TestCase):
         }
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
 
+        nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
+        nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
+
         data_augment_config = {
-            'augment_entries': ["Sentence"],
+            'augment_entries': ["Token", "Sentence", "Document"],
             'replacement_prob': 0.9,
             'replacement_level': 'word',
             'input_pack_name': 'input_src',
@@ -75,7 +79,6 @@ class TestTextGenerationAugmentProcessor(unittest.TestCase):
 
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
             self.assertEqual(m_pack.get_pack("aug_input_src_0").text, expected_outputs[idx])
-
 
 
 if __name__ == "__main__":

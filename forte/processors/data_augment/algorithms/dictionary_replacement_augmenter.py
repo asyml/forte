@@ -14,13 +14,20 @@
 
 import random
 from typing import Dict, List
-from forte.processors.data_augment.algorithms.base_augmenter import ReplacementDataAugmenter
+
+import nltk
+from nltk.corpus import wordnet
+from ft.onto.base_ontology import Token
+
+from forte.processors.data_augment.algorithms.base_augmenter \
+    import ReplacementDataAugmenter
 
 __all__ = [
-    "DictionaryReplaceAugmenter",
+    "DictionaryReplacementAugmenter",
 ]
 
 random.seed(0)
+
 
 class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
     r"""
@@ -31,15 +38,9 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
     """
     def __init__(self, configs: Dict[str, str]):
         super().__init__(configs)
-        # check if the nltk is properly installed
         try:
-            import nltk
-            from nltk.corpus import wordnet
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError("Missed nltk library. Please install it by 'pip install nltk'")
-
-        try:
-            # Check if the wordnet package and pos_tag package are downloaded.
+            # Check if the wordnet package and
+            # pos_tag package are downloaded.
             wordnet.synsets('computer')
             nltk.pos_tag('computer')
         except LookupError:
@@ -67,8 +68,7 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
             # As default pos in lemmatization is Noun
             return self.model.NOUN
 
-
-    def augment(self, word: str, pos_tag: str = '') -> str:
+    def augment(self, token: Token) -> str:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
         Args:
@@ -77,13 +77,19 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
         Returns:
             a synonym of the word
         """
+        word = token.text
+        pos_tag = token.pos
         res: List = []
         pos_wordnet = None
         # The POS property is used for retrieving synonyms with the same POS.
         if len(pos_tag) > 0:
             pos_wordnet = self._get_wordnet_pos(pos_tag)
 
-        for synonym in self.model.synsets(word, pos=pos_wordnet, lang=self.configs['lang']):
+        for synonym in self.model.synsets(
+                word,
+                pos=pos_wordnet,
+                lang=self.configs['lang']
+        ):
             for lemma in synonym.lemmas(lang=self.configs['lang']):
                 res.append(lemma.name())
         if len(res) == 0:
