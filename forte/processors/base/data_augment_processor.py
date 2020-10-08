@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Processors that augment the data.
+Processors that augment the data. The processor will call
+augmenters to generate texts similar to those in the input pack
+and insert them to the original pack.
 """
 
 from forte.processors.base.base_processor import BaseProcessor
@@ -32,12 +34,11 @@ class BaseDataAugmentProcessor(BaseProcessor):
     will run the algorithms and the processor will create Forte
     data structures based on the augmented inputs.
     """
-    @property
-    def augmenter(self) -> BaseDataAugmenter:
-        return self._augmenter
+    def __init__(self):
+        super().__init__()
+        self._augmenter = None
 
-    @augmenter.setter
-    def augmenter(self, augmenter: BaseDataAugmenter):
+    def set_augmenter(self, augmenter: BaseDataAugmenter):
         r"""
         This function takes in the instantiated augmenter
         and bounds it to the processor.
@@ -50,7 +51,6 @@ class BaseDataAugmentProcessor(BaseProcessor):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - augment_entries: defines the entries that will be returned
             - aug_num: The number of augmented data for data augmentation.
             For example, if aug_num = 5, the processor will output
             a multipack with 1 original input + 5 augmented inputs.
@@ -58,10 +58,7 @@ class BaseDataAugmentProcessor(BaseProcessor):
         """
         config = super().default_configs()
         config.update({
-            'augment_entries': ["Sentence", "Document"],
             'aug_num': 5,
-            'type': "",
-            'kwargs': {}
         })
         return config
 
@@ -79,17 +76,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - replacement_level: defines the type of replacement
-            (char/word/sentence), must be allowed by the the augmenter's
-            algorithm. Specifically, the augmenter also has a list of
-            allowed replacement_levels, and it must include this
-            processor's replacement_level.
-            - replacement_prob: defines the probability of replacing
-            the original input.
+            - augment_entries: defines the entries the processor
+            will augment. It should be a full path to the entry class.
+            - other_entry_policy: the policy for other entries that
+            is not the "augment_entry".
+            If "Delete", all the other entries will be erased.
+            Otherwise, they will be kept as they were,
+            but they might become invalid after the augmentation.
         """
         config = super().default_configs()
         config.update({
-            'replacement_level': 'word',
-            'replacement_prob': 0.1,
+            'augment_entry': "ft.onto.base_ontology.Sentence",
+            'other_entry_policy': "Delete"
         })
         return config

@@ -14,7 +14,7 @@
 """
 Class for data augmentation algorithm.
 """
-from typing import List, Dict, Any
+from typing import Dict, Any
 from abc import abstractmethod, ABC
 from forte.data.ontology.core import Entry
 
@@ -41,21 +41,12 @@ class BaseDataAugmenter(ABC):
 class ReplacementDataAugmenter(BaseDataAugmenter):
     r"""
     Most data augmentation algorithms can be considered as replacement-based
-    methods on different levels(character/word/sentence). The replacement_level
-    is a list containing the levels it allows.
-
-    For example, the replacement_level of synonym replacement is ["word"],
-    that of back-translation is ["word", "sentence"].
+    methods on different levels.
     """
-    @property
-    @abstractmethod
-    def replacement_level(self) -> List[str]:
-        raise NotImplementedError
-
     @abstractmethod
     def augment(self, input: Entry, *args, **kwargs) -> str:
         r"""
-        This function takes in a raw string as input, for the
+        This function takes in an entry as input, for the
         replacement-based augmenters. Additional information may
         be passes in the kwargs.
         """
