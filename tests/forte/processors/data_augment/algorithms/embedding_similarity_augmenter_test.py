@@ -19,12 +19,14 @@ import unittest
 
 from forte.processors.data_augment.algorithms.embedding_similarity_augmenter \
     import EmbeddingSimilarityAugmenter
+from forte.processors.data_augment.utils.utils import load_glove_vocab, load_glove_embedding
 
 
 class TestEmbeddingSimilarityAugmenter(unittest.TestCase):
     def setUp(self):
-        self.esa = EmbeddingSimilarityAugmenter("sample_embedding.txt", "glove", 50,
-            configs={"top_k": 5})
+        self.vocab = load_glove_vocab("sample_embedding.txt")
+        self.embedding = load_glove_embedding("sample_embedding.txt", 50, self.vocab)
+        self.esa = EmbeddingSimilarityAugmenter(self.embedding, self.vocab, top_k=5)
 
     def test_augmenter(self):
         self.assertIn(

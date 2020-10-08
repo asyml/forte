@@ -17,9 +17,11 @@ import random
 from typing import Dict, List
 import numpy as np
 from tensorflow import gfile
-from texar.tf.data import Embedding, load_glove
+from texar.tf.data import Embedding
+from texar.torch.data import Vocab
 
 from forte.processors.data_augment.algorithms.base_augmenter import ReplacementDataAugmenter
+from forte.processors.data_augment.utils.utils import l2_norm
 
 __all__ = [
     "EmbeddingSimilarityAugmenter",
@@ -30,24 +32,6 @@ random.seed(0)
 emb_types = ['glove']
 
 
-def load_glove_vocab(filename):
-    vocab = {}
-    idx_to_word = {}
-    with gfile.GFile(filename) as fin:
-        for line in fin:
-            vec = line.strip().split()
-            if len(vec) == 0:
-                continue
-            word = vec[0]
-            word_idx = len(vocab)
-            vocab[word] = word_idx
-            idx_to_word[word_idx] = word
-    return vocab, idx_to_word
-
-def l2_norm(word_vecs):
-    norm = np.sqrt((word_vecs * word_vecs).sum(axis=1))
-    return word_vecs / norm[:, np.newaxis]
-
 class EmbeddingSimilarityAugmenter(ReplacementDataAugmenter):
     r"""
     This class is a data augmenter leveraging pre-trained word
@@ -57,32 +41,23 @@ class EmbeddingSimilarityAugmenter(ReplacementDataAugmenter):
     top k words with the most similar embeddings.
 
     Args:
-        emb_path: Path to the pretrained embedding file
-        emb_type: Type of embedding. E.g. glove
-        emb_dim: Dimension of the embedding
+        embedding: A texar.tf.data.Embedding object. Can be initialized
+            from pre-trained embedding file using helper functions 
+            E.g. forte.processors.data_augment.utils.utils.load_glove_embedding
+        vocab: A texar.torch.data.Vocab object. Can be initialized from
+            pre-trained embedding file using helper functions
+            E.g. forte.processor.data_augment.utils.utils.load_glove_vocab
+        top_k: the number of k most similar words to choose from
     """
-    def __init__(self, emb_path, emb_type, emb_dim, configs: Dict[str, str]):
-        super().__init__(configs)
-        self.emb_path = emb_path
-        self.emb_type = emb_type
-        self.top_k = int(self.configs["top_k"]) if "top_k" in self.configs else 100
-
-        if emb_type == "glove":
-            self.vocab, self.idx_to_word = load_glove_vocab(emb_path)
-            hparams = Embedding.default_hparams()
-            hparams["file"] = emb_path
-            hparams["dim"] = emb_dim
-            hparams["read_fn"] = load_glove
-            embeddings = Embedding(self.vocab, hparams)
-            self.normalized_vectors = l2_norm(embeddings.word_vecs)
-        else:
-            raise ValueError('Embedding type value is unexpected. \
-                Expected values include {}'.format(emb_types))
+    def __init__(self, embedding: Embedding, vocab: Vocab, top_k: int = 100):
+        super().__init__({})
+        self.vocab = vocab
+        self.top_k = top_k
+        self.normalized_vectors = l2_norm(embedding.word_vecs)
 
     @property
     def replacement_level(self) -> List[str]:
         return ["word"]
-
 
     def augment(self, word: str) -> str:
         r"""
@@ -94,13 +69,13 @@ class EmbeddingSimilarityAugmenter(ReplacementDataAugmenter):
         Returns:
             a replacement word with similar word embedding
         """
-        if word not in self.vocab:
+        if word not in self.vocab.token_to_id_map_py:
             return word
 
-        source_id = self.vocab[word]
+        source_id = self.vocab.token_to_id_map_py[word]
         source_vector = self.normalized_vectors[source_id]
         scores = np.dot(self.normalized_vectors, source_vector)
         target_ids = np.argpartition(-scores, self.top_k+1)[:self.top_k+1]
-        target_words = [self.idx_to_word[idx] for idx in target_ids \
-            if idx != source_id and self.idx_to_word[idx].lower() != word.lower()]
+        target_words = [self.vocab.id_to_token_map_py[idx] for idx in target_ids \
+            if idx != source_id and self.vocab.id_to_token_map_py[idx].lower() != word.lower()]
         return random.choice(target_words)
