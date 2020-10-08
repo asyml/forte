@@ -1,0 +1,5 @@
+apple 1
+banana 2
+orange 5
+lemon 10
+watermelon 4
