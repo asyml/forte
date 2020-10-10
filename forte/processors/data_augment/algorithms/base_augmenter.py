@@ -37,17 +37,17 @@ class BaseDataAugmenter(ABC):
         """
         self.configs = configs
 
+    @abstractmethod
+    def augment(self, input: Entry) -> str:
+        r"""
+        This function takes in an entry as input and
+        returns the augmented string.
+        """
+        raise NotImplementedError
+
 
 class ReplacementDataAugmenter(BaseDataAugmenter):
     r"""
     Most data augmentation algorithms can be considered as replacement-based
     methods on different levels.
     """
-    @abstractmethod
-    def augment(self, input: Entry, *args, **kwargs) -> str:
-        r"""
-        This function takes in an entry as input, for the
-        replacement-based augmenters. Additional information may
-        be passes in the kwargs.
-        """
-        raise NotImplementedError

@@ -45,23 +45,6 @@ class BaseDataAugmentProcessor(BaseProcessor):
         """
         self._augmenter = augmenter
 
-    @classmethod
-    def default_configs(cls):
-        """
-        Returns:
-            A dictionary with the default config for this processor.
-        Following are the keys for this dictionary:
-            - aug_num: The number of augmented data for data augmentation.
-            For example, if aug_num = 5, the processor will output
-            a multipack with 1 original input + 5 augmented inputs.
-            - kwargs: augmenter-specific parameters
-        """
-        config = super().default_configs()
-        config.update({
-            'aug_num': 5,
-        })
-        return config
-
 
 class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     r"""
@@ -80,13 +63,12 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             will augment. It should be a full path to the entry class.
             - other_entry_policy: the policy for other entries that
             is not the "augment_entry".
-            If "Delete", all the other entries will be erased.
-            Otherwise, they will be kept as they were,
+            If "keep", all the other entries will be kept as they were,
             but they might become invalid after the augmentation.
         """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Sentence",
-            'other_entry_policy': "Delete"
+            'other_entry_policy': "keep"
         })
         return config
