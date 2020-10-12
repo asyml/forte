@@ -13,13 +13,13 @@
 # limitations under the License.
 """
 Processors that augment the data. The processor will call
-augmenters to generate texts similar to those in the input pack
-and insert them to the original pack.
+replacement ops to generate texts similar to those in the input pack
+and create a new pack with them.
 """
 
 from forte.processors.base.base_processor import BaseProcessor
-from forte.processors.data_augment.algorithms.base_augmenter \
-    import BaseDataAugmenter
+from forte.processors.data_augment.algorithms.text_replacement_op \
+    import TextReplacementOp
 
 __all__ = [
     "BaseDataAugmentProcessor",
@@ -29,21 +29,11 @@ __all__ = [
 
 class BaseDataAugmentProcessor(BaseProcessor):
     r"""The base class of processors that augment data.
-    This processor instantiates an augmenter where specific
-    data augmentation algorithms are implemented. The augmenter
+    This processor instantiates replacement ops where specific
+    data augmentation algorithms are implemented. The replacement ops
     will run the algorithms and the processor will create Forte
     data structures based on the augmented inputs.
     """
-    def __init__(self):
-        super().__init__()
-        self._augmenter = None
-
-    def set_augmenter(self, augmenter: BaseDataAugmenter):
-        r"""
-        This function takes in the instantiated augmenter
-        and bounds it to the processor.
-        """
-        self._augmenter = augmenter
 
 
 class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
@@ -52,6 +42,23 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     considered as replacement-based methods with different
     levels: character, word, sentence or document.
     """
+    def __init__(self):
+        """
+        The replaced_spans records the entries replaced by new texts.
+        It consists of tuples (entry, new text) inserted by :func: replace.
+        The new text will be used for building new data pack.
+        """
+        super().__init__()
+        self.replaced_spans: List[Tuple[Entry, str]] = []
+
+    def replace(self, replacement_op: TextReplacementOp, input: Entry):
+        """
+        This is a wrapper function to call the replacement op. After
+        getting the augmented text, it will register the input & output
+        for later batch process of building the new data pack.
+        """
+        replaced_text: str = replacement_op.replace(input)
+        self.replaced_spans.append((input, replaced_text))
 
     @classmethod
     def default_configs(cls):
@@ -61,14 +68,24 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Following are the keys for this dictionary:
             - augment_entries: defines the entries the processor
             will augment. It should be a full path to the entry class.
-            - other_entry_policy: the policy for other entries that
-            is not the "augment_entry".
-            If "keep", all the other entries will be kept as they were,
-            but they might become invalid after the augmentation.
+            - other_entry_policy: a dict specifying the policies
+            for other entries that is not the "augment_entry".
+            If "auto_align", the span will be automatically modified according
+            its original location. However, some spans might become invalid
+            after the augmentation, for example, the tokens within a replaced
+            sentence may disappear.
+            If "delete", the entry will not be copied to the new data pack. It
+            is the default operation for entries not specified in this dict.
+
+            Example: {
+                "ft.onto.base_ontology.Sentence": "auto_align",
+                "ft.onto.base_ontology.Document": "delete"
+            }
+
         """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Sentence",
-            'other_entry_policy': "keep"
+            'other_entry_policy': {}
         })
         return config

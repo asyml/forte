@@ -12,42 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class for data augmentation algorithm.
+Class for data augmentation algorithm. The text replacement op will
+replace a piece of text with data augmentation algorithms.
 """
 from typing import Dict, Any
 from abc import abstractmethod, ABC
 from forte.data.ontology.core import Entry
 
 __all__ = [
-    "BaseDataAugmenter",
-    "ReplacementDataAugmenter"
+    "TextReplacementOp",
 ]
 
 
-class BaseDataAugmenter(ABC):
+class TextReplacementOp(ABC):
     r"""
     The base class holds the data augmentation algorithm.
-    We leave the :func: augment method to be implemented
-    by subclasses because the function signature might be
-    different.
+    We leave the :func: replace method to be implemented
+    by subclasses.
     """
     def __init__(self, configs: Dict[str, Any]):
         r"""
-        Set the configuration for the data augmenter.
+        Set the configuration for the text replacement op.
         """
         self.configs = configs
 
     @abstractmethod
-    def augment(self, input: Entry) -> str:
+    def replace(self, input: Entry) -> str:
         r"""
+        Most data augmentation algorithms can be considered
+        as replacement-based methods on different levels.
         This function takes in an entry as input and
         returns the augmented string.
         """
         raise NotImplementedError
-
-
-class ReplacementDataAugmenter(BaseDataAugmenter):
-    r"""
-    Most data augmentation algorithms can be considered as replacement-based
-    methods on different levels.
-    """
