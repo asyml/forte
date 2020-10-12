@@ -16,7 +16,8 @@ Processors that augment the data. The processor will call
 replacement ops to generate texts similar to those in the input pack
 and create a new pack with them.
 """
-
+from typing import List, Tuple
+from forte.data.ontology.core import Entry
 from forte.processors.base.base_processor import BaseProcessor
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
