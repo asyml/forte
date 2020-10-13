@@ -69,24 +69,24 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Following are the keys for this dictionary:
             - augment_entries: defines the entries the processor
             will augment. It should be a full path to the entry class.
-            - other_entry_policy: a dict specifying the policies
-            for other entries that is not the "augment_entry".
-            If "auto_align", the span will be automatically modified according
-            its original location. However, some spans might become invalid
-            after the augmentation, for example, the tokens within a replaced
-            sentence may disappear.
-            If "delete", the entry will not be copied to the new data pack. It
-            is the default operation for entries not specified in this dict.
+            - auto_align_entries: a list specifying what other entries
+            to copy to the new data pack and auto align.
 
-            Example: {
-                "ft.onto.base_ontology.Sentence": "auto_align",
-                "ft.onto.base_ontology.Document": "delete"
-            }
+            If on the list, the span of the entry will be automatically
+            modified according to its original location. However, some
+            spans might become invalid after the augmentation, for
+            example, the tokens within a replaced sentence may disappear.
+
+            Otherwise, the entry will not be copied to the new data pack.
+
+            Example: ["ft.onto.base_ontology.Document"]
+            Then Document will be auto-aligned and other non-augment entries
+            will not be copied to the new data pack.
 
         """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Sentence",
-            'other_entry_policy': {}
+            'auto_align_entries': []
         })
         return config
