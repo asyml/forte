@@ -18,6 +18,8 @@ and create a new pack with them.
 """
 from typing import List, Tuple
 from forte.data.ontology.core import Entry
+from forte.data.ontology.top import Annotation
+from forte.data.data_pack import DataPack
 from forte.processors.base.base_processor import BaseProcessor
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
@@ -61,6 +63,27 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         replaced_text: str = replacement_op.replace(input)
         self.replaced_spans.append((input, replaced_text))
 
+    def auto_align_annotations(
+        self,
+        data_pack: DataPack,
+        replaced_annotations: List[Tuple[Annotation, str]]
+    ) -> DataPack:
+        r"""
+        Function to replace some annotations with new strings.
+        It will update the text and auto-align the annotation spans.
+
+        Args:
+            data_pack: Datapack holding the annotations to be replaced.
+            replaced_annotations: A list of tuples(annotation, new string).
+            The text for annotation will be updated with the new string.
+
+        Returns:
+            A new data_pack holds the text after replacement. The annotations
+            in the original data pack will be copied and auto-aligned as
+            instructed by the "other_entry_policy".
+
+        """
+
     @classmethod
     def default_configs(cls):
         """
@@ -69,24 +92,24 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Following are the keys for this dictionary:
             - augment_entries: defines the entries the processor
             will augment. It should be a full path to the entry class.
-            - auto_align_entries: a list specifying what other entries
-            to copy to the new data pack and auto align.
+            - other_entry_policy: a dict specifying the policies for
+            other entries.
 
-            If on the list, the span of the entry will be automatically
+            If "auto_align", the span of the entry will be automatically
             modified according to its original location. However, some
             spans might become invalid after the augmentation, for
             example, the tokens within a replaced sentence may disappear.
 
-            Otherwise, the entry will not be copied to the new data pack.
+            Entries not in the dict will not be copied to the new data pack.
 
-            Example: ["ft.onto.base_ontology.Document"]
-            Then Document will be auto-aligned and other non-augment entries
-            will not be copied to the new data pack.
-
+            Example: {
+                "ft.onto.base_ontology.Document": "auto_align",
+                "ft.onto.base_ontology.Sentence": "auto_align"
+            }
         """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Sentence",
-            'auto_align_entries': []
+            'other_entry_policy': {}
         })
         return config
