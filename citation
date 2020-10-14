@@ -1,7 +1,10 @@
-To cite Forte, please refer to the following unpublished manuscript at this moment.
+To cite Forte, use the following demo paper at EMNLP 2020.
 
-@unpublished{Liu2020,
-author = {Liu, Zhengzhong and Bukkittu, Avinash and Gupta, Mansi and Gao, Pengzhi and Singhavi, Swapnil and Ahmed, Atif and Wei, Wei and Hu, Zecong and Shi, Haoran and Xing, Eric P. and Hu, Zhiting},
-title = {{Forte: Composing Diverse NLP tools For Text Retrieval, Analysis and Generation}},
+Zhengzhong Liu, Guanxiong Ding, Avinash Bukkittu, Mansi Gupta, Pengzhi Gao, Atif Ahmed, Zhang Shikun, Gao Xin, Swapnil Singhavi, Li Linwei, Wei Wei, Hu Zecong, Shi Haoran, Liang XIaodan, Teruko Mitamura, Eric P. Xing, and Hu Zhiting. 2020. A Data-Centric Framework for Composable NLP Workflows. In EMNLP 2020.
+
+@inproceedings{Liu2020,
+author = {Liu, Zhengzhong and Ding, Guanxiong and Bukkittu, Avinash and Gupta, Mansi and Gao, Pengzhi and Ahmed, Atif and Shikun, Zhang and Xin, Gao and Singhavi, Swapnil and Linwei, Li and Wei, Wei and Zecong, Hu and Haoran, Shi and XIaodan, Liang and Mitamura, Teruko and Xing, Eric P. and Zhiting, Hu},
+booktitle = {EMNLP 2020},
+title = {{A Data-Centric Framework for Composable NLP Workflows}},
 year = {2020}
 }
