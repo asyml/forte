@@ -27,7 +27,7 @@ class TestDataSelectorProcessor(unittest.TestCase):
     def setUp(self):
         self.selector = LengthSelectorProcessor()
         self.selector.initialize(resources=None, configs={"max_length": 20})
-        # Todo: configs doesn't update, still use default val
+        # Todo: configs doesn't update, still use default val?
 
     def test_length_selector(self):
 
@@ -41,8 +41,6 @@ class TestDataSelectorProcessor(unittest.TestCase):
 
         n_pack = 0
         for _, m_pack in enumerate(nlp.process_dataset(self.data)):
-            if not m_pack.text:
-                continue
             self.assertEqual(m_pack.text, "apple banana pear")
             n_pack+=1
         self.assertEqual(n_pack, 1)

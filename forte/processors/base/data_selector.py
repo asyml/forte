@@ -39,8 +39,6 @@ class BaseDataSelectorProcessor(PackProcessor):
     This class drops the datapack by the selection criteria.
     It takes a datapack as input and process to keep or drop it.
     """
-    # def __init__(self, configs: Dict[str, str]):
-    #     super().__init__(configs)
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
@@ -48,10 +46,8 @@ class BaseDataSelectorProcessor(PackProcessor):
         raise NotImplementedError
 
     def _process(self, input_pack: DataPack):
-        print(self.configs["max_length"])
         if not self.select(input_pack):
-            # input_pack.__del__()    #Todo: remove datapack
-            input_pack.set_text("")
+            input_pack.__del__()    #Todo: remove datapack
 
 
 class RandomSelectorProcessor(BaseDataSelectorProcessor):
@@ -60,12 +56,8 @@ class RandomSelectorProcessor(BaseDataSelectorProcessor):
     This class simply drops the datapack according to a specific drop rate.
     It does not take the datapack textual information into consideration.
     """
-    # def __init__(self, configs: Dict[str, str]):
-    #     super().__init__(configs)
-    #     random.seed(0)
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-
 
     def select(self, input_pack: DataPack) -> bool:
         prob:float = random.random()
@@ -84,11 +76,8 @@ class LengthSelectorProcessor(BaseDataSelectorProcessor):
     r"""
     This class simply drops the datapack according to its document length.
     """
-    # def __init__(self, configs: Dict[str, str]):
-    #     super().__init__(configs)
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-
 
     def select(self, input_pack: DataPack) -> bool:
         text:str = input_pack.text
@@ -98,6 +87,6 @@ class LengthSelectorProcessor(BaseDataSelectorProcessor):
     def default_configs(cls):
         config = super().default_configs()
         config.update({
-            "max_length": 100,
+            "max_length": 20,
         })
         return config
