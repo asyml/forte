@@ -90,3 +90,27 @@ class LengthSelectorProcessor(BaseDataSelectorProcessor):
             "max_length": 20,
         })
         return config
+
+
+class KeywordSelectorProcessor(BaseDataSelectorProcessor):
+    r"""
+    This class simply selects the datapacks that contain given keywords.
+    """
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+
+    def select(self, input_pack: DataPack) -> bool:
+        text:str = input_pack.text
+        for k in self.configs["keyword"]:
+            if k in text:
+                return True
+        return False
+
+    @classmethod
+    def default_configs(cls):
+        config = super().default_configs()
+        config.update({
+            "keyword": ["apple"],
+        })
+        return config
+
