@@ -17,6 +17,7 @@ from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Set
 
@@ -40,6 +41,7 @@ __all__ = [
     "EventRelation",
     "CrossDocEventRelation",
     "ConstituentNode",
+    "Title",
 ]
 
 
@@ -86,10 +88,18 @@ class Token(Annotation):
 class Document(Annotation):
     """
     A span based annotation `Document`, normally used to represent a document.
+    Attributes:
+        document_class (List[str])	A list of class names that the document belongs to.
+        sentiment (Dict[str, float])
     """
+
+    document_class: List[str]
+    sentiment: Dict[str, float]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.document_class: List[str] = []
+        self.sentiment: Dict[str, float] = dict()
 
 
 @dataclass
@@ -396,3 +406,13 @@ class ConstituentNode(Annotation):
         self.is_leaf: Optional[bool] = None
         self.parent_node: Optional['ConstituentNode'] = None
         self.children_nodes: FList['ConstituentNode'] = FList(self)
+
+
+@dataclass
+class Title(Annotation):
+    """
+    A span based annotation `Title`, normally used to represent a title.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
