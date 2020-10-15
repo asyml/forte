@@ -17,12 +17,15 @@ replacement ops to generate texts similar to those in the input pack
 and create a new pack with them.
 """
 from typing import List, Tuple
+from bisect import bisect_right
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
 from forte.data.data_pack import DataPack
 from forte.processors.base.base_processor import BaseProcessor
+from forte.utils.utils import get_class, create_class_with_kwargs
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
+
 
 __all__ = [
     "BaseDataAugmentProcessor",
@@ -83,7 +86,107 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             instructed by the "other_entry_policy".
 
         """
-        pass
+        if len(replaced_annotations) == 0:
+            return
+
+        # Sort the annotations by span beginning index.
+        replaced_annotations = sorted(
+            replaced_annotations,
+            key=lambda x: x[0].begin
+        )
+        annotations: List[Annotation] = [
+            annotation for annotation, _ in replaced_annotations]
+        replacement_strs: List[str] = [
+            replacement_str for _, replacement_str in replaced_annotations]
+
+        # Get the new text for the new data pack.
+        new_text: str = ""
+        for i, anno in enumerate(annotations):
+            new_anno_str = replacement_strs[i]
+            # First, get the gap text between last and this annotation.
+            last_anno_end: int = annotations[i - 1].end if i > 0 else 0
+            gap_text: str = data_pack.text[last_anno_end: anno.begin]
+            new_text += gap_text
+            # Then, append the replaced new text.
+            new_text += new_anno_str
+        # Finally, append to new_text the text after the last annotation.
+        new_text += data_pack.text[annotations[-1].end:]
+
+        # Get the span (begin, end) before and after replacement.
+        old_spans: List[Tuple[int, int]] = [
+            (anno.begin, anno.end) for anno in annotations]
+        new_spans: List[Tuple[int, int]] = []
+
+        # Bias is the delta of beginning index of two spans.
+        bias: int = 0
+        for i in range(len(annotations)):
+            old_begin: int = old_spans[i][0]
+            old_end: int = old_spans[i][1]
+            new_begin: int = old_begin + bias
+            new_end = new_begin + len(replacement_strs[i])
+            new_spans.append((new_begin, new_end))
+            bias = new_end - old_end
+
+        def modify_index(index: int, old_spans: List[Tuple[int, int]],
+                         new_spans: List[Tuple[int, int]]):
+            r"""
+            A helper function to map an index before replacement
+            to the index after replacement. The old spans and
+            new spans are anchor indices for the mapping.
+            """
+
+            # Get the max index for binary search.
+            max_index: int = old_spans[-1][1] + 1
+            last_span_ind: int = bisect_right(
+                old_spans, (index, max_index)
+            ) - 1
+            if last_span_ind < 0:
+                # There is no replacement before this index.
+                return index
+
+            # Find the nearest anchor point on the left of current index.
+            # Start from the span's begin index.
+            delta_index: int = new_spans[last_span_ind][0] - \
+                               old_spans[last_span_ind][0]
+            if old_spans[last_span_ind][1] <= index:
+                # Use the span's end index as anchor, if possible.
+                delta_index = new_spans[last_span_ind][1] - \
+                              old_spans[last_span_ind][1]
+            return index + delta_index
+
+        new_pack: DataPack = DataPack()
+        new_pack.set_text(new_text)
+
+        entries_to_copy: List[str] = \
+            list(self.configs['auto_align_entries'].keys()) + \
+            [self.configs['augment_entry']]
+
+        # Iterate over all the original entries and modify their spans.
+        for entry in entries_to_copy:
+            for orig_anno in data_pack.get(get_class(entry)):
+                # Auto align the spans.
+                span_new_begin: int = orig_anno.begin
+                span_new_end: int = orig_anno.end
+
+                if entry == self.configs['augment_entry'] \
+                        or self.configs['auto_align_entries'][entry] \
+                        == 'auto_align':
+                    span_new_begin = modify_index(
+                        orig_anno.begin, old_spans, new_spans)
+                    span_new_end = modify_index(
+                        orig_anno.end, old_spans, new_spans)
+                new_pack.add_entry(
+                    create_class_with_kwargs(
+                        entry,
+                        {
+                            "pack": new_pack,
+                            "begin": span_new_begin,
+                            "end": span_new_end
+                        }
+                    )
+                )
+        return new_pack
+
 
     @classmethod
     def default_configs(cls):
