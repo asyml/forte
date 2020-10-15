@@ -25,6 +25,10 @@ from forte.data.data_pack import DataPack
 from data.converter.converter import OneToOneConverter
 
 
+def get_canonical_ner_type(label: str):
+    return label.replace("B", "").replace("I", "").replace("-", "")
+
+
 class ConverterTest(unittest.TestCase):
     def setUp(self):
         self.texts = [
@@ -83,7 +87,7 @@ class ConverterTest(unittest.TestCase):
                 self.assertEqual(tensor_dim1.shape, (1, len(token)))
                 for tensor_dim2, char in zip(tensor_dim1, iter(token)):
                     self.assertEqual(tensor_dim2,
-                                 torch.tensor(vocab.to_id(char)))
+                                     torch.tensor(vocab.to_id(char)))
 
         # TODO: test add_to_datapack
 
@@ -99,8 +103,8 @@ class ConverterTest(unittest.TestCase):
 
         # Add NER into data pack
         ners = [
-            [("PER", (0,3)), ("ORG", (15,40))],
-            [("PER", (0,15)), ("LOC", (33,40))]
+            [("PER", (0, 3)), ("ORG", (15, 40))],
+            [("PER", (0, 15)), ("LOC", (33, 40))]
         ]
         self.add_ner(self.data_pack, ners)
 
@@ -124,9 +128,11 @@ class ConverterTest(unittest.TestCase):
             for curr_idx, curr_id in enumerate(ids):
                 if curr_id != tag_o_id:
                     start_idx = curr_idx
-                    if (curr_idx == len(ids)-1) or ids[curr_idx+1] == tag_o_id:
+                    if (curr_idx == len(ids) - 1) or \
+                        ids[curr_idx + 1] == tag_o_id:
+
                         end_idx = curr_idx
-                        ner_type = vocab.get_canonical_type(
+                        ner_type = get_canonical_ner_type(
                             vocab.from_id(ids[start_idx]))
 
                         expect_ner_type = ner[ner_idx][0]
@@ -139,10 +145,10 @@ class ConverterTest(unittest.TestCase):
 
                         ner_idx += 1
                     else:
-                        curr_type = vocab.get_canonical_type(
+                        curr_type = get_canonical_ner_type(
                             vocab.from_id(ids[curr_idx]))
-                        next_type = vocab.get_canonical_type(
-                            vocab.from_id(ids[curr_idx+1]))
+                        next_type = get_canonical_ner_type(
+                            vocab.from_id(ids[curr_idx + 1]))
 
                         self.assertEqual(curr_type, next_type)
 
