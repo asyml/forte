@@ -12,12 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Processors that augment the data.
+Processors that augment the data. The processor will call
+replacement ops to generate texts similar to those in the input pack
+and create a new pack with them.
 """
-
+from typing import List, Tuple
+from forte.data.ontology.core import Entry
+from forte.data.ontology.top import Annotation
+from forte.data.data_pack import DataPack
 from forte.processors.base.base_processor import BaseProcessor
-from forte.processors.data_augment.algorithms.base_augmenter \
-    import BaseDataAugmenter
+from forte.processors.data_augment.algorithms.text_replacement_op \
+    import TextReplacementOp
 
 __all__ = [
     "BaseDataAugmentProcessor",
@@ -27,43 +32,11 @@ __all__ = [
 
 class BaseDataAugmentProcessor(BaseProcessor):
     r"""The base class of processors that augment data.
-    This processor instantiates an augmenter where specific
-    data augmentation algorithms are implemented. The augmenter
+    This processor instantiates replacement ops where specific
+    data augmentation algorithms are implemented. The replacement ops
     will run the algorithms and the processor will create Forte
     data structures based on the augmented inputs.
     """
-    @property
-    def augmenter(self) -> BaseDataAugmenter:
-        return self._augmenter
-
-    @augmenter.setter
-    def augmenter(self, augmenter: BaseDataAugmenter):
-        r"""
-        This function takes in the instantiated augmenter
-        and bounds it to the processor.
-        """
-        self._augmenter = augmenter
-
-    @classmethod
-    def default_configs(cls):
-        """
-        Returns:
-            A dictionary with the default config for this processor.
-        Following are the keys for this dictionary:
-            - augment_entries: defines the entries that will be returned
-            - aug_num: The number of augmented data for data augmentation.
-            For example, if aug_num = 5, the processor will output
-            a multipack with 1 original input + 5 augmented inputs.
-            - kwargs: augmenter-specific parameters
-        """
-        config = super().default_configs()
-        config.update({
-            'augment_entries': ["Sentence", "Document"],
-            'aug_num': 5,
-            'type': "",
-            'kwargs': {}
-        })
-        return config
 
 
 class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
@@ -72,6 +45,42 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     considered as replacement-based methods with different
     levels: character, word, sentence or document.
     """
+    def __init__(self):
+        """
+        The replaced_spans records the entries replaced by new texts.
+        It consists of tuples (entry, new text) inserted by :func: replace.
+        The new text will be used for building new data pack.
+        """
+        super().__init__()
+        self.replaced_spans: List[Tuple[Entry, str]] = []
+
+    def replace(self, replacement_op: TextReplacementOp, input: Entry):
+        """
+        This is a wrapper function to call the replacement op. After
+        getting the augmented text, it will register the input & output
+        for later batch process of building the new data pack.
+        """
+        replaced_text: str = replacement_op.replace(input)
+        self.replaced_spans.append((input, replaced_text))
+
+    def auto_align_annotations(
+        self,
+        data_pack: DataPack,
+        replaced_annotations: List[Tuple[Annotation, str]]
+    ) -> DataPack:
+        r"""
+        Function to replace some annotations with new strings.
+        It will update the text and auto-align the annotation spans.
+        Args:
+            data_pack: Datapack holding the annotations to be replaced.
+            replaced_annotations: A list of tuples(annotation, new string).
+            The text for annotation will be updated with the new string.
+        Returns:
+            A new data_pack holds the text after replacement. The annotations
+            in the original data pack will be copied and auto-aligned as
+            instructed by the "other_entry_policy".
+        """
+        pass
 
     @classmethod
     def default_configs(cls):
@@ -79,17 +88,23 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - replacement_level: defines the type of replacement
-            (char/word/sentence), must be allowed by the the augmenter's
-            algorithm. Specifically, the augmenter also has a list of
-            allowed replacement_levels, and it must include this
-            processor's replacement_level.
-            - replacement_prob: defines the probability of replacing
-            the original input.
+            - augment_entries: defines the entries the processor
+            will augment. It should be a full path to the entry class.
+            - other_entry_policy: a dict specifying the policies for
+            other entries.
+            If "auto_align", the span of the entry will be automatically
+            modified according to its original location. However, some
+            spans might become invalid after the augmentation, for
+            example, the tokens within a replaced sentence may disappear.
+            Entries not in the dict will not be copied to the new data pack.
+            Example: {
+                "ft.onto.base_ontology.Document": "auto_align",
+                "ft.onto.base_ontology.Sentence": "auto_align"
+            }
         """
         config = super().default_configs()
         config.update({
-            'replacement_level': 'word',
-            'replacement_prob': 0.1,
+            'augment_entry': "ft.onto.base_ontology.Sentence",
+            'other_entry_policy': {}
         })
         return config
