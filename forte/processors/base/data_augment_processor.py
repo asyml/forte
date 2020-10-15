@@ -26,7 +26,6 @@ from forte.utils.utils import get_class, create_class_with_kwargs
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 
-
 __all__ = [
     "BaseDataAugmentProcessor",
     "ReplacementDataAugmentProcessor"
@@ -86,6 +85,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             instructed by the "other_entry_policy".
 
         """
+
         if len(replaced_annotations) == 0:
             return
 
