@@ -38,7 +38,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         super().__init__()
         self.selector = DummySelector()
 
-    @abstractmethod
     def new_pack(self, pack_name: Optional[str] = None) -> PackType:
         """
         Create a new pack using the current pack manager.
