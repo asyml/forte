@@ -19,8 +19,7 @@ from forte.processors.base import MultiPackProcessor
 
 
 """
-Processors that filter the augmented data. The processor filter
-augmented data based on metrics such as domain-relevance.
+A processor that randomly filters augmented data.
 """
 class RandomDataFilteringProcessor(MultiPackProcessor):
     r"""Data filtering processor that filters augmented data by
