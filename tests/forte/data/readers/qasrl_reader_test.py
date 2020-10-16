@@ -50,6 +50,7 @@ class QASRLReaderTest(unittest.TestCase):
 
             count_packs += 1
             expected_doc: str = ""
+
             # Read all lines in .qa file
             with open(file_path, "r", encoding="utf8", errors='ignore') as file:
                 expected_doc = file.read()
