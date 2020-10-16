@@ -157,12 +157,12 @@ class MultiPackWriter(MultiPackProcessor):
         self.multi_idx_out = open(multi_index, 'w')
 
     def pack_name(self, pack: DataPack) -> str:
-        r"""Allow defining output path using the information of the datapack.
+        r"""Allow defining output name using the information of the datapack.
 
         Args:
             pack: The input datapack.
         """
-        return f"mult_pack_{pack.meta.pack_id}"
+        return f"{pack.pack_id}"
 
     def multipack_name(self, pack: MultiPack) -> str:
         r"""Allow defining output path using the information of the multipack.
@@ -170,7 +170,7 @@ class MultiPackWriter(MultiPackProcessor):
         Args:
             pack: The input multipack.
         """
-        return f"mult_pack_{pack.meta.pack_id}"
+        return f"mult_pack_{pack.pack_id}"
 
     def _process(self, input_pack: MultiPack):
         multi_out_dir = os.path.join(self.configs.output_dir, self.multi_base)
