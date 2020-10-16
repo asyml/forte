@@ -16,13 +16,13 @@ Unit tests for OpenIEReader.
 """
 import os
 import unittest
+import json
 from typing import Iterator, Iterable, List
-
 from forte.data.readers.qasrl_reader import QASRLReader
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence, Document
-import json
+
 
 
 class QASRLReaderTest(unittest.TestCase):
