@@ -81,6 +81,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             A new data_pack holds the text after replacement. The annotations
             in the original data pack will be copied and auto-aligned as
             instructed by the "other_entry_policy".
+
         """
         pass
 
