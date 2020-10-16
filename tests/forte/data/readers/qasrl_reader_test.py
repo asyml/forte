@@ -24,7 +24,6 @@ from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence, Document
 
 
-
 class QASRLReaderTest(unittest.TestCase):
 
     def setUp(self):
