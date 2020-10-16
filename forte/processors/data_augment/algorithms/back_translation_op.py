@@ -16,11 +16,12 @@ Class for back translation op. This file also wraps a machine translation
 model for the back translation. For simplicity, the model is not wrapped in
 a processor.
 """
-from typing import Dict, List
+from typing import List
 from transformers import MarianMTModel, MarianTokenizer
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 from forte.data.ontology.core import Entry
+from forte.common.configuration import Config
 
 
 __all__ = [
@@ -71,7 +72,7 @@ class BackTranslationOp(TextReplacementOp):
     back to the original language, with pretrained
     machine-translation models.
     """
-    def __init__(self, model_to, model_back, configs: Dict[str, str]):
+    def __init__(self, model_to, model_back, configs: Config):
         super().__init__(configs)
         self.model_to = model_to
         self.model_back = model_back
