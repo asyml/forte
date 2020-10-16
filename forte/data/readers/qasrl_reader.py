@@ -29,6 +29,7 @@ from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from ft.onto.base_ontology import Sentence, Document
+import json
 
 __all__ = [
     "QASRLReader"
@@ -84,12 +85,21 @@ class QASRLReader(PackReader):
             for line in f:
                 line = line.strip()
                 if line != "":
-                    sentence: str = line
 
+                    line_list1 = line.split("\"sentenceTokens\":")
+                    line_list2 = line_list1[1].split(",\"verbEntries\"")
+                    sentence = line_list2[0]
                     # Add sentence.
-                    Sentence(pack, offset, offset + len(sentence))
-                    offset += len(sentence) + 1
-                    text += sentence + " "
+
+                    temp_offset = offset
+                    temp_offset = temp_offset + len(line_list1[0])
+                    temp_offset = temp_offset + len("\"sentenceTokens\":")
+
+                    Sentence(pack, temp_offset, temp_offset + len(sentence))
+
+                    # For \n
+                    offset += len(line) + 1
+                    text += line + " "
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
