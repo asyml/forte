@@ -13,30 +13,31 @@
 # limitations under the License.
 
 import random
-from typing import Dict, List
-
+from typing import List
 import nltk
 from nltk.corpus import wordnet
-from ft.onto.base_ontology import Token
+from ft.onto.base_ontology import Entry
+from forte.common.configuration import Config
 
-from forte.processors.data_augment.algorithms.base_augmenter \
-    import ReplacementDataAugmenter
+from forte.processors.data_augment.algorithms.text_replacement_op \
+    import TextReplacementOp
 
 __all__ = [
-    "DictionaryReplacementAugmenter",
+    "DictionaryReplacementOp",
 ]
 
-random.seed(0)
 
-
-class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
+class DictionaryReplacementOp(TextReplacementOp):
     r"""
-    This class is a data augmenter utilizing the dictionaries,
+    This class is a replacement op utilizing the dictionaries,
     such as WORDNET, to replace the input word with an synonym.
     Part-of-Speech(optional) can be provided to the wordnet for
     retrieving synonyms with the same POS.
+
+    The config should contain the following fields:
+        - lang: the language of the text
     """
-    def __init__(self, configs: Dict[str, str]):
+    def __init__(self, configs: Config):
         super().__init__(configs)
         try:
             # Check if the wordnet package and
@@ -47,10 +48,6 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
             nltk.download('wordnet')
             nltk.download('averaged_perceptron_tagger')
         self.model = wordnet
-
-    @property
-    def replacement_level(self) -> List[str]:
-        return ["word"]
 
     def _get_wordnet_pos(self, treebank_tag: str) -> str:
         """
@@ -68,27 +65,26 @@ class DictionaryReplacementAugmenter(ReplacementDataAugmenter):
             # As default pos in lemmatization is Noun
             return self.model.NOUN
 
-    def augment(self, token: Token) -> str:
+    def replace(self, token: Entry) -> str:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
         Args:
-            word: input
-            additional_info: contains pos_tag of the word, optional
+            token: The input entry.
         Returns:
-            a synonym of the word
+            A synonym of the word.
         """
         word = token.text
         pos_tag = token.pos
-        res: List = []
+        res: List[str] = []
         pos_wordnet = None
         # The POS property is used for retrieving synonyms with the same POS.
-        if len(pos_tag) > 0:
+        if pos_tag and len(pos_tag) > 0:
             pos_wordnet = self._get_wordnet_pos(pos_tag)
 
         for synonym in self.model.synsets(
-                word,
-                pos=pos_wordnet,
-                lang=self.configs['lang']
+            word,
+            pos=pos_wordnet,
+            lang=self.configs['lang']
         ):
             for lemma in synonym.lemmas(lang=self.configs['lang']):
                 res.append(lemma.name())
