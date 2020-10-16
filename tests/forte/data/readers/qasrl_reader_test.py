@@ -22,6 +22,7 @@ from forte.data.readers.qasrl_reader import QASRLReader
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence, Document
+import json
 
 
 class QASRLReaderTest(unittest.TestCase):
@@ -49,6 +50,7 @@ class QASRLReaderTest(unittest.TestCase):
 
             count_packs += 1
             expected_doc: str = ""
+            # Read all lines in .qa file
             with open(file_path, "r", encoding="utf8", errors='ignore') as file:
                 expected_doc = file.read()
 
@@ -60,11 +62,19 @@ class QASRLReaderTest(unittest.TestCase):
             self.assertEqual(actual_doc.text, expected_doc.replace('\n', ' ') + ' ')
 
             lines: List[str] = expected_doc.split('\n')
+            sen_lines = []
+            for line in lines:
+                line_json = json.loads(line)
+                sentenceTokens = str(line_json["sentenceTokens"])
+                sentenceTokens = sentenceTokens.replace(" ", "")
+                sentenceTokens = sentenceTokens.replace("'", "\"")
+                sen_lines.append(sentenceTokens)
+
             actual_sentences: Iterator[Sentence] = pack.get(Sentence)
             # Force sorting as Link entries have no order when retrieving from
             # data pack.
 
-            for line, actual_sentence in zip(lines, actual_sentences):
+            for line, actual_sentence in zip(sen_lines, actual_sentences):
                 line: str = line.strip()
 
                 # Test sentence.
