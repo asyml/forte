@@ -11,20 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import random
+"""
+Class for back translation op. This file also wraps a machine translation
+model for the back translation. For simplicity, the model is not wrapped in
+a processor.
+"""
 from typing import Dict, List
 from transformers import MarianMTModel, MarianTokenizer
-from forte.processors.data_augment.algorithms.base_augmenter \
-    import ReplacementDataAugmenter
+from forte.processors.data_augment.algorithms.text_replacement_op \
+    import TextReplacementOp
 from forte.data.ontology.core import Entry
 
 
 __all__ = [
-    "BackTranslationAugmenter",
+    "BackTranslationOp",
 ]
-
-random.seed(0)
 
 
 class MarianMachineTranslator:
@@ -62,9 +63,9 @@ class MarianMachineTranslator:
         return tgt_texts
 
 
-class BackTranslationAugmenter(ReplacementDataAugmenter):
+class BackTranslationOp(TextReplacementOp):
     r"""
-    This class is a data augmenter using back translation
+    This class is a replacement op using back translation
     to generate data with the same semantic meanings. The
     input is translated to another language, then translated
     back to the original language, with pretrained
@@ -84,12 +85,7 @@ class BackTranslationAugmenter(ReplacementDataAugmenter):
             configs['src_language']
         )
 
-    @property
-    def replacement_level(self) -> List[str]:
-        return ["word", "sentence", "Document"]
-
-    def augment(self, input: Entry, *args, **kwargs) -> str:
-        # pylint: disable=W0612,W0613
+    def replace(self, input: Entry) -> str:
         r"""
         This function replaces a piece of text with back translation.
         Args:

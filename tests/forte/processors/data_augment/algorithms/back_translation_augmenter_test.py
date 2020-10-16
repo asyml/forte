@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for dictionary word replacement data augmenter.
+Unit tests for back translation replacement op.
 """
 
 import unittest
+import random
 from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Sentence
-
-from forte.processors.data_augment.algorithms.back_translation_augmenter \
+from forte.processors.data_augment.algorithms.back_translation_op \
     import MarianMachineTranslator
-from forte.processors.data_augment.algorithms.back_translation_augmenter \
-    import BackTranslationAugmenter
+from forte.processors.data_augment.algorithms.back_translation_op \
+    import BackTranslationOp
 
 
 class TestBackTranslationAugmenter(unittest.TestCase):
     def setUp(self):
-        self.bta = BackTranslationAugmenter(
+        self.bta = BackTranslationOp(
             model_to=MarianMachineTranslator(),
             model_back=MarianMachineTranslator(),
             configs={
@@ -36,7 +36,8 @@ class TestBackTranslationAugmenter(unittest.TestCase):
             }
         )
 
-    def test_augmenter(self):
+    def test_back_translation(self):
+        random.seed(0)
         data_pack = DataPack()
         text = "Natural Language Processing has never been made this simple!"
         data_pack.set_text(text)
@@ -44,7 +45,7 @@ class TestBackTranslationAugmenter(unittest.TestCase):
         data_pack.add_entry(sent)
 
         translated_text = "The treatment of natural language has never been easier!"
-        assert(translated_text == self.bta.augment(sent))
+        assert(translated_text == self.bta.replace(sent))
 
 
 if __name__ == "__main__":
