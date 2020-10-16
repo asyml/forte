@@ -21,7 +21,6 @@ https://github.com/uwnlp/qasrl-bank/blob/master/FORMAT.md
 import logging
 import os
 from typing import Iterator
-
 from forte.common.exception import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -29,7 +28,7 @@ from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from ft.onto.base_ontology import Sentence, Document
-import json
+
 
 __all__ = [
     "QASRLReader"
