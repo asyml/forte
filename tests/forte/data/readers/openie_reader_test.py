@@ -33,6 +33,11 @@ class OpenIEReaderTest(unittest.TestCase):
             os.path.dirname(os.path.realpath(__file__)),
             *([os.path.pardir] * 4),
             'data_samples/openie'))
+        
+        print(os.path.realpath(__file__))
+        print(os.path.dirname(os.path.realpath(__file__)))
+        print([os.path.pardir])
+        print(self.dataset_path)
 
         self.pipeline: Pipeline = Pipeline[DataPack]()
         self.reader: OpenIEReader = OpenIEReader()
@@ -40,39 +45,42 @@ class OpenIEReaderTest(unittest.TestCase):
         self.pipeline.initialize()
 
     def test_process_next(self):
-        data_packs: Iterable[DataPack] = self.pipeline.process_dataset(
-            self.dataset_path)
+        data_packs: Iterable[DataPack] = self.pipeline.process_dataset(self.dataset_path)
+        print("type(self.dataset_path) ", type(self.dataset_path))
         file_paths: Iterator[str] = self.reader._collect(self.dataset_path)
+
+        print(file_paths)
 
         count_packs: int = 0
 
+        #each .oie file is corresponding to an Iterable Obj
         for pack, file_path in zip(data_packs, file_paths):
+            print("pack: ", pack)
+            print("file_path: ", file_path)
             count_packs += 1
             expected_doc: str = ""
             with open(file_path, "r", encoding="utf8", errors='ignore') as file:
                 expected_doc = file.read()
+            print("expected_doc: ", expected_doc)
 
             # Test document.
             actual_docs: List[Document] = list(pack.get(Document))
+            print(type(actual_docs[0]))
             self.assertEqual(len(actual_docs), 1)
             actual_doc: Document = actual_docs[0]
-            self.assertEqual(actual_doc.text,
-                             expected_doc.replace('\t', ' ').replace('\n', ' ')
-                             + ' ')
+            print("actual_doc.text: ", actual_doc.text)
+
+            self.assertEqual(actual_doc.text,expected_doc.replace('\t', ' ').replace('\n', ' ') + ' ')
 
             lines: List[str] = expected_doc.split('\n')
             actual_sentences: Iterator[Sentence] = pack.get(Sentence)
-            actual_predicates: Iterator[PredicateMention] = \
-                pack.get(PredicateMention)
-            actual_args: Iterator[PredicateArgument] = \
-                pack.get(PredicateArgument)
+            actual_predicates: Iterator[PredicateMention] = pack.get(PredicateMention)
+            actual_args: Iterator[PredicateArgument] = pack.get(PredicateArgument)
             # Force sorting as Link entries have no order when retrieving from
             # data pack.
-            actual_link_ids: Iterator[int] = \
-                iter(sorted(pack.get_ids_by_type(PredicateLink)))
+            actual_link_ids: Iterator[int] = iter(sorted(pack.get_ids_by_type(PredicateLink)))
 
-            for line, actual_sentence, actual_full_predicate in \
-                    zip(lines, actual_sentences, actual_predicates):
+            for line, actual_sentence, actual_full_predicate in zip(lines, actual_sentences, actual_predicates):
                 line: str = line.strip()
                 line: List[str] = line.split('\t')
 
