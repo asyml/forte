@@ -12,22 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-from abc import ABC
-from typing import Iterator, List, Any, Dict
+from abc import ABC, abstractmethod
 
-from forte.common import Resources
-from forte.common.configuration import Config
+from typing import Iterator, List, Any
+
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
+from forte.data.data_utils import deserialize
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
-from forte.data.data_utils import deserialize
 
 __all__ = [
     'RawDataDeserializeReader',
     'RecursiveDirectoryDeserializeReader',
     'DirPackReader',
-    'MultiPackDiskReader',
+    'MultiPackDirectoryReader',
 ]
 
 
@@ -94,82 +93,98 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         }
 
 
-class MultiPackDiskReader(MultiPackReader):
+class MultiPackDeserializerBase(MultiPackReader):
     """
-    This reader implements one particular way of deserializing Multipack, which
-    is corresponding to the
-    :class:`~forte.processors.base.writers.MultiPackWriter`
+    This is a base implementation of deserializing multipacks, extend this
+    reader by implementing the following functions:
+      - Implement :func:`_get_multipack_str` to return the raw string of the
+         multi pack from the data source (read from :func:`_collect`)
+      - Implement :func:`_get_pack_str` to get the string of a particular
+         data pack given the pack id.
 
-    in this format, the DataPacks are serialized on the side, and the Multipack
-    contains references to them. The reader here assemble these information
-    together.
+    The data source (such as dataset path) should be passed in from the
+     configs during `initialize`, since the sources for multipack is likely to
+     be complex.
+
+    The base reader will then construct the multipack based on these
+      information.
     """
 
-    def __init__(self):
-        super().__init__()
-        self.__pack_index: Dict[int, str] = {}
-
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-        self.__get_pack_paths()
-
-    def _collect(self) -> Iterator[str]:  # type: ignore
+    def _collect(self) -> Iterator[Any]:  # type: ignore
         """
-        This collect actually do not need any data source, it directly read
+        This collect actually do not need any data source, it directly reads
         the data from the configurations.
 
         Returns:
 
         """
-        multi_idx_path = os.path.join(self.configs.data_path, 'multi.idx')
+        for s in self._get_multipack_content():
+            yield s
 
-        if not os.path.exists(multi_idx_path):
-            raise FileNotFoundError(
-                f"Cannot find file {multi_idx_path}, the multi pack "
-                f"serialization format may be unknown.")
-
-        with open(multi_idx_path) as multi_idx:
-            for line in multi_idx:
-                _, multi_path = line.strip().split()
-                yield multi_path
-
-    def _parse_pack(self, multi_pack_path: str) -> Iterator[MultiPack]:
+    def _parse_pack(self, multi_pack_str: str) -> Iterator[MultiPack]:
         # pylint: disable=protected-access
-        with open(os.path.join(
-                self.configs.data_path, multi_pack_path)) as m_data:
-            m_pack: MultiPack = deserialize(m_data.read())
+        m_pack: MultiPack = deserialize(multi_pack_str)
 
-            for pid in m_pack._pack_ref:
-                sub_pack_path = self.__pack_index[pid]
+        for pid in m_pack._pack_ref:
+            pack: DataPack = deserialize(self._get_pack_content(pid))
+            m_pack._packs.append(pack)
+        yield m_pack
 
+    @abstractmethod
+    def _get_multipack_content(self) -> Iterator[str]:
+        """
+        Implementation of this method should be responsible for yielding
+         the raw content of the multi packs.
+
+        Returns:
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get_pack_content(self, pack_id: int) -> str:
+        """
+        Implementation of this method should be responsible for returning the
+          raw string of the data pack from the pack id.
+
+        Args:
+            pack_id: representing the id of the data pack.
+
+        Returns:
+
+        """
+        raise NotImplementedError
+
+
+class MultiPackDirectoryReader(MultiPackDeserializerBase):
+    """
+    This reader implements one particular way of deserializing Multipack, which
+    can be used to read the output written by
+    :class:`~forte.processors.base.writers.PackNameMultiPackWriter`. It assumes
+    the multipack are stored in a directory, and the data packs are stored in
+    a directory too (they can be the same directory).
+    """
+
+    def _get_multipack_content(self) -> Iterator[str]:
+        # pylint: disable=protected-access
+        for f in os.listdir(self.configs.multi_pack_dir):
+            if f.endswith(self.configs.pack_suffix):
                 with open(os.path.join(
-                        self.configs.data_path, sub_pack_path)) as pack_data:
-                    pack: DataPack = deserialize(pack_data.read())
-                    m_pack._packs.append(pack)
-            yield m_pack
+                        self.configs.multi_pack_dir, f)) as m_data:
+                    yield m_data.read()
 
-    def __get_pack_paths(self):
-        pack_idx_path = os.path.join(self.configs.data_path, 'pack.idx')
-
-        if not os.path.exists(pack_idx_path):
-            raise FileNotFoundError(
-                f"Cannot find file {pack_idx_path}, the multi pack "
-                f"serialization format may be unknown.")
-
-        # Reade data packs paths first.
-        with open(pack_idx_path) as pack_idx:
-            for line in pack_idx:
-                pid, pack_path = line.strip().split()
-                self.__pack_index[int(pid)] = pack_path
+    def _get_pack_content(self, pack_id: int) -> str:
+        with open(os.path.join(
+                self.configs.data_pack_dir, f'{pack_id}.json')) as pack_data:
+            return pack_data.read()
 
     @classmethod
     def default_configs(cls):
         return {
-            "data_path": None
+            "multi_pack_dir": None,
+            "data_pack_dir": None,
+            "pack_suffix": '.json'
         }
-
-    def _cache_key_function(self, collection: Any) -> str:
-        pass
 
 
 # A short name for this class.
