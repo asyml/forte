@@ -15,9 +15,10 @@ from collections import defaultdict
 
 
 class Vocabulary:
-    def __init__(self, use_unk = False, unk_entry = "<UNK>"):
+    def __init__(self, method, use_unk = False, unk_entry = "<UNK>"):
         self.is_built = False
         self.use_unk = use_unk
+        self.method = method
 
         if use_unk:
             self.unk_id = 0
@@ -43,7 +44,12 @@ class Vocabulary:
     def to_id(self, entry: str):
         if not self.is_built:
             raise NotImplementedError("Vocab has not been built!")
-        return self.entry2id(entry)
+        if self.method == "indexing":
+            return self.entry2id(entry)
+        elif self.method == "one-hot":
+            ans = [0 for _ in range(len(self.entry2id))]
+            ans[self.entry2id(entry)] = 1
+            return ans
 
     def from_id(self, idx: int):
         if not self.is_built:
