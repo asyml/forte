@@ -91,6 +91,7 @@ for pack in datapacks:
 
 class BaseExtractor:
     def __init__(self, config: Dict):
+        self.vocab = Vocabulary()
         pass
 
     def init_vocab(self, labels:Union[List,Set,Dict]=None):
@@ -112,7 +113,21 @@ class BaseExtractor:
     def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
         raise NotImplementedError()
 
+class AttributeExtractor(BaseExtractor):
+    def __init__(self, config: Dict):
+        super().__init__(config)
 
+    def update_vocab(self, pack: DataPack, instance: EntryType):
+
+
+class TextExtractor(BaseExtractor):
+    def __init__(self, config: Dict):
+
+class CharExtractor(BaseExtractor):
+    def __init__(self, config: Dict):
+
+class AnnotationSeqConverter(BaseExtractor):
+    def __init__(self, config: Dict):
 
 
 # for pack in packs:
