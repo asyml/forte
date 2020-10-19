@@ -17,12 +17,12 @@ from typing import List, Tuple
 from torch import Tensor
 import torch
 
-from data.converter.vocabulary import Vocabulary
+from data.extractor.vocabulary import Vocabulary
 from ft.onto.base_ontology import Sentence, Token, Document, EntityMention
 
 from forte.data.data_pack import DataPack
 
-from data.converter.converter import OneToOneConverter
+from data.extractor.extractor import AttributeExtractor
 
 
 def get_canonical_ner_type(label: str):
@@ -45,7 +45,7 @@ class ConverterTest(unittest.TestCase):
             "repr": "text_repr",
             "conversion_method": "indexing"
         }
-        converter = OneToOneConverter(config)
+        converter = AttributeExtractor(config)
 
         for instance in self.data_pack.get_data(config["scope"]):
             converter.consume_instance(self.data_pack,
