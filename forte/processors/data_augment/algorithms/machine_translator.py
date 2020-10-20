@@ -46,7 +46,7 @@ class MachineTranslator:
         raise NotImplementedError
 
 
-class MarianMachineTranslator:
+class MarianMachineTranslator(MachineTranslator):
     r"""
     This class is a wrapper for the Marian Machine Translator
     (https://huggingface.co/transformers/model_doc/marian.html).
