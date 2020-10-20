@@ -16,52 +16,16 @@ Class for back translation op. This file also wraps a machine translation
 model for the back translation. For simplicity, the model is not wrapped in
 a processor.
 """
-from typing import List
-from transformers import MarianMTModel, MarianTokenizer
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 from forte.data.ontology.core import Entry
 from forte.common.configuration import Config
+from forte.utils.utils import create_class_with_kwargs
 
 
 __all__ = [
     "BackTranslationOp",
 ]
-
-
-class MarianMachineTranslator:
-    r"""
-    This class is a wrapper for the Marian Machine Translator
-    (https://huggingface.co/transformers/model_doc/marian.html).
-    Please refer to their doc for supported languages.
-    """
-    def __init__(self, src_lang: str = 'en', tgt_lang: str = 'fr'):
-        self.src_lang: str = src_lang
-        self.tgt_lang: str = tgt_lang
-        self.model_name: str = 'Helsinki-NLP/opus-mt-{src}-{tgt}'.format(
-            src=src_lang, tgt=tgt_lang
-        )
-        self.tokenizer = None
-        self.model = None
-
-    def initialize(self, src_lang: str = 'en', tgt_lang: str = 'fr'):
-        self.src_lang = src_lang
-        self.tgt_lang = tgt_lang
-        self.model_name = 'Helsinki-NLP/opus-mt-{src}-{tgt}'.format(
-            src=src_lang, tgt=tgt_lang
-        )
-        self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
-        self.model = MarianMTModel.from_pretrained(self.model_name)
-
-    def translate(self, src_texts: List[str]) -> List[str]:
-        translated: List[str] = self.model.generate(
-            **self.tokenizer.prepare_seq2seq_batch(src_texts)
-        )
-        tgt_texts: List[str] = [
-            self.tokenizer.decode(t, skip_special_tokens=True)
-            for t in translated
-        ]
-        return tgt_texts
 
 
 class BackTranslationOp(TextReplacementOp):
@@ -72,18 +36,21 @@ class BackTranslationOp(TextReplacementOp):
     back to the original language, with pretrained
     machine-translation models.
     """
-    def __init__(self, model_to, model_back, configs: Config):
+    def __init__(self, configs: Config):
         super().__init__(configs)
-        self.model_to = model_to
-        self.model_back = model_back
-
-        self.model_to.initialize(
-            configs['src_language'],
-            configs['tgt_language']
+        self.model_to = create_class_with_kwargs(
+            configs['model_to'],
+            class_args={
+                "src_lang": configs['src_language'],
+                "tgt_lang": configs['tgt_language']
+            }
         )
-        self.model_back.initialize(
-            configs['tgt_language'],
-            configs['src_language']
+        self.model_back = create_class_with_kwargs(
+            configs['model_back'],
+            class_args={
+                "src_lang": configs['tgt_language'],
+                "tgt_lang": configs['src_language']
+            }
         )
 
     def replace(self, input: Entry) -> str:
@@ -94,5 +61,5 @@ class BackTranslationOp(TextReplacementOp):
         Returns:
             a string with a similar semantic meaning.
         """
-        intermediate_texts: List[str] = self.model_to.translate([input.text])
-        return self.model_back.translate(intermediate_texts)[0]
+        intermediate_text: str = self.model_to.translate(input.text)
+        return self.model_back.translate(intermediate_text)

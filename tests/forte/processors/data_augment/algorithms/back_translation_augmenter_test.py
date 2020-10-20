@@ -20,17 +20,19 @@ import random
 from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Sentence
 from forte.processors.data_augment.algorithms.back_translation_op \
-    import MarianMachineTranslator
-from forte.processors.data_augment.algorithms.back_translation_op \
     import BackTranslationOp
 
 
 class TestBackTranslationAugmenter(unittest.TestCase):
     def setUp(self):
+        model_path = (
+            "forte.processors.data_augment.algorithms."
+            "machine_translator.MarianMachineTranslator"
+        )
         self.bta = BackTranslationOp(
-            model_to=MarianMachineTranslator(),
-            model_back=MarianMachineTranslator(),
             configs={
+                "model_to": model_path,
+                "model_back": model_path,
                 "src_language": "en",
                 "tgt_language": "fr",
             }
