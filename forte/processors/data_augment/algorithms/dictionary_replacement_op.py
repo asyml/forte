@@ -11,14 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import random
-from typing import List
-import nltk
-from nltk.corpus import wordnet
 from ft.onto.base_ontology import Entry
+from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
-
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 
@@ -35,35 +30,15 @@ class DictionaryReplacementOp(TextReplacementOp):
     retrieving synonyms with the same POS.
 
     The config should contain the following fields:
-        - lang: the language of the text
+        - dictionary: The full path to the dictionary class.
+        - lang: The language of the text.
     """
     def __init__(self, configs: Config):
         super().__init__(configs)
-        try:
-            # Check if the wordnet package and
-            # pos_tag package are downloaded.
-            wordnet.synsets('computer')
-            nltk.pos_tag('computer')
-        except LookupError:
-            nltk.download('wordnet')
-            nltk.download('averaged_perceptron_tagger')
-        self.model = wordnet
-
-    def _get_wordnet_pos(self, treebank_tag: str) -> str:
-        """
-        return WORDNET POS compliance to WORDNET lemmatization (a,n,r,v)
-        """
-        if treebank_tag.startswith('J'):
-            return self.model.ADJ
-        elif treebank_tag.startswith('V'):
-            return self.model.VERB
-        elif treebank_tag.startswith('N'):
-            return self.model.NOUN
-        elif treebank_tag.startswith('R'):
-            return self.model.ADV
-        else:
-            # As default pos in lemmatization is Noun
-            return self.model.NOUN
+        self.dictionary = create_class_with_kwargs(
+            configs["dictionary"],
+            class_args={}
+        )
 
     def replace(self, token: Entry) -> str:
         r"""
@@ -75,23 +50,5 @@ class DictionaryReplacementOp(TextReplacementOp):
         """
         word = token.text
         pos_tag = token.pos
-        res: List[str] = []
-        pos_wordnet = None
-        # The POS property is used for retrieving synonyms with the same POS.
-        if pos_tag and len(pos_tag) > 0:
-            pos_wordnet = self._get_wordnet_pos(pos_tag)
-
-        for synonym in self.model.synsets(
-            word,
-            pos=pos_wordnet,
-            lang=self.configs['lang']
-        ):
-            for lemma in synonym.lemmas(lang=self.configs['lang']):
-                res.append(lemma.name())
-        if len(res) == 0:
-            return word
-        # Randomly choose one word.
-        word = random.choice(res)
-        # The phrases are concatenated with "_" in wordnet.
-        word = word.replace("_", " ")
-        return word
+        lang = self.configs["lang"]
+        return self.dictionary.get_synonyms(word, pos_tag, lang)

@@ -16,7 +16,6 @@ Unit tests for dictionary word replacement op.
 """
 
 import unittest
-
 from forte.processors.data_augment.algorithms.dictionary_replacement_op \
     import DictionaryReplacementOp
 
@@ -26,7 +25,16 @@ from forte.data.data_pack import DataPack
 
 class TestDictionaryReplacementOp(unittest.TestCase):
     def setUp(self):
-        self.dra = DictionaryReplacementOp(configs={"lang": "eng"})
+        dict_path = (
+            "forte.processors.data_augment."
+            "algorithms.dictionary.WordnetDictionary"
+        )
+        self.dra = DictionaryReplacementOp(
+            configs={
+                "dictionary": dict_path,
+                "lang": "eng",
+            }
+        )
 
     def test_segmenter(self):
         data_pack = DataPack()
