@@ -57,14 +57,28 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         super().__init__()
         self.replaced_spans: List[Tuple[Entry, str]] = []
 
-    def replace(self, replacement_op: TextReplacementOp, input: Entry):
+    def _is_span_overlap(self, begin, end):
+        r"""
+        This function will check whether the new span
+        has an overlap with any existing spans.
+        """
+        for span in self.replaced_spans:
+            if span.begin >= end or span.end <= begin:
+                return True
+        return False
+
+    def replace(self, replacement_op: TextReplacementOp, input: Entry) -> bool:
         """
         This is a wrapper function to call the replacement op. After
         getting the augmented text, it will register the input & output
         for later batch process of building the new data pack.
         """
+        # Ignore the new annotation if overlap.
+        if _is_span_overlap(input.begin, input.end):
+            return False
         replaced_text: str = replacement_op.replace(input)
         self.replaced_spans.append((input, replaced_text))
+        return True
 
     def auto_align_annotations(
         self,

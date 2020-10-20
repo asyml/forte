@@ -23,7 +23,7 @@ from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackSentenceReader
-from forte.processors.base.data_augment_processor_tmp import ReplacementDataAugmentProcessor
+from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
 from ft.onto.base_ontology import Token, Sentence, Document, Annotation
 
