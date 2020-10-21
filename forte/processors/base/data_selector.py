@@ -30,6 +30,7 @@ __all__ = [
     "BaseDataSelectorProcessor",
     "RandomSelectorProcessor",
     "LengthSelectorProcessor",
+    "KeywordSelectorProcessor"
 ]
 
 
