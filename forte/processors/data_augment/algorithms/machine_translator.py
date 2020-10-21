@@ -38,8 +38,6 @@ class MachineTranslator:
     def __init__(self, src_lang: str, tgt_lang: str):
         self.src_lang: str = src_lang
         self.tgt_lang: str = tgt_lang
-        self.tokenizer = None
-        self.model = None
 
     @abstractmethod
     def translate(self, src_text: str) -> str:
@@ -53,12 +51,11 @@ class MarianMachineTranslator(MachineTranslator):
     Please refer to their doc for supported languages.
     """
     def __init__(self, src_lang: str = 'en', tgt_lang: str = 'fr'):
-        self.src_lang = src_lang
-        self.tgt_lang = tgt_lang
+        super().__init__(src_lang, tgt_lang)
         self.model_name = 'Helsinki-NLP/opus-mt-{src}-{tgt}'.format(
             src=src_lang, tgt=tgt_lang
         )
-        self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
+        self.tokenizer= MarianTokenizer.from_pretrained(self.model_name)
         self.model = MarianMTModel.from_pretrained(self.model_name)
 
     def translate(self, src_text: str) -> str:
