@@ -25,7 +25,7 @@ from forte.data.ontology.core import EntryType
 from forte.data.span import Span
 from forte.data.converter.vocabulary import Vocabulary
 from torch import Tensor
-from abc import abstractmethod
+from abc import abstractmethod, override
 
 
 '''
@@ -91,19 +91,38 @@ for pack in datapacks:
 
 class BaseExtractor:
     def __init__(self, config: Dict):
-        self.vocab = Vocabulary()
-        pass
+        self.config = config
+    
+    # interface for vocab
+    def init_vocab(self, *args, **kwargs):
+        self.__vocab = Vocabulary(*args, **kwargs)
 
-    def init_vocab(self, labels:Union[List,Set,Dict]=None):
-        pass
+    def build_vocab(self):
+        self.__vocab.build()
+
+    def add_entry(self, entry):
+        self.__vocab.add_entry(entry)
+
+    def entry2id(self, entry):
+        self.__vocab.entry2id(entry)
+
+    def id2entry(self, idx):
+        self.__vocab.id2entry(idx)
+
+    def get_pad_id(self):
+        return self.__vocab.get_pad_id()
+
+    def get_default_pad_id(self):
+        return Vocabulary.DEFAULT_PAD_ID
+    
+    def get_default_pad_entry(self):
+        return Vocabulary.DEFAULT_PAD_ENTRY
+
 
     @abstractmethod
     def update_vocab(self, pack: DataPack, instance: EntryType):
         raise NotImplementedError()
 
-    def build_vocab(self):
-        pass
-    
     @abstractmethod
     def extract(self, pack: DataPack, 
             instance: EntryType) -> Tensor:
@@ -113,21 +132,155 @@ class BaseExtractor:
     def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
         raise NotImplementedError()
 
+
 class AttributeExtractor(BaseExtractor):
     def __init__(self, config: Dict):
         super().__init__(config)
+        self.entry = config["entry"]
+        self.attribute = config["attribute"]
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
+        for entry in pack.get(self.entry, instance):
+            self.add_entry(getattr(entry, self.attribute))
 
+    def extract(self, pack: DataPack, instance: EntryType):
+        tensor = []
+        for entry in pack.get(self.entry, instance):
+            tensor.append(self.entry2id(getattr(entry, self.attribute)))
+        return Tensor(tensor)
 
-class TextExtractor(BaseExtractor):
+    def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
+        for entry, idx in zip(pack.get(self.entry, instance),
+                                tensor.numpy()):
+            setattr(entry, self.attribute, self.id2entry(idx))
+            
+
+class TextExtractor(AttributeError):
     def __init__(self, config: Dict):
+        config["attribute"] = "text"
+        super().__init__(config)
+
 
 class CharExtractor(BaseExtractor):
     def __init__(self, config: Dict):
+        super().__init__(config)
+        self.entry = config["entry"]
+        self.max_char_length = getattr(config, "max_char_length", None)
 
-class AnnotationSeqConverter(BaseExtractor):
+    def init_vocab(self, pad_entry, pad_id, *args, **kwargs):
+        pad_entry = self.get_default_pad_id() if pad_entry is None else pad_entry
+        pad_id = self.get_default_pad_id() if pad_id is None else pad_id
+        super().init_vocab(pad_entry=pad_entry, pad_id=pad_id,
+                            *args, **kwargs)
+
+    def update_vocab(self, pack: DataPack, instance: EntryType):
+        for word in pack.get(self.entry, instance):
+            for char in word.split():
+                self.add_entry(char)
+
+    def extract(self, pack: DataPack, instance: EntryType):
+        tensor = []
+        max_char_length = -1
+
+        for word in pack.get(self.entry, instance):
+            tmp = []
+            for char in word.split():
+                tmp.append(self.entry2id(char))
+            tensor.append(tmp)
+            max_char_length = max(max_char_length, len(tmp))
+
+        if self.max_char_length is not None:
+            max_char_length = min(self.max_char_length, max_char_length)
+
+        for i in range(len(tensor)):
+            if len(tensor[i]) >= max_char_length:
+                tensor[i] = tensor[i][:max_char_length]
+            else:
+                tensor[i] = tensor[i]+\
+                    [self.get_pad_id()]*(max_char_length-len(tensor[i]))
+        return Tensor(tensor)
+
+
+
+class AnnotationSeqExtractor(BaseExtractor):
     def __init__(self, config: Dict):
+        super().__init__(config)
+        self.entry = config["entry"]
+        self.attribute = config["attribute"]
+        self.strategy = config["strategy"]
+        self.base_on = config["base_on"]
+
+    @classmethod
+    def bio_variance(cls, tag):
+        return [(tag, "B"), (tag, "I"), (None, "O")]
+
+    @classmethod
+    def bio_tag(cls, instance_base_on, instance_entry):
+        tagged = []
+        cur_entry_id = 0
+        prev_entry_id = None
+        cur_base_on_id = 0
+        while cur_base_on_id < len(instance_base_on):
+            base_begin = instance_base_on[cur_base_on_id].begin()
+            base_end = instance_base_on[cur_base_on_id].end()
+            if cur_entry_id <= len(instance_entry):
+                entry_begin = instance_entry[cur_entry_id].begin()
+                entry_end = instance_entry[cur_entry_id].end()
+            else:
+                lastone = len(instance_base_on)
+                entry_begin = instance_base_on[lastone].end()
+                entry_end = instance_base_on[lastone].end()
+
+
+            if base_end < entry_begin:
+                # Base: [...]
+                # Entry       [....]
+                tagged.append((None, "O"))
+                prev_entry_id = None
+                cur_base_on_id += 1
+            elif base_begin < entry_begin and base_end > entry_begin:
+                # Base: [.....]
+                # Entry:   [......]
+                # Or Base: [.........]
+                # Entry:      [.....]
+                # This case should not happen.
+                raise AttributeError("Wrong base on and entry pair.")
+            elif base_begin >= entry_begin and base_end <= entry_end:
+                # Base:    [...]
+                # Entry:  [.......]
+                if prev_entry_id == cur_entry_id:
+                    tagged.append((instance_entry[cur_entry_id], "I"))
+                else:
+                    tagged.append((instance_entry[cur_entry_id], "B"))
+                prev_entry_id = cur_entry_id
+                cur_entry_id += 1
+            elif base_begin > entry_end:
+                cur_entry_id += 1
+            else:
+                raise AttributeError("Unconsidered case.")
+
+        return tagged
+
+    def update_vocab(self, pack: DataPack, instance: EntryType):
+        for entry in pack.get(self.entry, instance):
+            attribute = getattr(entry, self.attribute)
+            for tag_variance in self.bio_variance(attribute):
+                self.add_entry(tag_variance)
+
+    def extract(self, pack: DataPack, instance: EntryType):
+        instance_base_on = list(pack.get(self.base_on, instance))
+        instance_entry = list(pack.get(self.entry, instance))
+        instance_tagged = self.bio_tag(instance_base_on, instance_entry)
+        ans = []
+        for pair in instance_tagged:
+            ans.append(self.entry2id((getattr(pair[0], self.attribute), pair[1])))
+        return Tensor(ans)
+
+    def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
+        for entry, idx in zip(pack.get(self.entry, instance), tensor.numpy()):
+            tag = self.id2entry(idx)
+            setattr(entry, self.attribute, tag[0])
+
 
 
 # for pack in packs:
