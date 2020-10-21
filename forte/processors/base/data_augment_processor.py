@@ -16,6 +16,7 @@ Processors that augment the data. The processor will call
 replacement ops to generate texts similar to those in the input pack
 and create a new pack with them.
 """
+from copy import deepcopy
 from typing import List, Tuple
 from bisect import bisect_right
 from forte.data.ontology.core import Entry
@@ -74,7 +75,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         for later batch process of building the new data pack.
         """
         # Ignore the new annotation if overlap.
-        if _is_span_overlap(input.begin, input.end):
+        if self._is_span_overlap(input.begin, input.end):
             return False
         replaced_text: str = replacement_op.replace(input)
         self.replaced_spans.append((input, replaced_text))
@@ -101,7 +102,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         """
         if len(replaced_annotations) == 0:
-            return
+            return deepcopy(data_pack)
 
         # Sort the annotations by span beginning index.
         replaced_annotations = sorted(
@@ -200,7 +201,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                     )
                 )
         return new_pack
-
 
     @classmethod
     def default_configs(cls):
