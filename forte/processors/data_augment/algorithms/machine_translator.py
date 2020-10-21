@@ -55,7 +55,7 @@ class MarianMachineTranslator(MachineTranslator):
         self.model_name = 'Helsinki-NLP/opus-mt-{src}-{tgt}'.format(
             src=src_lang, tgt=tgt_lang
         )
-        self.tokenizer= MarianTokenizer.from_pretrained(self.model_name)
+        self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
         self.model = MarianMTModel.from_pretrained(self.model_name)
 
     def translate(self, src_text: str) -> str:
