@@ -38,6 +38,12 @@ class BaseExtractor:
                                 use_pad = use_pad,
                                 use_unk = use_unk)
 
+    def size(self):
+        return self.__vocab.size()
+
+    def contain(self, entry: Any):
+        return self.__vocab.contian(entry)
+
     def add_entry(self, entry):
         self.__vocab.add_entry(entry)
 
