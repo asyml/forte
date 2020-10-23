@@ -109,9 +109,8 @@ class CharExtractor(BaseExtractor):
             for char in word.text:
                 self.add_entry(char)
 
-    def extract(self, pack: DataPack, instance: EntryType) -> Tuple[Tensor, Tensor]:
+    def extract(self, pack: DataPack, instance: EntryType):
         tensor = []
-        mask = []
         max_char_length = -1
 
         for word in pack.get(self.entry, instance):
@@ -127,15 +126,11 @@ class CharExtractor(BaseExtractor):
         for i in range(len(tensor)):
             if len(tensor[i]) >= max_char_length:
                 tensor[i] = tensor[i][:max_char_length]
-                mask.append(np.ones_like(tensor[i], dtype = np.int))
             else:
-                mask.append(np.concatenate([np.ones_like(tensor[i], dtype = np.int),
-                                            np.zeros(shape = [max_char_length-len(tensor[i])],
-                                            dtype = np.int)]))
                 tensor[i] = tensor[i]+\
                     [self.get_pad_id()]*(max_char_length-len(tensor[i]))
                     
-        return torch.tensor(tensor), torch.tensor(mask)
+        return torch.tensor(tensor)
 
 
 
