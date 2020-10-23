@@ -156,6 +156,7 @@ class AnnotationSeqExtractor(BaseExtractor):
         cur_entry_id = 0
         prev_entry_id = None
         cur_based_on_id = 0
+
         while cur_based_on_id < len(instance_based_on):
             base_begin = instance_based_on[cur_based_on_id].begin
             base_end = instance_based_on[cur_based_on_id].end
@@ -167,7 +168,6 @@ class AnnotationSeqExtractor(BaseExtractor):
                 lastone = len(instance_based_on) - 1
                 entry_begin = instance_based_on[lastone].end + 1
                 entry_end = instance_based_on[lastone].end + 1
-
 
             if base_end < entry_begin:
                 # Base: [...]
@@ -183,7 +183,7 @@ class AnnotationSeqExtractor(BaseExtractor):
                 else:
                     tagged.append((instance_entry[cur_entry_id], "B"))
                 prev_entry_id = cur_entry_id
-                cur_entry_id += 1
+                cur_based_on_id += 1
             elif base_begin > entry_end:
                 # Base:         [...]
                 # Entry: [....]

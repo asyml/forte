@@ -104,6 +104,10 @@ class ExtractorTest(unittest.TestCase):
             for instance in pack.get(Sentence):
                 tensors.append(extractor.extract(pack, instance))
 
+        expected = [[0, 3, 5, 3, 3, 7, 3]]
+        tensors = [tensor.numpy() for tensor in tensors]
+        tensors = [[int(x) for x in tensor] for tensor in tensors]
+        self.assertListEqual(expected, tensors)
 
 if __name__ == '__main__':
     unittest.main()
