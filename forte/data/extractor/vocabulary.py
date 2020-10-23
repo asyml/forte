@@ -22,6 +22,9 @@ class Vocabulary:
         self.entry2id_dict = defaultdict()
         if use_unk:
             self.id2entry_dict = defaultdict(lambda : self.UNK_ENTRY)
+        else:
+            self.id2entry_dict = defaultdict()
+
         if use_pad:
             self.add_entry(self.PAD_ENTRY)
         if use_unk:
@@ -37,7 +40,7 @@ class Vocabulary:
 
     def add_entry(self, entry: Any):
         if entry not in self.entry2id_dict:
-            idx = len(self.entry2id)
+            idx = len(self.entry2id_dict)
             self.entry2id_dict[entry] = idx
             self.id2entry_dict[idx] = entry
 

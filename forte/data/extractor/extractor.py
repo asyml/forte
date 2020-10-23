@@ -31,9 +31,9 @@ from forte.data.extractor.vocabulary import Vocabulary
 class BaseExtractor:
     def __init__(self, config: Dict):
         self.config = config
-        use_pad = getattr(self.config, "use_pad", False)
-        use_unk = getattr(self.config, "use_unk", False)
-        method = getattr(self.config, "method", "indexing")
+        use_pad = config.get("vocab_use_pad", False)
+        use_unk = config.get("vocab_use_unk", False)
+        method = config.get("vocab_method", "indexing")
         self.__vocab = Vocabulary(method = method,
                                 use_pad = use_pad,
                                 use_unk = use_unk)
@@ -42,10 +42,10 @@ class BaseExtractor:
         self.__vocab.add_entry(entry)
 
     def entry2id(self, entry):
-        self.__vocab.entry2id(entry)
+        return self.__vocab.entry2id(entry)
 
     def id2entry(self, idx):
-        self.__vocab.id2entry(idx)
+        return self.__vocab.id2entry(idx)
 
     def get_pad_id(self):
         return self.__vocab.get_pad_id()
@@ -73,9 +73,7 @@ class AttributeExtractor(BaseExtractor):
 
     def extract(self, pack: DataPack, instance: EntryType):
         tensor = []
-        print("entry")
         for entry in pack.get(self.entry, instance):
-            
             tensor.append(self.entry2id(getattr(entry, self.attribute)))
         return Tensor(tensor)
 
@@ -99,7 +97,7 @@ class CharExtractor(BaseExtractor):
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
         for word in pack.get(self.entry, instance):
-            for char in word.split():
+            for char in word.text:
                 self.add_entry(char)
 
     def extract(self, pack: DataPack, instance: EntryType) -> Tuple[Tensor, Tensor]:
@@ -109,7 +107,7 @@ class CharExtractor(BaseExtractor):
 
         for word in pack.get(self.entry, instance):
             tmp = []
-            for char in word:
+            for char in word.text:
                 tmp.append(self.entry2id(char))
             tensor.append(tmp)
             max_char_length = max(max_char_length, len(tmp))
@@ -127,6 +125,7 @@ class CharExtractor(BaseExtractor):
                                             dtype = np.int)]))
                 tensor[i] = tensor[i]+\
                     [self.get_pad_id()]*(max_char_length-len(tensor[i]))
+                    
         return Tensor(tensor), Tensor(mask)
 
 
@@ -137,29 +136,29 @@ class AnnotationSeqExtractor(BaseExtractor):
         self.entry = config["entry"]
         self.attribute = config["attribute"]
         self.strategy = config["strategy"]
-        self.base_on = config["base_on"]
+        self.based_on = config["based_on"]
 
     @classmethod
     def bio_variance(cls, tag):
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
     @classmethod
-    def bio_tag(cls, instance_base_on, instance_entry):
+    def bio_tag(cls, instance_based_on, instance_entry):
         tagged = []
         cur_entry_id = 0
         prev_entry_id = None
-        cur_base_on_id = 0
-        while cur_base_on_id < len(instance_base_on):
-            base_begin = instance_base_on[cur_base_on_id].begin()
-            base_end = instance_base_on[cur_base_on_id].end()
+        cur_based_on_id = 0
+        while cur_based_on_id < len(instance_based_on):
+            base_begin = instance_based_on[cur_based_on_id].begin
+            base_end = instance_based_on[cur_based_on_id].end
 
-            if cur_entry_id <= len(instance_entry):
-                entry_begin = instance_entry[cur_entry_id].begin()
-                entry_end = instance_entry[cur_entry_id].end()
+            if cur_entry_id < len(instance_entry):
+                entry_begin = instance_entry[cur_entry_id].begin
+                entry_end = instance_entry[cur_entry_id].end
             else:
-                lastone = len(instance_base_on)
-                entry_begin = instance_base_on[lastone].end() + 1
-                entry_end = instance_base_on[lastone].end() + 1
+                lastone = len(instance_based_on) - 1
+                entry_begin = instance_based_on[lastone].end + 1
+                entry_end = instance_based_on[lastone].end + 1
 
 
             if base_end < entry_begin:
@@ -167,7 +166,7 @@ class AnnotationSeqExtractor(BaseExtractor):
                 # Entry       [....]
                 tagged.append((None, "O"))
                 prev_entry_id = None
-                cur_base_on_id += 1
+                cur_based_on_id += 1
             elif base_begin >= entry_begin and base_end <= entry_end:
                 # Base:    [...]
                 # Entry:  [.......]
@@ -190,15 +189,20 @@ class AnnotationSeqExtractor(BaseExtractor):
         for entry in pack.get(self.entry, instance):
             attribute = getattr(entry, self.attribute)
             for tag_variance in self.bio_variance(attribute):
+                print(tag_variance)
                 self.add_entry(tag_variance)
 
     def extract(self, pack: DataPack, instance: EntryType):
-        instance_base_on = list(pack.get(self.base_on, instance))
+        instance_based_on = list(pack.get(self.based_on, instance))
         instance_entry = list(pack.get(self.entry, instance))
-        instance_tagged = self.bio_tag(instance_base_on, instance_entry)
+        instance_tagged = self.bio_tag(instance_based_on, instance_entry)
         ans = []
         for pair in instance_tagged:
-            ans.append(self.entry2id((getattr(pair[0], self.attribute), pair[1])))
+            if pair[0] is None:
+                new_pair = (None, pair[1])
+            else:
+                new_pair = (getattr(pair[0], self.attribute), pair[1])
+            ans.append(self.entry2id(new_pair))
         return Tensor(ans)
 
     # def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
