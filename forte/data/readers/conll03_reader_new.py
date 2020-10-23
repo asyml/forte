@@ -64,10 +64,10 @@ class CoNLL03Reader(PackReader):
             if line != "" and not line.startswith("#"):
                 conll_components = line.split()
 
-                word = conll_components[1]
-                pos = conll_components[2]
-                chunk_id = conll_components[3]
-                ner_tag = conll_components[4]
+                word = conll_components[0]
+                pos = conll_components[1]
+                chunk_id = conll_components[2]
+                ner_tag = conll_components[3]
 
                 word_begin = offset
                 word_end = offset + len(word)
