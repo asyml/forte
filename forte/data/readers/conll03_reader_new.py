@@ -22,7 +22,7 @@ from typing import Iterator, Any
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Token, Sentence, Document
+from ft.onto.base_ontology import Token, Sentence, Document, EntityMention
 
 __all__ = [
     "CoNLL03Reader"
@@ -77,6 +77,9 @@ class CoNLL03Reader(PackReader):
                 token.pos = pos
                 token.chunk = chunk_id
                 token.ner = ner_tag
+
+                entity_mention = EntityMention(pack, word_begin, word_end)
+                entity_mention.ner_type = ner_tag
 
                 text += word + " "
                 offset = word_end + 1

@@ -31,6 +31,7 @@ from forte.data.extractor.vocabulary import Vocabulary
 class BaseExtractor:
     def __init__(self, config: Dict):
         self.config = config
+        self.entry = config["entry"]
         use_pad = config.get("vocab_use_pad", False)
         use_unk = config.get("vocab_use_unk", False)
         method = config.get("vocab_method", "indexing")
@@ -73,7 +74,6 @@ class BaseExtractor:
 class AttributeExtractor(BaseExtractor):
     def __init__(self, config: Dict):
         super().__init__(config)
-        self.entry = config["entry"]
         self.attribute = config["attribute"]
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
@@ -101,7 +101,6 @@ class TextExtractor(AttributeExtractor):
 class CharExtractor(BaseExtractor):
     def __init__(self, config: Dict):
         super().__init__(config)
-        self.entry = config["entry"]
         self.max_char_length = getattr(config, "max_char_length", None)
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
@@ -198,7 +197,6 @@ class AnnotationSeqExtractor(BaseExtractor):
         for entry in pack.get(self.entry, instance):
             attribute = getattr(entry, self.attribute)
             for tag_variance in self.bio_variance(attribute):
-                print(tag_variance)
                 self.add_entry(tag_variance)
 
     def extract(self, pack: DataPack, instance: EntryType):
@@ -218,6 +216,3 @@ class AnnotationSeqExtractor(BaseExtractor):
     #     for entry, idx in zip(pack.get(self.entry, instance), tensor.numpy()):
     #         tag = self.id2entry(idx)
     #         setattr(entry, self.attribute, tag[0])
-
-
-
