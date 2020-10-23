@@ -16,6 +16,7 @@ import codecs
 import logging
 import os
 import numpy as np
+import torch
 from torch import Tensor
 from typing import Iterator, Dict, List, Any, Union, Set, Tuple
 
@@ -84,7 +85,7 @@ class AttributeExtractor(BaseExtractor):
         tensor = []
         for entry in pack.get(self.entry, instance):
             tensor.append(self.entry2id(getattr(entry, self.attribute)))
-        return Tensor(tensor)
+        return torch.tensor(tensor)
 
     # def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
     #     for entry, idx in zip(pack.get(self.entry, instance),
@@ -134,7 +135,7 @@ class CharExtractor(BaseExtractor):
                 tensor[i] = tensor[i]+\
                     [self.get_pad_id()]*(max_char_length-len(tensor[i]))
                     
-        return Tensor(tensor), Tensor(mask)
+        return torch.tensor(tensor), torch.tensor(mask)
 
 
 
@@ -210,7 +211,7 @@ class AnnotationSeqExtractor(BaseExtractor):
             else:
                 new_pair = (getattr(pair[0], self.attribute), pair[1])
             ans.append(self.entry2id(new_pair))
-        return Tensor(ans)
+        return torch.tensor(ans)
 
     # def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
     #     for entry, idx in zip(pack.get(self.entry, instance), tensor.numpy()):

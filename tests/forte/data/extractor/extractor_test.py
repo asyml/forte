@@ -27,7 +27,7 @@ class ExtractorTest(unittest.TestCase):
 
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/conll03"
+        self.dataset_path = "data_samples/conll03_new"
 
     def test_TextExtractor(self):
         pipeline = Pipeline[DataPack]()
