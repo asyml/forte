@@ -41,8 +41,11 @@ class BaseExtractor:
     def size(self):
         return self.__vocab.size()
 
-    def contain(self, entry: Any):
-        return self.__vocab.contian(entry)
+    def contains(self, entry: Any):
+        return self.__vocab.contians(entry)
+
+    def items(self):
+        return self.__vocab.items()
 
     def add_entry(self, entry):
         self.__vocab.add_entry(entry)

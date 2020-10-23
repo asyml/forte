@@ -58,5 +58,9 @@ class Vocabulary:
     def size(self):
         return len(self.entry2id_dict)
 
-    def contian(self, entry: Any):
+    def contians(self, entry: Any):
         return entry in self.entry2id_dict
+
+    def items(self):
+        return self.entry2id_dict.items()
+
