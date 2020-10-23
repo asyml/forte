@@ -25,14 +25,14 @@ from forte.processors.data_augment.algorithms.back_translation_op \
 
 class TestBackTranslationAugmenter(unittest.TestCase):
     def setUp(self):
-        model_path = (
+        model_class_name = (
             "forte.processors.data_augment.algorithms."
             "machine_translator.MarianMachineTranslator"
         )
         self.bta = BackTranslationOp(
             configs={
-                "model_to": model_path,
-                "model_back": model_path,
+                "model_to": model_class_name,
+                "model_back": model_class_name,
                 "src_language": "en",
                 "tgt_language": "fr",
             }
