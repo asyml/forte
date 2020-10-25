@@ -19,15 +19,40 @@ import unittest
 import tempfile
 import os
 
+from forte.processors.data_augment.algorithms.text_replacement_op import TextReplacementOp
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
+from forte.data.ontology.top import MultiPackLink
 from forte.data.readers import MultiPackSentenceReader
 from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
 from ft.onto.base_ontology import Token, Sentence, Document, Annotation
 
 from ddt import ddt, data, unpack
+
+__all__ = [
+    "Replacer"
+]
+
+
+class TmpReplacementDataAugmentProcessor(ReplacementDataAugmentProcessor):
+    def new_pack(self):
+        return MultiPack()
+
+
+class Replacer(TextReplacementOp):
+    def __init__(self, configs):
+        super().__init__(configs)
+        self.token_replacement = {
+            "Mary": "Virgin",
+            "noon": "12",
+            "station": "stop",
+            "until": "til",
+        }
+
+    def replace(self, input):
+        return self.token_replacement.get(input.text, input.text)
 
 
 @ddt
@@ -63,39 +88,54 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             ["Virgin", "and", "Samantha", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", "."],
         ]
 
-        token_replacement = {
-            "Mary": "Virgin",
-            "noon": "12",
-            "station": "stop",
-            "until": "til",
-        }
-
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'auto_align_entries': {
                 "ft.onto.base_ontology.Sentence": "auto_align",
                 "ft.onto.base_ontology.Document": "auto_align"
-            }
+            },
+            'replacement_op': "tests.forte.processors.base.data_augment_replacement_processor_test.Replacer",
+            'replacement_op_config': {}
         }
 
-        processor = ReplacementDataAugmentProcessor()
+        processor = TmpReplacementDataAugmentProcessor()
         processor.initialize(resources=None, configs=processor_config)
 
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
-            data_pack = m_pack.get_pack("input_src")
-            replaced_annotations = []
-            for token in data_pack.get(Token):
-                if token.text in token_replacement:
-                    replaced_annotations.append((token, token_replacement[token.text]))
-            new_pack = processor.replace_annotations(data_pack, replaced_annotations)
+            src_pack = m_pack.get_pack('input_src')
+            tgt_pack = m_pack.get_pack('output_tgt')
 
-            self.assertEqual(new_pack.text, expected_outputs[idx])
+            # Copy the source pack to target pack.
+            tgt_pack.set_text(src_pack.text)
+            for anno in src_pack.get(Annotation):
+                new_anno = type(anno)(
+                    tgt_pack, anno.begin, anno.end
+                )
+                tgt_pack.add_entry(new_anno)
 
-            for j, token in enumerate(new_pack.get(Token)):
+                m_pack.add_entry(
+                    MultiPackLink(
+                        m_pack, anno, new_anno
+                    )
+                )
+
+            processor._process(m_pack)
+
+            new_src_pack = m_pack.get_pack('augmented_input_src')
+
+            self.assertEqual(new_src_pack.text, expected_outputs[idx])
+
+            for j, token in enumerate(new_src_pack.get(Token)):
                 self.assertEqual(token.text, expected_tokens[idx][j])
 
-            for sent in new_pack.get(Sentence):
+            for sent in new_src_pack.get(Sentence):
                 self.assertEqual(sent.text, expected_outputs[idx].strip())
+
+            for mpl in m_pack.get(MultiPackLink):
+                parent = mpl.get_parent()
+                child = mpl.get_child()
+                self.assertEqual(parent.text, child.text)
+                self.assertNotEqual(parent.pack.meta.pack_id, child.pack.meta.pack_id)
 
 
 if __name__ == "__main__":
