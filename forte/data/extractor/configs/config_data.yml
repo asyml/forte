@@ -1,6 +1,6 @@
-train_path: "../../../examples/ner/ner_data/conll03_english/tiny/"
-val_path: "../../../examples/ner/ner_data/conll03_english/dev/"
-test_path: "../../../examples/ner/ner_data/conll03_english/test"
+train_path: "../../../examples/ner_new/ner_data/conll03_english/train_tiny/"
+val_path: "../../../examples/ner_new/ner_data/conll03_english/dev/"
+test_path: "../../../examples/ner_new/ner_data/conll03_english/test"
 
 num_epochs: 200
 batch_size_tokens: 512
