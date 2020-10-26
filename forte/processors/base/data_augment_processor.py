@@ -91,7 +91,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 return True
         return False
 
-    def replace(self, replacement_op: TextReplacementOp, input: Entry) -> bool:
+    def replace(self, replacement_op: TextReplacementOp, input: Annotation) -> bool:
         r"""
         This is a wrapper function to call the replacement op. After
         getting the augmented text, it will register the input & output
@@ -257,11 +257,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 continue
             new_parent: Entry = new_pack.get_entry(anno_map[parent.tid])
             new_child: Entry = new_pack.get_entry(anno_map[child.tid])
-            new_pack.add_entry(
-                type(link)(
-                    new_pack, new_parent, new_child
-                )
-            )
+            new_link = type(link)(new_pack, new_parent, new_child) # type: ignore
+            new_pack.add_entry(new_link)
 
         pid = data_pack.meta.pack_id
         self.data_pack_map[pid] = new_pack.meta.pack_id
