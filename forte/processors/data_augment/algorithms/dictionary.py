@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
-from abc import abstractmethod
 from typing import List
 import nltk
 from nltk.corpus import wordnet
@@ -29,19 +27,75 @@ class Dictionary:
     r"""
     This class defines a dictionary for word replacement.
     Given an input word and its pos_tag(optional), the dictionary
-    will outputs its synonyms.
+    will outputs its synonyms, antonyms, hypernyns and hyponyms.
     """
-    @abstractmethod
-    def get_synonyms(self, word, pos_tag: str = "", lang: str = "eng"):
+    def get_synonyms(
+            self,
+            word,
+            pos_tag: str = "",
+            lang: str = "eng"
+    ) -> List[str]:
+        # pylint: disable=unused-argument
         r"""
         Args:
             - word: The input string.
             - pos_tag: The Part-of-Speech tag for substitution.
             - lang: The language of the input string.
         Returns:
-            A synonym of the word.
+            synonyms of the word.
         """
-        raise NotImplementedError
+        return []
+
+    def get_antonyms(
+            self,
+            word,
+            pos_tag: str = "",
+            lang: str = "eng"
+    ) -> List[str]:
+        # pylint: disable=unused-argument
+        r"""
+        Args:
+            - word: The input string.
+            - pos_tag: The Part-of-Speech tag for substitution.
+            - lang: The language of the input string.
+        Returns:
+            Antonyms of the word.
+        """
+        return []
+
+    def get_hypernyms(
+            self,
+            word,
+            pos_tag: str = "",
+            lang: str = "eng"
+    ) -> List[str]:
+        # pylint: disable=unused-argument
+        r"""
+        Args:
+            - word: The input string.
+            - pos_tag: The Part-of-Speech tag for substitution.
+            - lang: The language of the input string.
+        Returns:
+            Hypernyms of the word.
+        """
+        return []
+
+    def get_hyponyms(
+            self,
+            word,
+            pos_tag: str = "",
+            lang: str = "eng"
+    ) -> List[str]:
+        # pylint: disable=unused-argument
+        r"""
+        Args:
+            - word: The input string.
+            - pos_tag: The Part-of-Speech tag for substitution.
+            - lang: The language of the input string.
+        Returns:
+            Hyponyms of the word.
+        """
+        return []
 
 
 class WordnetDictionary(Dictionary):
@@ -76,9 +130,22 @@ class WordnetDictionary(Dictionary):
             # As default pos in lemmatization is Noun
             return self.model.NOUN
 
-    def get_synonyms(self, word, pos_tag: str = "", lang: str = "eng"):
+    def get_lemmas(
+            self,
+            word: str,
+            pos_tag: str = "",
+            lang: str = "eng",
+            lemma_type: str = "SYNONYM"
+    ):
         r"""
-        This function replaces a word with synonyms from a WORDNET dictionary.
+        This function gets synonyms/antonyms/hypernyms/hyponyms
+        from a WORDNET dictionary.
+        Args:
+            - word: The input token.
+            - pos_tag: The NLTK POS tag.
+            - lang: The input language.
+            - lemma_type: The type of words to replace, must be one of the
+                ["SYNONYM", "ANTONYM", "HYPERNYM", "HYPONYM"]
         """
         res: List[str] = []
         pos_wordnet = None
@@ -92,11 +159,66 @@ class WordnetDictionary(Dictionary):
             lang=lang
         ):
             for lemma in synonym.lemmas(lang=lang):
-                res.append(lemma.name())
-        if len(res) == 0:
-            return word
-        # Randomly choose one word.
-        word = random.choice(res)
+                if lemma_type == "SYNONYM":
+                    res.append(lemma.name())
+                elif lemma_type == "ANTONYM":
+                    for antonym in lemma.antonyms():
+                        res.append(antonym.name())
+                elif lemma_type == "HYPERNYM":
+                    for hypernym in lemma.hypernyms():
+                        res.append(hypernym.name())
+                elif lemma_type == "HYPONYM":
+                    for hyponym in lemma.hyponyms():
+                        res.append(hyponym.name())
+                else:
+                    raise KeyError(
+                        'The type {} does not belong to '
+                        '["SYNONYM", "ANTONYM", '
+                        '"HYPERNYM", "HYPONYM"]]'.format(type)
+                    )
         # The phrases are concatenated with "_" in wordnet.
-        word = word.replace("_", " ")
-        return word
+        return [word.replace("_", " ") for word in res]
+
+    def get_synonyms(
+            self,
+            word: str,
+            pos_tag: str = "",
+            lang: str = "eng"
+    ) -> List[str]:
+        r"""
+        This function replaces a word with synonyms from a WORDNET dictionary.
+        """
+        return self.get_lemmas(word, pos_tag, lang, lemma_type="SYNONYM")
+
+    def get_antonyms(
+            self,
+            word: str,
+            pos_tag: str = "",
+            lang: str = "eng"
+    ) -> List[str]:
+        r"""
+        This function replaces a word with antonyms from a WORDNET dictionary.
+        """
+        return self.get_lemmas(word, pos_tag, lang, lemma_type="ANTONYM")
+
+    def get_hypernyms(
+            self,
+            word: str,
+            pos_tag: str = "",
+            lang: str = "eng"
+    ) -> List[str]:
+        r"""
+        This function replaces a word with hypernyms from a WORDNET dictionary.
+        """
+        return self.get_lemmas(word, pos_tag, lang, lemma_type="HYPERNYM")
+
+    def get_hyponyms(
+            self,
+            word: str,
+            pos_tag: str = "",
+            lang: str = "eng"
+    ) -> List[str]:
+        r"""
+        This function replaces a word with hyponyms from a WORDNET dictionary.
+        """
+        return self.get_lemmas(word, pos_tag, lang, lemma_type="HYPONYM")

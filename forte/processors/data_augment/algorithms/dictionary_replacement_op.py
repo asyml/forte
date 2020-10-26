@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import random
 from ft.onto.base_ontology import Entry
 from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
@@ -51,4 +52,7 @@ class DictionaryReplacementOp(TextReplacementOp):
         word = token.text
         pos_tag = token.pos
         lang = self.configs["lang"]
-        return self.dictionary.get_synonyms(word, pos_tag, lang)
+        synonyms = self.dictionary.get_synonyms(word, pos_tag, lang)
+        if len(synonyms) == 0:
+            return word
+        return random.choice(synonyms)
