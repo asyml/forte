@@ -18,3 +18,4 @@ from forte.processors.base.index_processor import *
 from forte.processors.base.pack_processor import *
 from forte.processors.base.query_processor import *
 from forte.processors.base.writers import *
+from forte.processors.base.data_augment_processor import *
