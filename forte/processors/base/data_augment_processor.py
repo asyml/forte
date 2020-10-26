@@ -68,8 +68,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         The keys for all the three dicts are pack ids.
         """
         super().__init__()
-        self.replaced_spans: Dict[int, List[Tuple[Entry, str]]] = {}
-        self.data_pack_map: Dict[int, str] = {}
+        self.replaced_spans: Dict[int, List[Tuple[Annotation, str]]] = {}
+        self.data_pack_map: Dict[int, int] = {}
         self.anno_maps: Dict[int, Dict[int, int]] = {}
 
     def _is_span_overlap(self, pid: int, begin: int, end: int) -> bool:
@@ -114,7 +114,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         self.replaced_spans[pid].append((input, replaced_text))
         return True
 
-    def _get_replaced_spans(self, pid: int) -> List[Tuple[Entry, str]]:
+    def _get_replaced_spans(self, pid: int) -> List[Tuple[Annotation, str]]:
         r"""
         This function get the replaced spans and their new text.
         Args:
