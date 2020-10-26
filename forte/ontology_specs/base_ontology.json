@@ -51,6 +51,11 @@
       ]
     },
     {
+      "entry_name": "ft.onto.base_ontology.Subword",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "Used to represent subword tokenization results."
+    },
+    {
       "entry_name": "ft.onto.base_ontology.Document",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Document`, normally used to represent a document.",
