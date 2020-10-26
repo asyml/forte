@@ -19,15 +19,15 @@ import torchtext
 import torch
 from torch import Tensor, device
 
-from common.configuration import Config
-from data.extractor.trainer import Trainer
+from forte.common.configuration import Config
+from forte.data.extractor.trainer import Trainer
 from forte.data.ontology.core import EntryType
 
 from forte.data.base_pack import BasePack
 
-from data.extractor.extractor import BaseExtractor
-from data.ontology.core import Entry
-from evaluation.base import Evaluator
+from forte.data.extractor.extractor import BaseExtractor
+from forte.data.ontology.core import Entry
+from forte.evaluation.base import Evaluator
 from forte.data.readers.base_reader import BaseReader
 
 logger = logging.getLogger(__name__)
@@ -169,15 +169,22 @@ class TrainPipeline:
         self.resource["schemes"] = schemes
 
     def run(self, data_request):
+        # Steps:
+        # 1. parse request
+        # 2. build vocab
+        # 3. for each data pack, do:
+        #   Extract -> Caching -> Batching -> Padding
+        # 4. send batched & padded tensors to trainer
+
         # Parse and validate data request
         self.parse_request(data_request)
 
         extractor_handler = ExtractorHandler(self.resource, self.config)
 
-        data_packs = list(
-            self.train_reader.iter(self.train_path))
-
-        extractor_handler.build_vocab(data_packs)
+        # TODO: read all data packs is not memory friendly. Probably should
+        #  cache data pack when retrieve it multiple times
+        for data_pack in self.train_reader.iter(self.train_path):
+            extractor_handler.build_vocab(data_pack)
 
         # Model can only be initialized after here as it needs the built vocab
         schemes: Dict[str, Dict[str, BaseExtractor]] = self.resource["schemes"]
@@ -193,7 +200,7 @@ class TrainPipeline:
 
             epoch += 1
 
-            for data_pack in data_packs:
+            for data_pack in self.train_reader.iter(self.train_path):
                 for batch in extractor_handler.extract(data_pack,
                                                        self.config.batch_size):
                     self.trainer.train(batch)
@@ -208,15 +215,14 @@ class ExtractorHandler():
         self.resource = resource
         self.config = config
 
-    def build_vocab(self, data_packs: List[BasePack]):
+    def build_vocab(self, data_pack: BasePack):
         scope: EntryType = self.resource["scope"]
         schemes: Dict = self.resource["schemes"]
 
-        for data_pack in data_packs:
-            for instance in data_pack.get(scope):
-                for tag, scheme in schemes.items():
-                    extractor: BaseExtractor = scheme["extractor"]
-                    extractor.update_vocab(data_pack, instance)
+        for instance in data_pack.get(scope):
+            for tag, scheme in schemes.items():
+                extractor: BaseExtractor = scheme["extractor"]
+                extractor.update_vocab(data_pack, instance)
 
     # Extract should extract a single data pack. It should batch and shuffle
     # all the extracted data and return a generator for a batch of extracted
@@ -253,7 +259,9 @@ class ExtractorHandler():
             tensor_list.append({})
             for tag, scheme in schemes.items():
                 extractor: BaseExtractor = scheme["extractor"]
+                # TODO: read from cache here
                 tensor = extractor.extract(data_pack, instance)
+                # TODO: store to cache
 
                 tensor_list[-1][tag] = tensor
 

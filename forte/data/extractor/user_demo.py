@@ -18,11 +18,11 @@ from torch.optim import SGD
 import yaml
 from typing import Dict
 
-from common.configuration import Config
-from data.extractor.extractor import \
+from forte.common.configuration import Config
+from forte.data.extractor.extractor import \
     AnnotationSeqExtractor, TextExtractor, CharExtractor, BaseExtractor
-from data.extractor.trainer import Trainer
-from data.extractor.train_pipeline import TrainPipeline
+from forte.data.extractor.trainer import Trainer
+from forte.data.extractor.train_pipeline import TrainPipeline
 from forte.models.ner.utils import load_glove_embedding
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
@@ -134,7 +134,6 @@ if __name__ == "__main__":
                       num_epochs=config.config_data.num_epochs,
                       batch_size=config.config_data.batch_size_tokens)
 
-    # TODO: check if data request config can be correctly passed
     data_request = {
         "scope": Sentence,
         "schemes": {

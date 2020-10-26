@@ -15,7 +15,7 @@ from typing import Dict, List, Callable
 
 from torch import Tensor
 
-from data.extractor.extractor import BaseExtractor
+from forte.data.extractor.extractor import BaseExtractor
 
 # TODO: this class should be replaced with existing library like
 #  pytorch lightning
