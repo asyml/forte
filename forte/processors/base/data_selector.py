@@ -11,23 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=attribute-defined-outside-init
+# pylint: disable=useless-super-delegation
 
 """
 A data selector for data augmentation.
-It is a reader that search documents from elastic search indexer and yield datapacks.
+It is a reader that search documents from elastic search indexer
+and yield datapacks.
 An elastic search indexer for data selector needs to be created first.
 Refer to data_augment/data_select_index_pipeline.py for indexer generation.
 """
 
-from typing import Iterator, Any, Dict, Tuple, Optional
+from typing import Iterator, Any, Dict, Optional
 
-from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import (
-    Token, Sentence, Document
-)
 from forte.common.resources import Resources
 from forte.common.configuration import Config
+from forte.data.data_pack import DataPack
+from forte.data.readers.base_reader import PackReader
+from forte.data.data_utils import deserialize
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 
@@ -49,21 +50,15 @@ class BaseElasticSearchDataSelector(PackReader):
         super().initialize(resources, configs)
         self.index = ElasticSearchIndexer(config=self.config.index_config)
 
-    def _create_search_key(self, data: Optional[str]) -> Dict[str,Any]:
+    def _create_search_key(self, data: Optional[str]) -> Dict[str, Any]:
         raise NotImplementedError
 
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         raise NotImplementedError
 
-    def _parse_pack(self, doc_info: Tuple[str, str]) -> Iterator[DataPack]:
-        data_pack: DataPack = self.new_pack()
-        doc_id, doc_text = doc_info
-
-        data_pack.pack_name = doc_id
-        data_pack.set_text(doc_text)
-        Document(data_pack, 0, len(doc_text))
-
-        yield data_pack
+    def _parse_pack(self, pack_info: str) -> Iterator[DataPack]:
+        pack: DataPack = deserialize(pack_info)
+        yield pack
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -78,7 +73,7 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
-    def _collect(self, *args, **kwargs) -> Iterator[Tuple[str, str]]:
+    def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
         r"""Iterator over query text files in the data_source.
         Then search for documents using indexer.
@@ -87,7 +82,7 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
             args: args[0] is the path to the query file
             kwargs:
 
-        Returns: Selected document id and document content.
+        Returns: Selected document's original datapack.
         """
         data_path: str = args[0]
         with open(data_path, 'r') as file:
@@ -96,11 +91,11 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
                 results = self.index.search(query)
                 hits = results["hits"]["hits"]
 
-                for idx, hit in enumerate(hits):
+                for _, hit in enumerate(hits):
                     document = hit["_source"]
-                    yield document["doc_id"], document[self.config["field"]]
+                    yield document["pack_info"]
 
-    def _create_search_key(self, data: str) -> Dict[str,Any]:
+    def _create_search_key(self, data: str) -> Dict[str, Any]:     # type: ignore
         r"""Create a search dict for elastic search indexer.
         Args:
              text: str
@@ -128,21 +123,21 @@ class RandomDataSelector(BaseElasticSearchDataSelector):
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
-    def _collect(self, *args, **kwargs) -> Iterator[Tuple[str, str]]:
+    def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
         r"""random select num_of_doc documents from the indexer.
-        Returns: Selected document id and document content.
+        Returns: Selected document's original datapack.
         """
         for _ in range(self.config["num_of_doc"]):
             query: Dict = self._create_search_key()
             results = self.index.search(query)
             hits = results["hits"]["hits"]
 
-            for idx, hit in enumerate(hits):
+            for _, hit in enumerate(hits):
                 document = hit["_source"]
-                yield document["doc_id"], document[self.config["field"]]
+                yield document["pack_info"]
 
-    def _create_search_key(self) -> Dict[str,Any]:
+    def _create_search_key(self) -> Dict[str, Any]: # type: ignore
         return {
            "size": self.config["size"],
            "query": {
