@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import List, Any
+from typing import List, Any, Tuple
 
 
 class Feature:
@@ -61,5 +61,5 @@ class Feature:
     def pad(self, max_len: int):
         pass
 
-    def unroll(self) -> List[Any]:
+    def unroll(self) -> Tuple[List[Any], List[Any]]:
         pass
