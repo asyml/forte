@@ -6,21 +6,23 @@ recommonmark
 mypy_extensions~=0.4.1
 sphinxcontrib-spelling
 
-pyyaml
-jsonpickle
-sortedcontainers
-texar-pytorch
+pyyaml==5.1.2
+jsonpickle==1.4
+sortedcontainers==2.1.0
+texar-pytorch>=0.1.1
+typing>=3.7.4
+typing-inspect>=0.6.0
 
 # PyTorch installation for ReadTheDocs
 https://download.pytorch.org/whl/cpu/torch-1.1.0-cp37-cp37m-linux_x86_64.whl
 
 # faiss
-faiss-cpu
+faiss-cpu>=1.6.1
 
 # elasticsearch
-elasticsearch
+elasticsearch==7.5.1
 
 # code generation
 typed_astunparse~=2.1.4
 typed_ast~=1.4.0
-jsonschema
+jsonschema==3.0.2
