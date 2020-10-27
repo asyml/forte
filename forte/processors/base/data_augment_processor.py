@@ -261,7 +261,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 continue
             new_parent: Entry = new_pack.get_entry(anno_map[parent.tid])
             new_child: Entry = new_pack.get_entry(anno_map[child.tid])
-            new_link = type(link)(  # type: ignore
+            new_link = type(link)(
                 new_pack, new_parent, new_child)  # type: ignore
             new_pack.add_entry(new_link)
 
