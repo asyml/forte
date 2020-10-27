@@ -49,7 +49,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         Returns:
 
         """
-        raise NotImplementedError
+        pass
 
     def process(self, input_pack: PackType):
         # Set the component for recording purpose.
