@@ -15,7 +15,7 @@ from typing import List, Any
 
 
 class Feature:
-    def __init__(self, data: List[Any], dim: int, pad_id: int = 0):
+    def __init__(self, data: List[Any], pad_id: List[int], dim: int):
         """
         Args:
         data (List[Any]):
@@ -28,10 +28,26 @@ class Feature:
         pad_id (int):
             The id for <PAD> token
         """
+        self.validate_input(data, pad_id, dim)
+
         self.data: List[Any] = data
+        self.pad_id: List[int] = pad_id
         self.dim: int = dim
-        self.pad_id: int = pad_id
         self.is_base_feature = dim == 1
+
+    def validate_input(self, data: List[int], pad_id: List[int], dim: int):
+        assert dim >= 1
+        assert len(pad_id) == dim
+
+        data_dim = data
+        while dim > 1:
+            assert type(data_dim) == list
+            assert len(data_dim) > 0
+            data_dim = data_dim[0]
+            dim -= 1
+        assert type(data_dim) == list
+        for val in data_dim:
+            assert type(val) == float or type(val) == int
 
     def isBaseFeature(self) -> bool:
         pass
