@@ -30,14 +30,14 @@ __all__ = [
 
 class IndexProcessor2(PackProcessor, ABC):
     r"""A  base processor for indexing a document with its original datapack
-    into traditional indexers like Elasticsearch and/or dense vector indexers like Faiss.
+    into traditional indexers like Elasticsearch.
     Subclasses need to implement :meth:`IndexProcessor2::_bulk_process`.
     """
 
     # pylint: disable=useless-super-delegation
     def __init__(self) -> None:
         super().__init__()
-        self.documents: List[Tuple[str, str]] = []
+        self.documents: List[Tuple[str, str, str]] = []
 
     # pylint: disable=attribute-defined-outside-init
     def initialize(self, resources: Resources, configs: Config):
@@ -62,7 +62,8 @@ class IndexProcessor2(PackProcessor, ABC):
         compressed_datapack: str = input_pack.serialize()
 
         if input_pack.pack_name:
-            self.documents.append((input_pack.pack_name, input_pack.text, compressed_datapack))
+            self.documents.append((input_pack.pack_name, input_pack.text,
+                                   compressed_datapack))
         else:
             self.documents.append(("DOC", input_pack.text, compressed_datapack))
 

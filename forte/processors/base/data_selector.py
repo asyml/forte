@@ -48,7 +48,7 @@ class BaseElasticSearchDataSelector(PackReader):
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        self.index = ElasticSearchIndexer(config=self.config.index_config)
+        self.index = ElasticSearchIndexer(config=self.configs.index_config)
 
     def _create_search_key(self, data: Optional[str]) -> Dict[str, Any]:
         raise NotImplementedError
@@ -95,19 +95,19 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
                     document = hit["_source"]
                     yield document["pack_info"]
 
-    def _create_search_key(self, data: str) -> Dict[str, Any]:     # type: ignore
+    def _create_search_key(self, data: str) -> Dict[str, Any]:  # type: ignore
         r"""Create a search dict for elastic search indexer.
         Args:
              text: str
                 A string which will be looked up for in the corpus under field
-                name `field`. `field` can be passed in a `config` during initialize.
-                If `config` does not contain `field`, we will set it to "content".
+                name `field`. It can be passed in `config` during initialize.
+                If `config` does not contain `field`, we set it to "content".
 
         Returns: A dict that specifies the query match field.
         """
         return {"query":
-                    {"match": {self.config["field"]: data}},
-                "size": self.config["size"]}
+                    {"match": {self.configs["field"]: data}},
+                "size": self.configs["size"]}
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -128,7 +128,7 @@ class RandomDataSelector(BaseElasticSearchDataSelector):
         r"""random select num_of_doc documents from the indexer.
         Returns: Selected document's original datapack.
         """
-        for _ in range(self.config["num_of_doc"]):
+        for _ in range(self.configs["num_of_doc"]):
             query: Dict = self._create_search_key()
             results = self.index.search(query)
             hits = results["hits"]["hits"]
@@ -137,9 +137,9 @@ class RandomDataSelector(BaseElasticSearchDataSelector):
                 document = hit["_source"]
                 yield document["pack_info"]
 
-    def _create_search_key(self) -> Dict[str, Any]: # type: ignore
+    def _create_search_key(self) -> Dict[str, Any]:  # type: ignore
         return {
-           "size": self.config["size"],
+           "size": self.configs["size"],
            "query": {
               "function_score": {
                  "functions": [
