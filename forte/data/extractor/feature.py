@@ -11,13 +11,13 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Union
 
 
 class Feature:
     def __init__(self,
                  data: List[Any],
-                 pad_id: List[int],
+                 pad: Union[int, List],
                  dim: int):
         """
         Args:
@@ -34,7 +34,7 @@ class Feature:
         # self.validate_input(data, pad_id, dim)
 
         self.data: List[Any] = data
-        self.pad_id: List[int] = pad_id
+        self.pad: Union[int, List] = pad
         self.dim: int = dim
         self.is_base_feature = dim == 1
         # self.is_pad = is_pad
@@ -86,8 +86,8 @@ class Feature:
         assert self.getLen() <= max_len, \
             "Feature length should not exceed given max_len"
 
-        # for i in range(max_len - self.getLen()):
-        #     self.data.append(Feature())
+        for i in range(max_len - self.getLen()):
+            self.data.append(Feature([], ))
 
     def unroll(self) -> Tuple[List[Any], List[Any]]:
         pass
