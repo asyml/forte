@@ -15,7 +15,10 @@ from typing import List, Any, Tuple
 
 
 class Feature:
-    def __init__(self, data: List[Any], pad_id: List[int], dim: int):
+    def __init__(self,
+                 data: List[Any],
+                 pad_id: List[int],
+                 dim: int):
         """
         Args:
         data (List[Any]):
@@ -28,12 +31,13 @@ class Feature:
         pad_id (int):
             The id for <PAD> token
         """
-        self.validate_input(data, pad_id, dim)
+        # self.validate_input(data, pad_id, dim)
 
         self.data: List[Any] = data
         self.pad_id: List[int] = pad_id
         self.dim: int = dim
         self.is_base_feature = dim == 1
+        # self.is_pad = is_pad
 
     def validate_input(self, data: List[int], pad_id: List[int], dim: int):
         assert dim >= 1
@@ -50,16 +54,45 @@ class Feature:
             assert type(val) == float or type(val) == int
 
     def isBaseFeature(self) -> bool:
-        pass
+        return self.is_base_feature
 
     def getSubFeatures(self) -> List['Feature']:
-        pass
+        assert not self.is_base_feature, \
+            "Base feature does not have sub features"
+        assert len(self.pad_id) > 2, \
+            "Non-base feature should have pad_id for sub feature"
+        assert self.dim > 1, \
+            "Non-base feature should have as least 2 dimension"
+
+        features = []
+        for sub_data in self.data:
+            if type(sub_data) == list:
+                # Normal data
+                features.append(
+                    Feature(sub_data, self.pad_id[1:], self.dim - 1))
+            elif type(sub_data) == Feature:
+                # Padded data
+                features.append(sub_data)
+            else:
+                raise ValueError("Unexpected sub feature type: " +
+                                 type(sub_data))
+
+        return features
 
     def getLen(self) -> int:
-        pass
+        return len(self.data)
 
     def pad(self, max_len: int):
-        pass
+        assert self.getLen() <= max_len, \
+            "Feature length should not exceed given max_len"
+
+        # for i in range(max_len - self.getLen()):
+        #     self.data.append(Feature())
 
     def unroll(self) -> Tuple[List[Any], List[Any]]:
         pass
+
+#
+# class PadFeature(Feature):
+#     def __init__(self, data: List[Any], pad_id: List[int], dim: int):
+#         super().__init__(data, pad_id, dim)
