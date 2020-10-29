@@ -1,4 +1,4 @@
-class Converter_Cache:
+class Extractor_Cache:
   def __init__(self):
     self.cache_datapack2tensor = dict()
 
