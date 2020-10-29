@@ -12,13 +12,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import logging
-from typing import Optional, Dict, List, Type, Iterator, Tuple
+from typing import Optional, Dict, List, Type, Iterator, Tuple, Any
 
 import numpy as np
 import torchtext
 import torch
 from torch import Tensor, device
 
+from data.extractor.converter import Converter
+from forte.data.extractor.feature import Feature
 from forte.common.configuration import Config
 from forte.data.extractor.trainer import Trainer
 from forte.data.ontology.core import EntryType
@@ -45,7 +47,28 @@ class TrainPipeline:
                  batch_size: int,
                  evaluator: Optional[Evaluator] = None,
                  val_path: Optional[str] = None,
-                 device: Optional[device] = torch.device("cpu")):
+                 device_: Optional[device] = torch.device("cpu")):
+        """
+        Example resource format:
+        resource = {
+              "scope": ft.onto.Sentence,
+              "schemes": {
+                  "text_tag": {
+                      "extractor":  Extractor,
+                      "converter": Converter
+                  },
+                  "char_tag" {
+                      "extractor":  Extractor,
+                      "converter": Converter
+                  }
+                  "ner_tag": {
+                      "extractor":  Extractor,
+                      "converter": Converter
+                  }
+              },
+              "converter": Converter
+        }
+        """
         self.train_reader = train_reader
         self.dev_reader = dev_reader
 
@@ -55,11 +78,12 @@ class TrainPipeline:
         self.evaluator = evaluator
         self.val_path = val_path
 
-        self.resource = {}
+        self.resource: Dict[str, Any] = {}
+
         self.config = Config({}, default_hparams=None)
         self.config.add_hparam('num_epochs', num_epochs)
         self.config.add_hparam('batch_size', batch_size)
-        self.config.add_hparam('device', device)
+        self.config.add_hparam('device', device_)
 
     def parse_request(self, data_request):
         """
@@ -93,22 +117,6 @@ class TrainPipeline:
                 }
             }
         }
-
-        Example resource format:
-        resource = {
-              "scope": ft.onto.Sentence,
-              "schemes": {
-                  "text_tag": {
-                      "extractor":  Extractor
-                  },
-                  "char_tag" {
-                      "extractor":  Extractor
-                  }
-                  "ner_tag": {
-                      "extractor":  Extractor
-                  }
-              }
-        }
         """
 
         assert "scope" in data_request, \
@@ -116,9 +124,10 @@ class TrainPipeline:
         assert "schemes" in data_request, \
             "Field not found for data request: `schemes`"
 
+        self.resource["converter"] = Converter()
         self.resource["scope"] = data_request["scope"]
 
-        schemes = {}
+        resource_schemes = {}
         # Used for check dependency between different extractors
         scheme_group = {
             "dependent": {}, "dependee": {}
@@ -128,7 +137,7 @@ class TrainPipeline:
             assert "extractor" in scheme, \
                 "Field not found for data request scheme: `extractor`"
 
-            schemes[tag] = {}
+            resource_schemes[tag] = {}
 
             # Build config and extractor
             config = {}
@@ -142,7 +151,7 @@ class TrainPipeline:
 
             try:
                 extractor: BaseExtractor = scheme["extractor"](config)
-                schemes[tag]["extractor"] = extractor
+                resource_schemes[tag]["extractor"] = extractor
 
                 # Track dependency
                 if hasattr(extractor, "based_on"):
@@ -153,6 +162,11 @@ class TrainPipeline:
                     if extractor.entry not in scheme_group["dependee"]:
                         scheme_group["dependee"][extractor.entry] = set()
                     scheme_group["dependee"][extractor.entry].add(extractor)
+
+                need_pad: bool = \
+                    scheme["need_pad"] if "need_pad" in scheme else True
+                converter: Converter = Converter(need_pad=need_pad)
+                resource_schemes[tag]['converter'] = converter
             except Exception as e:
                 logger.error("Error instantiate extractor: " + str(e))
                 raise
@@ -162,11 +176,10 @@ class TrainPipeline:
             for dependent_extractor in dependent_extractors:
                 based_on: Entry = dependent_extractor.based_on
                 if based_on not in scheme_group["dependee"]:
-                    raise "Cannot found based on entry {} for extractor {}".format(
-                        based_on, dependent_extractor.tag
-                    )
+                    raise "Cannot found based on entry {} for extractor {}".\
+                        format(based_on, dependent_extractor.tag)
 
-        self.resource["schemes"] = schemes
+        self.resource["schemes"] = resource_schemes
 
     def run(self, data_request):
         # Steps:
@@ -179,12 +192,10 @@ class TrainPipeline:
         # Parse and validate data request
         self.parse_request(data_request)
 
-        extractor_handler = ExtractorHandler(self.resource, self.config)
-
         # TODO: read all data packs is not memory friendly. Probably should
         #  cache data pack when retrieve it multiple times
         for data_pack in self.train_reader.iter(self.train_path):
-            extractor_handler.build_vocab(data_pack)
+            self.build_vocab(data_pack)
 
         # Model can only be initialized after here as it needs the built vocab
         schemes: Dict[str, Dict[str, BaseExtractor]] = self.resource["schemes"]
@@ -201,19 +212,25 @@ class TrainPipeline:
             epoch += 1
 
             for data_pack in self.train_reader.iter(self.train_path):
-                for batch in extractor_handler.extract(data_pack,
-                                                       self.config.batch_size):
-                    self.trainer.train(batch)
+                for batch_feature_collection in self.extract(data_pack,
+                                                             self.config.batch_size):
+
+                    # TODO: should we:
+                    # 1) mask tensor be a member in Feature class and pass
+                    # features to user
+                    # or
+                    # 2) we explicitly put mask tensor and feature tensor into
+                    # a dictionary and pass this dict to user.
+                    # Note: they are passed to user via method:
+                    #       pass_tensor_to_model_fn())
+                    #       Currently, we choose the former approach.
+                    batch_tensor_collection = \
+                        self.convert(batch_feature_collection)
+                    self.trainer.train(batch_tensor_collection)
 
                     # TODO: evaluation process
                     if self.evaluator:
                         pass
-
-
-class ExtractorHandler():
-    def __init__(self, resource: Dict, config: Config):
-        self.resource = resource
-        self.config = config
 
     def build_vocab(self, data_pack: BasePack):
         scope: EntryType = self.resource["scope"]
@@ -245,103 +262,57 @@ class ExtractorHandler():
     # }
     # """
     def extract(self, data_pack: BasePack, batch_size: int) -> \
-            Iterator[Dict[str, Dict[str, Tensor]]]:
+            Iterator[Dict[str, List[Feature]]]:
         scope: Type[EntryType] = self.resource["scope"]
         schemes: Dict = self.resource["schemes"]
-        tensor_collection: Dict[str, Dict[str, Tensor]] = {}
+        batch_feature_collection: Dict[str, List[Feature]] = {}
 
         instances = list(data_pack.get(scope))
 
         # Extract all instances
-        tensor_list = []
+        feature_collection: List[Dict[str, Feature]] = []
 
         for instance in instances:
-            tensor_list.append({})
+            feature_collection.append({})
             for tag, scheme in schemes.items():
                 extractor: BaseExtractor = scheme["extractor"]
                 # TODO: read from cache here
-                tensor = extractor.extract(data_pack, instance)
+                feature: Feature = extractor.extract(data_pack, instance)
                 # TODO: store to cache
 
-                tensor_list[-1][tag] = tensor
+                feature_collection[-1][tag] = feature
 
         # random.shuffle(tensors) # TODO: do we need this?
         # TODO: check batch_size_fn
+        # TODO: A better tool for doing batching.
         data_iterator = torchtext.data.iterator.pool(
-            tensor_list,
+            feature_collection,
             batch_size,
             key=None,  # TODO: check this
             sort_within_batch=False,  # TODO: check this
             shuffle=False  # TODO: check this
         )
 
-        for tag, scheme in schemes.items():
-            tensor_collection[tag] = {}
+        # Yield a batch of features grouped by tag
+        for batch_feature in data_iterator:
+            batch_feature_collection.clear()
+            for tag, scheme in schemes.items():
+                batch_feature_collection[tag] = []
 
-        # Yield each extracted and padded batch
-        for batch in data_iterator:
-            unpadded_tensor_collection = {}
-            for extracted_instance in batch:
-                for tag, tensor in extracted_instance.items():
-                    if tag not in unpadded_tensor_collection:
-                        unpadded_tensor_collection[tag] = []
-                    unpadded_tensor_collection[tag].append(tensor)
+            for feature_by_tag in batch_feature:
+                for tag, feature in feature_by_tag.items():
+                    batch_feature_collection[tag].append(feature)
 
-            # TODO: padding should probably be a dedicated class
-            # TODO: there should be no hardcoding for tag
-            for tag, unpadded_tensors in unpadded_tensor_collection.items():
-                extractor: BaseExtractor = schemes[tag]["extractor"]
-                padded_tensors, masks = \
-                    self.padding(unpadded_tensors, extractor.get_pad_id(), tag)
-                tensor_collection[tag]["tensor"] = padded_tensors
-                tensor_collection[tag]["mask"] = masks
+            yield batch_feature_collection
 
-            yield tensor_collection
+    def convert(self, batch_feature_collection: Dict[str, List[Feature]]) -> \
+            Dict[str, Dict[str, Tensor]]:
+        tensor_collection: Dict[str, Dict[str, Tensor]] = {}
 
-    def padding(self, tensors: List[Tensor], pad_id: int, tag: str) \
-            -> Tuple[Tensor, Tensor]:
-        if tag != "char_tag":
-            batch_size = len(tensors)
-            max_length = max([len(t) for t in tensors])
+        for tag, features in batch_feature_collection.items():
+            converter: Converter = self.resource["schemes"][tag]["converter"]
+            tensor, mask = converter.convert(features)
+            tensor_collection[tag]["tensor"] = tensor
+            tensor_collection[tag]["mask"] = mask
 
-            padded_tensors = np.empty([batch_size, max_length], dtype=np.int64)
-            masks = np.zeros([batch_size, max_length], dtype=np.float32)
-
-            for i, tensor in enumerate(tensors):
-                curr_len = len(tensor)
-
-                padded_tensors[i, :curr_len] = tensor
-                padded_tensors[i, curr_len:] = pad_id
-
-                masks[i, :curr_len] = 1.0
-
-            padded_tensors = torch.from_numpy(padded_tensors).to(self.config.device)
-            masks = torch.from_numpy(masks).to(self.config.device)
-
-            return padded_tensors, masks
-        else:
-            batch_size = len(tensors)
-            max_length = max([len(t) for t in tensors])
-            char_length = max(
-                [max([len(charseq) for charseq in d]) for d in tensors]
-            )
-
-            padded_tensors = np.empty([batch_size, max_length, char_length],
-                                      dtype=np.int64)
-            masks = np.zeros([batch_size, max_length], dtype=np.float32)
-
-            for i, tensor in enumerate(tensors):
-                curr_len = len(tensor)
-
-                for c, cids in enumerate(tensor):
-                    padded_tensors[i, c, :len(cids)] = cids
-                    padded_tensors[i, c, len(cids):] = pad_id
-                padded_tensors[i, curr_len:, :] = pad_id
-
-                masks[i, :curr_len] = 1.0
-
-            padded_tensors = torch.from_numpy(padded_tensors).to(
-                self.config.device)
-            masks = torch.from_numpy(masks).to(self.config.device)
-
-            return padded_tensors, masks
+        return tensor_collection
