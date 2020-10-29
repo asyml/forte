@@ -25,6 +25,7 @@ class IMDBClassifier:
     """
     A baseline text classifier for the IMDB dataset.
     The input data should be CSV format with columns (content label id).
+    An example usage can be found at examples/text_classification.
     """
 
     def __init__(self, config_data, config_classifier, checkpoint=None, pretrained_model_name="bert-base-uncased"):
@@ -235,4 +236,3 @@ class IMDBClassifier:
 
             if do_test:
                 _test_epoch(sess)
-        
