@@ -38,22 +38,23 @@ class ExtractorTest(unittest.TestCase):
         config = {
             "scope": Sentence,
             "entry": Token,
-            "conversion_method": "indexing"
         }
         extractor = TextExtractor(config)
 
-        # Test token2id and labelpos2id dict
-        tokens = ['U.N.', 'official', 'Ekeus', 'heads', 'for', 'Baghdad', '.']
-        ners = ['ORG', 'O', 'PER', 'O', 'O', 'LOC', 'O']
+        sentence = "EU rejects German call to boycott British lamb ."
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
                 extractor.update_vocab(pack, instance)
 
-        tensors = []
+        features = []
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
-                tensors.append(extractor.extract(pack, instance))
+                features.append(extractor.extract(pack, instance))
+
+        for feat in features:
+            recovered = [extractor.id2entry(idx) for idx in feat.data]
+            self.assertEqual(" ".join(recovered), sentence)
 
     def test_CharExtractor(self):
         pipeline = Pipeline[DataPack]()
@@ -64,19 +65,27 @@ class ExtractorTest(unittest.TestCase):
         config = {
             "scope": Sentence,
             "entry": Token,
-            "vocab_method": "indexing",
-            "vocab_use_pad": True
         }
         extractor = CharExtractor(config)
+
+        sentence = "EU rejects German call to boycott British lamb ."
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
                 extractor.update_vocab(pack, instance)
 
-        tensors = []
+        features = []
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
-                tensors.append(extractor.extract(pack, instance))
+                features.append(extractor.extract(pack, instance))
+
+        for feat in features:
+            recovered = [[extractor.id2entry(char) for char in sent] \
+                                            for sent in feat.data]
+
+            recovered = ["".join(chars) for chars in recovered]
+            recovered = " ".join(recovered)
+            self.assertEqual(recovered , sentence)
 
     def test_AnnotationSeqExtractor(self):
         pipeline = Pipeline[DataPack]()
@@ -90,8 +99,11 @@ class ExtractorTest(unittest.TestCase):
             "attribute": "ner_type",
             "based_on": Token,
             "strategy": "BIO",
-            "vocab_method": "indexing"
         }
+
+        expected = [('ORG', 'B'), (None, 'O'), ('MISC', 'B'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    ('MISC', 'B'), (None, 'O'), (None, 'O')]
 
         extractor = AnnotationSeqExtractor(config)
 
@@ -99,15 +111,11 @@ class ExtractorTest(unittest.TestCase):
             for instance in pack.get(Sentence):
                 extractor.update_vocab(pack, instance)
 
-        tensors = []
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
-                tensors.append(extractor.extract(pack, instance))
-
-        expected = [[0, 3, 5, 3, 3, 7, 3]]
-        tensors = [tensor.numpy() for tensor in tensors]
-        tensors = [[int(x) for x in tensor] for tensor in tensors]
-        self.assertListEqual(expected, tensors)
+                feature = extractor.extract(pack, instance)
+                feature = [extractor.id2entry(idx) for idx in feature.data]
+                self.assertListEqual(feature, expected)
 
 if __name__ == '__main__':
     unittest.main()

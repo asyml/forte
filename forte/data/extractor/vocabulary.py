@@ -18,7 +18,7 @@ class Vocabulary:
     PAD_ENTRY = "<PAD>"
     UNK_ENTRY = "<UNK>"
 
-    def __init__(self, method, use_pad = False, use_unk = False):
+    def __init__(self, method, use_pad, use_unk):
         self.entry2id_dict = defaultdict()
         if use_unk:
             self.id2entry_dict = defaultdict(lambda : self.UNK_ENTRY)
@@ -29,14 +29,21 @@ class Vocabulary:
             self.add_entry(self.PAD_ENTRY)
         if use_unk:
             self.add_entry(self.UNK_ENTRY)
+
+        assert method in ("indexing", "one-hot")
         self.method = method
         self.use_pad = use_pad
         self.use_unk = use_unk
 
     def get_pad_id(self):
-        if not self.use_pad:
-            raise AssertionError("Pad is not used in this vocabulary.")
-        return self.entry2id(self.PAD_ENTRY)
+        if self.use_pad:
+            return self.entry2id(self.PAD_ENTRY)
+        return None
+
+    def get_unk_id(self):
+        if self.use_unk:
+            return self.entry2id(self.UNK_ENTRY)
+        return None
 
     def add_entry(self, entry: Any):
         if entry not in self.entry2id_dict:
@@ -48,10 +55,11 @@ class Vocabulary:
         if self.method == "indexing":
             return self.entry2id_dict[entry]
         else:
-            ans = [0 for _ in range(len(self.entry2id))]
+            ans = [0 for _ in range(self.size())]
             ans[self.entry2id_dict[entry]] = 1
             return ans
 
+    # TODO: Should we support one-hot to entry?
     def id2entry(self, idx: int):
         return self.id2entry_dict[idx]
 
@@ -63,4 +71,3 @@ class Vocabulary:
 
     def items(self):
         return self.entry2id_dict.items()
-

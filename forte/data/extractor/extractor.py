@@ -27,19 +27,23 @@ from ft.onto.base_ontology import Token, Sentence, Document, Annotation
 from forte.data.ontology.core import EntryType
 from forte.data.span import Span
 from forte.data.extractor.vocabulary import Vocabulary
+from forte.data.extractor.feature import Feature
 
 
 class BaseExtractor:
     def __init__(self, config: Dict):
         self.config = config
         self.entry = config["entry"]
-        use_pad = config.get("vocab_use_pad", False)
+        use_pad = config.get("vocab_use_pad", True)
         use_unk = config.get("vocab_use_unk", False)
         method = config.get("vocab_method", "indexing")
         self.__vocab = Vocabulary(method = method,
                                 use_pad = use_pad,
                                 use_unk = use_unk)
 
+    # Wrapper functions for vocabulary class,
+    # so that vocab is not directly exposed to
+    # outside user.
     def size(self):
         return self.__vocab.size()
 
@@ -66,7 +70,7 @@ class BaseExtractor:
 
     def extract(self, pack: DataPack, 
             instance: EntryType) -> Tensor:
-        raise NotImplementedError() 
+        raise NotImplementedError()
 
     def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
         raise NotImplementedError()
@@ -82,16 +86,12 @@ class AttributeExtractor(BaseExtractor):
             self.add_entry(getattr(entry, self.attribute))
 
     def extract(self, pack: DataPack, instance: EntryType):
-        tensor = []
+        data = []
         for entry in pack.get(self.entry, instance):
-            tensor.append(self.entry2id(getattr(entry, self.attribute)))
-        return torch.tensor(tensor)
+            idx = self.entry2id(getattr(entry, self.attribute))
+            data.append(idx)
+        return Feature(data, self.get_pad_id(), 1)
 
-    # def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
-    #     for entry, idx in zip(pack.get(self.entry, instance),
-    #                             tensor.numpy()):
-    #         setattr(entry, self.attribute, self.id2entry(idx))
-            
 
 class TextExtractor(AttributeExtractor):
     def __init__(self, config: Dict):
@@ -101,8 +101,8 @@ class TextExtractor(AttributeExtractor):
 
 class CharExtractor(BaseExtractor):
     def __init__(self, config: Dict):
-        super().__init__(config)
         self.max_char_length = getattr(config, "max_char_length", None)
+        super().__init__(config)
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
         for word in pack.get(self.entry, instance):
@@ -110,27 +110,20 @@ class CharExtractor(BaseExtractor):
                 self.add_entry(char)
 
     def extract(self, pack: DataPack, instance: EntryType):
-        tensor = []
+        data = []
         max_char_length = -1
 
         for word in pack.get(self.entry, instance):
             tmp = []
             for char in word.text:
                 tmp.append(self.entry2id(char))
-            tensor.append(tmp)
+            data.append(tmp)
             max_char_length = max(max_char_length, len(tmp))
 
         if self.max_char_length is not None:
             max_char_length = min(self.max_char_length, max_char_length)
 
-        for i in range(len(tensor)):
-            if len(tensor[i]) >= max_char_length:
-                tensor[i] = tensor[i][:max_char_length]
-            else:
-                tensor[i] = tensor[i]+\
-                    [self.get_pad_id()]*(max_char_length-len(tensor[i]))
-                    
-        return torch.tensor(tensor)
+        return Feature(data, self.get_pad_id(), 2)
 
 
 
@@ -186,7 +179,6 @@ class AnnotationSeqExtractor(BaseExtractor):
                 cur_entry_id += 1
             else:
                 raise AssertionError("Unconsidered case.")
-
         return tagged
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
@@ -199,16 +191,12 @@ class AnnotationSeqExtractor(BaseExtractor):
         instance_based_on = list(pack.get(self.based_on, instance))
         instance_entry = list(pack.get(self.entry, instance))
         instance_tagged = self.bio_tag(instance_based_on, instance_entry)
-        ans = []
+        data = []
         for pair in instance_tagged:
             if pair[0] is None:
                 new_pair = (None, pair[1])
             else:
                 new_pair = (getattr(pair[0], self.attribute), pair[1])
-            ans.append(self.entry2id(new_pair))
-        return torch.tensor(ans)
+            data.append(self.entry2id(new_pair))
+        return Feature(data, self.get_pad_id(), 1)
 
-    # def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
-    #     for entry, idx in zip(pack.get(self.entry, instance), tensor.numpy()):
-    #         tag = self.id2entry(idx)
-    #         setattr(entry, self.attribute, tag[0])
