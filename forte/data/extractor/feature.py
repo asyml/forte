@@ -34,7 +34,7 @@ class Feature:
         self.data: List[Any] = data
         self.pad_id: Union[int, List] = pad_id
         self.dim: int = dim
-        self.is_base_feature = dim == 1
+        self.base_feature = dim == 1
         self.mask = [1 * len(data)]
 
         self.validate_input()
@@ -45,7 +45,7 @@ class Feature:
         assert self.dim >= 1
 
     def is_base_feature(self) -> bool:
-        return self.is_base_feature
+        return self.base_feature
 
     def get_sub_features(self) -> List['Feature']:
         assert not self.is_base_feature, \
