@@ -24,7 +24,7 @@ class Converter:
         self.need_pad = need_pad
 
     def convert(self, features: List[Feature]) -> \
-            Tuple[Tensor, Tensor]:
+            Tuple[Tensor, List[Tensor]]:
         # Padding the features if needed
         if self.need_pad:
             # BFS to pad each dimension
@@ -35,16 +35,14 @@ class Converter:
                 queue.append(feature)
                 curr_max_len = max(curr_max_len, feature.get_len())
 
-            while queue:
+            while len(queue) > 0:
                 size: int = len(queue)
                 next_max_len = -1
-
                 while size > 0:
                     feature: Feature = queue.pop(0)
-
                     feature.pad(curr_max_len)
 
-                    if not feature.is_base_feature:
+                    if not feature.is_base_feature():
                         for sub_feature in feature.get_sub_features():
                             next_max_len = max(next_max_len,
                                                sub_feature.get_len())
@@ -55,11 +53,18 @@ class Converter:
                 curr_max_len = next_max_len
 
         # Convert features to tensors
-        padded_features: List[List[Any]] = []
-        masks: List[List[Any]] = []
+        batch_padded_features: List[List[Any]] = []
+        batch_masks: List[List[Any]] = []
         for feature in features:
-            padded_feature, mask = feature.unroll()
-            padded_features.append(padded_feature)
-            masks.append(mask)
+            padded_feature, mask_list = feature.unroll(self.need_pad)
+            batch_padded_features.append(padded_feature)
+            batch_masks.append(mask_list)
 
-        return torch.tensor(padded_features), torch.tensor(masks)
+        stack_masks = []
+        for i in range(features[0].dim):
+            curr_dim_masks = []
+            for mask in batch_masks:
+                curr_dim_masks.append(mask[i])
+            stack_masks.append(torch.tensor(curr_dim_masks))
+
+        return torch.tensor(batch_padded_features), stack_masks
