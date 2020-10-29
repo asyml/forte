@@ -236,4 +236,3 @@ class IMDBClassifier:
             if do_test:
                 _test_epoch(sess)
         
-        tf.app.run()

@@ -18,11 +18,11 @@ from forte.models.imdb_text_classifier.model import IMDBClassifier
 import config_data
 import config_classifier
 
-def main():
+def main(argv=None):
     model = IMDBClassifier(config_data, config_classifier)
     if not os.path.isfile("data/IMDB/train.tf_record"):
         model.prepare_data("data/IMDB")
     model.run(do_train=True, do_eval=True, do_test=False)
 
 if __name__ == "__main__":
-    main(_)
+    main()
