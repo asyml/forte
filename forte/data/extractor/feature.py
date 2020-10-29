@@ -44,10 +44,10 @@ class Feature:
         assert type(self.pad_id) == int or type(self.pad_id) == list
         assert self.dim >= 1
 
-    def isBaseFeature(self) -> bool:
+    def is_base_feature(self) -> bool:
         return self.is_base_feature
 
-    def getSubFeatures(self) -> List['Feature']:
+    def get_sub_features(self) -> List['Feature']:
         assert not self.is_base_feature, \
             "Base feature does not have sub features"
         assert self.dim > 1, \
@@ -68,21 +68,21 @@ class Feature:
 
         return features
 
-    def getLen(self) -> int:
+    def get_len(self) -> int:
         return len(self.data)
 
     def pad(self, max_len: int):
-        assert self.getLen() <= max_len, \
+        assert self.get_len() <= max_len, \
             "Feature length should not exceed given max_len"
 
-        for i in range(max_len - self.getLen()):
+        for i in range(max_len - self.get_len()):
             self.data.append(Feature([], self.pad_id, self.dim - 1))
             self.mask.append(0)
 
     def unroll(self, need_pad: bool = True) -> Tuple[List[Any], List[Any]]:
         if not need_pad:
             return self.data, []
-        
+
         unroll_features: List = []
 
         if self.is_base_feature:
@@ -98,7 +98,7 @@ class Feature:
         else:
             total_sub_masks: List = []
 
-            for feature in self.getSubFeatures():
+            for feature in self.get_sub_features():
                 sub_unroll_features, sub_masks = feature.unroll()
                 unroll_features.append(sub_unroll_features)
                 total_sub_masks.append(sub_masks)
