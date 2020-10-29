@@ -58,6 +58,12 @@ class CoNLL03Reader(PackReader):
         sentence_begin = 0
         sentence_cnt = 0
 
+        # NER tag is either "O" or in the format "X-Y",
+        # where X is one of B, I,
+        # Y is a tag like ORG, PER etc
+        prev_y = None
+        prev_x = None
+        start_index = -1
         for line in doc:
             line = line.strip()
 
@@ -67,7 +73,35 @@ class CoNLL03Reader(PackReader):
                 word = conll_components[0]
                 pos = conll_components[1]
                 chunk_id = conll_components[2]
+
                 ner_tag = conll_components[3]
+
+                # A new ner tag occurs.
+                if ner_tag == "O" or ner_tag.split("-")[0] == "B":
+                    # Add previous ner tag to sentence if it exists.
+                    if prev_y is not None:
+                        entity_mention = EntityMention(pack,
+                                                start_index, offset-1)
+                        entity_mention.ner_type = prev_y
+
+                    # Start process curent ner tag.
+                    if ner_tag == "O":
+                        # Current ner tag is O, reset information.
+                        prev_x = None
+                        prev_y = None
+                        start_index = -1
+                    else:
+                        # Current ner tag is B.
+                        prev_x = "B"
+                        prev_y = ner_tag.split("-")[1]
+                        start_index = offset
+                # This ner tag is connected to previous one.
+                else:
+                    x, y = ner_tag.split("-")
+                    assert x == "I", "Unseen tag %s in the file." % x
+                    assert y == prev_y, "Error in %s." % ner_tag
+                    assert prev_x in ("B", "I"), "Error in %s." % ner_tag
+                    prev_x = "I"
 
                 word_begin = offset
                 word_end = offset + len(word)
@@ -76,10 +110,6 @@ class CoNLL03Reader(PackReader):
                 token = Token(pack, word_begin, word_end)
                 token.pos = pos
                 token.chunk = chunk_id
-                token.ner = ner_tag
-
-                entity_mention = EntityMention(pack, word_begin, word_end)
-                entity_mention.ner_type = ner_tag
 
                 text += word + " "
                 offset = word_end + 1
@@ -88,17 +118,27 @@ class CoNLL03Reader(PackReader):
                 if not has_rows:
                     # Skip consecutive empty lines.
                     continue
-                # add sentence
+                # Add sentence
                 Sentence(pack, sentence_begin, offset - 1)
 
-                sentence_begin = offset
+                # Handle the last ner tag if exists.
+                if prev_x is not None:
+                    entity_mention = EntityMention(pack, start_index, offset-1)
+                    entity_mention.ner_type = prev_y
+
+                # Reset information.
                 sentence_cnt += 1
                 has_rows = False
+                prev_y = None
+                prev_x = None
+                sentence_begin = offset
 
         if has_rows:
             # Add the last sentence if exists.
             Sentence(pack, sentence_begin, offset - 1)
             sentence_cnt += 1
+
+
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
