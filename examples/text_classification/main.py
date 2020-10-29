@@ -25,4 +25,4 @@ def main():
     model.run(do_train=True, do_eval=True, do_test=False)
 
 if __name__ == "__main__":
-    main()
+    main(_)
