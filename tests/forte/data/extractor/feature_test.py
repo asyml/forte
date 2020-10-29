@@ -20,21 +20,9 @@ from forte.data.extractor.feature import Feature
 
 class FeatureTest(unittest.TestCase):
     def setUp(self):
-        data1: List = [7, 8, 9]
-        pad_id1: int = 0
-        dim1: int = 1
-        self.feature1: Feature = Feature(data1, pad_id1, dim1)
-
-        data2: List = [[6, 11, 2], [7, 8], [6, 7, 5, 4]]
-        pad_id2: int = 0
-        dim2: int = 2
-        self.feature2: Feature = Feature(data2, pad_id2, dim2)
-
-        data3: List = [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
-                       [[1, 0, 0], [0, 1, 0]]]
-        pad_id3: List = [0, 0, 1]
-        dim3: int = 2
-        self.feature3: Feature = Feature(data3, pad_id3, dim3)
+        self.feature1: Feature = self.create_feature1()
+        self.feature2: Feature = self.create_feature2()
+        self.feature3: Feature = self.create_feature3()
 
     def test_is_base_feature(self):
         self.assertTrue(self.feature1.is_base_feature())
@@ -62,10 +50,99 @@ class FeatureTest(unittest.TestCase):
         self.assertEqual(self.feature3.get_len(), 2)
 
     def test_pad(self):
-        pass
+        self.feature1.pad(4)
+        self.assertEqual(self.feature1.data, [7, 8, 9, 0])
+
+        self.feature1 = self.create_feature1()
+        self.feature1.pad(6)
+        self.assertEqual(self.feature1.data, [7, 8, 9, 0, 0, 0])
+
+        self.feature1 = self.create_feature1(
+            data=[[1, 0, 0], [0, 1, 0]],
+            pad_id=[0, 0, 1],
+            dim=1)
+        self.feature1.pad(4)
+        self.assertEqual(self.feature1.data,
+                         [[1, 0, 0],
+                          [0, 1, 0],
+                          [0, 0, 1],
+                          [0, 0, 1]])
+
+        self.feature2.pad(4)
+        self.assertEqual(self.feature2.get_len(), 4)
+        base_feature_data = [i.data for i in self.feature2.get_sub_features()]
+        self.assertEqual(base_feature_data[:-1],
+                         [[6, 11, 2], [7, 8], [6, 7, 5, 4]])
+        self.assertEqual(len(base_feature_data[-1]), 0)
+
+        self.feature3.pad(4)
+        self.assertEqual(self.feature3.get_len(), 4)
+        base_feature_data = [i.data for i in self.feature3.get_sub_features()]
+        self.assertEqual(base_feature_data[:-2],
+                         [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
+                          [[1, 0, 0], [0, 1, 0]]])
+        self.assertEqual(len(base_feature_data[-2]), 0)
+        self.assertEqual(len(base_feature_data[-1]), 0)
 
     def test_unroll(self):
-        pass
+        self.feature1.pad(4)
+        feature, mask = self.feature1.unroll()
+        self.assertEqual(feature, [7, 8, 9, 0])
+        self.assertEqual(mask, [[1, 1, 1, 0]])
+
+        self.feature2.pad(4)
+        for sub_feature in self.feature2.get_sub_features():
+            sub_feature.pad(4)
+        feature, mask = self.feature2.unroll()
+        self.assertEqual(feature, [[6, 11, 2, 0],
+                                   [7, 8, 0, 0],
+                                   [6, 7, 5, 4],
+                                   [0, 0, 0, 0]])
+        self.assertEqual(mask, [[1, 1, 1, 0],
+                                [[1, 1, 1, 0],
+                                 [1, 1, 0, 0],
+                                 [1, 1, 1, 1],
+                                 [0, 0, 0, 0]]])
+
+        self.feature3.pad(4)
+        for sub_feature in self.feature3.get_sub_features():
+            sub_feature.pad(3)
+        feature, mask = self.feature3.unroll()
+        self.assertEqual(feature, [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
+                                   [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+                                   [[0, 0, 1], [0, 0, 1], [0, 0, 1]],
+                                   [[0, 0, 1], [0, 0, 1], [0, 0, 1]]])
+        self.assertEqual(mask, [[1, 1, 0, 0],
+                                [[1, 1, 1],
+                                 [1, 1, 0],
+                                 [0, 0, 0],
+                                 [0, 0, 0]]])
+
+    def create_feature1(self, data=None, pad_id=None, dim=None):
+        data: List = [7, 8, 9] if data is None else data
+        pad_id: int = 0 if pad_id is None else pad_id
+        dim: int = 1 if dim is None else dim
+        feature: Feature = Feature(data, pad_id, dim)
+
+        return feature
+
+    def create_feature2(self, data=None, pad_id=None, dim=None):
+        data: List = [[6, 11, 2], [7, 8], [6, 7, 5, 4]] \
+            if data is None else data
+        pad_id: int = 0 if pad_id is None else pad_id
+        dim: int = 2 if dim is None else dim
+        feature: Feature = Feature(data, pad_id, dim)
+
+        return feature
+
+    def create_feature3(self, data=None, pad_id=None, dim=None):
+        data: List = [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
+                      [[1, 0, 0], [0, 1, 0]]] if data is None else data
+        pad_id: List = [0, 0, 1] if pad_id is None else pad_id
+        dim: int = 2 if dim is None else dim
+        feature: Feature = Feature(data, pad_id, dim)
+
+        return feature
 
 
 if __name__ == '__main__':
