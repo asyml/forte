@@ -31,18 +31,33 @@ class Feature:
             If the data is a list of value, the `dim` should be 1 and this
             feature is called base feature.
         """
-        self.data: List[Any] = data
         self.pad_id: Union[int, List] = pad_id
         self.dim: int = dim
         self.base_feature = dim == 1
-        self.mask = [1 * len(data)]
+        self.data = None  # Only base feature has actual data
+        self.mask = None
 
-        self.validate_input()
+        self._parse_sub_features(data)
+        self._validate_input()
 
-    def validate_input(self):
-        assert type(self.data) == list
+    def _validate_input(self):
+        assert (self.is_base_feature() and self.data is not None or
+                (not self.is_base_feature()
+                 and self.data is None
+                 and self.sub_features is not None))
         assert type(self.pad_id) == int or type(self.pad_id) == list
         assert self.dim >= 1
+
+    def _parse_sub_features(self, data):
+        if self.is_base_feature():
+            self.data = data
+        else:
+            self.sub_features: List = []
+            for sub_data in data:
+                self.sub_features.append(
+                    Feature(sub_data, self.pad_id, self.dim - 1))
+
+        self.mask = [1] * len(data)
 
     def is_base_feature(self) -> bool:
         return self.base_feature
@@ -53,55 +68,41 @@ class Feature:
         assert self.dim > 1, \
             "Non-base feature should have as least 2 dimension"
 
-        features: List = []
-        for sub_data in self.data:
-            if type(sub_data) == list:
-                # Normal data
-                features.append(
-                    Feature(sub_data, self.pad_id, self.dim - 1))
-            elif type(sub_data) == Feature:
-                # Padded data
-                features.append(sub_data)
-            else:
-                raise ValueError("Unexpected sub feature type: " +
-                                 type(sub_data))
-
-        return features
+        return self.sub_features
 
     def get_len(self) -> int:
-        return len(self.data)
+        return len(self.data) if self.is_base_feature() else \
+            len(self.sub_features)
 
     def pad(self, max_len: int):
         assert self.get_len() <= max_len, \
             "Feature length should not exceed given max_len"
 
         for i in range(max_len - self.get_len()):
-            self.data.append(Feature([], self.pad_id, self.dim - 1))
+            if self.is_base_feature():
+                self.data.append(self.pad_id)
+            else:
+                self.sub_features.append(Feature([], self.pad_id, self.dim - 1))
             self.mask.append(0)
 
     def unroll(self, need_pad: bool = True) -> Tuple[List[Any], List[Any]]:
         if not need_pad:
             return self.data, []
 
-        unroll_features: List = []
-
-        if self.is_base_feature:
-            for data in self.data:
-                if type(data) != Feature:
-                    # Actual value
-                    unroll_features.append(self.pad)
-                else:
-                    # Padded data
-                    unroll_features.append(data)
-
-            return unroll_features, self.mask
+        if self.is_base_feature():
+            return self.data, [self.mask]
         else:
-            total_sub_masks: List = []
+            unroll_features: List = []
+            sub_stack_masks: List = []
 
             for feature in self.get_sub_features():
                 sub_unroll_features, sub_masks = feature.unroll()
+
+                for i in range(self.dim - 1):
+                    if i == len(sub_stack_masks):
+                        sub_stack_masks.append([])
+                    sub_stack_masks[i].append(sub_masks[i])
+
                 unroll_features.append(sub_unroll_features)
-                total_sub_masks.append(sub_masks)
 
-            return unroll_features, self.mask + total_sub_masks
-
+            return unroll_features, [self.mask] + sub_stack_masks
