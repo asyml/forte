@@ -17,41 +17,32 @@ from typing import List, Any, Tuple, Union
 class Feature:
     def __init__(self,
                  data: List[Any],
-                 pad: Union[int, List],
+                 pad_id: Union[int, List],
                  dim: int):
         """
         Args:
         data (List[Any]):
             A list of features, where each feature can be the value or another
             list of features.
+        pad_id (int or List):
+            a single integer or a nested list of integer representing <PAD>.
         dim (int):
             Total number of dimensions for the data. `dim` is always >= 1.
             If the data is a list of value, the `dim` should be 1 and this
             feature is called base feature.
-        pad_id (int):
-            The id for <PAD> token
         """
-        # self.validate_input(data, pad_id, dim)
-
         self.data: List[Any] = data
-        self.pad: Union[int, List] = pad
+        self.pad_id: Union[int, List] = pad_id
         self.dim: int = dim
         self.is_base_feature = dim == 1
-        # self.is_pad = is_pad
+        self.mask = [1 * len(data)]
 
-    def validate_input(self, data: List[int], pad_id: List[int], dim: int):
-        assert dim >= 1
-        assert len(pad_id) == dim
+        self.validate_input()
 
-        data_dim = data
-        while dim > 1:
-            assert type(data_dim) == list
-            assert len(data_dim) > 0
-            data_dim = data_dim[0]
-            dim -= 1
-        assert type(data_dim) == list
-        for val in data_dim:
-            assert type(val) == float or type(val) == int
+    def validate_input(self):
+        assert type(self.data) == list
+        assert type(self.pad_id) == int or type(self.pad_id) == list
+        assert self.dim >= 1
 
     def isBaseFeature(self) -> bool:
         return self.is_base_feature
@@ -59,17 +50,15 @@ class Feature:
     def getSubFeatures(self) -> List['Feature']:
         assert not self.is_base_feature, \
             "Base feature does not have sub features"
-        assert len(self.pad_id) > 2, \
-            "Non-base feature should have pad_id for sub feature"
         assert self.dim > 1, \
             "Non-base feature should have as least 2 dimension"
 
-        features = []
+        features: List = []
         for sub_data in self.data:
             if type(sub_data) == list:
                 # Normal data
                 features.append(
-                    Feature(sub_data, self.pad_id[1:], self.dim - 1))
+                    Feature(sub_data, self.pad_id, self.dim - 1))
             elif type(sub_data) == Feature:
                 # Padded data
                 features.append(sub_data)
@@ -87,12 +76,32 @@ class Feature:
             "Feature length should not exceed given max_len"
 
         for i in range(max_len - self.getLen()):
-            self.data.append(Feature([], ))
+            self.data.append(Feature([], self.pad_id, self.dim - 1))
+            self.mask.append(0)
 
-    def unroll(self) -> Tuple[List[Any], List[Any]]:
-        pass
+    def unroll(self, need_pad: bool = True) -> Tuple[List[Any], List[Any]]:
+        if not need_pad:
+            return self.data, []
+        
+        unroll_features: List = []
 
-#
-# class PadFeature(Feature):
-#     def __init__(self, data: List[Any], pad_id: List[int], dim: int):
-#         super().__init__(data, pad_id, dim)
+        if self.is_base_feature:
+            for data in self.data:
+                if type(data) != Feature:
+                    # Actual value
+                    unroll_features.append(self.pad)
+                else:
+                    # Padded data
+                    unroll_features.append(data)
+
+            return unroll_features, self.mask
+        else:
+            total_sub_masks: List = []
+
+            for feature in self.getSubFeatures():
+                sub_unroll_features, sub_masks = feature.unroll()
+                unroll_features.append(sub_unroll_features)
+                total_sub_masks.append(sub_masks)
+
+            return unroll_features, self.mask + total_sub_masks
+
