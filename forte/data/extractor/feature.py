@@ -48,7 +48,7 @@ class Feature:
         return self.base_feature
 
     def get_sub_features(self) -> List['Feature']:
-        assert not self.is_base_feature, \
+        assert not self.is_base_feature(), \
             "Base feature does not have sub features"
         assert self.dim > 1, \
             "Non-base feature should have as least 2 dimension"
