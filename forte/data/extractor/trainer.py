@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, Any
 
 from torch import Tensor
 
@@ -30,7 +30,7 @@ class Trainer:
         self.model = None
         self.optim = None
 
-    def setup(self, schemes: Dict[str, Dict[str, BaseExtractor]]):
+    def setup(self, schemes: Dict[str, Dict[str, Any]]):
         self.model = self.create_model_fn(schemes)
         self.optim = self.create_optim_fn(self.model)
 
