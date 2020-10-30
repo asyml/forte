@@ -12,14 +12,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import logging
-from typing import Optional, Dict, List, Type, Iterator, Tuple, Any
+from typing import Optional, Dict, List, Type, Iterator, Any
 
-import numpy as np
 import torchtext
 import torch
 from torch import Tensor, device
 
-from data.extractor.converter import Converter
+from forte.data.extractor.converter import Converter
 from forte.data.extractor.feature import Feature
 from forte.common.configuration import Config
 from forte.data.extractor.trainer import Trainer
@@ -65,8 +64,7 @@ class TrainPipeline:
                       "extractor":  Extractor,
                       "converter": Converter
                   }
-              },
-              "converter": Converter
+              }
         }
         """
         self.train_reader = train_reader
@@ -85,7 +83,7 @@ class TrainPipeline:
         self.config.add_hparam('batch_size', batch_size)
         self.config.add_hparam('device', device_)
 
-    def parse_request(self, data_request):
+    def _parse_request(self, data_request):
         """
         Responsibilities:
         1. parse the given data request and stored internally into resource
@@ -124,7 +122,6 @@ class TrainPipeline:
         assert "schemes" in data_request, \
             "Field not found for data request: `schemes`"
 
-        self.resource["converter"] = Converter()
         self.resource["scope"] = data_request["scope"]
 
         resource_schemes = {}
@@ -176,118 +173,58 @@ class TrainPipeline:
             for dependent_extractor in dependent_extractors:
                 based_on: Entry = dependent_extractor.based_on
                 if based_on not in scheme_group["dependee"]:
-                    raise "Cannot found based on entry {} for extractor {}".\
+                    raise "Cannot found based on entry {} for extractor {}". \
                         format(based_on, dependent_extractor.tag)
 
         self.resource["schemes"] = resource_schemes
 
-    def run(self, data_request):
-        # Steps:
-        # 1. parse request
-        # 2. build vocab
-        # 3. for each data pack, do:
-        #   Extract -> Caching -> Batching -> Padding
-        # 4. send batched & padded tensors to trainer
-
-        # Parse and validate data request
-        self.parse_request(data_request)
+    def _build_vocab(self):
+        scope: EntryType = self.resource["scope"]
+        schemes: Dict = self.resource["schemes"]
 
         # TODO: read all data packs is not memory friendly. Probably should
         #  cache data pack when retrieve it multiple times
         for data_pack in self.train_reader.iter(self.train_path):
-            self.build_vocab(data_pack)
+            for instance in data_pack.get(scope):
+                for tag, scheme in schemes.items():
+                    extractor: BaseExtractor = scheme["extractor"]
+                    extractor.update_vocab(data_pack, instance)
 
-        # Model can only be initialized after here as it needs the built vocab
-        schemes: Dict[str, Dict[str, BaseExtractor]] = self.resource["schemes"]
-        self.trainer.setup(schemes)
-
-        # TODO: evaluation setup
-        if self.evaluator:
-            pass
-
-        epoch = 0
-        while epoch < self.config.num_epochs:
-            print("Train epoch:", epoch)
-
-            epoch += 1
-
-            for data_pack in self.train_reader.iter(self.train_path):
-                for batch_feature_collection in self.extract(data_pack,
-                                                             self.config.batch_size):
-
-                    # TODO: should we:
-                    # 1) mask tensor be a member in Feature class and pass
-                    # features to user
-                    # or
-                    # 2) we explicitly put mask tensor and feature tensor into
-                    # a dictionary and pass this dict to user.
-                    # Note: they are passed to user via method:
-                    #       pass_tensor_to_model_fn())
-                    #       Currently, we choose the former approach.
-                    batch_tensor_collection = \
-                        self.convert(batch_feature_collection)
-                    self.trainer.train(batch_tensor_collection)
-
-                    # TODO: evaluation process
-                    if self.evaluator:
-                        pass
-
-    def build_vocab(self, data_pack: BasePack):
-        scope: EntryType = self.resource["scope"]
-        schemes: Dict = self.resource["schemes"]
-
-        for instance in data_pack.get(scope):
-            for tag, scheme in schemes.items():
-                extractor: BaseExtractor = scheme["extractor"]
-                extractor.update_vocab(data_pack, instance)
-
-    # Extract should extract a single data pack. It should batch and shuffle
-    # all the extracted data and return a generator for a batch of extracted
-    # tensors as the tensor_collection
-    # Example return format
-    # """
-    # tensor_collection = {
-    #         "text_tag": {
-    #             "tensor": [<tensor>, <tensor>],
-    #             "mask": [<tensor>, <tensor>]
-    #         },
-    #         "char_tag": {
-    #             "tensor": [<tensor>, <tensor>],
-    #             "mask": [<tensor>, <tensor>]
-    #         },
-    #         "ner_tag": {
-    #             "tensor": [<tensor>, <tensor>],
-    #             "mask": [<tensor>, <tensor>]
-    #         }
-    # }
-    # """
-    def extract(self, data_pack: BasePack, batch_size: int) -> \
-            Iterator[Dict[str, List[Feature]]]:
+    def _extract(self, data_pack: BasePack) -> List[Dict[str, Feature]]:
+        """
+        Extract should extract a single data pack. It should extract features
+        from all instances in the given datapack and return a list of Feature.
+        """
         scope: Type[EntryType] = self.resource["scope"]
         schemes: Dict = self.resource["schemes"]
-        batch_feature_collection: Dict[str, List[Feature]] = {}
 
         instances = list(data_pack.get(scope))
 
         # Extract all instances
-        feature_collection: List[Dict[str, Feature]] = []
+        feature_list: List[Dict[str, Feature]] = []
 
         for instance in instances:
-            feature_collection.append({})
+            feature_list.append({})
             for tag, scheme in schemes.items():
                 extractor: BaseExtractor = scheme["extractor"]
                 # TODO: read from cache here
                 feature: Feature = extractor.extract(data_pack, instance)
                 # TODO: store to cache
 
-                feature_collection[-1][tag] = feature
+                feature_list[-1][tag] = feature
+
+        return feature_list
+
+    def _batch(self, feature_list) -> Iterator[Dict[str, List[Feature]]]:
+        schemes: Dict = self.resource["schemes"]
+        batch_feature_collection: Dict[str, List[Feature]] = {}
 
         # random.shuffle(tensors) # TODO: do we need this?
         # TODO: check batch_size_fn
         # TODO: A better tool for doing batching.
         data_iterator = torchtext.data.iterator.pool(
-            feature_collection,
-            batch_size,
+            feature_list,
+            self.config.batch_size,
             key=None,  # TODO: check this
             sort_within_batch=False,  # TODO: check this
             shuffle=False  # TODO: check this
@@ -295,7 +232,7 @@ class TrainPipeline:
 
         # Yield a batch of features grouped by tag
         for batch_feature in data_iterator:
-            batch_feature_collection.clear()
+            batch_feature_collection = {}
             for tag, scheme in schemes.items():
                 batch_feature_collection[tag] = []
 
@@ -305,14 +242,73 @@ class TrainPipeline:
 
             yield batch_feature_collection
 
-    def convert(self, batch_feature_collection: Dict[str, List[Feature]]) -> \
+    def _convert(self, batch_feature_collection: Dict[str, List[Feature]]) -> \
             Dict[str, Dict[str, Tensor]]:
+        """
+        Convert will batch, padding the given list of Features and return a
+        generator for a batch of padded tensors as the tensor_collection
+        Example return format
+        tensor_collection = {
+                "text_tag": {
+                    "tensor": [<tensor>, <tensor>],
+                    "mask": [<tensor>, <tensor>]
+                },
+                "char_tag": {
+                    "tensor": [<tensor>, <tensor>],
+                    "mask": [<tensor>, <tensor>]
+                },
+                "ner_tag": {
+                    "tensor": [<tensor>, <tensor>],
+                    "mask": [<tensor>, <tensor>]
+                }
+        }
+        """
         tensor_collection: Dict[str, Dict[str, Tensor]] = {}
 
         for tag, features in batch_feature_collection.items():
             converter: Converter = self.resource["schemes"][tag]["converter"]
             tensor, mask = converter.convert(features)
+
+            if tag not in tensor_collection:
+                tensor_collection[tag] = {}
+
             tensor_collection[tag]["tensor"] = tensor
             tensor_collection[tag]["mask"] = mask
 
         return tensor_collection
+
+    def run(self, data_request):
+        # Steps:
+        # 1. parse request
+        # 2. build vocab
+        # 3. for each data pack, do:
+        #   Extract + Caching -> Batching -> Padding
+        # 4. send batched & padded tensors to trainer
+
+        # Parse and validate data request
+        self._parse_request(data_request)
+
+        self._build_vocab()
+
+        # Model can only be initialized after here as it needs the built vocab
+        schemes: Dict[str, Dict[str, Any]] = self.resource["schemes"]
+        self.trainer.setup(schemes)
+
+        # TODO: evaluation setup
+        if self.evaluator:
+            pass
+
+        epoch = 0
+        while epoch < self.config.num_epochs:
+            epoch += 1
+
+            for data_pack in self.train_reader.iter(self.train_path):
+                feature_collection = self._extract(data_pack)
+                for batch_feature_collection in self._batch(feature_collection):
+                    batch_tensor_collection = \
+                        self._convert(batch_feature_collection)
+                    self.trainer.train(batch_tensor_collection)
+
+                    # TODO: evaluation process
+                    if self.evaluator:
+                        pass
