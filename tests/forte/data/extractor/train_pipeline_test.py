@@ -29,24 +29,6 @@ from forte.data.extractor.extractor import TextExtractor, CharExtractor, \
 from ft.onto.base_ontology import Sentence, Token, EntityMention
 
 
-class NerModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.loss_hooked = 0.0
-
-    def forward(self, input_word, input_char, target=None, mask=None, hx=None):
-        # Do some fake calculation
-        self.loss_hooked = torch.sum(input_word * mask + input_word + \
-                                     target + torch.sum(input_char, dim=-1))
-
-        return self.loss_hooked
-
-
-def create_mock_model_ner():
-    ner_model = NerModel()
-    return ner_model
-
-
 class TrainPipelineTest(unittest.TestCase):
     def setUp(self):
         self.config = {
@@ -90,43 +72,15 @@ class TrainPipelineTest(unittest.TestCase):
             }
         }
 
-        self.model: NerModel = create_mock_model_ner()
-
         def create_model_fn(schemes: Dict[str, Dict[str, Any]]):
-            assert "text_tag" in schemes
-            assert "char_tag" in schemes
-            assert "ner_tag" in schemes
-
-            return self.model
+            pass
 
         def create_optim_fn(model):
-            optim = SGD(
-                model.parameters(),
-                lr=self.config["learning_rate"],
-                momentum=self.config["momentum"],
-                nesterov=self.config["nesterov"])
-            return optim
+            pass
 
         def pass_tensor_to_model_fn(model,
                                     tensors: Dict[str, Dict[str, Tensor]]):
-            assert "text_tag" in tensors
-            assert "tensor" in tensors["text_tag"] and \
-                   "mask" in tensors["text_tag"]
-            assert "char_tag" in tensors
-            assert "tensor" in tensors["char_tag"] and \
-                   "mask" in tensors["char_tag"]
-            assert "ner_tag" in tensors
-            assert "tensor" in tensors["ner_tag"] and \
-                   "mask" in tensors["ner_tag"]
-
-            word = tensors["text_tag"]["tensor"]
-            char = tensors["char_tag"]["tensor"]
-            ner = tensors["ner_tag"]["tensor"]
-            word_masks = tensors["text_tag"]["mask"]
-
-            loss = model(word, char, ner, mask=word_masks)
-
-            return loss
+            pass
 
         self.create_model_fn = create_model_fn
         self.create_optim_fn = create_optim_fn
