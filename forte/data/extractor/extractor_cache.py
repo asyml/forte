@@ -1,47 +1,22 @@
+import os
+import numpy as np
 class Extractor_Cache:
-  #modify test
   def __init__(self):
-    self.cache_datapack2tensor = dict()
+    pass
 
-  def contains_datapack(self, data_pack):
-    if data_pack in self.cache_datapack2tensor:
-      return True
-    else:
-      return False
+  def get_ID(self, data_pack, instance):
+    key = str(pack.pack_id()) + "_" + str(instance.tid)
+    return key
 
-  def cache_datapack(self, data_pack, tensor):
-    cache_datapack2tensor[data_pack] = tensor
-    
+  def contains_datapack(self, data_pack, instance):
+    key = get_ID(data_pack, instance)
+    return os.path.exists(key + ".npy")
 
-  def get_tensor(self, data_pack):
-    return self.cache_datapack2tensor[data_pack]
-
-  def remove_datapack(self, data_pack):
-    del self.cache_datapack2tensor[data_pack]
-
-
-  def clear_cache_datapack2tensor (self):
-    self.cache_datapack2tensor.clear()
-
-
-def gen():
-  for pack in packs
-    for instance in pack
-      key = str(pack.pack_id()) + "_" + str(instance.tid)
-
-      if cache.contains_datapack(key):
-        yield cache.get_tensor(key)
-
-      tensor = extract(instance)
-      
-      cache.cache_datapack(key,tensor)
-
-      yield tensor
-
-
-
-if __name__ == '__main__':
-  cache = Converter_Cache()
-
-  for tensor in gen():
-    print(tensor)
+  def cache_datapack(self, data_pack, instance, tensor):
+    key = get_ID(data_pack, instance)
+    np.save(key+".npy", tensor)
+  
+  #call contains_datapack to check cache firstly
+  def get_tensor(self, data_pack, instance):
+    key = get_ID(data_pack, instance)
+    return np.load(key+".npy")
