@@ -16,7 +16,7 @@ import torch
 from torch import Tensor
 from torch.optim import SGD
 import yaml
-from typing import Dict
+from typing import Dict, Any
 
 from forte.common.configuration import Config
 from forte.data.extractor.extractor import \
@@ -104,11 +104,11 @@ if __name__ == "__main__":
         return optim
 
 
-    def pass_tensor_to_model_fn(model, tensors: Dict[str, Dict[str, Tensor]]):
+    def pass_tensor_to_model_fn(model, tensors: Dict[str, Dict[str, Any]]):
         word = tensors["text_tag"]["tensor"]
         char = tensors["char_tag"]["tensor"]
         ner = tensors["ner_tag"]["tensor"]
-        word_masks = tensors["text_tag"]["mask"]
+        word_masks = tensors["text_tag"]["mask"][0]
 
         loss = model(word, char, ner, mask=word_masks)
 
