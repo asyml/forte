@@ -23,7 +23,7 @@ from typing import Iterator, Dict, List, Any, Union, Set, Tuple
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Token, Sentence, Document, Annotation
+from ft.onto.base_ontology import Token, Sentence, Document, Annotation, EntityMention
 from forte.data.ontology.core import EntryType
 from forte.data.span import Span
 from forte.data.extractor.vocabulary import Vocabulary
@@ -69,10 +69,10 @@ class BaseExtractor:
         raise NotImplementedError()
 
     def extract(self, pack: DataPack, 
-            instance: EntryType) -> Tensor:
+            instance: EntryType) -> Feature:
         raise NotImplementedError()
 
-    def add_to_pack(self, pack: DataPack, instance: EntryType, tensor: Tensor):
+    def add_to_pack(self, pack: DataPack, instance: EntryType, feature: Feature):
         raise NotImplementedError()
 
 
@@ -124,7 +124,6 @@ class CharExtractor(BaseExtractor):
             max_char_length = min(self.max_char_length, max_char_length)
 
         return Feature(data, self.get_pad_id(), 2)
-
 
 
 class AnnotationSeqExtractor(BaseExtractor):
@@ -191,6 +190,7 @@ class AnnotationSeqExtractor(BaseExtractor):
         instance_based_on = list(pack.get(self.based_on, instance))
         instance_entry = list(pack.get(self.entry, instance))
         instance_tagged = self.bio_tag(instance_based_on, instance_entry)
+
         data = []
         for pair in instance_tagged:
             if pair[0] is None:
@@ -198,5 +198,28 @@ class AnnotationSeqExtractor(BaseExtractor):
             else:
                 new_pair = (getattr(pair[0], self.attribute), pair[1])
             data.append(self.entry2id(new_pair))
+
         return Feature(data, self.get_pad_id(), 1)
 
+    def add_to_pack(self, pack: DataPack, instance: EntryType, feature: Feature):
+        data = feature.data
+        tags = [self.id2entry(x) for x in data]
+
+        tag_start = None
+        tag_end = None
+        tag_type = None
+        for entry, tag in zip(pack.get(self.based_on, instance), tags):
+            # A new tag occurs
+            if tag[1] == "O" or tag[1] == "B":
+                # Handle previous tag
+                if tag_type:
+                    entity_mention = EntityMention(pack, tag_start, tag_end)
+                    entity_mention.ner_type = tag_type
+                tag_start = entry.begin
+                tag_end = entry.end
+                tag_type = tag[0]
+            # It is same tag
+            else:
+                # TODO: handle not current tag as output
+                assert entry[0] == tag_type
+                tag_end = entry.end
