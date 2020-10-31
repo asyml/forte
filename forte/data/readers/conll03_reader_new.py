@@ -81,7 +81,7 @@ class CoNLL03Reader(PackReader):
                     # Add previous ner tag to sentence if it exists.
                     if prev_y is not None:
                         entity_mention = EntityMention(pack,
-                                                start_index, offset-1)
+                                                start_index, offset - 1)
                         entity_mention.ner_type = prev_y
 
                     # Start process curent ner tag.
@@ -123,7 +123,7 @@ class CoNLL03Reader(PackReader):
 
                 # Handle the last ner tag if exists.
                 if prev_x is not None:
-                    entity_mention = EntityMention(pack, start_index, offset-1)
+                    entity_mention = EntityMention(pack, start_index, offset - 1)
                     entity_mention.ner_type = prev_y
 
                 # Reset information.
@@ -137,8 +137,6 @@ class CoNLL03Reader(PackReader):
             # Add the last sentence if exists.
             Sentence(pack, sentence_begin, offset - 1)
             sentence_cnt += 1
-
-
 
         pack.set_text(text, replace_func=self.text_replace_operation)
 
