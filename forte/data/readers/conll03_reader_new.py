@@ -123,7 +123,8 @@ class CoNLL03Reader(PackReader):
 
                 # Handle the last ner tag if exists.
                 if prev_x is not None:
-                    entity_mention = EntityMention(pack, start_index, offset - 1)
+                    entity_mention = EntityMention(pack, start_index,
+                                                    offset - 1)
                     entity_mention.ner_type = prev_y
 
                 # Reset information.
