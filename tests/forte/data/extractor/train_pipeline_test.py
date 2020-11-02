@@ -13,12 +13,11 @@
 #  limitations under the License.
 import unittest
 
-from typing import Dict, Any
-
+from typing import Dict, Any, Type, List
 import torch
-from torch import Tensor, nn
-from torch.optim import SGD
+from torch import Tensor
 
+from forte.data.ontology.core import EntryType
 from forte.data.extractor.feature import Feature
 from forte.data.extractor.converter import Converter
 from forte.data.extractor.train_pipeline import TrainPipeline
@@ -36,7 +35,7 @@ class TrainPipelineTest(unittest.TestCase):
             "train_path": "../../../../data_samples/train_pipeline_test",
             "val_path": "../../../../data_samples/train_pipeline_test",
             "num_epochs": 1,
-            "batch_size_tokens": 10,
+            "batch_size_tokens": 5,
             "learning_rate": 0.01,
             "momentum": 0.9,
             "nesterov": True
@@ -103,7 +102,6 @@ class TrainPipelineTest(unittest.TestCase):
                           batch_size=self.config["batch_size_tokens"])
 
         # TODO: calculate expected loss
-        self.expected_loss = ...
 
     def test_parse_request(self):
         self.train_pipeline._parse_request(self.data_request)
@@ -150,79 +148,84 @@ class TrainPipelineTest(unittest.TestCase):
         self.train_pipeline._parse_request(self.data_request)
         self.train_pipeline._build_vocab()
 
-        data_pack = list(self.reader.iter(self.train_pipeline.train_path))[0]
-        feature_list = self.train_pipeline._extract(data_pack)
+        scope: Type[EntryType] = self.train_pipeline.resource["scope"]
 
-        self.assertEqual(len(feature_list), 7)
-        for feature in feature_list:
-            self.assertTrue("text_tag" in feature)
-            self.assertEqual(type(feature["text_tag"]), Feature)
-            self.assertTrue("char_tag" in feature)
-            self.assertEqual(type(feature["char_tag"]), Feature)
-            self.assertTrue("ner_tag" in feature)
-            self.assertEqual(type(feature["ner_tag"]), Feature)
+        # Collect all batch feature collections
+        feature_collection_list: List[Dict[str, List[Feature]]] = []
 
-    def test_batch(self):
-        self.train_pipeline.config.batch_size = 5
-        self.train_pipeline._parse_request(self.data_request)
-        self.train_pipeline._build_vocab()
+        for data_pack in self.reader.iter(self.train_pipeline.train_path):
+            for batch in self.train_pipeline.batcher.get_batch(data_pack,
+                                                               scope,
+                                                               {scope: []}):
+                batch_feature_collection: Dict[str, List[Feature]] = \
+                    self.train_pipeline._extract(batch)
+                feature_collection_list.append(batch_feature_collection)
 
-        data_pack = list(self.reader.iter(self.train_pipeline.train_path))[0]
-        feature_list = self.train_pipeline._extract(data_pack)
+        # Total number of instances is 7, batch_size is 5 so we have 1 batch
+        self.assertEqual(len(feature_collection_list), 1)
 
-        actual_batch_num = 0
-        for batch_feature_collection in \
-                self.train_pipeline._batch(feature_list):
-            self.assertTrue("text_tag" in batch_feature_collection)
-            self.assertTrue("char_tag" in batch_feature_collection)
-            self.assertTrue("ner_tag" in batch_feature_collection)
+        feature_collection = feature_collection_list[0]
+        self.assertTrue("text_tag" in feature_collection)
+        self.assertTrue("char_tag" in feature_collection)
+        self.assertTrue("ner_tag" in feature_collection)
 
-            self.assertTrue(len(batch_feature_collection["text_tag"]), 5)
-            self.assertTrue(len(batch_feature_collection["char_tag"]), 5)
-            self.assertTrue(len(batch_feature_collection["ner_tag"]), 5)
+        self.assertEqual(len(feature_collection["text_tag"]), 5)
+        self.assertEqual(len(feature_collection["char_tag"]), 5)
+        self.assertEqual(len(feature_collection["ner_tag"]), 5)
 
-            actual_batch_num += 1
-
-        self.assertEqual(actual_batch_num, 2)
+        # TODO: test multi-packs
 
     def test_convert(self):
         self.train_pipeline._parse_request(self.data_request)
         self.train_pipeline._build_vocab()
 
-        data_pack = list(self.reader.iter(self.train_pipeline.train_path))[0]
-        feature_list = self.train_pipeline._extract(data_pack)
+        scope: Type[EntryType] = self.train_pipeline.resource["scope"]
 
-        for batch_feature_collection in \
-                self.train_pipeline._batch(feature_list):
+        batch_tensor_collection_list: List[Dict[str, Dict[str, Tensor]]] = []
 
-            batch_tensor_collection = \
-                 self.train_pipeline._convert(batch_feature_collection)
+        for data_pack in self.reader.iter(self.train_pipeline.train_path):
+            for batch in self.train_pipeline.batcher.get_batch(data_pack,
+                                                               scope,
+                                                               {scope: []}):
+                batch_feature_collection: Dict[str, List[Feature]] = \
+                    self.train_pipeline._extract(batch)
 
-            self.assertTrue("text_tag" in batch_tensor_collection)
-            self.assertTrue("char_tag" in batch_tensor_collection)
-            self.assertTrue("ner_tag" in batch_tensor_collection)
+                batch_tensor_collection: Dict[str, Dict[str, Tensor]] = \
+                    self.train_pipeline._convert(batch_feature_collection)
 
-            batch_text_tensor = batch_tensor_collection["text_tag"]
-            self.assertTrue("tensor" in batch_text_tensor)
-            self.assertEqual(type(batch_text_tensor["tensor"]), torch.Tensor)
-            self.assertTrue("mask" in batch_text_tensor)
-            self.assertEqual(len(batch_text_tensor["mask"]), 1)
-            self.assertEqual(type(batch_text_tensor["mask"][0]), torch.Tensor)
+                batch_tensor_collection_list.append(batch_tensor_collection)
 
-            batch_char_tensor = batch_tensor_collection["char_tag"]
-            self.assertTrue("tensor" in batch_char_tensor)
-            self.assertEqual(type(batch_char_tensor["tensor"]), torch.Tensor)
-            self.assertTrue("mask" in batch_char_tensor)
-            self.assertEqual(len(batch_char_tensor["mask"]), 2)
-            self.assertEqual(type(batch_char_tensor["mask"][0]), torch.Tensor)
-            self.assertEqual(type(batch_char_tensor["mask"][1]), torch.Tensor)
+        # Total number of instances is 7, batch_size is 5 so we have 1 batch
+        self.assertEqual(len(batch_tensor_collection_list), 1)
 
-            batch_ner_tensor = batch_tensor_collection["ner_tag"]
-            self.assertTrue("tensor" in batch_ner_tensor)
-            self.assertEqual(type(batch_ner_tensor["tensor"]), torch.Tensor)
-            self.assertTrue("mask" in batch_ner_tensor)
-            self.assertEqual(len(batch_ner_tensor["mask"]), 1)
-            self.assertEqual(type(batch_ner_tensor["mask"][0]), torch.Tensor)
+        batch_tensor_collection: Dict[str, Dict[str, Tensor]] = \
+            batch_tensor_collection_list[0]
+
+        self.assertTrue("text_tag" in batch_tensor_collection)
+        self.assertTrue("char_tag" in batch_tensor_collection)
+        self.assertTrue("ner_tag" in batch_tensor_collection)
+
+        batch_text_tensor = batch_tensor_collection["text_tag"]
+        self.assertTrue("tensor" in batch_text_tensor)
+        self.assertEqual(type(batch_text_tensor["tensor"]), torch.Tensor)
+        self.assertTrue("mask" in batch_text_tensor)
+        self.assertEqual(len(batch_text_tensor["mask"]), 1)
+        self.assertEqual(type(batch_text_tensor["mask"][0]), torch.Tensor)
+
+        batch_char_tensor = batch_tensor_collection["char_tag"]
+        self.assertTrue("tensor" in batch_char_tensor)
+        self.assertEqual(type(batch_char_tensor["tensor"]), torch.Tensor)
+        self.assertTrue("mask" in batch_char_tensor)
+        self.assertEqual(len(batch_char_tensor["mask"]), 2)
+        self.assertEqual(type(batch_char_tensor["mask"][0]), torch.Tensor)
+        self.assertEqual(type(batch_char_tensor["mask"][1]), torch.Tensor)
+
+        batch_ner_tensor = batch_tensor_collection["ner_tag"]
+        self.assertTrue("tensor" in batch_ner_tensor)
+        self.assertEqual(type(batch_ner_tensor["tensor"]), torch.Tensor)
+        self.assertTrue("mask" in batch_ner_tensor)
+        self.assertEqual(len(batch_ner_tensor["mask"]), 1)
+        self.assertEqual(type(batch_ner_tensor["mask"][0]), torch.Tensor)
 
     # TODO: add a test for testing TrainPipeline::run
 

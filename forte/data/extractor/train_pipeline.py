@@ -16,6 +16,9 @@ from typing import Optional, Dict, List, Type, Iterator, Any
 
 import torchtext
 import torch
+from forte.data.data_utils_io import slice_batch
+
+from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from torch import Tensor, device
 
 from forte.data.extractor.converter import Converter
@@ -76,12 +79,16 @@ class TrainPipeline:
         self.evaluator = evaluator
         self.val_path = val_path
 
+        self.batcher: ProcessingBatcher = FixedSizeDataPackBatcher()
+
         self.resource: Dict[str, Any] = {}
 
         self.config = Config({}, default_hparams=None)
         self.config.add_hparam('num_epochs', num_epochs)
         self.config.add_hparam('batch_size', batch_size)
         self.config.add_hparam('device', device_)
+
+        self.batcher.initialize(self.config)
 
     def _parse_request(self, data_request):
         """
@@ -190,57 +197,49 @@ class TrainPipeline:
                     extractor: BaseExtractor = scheme["extractor"]
                     extractor.update_vocab(data_pack, instance)
 
-    def _extract(self, data_pack: BasePack) -> List[Dict[str, Feature]]:
+    def _extract(self, batch: Dict) -> Dict[str, List[Feature]]:
         """
-        Extract should extract a single data pack. It should extract features
-        from all instances in the given datapack and return a list of Feature.
+        Extract should extract a batch of instances. It should extract
+        features from all instances in the given batch and return a
+        collection of Feature.
         """
-        scope: Type[EntryType] = self.resource["scope"]
-        schemes: Dict = self.resource["schemes"]
 
-        instances = list(data_pack.get(scope))
+        def merge_batch_collection(total_collection, part_collection):
+            for tag, part_features in part_collection.items():
+                if tag not in total_collection:
+                    total_collection[tag] = []
+                total_collection[tag].extend(part_collection[tag])
+            assert len(total_collection) == len(part_collection)
 
-        # Extract all instances
-        feature_list: List[Dict[str, Feature]] = []
-
-        for instance in instances:
-            feature_list.append({})
-            for tag, scheme in schemes.items():
-                extractor: BaseExtractor = scheme["extractor"]
-                # TODO: read from cache here
-                feature: Feature = extractor.extract(data_pack, instance)
-                # TODO: store to cache
-
-                feature_list[-1][tag] = feature
-
-        return feature_list
-
-    def _batch(self, feature_list) -> Iterator[Dict[str, List[Feature]]]:
         schemes: Dict = self.resource["schemes"]
         batch_feature_collection: Dict[str, List[Feature]] = {}
 
-        # random.shuffle(tensors) # TODO: do we need this?
-        # TODO: check batch_size_fn
-        # TODO: A better tool for doing batching.
-        data_iterator = torchtext.data.iterator.pool(
-            feature_list,
-            self.config.batch_size,
-            key=None,  # TODO: check this
-            sort_within_batch=False,  # TODO: check this
-            shuffle=False  # TODO: check this
-        )
+        # A batch can contain instances from different data packs.
+        # We need to check this
+        start = 0
+        for i in range(len(self.batcher.data_pack_pool)):
+            pack_i = self.batcher.data_pack_pool[i]
+            batch_i: Dict = \
+                slice_batch(batch, start,
+                            self.batcher.current_batch_sources[i])
 
-        # Yield a batch of features grouped by tag
-        for batch_feature in data_iterator:
-            batch_feature_collection = {}
-            for tag, scheme in schemes.items():
-                batch_feature_collection[tag] = []
+            batch_feature_collection_i: Dict[str, List[Feature]] = {}
 
-            for feature_by_tag in batch_feature:
-                for tag, feature in feature_by_tag.items():
-                    batch_feature_collection[tag].append(feature)
+            for tid in batch_i['tid']:
+                instance = pack_i.get_entry(tid)
+                for tag, scheme in schemes.items():
+                    extractor: BaseExtractor = scheme["extractor"]
+                    # TODO: read from cache here
+                    feature: Feature = extractor.extract(pack_i, instance)
+                    # TODO: store to cache
+                    if tag not in batch_feature_collection_i:
+                        batch_feature_collection_i[tag] = []
+                    batch_feature_collection_i[tag].append(feature)
 
-            yield batch_feature_collection
+            merge_batch_collection(batch_feature_collection,
+                                   batch_feature_collection_i)
+
+        return batch_feature_collection
 
     def _convert(self, batch_feature_collection: Dict[str, List[Feature]]) -> \
             Dict[str, Dict[str, Tensor]]:
@@ -298,17 +297,25 @@ class TrainPipeline:
         if self.evaluator:
             pass
 
+        scope: Type[EntryType] = self.resource["scope"]
+
         epoch = 0
         while epoch < self.config.num_epochs:
             epoch += 1
 
             for data_pack in self.train_reader.iter(self.train_path):
-                feature_collection = self._extract(data_pack)
-                for batch_feature_collection in self._batch(feature_collection):
+                # TODO: batcher will discard tail batch with size < batch_size
+                # should we support an option for including that partial batch?
+                for batch in self.batcher.get_batch(data_pack,
+                                                    scope,
+                                                    {scope: []}):
+                    batch_feature_collection: Dict[str, List[Feature]] = \
+                        self._extract(batch)
+
                     batch_tensor_collection = \
                         self._convert(batch_feature_collection)
                     self.trainer.train(batch_tensor_collection)
 
-                    # TODO: evaluation process
-                    if self.evaluator:
-                        pass
+            # TODO: evaluation process
+            if self.evaluator:
+                pass
