@@ -20,20 +20,37 @@ from forte.data.extractor.feature import Feature
 
 
 class Converter:
+    """
+    # TODO:
+
+    """
     def __init__(self, need_pad=True):
-        self.need_pad = need_pad
+        self._need_pad = need_pad
 
     def convert(self, features: List[Feature]) -> \
             Tuple[Tensor, List[Tensor]]:
+        """
+        Convert a list of Features to a Tensor. Internally it will use
+        breadth-first search to pad all features and get the actual data and
+        corresponding masks.
+        Args:
+            features (List):
+                A list of features, where each feature can be the value or
+                another list of features.
+        Returns: A tuple where the first element is a Tensor representing the
+        padded batch of data and the second element is a list of Tensors `masks`
+        representing masks along different feature dimensions. For example, the
+        masks[i] is the mask along ith dimension.
+        """
         # Padding the features if needed
-        if self.need_pad:
+        if self._need_pad:
             # BFS to pad each dimension
             queue: List[Feature] = []
             curr_max_len: int = -1
 
             for feature in features:
                 queue.append(feature)
-                curr_max_len = max(curr_max_len, feature.get_len())
+                curr_max_len = max(curr_max_len, len(feature))
 
             while len(queue) > 0:
                 size: int = len(queue)
@@ -42,10 +59,10 @@ class Converter:
                     feature: Feature = queue.pop(0)
                     feature.pad(curr_max_len)
 
-                    if not feature.is_base_feature():
+                    if not feature.is_base_feature:
                         for sub_feature in feature.get_sub_features():
                             next_max_len = max(next_max_len,
-                                               sub_feature.get_len())
+                                               len(sub_feature))
                             queue.append(sub_feature)
 
                     size -= 1
@@ -56,7 +73,7 @@ class Converter:
         batch_padded_features: List[List[Any]] = []
         batch_masks: List[List[Any]] = []
         for feature in features:
-            padded_feature, mask_list = feature.unroll(self.need_pad)
+            padded_feature, mask_list = feature.unroll(self._need_pad)
             batch_padded_features.append(padded_feature)
             batch_masks.append(mask_list)
 
