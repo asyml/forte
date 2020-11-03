@@ -21,8 +21,8 @@ from forte.data.extractor.feature import Feature
 
 class Converter:
     """
-    # TODO:
-
+    This class has the functionality of converting a batch of Feature to a
+    PyTorch tensor. It will also do the padding for the given batch of data.
     """
     def __init__(self, need_pad=True):
         self._need_pad = need_pad
@@ -37,10 +37,13 @@ class Converter:
             features (List):
                 A list of features, where each feature can be the value or
                 another list of features.
-        Returns: A tuple where the first element is a Tensor representing the
-        padded batch of data and the second element is a list of Tensors `masks`
-        representing masks along different feature dimensions. For example, the
-        masks[i] is the mask along ith dimension.
+        Returns: A tuple containing two elements. The first element is a Tensor
+        representing the padded batch of data. The shape will be
+        [batch_size, feature_dim1_max, feature_dim2_max, ...].
+        The second element is a list of Tensors `masks` representing masks
+        along different feature dimensions. For example, the masks[i] is the
+        mask tensor along ith dimension and will have the shape:
+        [batch_size, feature_dim1_max, ..., feature_dimi_max]
         """
         # Padding the features if needed
         if self._need_pad:
