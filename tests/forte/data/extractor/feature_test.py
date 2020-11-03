@@ -25,29 +25,29 @@ class FeatureTest(unittest.TestCase):
         self.feature3: Feature = self.create_feature3()
 
     def test_is_base_feature(self):
-        self.assertTrue(self.feature1.is_base_feature())
-        self.assertFalse(self.feature2.is_base_feature())
-        self.assertFalse(self.feature3.is_base_feature())
+        self.assertTrue(self.feature1.is_base_feature)
+        self.assertFalse(self.feature2.is_base_feature)
+        self.assertFalse(self.feature3.is_base_feature)
 
     def test_get_sub_feature(self):
         sub_features2: List[Feature] = self.feature2.get_sub_features()
         for sub_feature in sub_features2:
-            self.assertTrue(sub_feature.is_base_feature())
+            self.assertTrue(sub_feature.is_base_feature)
         self.assertEqual(sub_features2[0].data, [6, 11, 2])
         self.assertEqual(sub_features2[1].data, [7, 8])
         self.assertEqual(sub_features2[2].data, [6, 7, 5, 4])
 
         sub_features3: List[Feature] = self.feature3.get_sub_features()
         for sub_feature in sub_features3:
-            self.assertTrue(sub_feature.is_base_feature())
+            self.assertTrue(sub_feature.is_base_feature)
         self.assertEqual(sub_features3[0].data,
                          [[0, 1, 0], [1, 0, 0], [1, 0, 0]])
         self.assertEqual(sub_features3[1].data, [[1, 0, 0], [0, 1, 0]])
 
     def test_get_len(self):
-        self.assertEqual(self.feature1.get_len(), 3)
-        self.assertEqual(self.feature2.get_len(), 3)
-        self.assertEqual(self.feature3.get_len(), 2)
+        self.assertEqual(len(self.feature1), 3)
+        self.assertEqual(len(self.feature2), 3)
+        self.assertEqual(len(self.feature3), 2)
 
     def test_pad(self):
         self.feature1.pad(4)
@@ -69,14 +69,14 @@ class FeatureTest(unittest.TestCase):
                           [0, 0, 1]])
 
         self.feature2.pad(4)
-        self.assertEqual(self.feature2.get_len(), 4)
+        self.assertEqual(len(self.feature2), 4)
         base_feature_data = [i.data for i in self.feature2.get_sub_features()]
         self.assertEqual(base_feature_data[:-1],
                          [[6, 11, 2], [7, 8], [6, 7, 5, 4]])
         self.assertEqual(len(base_feature_data[-1]), 0)
 
         self.feature3.pad(4)
-        self.assertEqual(self.feature3.get_len(), 4)
+        self.assertEqual(len(self.feature3), 4)
         base_feature_data = [i.data for i in self.feature3.get_sub_features()]
         self.assertEqual(base_feature_data[:-2],
                          [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
