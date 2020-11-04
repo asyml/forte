@@ -1,0 +1,7 @@
+Effective|13994
+Effective but|40881
+Effective but too-tepid biopic|13995
+but|650
+too-tepid|17867
+too-tepid biopic|17868
+biopic|15265
