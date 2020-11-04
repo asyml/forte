@@ -16,6 +16,8 @@ from typing import Optional, Dict, List, Type, Iterator, Any
 
 import torchtext
 import torch
+from forte.processors.base.base_processor import BaseProcessor
+
 from forte.data.data_utils_io import slice_batch
 
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
@@ -40,6 +42,9 @@ logger = logging.getLogger(__name__)
 # TODO: BasePack or DataPack
 
 class TrainPipeline:
+    """
+    # TODO:
+    """
     def __init__(self,
                  train_reader: BaseReader,
                  dev_reader: BaseReader,
@@ -47,28 +52,52 @@ class TrainPipeline:
                  train_path: str,
                  num_epochs: int,
                  batch_size: int,
+                 predictor: Optional[BaseProcessor] = None,
                  evaluator: Optional[Evaluator] = None,
                  val_path: Optional[str] = None,
                  device_: Optional[device] = torch.device("cpu")):
         """
-        Example resource format:
-        resource = {
-              "scope": ft.onto.Sentence,
-              "schemes": {
-                  "text_tag": {
-                      "extractor":  Extractor,
-                      "converter": Converter
-                  },
-                  "char_tag" {
-                      "extractor":  Extractor,
-                      "converter": Converter
-                  }
-                  "ner_tag": {
-                      "extractor":  Extractor,
-                      "converter": Converter
-                  }
-              }
-        }
+        `TrainPipeline` will maintain a Config that stores all the configurable
+        parameters for various components inside TrainPipeline. In addition,
+        those parameters are organized in a hierarchical way. For example, at
+        first level, it will contain three parts: pipeline, train and model
+        corresponding to pipeline-related, training-related and
+        model-hyper-parameter-related parameters. The following example
+        demonstrate a typical content of a Config.
+        Example config:
+        pipeline:
+            train_reader:   Reader
+            dev_reader:     Reader
+            trainer:        Trainer
+            predictor:      BatchProcessor
+            evaluator:      Evaluator
+            feature_resource: {
+                "scope": ft.onto.Sentence
+                "schemes": {
+                    "text_tag": {
+                        "extractor":  Extractor,
+                        "converter": Converter
+                    },
+                    "char_tag" {
+                        "extractor":  Extractor,
+                        "converter": Converter
+                    }
+                    "ner_tag": {
+                        "extractor":  Extractor,
+                        "converter": Converter
+                    }
+                }
+            }
+        train:
+            batch_size: int
+            num_epochs: int
+            train_path: str
+            dev_path:   str
+            device:     [device("cpu") | device("cuda")]
+        Specifically, there will be a Config.pipeline.feature_resource which 
+        indicates feature-related processing parameters such as 
+        Extractor, Converter. Those Extractor and Converter are grouped by 
+        corresponding tags.
         """
         self.train_reader = train_reader
         self.dev_reader = dev_reader
@@ -76,19 +105,46 @@ class TrainPipeline:
         self.trainer: Trainer = trainer
         self.train_path = train_path
 
+        self.predictor = predictor
+
         self.evaluator = evaluator
         self.val_path = val_path
 
+        self.batch_size = batch_size
+        self.num_epochs = num_epochs
+        self.device_ = device_
+
         self.batcher: ProcessingBatcher = FixedSizeDataPackBatcher()
 
-        self.resource: Dict[str, Any] = {}
+        self.feature_resource: Dict[str, Any] = {}
 
-        self.config = Config({}, default_hparams=None)
-        self.config.add_hparam('num_epochs', num_epochs)
-        self.config.add_hparam('batch_size', batch_size)
-        self.config.add_hparam('device', device_)
+        self._build_config()
 
-        self.batcher.initialize(self.config)
+        self.batcher.initialize(self.config.train)
+
+    def _build_config(self):
+        self.config = Config({}, None)
+        pipeline_config = Config({}, None)
+        train_config = Config({}, None)
+        self.config.add_hparam("pipeline", pipeline_config)
+        self.config.add_hparam("train", train_config)
+
+        # Pipeline config
+        pipeline_config.add_hparam("train_reader", self.train_reader)
+        pipeline_config.add_hparam("dev_reader", self.dev_reader)
+        pipeline_config.add_hparam("trainer", self.trainer)
+        pipeline_config.add_hparam("predictor", self.predictor)
+        pipeline_config.add_hparam("evaluator", self.evaluator)
+        pipeline_config.add_hparam("feature_resource", 
+                                        self.feature_resource)
+
+        # Train config
+        train_config.add_hparam("num_epochs", self.num_epochs)
+        train_config.add_hparam("batch_size", self.batch_size)
+        train_config.add_hparam("train_path", self.train_path)
+        train_config.add_hparam("val_path", self.val_path)
+        train_config.add_hparam("device", self.device_)
+        train_config.add_hparam("batcher", self.batcher)
 
     def _parse_request(self, data_request):
         """
@@ -129,7 +185,7 @@ class TrainPipeline:
         assert "schemes" in data_request, \
             "Field not found for data request: `schemes`"
 
-        self.resource["scope"] = data_request["scope"]
+        self.feature_resource["scope"] = data_request["scope"]
 
         resource_schemes = {}
         # Used for check dependency between different extractors
@@ -183,11 +239,11 @@ class TrainPipeline:
                     raise "Cannot found based on entry {} for extractor {}". \
                         format(based_on, dependent_extractor.tag)
 
-        self.resource["schemes"] = resource_schemes
+        self.feature_resource["schemes"] = resource_schemes
 
     def _build_vocab(self):
-        scope: EntryType = self.resource["scope"]
-        schemes: Dict = self.resource["schemes"]
+        scope: EntryType = self.feature_resource["scope"]
+        schemes: Dict = self.feature_resource["schemes"]
 
         # TODO: read all data packs is not memory friendly. Probably should
         #  cache data pack when retrieve it multiple times
@@ -211,7 +267,7 @@ class TrainPipeline:
                 total_collection[tag].extend(part_collection[tag])
             assert len(total_collection) == len(part_collection)
 
-        schemes: Dict = self.resource["schemes"]
+        schemes: Dict = self.feature_resource["schemes"]
         batch_feature_collection: Dict[str, List[Feature]] = {}
 
         # A batch can contain instances from different data packs.
@@ -265,7 +321,8 @@ class TrainPipeline:
         tensor_collection: Dict[str, Dict[str, Tensor]] = {}
 
         for tag, features in batch_feature_collection.items():
-            converter: Converter = self.resource["schemes"][tag]["converter"]
+            converter: Converter = \
+                self.feature_resource["schemes"][tag]["converter"]
             tensor, mask = converter.convert(features)
 
             if tag not in tensor_collection:
@@ -290,22 +347,20 @@ class TrainPipeline:
         self._build_vocab()
 
         # Model can only be initialized after here as it needs the built vocab
-        schemes: Dict[str, Dict[str, Any]] = self.resource["schemes"]
+        schemes: Dict[str, Dict[str, Any]] = self.feature_resource["schemes"]
         self.trainer.setup(schemes)
 
         # TODO: evaluation setup
         if self.evaluator:
             pass
 
-        scope: Type[EntryType] = self.resource["scope"]
+        scope: Type[EntryType] = self.feature_resource["scope"]
 
         epoch = 0
         while epoch < self.config.num_epochs:
             epoch += 1
 
             for data_pack in self.train_reader.iter(self.train_path):
-                # TODO: batcher will discard tail batch with size < batch_size
-                # should we support an option for including that partial batch?
                 for batch in self.batcher.get_batch(data_pack,
                                                     scope,
                                                     {scope: []}):
