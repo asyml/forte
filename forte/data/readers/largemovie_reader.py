@@ -87,7 +87,7 @@ class LargeMovieReader(PackReader):
         return dataset_path_iterator(movie_directory, "txt")
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        data_pack: DataPack = self.new_pack()
+        data_pack: DataPack = DataPack()
 
         sent_begin: int = 0
         doc_text: str = ""

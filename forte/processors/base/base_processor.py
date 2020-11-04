@@ -38,20 +38,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         super().__init__()
         self.selector = DummySelector()
 
-    @abstractmethod
-    def new_pack(self, pack_name: Optional[str] = None) -> PackType:
-        """
-        Create a new pack using the current pack manager.
-
-        Args:
-            pack_name (str, Optional): The name to be used for the pack. If not
-              set, the pack name will remained unset.
-
-        Returns:
-
-        """
-        raise NotImplementedError
-
     def process(self, input_pack: PackType):
         # Set the component for recording purpose.
         input_pack.set_control_component(self.name)
