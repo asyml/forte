@@ -19,41 +19,41 @@ class Feature:
     This class represents a type of feature for a single data instance. The
     Feature can be multiple dimensions. It has methods to do padding and
     retrieve the actual multi-dimension data.
-    The `data` contains the actual value. The `pad_id` is the pad that
+    The `data` contains the actual value. The `pad_value` is the pad that
     will be used to do padding. The `dim` indicates the total number of
     dimension for this feature.
     Here are some examples for how the padding works:
     i) [2,7,8] -> [2,7,8,0]
         1 dim feature
         pad_len = 4
-        pad_id = 0
+        pad_value = 0
     ii) [[1,2],[3,4,5],[9]] -> [[1,2,0],[3,4,5],[9,0,0],[0,0,0]]
         2 dim feature
         pad_len_dim1 = 4, pad_len_dim2=3
-        pad_id = 0
+        pad_value = 0
     iii) [[0,1,0],[1,0,0]] -> [[0,1,0],[1,0,0],[0,0,1]]
         1 dim one-hot-encoding feature
         pad_len = 3
-        pad_id = [0,0,1]
+        pad_value = [0,0,1]
     """
     def __init__(self,
                  data: List,
-                 pad_id: Union[int, List],
+                 pad_value: Union[int, List],
                  dim: int):
         """
         Args:
             data (List):
                 A list of features, where each feature can be the value or
                 another list of features.
-            pad_id (int or List):
+            pad_value (int or List):
                 a single integer or a list of integer representing <PAD>. Only
-                the base dimension will actually use `pad_id`.
+                the base dimension will actually use `pad_value`.
             dim (int):
                 Total number of dimensions for the data. `dim` is always >= 1.
                 If the data is a list of value, the `dim` should be 1 and this
                 feature is called base feature.
         """
-        self.pad_id: Union[int, List] = pad_id
+        self.pad_value: Union[int, List] = pad_value
         self.dim: int = dim
 
         # Indicating whether current Feature is the inner most feature.
@@ -81,7 +81,7 @@ class Feature:
                 (not self.is_base_feature
                  and self.data is None
                  and self.sub_features is not None))
-        assert type(self.pad_id) == int or type(self.pad_id) == list
+        assert type(self.pad_value) == int or type(self.pad_value) == list
         assert self.dim >= 1
 
     def _parse_sub_features(self, data):
@@ -100,7 +100,7 @@ class Feature:
             self.sub_features: List = []
             for sub_data in data:
                 self.sub_features.append(
-                    Feature(sub_data, self.pad_id, self.dim - 1))
+                    Feature(sub_data, self.pad_value, self.dim - 1))
 
         self.mask: List = [1] * len(data)
 
@@ -132,7 +132,7 @@ class Feature:
     def pad(self, max_len: int):
         """
         Pad the current feature dimension with the given `max_len`. It will use
-        `pad_id` to do the padding.
+        `pad_value` to do the padding.
         Args:
             max_len (int):
                 The padded length.
@@ -142,9 +142,9 @@ class Feature:
 
         for i in range(max_len - len(self)):
             if self.is_base_feature:
-                self.data.append(self.pad_id)
+                self.data.append(self.pad_value)
             else:
-                self.sub_features.append(Feature([], self.pad_id, self.dim - 1))
+                self.sub_features.append(Feature([], self.pad_value, self.dim - 1))
             self.mask.append(0)
 
     def unroll(self, need_pad: bool = True) -> Tuple[List[Any], List[Any]]:
