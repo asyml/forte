@@ -100,7 +100,7 @@ class MultiPackSentenceReader(MultiPackReader):
                 if len(line) == 0:
                     continue
 
-                m_pack = DataPack()
+                m_pack = MultiPack()
                 pack = m_pack.add_pack('pack')
                 pack.set_text(line)
 
