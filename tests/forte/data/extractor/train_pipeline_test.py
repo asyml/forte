@@ -96,6 +96,8 @@ class TrainPipelineTest(unittest.TestCase):
                           dev_reader=self.reader,
                           trainer=self.trainer,
                           train_path=self.config["train_path"],
+                          dev_path=self.config["val_path"],
+                          predictor=None,
                           evaluator=None,
                           val_path=self.config["val_path"],
                           num_epochs=self.config["num_epochs"],
@@ -105,16 +107,21 @@ class TrainPipelineTest(unittest.TestCase):
 
     def test_parse_request(self):
         self.train_pipeline._parse_request(self.data_request)
-        self.assertTrue(self.train_pipeline.resource is not None)
-        self.assertTrue("scope" in self.train_pipeline.resource)
-        self.assertTrue("schemes" in self.train_pipeline.resource)
+        self.assertTrue(self.train_pipeline.feature_resource is not None)
+        self.assertTrue("scope" in self.train_pipeline.feature_resource)
+        self.assertTrue("schemes" in self.train_pipeline.feature_resource)
 
-        self.assertTrue(len(self.train_pipeline.resource["schemes"]), 3)
-        self.assertTrue("text_tag" in self.train_pipeline.resource["schemes"])
-        self.assertTrue("char_tag" in self.train_pipeline.resource["schemes"])
-        self.assertTrue("ner_tag" in self.train_pipeline.resource["schemes"])
+        self.assertTrue(len(self.train_pipeline.feature_resource["schemes"]),
+                        3)
+        self.assertTrue(
+            "text_tag" in self.train_pipeline.feature_resource["schemes"])
+        self.assertTrue(
+            "char_tag" in self.train_pipeline.feature_resource["schemes"])
+        self.assertTrue(
+            "ner_tag" in self.train_pipeline.feature_resource["schemes"])
 
-        for tag, scheme in self.train_pipeline.resource["schemes"].items():
+        for tag, scheme in \
+                self.train_pipeline.feature_resource["schemes"].items():
             self.assertTrue("extractor" in scheme)
             self.assertTrue("converter" in scheme)
             self.assertTrue(issubclass(type(scheme["extractor"]),
@@ -128,7 +135,8 @@ class TrainPipelineTest(unittest.TestCase):
 
         self.train_pipeline._build_vocab()
 
-        schemes: Dict[str, Any] = self.train_pipeline.resource["schemes"]
+        schemes: Dict[str, Any] = \
+            self.train_pipeline.feature_resource["schemes"]
 
         text_extractor: TextExtractor = schemes["text_tag"]["extractor"]
         self.assertTrue(text_extractor.contains("EU"))
@@ -148,7 +156,7 @@ class TrainPipelineTest(unittest.TestCase):
         self.train_pipeline._parse_request(self.data_request)
         self.train_pipeline._build_vocab()
 
-        scope: Type[EntryType] = self.train_pipeline.resource["scope"]
+        scope: Type[EntryType] = self.train_pipeline.feature_resource["scope"]
 
         # Collect all batch feature collections
         feature_collection_list: List[Dict[str, List[Feature]]] = []
@@ -179,7 +187,7 @@ class TrainPipelineTest(unittest.TestCase):
         self.train_pipeline._parse_request(self.data_request)
         self.train_pipeline._build_vocab()
 
-        scope: Type[EntryType] = self.train_pipeline.resource["scope"]
+        scope: Type[EntryType] = self.train_pipeline.feature_resource["scope"]
 
         batch_tensor_collection_list: List[Dict[str, Dict[str, Tensor]]] = []
 
