@@ -19,6 +19,7 @@ from torch.optim import SGD
 import yaml
 from typing import Dict, Any
 
+from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.data.extractor.extractor import \
     AnnotationSeqExtractor, TextExtractor, CharExtractor, BaseExtractor
@@ -143,6 +144,7 @@ if __name__ == "__main__":
                 "repr": "text_repr",
                 "conversion_method": "indexing",
                 "vocab_use_pad": True,
+                "type": DATA_INPUT,
                 "extractor": TextExtractor
             },
             "char_tag": {
@@ -151,6 +153,7 @@ if __name__ == "__main__":
                 "conversion_method": "indexing",
                 "max_char_length": config.config_data.max_char_length,
                 "vocab_use_pad": True,
+                "type": DATA_INPUT,
                 "extractor": CharExtractor
             },
             "ner_tag": {
@@ -160,6 +163,7 @@ if __name__ == "__main__":
                 "strategy": "BIO",
                 "conversion_method": "indexing",
                 "vocab_use_pad": True,
+                "type": DATA_OUTPUT,
                 "extractor": AnnotationSeqExtractor
             }
         }
