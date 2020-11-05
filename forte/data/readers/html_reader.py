@@ -273,7 +273,7 @@ class HTMLReader(PackReader):
 
         Returns: DataPack containing Document.
         """
-        pack = self.new_pack()
+        pack = DataPack()
 
         # Check if data_source is a filepath
         if self.init_with_fileloc:

@@ -28,7 +28,7 @@ class ClinerReader(PackReader):
     def _parse_pack(self, collection) -> Iterator[DataPack]:
         txt_path = collection
 
-        pack = self.new_pack(pack_name='Cliner_input')
+        pack = DataPack(pack_name='Cliner_input')
         with open(txt_path, "r", encoding="utf-8") as doc_file:
             doc = doc_file.readlines()
             offsets = []

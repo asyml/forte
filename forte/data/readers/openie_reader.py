@@ -81,7 +81,7 @@ class OpenIEReader(PackReader):
         return os.path.basename(oie_file)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack: DataPack = self.new_pack()
+        pack: DataPack = DataPack()
         text: str = ""
         offset: int = 0
 

@@ -220,7 +220,7 @@ class SST2Reader(PackReader):
         node_list[0].is_root = True
 
     def _parse_pack(self, sent_lines) -> Iterator[DataPack]:
-        data_pack: DataPack = self.new_pack()
+        data_pack: DataPack = DataPack()
         sent_bias: int = 0
         batch_text: str = "\n".join(
             [sent_text for _, sent_text, _ in sent_lines]
