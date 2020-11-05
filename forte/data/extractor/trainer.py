@@ -13,6 +13,7 @@
 # limitations under the License.
 from typing import Dict, List, Callable, Any
 
+from texar.torch.data import Batch
 from torch import Tensor
 
 from forte.data.extractor.extractor import BaseExtractor
@@ -34,7 +35,7 @@ class Trainer:
         self.model = self.create_model_fn(schemes)
         self.optim = self.create_optim_fn(self.model)
 
-    def train(self, batch_tensors: Dict[str, Dict[str, Tensor]]):
+    def train(self, batch: Batch):
 
         step = 0
         train_err = 0.0
@@ -44,11 +45,10 @@ class Trainer:
         self.optim.zero_grad()
 
         # Pass a batch data to the model
-        loss = self.pass_tensor_to_model_fn(self.model, batch_tensors)
+        loss = self.pass_tensor_to_model_fn(self.model, batch)
 
         loss.backward()
         self.optim.step()
 
-        num_inst = len(next(iter(next(iter(batch_tensors.values())))))
-        train_err += loss.item() * num_inst
-        train_total += num_inst
+        train_err += loss.item() * batch.batch_size
+        train_total += batch.batch_size
