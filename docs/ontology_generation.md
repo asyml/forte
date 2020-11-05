@@ -56,7 +56,7 @@ We provide a set of commonly used NLP entry types in the module
 [``forte.data.ontology.base_ontology.py``](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json). 
 Those entries could be used directly in your project!
  
-### A simple Ontology Config Example
+### A Simple Ontology Config Example
 Let us consider a simple ontology used for analyze a pet shop's accounting documents.
 ```json
 {
@@ -114,51 +114,47 @@ Each definition is a dictionary of several keywords:
     > Note: Entries in the same config can have different module names.
     * The `<entry_name>` is the generated class name.
     
- * The `parent_type` keyword defines the base class of the generated entry class. All 
- the user-defined entries should inherit either any of the top entries or one 
- of the other user-defined entries.
+ * The `parent_entry` defines the base class of the generated entry class. All 
+ the user-defined entries can inherit either from any of the top entries or user-defined entries.
  
- * The `description` keyword is optionally used as the comment to describe the generated Python class.
+ * The `description` (optional) provides descriptions of the generated Python class and a user can choose to skip. 
   
- * `attributes`: List of attributes that would be used as instance variables of 
+ * The `attributes` defines a list of attributes that would be used as instance variables of 
  the generated class. 
 
 ##### ```attributes```
-Each entry definition will define a couple (can be empty) attributes, mimicking the class variables:
+Each entry definition can have a couple (can be empty) attributes, mimicking the class variables:
 
-* The `name` keyword defines the name of the property unique to the entry.
-* The `description` keyword is optionally used as the comment to describe the attribute.
-* The `type` keyword is used to define the type of the attribute. Currently supported types are:
+* The `name` defines the name of the property unique to the entry.
+* The `description` (optional) provides description of the attribute.
+* The `type` defines the attribute type. Currently supported types include:
     * Primitive types - `int`, `float`, `str`, `bool`
     * Composite types - `List`, `Dict`
-    * Entries defined in the `top` module - The attributes can be of the type base
-    entries (defined in the `forte.data.ontology.top` module) and can be directly 
-    referred by the class name.
-    * User-defined types - The attributes can be of the type of entries that are
-     user-defined. These user-defined entries could be defined (a) in the same config 
-     (b) any of the imported configs. To avoid ambiguity, only full-names of the user-defined
-     entry types are supported     
-* `item_type: str`: If the `type` of the property is a `List`,
-   then `item_type` defines the type of the items contained in the list. 
-* `key_type` and `value_type`: If the `type` of the property is a `Dict`,
-   then these two represent the types of the key and value of the dictionary,
+    * Pre-defined type in the `top` module - The attribute type can inherit from the base
+    entry type (defined in the `forte.data.ontology.top` module) or use the class name.
+    * User-defined types - The attribute type can inherit from the user-defined entry type
+    (defined in (a) the same config;(b) any imported configs). To avoid ambiguity, only the 
+    ful name of user-defind types are supported. 
+* `item_type: str`: defines the type of the items contained in the set defined by `type`. For example,
+   If the `type` of the property is a `List`, then `item_type` defines the type of the items contained in the list. 
+* `key_type` and `value_type`: defines the types of value and key in the set defined by `type`. For example, 
+   If the `type` of the property is a `Dict`, then `key_type` and `value_type` represent the types of the key and value of the dictionary,
    currently, only primitive types are supported as the `key_type`.
 
-### Major ontology types, Annotations, Links, Groups and Generics
-There are some very frequently used types in NLP: 
+### Major Ontology Types - Annotations, Links, Groups and Generics
+The most commonly used **entry types** include: 
 
-* **Annotation**: an annotation is a type of entry that correspond to a piece of text.
+* **Annotation**: an annotation contains 
   For example, a `sentence` can be an annotation. In our example, we use
-  `awesome.pet.com.Color` to annotate the color words in text documents. All
+  `awesome.pet.com.Color` to annotate the words used to describe colors in the text. All
   annotations need to inherit `forte.data.ontology.top.Annotation`. The annotation 
-  entries will have special `begin` and `end` attributes to indicate their text 
-  position.
+  entries will have `begin` and `end` to denote the offsets of a piece of text.
 
-* **Link**: a link is a type of entry that connect two other entries. For example, a dependency
-  link connect two words. All link in Forte need to inherit `forte.data.ontology.top.BaseLink`,
-  and the ontology need to specify ``parent_type`` and ``child_type`` for the linked entries. 
+* **Link**: a link can connect two entries. For example, a dependency
+  link connects two words. All links need to inherit `forte.data.ontology.top.BaseLink`,
+  and ``parent_type`` and ``child_type`` needs to be specified for the linked entries in the ontology. 
     
-* **Group**: a group is a type of entry that groups several entries. For example, a coreference
+* **Group**: a group can group multiple entries. For example, a coreference
   cluster will contain several entity mentions. All link in Forte inherits from
   `forte.data.ontology.top.BaseGroup`.  The ``member_type`` need to be set to indicate the
   types of entries in the group.
