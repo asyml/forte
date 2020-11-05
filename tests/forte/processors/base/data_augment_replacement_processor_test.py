@@ -90,7 +90,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
-            'auto_align_entries': {
+            'other_entry_policy': {
                 "ft.onto.base_ontology.Sentence": "auto_align",
                 "ft.onto.base_ontology.Document": "auto_align"
             },
