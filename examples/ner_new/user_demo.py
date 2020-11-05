@@ -13,6 +13,7 @@
 # limitations under the License.
 import numpy as np
 import torch
+from texar.torch.data import Batch
 from torch import Tensor
 from torch.optim import SGD
 import yaml
@@ -104,11 +105,11 @@ if __name__ == "__main__":
         return optim
 
 
-    def pass_tensor_to_model_fn(model, tensors: Dict[str, Dict[str, Any]]):
-        word = tensors["text_tag"]["tensor"]
-        char = tensors["char_tag"]["tensor"]
-        ner = tensors["ner_tag"]["tensor"]
-        word_masks = tensors["text_tag"]["mask"][0]
+    def pass_tensor_to_model_fn(model, batch: Batch):
+        word = batch["text_tag"]["tensor"]
+        char = batch["char_tag"]["tensor"]
+        ner = batch["ner_tag"]["tensor"]
+        word_masks = batch["text_tag"]["mask"][0]
 
         loss = model(word, char, ner, mask=word_masks)
 
