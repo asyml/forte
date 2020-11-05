@@ -161,6 +161,8 @@ class IMDbProcessor(DataProcessor):
       if line[1] == "unsup" and len(line[0]) < 500:
         # tf.logging.info("skipping short samples:{:s}".format(line[0]))
         continue
+      if line[1] not in ["pos", "neg", "unsup"]:
+        continue
       guid = "%s-%s" % (set_type, line[2])
       text_a = line[0]
       label = tx.utils.compat_as_text(line[1])

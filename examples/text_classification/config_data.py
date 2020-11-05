@@ -1,7 +1,7 @@
 tfrecord_data_dir = "data/IMDB"
 max_seq_length = 64
 num_classes = 2
-num_train_data = 25000
+num_train_data = 50000
 
 train_batch_size = 32
 max_train_epoch = 1
