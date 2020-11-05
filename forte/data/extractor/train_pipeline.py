@@ -17,7 +17,7 @@ from typing import Optional, Dict, List, Type, Any
 import torch
 from texar.torch.data import DataIterator
 
-from forte.data.extractor.DataPackDataSource import DataPackDataSource, \
+from forte.data.extractor.DataPackDataset import DataPackDataSource, \
     DataPackDataset
 from forte.processors.base.base_processor import BaseProcessor
 
@@ -305,7 +305,6 @@ class TrainPipeline:
 
         epoch = 0
         while epoch < self.num_epochs:
-            print("epoch:", epoch)
             epoch += 1
 
             for batch in train_iterator:
