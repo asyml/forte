@@ -96,7 +96,6 @@ class TrainPipelineTest(unittest.TestCase):
                           dev_reader=self.reader,
                           trainer=self.trainer,
                           train_path=self.config["train_path"],
-                          dev_path=self.config["val_path"],
                           predictor=None,
                           evaluator=None,
                           val_path=self.config["val_path"],
@@ -152,89 +151,41 @@ class TrainPipelineTest(unittest.TestCase):
         self.assertTrue(ner_extractor.contains((None, "O")))
         self.assertTrue(ner_extractor.contains(("MISC", "I")))
 
-    def test_extract(self):
+    def test_build_train_dataset_iterator(self):
         self.train_pipeline._parse_request(self.data_request)
         self.train_pipeline._build_vocab()
 
-        scope: Type[EntryType] = self.train_pipeline.feature_resource["scope"]
+        train_iterator = \
+            self.train_pipeline._build_dataset_iterator(
+                self.train_pipeline.train_path,
+                self.train_pipeline.train_reader)
 
-        # Collect all batch feature collections
-        feature_collection_list: List[Dict[str, List[Feature]]] = []
+        batchs = []
+        for batch in train_iterator:
+            batchs.append(batch)
 
-        for data_pack in self.reader.iter(self.train_pipeline.train_path):
-            for batch in self.train_pipeline.batcher.get_batch(data_pack,
-                                                               scope,
-                                                               {scope: []}):
-                batch_feature_collection: Dict[str, List[Feature]] = \
-                    self.train_pipeline._extract(batch)
-                feature_collection_list.append(batch_feature_collection)
+        self.assertEqual(len(batchs), 2)
+        self.assertEqual(batchs[0].batch_size, 5)
+        self.assertEqual(batchs[1].batch_size, 2)
 
-        # Total number of instances is 7, batch_size is 5 so we have 1 batch
-        self.assertEqual(len(feature_collection_list), 1)
+        for batch in batchs:
+            self.assertTrue(hasattr(batch, "text_tag"))
+            self.assertTrue(hasattr(batch, "char_tag"))
+            self.assertTrue(hasattr(batch, "ner_tag"))
 
-        feature_collection = feature_collection_list[0]
-        self.assertTrue("text_tag" in feature_collection)
-        self.assertTrue("char_tag" in feature_collection)
-        self.assertTrue("ner_tag" in feature_collection)
+            for tag, tensors in batch.items():
+                self.assertTrue("tensor" in tensors)
+                self.assertEqual(type(tensors["tensor"]), Tensor)
+                self.assertTrue("mask" in tensors)
+                if tag == "text_tag" or tag == "ner_tag":
+                    self.assertEqual(len(tensors["mask"]), 1)
+                    self.assertEqual(type(tensors["mask"][0]), Tensor)
+                else:
+                    self.assertEqual(len(tensors["mask"]), 2)
+                    self.assertEqual(type(tensors["mask"][0]), Tensor)
+                    self.assertEqual(type(tensors["mask"][1]), Tensor)
 
-        self.assertEqual(len(feature_collection["text_tag"]), 5)
-        self.assertEqual(len(feature_collection["char_tag"]), 5)
-        self.assertEqual(len(feature_collection["ner_tag"]), 5)
-
-        # TODO: test multi-packs
-
-    def test_convert(self):
-        self.train_pipeline._parse_request(self.data_request)
-        self.train_pipeline._build_vocab()
-
-        scope: Type[EntryType] = self.train_pipeline.feature_resource["scope"]
-
-        batch_tensor_collection_list: List[Dict[str, Dict[str, Tensor]]] = []
-
-        for data_pack in self.reader.iter(self.train_pipeline.train_path):
-            for batch in self.train_pipeline.batcher.get_batch(data_pack,
-                                                               scope,
-                                                               {scope: []}):
-                batch_feature_collection: Dict[str, List[Feature]] = \
-                    self.train_pipeline._extract(batch)
-
-                batch_tensor_collection: Dict[str, Dict[str, Tensor]] = \
-                    self.train_pipeline._convert(batch_feature_collection)
-
-                batch_tensor_collection_list.append(batch_tensor_collection)
-
-        # Total number of instances is 7, batch_size is 5 so we have 1 batch
-        self.assertEqual(len(batch_tensor_collection_list), 1)
-
-        batch_tensor_collection: Dict[str, Dict[str, Tensor]] = \
-            batch_tensor_collection_list[0]
-
-        self.assertTrue("text_tag" in batch_tensor_collection)
-        self.assertTrue("char_tag" in batch_tensor_collection)
-        self.assertTrue("ner_tag" in batch_tensor_collection)
-
-        batch_text_tensor = batch_tensor_collection["text_tag"]
-        self.assertTrue("tensor" in batch_text_tensor)
-        self.assertEqual(type(batch_text_tensor["tensor"]), torch.Tensor)
-        self.assertTrue("mask" in batch_text_tensor)
-        self.assertEqual(len(batch_text_tensor["mask"]), 1)
-        self.assertEqual(type(batch_text_tensor["mask"][0]), torch.Tensor)
-
-        batch_char_tensor = batch_tensor_collection["char_tag"]
-        self.assertTrue("tensor" in batch_char_tensor)
-        self.assertEqual(type(batch_char_tensor["tensor"]), torch.Tensor)
-        self.assertTrue("mask" in batch_char_tensor)
-        self.assertEqual(len(batch_char_tensor["mask"]), 2)
-        self.assertEqual(type(batch_char_tensor["mask"][0]), torch.Tensor)
-        self.assertEqual(type(batch_char_tensor["mask"][1]), torch.Tensor)
-
-        batch_ner_tensor = batch_tensor_collection["ner_tag"]
-        self.assertTrue("tensor" in batch_ner_tensor)
-        self.assertEqual(type(batch_ner_tensor["tensor"]), torch.Tensor)
-        self.assertTrue("mask" in batch_ner_tensor)
-        self.assertEqual(len(batch_ner_tensor["mask"]), 1)
-        self.assertEqual(type(batch_ner_tensor["mask"][0]), torch.Tensor)
-
+    # TODO: add a test for testing dev dataset iterator
     # TODO: add a test for testing TrainPipeline::run
 
 
