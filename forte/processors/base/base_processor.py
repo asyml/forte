@@ -17,7 +17,7 @@ Base class for processors.
 
 import itertools
 from abc import abstractmethod, ABC
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
