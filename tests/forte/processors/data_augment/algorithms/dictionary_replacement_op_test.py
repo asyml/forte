@@ -32,6 +32,7 @@ class TestDictionaryReplacementOp(unittest.TestCase):
         self.dra = DictionaryReplacementOp(
             configs={
                 "dictionary": dict_path,
+                "prob": 1.0,
                 "lang": "eng",
             }
         )
@@ -47,7 +48,7 @@ class TestDictionaryReplacementOp(unittest.TestCase):
         data_pack.add_entry(token_2)
 
         self.assertIn(
-            self.dra.replace(token_1),
+            self.dra.replace(token_1)[1],
             [
                 'eat', 'feed', 'eat on', 'consume',
                 'eat up', 'use up', 'deplete', 'exhaust',
@@ -55,7 +56,7 @@ class TestDictionaryReplacementOp(unittest.TestCase):
             ]
         )
         self.assertIn(
-            self.dra.replace(token_2),
+            self.dra.replace(token_2)[1],
             [
                 'telephone', 'phone', 'telephone set',
                 'speech sound', 'sound', 'earphone', 'earpiece',
