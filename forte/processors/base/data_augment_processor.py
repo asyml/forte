@@ -224,7 +224,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         new_pack.set_text(new_text)
 
         entries_to_copy: List[str] = \
-            list(self.configs['auto_align_entries'].keys()) + \
+            list(self.configs['other_entry_policy'].keys()) + \
             [self.configs['augment_entry']]
 
         anno_map: Dict[int, int] = {}
@@ -236,7 +236,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 span_new_end: int = orig_anno.end
 
                 if entry == self.configs['augment_entry'] \
-                        or self.configs['auto_align_entries'][entry] \
+                        or self.configs['other_entry_policy'][entry] \
                         == 'auto_align':
                     span_new_begin = modify_index(
                         orig_anno.begin, old_spans, new_spans)
