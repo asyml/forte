@@ -17,7 +17,7 @@ from typing import Optional, Dict, List, Type, Any
 import torch
 from texar.torch.data import DataIterator
 
-from forte.data.extractor.DataPackDataset import DataPackDataSource, \
+from forte.data.extractor.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.processors.base.base_processor import BaseProcessor
 
