@@ -101,9 +101,9 @@ class Dictionary:
 class WordnetDictionary(Dictionary):
     r"""
     This class wraps the nltk WORDNET to replace
-    the input word with an synonym. Part-of-Speech(optional)
-    can be provided to the wordnet for retrieving
-    synonyms with the same POS.
+    the input word with an synonym/antonym/hypernym/hyponym.
+    Part-of-Speech(optional) can be provided to the wordnet
+    for retrieving words with the same POS.
     """
     def __init__(self):
         try:
@@ -149,7 +149,7 @@ class WordnetDictionary(Dictionary):
         """
         res: List[str] = []
         pos_wordnet = None
-        # The POS property is used for retrieving synonyms with the same POS.
+        # The POS property is used for retrieving lemmas with the same POS.
         if pos_tag and len(pos_tag) > 0:
             pos_wordnet = self._get_wordnet_pos(pos_tag)
 
