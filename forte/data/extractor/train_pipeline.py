@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import pickle
+import time
 from typing import Optional, Dict, List, Type, Any
 
 import torch
@@ -125,8 +127,6 @@ class TrainPipeline:
 
         self._build_config()
 
-        self.batcher.initialize(self.config.train)
-
     def _build_config(self):
         self.config = Config({}, None)
         pipeline_config = Config({}, None)
@@ -149,7 +149,6 @@ class TrainPipeline:
         train_config.add_hparam("train_path", self.train_path)
         train_config.add_hparam("val_path", self.val_path)
         train_config.add_hparam("device", self.device_)
-        train_config.add_hparam("batcher", self.batcher)
 
     def _parse_request(self, data_request):
         """
@@ -278,6 +277,25 @@ class TrainPipeline:
         iterator = DataIterator(dataset)
 
         return iterator
+
+    @staticmethod
+    def _get_default_filename() -> str:
+        # TODO: file path
+        timestamp = str(int(time.time()))
+        return timestamp + ".pkl"
+
+    def get_state(self) -> Dict:
+        return {
+            "feature_resource": self.feature_resource,
+            "train_config": self.config.train
+        }
+
+    def save_state(self, filename: str):
+        if not filename:
+            filename = self._get_default_filename()
+
+        with open(filename, 'wb') as f:
+            pickle.dump(self.get_state(), f)
 
     def run(self, data_request):
         # Steps:
