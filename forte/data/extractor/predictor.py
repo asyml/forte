@@ -113,37 +113,7 @@ class Predictor(BaseProcessor):
             tensor_collection[tag]["mask"] = mask
         return tensor_collection
 
-    # def yield_batch(self, pack):
-    #     for instance in pack.get(self.scope):
-    #         feature_collection = {}
-    #         for tag, scheme in self.feature_scheme.items():
-    #             extractor = scheme["extractor"]
-    #             feature = extractor.extract(pack, instance)
-    #             feature_collection[tag] = feature
-            
-    #         self.pack_pools.append(pack)
-    #         self.instance_pools.append(instance)
-    #         self.features_pools.append(feature_collection)
-            
-    #         if len(feature_collection) == self.batch_size:
-    #             yield self.convert(self.features_pools[:self.batch_size]), \
-    #                 self.pack_pools[:self.batch_size], \
-    #                 self.instance_pools[:self.batch_size]
-                
-    #             self.features_pools.clear()
-    #             self.pack_pools.clear()
-    #             self.instance_pools.clear()
-
-    # def flush_batch(self):
-    #     if len(self.features_pools) > 0:
-    #         yield self.convert(self.features_pools), self.pack_pools, \
-    #             self.instance_pools
-    #         self.features_pools.clear()
-    #         self.pack_pools.clear()
-    #         self.instance_pools.clear()
-
-    def _process(self, input_pack: PackType):
-        pack = input_pack
+    def yield_batch(self, pack):
         for instance in pack.get(self.scope):
             feature_collection = {}
             for tag, scheme in self.feature_scheme.items():
@@ -155,48 +125,87 @@ class Predictor(BaseProcessor):
             self.instance_pools.append(instance)
             self.features_pools.append(feature_collection)
 
-        predictions = self.predict(self.convert(self.features_pools))
-        self.add_to_pack(predictions, self.pack_pools, self.instance_pools)
+            if len(self.features_pools) == self.batch_size:
+                yield self.convert(self.features_pools[:self.batch_size]), \
+                    self.pack_pools[:self.batch_size], \
+                    self.instance_pools[:self.batch_size]
+                
+                self.features_pools.clear()
+                self.pack_pools.clear()
+                self.instance_pools.clear()
 
-        # for tensor_collection, packs, instances in self.yield_batch(input_pack):
-        #     predictions = self.predict(tensor_collection)
-        #     self.add_to_pack(predictions, packs, instances)
+    def flush_batch(self):
+        if len(self.features_pools) > 0:
+            yield self.convert(self.features_pools), self.pack_pools, \
+                self.instance_pools
+            self.features_pools.clear()
+            self.pack_pools.clear()
+            self.instance_pools.clear()
 
-        # # update the status of the jobs. The jobs which were removed from
-        # # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
-        # q_index = self._process_manager.current_queue_index
-        # u_index = self._process_manager.unprocessed_queue_indices[q_index]
-        # data_pool_length = len(set(self.pack_pools))
-        # current_queue = self._process_manager.current_queue
+    def _process(self, input_pack: PackType):
+        # pack = input_pack
+        # for instance in pack.get(self.scope):
+        #     feature_collection = {}
+        #     for tag, scheme in self.feature_scheme.items():
+        #         extractor = scheme["extractor"]
+        #         feature = extractor.extract(pack, instance)
+        #         feature_collection[tag] = feature
+            
+        #     self.pack_pools.append(pack)
+        #     self.instance_pools.append(instance)
+        #     self.features_pools.append(feature_collection)
 
-        # for i, job_i in enumerate(
-        #         itertools.islice(current_queue, 0, u_index + 1)):
-        #     if i <= u_index - data_pool_length:
-        #         job_i.set_status(ProcessJobStatus.PROCESSED)
-        #     else:
-        #         job_i.set_status(ProcessJobStatus.QUEUED)
+        # predictions = self.predict(self.convert(self.features_pools))
+        # self.add_to_pack(predictions, self.pack_pools, self.instance_pools)
 
-    # def flush(self):
-    #     for tensor_collection, packs, instances in self.flush_batch():
-    #         predictions = self.predict(tensor_collection)
-    #         self.add_to_pack(predictions, packs, instances)
-        
-    #     current_queue = self._process_manager.current_queue
-    #     for job in current_queue:
-    #         job.set_status(ProcessJobStatus.PROCESSED)
+        for tensor_collection, packs, instances in self.yield_batch(input_pack):
+            predictions = self.predict(tensor_collection)
+            self.add_to_pack(predictions, tensor_collection, packs, instances)
+
+        # update the status of the jobs. The jobs which were removed from
+        # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
+        q_index = self._process_manager.current_queue_index
+        u_index = self._process_manager.unprocessed_queue_indices[q_index]
+        data_pool_length = len(set(self.pack_pools))
+        current_queue = self._process_manager.current_queue
+
+        for i, job_i in enumerate(
+                itertools.islice(current_queue, 0, u_index + 1)):
+            if i <= u_index - data_pool_length:
+                job_i.set_status(ProcessJobStatus.PROCESSED)
+            else:
+                job_i.set_status(ProcessJobStatus.QUEUED)
+
+    def flush(self):
+        for tensor_collection, packs, instances in self.flush_batch():
+
+            predictions = self.predict(tensor_collection)
+            self.add_to_pack(predictions, tensor_collection, packs, instances)
+            pack = packs[0]
+
+        current_queue = self._process_manager.current_queue
+        for job in current_queue:
+            job.set_status(ProcessJobStatus.PROCESSED)
 
     def predict(self, tensor_collection):
         predictions = self.model(tensor_collection["text_tag"]["tensor"])
         return predictions
 
 
-    def add_to_pack(self, predictions, packs, instances):
-        for pred, pack, instance in zip(predictions, packs, instances):
+    def add_to_pack(self, predictions, tensor_collection, packs, instances):
+        prev_pack = None
+        for pred, mask, pack, instance in zip(predictions,
+                                        tensor_collection["text_tag"]["mask"],
+                                         packs, instances):
             self.feature_scheme["ner_tag"]["extractor"].add_to_pack(
-                pack, instance, pred
+                pack, instance, pred[:sum(mask)]
             )
-        for pack in set(packs):
-            pack.add_all_remaining_entries()
+            if prev_pack is not None and prev_pack != pack:
+                prev_pack.add_all_remaining_entries()
+            prev_pack = pack
+
+        if prev_pack is not None:
+            prev_pack.add_all_remaining_entries()
 
     def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
         return DataPack(pack_name)
