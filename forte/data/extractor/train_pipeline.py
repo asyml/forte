@@ -14,7 +14,7 @@
 import logging
 import pickle
 import time
-from typing import Optional, Dict, List, Type, Any
+from typing import Optional, Dict, Type, Any
 
 import torch
 from texar.torch.data import DataIterator
@@ -23,24 +23,17 @@ from forte.data.extractor.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.processors.base.base_processor import BaseProcessor
 
-from forte.data.data_utils_io import slice_batch
-
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
-from torch import Tensor, device
+from torch import device
 
 from forte.data.extractor.converter import Converter
-from forte.data.extractor.feature import Feature
 from forte.common.configuration import Config
 from forte.data.extractor.trainer import Trainer
 from forte.data.ontology.core import EntryType
-
-from forte.data.base_pack import BasePack
-
 from forte.data.extractor.extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.evaluation.base import Evaluator
-from forte.data.readers.base_reader import BaseReader, PackReader
-from texar.torch import HParams
+from forte.data.readers.base_reader import BaseReader
 
 logger = logging.getLogger(__name__)
 
@@ -288,7 +281,8 @@ class TrainPipeline:
     def state(self) -> Dict:
         return {
             "feature_resource": self.feature_resource,
-            "train_config": self.config.train
+            "train_config": self.config.train,
+            "model": self.trainer.model.state_dict()
         }
 
     def save_state(self, filename: str):
@@ -307,12 +301,16 @@ class TrainPipeline:
         # 4. send batched & padded tensors to trainer
 
         # Parse and validate data request
+        logger.info("Parse user request.")
         self._parse_request(data_request)
 
+        logger.info("Build vocabulary.")
         self._build_vocab()
 
         # Model can only be initialized after here as it needs the built vocab
         schemes: Dict[str, Dict[str, Any]] = self.feature_resource["schemes"]
+
+        logger.info("Setup trainer.")
         self.trainer.setup(schemes)
 
         # TODO: evaluation setup
@@ -322,8 +320,10 @@ class TrainPipeline:
         train_iterator = self._build_dataset_iterator(self.train_path,
                                                       self.train_reader)
 
+        logger.info("Start training.")
         epoch = 0
         while epoch < self.num_epochs:
+            logger.info("Training epoch: %s", epoch)
             epoch += 1
 
             for batch in train_iterator:
