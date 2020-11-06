@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Dict, List, Callable, Any
+from typing import Dict, List, Callable, Any, Optional
 
 from texar.torch.data import Batch
-from torch import Tensor
+from torch import Tensor, nn
 
 from forte.data.extractor.extractor import BaseExtractor
+
 
 # TODO: this class should be replaced with existing library like
 #  pytorch lightning
@@ -28,7 +29,7 @@ class Trainer:
         self.create_model_fn = create_model_fn
         self.create_optim_fn = create_optim_fn
         self.pass_tensor_to_model_fn = pass_tensor_to_model_fn
-        self.model = None
+        self.model: Optional[nn.Module] = None
         self.optim = None
 
     def setup(self, schemes: Dict[str, Dict[str, Any]]):
@@ -36,7 +37,6 @@ class Trainer:
         self.optim = self.create_optim_fn(self.model)
 
     def train(self, batch: Batch):
-
         step = 0
         train_err = 0.0
         train_total = 0.0
