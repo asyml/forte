@@ -202,14 +202,11 @@ class AnnotationSeqExtractor(BaseExtractor):
         return Feature(data, self.get_pad_id(), 1)
 
     def add_to_pack(self, pack: DataPack, instance: EntryType, prediction: List):
-        
         tags = [self.id2entry(x) for x in prediction]
-
-        print(tags)
-
         tag_start = None
         tag_end = None
         tag_type = None
+        cnt = 0
         for entry, tag in zip(pack.get(self.based_on, instance), tags):
             # A new tag occurs
             if tag[1] == "O" or tag[1] == "B":
@@ -225,3 +222,9 @@ class AnnotationSeqExtractor(BaseExtractor):
                 # TODO: handle not current tag as output
                 assert entry[0] == tag_type
                 tag_end = entry.end
+            cnt += 1
+
+        # Handle the final tag
+        if tag_type:
+            entity_mention = EntityMention(pack, tag_start, tag_end)
+            entity_mention.ner_type = tag_type
