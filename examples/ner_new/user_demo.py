@@ -170,3 +170,6 @@ if __name__ == "__main__":
     }
 
     train_pipeline.run(data_request=data_request)
+
+    # Persist training state
+    # train_pipeline.save_state("foo.pkl")
