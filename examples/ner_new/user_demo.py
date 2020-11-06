@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
+
 import numpy as np
 import torch
 from texar.torch.data import Batch
@@ -32,6 +34,8 @@ from ft.onto.base_ontology import Sentence, Token, EntityMention
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
     # All the configs
     config_data = yaml.safe_load(open("configs/config_data.yml", "r"))
     config_model = yaml.safe_load(open("configs/config_model.yml", "r"))
