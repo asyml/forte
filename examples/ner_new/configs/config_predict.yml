@@ -1,2 +1,3 @@
 converters: "resources/converters.h5"
 model: "resources/model.h5"
+batch_size: 10

@@ -26,11 +26,10 @@ config_predict = yaml.safe_load(open("configs/config_predict.yml", "r"))
 
 config = Config({}, default_hparams=None)
 config.add_hparam("config_data", config_data)
-# config.add_hparam('config_predict', config_predict)
 
 pl = Pipeline[DataPack]()
 pl.set_reader(CoNLL03Reader())
-pl.add(Predictor(), config=config)
+pl.add(Predictor())
 
 pl.initialize()
 

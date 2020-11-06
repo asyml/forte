@@ -201,9 +201,9 @@ class AnnotationSeqExtractor(BaseExtractor):
 
         return Feature(data, self.get_pad_id(), 1)
 
-    def add_to_pack(self, pack: DataPack, instance: EntryType, feature: Feature):
-        data = feature.data
-        tags = [self.id2entry(x) for x in data]
+    def add_to_pack(self, pack: DataPack, instance: EntryType, prediction: List):
+
+        tags = [self.id2entry(x) for x in prediction]
 
         tag_start = None
         tag_end = None
