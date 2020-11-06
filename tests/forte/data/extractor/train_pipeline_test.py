@@ -185,7 +185,6 @@ class TrainPipelineTest(unittest.TestCase):
                     self.assertEqual(type(tensors["mask"][0]), Tensor)
                     self.assertEqual(type(tensors["mask"][1]), Tensor)
 
-    # TODO: add a test for testing dev dataset iterator
     # TODO: add a test for testing TrainPipeline::run
 
 

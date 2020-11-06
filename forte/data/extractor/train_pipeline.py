@@ -284,7 +284,8 @@ class TrainPipeline:
         timestamp = str(int(time.time()))
         return timestamp + ".pkl"
 
-    def get_state(self) -> Dict:
+    @property
+    def state(self) -> Dict:
         return {
             "feature_resource": self.feature_resource,
             "train_config": self.config.train
@@ -295,7 +296,7 @@ class TrainPipeline:
             filename = self._get_default_filename()
 
         with open(filename, 'wb') as f:
-            pickle.dump(self.get_state(), f)
+            pickle.dump(self.state, f)
 
     def run(self, data_request):
         # Steps:
