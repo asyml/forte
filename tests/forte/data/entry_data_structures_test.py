@@ -74,7 +74,7 @@ class EmptyReader(PackReader):
         yield from names
 
     def _parse_pack(self, name: str) -> Iterator[DataPack]:
-        p = self.new_pack()
+        p = DataPack()
         p.pack_name = name
         yield p
 
@@ -108,7 +108,7 @@ class EmptyMultiReader(MultiPackReader):
         yield from names
 
     def _parse_pack(self, name: str) -> Iterator[MultiPack]:
-        p = self.new_pack()
+        p = MultiPack()
         p.pack_name = name
         yield p
 

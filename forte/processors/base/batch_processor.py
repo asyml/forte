@@ -241,9 +241,6 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
                     entry_type
                 )
 
-    def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
-        return DataPack(pack_name)
-
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):
     @staticmethod
@@ -268,9 +265,6 @@ class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
                 p = input_pack.packs[self.input_pack_name]
                 p.index.build_coverage_index(
                     p, self.context_type, entry_type)
-
-    def new_pack(self, pack_name: Optional[str] = None) -> MultiPack:
-        return MultiPack(pack_name)
 
 
 class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):
