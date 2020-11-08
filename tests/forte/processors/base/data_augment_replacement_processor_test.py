@@ -31,17 +31,13 @@ from ft.onto.base_ontology import Token, Sentence, Document, Annotation
 
 from ddt import ddt, data, unpack
 
-__all__ = [
-    "Replacer"
-]
-
 
 class TmpReplacementDataAugmentProcessor(ReplacementDataAugmentProcessor):
     def new_pack(self):
         return MultiPack()
 
 
-class Replacer(TextReplacementOp):
+class TmpReplacer(TextReplacementOp):
     def __init__(self, configs):
         super().__init__(configs)
         self.token_replacement = {
@@ -52,7 +48,7 @@ class Replacer(TextReplacementOp):
         }
 
     def replace(self, input):
-        return self.token_replacement.get(input.text, input.text)
+        return True, self.token_replacement.get(input.text, input.text)
 
 
 @ddt
@@ -91,10 +87,13 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
-                "ft.onto.base_ontology.Sentence": "auto_align",
-                "ft.onto.base_ontology.Document": "auto_align"
+                "entry": [
+                    "ft.onto.base_ontology.Document",
+                    "ft.onto.base_ontology.Sentence"
+                ],
+                "policy": ["auto_align", "auto_align"]
             },
-            'replacement_op': "tests.forte.processors.base.data_augment_replacement_processor_test.Replacer",
+            'replacement_op': "tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer",
             'replacement_op_config': {}
         }
 
