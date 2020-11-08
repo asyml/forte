@@ -16,6 +16,7 @@ Class for back translation op. This file also wraps a machine translation
 model for the back translation. For simplicity, the model is not wrapped in
 a processor.
 """
+from typing import Tuple
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 from forte.data.ontology.core import Entry
@@ -53,13 +54,14 @@ class BackTranslationOp(TextReplacementOp):
             }
         )
 
-    def replace(self, input: Entry) -> str:
+    def replace(self, input: Entry) -> Tuple[bool, str]:
         r"""
         This function replaces a piece of text with back translation.
         Args:
             input: a string, could be a word, sentence or document.
         Returns:
+            a bool value indicating that the replacement happened.
             a string with a similar semantic meaning.
         """
         intermediate_text: str = self.model_to.translate(input.text)
-        return self.model_back.translate(intermediate_text)
+        return True, self.model_back.translate(intermediate_text)
