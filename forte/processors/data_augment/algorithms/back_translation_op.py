@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class for back translation op. This file also wraps a machine translation
-model for the back translation. For simplicity, the model is not wrapped in
-a processor.
+Class for back translation op. The input is translated
+to another language, then translated back to the original language.
 """
 from typing import Tuple
 from forte.processors.data_augment.algorithms.text_replacement_op \

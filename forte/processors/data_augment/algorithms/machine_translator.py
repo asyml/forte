@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This file also wraps a machine translation model for the back translation.
+This file wraps a machine translation model.
+It could be used for back translation.
 For simplicity, the model is not wrapped as a processor.
 """
 from typing import List
@@ -32,8 +33,6 @@ class MachineTranslator:
     Args:
         - src_lang: The source language.
         - tgt_lang: The target language.
-        - tokenizer: It tokenize the inputs.
-        - model: The Machine Translation model.
     """
     def __init__(self, src_lang: str, tgt_lang: str):
         self.src_lang: str = src_lang
@@ -41,6 +40,13 @@ class MachineTranslator:
 
     @abstractmethod
     def translate(self, src_text: str) -> str:
+        r"""
+        This function translates the input text into target language.
+        Args:
+            - src_text: The input text in source language.
+        Returns:
+            - The output text in target language.
+        """
         raise NotImplementedError
 
 
