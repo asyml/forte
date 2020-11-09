@@ -20,10 +20,12 @@ This is the Data Loading Pipeline for Sentence Classifier Task from:
 import os
 import csv
 import collections
+import logging
 
 import tensorflow as tf
 
-import texar.tf as tx
+# import texar.tf as tx
+import texar.torch as tx
 
 
 class InputExample():
@@ -410,7 +412,7 @@ class ColaProcessor(DataProcessor):
 
 def convert_single_example(ex_index, example, label_list, max_seq_length,
                            tokenizer):
-    """Converts a single `InputExample` into a single `InputFeatures`."""
+    r"""Converts a single `InputExample` into a single `InputFeatures`."""
     label_map = {}
     for (i, label) in enumerate(label_list):
         label_map[label] = i
@@ -423,16 +425,14 @@ def convert_single_example(ex_index, example, label_list, max_seq_length,
     label_id = label_map[example.label]
 
     # here we disable the verbose printing of the data
-    if ex_index <= 0:
-        tf.logging.info("*** Example ***")
-        tf.logging.info("guid: %s" % example.guid)
-        tf.logging.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
-        tf.logging.info("input_ids length: %d" % len(input_ids))
-        tf.logging.info("input_mask: %s" %
-                        " ".join([str(x) for x in input_mask]))
-        tf.logging.info("segment_ids: %s" %
-                        " ".join([str(x) for x in segment_ids]))
-        tf.logging.info("label: %s (id = %d)" % (example.label, label_id))
+    if ex_index < 0:
+        logging.info("*** Example ***")
+        logging.info("guid: %s", example.guid)
+        logging.info("input_ids: %s", " ".join([str(x) for x in input_ids]))
+        logging.info("input_ids length: %d", len(input_ids))
+        logging.info("input_mask: %s", " ".join([str(x) for x in input_mask]))
+        logging.info("segment_ids: %s", " ".join([str(x) for x in segment_ids]))
+        logging.info("label: %s (id = %d)", example.label, label_id)
 
     feature = InputFeatures(input_ids=input_ids,
                             input_mask=input_mask,
@@ -442,59 +442,54 @@ def convert_single_example(ex_index, example, label_list, max_seq_length,
 
 
 def convert_examples_to_features_and_output_to_files(
-        examples, label_list, max_seq_length, tokenizer, output_file):
-    """Convert a set of `InputExample`s to a TFRecord file."""
+        examples, label_list, max_seq_length, tokenizer, output_file,
+        feature_types):
+    r"""Convert a set of `InputExample`s to a pickled file."""
 
-    writer = tf.python_io.TFRecordWriter(output_file)
+    with tx.data.RecordData.writer(output_file, feature_types) as writer:
+        for (ex_index, example) in enumerate(examples):
+            feature = convert_single_example(ex_index, example, label_list,
+                                             max_seq_length, tokenizer)
 
-    for (ex_index, example) in enumerate(examples):
-
-        feature = convert_single_example(ex_index, example, label_list,
-                                         max_seq_length, tokenizer)
-
-        def create_int_feature(values):
-            return tf.train.Feature(
-                int64_list=tf.train.Int64List(value=list(values)))
-
-        features = collections.OrderedDict()
-        features["input_ids"] = create_int_feature(feature.input_ids)
-        features["input_mask"] = create_int_feature(feature.input_mask)
-        features["segment_ids"] = create_int_feature(feature.segment_ids)
-        features["label_ids"] = create_int_feature([feature.label_id])
-
-        tf_example = tf.train.Example(
-            features=tf.train.Features(feature=features))
-        writer.write(tf_example.SerializeToString())
+            features = {
+                "input_ids": feature.input_ids,
+                "input_mask": feature.input_mask,
+                "segment_ids": feature.segment_ids,
+                "label_ids": feature.label_id
+            }
+            writer.write(features)
 
 
-def prepare_TFRecord_data(processor, tokenizer,
-                          data_dir, max_seq_length, output_dir):
-    """
+def prepare_record_data(processor, tokenizer,
+                        data_dir, max_seq_length, output_dir,
+                        feature_types):
+    r"""Prepare record data.
     Args:
-        processor: Data Preprocessor, which must have get_lables,
+        processor: Data Preprocessor, which must have get_labels,
             get_train/dev/test/examples methods defined.
         tokenizer: The Sentence Tokenizer. Generally should be
             SentencePiece Model.
         data_dir: The input data directory.
         max_seq_length: Max sequence length.
-        output_dir: The directory to save the TFRecord in.
+        output_dir: The directory to save the pickled file in.
+        feature_types: The original type of the feature.
     """
     label_list = processor.get_labels()
 
     train_examples = processor.get_train_examples(data_dir)
-    train_file = os.path.join(output_dir, "train.tf_record")
+    train_file = os.path.join(output_dir, "train.pkl")
     convert_examples_to_features_and_output_to_files(
         train_examples, label_list, max_seq_length,
-        tokenizer, train_file)
+        tokenizer, train_file, feature_types)
 
     eval_examples = processor.get_dev_examples(data_dir)
-    eval_file = os.path.join(output_dir, "eval.tf_record")
+    eval_file = os.path.join(output_dir, "eval.pkl")
     convert_examples_to_features_and_output_to_files(
         eval_examples, label_list,
-        max_seq_length, tokenizer, eval_file)
+        max_seq_length, tokenizer, eval_file, feature_types)
 
     test_examples = processor.get_test_examples(data_dir)
-    test_file = os.path.join(output_dir, "predict.tf_record")
+    test_file = os.path.join(output_dir, "predict.pkl")
     convert_examples_to_features_and_output_to_files(
         test_examples, label_list,
-        max_seq_length, tokenizer, test_file)
+        max_seq_length, tokenizer, test_file, feature_types)

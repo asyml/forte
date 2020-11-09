@@ -1,39 +1,36 @@
-tfrecord_data_dir = "data/IMDB"
+pickle_data_dir = "data/IMDB"
 max_seq_length = 64
 num_classes = 2
 num_train_data = 25000
 
-train_batch_size = 32
-max_train_epoch = 1
-display_steps = 50  # Print training loss every display_steps; -1 to disable
-eval_steps = -1    # Eval on the dev set every eval_steps; -1 to disable
-# Proportion of training to perform linear learning
-# rate warmup for. E.g., 0.1 = 10% of training.
-warmup_proportion = 0.1
+# used for bert executor example
+max_batch_tokens = 128
 
+train_batch_size = 32
+max_train_epoch = 5
+display_steps = 50  # Print training loss every display_steps; -1 to disable
+
+# tbx config
+tbx_logging_steps = 5  # log the metrics for tbX visualization
+tbx_log_dir = "runs/"
+exp_number = 1  # experiment number
+
+eval_steps = 100  # Eval on the dev set every eval_steps; -1 to disable
+# Proportion of training to perform linear learning rate warmup for.
+# E.g., 0.1 = 10% of training.
+warmup_proportion = 0.1
 eval_batch_size = 8
 test_batch_size = 8
 
-
-feature_original_types = {
-    # Reading features from TFRecord data file.
-    # E.g., Reading feature "input_ids" as dtype `tf.int64`;
+feature_types = {
+    # Reading features from pickled data file.
+    # E.g., Reading feature "input_ids" as dtype `int64`;
     # "FixedLenFeature" indicates its length is fixed for all data instances;
     # and the sequence length is limited by `max_seq_length`.
-    "input_ids": ["tf.int64", "FixedLenFeature", max_seq_length],
-    "input_mask": ["tf.int64", "FixedLenFeature", max_seq_length],
-    "segment_ids": ["tf.int64", "FixedLenFeature", max_seq_length],
-    "label_ids": ["tf.int64", "FixedLenFeature"]
-}
-
-feature_convert_types = {
-    # Converting feature dtype after reading. E.g.,
-    # Converting the dtype of feature "input_ids" from `tf.int64` (as above)
-    # to `tf.int32`
-    "input_ids": "tf.int32",
-    "input_mask": "tf.int32",
-    "label_ids": "tf.int32",
-    "segment_ids": "tf.int32"
+    "input_ids": ["int64", "stacked_tensor", max_seq_length],
+    "input_mask": ["int64", "stacked_tensor", max_seq_length],
+    "segment_ids": ["int64", "stacked_tensor", max_seq_length],
+    "label_ids": ["int64", "stacked_tensor"]
 }
 
 train_hparam = {
@@ -41,12 +38,11 @@ train_hparam = {
     "batch_size": train_batch_size,
     "dataset": {
         "data_name": "data",
-        "feature_convert_types": feature_convert_types,
-        "feature_original_types": feature_original_types,
-        "files": "{}/train.tf_record".format(tfrecord_data_dir)
+        "feature_types": feature_types,
+        "files": "{}/train.pkl".format(pickle_data_dir)
     },
     "shuffle": True,
-    "shuffle_buffer_size": None # 100
+    "shuffle_buffer_size": None
 }
 
 eval_hparam = {
@@ -54,9 +50,8 @@ eval_hparam = {
     "batch_size": eval_batch_size,
     "dataset": {
         "data_name": "data",
-        "feature_convert_types": feature_convert_types,
-        "feature_original_types": feature_original_types,
-        "files": "{}/eval.tf_record".format(tfrecord_data_dir)
+        "feature_types": feature_types,
+        "files": "{}/eval.pkl".format(pickle_data_dir)
     },
     "shuffle": False
 }
@@ -66,10 +61,8 @@ test_hparam = {
     "batch_size": test_batch_size,
     "dataset": {
         "data_name": "data",
-        "feature_convert_types": feature_convert_types,
-        "feature_original_types": feature_original_types,
-        "files": "{}/predict.tf_record".format(tfrecord_data_dir)
+        "feature_types": feature_types,
+        "files": "{}/predict.pkl".format(pickle_data_dir)
     },
-
     "shuffle": False
 }
