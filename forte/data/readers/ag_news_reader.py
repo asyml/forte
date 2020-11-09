@@ -71,7 +71,7 @@ class AGNewsReader(PackReader):
     def _parse_pack(self, line_info: Tuple[int, str]) -> Iterator[DataPack]:
         line_id, line = line_info
 
-        pack = self.new_pack()
+        pack = DataPack()
         text: str = ""
         line = line.strip()
         data = line.split(",")

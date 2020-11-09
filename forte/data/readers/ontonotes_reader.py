@@ -141,7 +141,7 @@ class OntonotesReader(PackReader):
         return self.ParsedFields(**fields)  # type: ignore
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = self.new_pack()
+        pack = DataPack()
 
         with open(file_path, encoding="utf8") as doc:
             words = []
