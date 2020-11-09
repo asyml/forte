@@ -36,7 +36,7 @@ In the rest of this tutorial, we will walk through this example to let you learn
 ### Before We Start
 You need to understand a few basic concepts of Forte's ontology system before you start. 
 
-* *Entry* - An entry refers to one NLP unit in the document, such as an annotated sequence or 
+* *Entry* - An entry is referred to one NLP unit in the document, such as an annotated sequence or 
 relationship between annotated sequences. `Token`, `Sentence` and `DependencyLink` are some examples of entries. 
 One entry defined in the config is used to generate one python class.
 
@@ -45,7 +45,7 @@ The entries of an ontology can span one or more Python modules. In this way, the
 can be imported regardless of the ontology config they were originally generated from.
 The modules that contain these entry classes belong to the package `ft.onto`.
 
-* *Attribute* - An attribute refers to a label or property that is
+* *Attribute* - An attribute is referred to a label or property that is
 associated with an entry, for example, `pos_tag` for the entry `Token`.
 
 * *Top* - Top entries are a set of entries that are pre-defined in the module 
@@ -144,45 +144,41 @@ Each entry definition can have a couple (can be empty) attributes, mimicking the
 ### Major Ontology Types - Annotations, Links, Groups and Generics
 The most commonly used **entry types** include: 
 
-* **Annotation**: an annotation contains 
-  For example, a `sentence` can be an annotation. In our example, we use
-  `awesome.pet.com.Color` to annotate the words used to describe colors in the text. All
-  annotations need to inherit `forte.data.ontology.top.Annotation`. The annotation 
-  entries will have `begin` and `end` to denote the offsets of a piece of text.
+* **Annotation**: an annotation contains two integer attributes, `begin` and `end`
+  to denote the offsets of a piece of text. For example, a `sentence` can be an annotation. 
+  In our example, we use `awesome.pet.com.Color` to annotate the words used to describe colors in the text. 
+  All annotations need to inherit from `forte.data.ontology.top.Annotation`. 
 
-* **Link**: a link can connect two entries. For example, a dependency
-  link connects two words. All links need to inherit `forte.data.ontology.top.BaseLink`,
-  and ``parent_type`` and ``child_type`` needs to be specified for the linked entries in the ontology. 
+* **Link**: a link connects two entries. For example, a dependency link can connect two words. 
+  All links need to inherit from `forte.data.ontology.top.BaseLink`. ``parent_type`` and ``child_type`` 
+  need to be defined to specify the linked entries in the ontology. 
     
-* **Group**: a group can group multiple entries. For example, a coreference
-  cluster will contain several entity mentions. All link in Forte inherits from
-  `forte.data.ontology.top.BaseGroup`.  The ``member_type`` need to be set to indicate the
-  types of entries in the group.
+* **Group**: a group can assort multiple entries. For example, a coreference cluster can contain several entity 
+  mentions. All links need to inherit from `forte.data.ontology.top.BaseGroup`. The ``member_type`` need to be 
+  defined to specify the type of entries in the group. 
   
 * **Generics**: there are some entries that do not have the above characteristics, such as
-  general meta data storing information. These are `Generics` types. 
+  general meta data storage information. These are `Generics` types. 
 
-To see more examples of these different types of entries, you can read the 
-[pet shop ontology](https://github.com/asyml/forte/blob/master/examples/ontology/pet_shop.json)
-as an example, or refer to the [base ontology](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json),
-which is an ontology provided by Forte to represent general NLP concepts.
+To see more examples of these different entry types, you can refer to the example 
+[pet shop ontology](https://github.com/asyml/forte/blob/master/examples/ontology/pet_shop.json), or the [base ontology](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json),
+an ontology provided by Forte to represent general NLP concepts.
 
-### Importing another ontology
-`imports` is an optional keyword used to help you import existing ontology to help build
-the current one. This is similar to `import` in a normal programming language:
+### Import Another Ontology
+`imports` is an optional keyword used to import an existing ontology to help build
+a new one. This is similar to `import` used in common programming languages:
 
 * The entries of the imported configs can be used in the current config as
 types or parent classes.
 * The imports could either be 
   - absolute paths
-  - relative to the directory of the current config or the
-current working directory
+  - relative to the directory of the current config or the current working directory
   - relative to one of the user-provided ``spec_paths`` (see [generation steps](#ontology-generation-steps).)
     
 For example, ``ft.onto.ft_module.Word`` has the parent entry defined in the
 generated module ``ft.onto.example_import_ontology``. The generation 
-framework makes sure that the imported JSON configs are generated before the
-current config. In case of cycle dependency between the JSON configs, an 
+framework ensures that the imported JSON configs are generated prior to the
+current config. In case of cycle dependency issue between the JSON configs, an 
 error would be thrown.
 
 ### Package Naming Convention
@@ -192,10 +188,10 @@ class.
 
 In order to avoid polluting your package space accidentally, the package names
 that can be used on the types are restricted. The default package name allowed
-is `ft.onto`. However, in many cases you may want to use custom package name,
- let's say,`awesome.pet.com`, how can we achieve it?
+is `ft.onto`. However, in many cases you may want to use custom package name, such as`awesome.pet.com`, 
+how can we achieve it?
   
-We can explicitly set more attributes in the `additional_prefixes`, as in the 
+We can explicitly define more attributes in the `additional_prefixes`, as shown in the 
 following snippet:
 
 ```json
@@ -236,15 +232,14 @@ following snippet:
 }
 ```
     
-### Generating Python classes from ontology.
+### Generate Python Classes from Ontology.
 * Write the json spec(s) as per the instructions in the previous sections. 
-* Use the command `generate_ontology --create` (added during installation of Forte) to 
+* Use the command `generate_ontology --create` (add during the installation of Forte) to 
 generate the ontology, and `generate_ontology --clean` to clean up the generated ontology. 
 The steps are detailed in the following sections.
 
 ##### Ontology Generation Steps
-At the beginning we have tried generating the ontology. Now let's go into the
-some details.
+Let's drill down into details about how to generate ontology. 
 
 * To verify that the `generate_ontology`
 command is found, run `generate_ontology -h`, and the output should look like the
@@ -321,9 +316,9 @@ following -
         ├── com.py
         └── __init__.py
     ```
- * Our ontology generation is complete!
+ * Ontology generation is completed!
  
-#### Cleaning the generated ontology
+#### Clean the generated ontology
 * Use `clean` mode of `generate_ontology` to clean the generated files from a given directory.
 * All the arguments of `generate_ontology clean` are explained as below:
 
@@ -337,7 +332,7 @@ optional arguments:
               caution.
  ```
  
-* Now, let's try to clean up *only* the automatically generated files and directories. 
+* Now, let's try to clean up the automatically generated files and directories *only* . 
 Say, there are user-created files in the generated folder, ``user_project/src/ft``, 
 called `important_stuff` that we do not want to clean up. 
      ```bash
@@ -361,7 +356,7 @@ called `important_stuff` that we do not want to clean up.
     ``` 
 
 * Run the cleanup command and observe the directory structure. The cleanup preserves the 
-partial directory structure in the case there exists files that are not generated by the framework.
+partial directory structure in the case that there are files that are not generated by the framework.
     ```bash
     $ generate_ontology clean --dir user-project/src
   
@@ -372,10 +367,8 @@ partial directory structure in the case there exists files that are not generate
 * For safety, the deleted directories are not immediately deleted but are moved to a timestamped 
  directory inside ``.deleted`` and can be restored, unless `--force` is passed. 
  
- * If the directories that are to be generated already exist, the files will be generated in the 
- already existing directories.
+ * If the directories that are to be generated already exist, the files will be generated in the  existing directories.
  
- * Automatically generated folders are identified by an empty marker file of the name ``.generated``, 
- and automatically generated files are identified by special headers. If the headers or marker files 
- are removed manually, than the cleanup won't affect them.
+ * Automatically generated folders are identified by an empty marker file with the name ``.generated`` or special headers. 
+ If the headers or marker files are removed manually, the cleanup won't affect them.
  
