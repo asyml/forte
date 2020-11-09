@@ -19,12 +19,10 @@ This is the Data Loading Pipeline for Sentence Classifier Task from:
 
 import os
 import csv
-import collections
 import logging
 
 import tensorflow as tf
 
-# import texar.tf as tx
 import texar.torch as tx
 
 
@@ -58,7 +56,7 @@ class InputFeatures:
         self.label_id = label_id
 
 
-class DataProcessor(object):
+class DataProcessor():
     """Base class for data converters for sequence classification data sets."""
 
     def get_train_examples(self, data_dir):
@@ -89,93 +87,87 @@ class DataProcessor(object):
 
 
 def clean_web_text(st):
-  """clean text."""
-  st = st.replace("<br />", " ")
-  st = st.replace("&quot;", "\"")
-  st = st.replace("<p>", " ")
-  if "<a href=" in st:
-    # print("before:\n", st)
-    while "<a href=" in st:
-      start_pos = st.find("<a href=")
-      end_pos = st.find(">", start_pos)
-      if end_pos != -1:
-        st = st[:start_pos] + st[end_pos + 1:]
-      else:
-        print("incomplete href")
-        print("before", st)
-        st = st[:start_pos] + st[start_pos + len("<a href=")]
-        print("after", st)
+    """clean text."""
+    st = st.replace("<br />", " ")
+    st = st.replace("&quot;", "\"")
+    st = st.replace("<p>", " ")
+    if "<a href=" in st:
+        # print("before:\n", st)
+        while "<a href=" in st:
+            start_pos = st.find("<a href=")
+            end_pos = st.find(">", start_pos)
+            if end_pos != -1:
+                st = st[:start_pos] + st[end_pos + 1:]
+            else:
+                print("incomplete href")
+                print("before", st)
+                st = st[:start_pos] + st[start_pos + len("<a href=")]
+                print("after", st)
 
-    st = st.replace("</a>", "")
-    # print("after\n", st)
-    # print("")
-  st = st.replace("\\n", " ")
-  st = st.replace("\\", " ")
-  # while "  " in st:
-  #   st = st.replace("  ", " ")
-  return st
+        st = st.replace("</a>", "")
+        # print("after\n", st)
+        # print("")
+    st = st.replace("\\n", " ")
+    st = st.replace("\\", " ")
+    # while "  " in st:
+    #   st = st.replace("  ", " ")
+    return st
 
 
 class IMDbProcessor(DataProcessor):
-  """Processor for the CoLA data set (GLUE version)."""
+    """Processor for the CoLA data set (GLUE version)."""
 
-  def get_train_examples(self, raw_data_dir):
-    """See base class."""
-    return self._create_examples(
-        self._read_tsv(os.path.join(raw_data_dir, "train.csv"),
-                       quotechar='"'), "train")
+    def get_train_examples(self, raw_data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(raw_data_dir, "train.csv"),
+                           quotechar='"'), "train")
 
-  def get_dev_examples(self, raw_data_dir):
-    """See base class."""
-    return self._create_examples(
-        self._read_tsv(os.path.join(raw_data_dir, "test.csv"), # temporary workaround
-                       quotechar='"'), "test")
+    def get_dev_examples(self, raw_data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(raw_data_dir, "test.csv"),
+                           quotechar='"'), "test")
 
-  def get_test_examples(self, raw_data_dir):
-    """See base class."""
-    return self._create_examples(
-        self._read_tsv(os.path.join(raw_data_dir, "test.csv"),
-                       quotechar='"'), "test")
+    def get_unsup_examples(self, raw_data_dir, unsup_set):
+        """See base class."""
+        if unsup_set == "unsup_ext":
+            return self._create_examples(
+                self._read_tsv(os.path.join(raw_data_dir, "unsup_ext.csv"),
+                               quotechar='"'), "unsup_ext", skip_unsup=False)
+        elif unsup_set == "unsup_in":
+            return self._create_examples(
+                self._read_tsv(os.path.join(raw_data_dir, "train.csv"),
+                               quotechar='"'), "unsup_in", skip_unsup=False)
 
-  def get_unsup_examples(self, raw_data_dir, unsup_set):
-    """See base class."""
-    if unsup_set == "unsup_ext":
-      return self._create_examples(
-          self._read_tsv(os.path.join(raw_data_dir, "unsup_ext.csv"),
-                         quotechar='"'), "unsup_ext", skip_unsup=False)
-    elif unsup_set == "unsup_in":
-      return self._create_examples(
-          self._read_tsv(os.path.join(raw_data_dir, "train.csv"),
-                         quotechar='"'), "unsup_in", skip_unsup=False)
+    def get_labels(self):
+        """See base class."""
+        return ["pos", "neg"]
 
-  def get_labels(self):
-    """See base class."""
-    return ["pos", "neg"]
+    def _create_examples(self, lines, set_type, skip_unsup=True):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            if skip_unsup and line[1] == "unsup":
+                continue
+            if line[1] == "unsup" and len(line[0]) < 500:
+                # tf.logging.info("skipping short samples:{:s}".format(line[0]))
+                continue
+            guid = "%s-%s" % (set_type, line[2])
+            text_a = line[0]
+            label = line[1]
+            text_a = clean_web_text(text_a)
+            examples.append(InputExample(guid=guid, text_a=text_a,
+                             text_b=None, label=label))
+        return examples
 
-  def _create_examples(self, lines, set_type, skip_unsup=True):
-    """Creates examples for the training and dev sets."""
-    examples = []
-    for (i, line) in enumerate(lines):
-      if i == 0:
-        continue
-      if skip_unsup and line[1] == "unsup":
-        continue
-      if line[1] == "unsup" and len(line[0]) < 500:
-        # tf.logging.info("skipping short samples:{:s}".format(line[0]))
-        continue
-      guid = "%s-%s" % (set_type, line[2])
-      text_a = line[0]
-      label = tx.utils.compat_as_text(line[1])
-      text_a = tx.utils.compat_as_text(clean_web_text(text_a))
-      examples.append(
-          InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
-    return examples
+    def get_train_size(self):
+        return 25000
 
-  def get_train_size(self):
-    return 25000
-
-  def get_dev_size(self):
-    return 25000
+    def get_dev_size(self):
+        return 25000
 
 
 class SSTProcessor(DataProcessor):
@@ -204,7 +196,7 @@ class SSTProcessor(DataProcessor):
     def _create_examples(lines, set_type):
         """Creates examples for the training and dev sets."""
         examples = []
-        if set_type == 'train' or set_type == 'dev':
+        if set_type in ('train', 'dev'):
             for (i, line) in enumerate(lines):
                 if i == 0:
                     continue

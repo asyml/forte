@@ -31,7 +31,8 @@ class IMDBClassifier:
     An example usage can be found at examples/text_classification.
     """
 
-    def __init__(self, config_data, config_classifier, checkpoint=None, pretrained_model_name="bert-base-uncased"):
+    def __init__(self, config_data, config_classifier, checkpoint=None,
+        pretrained_model_name="bert-base-uncased"):
         """Constructs the text classifier.
         Args:
             config_data: string, data config file.
@@ -40,7 +41,7 @@ class IMDBClassifier:
         self.config_classifier = config_classifier
         self.checkpoint = checkpoint
         self.pretrained_model_name = pretrained_model_name
-    
+
     def prepare_data(self, csv_data_dir):
         """Prepares data.
         """
@@ -51,13 +52,13 @@ class IMDBClassifier:
         else:
             output_dir = self.config_data.pickle_data_dir
         tx.utils.maybe_create_dir(output_dir)
-        
+
         processor = data_utils.IMDbProcessor()
 
         num_classes = len(processor.get_labels())
         num_train_data = len(processor.get_train_examples(csv_data_dir))
         logging.info(
-            'num_classes:%d; num_train_data:%d' % (num_classes, num_train_data))
+            'num_classes:%d; num_train_data:%d', num_classes, num_train_data)
 
         tokenizer = tx.data.BERTTokenizer(
             pretrained_model_name=self.pretrained_model_name)
@@ -82,7 +83,6 @@ class IMDBClassifier:
         # Loads data
         num_train_data = self.config_data.num_train_data
 
-        # config_downstream = importlib.import_module(args.config_downstream)
         hparams = {
             k: v for k, v in self.config_classifier.__dict__.items()
             if not k.startswith('__') and k != "hyperparams"}
@@ -93,9 +93,10 @@ class IMDBClassifier:
             hparams=hparams)
         model.to(device)
 
-        num_train_steps = int(num_train_data / self.config_data.train_batch_size *
-                              self.config_data.max_train_epoch)
-        num_warmup_steps = int(num_train_steps * self.config_data.warmup_proportion)
+        num_train_steps = int(num_train_data / self.config_data.train_batch_size
+                            * self.config_data.max_train_epoch)
+        num_warmup_steps = int(num_train_steps
+                            * self.config_data.warmup_proportion)
 
         # Builds learning rate decay scheduler
         static_lr = 2e-5
@@ -123,12 +124,12 @@ class IMDBClassifier:
                                      total_steps=num_train_steps,
                                      warmup_steps=num_warmup_steps))
 
-        train_dataset = tx.data.RecordData(hparams=self.config_data.train_hparam,
-                                           device=device)
-        eval_dataset = tx.data.RecordData(hparams=self.config_data.eval_hparam,
-                                          device=device)
-        test_dataset = tx.data.RecordData(hparams=self.config_data.test_hparam,
-                                          device=device)
+        train_dataset = tx.data.RecordData(
+            hparams=self.config_data.train_hparam, device=device)
+        eval_dataset = tx.data.RecordData(
+            hparams=self.config_data.eval_hparam, device=device)
+        test_dataset = tx.data.RecordData(
+            hparams=self.config_data.test_hparam, device=device)
 
         iterator = tx.data.DataIterator(
             {"train": train_dataset, "eval": eval_dataset, "test": test_dataset}
@@ -222,7 +223,7 @@ class IMDBClassifier:
 
                 _all_preds.extend(preds.tolist())
 
-            output_file = os.path.join(args.output_dir, "test_results.tsv")
+            output_file = os.path.join(output_dir, "test_results.tsv")
             with open(output_file, "w+") as writer:
                 writer.write("\n".join(str(p) for p in _all_preds))
             logging.info("test output written to %s", output_file)
