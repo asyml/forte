@@ -122,9 +122,9 @@ class CoNLL03Reader(PackReader):
                 Sentence(pack, sentence_begin, offset - 1)
 
                 # Handle the last ner tag if exists.
-                # if prev_x is not None:
-                #     entity_mention = EntityMention(pack, start_index, offset-1)
-                #     entity_mention.ner_type = prev_y
+                if prev_x is not None:
+                    entity_mention = EntityMention(pack, start_index, offset-1)
+                    entity_mention.ner_type = prev_y
 
                 # Reset information.
                 sentence_cnt += 1
