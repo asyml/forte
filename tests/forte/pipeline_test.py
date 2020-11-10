@@ -65,7 +65,7 @@ class SentenceReader(PackReader):
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         with open(file_path, "r", encoding="utf8") as doc:
             for line in doc:
-                pack = self.new_pack(file_path)
+                pack = DataPack(file_path)
                 line = line.strip()
                 if len(line) == 0:
                     continue
@@ -100,7 +100,7 @@ class MultiPackSentenceReader(MultiPackReader):
                 if len(line) == 0:
                     continue
 
-                m_pack = self.new_pack()
+                m_pack = MultiPack()
                 pack = m_pack.add_pack('pack')
                 pack.set_text(line)
 

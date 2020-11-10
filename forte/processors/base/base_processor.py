@@ -17,7 +17,7 @@ Base class for processors.
 
 import itertools
 from abc import abstractmethod, ABC
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
@@ -37,20 +37,6 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
     def __init__(self):
         super().__init__()
         self.selector = DummySelector()
-
-    @abstractmethod
-    def new_pack(self, pack_name: Optional[str] = None) -> PackType:
-        """
-        Create a new pack using the current pack manager.
-
-        Args:
-            pack_name (str, Optional): The name to be used for the pack. If not
-              set, the pack name will remained unset.
-
-        Returns:
-
-        """
-        raise NotImplementedError
 
     def process(self, input_pack: PackType):
         # Set the component for recording purpose.
