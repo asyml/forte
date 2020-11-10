@@ -14,63 +14,50 @@
 # pylint: disable=useless-super-delegation
 
 """
-This class is used for data selection of the data augmentation tasks.
+This class is used for data selection step in data augmentation tasks.
 For each specific dataset, we first create a reader that reads
 in the document text as Datapack.
 Then we pipeline the reader and the ElasticSearchIndexProcessor
-to create a indexer,
+to create an indexer,
 which is defined in forte/data/indexers/EleasticSearchIndexer.
-This class is then used by the DataSelector class to search for documents.
+This indexer is then used by the DataSelector class to search for documents.
 """
 
 from typing import Dict, Any
+import logging
 
 from forte.common.configuration import Config
-from forte.data.readers.base_reader import PackReader
 from forte.data.data_pack import DataPack
-from forte.data.readers import MSMarcoPassageReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.pipeline import Pipeline
 from forte.processors.data_augment import DataSelectorIndexProcessor
 
 
 __all__ = [
-    "CreateIndexerBasePipeline",
-    "CreateIndexerMSMacroPipeline",
+    "CreateIndexerPipeline",
 ]
 
 
-class CreateIndexerBasePipeline:
+class CreateIndexerPipeline:
 
-    def __init__(self):
-        self.reader = self._set_reader()
-        self.datapath = self._set_data_path()
-        self.config = Config(self.default_config(), default_hparams=None)
+    def __init__(self, reader, reader_config, indexer_config=None):
+        self.reader = reader
+        self.reader_config = reader_config
+        self.config = indexer_config if indexer_config is not None else self.default_config()
+        self.config = Config(self.config, default_hparams=None)
         self.create_pipeline()
-        self.create_index()
 
-    def _set_reader(self) -> PackReader:
-        """
-        Return: A dataset Reader.
-        """
-        raise NotImplementedError
-
-    def _set_data_path(self) -> str:
-        """
-        Return: The dataset path used in the Reader.
-        """
-        raise NotImplementedError
-
+    # pylint: disable=attribute-defined-outside-init
     def create_pipeline(self):
         self.nlp: Pipeline[DataPack] = Pipeline()
-        self.nlp.set_reader(self.reader)
+        self.nlp.set_reader(reader=self.reader, config=self.reader_config)
         self.nlp.add(DataSelectorIndexProcessor(), config=self.config)
         self.nlp.initialize()
 
-    def create_index(self):
-        for idx, _ in enumerate(self.nlp.process_dataset(self.datapath)):
+    def create_index(self, datapath):
+        for idx, _ in enumerate(self.nlp.process_dataset(datapath)):
             if idx + 1 > 0 and (idx + 1) % 10000 == 0:
-                print(f"Indexed {idx + 1} packs")
+                logging.info(f"Indexed {idx + 1} packs")
 
     @classmethod
     def default_config(cls) -> Dict[str, Any]:
@@ -86,19 +73,3 @@ class CreateIndexerBasePipeline:
                 }
             }
         }
-
-
-class CreateIndexerMSMacroPipeline(CreateIndexerBasePipeline):
-    def __init__(self):
-        super().__init__()
-
-    def _set_reader(self) -> PackReader:
-        return MSMarcoPassageReader()
-
-    def _set_data_path(self) -> str:
-        return 'data_samples/ms_marco_passage_retrieval'
-
-    @classmethod
-    def default_configs(cls):
-        config: Dict = super().default_configs()
-        return config

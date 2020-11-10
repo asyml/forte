@@ -13,13 +13,9 @@
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=useless-super-delegation
-
 """
-A data selector for data augmentation.
-It is a reader that search documents from elastic search indexer
-and yield datapacks.
-An elastic search indexer for data selector needs to be created first.
-Refer to data_augment/data_select_index_pipeline.py for indexer generation.
+An elastic search indexer needs to be created first in order to perform data selection.
+Refer to examples/data_augmentation/data_select_index_pipeline.py for indexer creation.
 """
 
 from typing import Iterator, Any, Dict, Optional
@@ -39,11 +35,17 @@ __all__ = [
 ]
 
 
-class BaseElasticSearchDataSelector(PackReader):
-    r"""
-    The base data selector reader for data augmentation.
-    This class creates an ElasticSearchIndexer and search for document
-    according to the search key. It then generate Datapacks.
+class BaseDataSelector(PackReader):
+    r"""A base data selector for data augmentation.
+    It is a reader that searches documents from an indexer and yields datapacks.
+    """
+
+
+class BaseElasticSearchDataSelector(BaseDataSelector):
+    r"""The base elastic search indexer for data selector.
+    This class creates an ElasticSearchIndexer and searches for documents
+    according to the user-provided search keys. It then yields the corresponding
+    datapacks from the selected documents.
     """
 
     def initialize(self, resources: Resources, configs: Config):

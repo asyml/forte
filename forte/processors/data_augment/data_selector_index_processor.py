@@ -18,7 +18,7 @@ from forte import utils
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
-from forte.processors.base import IndexProcessor2
+from forte.processors.base import IndexProcessorWithDatapack
 
 
 __all__ = [
@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class DataSelectorIndexProcessor(IndexProcessor2):
+class DataSelectorIndexProcessor(IndexProcessorWithDatapack):
     r"""This processor indexes the data packs into an Elasticsearch index."""
 
     # pylint: disable=useless-super-delegation
@@ -82,7 +82,7 @@ class DataSelectorIndexProcessor(IndexProcessor2):
         """
         config = super().default_configs()
         config.update({
-            **IndexProcessor2.default_configs(),
+            **IndexProcessorWithDatapack.default_configs(),
             "fields": ["doc_id", "content", "pack_info"],
             "indexer": {
                 "name": "ElasticSearchIndexer",
@@ -96,8 +96,11 @@ class DataSelectorIndexProcessor(IndexProcessor2):
         return config
 
     def _bulk_process(self):
-        documents = [{self.config.fields[0]: document[0],
-                      self.config.fields[1]: document[1],
-                      self.config.fields[2]: document[2]}
-                     for document in self.documents]
-        self.indexer.add_bulk(documents, **self.config.indexer.other_kwargs)
+        docs = []
+        for document in self.documents:
+            doc_dict = {}
+            for i in range(len(self.config.fields)):
+                doc_dict[i] = document[i]
+            docs.append(doc_dict)
+
+        self.indexer.add_bulk(docs, **self.config.indexer.other_kwargs)
