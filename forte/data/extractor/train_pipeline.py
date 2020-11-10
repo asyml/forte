@@ -274,26 +274,19 @@ class TrainPipeline:
 
         return iterator
 
-    @staticmethod
-    def _get_default_filename() -> str:
-        # TODO: file path
-        timestamp = str(int(time.time()))
-        return timestamp + ".pkl"
-
     @property
     def state(self) -> Dict:
         return {
             "feature_resource": self.feature_resource,
             "train_config": self.config.train,
-            "model": self.trainer.model.state_dict(),
             "user_request": self._user_request
         }
 
     def save_state(self, filename: str):
-        if not filename:
-            filename = self._get_default_filename()
-
         torch.save(self.state, filename)
+
+    def save_model(self, filename: str):
+        torch.save(self.trainer.model, filename)
 
     def run(self, data_request):
         # Steps:
