@@ -16,10 +16,12 @@ import logging
 import numpy as np
 import torch
 from texar.torch.data import Batch
-from torch import Tensor
+from torch import Tensor, nn
 from torch.optim import SGD
 import yaml
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+
+from torch.optim.optimizer import Optimizer
 
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
@@ -103,14 +105,18 @@ if __name__ == "__main__":
         return model
 
 
-    def create_optim_fn(model):
+    def create_optim_fn(model: nn.Module) -> Optimizer:
         optim = SGD(
             model.parameters(), lr=config.config_model.learning_rate,
             momentum=config.config_model.momentum, nesterov=True)
         return optim
 
 
-    def pass_tensor_to_model_fn(model, batch: Batch):
+    def create_criterion_fn(model: nn.Module) -> Optional[nn.Module]:
+        return None
+
+
+    def train_forward_fn(model, criterion: Optional[nn.Module], batch: Batch):
         word = batch["text_tag"]["tensor"]
         char = batch["char_tag"]["tensor"]
         ner = batch["ner_tag"]["tensor"]
@@ -125,7 +131,8 @@ if __name__ == "__main__":
 
     trainer = Trainer(create_model_fn=create_model_fn,
                       create_optim_fn=create_optim_fn,
-                      pass_tensor_to_model_fn=pass_tensor_to_model_fn)
+                      create_criterion_fn=create_criterion_fn,
+                      train_forward_fn=train_forward_fn)
 
     # TODO:
     evaluator = None
@@ -175,5 +182,6 @@ if __name__ == "__main__":
 
     train_pipeline.run(data_request=data_request)
 
-    # Persist training state
-    # train_pipeline.save_state("foo.pkl")
+    # Save training result to disk
+    train_pipeline.save_state(config.config_data.train_state_path)
+    train_pipeline.save_model(config.config_model.model_path)

@@ -38,7 +38,7 @@ initializer:
     "type": "xavier_uniform_"
 
 # path to save model
-model_path: "resources/best_ner_crf_model.ckpt"
+model_path: "best_ner_crf_model.ckpt"
 
 # path to save resources
 resource_dir: "resources/"
