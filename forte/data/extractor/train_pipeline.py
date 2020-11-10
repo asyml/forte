@@ -55,7 +55,7 @@ class TrainPipeline:
                  predictor: Optional[BaseProcessor] = None,
                  evaluator: Optional[Evaluator] = None,
                  val_path: Optional[str] = None,
-                 device_: Optional[device] = torch.device("cpu")):
+                 _device: Optional[device] = torch.device("cpu")):
         """
         `TrainPipeline` will maintain a Config that stores all the configurable
         parameters for various components inside TrainPipeline. In addition,
@@ -99,51 +99,51 @@ class TrainPipeline:
         Extractor, Converter. Those Extractor and Converter are grouped by 
         corresponding tags.
         """
-        self.train_reader = train_reader
-        self.dev_reader = dev_reader
+        self._train_reader = train_reader
+        self._dev_reader = dev_reader
 
-        self.trainer: Trainer = trainer
-        self.train_path = train_path
+        self._trainer: Trainer = trainer
+        self._train_path = train_path
 
-        self.predictor = predictor
+        self._predictor = predictor
 
-        self.evaluator = evaluator
-        self.val_path = val_path
+        self._evaluator = evaluator
+        self._val_path = val_path
 
-        self.batch_size = batch_size
-        self.num_epochs = num_epochs
-        self.device_ = device_
+        self._batch_size = batch_size
+        self._num_epochs = num_epochs
+        self._device = _device
 
-        self.batcher: ProcessingBatcher = FixedSizeDataPackBatcher()
+        self._batcher: ProcessingBatcher = FixedSizeDataPackBatcher()
 
-        self.feature_resource: Dict[str, Any] = {}
+        self._feature_resource: Dict[str, Any] = {}
         self._user_request: Dict = {}
 
         self._build_config()
 
     def _build_config(self):
-        self.config = Config({}, None)
+        self._config = Config({}, None)
         pipeline_config = Config({}, None)
         train_config = Config({}, None)
-        self.config.add_hparam("pipeline", pipeline_config)
-        self.config.add_hparam("train", train_config)
+        self._config.add_hparam("pipeline", pipeline_config)
+        self._config.add_hparam("train", train_config)
 
         # Pipeline config
-        pipeline_config.add_hparam("train_reader", self.train_reader)
-        pipeline_config.add_hparam("dev_reader", self.dev_reader)
-        pipeline_config.add_hparam("trainer", self.trainer)
-        pipeline_config.add_hparam("predictor", self.predictor)
-        pipeline_config.add_hparam("evaluator", self.evaluator)
+        pipeline_config.add_hparam("train_reader", self._train_reader)
+        pipeline_config.add_hparam("dev_reader", self._dev_reader)
+        pipeline_config.add_hparam("trainer", self._trainer)
+        pipeline_config.add_hparam("predictor", self._predictor)
+        pipeline_config.add_hparam("evaluator", self._evaluator)
         pipeline_config.add_hparam("feature_resource",
-                                   self.feature_resource)
+                                   self._feature_resource)
         pipeline_config.add_hparam("user_request", self._user_request)
 
         # Train config
-        train_config.add_hparam("num_epochs", self.num_epochs)
-        train_config.add_hparam("batch_size", self.batch_size)
-        train_config.add_hparam("train_path", self.train_path)
-        train_config.add_hparam("val_path", self.val_path)
-        train_config.add_hparam("device", self.device_)
+        train_config.add_hparam("num_epochs", self._num_epochs)
+        train_config.add_hparam("batch_size", self._batch_size)
+        train_config.add_hparam("train_path", self._train_path)
+        train_config.add_hparam("val_path", self._val_path)
+        train_config.add_hparam("device", self._device)
 
     def _parse_request(self, data_request: Dict):
         """
@@ -185,8 +185,8 @@ class TrainPipeline:
             "Field not found for data request: `schemes`"
 
         self._user_request: Dict = data_request
-        self.feature_resource.clear()
-        self.feature_resource["scope"] = data_request["scope"]
+        self._feature_resource.clear()
+        self._feature_resource["scope"] = data_request["scope"]
 
         resource_schemes = {}
         # Used for check dependency between different extractors
@@ -240,16 +240,16 @@ class TrainPipeline:
                     raise "Cannot found based on entry {} for extractor {}". \
                         format(based_on, dependent_extractor.tag)
 
-        self.feature_resource["schemes"] = resource_schemes
+        self._feature_resource["schemes"] = resource_schemes
 
     def _build_vocab(self):
-        scope: EntryType = self.feature_resource["scope"]
-        schemes: Dict = self.feature_resource["schemes"]
+        scope: EntryType = self._feature_resource["scope"]
+        schemes: Dict = self._feature_resource["schemes"]
 
         # TODO: read all data packs is not memory friendly. Probably should
         #  cache data pack when retrieve it multiple times
         # TODO: clear vocab?
-        for data_pack in self.train_reader.iter(self.train_path):
+        for data_pack in self._train_reader.iter(self._train_path):
             for instance in data_pack.get(scope):
                 for tag, scheme in schemes.items():
                     extractor: BaseExtractor = scheme["extractor"]
@@ -257,19 +257,19 @@ class TrainPipeline:
 
     def _build_dataset_iterator(self, file_path: str, reader: BaseReader) \
             -> DataIterator:
-        scope: Type[EntryType] = self.feature_resource["scope"]
-        schemes: Dict[str, Dict[str, Any]] = self.feature_resource["schemes"]
+        scope: Type[EntryType] = self._feature_resource["scope"]
+        schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
 
         data_source = DataPackDataSource(file_path,
                                          reader,
                                          scope,
                                          {scope: []})
 
-        hparams = {"batch_size": self.batch_size}
+        hparams = {"batch_size": self._batch_size}
         dataset = DataPackDataset(data_source,
                                   schemes,
                                   hparams,
-                                  self.device_)
+                                  self._device)
         iterator = DataIterator(dataset)
 
         return iterator
@@ -277,8 +277,8 @@ class TrainPipeline:
     @property
     def state(self) -> Dict:
         return {
-            "feature_resource": self.feature_resource,
-            "train_config": self.config.train,
+            "feature_resource": self._feature_resource,
+            "train_config": self._config.train,
             "user_request": self._user_request
         }
 
@@ -286,7 +286,7 @@ class TrainPipeline:
         torch.save(self.state, filename)
 
     def save_model(self, filename: str):
-        torch.save(self.trainer.model, filename)
+        torch.save(self._trainer.model, filename)
 
     def run(self, data_request):
         # Steps:
@@ -304,26 +304,26 @@ class TrainPipeline:
         self._build_vocab()
 
         # Model can only be initialized after here as it needs the built vocab
-        schemes: Dict[str, Dict[str, Any]] = self.feature_resource["schemes"]
+        schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
 
         logger.info("Setup trainer.")
-        self.trainer.setup(schemes)
+        self._trainer.setup(schemes)
 
         # TODO: evaluation setup
-        if self.evaluator:
+        if self._evaluator:
             pass
 
-        train_iterator = self._build_dataset_iterator(self.train_path,
-                                                      self.train_reader)
+        train_iterator = self._build_dataset_iterator(self._train_path,
+                                                      self._train_reader)
 
         logger.info("Start training.")
         epoch = 0
-        while epoch < self.num_epochs:
+        while epoch < self._num_epochs:
             logger.info("Training epoch: %s", epoch)
             epoch += 1
 
             for batch in train_iterator:
-                self.trainer.train(batch)
+                self._trainer.train(batch)
 
             # TODO: evaluation process
         #     if self.evaluator:
