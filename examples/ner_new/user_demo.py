@@ -183,5 +183,5 @@ if __name__ == "__main__":
     train_pipeline.run(data_request=data_request)
 
     # Save training result to disk
-    train_pipeline.save_state(config.config_data.train_state_path)
-    train_pipeline.save_model(config.config_model.model_path)
+    # train_pipeline.save_state(config.config_data.train_state_path)
+    # train_pipeline.save_model(config.config_model.model_path)
