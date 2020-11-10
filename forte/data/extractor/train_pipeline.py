@@ -14,16 +14,16 @@
 import logging
 import pickle
 import time
-from typing import Optional, Dict, Type, Any
+from typing import Optional, Dict, Type, Any, Union
 
 import torch
+from texar.torch import HParams
 from texar.torch.data import DataIterator
 
 from forte.data.extractor.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.processors.base.base_processor import BaseProcessor
 
-from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from torch import device
 
 from forte.data.extractor.converter import Converter
@@ -50,8 +50,8 @@ class TrainPipeline:
                  dev_reader: BaseReader,
                  trainer: Trainer,
                  train_path: str,
+                 dataset_hparams: Union[HParams, Dict],
                  num_epochs: int,
-                 batch_size: int,
                  predictor: Optional[BaseProcessor] = None,
                  evaluator: Optional[Evaluator] = None,
                  val_path: Optional[str] = None,
@@ -110,11 +110,13 @@ class TrainPipeline:
         self._evaluator = evaluator
         self._val_path = val_path
 
-        self._batch_size = batch_size
+        if isinstance(dataset_hparams, Dict):
+            self._dataset_hparams = Config(dataset_hparams, None)
+        else:
+            self._dataset_hparams = dataset_hparams
+
         self._num_epochs = num_epochs
         self._device = _device
-
-        self._batcher: ProcessingBatcher = FixedSizeDataPackBatcher()
 
         self._feature_resource: Dict[str, Any] = {}
         self._user_request: Dict = {}
@@ -127,6 +129,7 @@ class TrainPipeline:
         train_config = Config({}, None)
         self._config.add_hparam("pipeline", pipeline_config)
         self._config.add_hparam("train", train_config)
+        self._config.add_hparam("dataset", self._dataset_hparams)
 
         # Pipeline config
         pipeline_config.add_hparam("train_reader", self._train_reader)
@@ -139,11 +142,10 @@ class TrainPipeline:
         pipeline_config.add_hparam("user_request", self._user_request)
 
         # Train config
-        train_config.add_hparam("num_epochs", self._num_epochs)
-        train_config.add_hparam("batch_size", self._batch_size)
         train_config.add_hparam("train_path", self._train_path)
         train_config.add_hparam("val_path", self._val_path)
         train_config.add_hparam("device", self._device)
+        train_config.add_hparam("num_epochs", self._num_epochs)
 
     def _parse_request(self, data_request: Dict):
         """
@@ -265,10 +267,9 @@ class TrainPipeline:
                                          scope,
                                          {scope: []})
 
-        hparams = {"batch_size": self._batch_size}
         dataset = DataPackDataset(data_source,
                                   schemes,
-                                  hparams,
+                                  self._dataset_hparams,
                                   self._device)
         iterator = DataIterator(dataset)
 
