@@ -117,6 +117,7 @@ class TrainPipeline:
         self.batcher: ProcessingBatcher = FixedSizeDataPackBatcher()
 
         self.feature_resource: Dict[str, Any] = {}
+        self._user_request: Dict = {}
 
         self._build_config()
 
@@ -135,6 +136,7 @@ class TrainPipeline:
         pipeline_config.add_hparam("evaluator", self.evaluator)
         pipeline_config.add_hparam("feature_resource",
                                    self.feature_resource)
+        pipeline_config.add_hparam("user_request", self._user_request)
 
         # Train config
         train_config.add_hparam("num_epochs", self.num_epochs)
@@ -143,7 +145,7 @@ class TrainPipeline:
         train_config.add_hparam("val_path", self.val_path)
         train_config.add_hparam("device", self.device_)
 
-    def _parse_request(self, data_request):
+    def _parse_request(self, data_request: Dict):
         """
         Responsibilities:
         1. parse the given data request and stored internally into resource
@@ -182,6 +184,7 @@ class TrainPipeline:
         assert "schemes" in data_request, \
             "Field not found for data request: `schemes`"
 
+        self._user_request: Dict = data_request
         self.feature_resource.clear()
         self.feature_resource["scope"] = data_request["scope"]
 
@@ -282,15 +285,15 @@ class TrainPipeline:
         return {
             "feature_resource": self.feature_resource,
             "train_config": self.config.train,
-            "model": self.trainer.model.state_dict()
+            "model": self.trainer.model.state_dict(),
+            "user_request": self._user_request
         }
 
     def save_state(self, filename: str):
         if not filename:
             filename = self._get_default_filename()
 
-        with open(filename, 'wb') as f:
-            pickle.dump(self.state, f)
+        torch.save(self.state, filename)
 
     def run(self, data_request):
         # Steps:
