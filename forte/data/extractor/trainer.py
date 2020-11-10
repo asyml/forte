@@ -15,6 +15,7 @@ from typing import Dict, List, Callable, Any, Optional
 
 from texar.torch.data import Batch
 from torch import Tensor, nn
+from torch.optim.optimizer import Optimizer
 
 from forte.data.extractor.extractor import BaseExtractor
 
@@ -25,16 +26,20 @@ class Trainer:
     def __init__(self,
                  create_model_fn: Callable,
                  create_optim_fn: Callable,
-                 pass_tensor_to_model_fn: Callable):
+                 create_criterion_fn: Callable,
+                 train_forward_fn: Callable):
         self.create_model_fn = create_model_fn
         self.create_optim_fn = create_optim_fn
-        self.pass_tensor_to_model_fn = pass_tensor_to_model_fn
+        self.create_criterion_fn = create_criterion_fn
+        self.train_forward_fn = train_forward_fn
         self.model: Optional[nn.Module] = None
-        self.optim = None
+        self.optim: Optional[Optimizer] = None
+        self.criterion: Optional[nn.Module] = None
 
     def setup(self, schemes: Dict[str, Dict[str, Any]]):
         self.model = self.create_model_fn(schemes)
         self.optim = self.create_optim_fn(self.model)
+        self.criterion = self.create_criterion_fn(self.model)
 
     def train(self, batch: Batch):
         step = 0
@@ -45,7 +50,7 @@ class Trainer:
         self.optim.zero_grad()
 
         # Pass a batch data to the model
-        loss = self.pass_tensor_to_model_fn(self.model, batch)
+        loss = self.train_forward_fn(self.model, self.criterion, batch)
 
         loss.backward()
         self.optim.step()
