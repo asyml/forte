@@ -137,6 +137,11 @@ if __name__ == "__main__":
     # TODO:
     evaluator = None
 
+    # All not specified parameters are set by default in Texar.
+    # Default settings can be found here:
+    # https://texar-pytorch.readthedocs.io/en/latest/code/data.html#texar.torch.data.DatasetBase.default_hparams
+    dataset_hparams = {"batch_size": config.config_data.batch_size_tokens}
+
     train_pipeline = \
         TrainPipeline(train_reader=reader,
                       dev_reader=reader,
@@ -145,7 +150,7 @@ if __name__ == "__main__":
                       evaluator=evaluator,
                       val_path=config.config_data.val_path,
                       num_epochs=config.config_data.num_epochs,
-                      batch_size=config.config_data.batch_size_tokens)
+                      dataset_hparams=dataset_hparams)
 
     data_request = {
         "scope": Sentence,
