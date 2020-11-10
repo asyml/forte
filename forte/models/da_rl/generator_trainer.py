@@ -50,7 +50,7 @@ class MetaAugmentationWrapper:
         # might need a gumbel trick here in order to keep phi as variables
         augmented_batch = self._generator(train_batch)  # with phi as var   # Todo
 
-        grads_theta = classifier.calculate_grads(augmented_batch)   # see example below
+        grads_theta = calculate_grads(augmented_batch, classifier)   # see example below
 
         # meta model is used to calculate \nabla_{phi} L_{val}(theta'(phi)),
         # where it needs gradients applied to phi
@@ -69,6 +69,11 @@ class MetaAugmentationWrapper:
 
             # phi = phi - \nabla_{phi} L_{val}(theta'(phi))
             self.optimizer_phi.step()
+
+
+
+def calculate_grads(augmented_batch, classifier):
+    return
 
 
 class MetaModule(tx.modules):
