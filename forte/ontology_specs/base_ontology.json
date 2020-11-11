@@ -332,6 +332,23 @@
       "entry_name": "ft.onto.base_ontology.Title",
       "parent_entry": "forte.data.ontology.top.Annotation",
       "description": "A span based annotation `Title`, normally used to represent a title."
+    },
+    {
+      "entry_name": "ft.onto.base_ontology.LinkedMention",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `LinkedMention`.",
+      "attributes": [
+        {
+          "name": "linked_kb_ids",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "float"
+        },
+        {
+          "name": "kb",
+          "type": "str"
+        }
+      ]
     }
   ]
 }

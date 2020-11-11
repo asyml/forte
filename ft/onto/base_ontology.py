@@ -25,7 +25,6 @@ __all__ = [
     "Token",
     "Subword",
     "Document",
-    "LinkedMention",
     "Sentence",
     "Phrase",
     "UtteranceContext",
@@ -44,6 +43,7 @@ __all__ = [
     "CrossDocEventRelation",
     "ConstituentNode",
     "Title",
+    "LinkedMention",
 ]
 
 
@@ -151,39 +151,6 @@ class Phrase(Annotation):
         super().__init__(pack, begin, end)
         self.phrase_type: Optional[str] = None
         self.headword: Optional[Token] = None
-
-
-@dataclass
-class LinkedMention(Annotation):
-    """
-    A span based annotation :class:`LinkedMention`.
-
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the entity mention.
-        end (int): The offset of the last character in the entity mention + 1.
-    """
-
-    def __init__(self, pack: DataPack, begin: int, end: int):
-        super().__init__(pack, begin, end)
-        self._linked_kb_ids: Optional[Dict[str, float]] = None
-        self._kb: Optional[str] = None
-
-    @property
-    def linked_kb_ids(self):
-        return self._linked_kb_ids
-
-    @linked_kb_ids.setter
-    def linked_kb_ids(self, kb_ids: Optional[Dict[str, float]]):
-        self.set_fields(_linked_kb_ids=kb_ids)
-
-    @property
-    def kb(self):
-        return self._kb
-
-    @kb.setter
-    def kb(self, k_base: Optional[str]):
-        self.set_fields(_kb=k_base)
 
 
 @dataclass
@@ -325,7 +292,7 @@ class Dependency(Link):
 @dataclass
 class EnhancedDependency(Link):
     """
-    A `Link` type entry which represent a enhanced dependency: 
+    A `Link` type entry which represent a enhanced dependency:
      https://universaldependencies.org/u/overview/enhanced-syntax.html
     Attributes:
         dep_label (Optional[str])	The enhanced dependency label in Universal Dependency.
@@ -461,3 +428,21 @@ class Title(Annotation):
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+
+
+@dataclass
+class LinkedMention(Annotation):
+    """
+    A span based annotation `LinkedMention`.
+    Attributes:
+        linked_kb_ids (Dict[str, float])
+        kb (Optional[str])
+    """
+
+    linked_kb_ids: Dict[str, float]
+    kb: Optional[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.linked_kb_ids: Dict[str, float] = dict()
+        self.kb: Optional[str] = None
