@@ -31,7 +31,7 @@ class Dictionary:
     """
     def get_synonyms(
             self,
-            word,
+            word: str,
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
@@ -48,7 +48,7 @@ class Dictionary:
 
     def get_antonyms(
             self,
-            word,
+            word: str,
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
@@ -65,7 +65,7 @@ class Dictionary:
 
     def get_hypernyms(
             self,
-            word,
+            word: str,
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
@@ -82,7 +82,7 @@ class Dictionary:
 
     def get_hyponyms(
             self,
-            word,
+            word: str,
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
