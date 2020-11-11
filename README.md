@@ -50,7 +50,7 @@ Users can declaratively specify the type through a simple JSON file. Our Code Ge
 will automatically generate ready-to-use python files accordingly. Check out our 
 [Ontology Generation documentation](./docs/ontology_generation.md) for more details.
 
-* **Universal Data Flow**: Forte unifies data representation to enable full interoperation between
+* **Universal Data Flow**: Forte unifies data representations to enable full interoperation between
 different components. Central to Forte's composable architecture, a transparent and universal data flow was established to
 make process interventions and pipeline management very easy. Adaptive to generic data formats, Forte is positioned as 
 a perfect tool for data inspection, component swapping and result sharing. 
