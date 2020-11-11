@@ -20,6 +20,8 @@ from copy import deepcopy
 from typing import List, Tuple, Dict
 from bisect import bisect_right
 from forte.data.ontology.core import Entry
+from forte.common.configuration import Config
+from forte.common.resources import Resources
 from forte.data.ontology.top import Annotation, MultiPackLink, Link
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -57,13 +59,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         (entry, new text) inserted by :func: replace.
         The new text will be used for building new data pack.
 
-        The data_pack_map maintains a mapping of the pack ids
-        from the original to the augmented one. It is used when
-        copying the MultiPackLink.
+        The data_pack_map maintains a mapping from the pack id
+        of the original pack to the pack id of augmented pack.
+        It is used when copying the MultiPackLink.
 
         The anno_maps keeps a map for each datapack id to track the
         annotation ids before and after the auto align. It maps the
         original annotation tid to the new annotation tid.
+        It is used when copying the MultiPackLink.
 
         The keys for all the three dicts are pack ids.
         """
@@ -71,6 +74,24 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         self.replaced_spans: Dict[int, List[Tuple[Annotation, str]]] = {}
         self.data_pack_map: Dict[int, int] = {}
         self.anno_maps: Dict[int, Dict[int, int]] = {}
+        self.other_entry_policy: Dict[str, str] = {}
+
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+        # Parse the "other_entry_policy" in the configuration.
+        self.other_entry_policy = self._get_other_entry_policy_dict()
+
+    def _get_other_entry_policy_dict(self) -> Dict[str, str]:
+        r"""
+        A helper function for parsing the "other_entry_policy"
+        configuration.
+        """
+        entries = self.configs['other_entry_policy']["entry"]
+        policies = self.configs['other_entry_policy']["policy"]
+        other_entry_policy = {}
+        for entry, policy in zip(entries, policies):
+            other_entry_policy[entry] = policy
+        return other_entry_policy
 
     def _is_span_overlap(self, pid: int, begin: int, end: int) -> bool:
         r"""
@@ -101,26 +122,33 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         getting the augmented text, it will register the input & output
         for later batch process of building the new data pack.
 
+        It will ignore the input if it has an overlap with the already
+        augmented spans.
+
         Args:
             - replacement_op: The class for data augmentation algorithm.
             - input: The entry to be replaced.
         Returns:
-            True if the replaced span does not overlap with any existing spans,
-            False otherwise.
+            A bool value. True if the replacement happened, False otherwise.
         """
         # Ignore the new annotation if overlap.
         pid: int = input.pack.meta.pack_id
         if self._is_span_overlap(pid, input.begin, input.end):
             return False
-        replaced_text: str = replacement_op.replace(input)
-        if pid not in self.replaced_spans:
-            self.replaced_spans[pid] = []
-        self.replaced_spans[pid].append((input, replaced_text))
-        return True
+        replaced_text: str
+        is_replace: bool
+        is_replace, replaced_text = replacement_op.replace(input)
+        if is_replace:
+            if pid not in self.replaced_spans:
+                self.replaced_spans[pid] = []
+            self.replaced_spans[pid].append((input, replaced_text))
+            return True
+        return False
 
     def _get_replaced_spans(self, pid: int) -> List[Tuple[Annotation, str]]:
         r"""
-        This function get the replaced spans and their new text.
+        This function get the replaced spans and
+        their new text for a Datapack.
         Args:
             pid: Datapack id.
         Returns:
@@ -137,19 +165,22 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     ) -> DataPack:
         r"""
         Function to replace some annotations with new strings.
-        It will update the text and auto-align the annotation spans.
+        It will update the text of datapack and auto-align the
+        annotation spans.
+
         The links are also copied if its parent & child are
         both present in the new pack.
 
         Args:
-            data_pack: Datapack holding the annotations to be replaced.
+            data_pack: The Datapack holding the replaced annotations.
             replaced_annotations: A list of tuples(annotation, new string).
-            The text for annotation will be updated with the new string.
+            The text and span of the annotations will be updated
+            with the new string.
 
         Returns:
             A new data_pack holds the text after replacement. The annotations
             in the original data pack will be copied and auto-aligned as
-            instructed by the "other_entry_policy".
+            instructed by the "other_entry_policy" in the configuration.
 
         """
         if len(replaced_annotations) == 0:
@@ -183,7 +214,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             (anno.begin, anno.end) for anno in annotations]
         new_spans: List[Tuple[int, int]] = []
 
-        # Bias is the delta of beginning index of two spans.
+        # Bias is the delta between the beginning
+        # indices before & after replacement.
         bias: int = 0
         for i in range(len(annotations)):
             old_begin: int = old_spans[i][0]
@@ -203,6 +235,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
             # Get the max index for binary search.
             max_index: int = old_spans[-1][1] + 1
+
             last_span_ind: int = bisect_right(
                 old_spans, (index, max_index)
             ) - 1
@@ -224,10 +257,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         new_pack.set_text(new_text)
 
         entries_to_copy: List[str] = \
-            list(self.configs['other_entry_policy'].keys()) + \
+            list(self.other_entry_policy.keys()) + \
             [self.configs['augment_entry']]
 
         anno_map: Dict[int, int] = {}
+
         # Iterate over all the original entries and modify their spans.
         for entry in entries_to_copy:
             for orig_anno in data_pack.get(get_class(entry)):
@@ -236,7 +270,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 span_new_end: int = orig_anno.end
 
                 if entry == self.configs['augment_entry'] \
-                        or self.configs['other_entry_policy'][entry] \
+                        or self.other_entry_policy[entry] \
                         == 'auto_align':
                     span_new_begin = modify_index(
                         orig_anno.begin, old_spans, new_spans)
@@ -297,13 +331,13 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             parent_pack_pid: int = parent_pack.meta.pack_id
             child_pack_pid: int = child_pack.meta.pack_id
 
+            # Only copy the link when both packs are present.
             if parent_pack_pid not in self.data_pack_map \
                     or child_pack_pid not in self.data_pack_map \
                     or parent_pack_pid not in self.anno_maps \
                     or child_pack_pid not in self.anno_maps:
                 continue
             # Get the new Entry and DataPack.
-
             new_parent_pack: DataPack = multi_pack.get_pack_at(
                 multi_pack.get_pack_index(self.data_pack_map[parent_pack_pid])
             )
@@ -358,24 +392,36 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             - augment_entries: defines the entries the processor
             will augment. It should be a full path to the entry class.
             - other_entry_policy: a dict specifying the policies for
-            other entries.
+            other entries. It has two keys: "entry" and "policy".
 
-            If "auto_align", the span of the entry will be automatically
-            modified according to its original location. However, some
-            spans might become invalid after the augmentation, for
-            example, the tokens within a replaced sentence may disappear.
+            The values of "policy" are aligned with the values of "entry".
+            They are two aligned lists. The "entry" should be class name.
+            The "policy" specifies how to process the corresponding entries
+            after replacement.
 
-            Entries not in the dict will not be copied to the new data pack.
+            If the policy is "auto_align", the span of the entry
+            will be automatically modified according to its original location.
+            However, some spans might become invalid after the augmentation,
+            for example, the tokens within a replaced sentence may disappear.
 
-            Example: {
-                "ft.onto.base_ontology.Document": "auto_align",
-                "ft.onto.base_ontology.Sentence": "auto_align"
+            Entries not in the "entry" will not be copied to the new data pack.
+
+            Example:
+            {
+                "entry": [
+                    "ft.onto.base_ontology.Document",
+                    "ft.onto.base_ontology.Sentence"
+                ],
+                "policy": ["auto_align", "auto_align"]
             }
         """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Sentence",
-            'other_entry_policy': {},
+            'other_entry_policy': {
+                "entry": [],
+                "policy": [],
+            },
             'replacement_op': "",
             'replacement_op_config': {}
         })
