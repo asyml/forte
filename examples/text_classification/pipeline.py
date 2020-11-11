@@ -51,11 +51,6 @@ def main(argv=None):
         "algorithms.dictionary.WordnetDictionary"
     )
 
-    dict_path = (
-        "forte.processors.data_augment."
-        "algorithms.dictionary.WordnetDictionary"
-    )
-
     processor_config = {
         'augment_entry': "ft.onto.base_ontology.Token",
         'other_entry_policy': {
