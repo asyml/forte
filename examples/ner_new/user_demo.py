@@ -77,6 +77,8 @@ if __name__ == "__main__":
 
     def create_model_fn(schemes: Dict[str, Dict[str, BaseExtractor]]):
         text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
+        char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
+        ner_extractor: BaseExtractor = schemes["ner_tag"]["extractor"]
 
         # embedding_dict = \
         #     load_glove_embedding(config.preprocessor.embedding_path)
@@ -97,8 +99,8 @@ if __name__ == "__main__":
 
         model = \
             BiRecurrentConvCRF(word_embedding_table=word_embedding_table,
-                               char_vocab_size=text_extractor.size(),
-                               tag_vocab_size=text_extractor.size(),
+                               char_vocab_size=char_extractor.size(),
+                               tag_vocab_size=ner_extractor.size(),
                                config_model=config.config_model)
         model.to(device=device)
 
