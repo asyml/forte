@@ -58,7 +58,7 @@ class CreateIndexerPipeline:
     def create_index(self, datapath):
         for idx, _ in enumerate(self.nlp.process_dataset(datapath)):
             if idx + 1 > 0 and (idx + 1) % 10000 == 0:
-                logging.info(f"Indexed %d packs", idx + 1)
+                logging.info("Indexed %d packs", idx + 1)
 
     @classmethod
     def default_config(cls) -> Dict[str, Any]:
