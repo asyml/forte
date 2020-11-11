@@ -31,19 +31,19 @@ class VocabularyTest(unittest.TestCase):
             print(use_pad, use_unk, method)
             vocab = Vocabulary(method=method, use_pad=use_pad, use_unk=use_unk)
             if use_pad:
-                self.assertEqual(vocab.get_pad_id(), vocab.entry2id(vocab.PAD_ENTRY))
+                self.assertEqual(vocab.get_pad_id(), vocab.element2id(vocab.PAD_ENTRY))
             if use_unk:
-                self.assertEqual(vocab.get_unk_id(), vocab.entry2id(vocab.UNK_ENTRY))
+                self.assertEqual(vocab.get_unk_id(), vocab.element2id(vocab.UNK_ENTRY))
 
             sentence = "EU rejects German call to boycott British lamb ."
             tokens = sentence.split(" ")
 
             for tok in tokens:
-                vocab.add_entry(tok)
+                vocab.add(tok)
 
-            self.assertEqual(len(set(tokens))+int(use_unk)+int(use_pad), vocab.size())
+            self.assertEqual(len(set(tokens))+int(use_unk)+int(use_pad), len(vocab))
 
-            ids = [vocab.entry2id(tok) for tok in tokens]
+            ids = [vocab.element2id(tok) for tok in tokens]
             if method == "indexing":
                 self.assertTrue(isinstance(ids[0], int))
             else:
@@ -51,7 +51,7 @@ class VocabularyTest(unittest.TestCase):
                 self.assertTrue(isinstance(ids[0], list))
                 ids = [self.argmax(one_hot) for one_hot in ids]
             print(ids)
-            reverted = [vocab.id2entry(idx) for idx in ids]
+            reverted = [vocab.id2element(idx) for idx in ids]
             self.assertListEqual(tokens, reverted)
 
 

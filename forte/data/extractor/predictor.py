@@ -38,7 +38,7 @@ class Batcher:
                 'converter': <forte.data.extractor.converter.Converter>,
                 'type': DATA_INPUT
             },
- 
+
             'char_tag': {
                 'extractor': <forte.data.extractor.extractor.CharExtractor>,
                 'converter': <forte.data.extractor.converter.Converter>,
@@ -112,6 +112,8 @@ class Batcher:
 
 
 class Predictor(BaseProcessor):
+    '''This class 
+    '''
     def __init__(self, batch_size: int, predict_foward_fn: Callable,
                     feature_resource: Dict):
         super().__init__()
@@ -170,7 +172,6 @@ class Predictor(BaseProcessor):
         current_queue = self._process_manager.current_queue
         for job in current_queue:
             job.set_status(ProcessJobStatus.PROCESSED)
-
 
     def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
         return DataPack(pack_name)

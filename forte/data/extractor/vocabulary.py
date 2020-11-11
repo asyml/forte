@@ -12,63 +12,77 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from collections import defaultdict
-from typing import Any
+from typing import List, Tuple, Any, Iterable
 
-class Vocabulary:
+
+class Vocabulary(object):
+    '''This class is used to save the mapping table from
+    tokens, words, labels etc. to indexes.
+    There are two methods used for the mapping table.
+    One is indexing, which will map the entry to a single interger.
+    The other one is one-hot, which will map the entry to an
+    one-hot vector.
+    '''
+
     PAD_ENTRY = "<PAD>"
     UNK_ENTRY = "<UNK>"
 
-    def __init__(self, method, use_pad, use_unk):
-        self.entry2id_dict = defaultdict()
-        self.id2entry_dict = defaultdict()
+    def __init__(self, method: str, use_pad: bool, use_unk: bool):
+        self.element2id_dict = defaultdict()
+        self.id2element_dict = defaultdict()
 
         if use_pad:
-            self.add_entry(self.PAD_ENTRY)
+            self.add(self.PAD_ENTRY)
         if use_unk:
-            self.add_entry(self.UNK_ENTRY)
-            self.id2entry_dict.default_factory = \
-                lambda : self.UNK_ENTRY
-            self.entry2id_dict.default_factory = \
-                lambda : self.entry2id_dict[self.UNK_ENTRY]
+            self.add(self.UNK_ENTRY)
+            self.id2element_dict.default_factory = \
+                lambda: self.UNK_ENTRY
+            self.element2id_dict.default_factory = \
+                lambda: self.element2id_dict[self.UNK_ENTRY]
 
-        assert method in ("indexing", "one-hot")
+        if method not in ("indexing", "one-hot"):
+            raise AttributeError("The method %s is not supported in Vocabulary!"
+                                 % method)
+
         self.method = method
         self.use_pad = use_pad
         self.use_unk = use_unk
 
     def get_pad_id(self):
         if self.use_pad:
-            return self.entry2id(self.PAD_ENTRY)
+            return self.element2id(self.PAD_ENTRY)
         return None
 
     def get_unk_id(self):
         if self.use_unk:
-            return self.entry2id(self.UNK_ENTRY)
+            return self.element2id(self.UNK_ENTRY)
         return None
 
-    def add_entry(self, entry: Any):
-        if entry not in self.entry2id_dict:
-            idx = len(self.entry2id_dict)
-            self.entry2id_dict[entry] = idx
-            self.id2entry_dict[idx] = entry
+    def add(self, element: Any):
+        if element not in self.element2id_dict:
+            idx = len(self)
+            self.element2id_dict[element] = idx
+            self.id2element_dict[idx] = element
 
-    def entry2id(self, entry: str):
-        if self.method == "indexing":
-            return self.entry2id_dict[entry]
-        else:
-            ans = [0 for _ in range(self.size())]
-            ans[self.entry2id_dict[entry]] = 1
-            return ans
+    def get_one_hot(self, idx: int) -> List[int]:
+        vec = [0] * len(self)
+        vec[idx] = 1
+        return vec
 
-    # TODO: Should we support one-hot to entry?
-    def id2entry(self, idx: int):
-        return self.id2entry_dict[idx]
+    def element2id(self, element: Any) -> int:
+        idx = self.element2id_dict[element]
+        if self.method == "one-hot":
+            return self.get_one_hot(idx)
+        return idx
 
-    def size(self):
-        return len(self.entry2id_dict)
+    def id2element(self, idx: int) -> Any:
+        return self.id2element_dict[idx]
 
-    def contians(self, entry: Any):
-        return entry in self.entry2id_dict
+    def __len__(self) -> int:
+        return len(self.element2id_dict)
 
-    def items(self):
-        return self.entry2id_dict.items()
+    def has_key(self, element: Any) -> bool:
+        return element in self.element2id_dict
+
+    def items(self) -> Iterable[Tuple[Any, int]]:
+        return self.element2id_dict.items()
