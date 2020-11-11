@@ -15,8 +15,9 @@
 import yaml
 
 from termcolor import colored
-from texar.torch import HParams
 
+from forte.common.configuration import Config
+from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors import CoNLLNERPredictor, SRLPredictor
@@ -28,18 +29,18 @@ from ft.onto.base_ontology import Token, Sentence, PredicateLink, \
 
 config = yaml.safe_load(open("config.yml", "r"))
 
-config = HParams(config, default_hparams=None)
+config = Config(config, default_hparams=None)
 
 
 def main():
-    pl = Pipeline()
+    pl = Pipeline[DataPack]()
     pl.set_reader(StringReader())
-    pl.add_processor(NLTKSentenceSegmenter())
-    pl.add_processor(NLTKWordTokenizer())
-    pl.add_processor(NLTKPOSTagger())
+    pl.add(NLTKSentenceSegmenter())
+    pl.add(NLTKWordTokenizer())
+    pl.add(NLTKPOSTagger())
 
-    pl.add_processor(CoNLLNERPredictor(), config=config.NER)
-    pl.add_processor(SRLPredictor(), config=config.SRL)
+    pl.add(CoNLLNERPredictor(), config=config.NER)
+    pl.add(SRLPredictor(), config=config.SRL)
 
     pl.initialize()
 

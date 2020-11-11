@@ -1,0 +1,45 @@
+{
+  "py/object": "forte.data.data_pack.DataPack",
+  "py/state": {
+    "creation_records": {
+      "examples.Cliner.reader.ClinerReader": {
+        "py/set": [
+          0
+        ]
+      }
+    },
+    "field_records": {},
+    "links": [],
+    "groups": [],
+    "meta": {
+      "py/object": "forte.data.data_pack.Meta",
+      "py/state": {
+        "pack_name": "Cliner_input",
+        "_pack_id": 0,
+        "language": "eng",
+        "span_unit": "character"
+      }
+    },
+    "_text": "DATE OF ADMISSION : MM/DD/YYYY\nDATE OF DISCHARGE : MM/DD/YYYY\nDISCHARGE DIAGNOSES :\n1 . Vasovagal syncope , status post fall .\n2 . Traumatic arthritis , right knee .\n3 . Hypertension .\n4 . History of recurrent urinary tract infection .\n5 . History of renal carcinoma , stable .\n6 .\nHistory of chronic obstructive pulmonary disease .\nCONSULTANTS : None .\nPROCEDURES : None .\nBRIEF HISTORY : The patient is an ( XX ) -year-old female with history of previous stroke ; hypertension ; COPD , stable ; renal carcinoma ; presenting after a fall and possible syncope .\nWhile walking , she accidentally fell to her knees and did hit her head on the ground , near her left eye .\nHer fall was not observed , but the patient does not profess any loss of consciousness , recalling the entire event .\nThe patient does have a history of previous falls , one of which resulted in a hip fracture .\nShe has had physical therapy and recovered completely from that .\nInitial examination showed bruising around the left eye , normal lung examination , normal heart examination , normal neurologic function with a baseline decreased mobility of her left arm .\nThe patient was admitted for evaluation of her fall and to rule out syncope and possible stroke with her positive histories .\nDIAGNOSTIC STUDIES : All x-rays including left foot , right knee , left shoulder and cervical spine showed no acute fractures .\nThe left shoulder did show old healed left humeral head and neck fracture with baseline anterior dislocation .\nCT of the brain showed no acute changes , left periorbital soft tissue swelling .\nCT of the maxillofacial area showed no facial bone fracture .\nEchocardiogram showed normal left ventricular function , ejection fraction estimated greater than 65 % .\nHOSPITAL COURSE :\n1 .\nFall : The patient was admitted and ruled out for syncopal episode .\nEchocardiogram was normal , and when the patient was able , her orthostatic blood pressures were within normal limits .\nAny serious conditions were quickly ruled out .\n2 .\nStatus post fall with trauma : The patient was unable to walk normally secondary to traumatic injury of her knee , causing significant pain and swelling .\nAlthough a scan showed no acute fractures , the patients frail status and previous use of cane prevented her regular abilities .\nShe was set up with a skilled nursing facility , which took several days to arrange , where she was to be given daily physical therapy and rehabilitation until appropriate for her previous residence .\nDISCHARGE DISPOSITION : Discharged to skilled nursing facility .\nACTIVITY : Per physical therapy and rehabilitation .\nDIET : General cardiac .\nMEDICATIONS : Darvocet-N 100 one tablet p.o .\nq.4-6 h. p.r.n .\nand Colace 100 mg p.o .\nb.i.d .\nMedications at Home : Zestril 40 mg p.o .\ndaily , Plavix 75 mg p.o .\ndaily , Norvasc 5 mg p.o .\ndaily , hydrochlorothiazide 50 mg p.o .\ndaily , potassium chloride 40 mEq p.o .\ndaily , Atrovent inhaler 2 puffs q.i.d. , albuterol inhaler 2 puffs q.4-6 h .\np.r.n. , clonidine 0.1 mg p.o .\nb.i.d. , Cardura 2 mg p.o .\ndaily , and Macrobid for prophylaxis , 100 mg p.o .\ndaily .\nFOLLOWUP :\n1 .\nFollow up per skilled nursing facility until discharged to regular residence .\n2 .\nFollow up with primary provider within 2-3 weeks on arriving to home .\n",
+    "annotations": [
+      {
+        "py/object": "ft.onto.base_ontology.Document",
+        "py/state": {
+          "_span": {
+            "py/object": "forte.data.span.Span",
+            "begin": 0,
+            "end": 3282
+          },
+          "_tid": 0
+        }
+      }
+    ],
+    "generics": [],
+    "replace_back_operations": [],
+    "processed_original_spans": [],
+    "orig_text_len": 3282,
+    "serialization": {
+      "next_id": 1
+    }
+  }
+}

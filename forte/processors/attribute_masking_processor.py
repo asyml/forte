@@ -13,12 +13,10 @@
 # limitations under the License.
 from typing import Any, Dict
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
-
 
 __all__ = [
     "AttributeMasker"
@@ -28,11 +26,11 @@ __all__ = [
 class AttributeMasker(PackProcessor):
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, _: Resources, config: HParams):
+    def initialize(self, _: Resources, config: Config):
         self.fields = config.kwargs
 
-    @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
         r"""Default config for this processor.
 
         Example usage is shown below
@@ -51,13 +49,15 @@ class AttributeMasker(PackProcessor):
             are the entry types whose fields need to be masked and the value is
             a list of field names.
         """
-        return {
+        config = super().default_configs()
+        config.update({
             "type": "",
             "kwargs": {}
-        }
+        })
+        return config
 
     def _process(self, input_pack: DataPack):
         for entry_type, attributes in self.fields:
             for entry in input_pack.get_entries_by_type(entry_type):
-                entry.set_fields(
-                    **{attribute: None for attribute in attributes})
+                for attribute in attributes:
+                    setattr(entry, attribute, None)

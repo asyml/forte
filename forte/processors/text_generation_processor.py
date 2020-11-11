@@ -18,14 +18,13 @@ from typing import Dict, List, Optional
 import numpy as np
 import torch
 import texar.torch as tx
-from texar.torch.hyperparams import HParams
 
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data import MultiPack
-from forte.data import MultiPackLink
 from forte.data.batchers import (
     ProcessingBatcher, FixedSizeMultiPackProcessingBatcher)
-from forte.common.types import DataRequest
+from forte.data.multi_pack import MultiPack, MultiPackLink
+from forte.data.types import DataRequest
 from forte.processors.base.batch_processor import MultiPackBatchProcessor
 from ft.onto.base_ontology import Sentence
 
@@ -46,7 +45,6 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         self.word_processor = None
         self.model = None
 
-        self.batch_size = 6
         self._get_helper = None
 
         self.max_decoding_length = None
@@ -54,21 +52,23 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         self.top_k = None
         self.top_p = None
         self.device = None
-        self.define_context()
 
-    def _define_input_info(self) -> DataRequest:
+    @staticmethod
+    def _define_input_info() -> DataRequest:
         return {}
 
-    def define_context(self):
-        self.context_type = Sentence
+    @staticmethod
+    def _define_context():
+        return Sentence
 
-    def define_batcher(self) -> ProcessingBatcher:
+    @staticmethod
+    def define_batcher() -> ProcessingBatcher:
         return FixedSizeMultiPackProcessingBatcher()
 
-    def initialize(self, resource: Resources, configs: Optional[HParams]):
+    def initialize(self, resources: Resources, configs: Optional[Config]):
         """
         Args:
-            resource:
+            resources:
             configs: A config with the following keys:
                 * input_pack_name: specify the input pack name of the MultiPack
                   to be processed
@@ -81,7 +81,7 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
 
         Returns:
         """
-        super().initialize(resource, configs)
+        super().initialize(resources, configs)
 
         if configs is not None:
             self.input_pack_name = configs.input_pack_name
@@ -97,7 +97,7 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
                                    else "cpu")
         self.model.to(device=self.device)
 
-        resource.update(model=self.model)
+        resources.update(model=self.model)
         self.word_processor = tx.data.GPT2Tokenizer(
             pretrained_model_name=configs.pretrained_model_name)
 
@@ -177,13 +177,10 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
         for input_id, output_sentence in zip(input_sent_tids, output_sentences):
             offset = len(output_pack.text)
             sent = Sentence(output_pack, offset, offset + len(output_sentence))
-            output_pack.add_entry(sent)
             text += output_sentence + "\n"
 
             input_sent = input_pack.get_entry(input_id)
-            cross_link = MultiPackLink(
-                data_pack, data_pack.subentry(self.input_pack_name, input_sent),
-                data_pack.subentry(self.output_pack_name, sent))
+            cross_link = MultiPackLink(data_pack, input_sent, sent)
             data_pack.add_entry(cross_link)
             # We may also consider adding two link with opposite directions
             # Here the unidirectional link indicates the generation dependency
@@ -224,21 +221,24 @@ class TextGenerationProcessor(MultiPackBatchProcessor):
 
         return words, lengths
 
-    @staticmethod
-    def default_configs():
-        return {
-            'max_decoding_length': 128,
-            'temperature': 0.7,
-            'top_p': None,
-            'top_k': 40,
-            'pretrained_model_name': "117M",
-            'checkpoint': None,
-            'input_pack_name': None,
-            'output_pack_name': None,
-            'selector': {
-                'type': 'forte.data.selector.DummySelector',
-                'args': None,
-                'kwargs': {}
-            },
-            'batch_size': 10,
-        }
+    @classmethod
+    def default_configs(cls):
+        config = super().default_configs()
+        config.update(
+            {
+                'max_decoding_length': 128,
+                'temperature': 0.7,
+                'top_p': None,
+                'top_k': 40,
+                'pretrained_model_name': "117M",
+                'checkpoint': None,
+                'input_pack_name': None,
+                'output_pack_name': None,
+                'selector': {
+                    'type': 'forte.data.selector.DummySelector',
+                    'args': None,
+                    'kwargs': {}
+                },
+            }
+        )
+        return config

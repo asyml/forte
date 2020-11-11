@@ -1,0 +1,20 @@
+{
+    "name": "test_ontology",
+    "definitions": [
+        {
+            "entry_name": "ft.onto.test_ontology.Token",
+            "parent_entry": "forte.data.ontology.core.Entry",
+            "description": "Base parent token entry",
+            "attributes": [
+                {
+                    "name": "pos",
+                    "type": "str"
+                },
+                {
+                    "name": "lemma",
+                    "type": "str"
+                }
+            ]
+        }
+    ]
+}

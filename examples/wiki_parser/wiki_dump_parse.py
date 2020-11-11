@@ -22,11 +22,11 @@ import pickle
 import sys
 from typing import TextIO, Any, Dict
 
-from texar.torch.hyperparams import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data import DataPack
-from forte.data.datasets.wikipedia.db_utils import load_redirects
+from forte.data.data_pack import DataPack
+from forte.data.datasets.wikipedia.db_utils import load_redirects, \
+    print_progress
 from forte.data.datasets.wikipedia.dbpedia_based_reader import DBpediaWikiReader
 from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \
     DBpediaInfoBoxReader
@@ -34,14 +34,12 @@ from forte.pipeline import Pipeline
 from forte.processors.base.writers import JsonPackWriter
 from ft.onto.wikipedia import WikiPage
 
-from utils import get_single
-
 __all__ = [
     'WikiArticleWriter',
 ]
 
 
-class WikiArticleWriter(JsonPackWriter[DataPack]):
+class WikiArticleWriter(JsonPackWriter):
     article_index: TextIO
 
     # It is difficult to get the type of the csv writer
@@ -53,16 +51,16 @@ class WikiArticleWriter(JsonPackWriter[DataPack]):
         super().__init__()
         self.article_count: int = 0
 
-    def initialize(self, resource: Resources, configs: HParams):
-        super(WikiArticleWriter, self).initialize(resource, configs)
+    def initialize(self, resources: Resources, configs: Config):
+        super(WikiArticleWriter, self).initialize(resources, configs)
         self.article_count = 0
         self.article_index = open(
-            os.path.join(self.root_output_dir, 'article.idx'), 'w')
+            os.path.join(self.configs.output_dir, 'article.idx'), 'w')
         self.csv_writer = csv.writer(self.article_index, delimiter='\t')
 
     def sub_output_path(self, pack: DataPack) -> str:
         sub_dir = str(int(self.article_count / 2000)).zfill(5)
-        pid = get_single(pack, WikiPage).page_id
+        pid = pack.get_single(WikiPage).page_id
         doc_name = f'doc_{self.article_count}' if pid is None else pid
 
         return os.path.join(sub_dir, doc_name + '.json')
@@ -86,13 +84,13 @@ class WikiArticleWriter(JsonPackWriter[DataPack]):
             out_path = out_path + '.gz'
 
         # Write the index
-        self.csv_writer.writerow([input_pack.meta.doc_id, out_path])
+        self.csv_writer.writerow([input_pack.meta.pack_name, out_path])
         self.article_count += 1
 
         if self.article_count % 1000 == 0:
             logging.info(
                 "Written %s to %s",
-                self.article_count, self.root_output_dir
+                self.article_count, self.configs.output_dir
             )
 
     def finish(self, resource: Resources):
@@ -104,24 +102,28 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
          mapping_objects: str, nif_text_links: str, redirects: str,
          info_boxs: str, output_path: str):
     # Load redirects.
+    print_progress('Loading redirects', '\n')
     logging.info("Loading redirects")
     redirect_pickle = os.path.join(output_path, 'redirects.pickle')
+
+    redirect_map: Dict[str, str]
     if os.path.exists(redirect_pickle):
-        redirect_map: Dict[str, str] = pickle.load(open(redirect_pickle, 'rb'))
+        redirect_map = pickle.load(open(redirect_pickle, 'rb'))
     else:
-        redirect_map: Dict[str, str] = load_redirects(redirects)
+        redirect_map = load_redirects(redirects)
         with open(redirect_pickle, 'wb') as pickle_f:
             pickle.dump(redirect_map, pickle_f)
+    print_progress('\nLoading redirects', '\n')
     logging.info("Done loading.")
 
     # The datasets are read in two steps.
     raw_pack_dir = os.path.join(output_path, 'nif_raw')
 
     # First, we create the NIF reader that read the NIF in order.
-    nif_pl = Pipeline()
+    nif_pl = Pipeline[DataPack]()
     nif_pl.resource.update(redirects=redirect_map)
 
-    nif_pl.set_reader(DBpediaWikiReader(), config=HParams(
+    nif_pl.set_reader(DBpediaWikiReader(), config=Config(
         {
             'redirect_path': redirects,
             'nif_page_structure': nif_page_structure,
@@ -130,7 +132,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         DBpediaWikiReader.default_configs()
     ))
 
-    nif_pl.add_processor(WikiArticleWriter(), config=HParams(
+    nif_pl.add(WikiArticleWriter(), config=Config(
         {
             'output_dir': raw_pack_dir,
             'zip_pack': True,
@@ -140,12 +142,13 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
 
     nif_pl.initialize()
     logging.info('Start running the DBpedia text pipeline.')
+    print_progress('Start running the DBpedia text pipeline.', '\n')
     nif_pl.run(nif_context)
 
     # Second, we add info boxes to the packs with NIF.
-    ib_pl = Pipeline()
+    ib_pl = Pipeline[DataPack]()
     ib_pl.resource.update(redirects=redirect_map)
-    ib_pl.set_reader(DBpediaInfoBoxReader(), config=HParams(
+    ib_pl.set_reader(DBpediaInfoBoxReader(), config=Config(
         {
             'pack_index': os.path.join(raw_pack_dir, 'article.idx'),
             'pack_dir': raw_pack_dir,
@@ -156,7 +159,7 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         DBpediaInfoBoxReader.default_configs()
     ))
 
-    ib_pl.add_processor(WikiArticleWriter(), config=HParams(
+    ib_pl.add(WikiArticleWriter(), config=Config(
         {
             'output_dir': os.path.join(output_path, 'nif_info_box'),
             'zip_pack': True,
@@ -165,7 +168,6 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     ))
 
     # Now we run the info box pipeline.
-    ib_pl.initialize()
     ib_pl.run(info_boxs)
 
 
@@ -181,7 +183,12 @@ def get_data(dataset: str):
 if __name__ == '__main__':
     base_dir = sys.argv[1]
 
-    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+    pack_output = os.path.join(base_dir, 'packs')
+
+    logging.basicConfig(
+        format='%(asctime)s - %(message)s', level=logging.INFO,
+        filename=os.path.join(pack_output, 'dump.log')
+    )
 
     main(
         get_data('nif_context_en.tql.bz2'),
@@ -191,5 +198,5 @@ if __name__ == '__main__':
         get_data('nif_text_links_en.tql.bz2'),
         get_data('redirects_en.tql.bz2'),
         get_data('infobox_properties_mapped_en.tql.bz2'),
-        os.path.join(base_dir, 'packs'),
+        pack_output
     )

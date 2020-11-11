@@ -11,16 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from dataclasses import dataclass
 from functools import total_ordering
-from typing import Optional, Set, Tuple, Type, Any, Dict, Union
+from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
 
 from forte.common.exception import IncompleteEntryError
-from forte.data.container import EntryContainer
-from forte.data.ontology.core import Entry, BaseLink, BaseGroup
 from forte.data.base_pack import PackType
+from forte.data.ontology.core import Entry, BaseLink, BaseGroup, MultiEntry
 from forte.data.span import Span
 
 __all__ = [
@@ -31,7 +30,6 @@ __all__ = [
     "MultiPackGeneric",
     "MultiPackGroup",
     "MultiPackLink",
-    "SubEntry",
     "Query",
     "SinglePackEntries",
     "MultiPackEntries",
@@ -59,33 +57,26 @@ class Annotation(Entry):
     """
 
     def __init__(self, pack: PackType, begin: int, end: int):
+        self._span: Optional[Span]
+        self.set_span(begin, end)
         super().__init__(pack)
-        if begin > end:
-            raise ValueError(
-                f"The begin {begin} of span is greater than the end {end}")
-        self._span = Span(begin, end)
 
     @property
     def span(self):
         return self._span
 
+    @property
+    def begin(self):
+        return self._span.begin
+
+    @property
+    def end(self):
+        return self._span.end
+
     def set_span(self, begin: int, end: int):
         r"""Set the span of the annotation.
         """
-        if begin > end:
-            raise ValueError(
-                f"The begin {begin} of span is greater than the end {end}")
         self._span = Span(begin, end)
-
-    def __hash__(self):
-        r"""The hash function of :class:`Annotation`.
-
-        Users can define their own hash function by themselves but this must
-        be consistent to :meth:`eq`.
-        """
-        return hash(
-            (type(self), self.pack, self.span.begin, self.span.end)
-        )
 
     def __eq__(self, other):
         r"""The eq function of :class:`Annotation`.
@@ -103,19 +94,16 @@ class Annotation(Entry):
     def __lt__(self, other):
         r"""To support total_ordering, :class:`Annotations` must provide
         :meth:`__lt__`.
-
-        Users can define their own lt function by themselves but this must
-        be consistent to :meth:`__eq__`.
         """
         if self.span != other.span:
             return self.span < other.span
-        return str(type(self)) < str(type(other))
+        return (str(type(self)), self._tid) < (str(type(other)), other.tid)
 
     @property
     def text(self):
         if self.pack is None:
-            raise ValueError(f"Cannot get text because annotation is not "
-                             f"attached to any data pack.")
+            raise ValueError("Cannot get text because annotation is not "
+                             "attached to any data pack.")
         return self.pack.get_span_text(self.span)
 
     @property
@@ -195,10 +183,10 @@ class Link(BaseLink):
              An instance of :class:`Entry` that is the parent of the link.
         """
         if self.pack is None:
-            raise ValueError(f"Cannot get parent because link is not "
-                             f"attached to any data pack.")
+            raise ValueError("Cannot get parent because link is not "
+                             "attached to any data pack.")
         if self._parent is None:
-            raise ValueError(f"The parent of this entry is not set.")
+            raise ValueError("The parent of this entry is not set.")
         return self.pack.get_entry(self._parent)
 
     def get_child(self) -> Entry:
@@ -208,10 +196,10 @@ class Link(BaseLink):
              An instance of :class:`Entry` that is the child of the link.
         """
         if self.pack is None:
-            raise ValueError(f"Cannot get child because link is not"
-                             f" attached to any data pack.")
+            raise ValueError("Cannot get child because link is not"
+                             " attached to any data pack.")
         if self._child is None:
-            raise ValueError(f"The child of this entry is not set.")
+            raise ValueError("The child of this entry is not set.")
         return self.pack.get_entry(self._child)
 
 
@@ -225,76 +213,71 @@ class Group(BaseGroup[Entry]):
 
     def __init__(
             self,
-            pack: EntryContainer,
+            pack: PackType,
             members: Optional[Set[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
+        self._members: Set[int] = set()
         super().__init__(pack, members)
 
+    def add_member(self, member: Entry):
+        r"""Add one entry to the group.
 
-class SubEntry(Entry[PackType]):
-    r"""This is used to identify an Entry in one of the packs in the
-    :class:`Multipack`. For example, the sentence in one of the packs. A
-    ``pack_index`` and an ``entry`` is needed to identify this.
+        Args:
+            member: One member to be added to the group.
+        """
+        if not isinstance(member, self.MemberType):
+            raise TypeError(
+                f"The members of {type(self)} should be "
+                f"instances of {self.MemberType}, but got {type(member)}")
+        self._members.add(member.tid)
 
-    Args:
-        pack_index: Indicate which pack this entry belongs. If this is less
-            than 0, then this is a cross pack entry.
-        entry_id: The tid of the entry in the sub pack.
-    """
+    def get_members(self) -> List[Entry]:
+        r"""Get the member entries in the group.
 
-    def __init__(self, pack: PackType, pack_index: int, entry_id: int):
-        super().__init__(pack)
-        self._pack_index: int = pack_index
-        self._entry_id: int = entry_id
-
-    @property
-    def pack_index(self):
-        return self._pack_index
-
-    @property
-    def entry_id(self):
-        return self._entry_id
-
-    def __hash__(self):
-        return hash((type(self), self._pack_index, self._entry_id))
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return (type(self), self.pack_index, self.entry_id
-                ) == (type(other), other.pack_index, other.entry)
-
-    @property
-    def index_key(self) -> Tuple[int, int]:
-        return self._pack_index, self._entry_id
+        Returns:
+             A set of instances of :class:`Entry` that are the members of the
+             group.
+        """
+        if self.pack is None:
+            raise ValueError("Cannot get members because group is not "
+                             "attached to any data pack.")
+        member_entries = []
+        for m in self._members:
+            member_entries.append(self.pack.get_entry(m))
+        return member_entries
 
 
-class MultiPackGeneric(Entry):
+class MultiPackGeneric(MultiEntry, Entry):
     def __init__(self, pack: PackType):
         super(MultiPackGeneric, self).__init__(pack=pack)
 
 
-class MultiPackLink(BaseLink):
+class MultiPackLink(MultiEntry, BaseLink):
     r"""This is used to link entries in a :class:`MultiPack`, which is
     designed to support cross pack linking, this can support applications such
     as sentence alignment and cross-document coreference. Each link should have
-    a parent node and a child node. Note that the nodes are `SubEntry(s)`, thus
-    have one additional index on which pack it comes from.
+    a parent node and a child node. Note that the nodes are indexed by two
+    integers, one additional index on which pack it comes from.
     """
 
-    ParentType = SubEntry
-    ChildType = SubEntry
+    ParentType = Entry
+    ChildType = Entry
 
     def __init__(
             self,
             pack: PackType,
-            parent: Optional[SubEntry],
-            child: Optional[SubEntry],
+            parent: Optional[Entry] = None,
+            child: Optional[Entry] = None,
     ):
         self._parent: Optional[Tuple[int, int]] = None
         self._child: Optional[Tuple[int, int]] = None
 
-        super().__init__(pack, parent, child)
+        super().__init__(pack)
+
+        if parent is not None:
+            self.set_parent(parent)
+        if child is not None:
+            self.set_child(child)
 
     @property
     def parent(self) -> Tuple[int, int]:
@@ -308,99 +291,131 @@ class MultiPackLink(BaseLink):
             raise IncompleteEntryError("Child is not set for this link.")
         return self._child
 
-    def set_parent(self, parent: SubEntry):  # type: ignore
-        r"""This will set the `parent` of the current instance with given Entry
-        The parent is saved internally as a tuple: ``pack_name`` and
-        ``entry.tid``.
+    def set_parent(self, parent: Entry):
+        r"""This will set the `parent` of the current instance with given Entry.
+        The parent is saved internally as a tuple: ``pack index`` and
+        ``entry.tid``. Pack index is the index of the data pack in the
+        multi-pack.
 
         Args:
-            parent: The parent of the link, identified as a sub entry, which
-                has a value for the pack index and the tid in the pack.
+            parent: The parent of the link, which is an Entry from a data pack,
+                it has access to the pack index and its own tid in the pack.
         """
         if not isinstance(parent, self.ParentType):
             raise TypeError(
                 f"The parent of {type(self)} should be an "
                 f"instance of {self.ParentType}, but get {type(parent)}")
-        self._parent = parent.index_key
+        self._parent = self.pack.get_pack_index(parent.pack_id), parent.tid
 
-    def set_child(self, child: SubEntry):  # type: ignore
+    def set_child(self, child: Entry):
+        r"""This will set the `child` of the current instance with given Entry.
+        The child is saved internally as a tuple: ``pack index`` and
+        ``entry.tid``. Pack index is the index of the data pack in the
+        multi-pack.
+
+        Args:
+            child: The child of the link, which is an Entry from a data pack,
+                it has access to the pack index and its own tid in the pack.
+        """
+
         if not isinstance(child, self.ChildType):
             raise TypeError(
-                f"The parent of {type(self)} should be an "
+                f"The child of {type(self)} should be an "
                 f"instance of {self.ChildType}, but get {type(child)}")
-        self._child = child.index_key
+        self._child = self.pack.get_pack_index(child.pack_id), child.tid
 
-    def get_parent(self) -> SubEntry:
+    def get_parent(self) -> Entry:
         r"""Get the parent entry of the link.
 
         Returns:
-             An instance of :class:`SubEntry` that is the parent of the link
-             from the given DataPack.
+             An instance of :class:`Entry` that is the parent of the link.
         """
         if self._parent is None:
             raise IncompleteEntryError("The parent of this link is not set.")
+
         pack_idx, parent_tid = self._parent
+        return self.pack.get_subentry(pack_idx, parent_tid)
 
-        return SubEntry(self.pack, pack_idx, parent_tid)
-
-    def get_child(self) -> SubEntry:
+    def get_child(self) -> Entry:
         r"""Get the child entry of the link.
 
         Returns:
-             An instance of :class:`SubEntry` that is the child of the link
-             from the given DataPack.
+             An instance of :class:`Entry` that is the child of the link.
         """
         if self._child is None:
             raise IncompleteEntryError("The parent of this link is not set.")
 
         pack_idx, child_tid = self._child
-
-        return SubEntry(self.pack, pack_idx, child_tid)
+        return self.pack.get_subentry(pack_idx, child_tid)
 
 
 # pylint: disable=duplicate-bases
-class MultiPackGroup(BaseGroup[SubEntry]):
+class MultiPackGroup(MultiEntry, BaseGroup[Entry]):
     r"""Group type entries, such as "coreference group". Each group has a set
     of members.
     """
+    MemberType: Type[Entry] = Entry
 
     def __init__(
-            self,
-            pack: PackType,
-            members: Optional[Set[SubEntry]],
+            self, pack: PackType, members: Optional[Iterable[Entry]] = None
     ):  # pylint: disable=useless-super-delegation
-        super().__init__(pack, members)
+        self._members: List[Tuple[int, int]] = []
+        super().__init__(pack)
+        if members is not None:
+            self.add_members(members)
+
+    def add_member(self, member: Entry):
+        if not isinstance(member, self.MemberType):
+            raise TypeError(
+                f"The members of {type(self)} should be "
+                f"instances of {self.MemberType}, but got {type(member)}")
+
+        self._members.append(
+            (self.pack.get_pack_index(member.pack_id), member.tid))
+
+    def get_members(self) -> List[Entry]:
+        members = []
+        for pack_idx, member_tid in self._members:
+            members.append(self.pack.get_subentry(pack_idx, member_tid))
+        return members
 
 
+@dataclass
 class Query(Generics):
     r"""An entry type representing queries for information retrieval tasks.
 
     Args:
         pack (Data pack): Data pack reference to which this query will be added
     """
+    value: Optional[QueryType]
+    results: Dict[str, float]
 
     def __init__(self, pack: PackType):
         super().__init__(pack)
-        self.value: QueryType = None
+        self.value: Optional[QueryType] = None
         self.results: Dict[str, float] = {}
 
-    def set_value(self, value: QueryType):
-        r"""Sets the value of the query.
+    def add_result(self, pid: str, score: float):
+        """
+        Set the result score for a particular pack (based on the pack id).
 
         Args:
-            value (numpy array or str): A vector or a string (in case of
-            traditional models) representing the query.
+            pid: the pack id.
+            score: the score for the pack
+
+        Returns:
+
         """
-        self.value = value
+        self.results[pid] = score
 
     def update_results(self, pid_to_score: Dict[str, float]):
         r"""Updates the results for this query.
 
         Args:
-             pid_to_score (dict): A dict containing pid -> score mapping
+             pid_to_score (dict): A dict containing pack id -> score mapping
         """
         self.results.update(pid_to_score)
 
 
-SinglePackEntries = (Link, Group, Annotation)
-MultiPackEntries = (MultiPackLink, MultiPackGroup)
+SinglePackEntries = (Link, Group, Annotation, Generics)
+MultiPackEntries = (MultiPackLink, MultiPackGroup, MultiPackGeneric)

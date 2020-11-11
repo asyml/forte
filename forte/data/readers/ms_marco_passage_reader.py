@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 A reader to read passages from `MS MARCO` dataset, pertaining to the
 Passage Ranking task. Uses the document text for indexing.
@@ -23,11 +24,11 @@ Dataset Paper -
 Nguyen, Tri, et al. "MS MARCO: A Human-Generated MAchine Reading
 COmprehension Dataset." (2016).
 """
+
 import os
 from typing import Iterator, Tuple
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
@@ -39,12 +40,11 @@ __all__ = [
 
 
 class MSMarcoPassageReader(PackReader):
-
     def __init__(self):
-        super(MSMarcoPassageReader, self).__init__()
+        super().__init__()
         self.configs = None
 
-    def initialize(self, resources: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         # pylint: disable = unused-argument
         self.configs = configs
 
@@ -72,15 +72,15 @@ class MSMarcoPassageReader(PackReader):
         data_pack: DataPack = DataPack()
 
         doc_id, doc_text = doc_info
-        data_pack.meta.doc_id = doc_id
+        data_pack.pack_name = doc_id
 
-        # add documents
-        data_pack.add_or_get_entry(Document(data_pack, 0, len(doc_text)))
         data_pack.set_text(doc_text)
+        # add documents
+        Document(data_pack, 0, len(doc_text))
 
         yield data_pack
 
     def _cache_key_function(self, data_pack: DataPack) -> str:
-        if data_pack.meta.doc_id is None:
+        if data_pack.pack_name is None:
             raise ValueError("Data pack does not have a document id.")
-        return data_pack.meta.doc_id
+        return data_pack.pack_name

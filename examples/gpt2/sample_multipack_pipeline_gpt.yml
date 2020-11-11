@@ -1,35 +1,32 @@
 # This provides a configuration for inference only
 
-Reader:
-  type: "forte.data.readers.MultiPackSentenceReader"
-  hparams:
-    overwrite_configs:
-      input_pack_name: "input_src"
-      output_pack_name: "output_tgt"
+- type: "forte.data.readers.MultiPackSentenceReader"
+  configs:
+    input_pack_name: "input_src"
+    output_pack_name: "output_tgt"
 
-Processors:
-  - type: "forte.processors.TextGenerationProcessor"
-    hparams:
-      overwrite_configs:
-        max_decoding_length: 128
-        temperature: 0.7
-        top_k: 40
-        pretrained_model_name: "gpt2-small"
-        input_pack_name: "input_src"
-        output_pack_name: "output_tgt"
-        batch_size: 64
-  - type: "forte.processors.nltk_processors.NLTKWordTokenizer"
-    hparams:
-      overwrite_configs:
-        selector:
-          type: "forte.data.selector.NameMatchSelector"
-          kwargs:
-            select_name: "output_tgt"
-  - type: "forte.processors.nltk_processors.NLTKPOSTagger"
-    hparams:
-      overwrite_configs:
-        selector:
-          type: "forte.data.selector.NameMatchSelector"
-          kwargs:
-            select_name: "output_tgt"
+- type: "forte.processors.TextGenerationProcessor"
+  configs:
+    max_decoding_length: 128
+    temperature: 0.7
+    top_k: 40
+    pretrained_model_name: "gpt2-small"
+    input_pack_name: "input_src"
+    output_pack_name: "output_tgt"
+    batcher:
+      batch_size: 64
+
+- type: "forte.processors.nltk_processors.NLTKWordTokenizer"
+  configs:
+    selector:
+      type: "forte.data.selector.NameMatchSelector"
+      kwargs:
+        select_name: "output_tgt"
+
+- type: "forte.processors.nltk_processors.NLTKPOSTagger"
+  configs:
+    selector:
+      type: "forte.data.selector.NameMatchSelector"
+      kwargs:
+        select_name: "output_tgt"
 

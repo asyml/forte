@@ -18,7 +18,9 @@ into data_pack format
 """
 from typing import Iterator, Dict, Tuple, Any
 
-from ft.onto.base_ontology import Document, Sentence, Token, Dependency
+from ft.onto.base_ontology import (
+    Document, Sentence, Token, Dependency, EnhancedDependency)
+
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
@@ -34,9 +36,9 @@ class ConllUDReader(PackReader):
     """
 
     def _cache_key_function(self, data_pack: Any) -> str:
-        if data_pack.meta.doc_id is None:
+        if data_pack.meta.pack_name is None:
             raise ValueError("data_pack does not have a document id")
-        return data_pack.meta.doc_id
+        return data_pack.meta.pack_name
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument
@@ -49,7 +51,6 @@ class ConllUDReader(PackReader):
         Returns: data packs obtained from each document from each conllu file.
         """
         conll_dir_path = args[0]
-
         file_paths = dataset_path_iterator(conll_dir_path, "conllu")
         for file_path in file_paths:
             with open(file_path, "r", encoding="utf8") as file:
@@ -73,9 +74,6 @@ class ConllUDReader(PackReader):
                               "enhanced_dependency_relations"]
 
         token_feature_fields = ["ud_features", "ud_misc"]
-
-        token_entry_fields = ["lemma", "pos", "ud_xpos",
-                              "ud_features", "ud_misc"]
 
         data_pack: DataPack = DataPack()
         doc_sent_begin: int = 0
@@ -121,14 +119,14 @@ class ConllUDReader(PackReader):
                 word_begin = doc_offset
                 word_end = doc_offset + len(word)
 
-                token: Token \
-                    = Token(data_pack, word_begin, word_end)
-                kwargs = {key: token_comps[key]
-                          for key in token_entry_fields}
-
                 # add token
-                token.set_fields(**kwargs)
-                data_pack.add_or_get_entry(token)
+                token: Token = Token(data_pack, word_begin, word_end)
+
+                token.lemma = token_comps['lemma']
+                token.pos = token_comps['pos']
+                token.ud_xpos = token_comps['ud_xpos']
+                token.ud_features = token_comps['ud_features']
+                token.ud_misc = token_comps['ud_misc']
 
                 sent_tokens[str(token_comps["id"])] = (token_comps, token)
 
@@ -145,23 +143,6 @@ class ConllUDReader(PackReader):
                 for token_id in sent_tokens:
                     token_comps, token = sent_tokens[token_id]
 
-                    def add_dependency(dep_parent, dep_child, dep_label,
-                                       dep_type, data_pack_):
-                        """Adds dependency to a data_pack
-                        Args:
-                            dep_parent: dependency parent token
-                            dep_child: dependency child token
-                            dep_label: dependency label
-                            dep_type: "primary" or "enhanced" dependency
-                            data_pack_: data_pack to which the
-                            dependency is to be added
-                        """
-                        dependency = Dependency(
-                            data_pack, dep_parent, dep_child)
-                        dependency.dep_label = dep_label
-                        dependency.type = dep_type
-                        data_pack_.add_or_get_entry(dependency)
-
                     # add primary dependency
                     label = token_comps["label"]
                     if label == "root":
@@ -169,28 +150,29 @@ class ConllUDReader(PackReader):
                     else:
                         token.is_root = False
                         head = sent_tokens[token_comps["head"]][1]
-                        add_dependency(head, token, label,
-                                       "primary", data_pack)
+                        dependency = Dependency(data_pack, head, token)
+                        dependency.dep_label = label
 
                     # add enhanced dependencies
                     for dep in token_comps["enhanced_dependency_relations"]:
                         head_id, label = dep.split(":", 1)
                         if label != "root":
                             head = sent_tokens[head_id][1]
-                            add_dependency(head, token, label, "enhanced",
-                                           data_pack)
+                            enhanced_dependency = \
+                                EnhancedDependency(data_pack, head, token)
+                            enhanced_dependency.dep_label = label
 
                 # add sentence
-                sent = Sentence(data_pack, doc_sent_begin, doc_offset - 1)
-                data_pack.add_or_get_entry(sent)
+                Sentence(data_pack, doc_sent_begin, doc_offset - 1)
 
                 doc_sent_begin = doc_offset
                 doc_num_sent += 1
 
+        doc_text = doc_text.strip()
+        data_pack.set_text(doc_text)
+
         # add doc to data_pack
-        document = Document(data_pack, 0, len(doc_text))
-        data_pack.add_or_get_entry(document)
-        data_pack.meta.doc_id = doc_id
-        data_pack.set_text(doc_text.strip())
+        Document(data_pack, 0, len(doc_text))
+        data_pack.pack_name = doc_id
 
         yield data_pack

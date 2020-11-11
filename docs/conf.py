@@ -240,17 +240,17 @@ htmlhelp_basename = 'fortedoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 
-# Latex figure (float) alignment
-#'figure_align': 'htbp',
+    # Latex figure (float) alignment
+    #'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -325,24 +325,24 @@ intersphinx_mapping = {
 }
 
 extlinks = {'torch_docs': (
-                'https://pytorch.org/docs/stable/%s',
-                None),
-            'torch': (
-                'https://pytorch.org/docs/stable/torch.html#torch.%s',
-                'torch.'),
-            'torch_nn': (
-                'https://pytorch.org/docs/stable/nn.html#torch.nn.%s',
-                'torch.nn.'),
-            'torch_tensor': (
-                'https://pytorch.org/docs/stable/tensors.html#torch.Tensor.%s',
-                'torch.Tensor.'),
-            'tensor': (
-                'https://pytorch.org/docs/stable/tensors.html#torch.%s',
-                'torch.'),
-            'gym': (
-                'https://gym.openai.com/docs/%s',
-                None),
-            }
+    'https://pytorch.org/docs/stable/%s',
+    None),
+    'torch': (
+        'https://pytorch.org/docs/stable/torch.html#torch.%s',
+        'torch.'),
+    'torch_nn': (
+        'https://pytorch.org/docs/stable/nn.html#torch.nn.%s',
+        'torch.nn.'),
+    'torch_tensor': (
+        'https://pytorch.org/docs/stable/tensors.html#torch.Tensor.%s',
+        'torch.Tensor.'),
+    'tensor': (
+        'https://pytorch.org/docs/stable/tensors.html#torch.%s',
+        'torch.'),
+    'gym': (
+        'https://gym.openai.com/docs/%s',
+        None),
+}
 
 ##### Customize ######
 

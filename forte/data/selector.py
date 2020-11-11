@@ -55,6 +55,9 @@ class DummySelector(Selector[InputPackType, InputPackType]):
 
 
 class SinglePackSelector(Selector[MultiPack, DataPack]):
+    """
+    This is the base class that select a DataPack from MultiPack.
+    """
 
     def select(self, pack: MultiPack) -> Iterator[DataPack]:
         raise NotImplementedError
@@ -85,6 +88,7 @@ class NameMatchSelector(SinglePackSelector):
 class RegexNameMatchSelector(SinglePackSelector):
     r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex.
     """
+
     def __init__(self, select_name: str):
         super().__init__()
         assert select_name is not None
@@ -105,7 +109,7 @@ class FirstPackSelector(SinglePackSelector):
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
-            raise ValueError(f"Multi-pack has no data packs.")
+            raise ValueError("Multi-pack has no data packs.")
 
         else:
             yield m_pack.packs[0]
@@ -117,7 +121,7 @@ class AllPackSelector(SinglePackSelector):
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
-            raise ValueError(f"Multi-pack has no data packs.")
+            raise ValueError("Multi-pack has no data packs.")
 
         else:
             yield from m_pack.packs

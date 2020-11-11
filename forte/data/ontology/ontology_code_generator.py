@@ -15,42 +15,127 @@
     Module to automatically generate python ontology given json file
     Performs a preliminary check of dependencies
 """
-import os
+import copy
 import json
+import logging
+import os
 import shutil
-import warnings
-
-import itertools as it
 import tempfile
-from pathlib import Path
-from datetime import datetime
+import warnings
 from collections import defaultdict
+from datetime import datetime
 from distutils import dir_util
-
+from pathlib import Path
 from types import ModuleType
-from typing import Dict, List, Optional, Tuple, Set, no_type_check
+from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any, cast
 
+import jsonschema
 import typed_ast.ast3 as ast
 import typed_astunparse as ast_unparse
 
-from forte.data.ontology import utils, top
-from forte.data.ontology.ontology_code_generator_utils import (
-    BasicItem, CompositeItem, ClassAttributeItem, DefinitionItem, FileItem,
-    Property)
+from forte.data.ontology import top, utils
+from forte.data.ontology.code_generation_exceptions import (
+    DuplicateEntriesWarning, OntologySpecError,
+    OntologyAlreadyGeneratedException,
+    ParentEntryNotDeclaredException, TypeNotDeclaredException,
+    UnsupportedTypeException, InvalidIdentifierException,
+    DuplicatedAttributesWarning, ParentEntryNotSupportedException,
+    OntologySpecValidationError, OntologySourceNotFoundException)
+from forte.data.ontology.code_generation_objects import (
+    NonCompositeProperty, ListProperty, ClassTypeDefinition,
+    EntryDefinition, Property, ImportManagerPool,
+    EntryName, ModuleWriterPool, ImportManager, DictProperty)
+# Builtin and local imports required in the generated python modules.
+from forte.data.ontology.ontology_code_const import (
+    REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
+    DEFAULT_PREFIX, SchemaKeywords, file_header, NON_COMPOSITES, COMPOSITES,
+    ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
+    hardcoded_pack_map, AUTO_GEN_FILENAME,
+    AUTO_DEL_FILENAME)
+from forte.utils.utils_io import get_resource
 
 
-# TODO: Causing error in sphinx - fix and uncomment. Current version displays
-#  the line of code to the user, which is undesired.
-# def format_warning(message, category, filename, lineno, _):
-#     return '%s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
-#
-#
-# warnings.formatwarning = format_warning  # type: ignore
+def name_validation(name):
+    parts = name.split('.')
+    for part in parts:
+        if not part.isidentifier():
+            raise SyntaxError(f"'{part}' is not an valid identifier.")
+
+
+def analyze_packages(packages: Set[str]):
+    r""" Analyze the package paths to make sure they are valid.
+
+    Args:
+        packages: The list of packages.
+
+    Returns: A list of the package paths, sorted by the package depth (
+        deepest first).
+
+    """
+    package_len = []
+    for p in packages:
+        parts = p.split('.')
+        package_len.append((len(parts), p))
+        try:
+            name_validation(p)
+        except InvalidIdentifierException:
+            logging.error(
+                "Error analyzing package name: '%s' is "
+                "not a valid package name", p)
+            raise
+
+    return [p for (l, p) in sorted(package_len, reverse=True)]
+
+
+def validate_entry(entry_name: str, sorted_packages: List[str]) -> str:
+    for package_name in sorted_packages:
+        if entry_name.startswith(package_name):
+            matched_package = package_name
+            break
+    else:
+        # None of the package name matches.
+        raise InvalidIdentifierException(
+            f"Entry name [{entry_name}] does not start with any predefined "
+            f"packages, please define the packages by using "
+            f"`additional_prefixes` in the ontology. Or you can use the "
+            f"default prefix 'ft.onto'."
+        )
+
+    entry_splits = entry_name.split('.')
+
+    if len(entry_splits) < 3:
+        raise InvalidIdentifierException(
+            f"We currently require each entry to contains at least 3 levels, "
+            f"which corresponds to the directory name, the file (module) name,"
+            f"the entry class name. There are only {len(entry_splits)}"
+            f"levels in [{entry_name}].")
+    return matched_package
+
+
+def as_init_str(init_args):
+    """
+    Create the __init__ string by using unparse in ast.
+    Args:
+        init_args: The ast args object of the init arguments.
+
+    Returns:
+
+    """
+    # Unparsing the `__init__` args and normalising the string
+    args = ast_unparse.unparse(init_args).strip().split(',', 1)
+    return args[1].strip().replace('  ', '')
+
+
+def is_composite_type(item_type: str):
+    return item_type in COMPOSITES
+
+
+def valid_composite_key(item_type: str):
+    return item_type in ('int', 'str')
 
 
 class OntologyCodeGenerator:
-    r"""
-    Class to generate python ontology given ontology config in json format
+    r"""Class to generate python ontology given ontology config in json format
     Salient Features -
         (1) Generates a class for each entry in the module corresponding to
         the defined entry package.
@@ -58,105 +143,133 @@ class OntologyCodeGenerator:
         serve as ancestors of the user-defined entries.
         (2) Dependencies to other json configs through the json `imports`
     Example:
-        >>> destination_dir = OntologyCodeGenerator().generate_ontology(
+        >>> destination_dir = OntologyCodeGenerator().generate(
         'test/example_ontology_config.json')
     """
-    AUTO_GEN_CONST = '***automatically_generated***'
 
-    def __init__(self, json_dir_paths: Optional[List[str]] = None):
+    def __init__(self, import_dirs: Optional[List[str]] = None,
+                 generate_all=False):
         """
-
         Args:
-            json_dir_paths: Additional user provided paths to search the
-            imported json configs from. By default paths provided in the json
-            configs and the current working directory would be searched.
+            import_dirs: Additional user provided paths to search the
+                imported json configs or installed ontologies from. By default
+                paths provided in the imports, current working directory and
+                the path where forte is installed (if it is) would be searched.
+            generate_all: whether to generate all the packages even if some are
+                already generated.
         """
-        # The entries of the `self.base_ontology_module` serve as ancestors of
+        # The entries of the `self.top_ontology_module` serve as ancestors of
         # the user-defined entries.
-        base_ontology_module: ModuleType = top
+        top_ontology_module: ModuleType = top
 
         # Builtin and local imports required in the generated python modules.
-        self.required_imports: List[str] = [
-            'typing',
-            'ft.onto',
-            'forte.data.data_pack',
-            base_ontology_module.__name__]
+        self.required_imports: List[str] = REQUIRED_IMPORTS
+        self.required_imports.append(top_ontology_module.__name__)
 
-        # Special comments to be added to disable checking.
-        self.ignore_errors: List[str] = [
-            f'# {self.AUTO_GEN_CONST}',
-            '# flake8: noqa',
-            '# mypy: ignore-errors',
-            '# pylint: skip-file']
+        # A collection of import managers: each manager is responsible for
+        # controlling the imports of one module. The key of the collection is
+        # the module's full name, e.g. ft.onto.base_ontology
+        self.import_managers: ImportManagerPool = ImportManagerPool()
 
-        self.core_base_keys = {"BaseLink": ["parent_type", "child_type"],
-                               "GroupLink": ["member_type"]}
+        # Store information to write each modules.
+        self.module_writers: ModuleWriterPool = ModuleWriterPool(
+            self.import_managers)
 
-        # Mapping from entries parsed from the `base_ontology_module`
-        # (default is `top.py`), to their `__init__` arguments.
-        self.top_init_args: Dict[str, str]
+        # Mapping from entries parsed from the `top_ontology_module`
+        # (default is `forte.data.ontology.top.py`), to their
+        # `__init__` arguments.
+        # self.top_init_args_strs: Dict[str, str] = {}
+        self.root_base_entries: Set[str] = set()
 
-        # Mapping from entries in `base_ontology_module` to their ancestors
-        self.top_to_core_entries: Dict[str, Set[str]]
+        # Map from the full class name, to the list contains objects of
+        # <typed_ast._ast3.arg>, which are the init arguments.
+        self.top_init_args: Dict[str, Any] = {}
 
-        self.top_init_args, _, self.top_to_core_entries = \
-            self.initialize_top_entries(base_ontology_module)
+        # Mapping from user extendable entries to their ancestors
+        self.top_to_core_entries: Dict[str, Set[str]] = {}
 
-        # Mapping from user-defined entries to their ancestor entry present in
-        # `self.top_init_args`.
-        self.user_to_base_entry: Dict[str, str] = {}
+        # Mapping from user-defined entries to a set of base ancestor entries.
+        # these base entries are the top level entries where user can
+        # initialize, so they wil be part of the generated class's __init__
+        self.base_entry_lookup: Dict[str, str] = {}
 
-        # Mapping from reference string to corresponding full class name
-        self.ref_to_full_name: Dict[str, str] = {}
+        # Populate the two dictionaries above. And make the classes in the base
+        # ontology aware to the root manager.
+        self.initialize_top_entries(self.import_managers.root,
+                                    top_ontology_module)
+
+        # A few pre-requesite type to support.
+        self.import_managers.add_default_import("dataclasses.dataclass")
+        self.import_managers.root.add_object_to_import('typing.Optional')
+
+        for type_class in NON_COMPOSITES.values():
+            self.import_managers.root.add_object_to_import(type_class)
 
         # Adjacency list to store the allowed types (in-built or user-defined),
         # and their attributes (if any) in order to validate the attribute
         # types.
         self.allowed_types_tree: Dict[str, Set] = {}
-        for type_str in {*BasicItem.TYPES, *CompositeItem.TYPES}:
+        for type_str in ALL_INBUILT_TYPES:
             self.allowed_types_tree[type_str] = set()
-            self.ref_to_full_name[type_str] = type_str
 
-        # A temporary directory to save the generated file structure until the
-        # generation is completed and verified.
-        self.tempdir: str
+        self.installed_forte_dir = utils.get_installed_forte_dir()
+        self.exclude_from_writing: Set[str] = set()
 
-        # Directories to be examined to find json files for user-defined config
-        # imports.
-        self.json_paths: List[str] = [] \
-            if json_dir_paths is None else json_dir_paths
+        # Directories to be examined to find json schema or installed ontology
+        # packages which the user wants to import.
+        self.import_dirs: List[str] = []
 
-    @staticmethod
+        # User defined directories are top choices.
+        if import_dirs is not None:
+            self.import_dirs.extend(import_dirs)
+
+        # The current directory is secondary.
+        self.import_dirs.append(os.getcwd())
+
+        spec_base = 'forte/ontology_specs'
+        forte_spec_dir = get_resource(spec_base, False)
+
+        # Lastly, the Forte installed directory.
+        self.import_dirs.append(forte_spec_dir)
+        self.exclude_from_writing = set()
+
+        if not generate_all:
+            logging.info("Checking existing specification "
+                         "directory: %s", forte_spec_dir)
+            for existing_spec in os.listdir(forte_spec_dir):
+                if existing_spec.endswith('.json'):
+                    logging.info(
+                        "Forte library contains %s, "
+                        "will skip this one.", existing_spec)
+                    self.exclude_from_writing.add(
+                        os.path.join(spec_base, existing_spec))
+
     @no_type_check
-    def initialize_top_entries(base_ontology_module: ModuleType) \
-            -> Tuple[Dict[str, str], Dict[str, str], Dict[str, Set[str]]]:
+    def initialize_top_entries(self, manager: ImportManager,
+                               base_ontology_module: ModuleType):
         """
         Parses the file corresponding to `base_ontology_module` -
         (1) Imports the imports defined by the base file,
-        (2) Imports the public API defined by by the base file in it's `__all__`
-        attribute,
-        (3) Extracts the name and inheritence of the class definitions and
+        (2) Imports the public API defined by the base file in it's `__all__`
+        attribute. The imports are added to the import manager.
+
+        (3) Extracts the name and inheritance of the class definitions and
         populates `self.top_to_core_entries`,
         (4) Extracts `__init__` arguments of class definitions and populates
         `self.top_init_args`
         (5) Includes type annotations for the `__init__` arguments.
 
         Args:
+            manager: The import manager to be populated
             base_ontology_module: File path of the module to be parsed.
 
         Returns:
-            Mapping from a class name defined in `base_ontology_module`
-        to the `__init__` arguments.
-            Mapping from import names defined in `base_ontology_module` to
-        import full name
-            Mapping from import names defined in `base_ontology_module` to
-        base names defined in `core.py`.
         """
-        top_init_args = {}
-        top_to_core_entries = {}
         tree = ast.parse(open(base_ontology_module.__file__, 'r').read())
+        base_module_name = base_ontology_module.__name__
 
-        imports = {}
+        # Record a map from the import name to the full name.
+        full_names = {}
 
         for elem in tree.body:
             # Adding all the imports.
@@ -164,143 +277,171 @@ class OntologyCodeGenerator:
                 for import_ in elem.names:
                     as_name = import_.asname
                     import_name = import_.name if as_name is None else as_name
-                    imports[import_name] = import_.name
+                    full_names[import_name] = import_.name
+                    manager.add_object_to_import(import_.name)
 
             if isinstance(elem, ast.ImportFrom):
                 for import_ in elem.names:
-                    imports[import_.name] = f"{elem.module}.{import_.name}"
+                    full_names[import_.name] = f"{elem.module}.{import_.name}"
+                    full_name = f"{elem.module}.{import_.name}"
+                    manager.add_object_to_import(full_name)
 
             # Adding all the module objects defined in `__all__` to imports.
             if isinstance(elem, ast.Assign) and len(elem.targets) > 0:
                 if elem.targets[0].id == '__all__':
-                    imports.update(
+                    full_names.update(
                         [(name.s,
                           f"{base_ontology_module.__name__}.{name.s}")
                          for name in elem.value.elts])
 
+                    for name in elem.value.elts:
+                        full_class_name = f"{base_module_name}.{name.s}"
+                        manager.add_object_to_import(full_class_name)
+
             # Adding `__init__` arguments for each class
             if isinstance(elem, ast.ClassDef):
+
                 # Adding base names for each class
                 elem_base_names = set()
                 if elem.bases is not None and len(elem.bases) > 0:
                     for elem_base in elem.bases:
                         while isinstance(elem_base, ast.Subscript):
+                            # TODO: Doesn't handle typed class well.
                             elem_base = elem_base.slice.value
                         elem_base_names.add(elem_base.id)
                 init_func = None
+
                 for func in elem.body:
                     if isinstance(func, ast.FunctionDef) and \
                             func.name == '__init__':
                         init_func = func
                         break
+
                 if init_func is None:
                     warnings.warn(
                         f"No `__init__` function found in the class"
                         f" {elem.name} of the module "
                         f"{base_ontology_module}.")
                 else:
+                    full_ele_name = full_names[elem.name]
+
                     # Assuming no variable args and keyword only args present in
                     # the base ontology module
-                    for i, arg in enumerate(init_func.args.args):
+                    for arg in init_func.args.args:
                         # Parsing the nested list of arg annotations
                         if arg.annotation is not None:
                             arg_ann = arg.annotation
                             while isinstance(arg_ann, ast.Subscript):
                                 module = arg_ann.value.id
-                                if module is not None and module in imports:
-                                    arg_ann.value.id = imports[module]
+                                if module is not None and module in full_names:
+                                    arg_ann.value.id = full_names[module]
                                 arg_ann = arg_ann.slice.value
                             module = arg_ann.id
-                            if module is not None and module in imports:
-                                arg_ann.id = imports[module]
-                        init_func.args.args[i] = arg
 
-                    # Unparsing the `__init__` args and normalising the string
-                    args = ast_unparse.unparse(init_func.args).split(',', 1)
-                    args_str = args[1].strip()\
-                        .replace('\n', '').replace('  ', '')
+                            if module is not None and module in full_names:
+                                arg_ann.id = full_names[module]
+                                manager.add_object_to_import(arg_ann.id)
 
-                    top_to_core_entries[imports[elem.name]] = elem_base_names
-                    top_init_args[imports[elem.name]] = args_str
-        return top_init_args, imports, top_to_core_entries
+                                # Convert from PackType to more concrete pack
+                                # type, such as DataPack or MultiPack.
+                                if arg_ann.id == PACK_TYPE_CLASS_NAME:
+                                    pack_class = hardcoded_pack_map(
+                                        full_ele_name)
+                                    manager.add_object_to_import(pack_class)
+                                    arg_ann.id = pack_class
 
-    def generate_ontology(self, base_json_file_path: str,
-                          destination_dir: Optional[str] = None,
-                          is_dry_run: bool = False) -> Optional[str]:
+                    self.top_to_core_entries[full_ele_name] = elem_base_names
+                    self.base_entry_lookup[full_ele_name] = full_ele_name
+                    self.top_init_args[full_ele_name] = init_func.args
+
+    def generate(self, spec_path: str, destination_dir: str = os.getcwd(),
+                 is_dry_run: bool = False, include_init: bool = True,
+                 merged_path: Optional[str] = None) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
-            ontology from the input json file.
+            ontology from the input json file. This is the main entry point to
+            the class.
+
             Args:
-                base_json_file_path: The base json config file.
+                spec_path: The input ontology specification file, which should
+                    be a json file.
                 destination_dir: The folder in which config packages are to be
-                generated. If not provided, current working directory is used.
-                Ignored if `is_dry_run` is `True`.
+                    generated. If not provided, current working directory is
+                    used. Ignored if `is_dry_run` is `True`.
                 is_dry_run: if `True`, creates the ontology in the temporary
-                directory, else, creates the ontology in the `destination_dir`.
+                    directory, else, creates the ontology in the
+                    `destination_dir`.
+                include_init: if `True`, generates `__init__.py` in the already
+                    existing directories, otherwise only generates `__init__.py`
+                    in the generated directories.
+                merged_path: if a path is provided, a merged ontology file will
+                    be written at this path.
+
             Returns:
                 Directory path in which the modules are created: either one of
                 the temporary directory or `destination_dir`.
         """
-        self.tempdir = tempfile.mkdtemp()
-
         # Update the list of directories to be examined for imported configs
-        self.json_paths.extend([
-            os.path.dirname(os.path.realpath(base_json_file_path)),
-            os.path.dirname(os.path.realpath('ft/onto')),
-            os.getcwd()])
+        self.import_dirs.append(os.path.dirname(os.path.realpath(spec_path)))
 
-        # Adding the imported objects to the allowed types.
-        for import_module in self.required_imports:
-            for obj_str in utils.get_user_objects_from_module(import_module):
-                full_obj_str = f"{import_module}.{obj_str}"
-                self.allowed_types_tree[full_obj_str] = set()
-                self.ref_to_full_name[obj_str] = full_obj_str
+        merged_schemas: List[Dict] = []
 
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
-        destination_dir = os.getcwd() if destination_dir is None \
-            else destination_dir
-        self.parse_ontology(base_json_file_path, destination_dir)
+        try:
+            self.parse_ontology_spec(spec_path, destination_dir,
+                                     merged_schema=merged_schemas)
+        except OntologySpecError:
+            logging.error("Error at parsing [%s]", spec_path)
+            raise
+
+        # Now generate all data.
+
+        # A temporary directory to save the generated file structure until the
+        # generation is completed and verified.
+        tempdir = tempfile.mkdtemp()
+
+        # Starting from here, we won't add any more modules to import.
+        self.import_managers.fix_all_modules()
+
+        logging.info('Working on %s', spec_path)
+        for writer in self.module_writers.writers():
+            logging.info('Writing module: %s', writer.module_name)
+            writer.write(tempdir, destination_dir, include_init)
+            logging.info('Done writing.')
+
+        if merged_path is not None:
+            logging.info("Writing merged schema at %s", merged_path)
+            merged_config = {
+                "name": "all_ontology",
+                "definitions": merged_schemas
+            }
+            with open(merged_path, 'w') as out:
+                json.dump(merged_config, out, indent=2)
+            logging.info("Done writing.")
 
         # When everything is successfully completed, copy the contents of
         # `self.tempdir` to the provided folder.
         if not is_dry_run:
-
-            generated_top_dirs = set(utils.get_top_level_dirs(self.tempdir))
+            generated_top_dirs = set(utils.get_top_level_dirs(tempdir))
             for existing_top_dir in utils.get_top_level_dirs(destination_dir):
                 if existing_top_dir in generated_top_dirs:
-                    warnings.warn(
-                        f"DirectoryAlreadyPresent: "
-                        f"The directory with the name "
-                        f"{existing_top_dir} is already present in "
-                        f"{destination_dir}. Merging into the "
-                        f"existing directory.")
+                    logging.warning(
+                        "The directory with the name "
+                        "%s is already present in "
+                        "%s. New files will be merge into the "
+                        "existing directory.", existing_top_dir,
+                        destination_dir)
 
-            dir_util.copy_tree(self.tempdir, destination_dir)
-
+            utils.copytree(tempdir, destination_dir,
+                           ignore_pattern_if_file_exists='*/__init__.py')
             return destination_dir
-        return self.tempdir
+        return tempdir
 
-    def parse_ontology(self, json_file_path: str,
-                       destination_dir: str,
-                       visited_paths: Optional[Dict[str, bool]] = None,
-                       rec_visited_paths: Optional[Dict[str, bool]] = None)\
-            -> List[str]:
-        """
-        Performs a topological traversal on the directed graph formed by the
-        imported json configs. While processing each config, it first generates
-        the classes corresponding to the entries of the imported configs, then
-        imports the generated python classes to generate the classes
-        corresponding to the entries of `json_file_path`.
-        Args:
-            json_file_path: The current json config to be processed.
-            visited_paths: Keeps track of the json configs already processed.
-            rec_visited_paths: Keeps track of the current recursion stack, to
-            detect, and throw error if any cycles are present.
-            with the base ontology config, else, False.
-
-        Returns: Modules to be imported by the generated python files
-        corresponding to the entries defined in json config imports.
-        """
+    def visit_ontology_imports(
+            self, import_path: str,
+            visited_paths: Optional[Dict[str, bool]] = None,
+            rec_visited_paths: Optional[Dict[str, bool]] = None
+    ) -> Optional[Tuple[str, Dict[str, bool], Dict[str, bool]]]:
         # Initialize the visited dicts when the function is called for the
         # first time.
         if visited_paths is None:
@@ -309,141 +450,174 @@ class OntologyCodeGenerator:
         if rec_visited_paths is None:
             rec_visited_paths = defaultdict(lambda: False)
 
-        visited_paths[json_file_path] = True
-        rec_visited_paths[json_file_path] = True
+        # Check for import cycles
+        if rec_visited_paths[import_path]:
+            raise OntologyAlreadyGeneratedException(
+                f"Ontology corresponding to {import_path} already "
+                f"generated, cycles not permitted, aborting")
+
+        # If the ontology is already generated, need not generate it again
+        if visited_paths[import_path]:
+            return None
+
+        # Add the json_file path to the visited dictionaries
+        visited_paths[import_path] = True
+        rec_visited_paths[import_path] = True
+
+        # Validate and load the ontology specification.
+        try:
+            utils.validate_json_schema(import_path)
+        except Exception as exception:
+            if type(exception).__name__.split('.')[0] == jsonschema.__name__ \
+                    and hasattr(exception, 'message'):
+                raise OntologySpecValidationError(cast(Any, exception).message)
+            raise
+
+        return import_path, visited_paths, rec_visited_paths
+
+    def find_import_path(self, import_path):
+        for import_dir in self.import_dirs:
+            full_spec_path = os.path.join(import_dir, import_path)
+            if os.path.exists(full_spec_path):
+                return full_spec_path
+
+        raise OntologySourceNotFoundException(
+            'Cannot find import [%s].' % import_path)
+
+    def parse_ontology_spec(
+            self, ontology_path: str,
+            destination_dir: str,
+            merged_schema: List[Dict],
+            visited_paths: Optional[Dict[str, bool]] = None,
+            rec_visited_paths: Optional[Dict[str, bool]] = None,
+    ):
+        r"""Performs a topological traversal on the directed graph formed by the
+        imported json configs. While processing each config, it first generates
+        the classes corresponding to the entries of the imported configs, then
+        imports the generated python classes to generate the classes
+        corresponding to the entries of `json_file_path`.
+        Args:
+            ontology_path: Path to the ontology.
+            destination_dir: Directory in which the generated module will
+                be located.
+            merged_schema: A list to read all the merged schema.
+            visited_paths: Keeps track of the json configs already processed.
+            rec_visited_paths: Keeps track of the current recursion stack, to
+                detect, and throw error if any cycles are present.
+        Returns:
+        """
+        import_info = self.visit_ontology_imports(
+            ontology_path, visited_paths, rec_visited_paths)
+
+        if import_info is None:
+            return
+
+        json_file_path, visited_paths, rec_visited_paths = import_info
 
         with open(json_file_path, 'r') as f:
-            curr_str = f.read()
-        curr_dict = json.loads(curr_str)
+            spec_dict = json.load(f)
 
-        # Extract imported json files and generate ontology for them.
-        json_imports: List = curr_dict.get("import_paths", [])
-        allowed_packages: List = curr_dict.get("additional_prefixes", [])
+        # Parse imported ontologies. Users can import them via a path relative
+        # to the PYTHONPATH.
+        relative_imports: Set[str] = set(
+            spec_dict.get(SchemaKeywords.imports, []))
 
-        modules_to_import: List[str] = allowed_packages
+        for rel_import in relative_imports:
+            full_pkg_path: str = self.find_import_path(rel_import)
+            logging.info('Imported ontology at: %s', full_pkg_path)
+            self.parse_ontology_spec(
+                full_pkg_path, destination_dir, merged_schema, visited_paths,
+                rec_visited_paths)
 
-        for import_file in json_imports:
-            import_json_file = utils.search_in_dirs(import_file,
-                                                    self.json_paths)
-            if import_json_file is None:
-                raise ValueError(f"ImportOntologyNotFound: "
-                                 f"Ontology corresponding to {import_file} not "
-                                 f"found in the current directory or the "
-                                 f"directory of original json config.")
-            if import_json_file in rec_visited_paths:
-                raise ValueError(f"ImportOntologyAlreadyGenerated: "
-                                 f"Ontology corresponding to {import_json_file}"
-                                 f" already generated, cycles not permitted, "
-                                 f"aborting")
-            elif import_json_file not in visited_paths:
-                modules_to_import.extend(self.parse_ontology(
-                    import_json_file, destination_dir,
-                    visited_paths, rec_visited_paths))
+        # Once the ontology for all the imported files is generated, generate
+        # ontology of the current file.
+        # Print relative json path in the ontology if the current directory is
+        # the installation directory - example, when running the test cases
+        curr_forte_dir = utils.get_current_forte_dir()
 
-        # once the ontologies for all the imported files is generated, generate
-        # ontology of the current file
-        modules_to_import = self.parse_config(curr_dict, modules_to_import,
-                                              destination_dir)
+        print_json_file = json_file_path
+        if self.installed_forte_dir is not None and os.path.samefile(
+                curr_forte_dir, self.installed_forte_dir):
+            print_json_file = os.path.relpath(json_file_path, curr_forte_dir)
+
+        self.parse_schema(spec_dict, print_json_file, merged_schema)
+
         rec_visited_paths[json_file_path] = False
-        return modules_to_import
 
-    def parse_config(self, schema: Dict, modules_to_import: List[str],
-                     destination_dir: str) -> List[str]:
-        r"""
-        Generates ontology code for ontology dictionary extracted from a json
-        config. Appends entry code to the corresponding module. Creates a new
-        module file if module is generated for the first time.
+    def parse_schema(self, schema: Dict, source_json_file: str,
+                     merged_schema: List[Dict]):
+        r""" Generates ontology code for a parsed schema extracted from a
+        json config. Appends entry code to the corresponding module. Creates a
+        new module file if module is generated for the first time.
+
         Args:
             schema: Ontology dictionary extracted from a json config.
-            modules_to_import: Dependencies to be imported by generated modules.
-
+            source_json_file: Path of the source json file.
+            merged_schema: The merged schema is used to remember all
+                definitions during parsing.
         Returns:
             Modules to be imported by dependencies of the current ontology.
         """
-        entry_definitions: List[Dict] = schema["definitions"]
+        entry_definitions: List[Dict] = schema[SchemaKeywords.definitions]
+        merged_schema.extend(entry_definitions)
 
-        allowed_packages = set(schema.get("additional_prefixes", [])
-                               + ["ft.onto"])
+        allowed_packages = set(
+            schema.get(SchemaKeywords.prefixes, []) + [DEFAULT_PREFIX])
+        sorted_prefixes = analyze_packages(allowed_packages)
 
-        modules_to_import += list(allowed_packages)
-        new_modules_to_import = []
+        file_desc = file_header(
+            schema.get(SchemaKeywords.description, ""),
+            schema.get(SchemaKeywords.ontology_name, "")
+        )
+
         for definition in entry_definitions:
-            entry_name = definition["entry_name"]
-            entry_splits = entry_name.split('.')
-            filename, name = entry_name.split('.')[-2:]
-            pkg = '.'.join(entry_splits[0: -2])
-            if len(entry_splits) < 4:
-                raise ValueError(f"EntryNameNotComplete: {entry_name} is not "
-                                 f"complete, please provide full package, "
-                                 f"module and class name.")
-            if pkg not in allowed_packages:
-                raise ValueError(f"EntryPackageConflict: Package name for "
-                                 f"{entry_name} conflicts with the provided "
-                                 f"prefixes.")
-            self.ref_to_full_name[name] = entry_name
-            self.ref_to_full_name[entry_name] = entry_name
-            if entry_name in self.allowed_types_tree:
+            raw_entry_name = definition[SchemaKeywords.entry_name]
+            validate_entry(raw_entry_name, sorted_prefixes)
+
+            if raw_entry_name in self.allowed_types_tree:
                 warnings.warn(
-                    f"DuplicateEntryWarning: "
-                    f"Class {entry_name} already present in the "
-                    f"ontology, will be overridden.")
-            self.allowed_types_tree[entry_name] = set()
-            entry_item, properties = self.parse_entry(name,
-                                                      entry_name,
-                                                      definition)
-            module_name: str = f"{pkg}.{filename}"
-            class_name: str = f"{module_name}.{name}"
+                    f"Class {raw_entry_name} already present in the "
+                    f"ontology, will be overridden.", DuplicateEntriesWarning)
+            self.allowed_types_tree[raw_entry_name] = set()
 
-            try:
-                # Creating entry directory and file in the tempdir if required.
-                entry_pkg_dir = pkg.replace('.', '/')
-                entry_dir: str = os.path.join(self.tempdir, entry_pkg_dir)
-                entry_file: str = f'{os.path.join(entry_dir, filename)}.py'
-                file_desc: str = 'Automatically generated file. ' \
-                                 'Do not change manually.'
-                all_imports = self.required_imports + modules_to_import
-                file_item = FileItem(entry_item, entry_file, self.ignore_errors,
-                                     file_desc, all_imports)
+            # Add the entry definition to the import managers.
+            # This time adding to the root manager so everyone can access it
+            # if needed, but they will only appear in the import list when
+            # requested.
+            # Entry class should be added to the imports before the attributes
+            # to be able to used as the attribute type for the same entry.
+            self.import_managers.root.add_object_to_import(raw_entry_name)
 
-                # Path(entry_dir).mkdir(parents=True, exist_ok=True)
-                # Create entry sub-directories with .generated file if the
-                # subdirectory is created programmatically
-                # Peak if the folder exists at the destination directory
-                entry_dir_split = utils.split_file_path(entry_pkg_dir)
-                rel_dir_paths = it.accumulate(entry_dir_split, os.path.join)
-                for rel_dir_path in rel_dir_paths:
-                    temp_path = os.path.join(self.tempdir, rel_dir_path)
-                    dest_path = os.path.join(destination_dir, rel_dir_path)
-                    if not os.path.exists(temp_path):
-                        os.mkdir(temp_path)
-                    if not os.path.exists(dest_path):
-                        Path(os.path.join(temp_path, '.generated')).touch()
+            # Get various parts of the entry name.
+            en = EntryName(raw_entry_name)
+            entry_item, properties = self.parse_entry(en, definition)
 
-                # Creating the file if it does not exist.
-                with open(entry_file, 'a+') as f:
-                    f.write(file_item.to_code(0))
+            # Add it as a defining object.
+            self.import_managers.get(en.module_name).add_defining_objects(
+                raw_entry_name)
 
-            except ValueError:
-                self.cleanup_generated_ontology(self.tempdir, is_forced=True)
-                raise
-
-            # Modules to be imported by the dependencies.
-            new_modules_to_import.append(module_name)
+            # Get or set module writer only if the ontology to be generated
+            # is not already installed.
+            if source_json_file not in self.exclude_from_writing:
+                module_writer = self.module_writers.get(en.module_name)
+                module_writer.set_description(file_desc)
+                module_writer.source_file = source_json_file
+                # Add entry item to the writer.
+                module_writer.add_entry(en, entry_item)
 
             # Adding entry attributes to the allowed types for validation.
             for property_name in properties:
-                if property_name in self.allowed_types_tree[class_name]:
+                if property_name in self.allowed_types_tree[en.class_name]:
                     warnings.warn(
-                        f"DuplicateAttributeWarning: "
-                        f"Attribute type for the entry {class_name} and "
-                        f"the attribute {property_name} already present in "
-                        f"the ontology, will be overridden")
-                self.allowed_types_tree[class_name].add(property_name)
+                        f"Attribute type for the entry {en.class_name} "
+                        f"and the attribute {property_name} already present in "
+                        f"the ontology, will be overridden",
+                        DuplicatedAttributesWarning
+                    )
+                self.allowed_types_tree[en.class_name].add(property_name)
 
-        return new_modules_to_import
-
-    def cleanup_generated_ontology(self, path, is_forced=False) -> \
-            Tuple[bool, Optional[str]]:
+    def cleanup_generated_ontology(self, path, is_forced=False) -> (
+            Tuple[bool, Optional[str]]):
         """
         Deletes the generated files and directories. Generated files are
         identified by the header `***automatically_generated***`. Generated
@@ -463,12 +637,12 @@ class OntologyCodeGenerator:
 
         rel_paths = dir_util.copy_tree(path, '', dry_run=1)
         rel_paths = [os.path.dirname(file) for file in rel_paths
-                     if os.path.basename(file).startswith('.generated')]
+                     if os.path.basename(file).startswith(AUTO_GEN_FILENAME)]
 
         del_dir = None
         if not is_forced:
             curr_time_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
-            del_dir = os.path.join(os.path.dirname(path), '.deleted',
+            del_dir = os.path.join(os.path.dirname(path), AUTO_DEL_FILENAME,
                                    curr_time_str)
             for rel_path in rel_paths:
                 joined_path = os.path.join(del_dir, rel_path)
@@ -502,12 +676,12 @@ class OntologyCodeGenerator:
         if os.path.isfile(path):
             # path is a file type
             # delete .generated marker files and automatically generated files
-            is_empty = os.path.basename(path).startswith('.generated')
+            is_empty = os.path.basename(path).startswith(AUTO_GEN_FILENAME)
             if not is_empty and os.access(path, os.R_OK):
                 with open(path, 'r') as f:
                     lines = f.readlines()
                     if len(lines) > 0:
-                        if lines[0].startswith(f'# {self.AUTO_GEN_CONST}'):
+                        if lines[0].startswith(f'# {AUTO_GEN_SIGNATURE}'):
                             is_empty = True
             if is_empty:
                 if delete_dir is not None:
@@ -529,160 +703,301 @@ class OntologyCodeGenerator:
                 os.rmdir(path)
         return is_empty
 
-    def parse_entry(self, ref_name: str,
-                    full_name: str,
-                    schema: Dict) -> Tuple[DefinitionItem, List[str]]:
+    def replace_annotation(self, entry_name: EntryName, func_args):
+        this_manager = self.import_managers.get(entry_name.module_name)
+        for arg in func_args.args:
+            if arg.annotation is not None:
+                arg_ann = arg.annotation
+                # Handling the type name for cases like Optional[X]
+                while isinstance(arg_ann, ast.Subscript):
+                    # The types for arg_ann and so on are in typed_ast._ast3,
+                    # these types are protected hence hard to be used here.
+
+                    short_ann_name = arg_ann.value.id  # type: ignore
+                    full_ann_name: str = this_manager.get_name_to_use(
+                        short_ann_name)
+
+                    arg_ann.value.id = full_ann_name  # type: ignore
+                    arg_ann = arg_ann.slice.value  # type: ignore
+
+                # Handling the type name for arguments.
+                arg_ann.id = this_manager.get_name_to_use(arg_ann.id)
+
+    def construct_init(self, entry_name: EntryName, base_entry: str):
+        base_init_args = self.top_init_args[base_entry]
+        custom_init_args = copy.deepcopy(base_init_args)
+
+        self.replace_annotation(entry_name, custom_init_args)
+        custom_init_args_str = as_init_str(custom_init_args)
+        return custom_init_args_str
+
+    def parse_entry(self, entry_name: EntryName,
+                    schema: Dict) -> Tuple[EntryDefinition, List[str]]:
         """
         Args:
-            ref_name: Reference name of the entry.
-            full_name: Full class name of the entry.
+            entry_name: Object holds various name form of the entry.
             schema: Dictionary containing specifications for an entry.
 
         Returns: extracted entry information: entry package string, entry
         filename, entry class entry_name, generated entry code and entry
         attribute names.
         """
-        name = full_name
-        # reading the entry definition dictionary
-        parent_entry: str = self.parse_type(schema["parent_entry"])
+        this_manager = self.import_managers.get(entry_name.module_name)
 
-        properties: List[Dict] = schema.get("attributes", [])
+        # Determine the parent entry of this entry.
+        parent_entry: str = schema[SchemaKeywords.parent_entry]
 
-        # validate if the entry parent is present in the tree
-        if parent_entry not in self.allowed_types_tree:
-            raise ValueError(f"ParentEntryNotDeclared: "
-                             f"Cannot add {name} to the ontology as "
-                             f"it's parent entry {parent_entry} is not present "
-                             f"in the ontology.")
+        if parent_entry.startswith(TOP_MOST_MODULE_NAME):
+            raise ParentEntryNotSupportedException(
+                f"The parent entry {parent_entry} cannot be directly inherited,"
+                f" please inherit a type from {top.__name__} or your own"
+                f" ontology."
+            )
 
-        base_entry: str = self.get_and_set_base_entry(name, parent_entry)
-        init_args: str = self.top_init_args[base_entry]
-        core_bases: Set[str] = self.top_to_core_entries[base_entry]
+        if not this_manager.is_imported(parent_entry):
+            raise ParentEntryNotDeclaredException(
+                f"The parent entry {parent_entry} is not declared. It is "
+                f"neither in the base entries nor in custom entries. "
+                f"Please check them ontology specification, and make sure the "
+                f"entry is defined before this."
+            )
+
+        base_entry: Optional[str] = self.find_base_entry(
+            entry_name.class_name, parent_entry)
+
+        if base_entry is None:
+            raise OntologySpecError(
+                f"Cannot find the base entry for entry "
+                f"{entry_name.class_name} and {parent_entry}"
+            )
+
+        if base_entry not in self.top_init_args:
+            raise ParentEntryNotSupportedException(
+                f"Cannot add {entry_name.class_name} to the ontology as "
+                f"it's parent entry {parent_entry} is not supported. This is "
+                f"likely that the entries are not inheriting the allowed types."
+            )
+
+        # Take the property definitions of this entry.
+        properties: List[Dict] = schema.get(SchemaKeywords.attributes, [])
+
+        this_manager = self.import_managers.get(entry_name.module_name)
+
+        # Validate if the parent entry is present.
+        if not this_manager.is_known_name(parent_entry):
+            raise ParentEntryNotDeclaredException(
+                f"Cannot add {entry_name.class_name} to the ontology as "
+                f"it's parent entry {parent_entry} is not present "
+                f"in the ontology.")
+
+        parent_entry_use_name = this_manager.get_name_to_use(parent_entry)
 
         property_items, property_names = [], []
         for prop_schema in properties:
             property_names.append(prop_schema["name"])
-            property_items.append(self.parse_property(name, prop_schema))
+            property_items.append(
+                self.parse_property(entry_name, prop_schema))
 
-        class_attribute_names: List[str] = []
+        # For special classes that requires a constraint.
+        core_bases: Set[str] = self.top_to_core_entries[base_entry]
+        entry_constraint_keys: Dict[str, str] = {}
         if any([item == "BaseLink" for item in core_bases]):
-            class_attribute_names = self.core_base_keys["BaseLink"]
+            entry_constraint_keys = DEFAULT_CONSTRAINTS_KEYS["BaseLink"]
         elif any([item == "BaseGroup" for item in core_bases]):
-            class_attribute_names = self.core_base_keys["BaseGroup"]
+            entry_constraint_keys = DEFAULT_CONSTRAINTS_KEYS["BaseGroup"]
 
-        # TODO: Apply stricter checking on class attributes.
-        # TODO: Test subtypes of Group.
-        class_att_items: List[Property] = []
+        class_att_items: List[ClassTypeDefinition] = []
+        for schema_key, class_key in entry_constraint_keys.items():
+            if schema_key in schema:
+                constraint_type_ = schema[schema_key]
+                constraint_type_name = this_manager.get_name_to_use(
+                    constraint_type_)
 
-        for class_att in class_attribute_names:
-            if class_att in schema:
-                type_ = self.parse_type(schema[class_att])
-                class_att_items.append(ClassAttributeItem(class_att, type_,))
+                # TODO: cannot handle constraints that contain self-references.
+                # self_ref = entry_name.class_name == constraint_type_
 
-        entry_item = DefinitionItem(name=ref_name,
-                                    class_type=parent_entry,
-                                    init_args=init_args,
-                                    properties=property_items,
-                                    class_attributes=class_att_items,
-                                    description=schema.get("description", None))
+                class_att_items.append(
+                    ClassTypeDefinition(class_key, constraint_type_name))
+
+        # TODO: Can assign better object type to Link and Group objects
+        custom_init_arg_str: str = self.construct_init(entry_name, base_entry)
+
+        entry_item = EntryDefinition(
+            name=entry_name.name,
+            class_type=parent_entry_use_name,
+            init_args=custom_init_arg_str,
+            properties=property_items,
+            class_attributes=class_att_items,
+            description=schema.get(SchemaKeywords.description, None))
 
         return entry_item, property_names
 
-    def parse_type(self, type_):
-        return self.ref_to_full_name.get(type_, type_)
+    def parse_dict(
+            self, manager: ImportManager, schema: Dict, entry_name: EntryName,
+            att_name: str, att_type: str, desc: str):
+        if (SchemaKeywords.dict_key_type not in schema
+                or SchemaKeywords.dict_value_type not in schema):
+            raise TypeNotDeclaredException(
+                f"Item type of the attribute {att_name} for the entry "
+                f" {entry_name.class_name} not declared. This attribute is "
+                f"a composite type: {att_type}, it should have a "
+                f"{SchemaKeywords.dict_key_type} and "
+                f"{SchemaKeywords.dict_value_type}.")
 
-    def parse_property(self, entry_name: str, schema: Dict) -> Property:
+        key_type = schema[SchemaKeywords.dict_key_type]
+        if not valid_composite_key(key_type):
+            raise UnsupportedTypeException(
+                f"Key type {key_type} for entry {entry_name.name}'s "
+                f"attribute {att_name} is not supported, we only support a "
+                f"limited set of keys.")
+
+        value_type = schema[SchemaKeywords.dict_value_type]
+        if is_composite_type(value_type):
+            # Case of nested.
+            raise UnsupportedTypeException(
+                f"Item type {value_type} for entry {entry_name.name}'s "
+                f"attribute {att_name} is a composite type, we do not support "
+                f"nested composite type.")
+
+        if not manager.is_known_name(value_type):
+            # Case of unknown.
+            raise TypeNotDeclaredException(
+                f"Item type {value_type} for the entry "
+                f"{entry_name.name} of the attribute {att_name} "
+                f"not declared in ontology.")
+
+        # Make sure the import of these related types are handled.
+        manager.add_object_to_import(value_type)
+
+        self_ref = entry_name.class_name == value_type
+
+        default_val: Dict = {}
+
+        return DictProperty(
+            manager, att_name, key_type, value_type,
+            description=desc, default_val=default_val, self_ref=self_ref)
+
+    def parse_list(
+            self, manager: ImportManager, schema: Dict, entry_name: EntryName,
+            att_name: str, att_type: str, desc: str) -> ListProperty:
+        if SchemaKeywords.element_type not in schema:
+            raise TypeNotDeclaredException(
+                f"Item type for the attribute {att_name} of the entry "
+                f"[{entry_name.class_name}] not declared. This attribute is "
+                f"a composite type: {att_type}, it should have a "
+                f"{SchemaKeywords.element_type}.")
+
+        item_type = schema[SchemaKeywords.element_type]
+        if is_composite_type(item_type):
+            # Case of nested.
+            raise UnsupportedTypeException(
+                f"Item type {item_type} for entry {entry_name.name}'s "
+                f"attribute {att_name} is a composite type, we do not support "
+                f"nested composite type.")
+
+        if not manager.is_known_name(item_type):
+            # Case of unknown.
+            raise TypeNotDeclaredException(
+                f"Item type {item_type} for the entry "
+                f"{entry_name.name} of the attribute {att_name} "
+                f"not declared in ontology.")
+
+        # Make sure the import of these related types are handled.
+        manager.add_object_to_import(item_type)
+
+        self_ref = entry_name.class_name == item_type
+
+        return ListProperty(
+            manager, att_name, item_type, description=desc,
+            default_val=[], self_ref=self_ref)
+
+    def parse_non_composite(
+            self, manager: ImportManager, att_name: str, att_type: str,
+            desc: str, default_val: str, self_ref: bool = False
+    ) -> NonCompositeProperty:
+        manager.add_object_to_import('typing.Optional')
+
+        return NonCompositeProperty(
+            manager, att_name, att_type, description=desc,
+            default_val=default_val, self_ref=self_ref)
+
+    def parse_property(self, entry_name: EntryName, schema: Dict) -> Property:
         """
         Parses instance and class properties defined in an entry schema and
         checks for the constraints allowed by the ontology generation system.
+
         Args:
-            entry_name: Normalized name for the entry as defined by the user.
+            entry_name: Entry Name object that contains various form of the
+              entry's name.
             schema: Entry definition schema
         Returns: An object of class `code_generation_util.FileItem` containing
          the generated code.
         """
-        name = schema["name"]
-        type_str = schema["type"]
-        type_ = self.parse_type(type_str)
+        att_name = schema[SchemaKeywords.attribute_name]
+        att_type = schema[SchemaKeywords.attribute_type]
+
+        manager: ImportManager = self.import_managers.get(
+            entry_name.module_name)
 
         # schema type should be present in the validation tree
-        if type_ not in self.allowed_types_tree:
-            raise ValueError(f"AttributeTypeNotDeclared: "
-                             f"Attribute type '{type_}' for the entry "
-                             f"'{entry_name}' and the schema '{name}' not "
-                             f"declared in the ontology")
+        # TODO: Remove this hack
+        if not manager.is_known_name(att_type):
+            raise TypeNotDeclaredException(
+                f"Attribute type '{att_type}' for the entry "
+                f"'{entry_name.name}' of the attribute '{att_name}' not "
+                f"declared in the ontology")
 
-        desc = schema.get("description", None)
-        default = schema.get("default", None)
+        desc = schema.get(SchemaKeywords.description, None)
+        default_val = schema.get(SchemaKeywords.default_value, None)
 
-        # TODO: Only supports array for now!
         # element type should be present in the validation tree
-        if type_str in CompositeItem.TYPES:
-            if "item_type" not in schema:
-                raise ValueError(f"ItemTypeNotFound: "
-                                 f"Item type for the entry {entry_name} "
-                                 f"of the attribute {name} not declared")
-            item_type = schema["item_type"]
-            if item_type in CompositeItem.TYPES:
-                raise ValueError(
-                    f"ItemTypeCompositeError: "
-                    f"Item type {item_type} for the entry {entry_name} of the"
-                    f"attribute {name} is a composite type that is not"
-                    f"supported.")
-            item_type = self.parse_type(item_type)
-            item_type_norm = item_type.replace('"', '')
-            if not (item_type_norm in self.allowed_types_tree
-                    or self.ref_to_full_name.get(item_type_norm, '')
-                    in self.allowed_types_tree
-                    or item_type_norm == entry_name):
-                raise ValueError(
-                    f"ItemTypeNotDeclared: "
-                    f"Item type {item_type_norm} for the entry {entry_name} "
-                    f"of the attribute {name} not declared in ontology")
+        if att_type in COMPOSITES:
+            if att_type == 'List':
+                return self.parse_list(
+                    manager, schema, entry_name, att_name, att_type, desc)
+            elif att_type == 'Dict':
+                return self.parse_dict(
+                    manager, schema, entry_name, att_name, att_type, desc)
+        elif att_type in NON_COMPOSITES or manager.is_imported(att_type):
+            self_ref = entry_name.class_name == att_type
+            return self.parse_non_composite(
+                manager, att_name, att_type, desc, default_val,
+                self_ref=self_ref)
 
-            return CompositeItem(name, type_, item_type, desc, default)
+        raise UnsupportedTypeException(
+            f"{att_type} is not a supported type.")
 
-        return BasicItem(name, type_, desc, default)
+    def find_base_entry(
+            self, this_entry: str, parent_entry: str) -> Optional[str]:
+        """ Find the `base_entry`. As a side effect, it will populate the
+        internal state `self.base_entry_lookup`. The base will be one of the
+        predefined base entry group in the top ontology, which are:
+         ["Link", "Annotation", "Group", "Generic", "MultiPackLink",
+         "MultiPackGroup", "MultiPackGeneric"]
 
-    def parse_attribute(self, entry_name, schema):
-        name = schema["name"]
-        type_str = schema.get("type", None)
-        type_ = '' if type_str is None else self.parse_type(type_str)
-
-        desc = schema.get("description", None)
-
-        if "default" not in schema:
-            raise ValueError(f"NoDefaultClassAttribute: "
-                             f"No default value present for the class attribute"
-                             f" {name} for the entry {entry_name}.")
-
-        # if default is of the type "type" which is already seen, parse_type
-        default = self.parse_type(schema.get("default"))
-        return ClassAttributeItem(name, type_, desc, default)
-
-    def get_and_set_base_entry(self, entry_name: str, parent_entry: str) \
-            -> str:
-        """
-        Function to return `base_entry` which is the entry on which the
-         arguments would be based and populates `self.user_to_base_entry`
         Args:
-            entry_name: the entry name for which the base_entry is
-            to be returned.
-            parent_entry: parent of the entry name Note that the `base_entry` of
-            the `entry_name` is same as the base entry of the `parent_entry`.
+            this_entry: the entry name for which the base_entry is to be
+               returned.
+            parent_entry: parent of the `this_entry`. Note that the `base_entry`
+             of the `this_entry` is same as the base entry of the
+             `parent_entry`.
 
         Returns:
-            `base_entry` for the entry `entry_name`. Note that base entry can
-            only be one of - `["Link", "Annotation", "Group"]`
+            `base_entry` for the entry `this_entry`.
 
         Example:
             If the subclass structure is -
             `Word` inherits `Token` inherits `Annotation`.
             The base_entry for both `Word` and `Token` should be `Annotation`.
         """
+        base_entry: Optional[str]
         if parent_entry in self.top_init_args:
-            base_entry: str = parent_entry
+            # The top init args contains the objects in the top.py.
+            base_entry = parent_entry
         else:
-            base_entry = self.user_to_base_entry[parent_entry]
-        self.user_to_base_entry[entry_name] = base_entry
+            base_entry = self.base_entry_lookup.get(parent_entry, None)
+
+        if base_entry is not None:
+            self.base_entry_lookup[this_entry] = base_entry
+
         return base_entry

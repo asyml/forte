@@ -3,3 +3,9 @@
 
 Trainers
 *********
+
+Base Trainer
+============
+
+.. autoclass:: forte.trainer.base.base_trainer.BaseTrainer
+    :members:

@@ -15,7 +15,6 @@
 Modules of Forte library utils.
 """
 
-from forte.utils.test import *
 from forte.utils.types import *
 from forte.utils.utils import *
 from forte.utils.utils_io import *

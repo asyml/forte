@@ -14,16 +14,15 @@
 """
 The reader that reads RACE multi choice QA data into Datapacks.
 """
-import os
 import json
-
-from typing import Any, Iterator, List
+import os
+from typing import Any, Iterator
 
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.race_mutli_choice_qa_ontology import (
-    Article, Passage, Question, Option)
+from ft.onto.race_multi_choice_qa_ontology import (
+    RaceDocument, Passage, Question, Option)
 
 __all__ = [
     "RACEMultiChoiceQAReader",
@@ -64,8 +63,6 @@ class RACEMultiChoiceQAReader(PackReader):
             pack = DataPack()
             text: str = dataset['article']
             article_end = len(text)
-            article = Article(pack, 0, article_end)
-            pack.add_entry(article)
             offset = article_end + 1
 
             for qid, ques_text in enumerate(dataset['questions']):
@@ -74,30 +71,27 @@ class RACEMultiChoiceQAReader(PackReader):
                 question = Question(pack, offset, ques_end)
                 offset = ques_end + 1
 
-                options: List[Option] = []
                 options_text = dataset['options'][qid]
                 for option_text in options_text:
                     text += '\n' + option_text
                     option_end = offset + len(option_text)
                     option = Option(pack, offset, option_end)
-                    options.append(option)
-                    pack.add_entry(option)
                     offset = option_end + 1
-                question.set_options(options)
+                    question.options.append(option)
 
                 answers = dataset['answers'][qid]
                 if not isinstance(answers, list):
                     answers = [answers]
                 answers = [self._convert_to_int(ans) for ans in answers]
-                question.set_answers(answers)
-                pack.add_entry(question)
+                question.answers = answers
 
             pack.set_text(text, replace_func=self.text_replace_operation)
 
+            RaceDocument(pack, 0, article_end)
+
             passage_id: str = dataset['id']
             passage = Passage(pack, 0, len(pack.text))
-            passage.set_passage_id(passage_id)
-            pack.add_entry(passage)
+            passage.passage_id = passage_id
 
-            pack.meta.doc_id = passage_id
+            pack.pack_name = passage_id
             yield pack

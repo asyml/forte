@@ -14,18 +14,20 @@
 """
 Utility functions
 """
-from typing import Dict, List, Optional
+from functools import wraps
+from inspect import getfullargspec
 from pydoc import locate
-import yaml
+from typing import Dict, List, Optional, get_type_hints
 
-from texar.torch import HParams
+from typing_inspect import is_union_type, get_origin
 
 __all__ = [
     "get_full_module_name",
     "get_class_name",
     "get_class",
     "get_qual_name",
-    "create_class_with_kwargs"
+    "create_class_with_kwargs",
+    "check_type",
 ]
 
 
@@ -97,8 +99,12 @@ def get_class(class_name: str,
                 break
 
     if class_ is None:
-        raise ValueError(
-            "Class not found in {}: {}".format(module_paths, class_name))
+        if module_paths:
+            raise ValueError(
+                "Class not found in {}: {}".format(module_paths, class_name))
+        else:
+            raise ValueError(
+                "Class not found in {}".format(class_name))
 
     return class_
 
@@ -121,39 +127,57 @@ def get_qual_name(o, lower: bool = False) -> str:
         return o.__qualname__
 
 
-def create_class_with_kwargs(class_name: str,
-                             class_args: Dict,
-                             h_params: Optional[Dict] = None):
+def create_class_with_kwargs(class_name: str, class_args: Dict):
     r"""Create class with the given arguments.
 
     Args:
         class_name (str): Class name.
         class_args (Dict): Class arguments.
-        h_params (Dict): Hyperparameters for the processor.
 
     Returns:
-        The class object and the hyperparameters for the processor.
+        An object with class of type `class_name`.
     """
     cls = get_class(class_name)
     if not class_args:
         class_args = {}
     obj = cls(**class_args)
 
-    if h_params is None:
-        h_params = {}
+    return obj
 
-    p_params: Dict = {}
 
-    if "config_path" in h_params and not h_params["config_path"] is None:
-        filebased_hparams = yaml.safe_load(open(h_params["config_path"]))
+def check_type(obj, tp):
+    if is_union_type(tp):
+        return any(check_type(obj, a) for a in tp.__args__)
     else:
-        filebased_hparams = {}
-    p_params.update(filebased_hparams)
+        origin = get_origin(tp)
+        if origin is None or origin == tp:
+            return isinstance(obj, tp)
+        else:
+            return check_type(obj, origin)
 
-    p_params.update(h_params.get("overwrite_configs", {}))
-    default_processor_hparams = cls.default_configs()
 
-    processor_hparams = HParams(p_params,
-                                default_processor_hparams)
+def validate_input(func, **kwargs):
+    hints = get_type_hints(func)
 
-    return obj, processor_hparams
+    # iterate all type hints
+    for attr_name, attr_type in hints.items():
+        if attr_name == 'return':
+            continue
+
+        if not isinstance(kwargs[attr_name], attr_type):
+            raise TypeError(
+                f'{attr_name} should be of type {attr_type}, '
+                f'got type {type(kwargs[attr_name])}'
+            )
+
+
+def type_check(func):
+    @wraps(func)
+    def wrapped_decorator(*args, **kwargs):
+        # translate *args into **kwargs
+        func_args = getfullargspec(func)[0]
+        kwargs.update(dict(zip(func_args, args)))
+        validate_input(func, **kwargs)
+        return func(**kwargs)
+
+    return wrapped_decorator

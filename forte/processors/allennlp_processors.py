@@ -13,14 +13,15 @@
 # limitations under the License.
 
 import logging
-from allennlp.predictors import Predictor
-from texar.torch import HParams
 
-from ft.onto.base_ontology import Token, Sentence, Dependency
-from forte.common.resources import Resources
-from forte.data import DataPack
-from forte.processors.base import PackProcessor
+from allennlp.predictors import Predictor
+
 from forte.common import ProcessorConfigError
+from forte.common.configuration import Config
+from forte.common.resources import Resources
+from forte.data.data_pack import DataPack
+from forte.processors.base import PackProcessor
+from ft.onto.base_ontology import Token, Sentence, Dependency
 
 logger = logging.getLogger(__name__)
 
@@ -30,32 +31,31 @@ __all__ = [
 
 # pylint: disable=line-too-long
 MODEL2URL = {
-    'stanford_dependencies': "https://allennlp.s3.amazonaws.com/models/biaffine-dependency-parser-ptb-2018.08.23.tar.gz",
-    'universal_dependencies': "https://allennlp.s3.amazonaws.com/models/biaffine-dependency-parser-ud-2018.08.23.tar.gz",
+    'stanford': "https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ptb-2020.04.06.tar.gz",
+    # TODO: The UD model seems to be broken at this moment.
+    # 'universal': "https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ud-2020.02.10.tar.gz",
 }
+
+
 # pylint: enable=line-too-long
 
 
 class AllenNLPProcessor(PackProcessor):
 
     # pylint: disable=attribute-defined-outside-init,unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
-        self.processors = configs.processors
-        if self.processors is None or self.processors == "":
-            self.processors = self.default_configs()['processors']
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
 
-        if configs.output_format not in MODEL2URL:
-            raise ProcessorConfigError('Incorrect value for output_format')
-        model_url = MODEL2URL[configs.output_format]
+        if configs.tag_formalism not in MODEL2URL:
+            raise ProcessorConfigError('Incorrect value for tag_formalism')
+        model_url = MODEL2URL[configs.tag_formalism]
         self.predictor = Predictor.from_path(model_url)
 
-        self.overwrite_entries = configs.overwrite_entries
-        self.allow_parallel_entries = configs.allow_parallel_entries
-        if self.overwrite_entries:
+        if configs.overwrite_entries:
             logger.warning("`overwrite_entries` is set to True, this means "
                            "that the entries of the same type as produced by "
                            "this processor will be overwritten if found.")
-            if self.allow_parallel_entries:
+            if configs.allow_parallel_entries:
                 logger.warning('Both `overwrite_entries` (whether to overwrite '
                                'the entries of the same type as produced by '
                                'this processor) and '
@@ -64,7 +64,7 @@ class AllenNLPProcessor(PackProcessor):
                                'are True, all existing conflicting entries '
                                'will be deleted.')
         else:
-            if not self.allow_parallel_entries:
+            if not configs.allow_parallel_entries:
                 logger.warning('Both `overwrite_entries` (whether to overwrite '
                                'the entries of the same type as produced by '
                                'this processor) and '
@@ -73,29 +73,31 @@ class AllenNLPProcessor(PackProcessor):
                                'are False, processor will only run if there '
                                'are no existing conflicting entries.')
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure for AllenNLP.
         :return: A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
             - processors: defines what operations to be done on the sentence,
                 default value is "tokenize,pos,depparse" which performs all the
-                three operations
-            - output_format: format of the POS tags and dependency parsing,
-                default value is "universal_dependencies"
+                three operations.
+            - tag_formalism: format of the POS tags and dependency parsing,
+                can be "universal" or "stanford", default value is "stanford".
             - overwrite_entries: whether to overwrite the entries of the same
-                type as produced by this processor, default value is False
+                type as produced by this processor, default value is False.
             - allow_parallel_entries: whether to allow similar new entries when
                 they already exist, e.g. allowing new tokens with same spans,
-                used only when `overwrite_entries` is False
+                used only when `overwrite_entries` is False.
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'processors': "tokenize,pos,depparse",
-            'output_format': "universal_dependencies",
+            'tag_formalism': "stanford",
             'overwrite_entries': False,
             'allow_parallel_entries': True
-        }
+        })
+        return config
 
     def _process(self, input_pack: DataPack):
         # handle existing entries
@@ -104,10 +106,10 @@ class AllenNLPProcessor(PackProcessor):
         for sentence in input_pack.get(Sentence):
             result = self.predictor.predict(sentence=sentence.text)
 
-            if "tokenize" in self.processors:
+            if "tokenize" in self.configs.processors:
                 # creating new tokens and dependencies
                 tokens = self._create_tokens(input_pack, sentence, result)
-                if "depparse" in self.processors:
+                if "depparse" in self.configs.processors:
                     self._create_dependencies(input_pack, tokens, result)
 
     def _process_existing_entries(self, input_pack):
@@ -115,12 +117,11 @@ class AllenNLPProcessor(PackProcessor):
         dependencies_exist = any(True for _ in input_pack.get(Dependency))
 
         if tokens_exist or dependencies_exist:
-            if not self.overwrite_entries:
-                if not self.allow_parallel_entries:
-                    raise ProcessorConfigError("Found existing entries, either "
-                                               "`overwrite_entries` or "
-                                               "`allow_parallel_entries` "
-                                               "should be True")
+            if not self.configs.overwrite_entries:
+                if not self.configs.allow_parallel_entries:
+                    raise ProcessorConfigError(
+                        "Found existing entries, either `overwrite_entries` or "
+                        "`allow_parallel_entries` should be True")
             else:
                 # delete existing tokens and dependencies
                 for entry_type in (Token, Dependency):
@@ -135,13 +136,10 @@ class AllenNLPProcessor(PackProcessor):
         for i, word in enumerate(words):
             word_begin = sentence.text.find(word, word_end)
             word_end = word_begin + len(word)
-            token = Token(input_pack,
-                          offset + word_begin,
-                          offset + word_end)
-            if "pos" in self.processors:
-                token.set_fields(pos=pos[i])
+            token = Token(input_pack, offset + word_begin, offset + word_end)
+            if "pos" in self.configs.processors:
+                token.pos = pos[i]
             tokens.append(token)
-            input_pack.add_entry(token)
 
         return tokens
 
@@ -153,5 +151,4 @@ class AllenNLPProcessor(PackProcessor):
             relation = Dependency(input_pack,
                                   parent=tokens[heads[i] - 1],
                                   child=token)
-            relation.set_fields(rel_type=deps[i])
-            input_pack.add_or_get_entry(relation)
+            relation.rel_type = deps[i]

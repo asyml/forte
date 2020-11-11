@@ -11,26 +11,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from typing import Optional, Dict, Union, Any, Iterable
+import logging
 from copy import deepcopy
+from typing import Optional, Dict, Union, Any, Iterable
 
-from texar.torch import HParams
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
+from elasticsearch import logger as es_logger
 
 __all__ = [
     "ElasticSearchIndexer"
 ]
 
+from forte.common.configuration import Config
+
+# It seems that elastic search shows a lot of debug message, sometimes can
+# suffocate travis. Trying to depress the logging.
+es_logger.setLevel(logging.INFO)
+
 
 class ElasticSearchIndexer:
     r"""Indexer class for Elastic Search."""
 
-    def __init__(self, hparams: Optional[Union[Dict, HParams]] = None):
+    def __init__(self, config: Optional[Union[Dict, Config]] = None):
         super().__init__()
-        self._hparams = HParams(hparams, self.default_configs())
-        self.elasticsearch = Elasticsearch(hosts=self._hparams.hosts)
+        self._config = Config(config, self.default_configs())
+        self.elasticsearch = Elasticsearch(hosts=self._config.hosts)
 
     def index(self, document: Dict[str, Any], index_name: Optional[str] = None,
               refresh: Optional[Union[bool, str]] = False) -> None:
@@ -74,7 +80,7 @@ class ElasticSearchIndexer:
                 https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
                 for more information on "refresh"
         """
-        index_name = index_name if index_name else self._hparams.index_name
+        index_name = index_name if index_name else self._config.index_name
         self.elasticsearch.index(  # pylint: disable=unexpected-keyword-arg
             index=index_name, body=document, refresh=refresh)
 
@@ -100,12 +106,13 @@ class ElasticSearchIndexer:
                 https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
                 for more information on "refresh"
         """
+
         def actions():
             for document in documents:
                 new_document = deepcopy(document)
                 new_document.update(
-                    {"_index": index_name if index_name else
-                        self.hparams.index_name,
+                    {"_index":
+                         index_name if index_name else self.hparams.index_name,
                      "_type": "document"})
                 yield new_document
 
@@ -131,11 +138,16 @@ class ElasticSearchIndexer:
             meta data of the search.
         """
         index_name = index_name if index_name else self.hparams.index_name
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        # TODO: until fix: https://github.com/PyCQA/pylint/issues/3507
+        if not isinstance(query, Dict):
+            raise ValueError(
+                "The query to the elastic indexer need to be a dictionary.")
         return self.elasticsearch.search(index=index_name, body=query, **kwargs)
 
     @property
     def hparams(self):
-        return self._hparams
+        return self._config
 
     @staticmethod
     def default_configs() -> Dict[str, Any]:

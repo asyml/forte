@@ -1,128 +1,125 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# ***automatically_generated***
+# ***source json:forte/ontology_specs/wikipedia.json***
+# flake8: noqa
+# mypy: ignore-errors
+# pylint: skip-file
+"""
+Automatically generated ontology wikipedia. Do not change manually.
+"""
 
-from forte.data import DataPack
-from forte.data.ontology import Annotation, Generics
-from ft.onto.base_ontology import Document
+from dataclasses import dataclass
+from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Annotation
+from forte.data.ontology.top import Generics
+from typing import Optional
+
+__all__ = [
+    "WikiPage",
+    "WikiBody",
+    "WikiSection",
+    "WikiParagraph",
+    "WikiTitle",
+    "WikiAnchor",
+    "WikiInfoBoxProperty",
+    "WikiInfoBoxMapped",
+]
 
 
-class WikiPage(Document):
+@dataclass
+class WikiPage(Annotation):
+    """
+    Attributes:
+        page_id (Optional[str])
+        page_name (Optional[str])
+    """
+
+    page_id: Optional[str]
+    page_name: Optional[str]
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._body: WikiBody
-        self._page_id: str
-        self._page_name: str
-
-    def set_page_id(self, pid: str):
-        self.set_fields(_page_id=pid)
-
-    @property
-    def page_id(self):
-        return self._page_id
-
-    def set_page_name(self, page_name: str):
-        self.set_fields(_page_name=page_name)
-
-    def page_name(self):
-        return self._page_name
+        self.page_id: Optional[str] = None
+        self.page_name: Optional[str] = None
 
 
-# pylint: disable=useless-super-delegation
+@dataclass
 class WikiBody(Annotation):
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
 
+@dataclass
 class WikiSection(Annotation):
+    """
+    Attributes:
+        is_intro (Optional[bool])
+    """
+
+    is_intro: Optional[bool]
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._is_intro: bool
-
-    def set_is_intro(self, is_intro: bool):
-        self.set_fields(_is_intro=is_intro)
-
-    @property
-    def is_intro(self):
-        return self._is_intro
+        self.is_intro: Optional[bool] = None
 
 
+@dataclass
 class WikiParagraph(Annotation):
-    pass
 
-
-class WikiTitle(Annotation):
-    pass
-
-
-class WikiAnchor(Annotation):
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._target_page_name: str
-
-    @property
-    def target_page_name(self):
-        return self._target_page_name
-
-    def set_target_page_name(self, page_name: str):
-        self.set_fields(_target_page_name=page_name)
 
 
+@dataclass
+class WikiTitle(Annotation):
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+
+
+@dataclass
+class WikiAnchor(Annotation):
+    """
+    Attributes:
+        target_page_name (Optional[str])
+    """
+
+    target_page_name: Optional[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.target_page_name: Optional[str] = None
+
+
+@dataclass
 class WikiInfoBoxProperty(Generics):
+    """
+    Attributes:
+        key (Optional[str])
+        value (Optional[str])
+    """
+
+    key: Optional[str]
+    value: Optional[str]
+
     def __init__(self, pack: DataPack):
         super().__init__(pack)
-        self._key: str
-        self._value: str
-
-    @property
-    def key(self):
-        return self._key
-
-    def set_key(self, key: str):
-        self.set_fields(_key=key)
-
-    @property
-    def value(self):
-        return self._value
-
-    def set_value(self, value: str):
-        self.set_fields(_value=value)
+        self.key: Optional[str] = None
+        self.value: Optional[str] = None
 
 
+@dataclass
 class WikiInfoBoxMapped(Generics):
+    """
+    Attributes:
+        key (Optional[str])
+        value (Optional[str])
+    """
+
+    key: Optional[str]
+    value: Optional[str]
+
     def __init__(self, pack: DataPack):
         super().__init__(pack)
-        self._key: str
-        self._value: str
-        self._infobox_type: str
-
-    @property
-    def key(self):
-        return self._key
-
-    def set_key(self, key: str):
-        self.set_fields(_key=key)
-
-    @property
-    def value(self):
-        return self._value
-
-    def set_value(self, value: str):
-        self.set_fields(_value=value)
-
-    @property
-    def infobox_type(self):
-        return self._infobox_type
-
-    def set_infobox_type(self, infobox_type: str):
-        self.set_fields(_infobox_type=infobox_type)
+        self.key: Optional[str] = None
+        self.value: Optional[str] = None

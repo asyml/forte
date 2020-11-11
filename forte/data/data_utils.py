@@ -22,12 +22,14 @@ import urllib.request
 import zipfile
 from typing import List, Optional, overload
 
+import jsonpickle
+
 from forte.utils.types import PathLike
 from forte.utils.utils_io import maybe_create_dir
 
-
 __all__ = [
-    "maybe_download"
+    "maybe_download",
+    "deserialize"
 ]
 
 
@@ -143,6 +145,7 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     r"""Adapted from `https://github.com/saurabhshri/gdrive-downloader`
     """
 
+    # pylint: disable=import-outside-toplevel
     try:
         import requests
     except ImportError:
@@ -177,3 +180,15 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     print(f'Successfully downloaded {filename}')
 
     return filepath
+
+
+def deserialize(string: str):
+    r"""Deserialize a pack from a string.
+    """
+    pack = jsonpickle.decode(string)
+    # Need to assign the pack manager to the pack to control it after reading
+    #  the raw data.
+    # pylint: disable=protected-access
+    # pack._pack_manager = pack_manager
+    # pack_manager.set_remapped_pack_id(pack)
+    return pack

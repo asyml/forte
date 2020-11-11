@@ -20,20 +20,21 @@ This will use the following datasets from DBpedia:
         -- infobox_properties_wkd_uris_en.tql.bz2
 """
 import csv
+import logging
 import os
 from typing import List, Iterator, Dict, Tuple
 
 from smart_open import open
-from texar.torch import HParams
-
 import rdflib
 
-from forte import Resources, logging
-from forte.data import DataPack
+from forte.common import Resources
+from forte.common.configuration import Config
+from forte.data import data_utils
+from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader,
     print_progress, print_notice)
-from forte.data.readers import PackReader
+from forte.data.readers.base_reader import PackReader
 from ft.onto.wikipedia import WikiInfoBoxProperty, WikiInfoBoxMapped
 
 state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]
@@ -44,19 +45,15 @@ def add_property(pack: DataPack, statements: List):
         slot_name = v.toPython()
         slot_value = get_resource_name(o)
         info_box = WikiInfoBoxProperty(pack)
-        info_box.set_key(slot_name)
-        info_box.set_value(slot_value)
-        pack.add_entry(info_box)
+        info_box.key = slot_name
+        info_box.value = slot_value
 
 
-def add_info_boxes(pack: DataPack, info_box_statements: List,
-                   info_type: str):
+def add_info_boxes(pack: DataPack, info_box_statements: List):
     for _, v, o in info_box_statements:
         info_box = WikiInfoBoxMapped(pack)
-        info_box.set_key(v.toPython())
-        info_box.set_value(get_resource_name(o))
-        info_box.set_infobox_type(info_type)
-        pack.add_entry(info_box)
+        info_box.key = v.toPython()
+        info_box.value = get_resource_name(o)
 
 
 def read_index(pack_index_path: str) -> Dict[str, str]:
@@ -78,12 +75,12 @@ class DBpediaInfoBoxReader(PackReader):
         self.redirects: Dict[str, str]
         self.logger = logging.getLogger(__name__)
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         # pylint: disable=attribute-defined-outside-init
         self.pack_index = read_index(configs.pack_index)
         self.pack_dir = configs.pack_dir
 
-        self.redirects = resource.get('redirects')
+        self.redirects = resources.get('redirects')
 
         self.literal_info_reader = NIFBufferedContextReader(
             configs.mapping_literals)
@@ -124,10 +121,10 @@ class DBpediaInfoBoxReader(PackReader):
 
             if os.path.exists(pack_path):
                 with open(pack_path) as pack_file:
-                    pack = DataPack.deserialize(pack_file.read())
+                    pack = data_utils.deserialize(pack_file.read())
 
-                    add_info_boxes(pack, info_box_data['literals'], 'literal')
-                    add_info_boxes(pack, info_box_data['objects'], 'object')
+                    add_info_boxes(pack, info_box_data['literals'])
+                    add_info_boxes(pack, info_box_data['objects'])
                     add_property(pack, info_box_data['properties'])
                     yield pack
         else:
@@ -135,11 +132,8 @@ class DBpediaInfoBoxReader(PackReader):
             self.logger.warning("Resource %s is not in the raw packs.",
                                 resource_name)
 
-    def _cache_key_function(self, info_box_data: Dict[str, List]) -> str:
-        pass
-
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure
         :return:

@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=attribute-defined-outside-init
+
 from abc import abstractmethod
 from typing import (
-    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator)
+    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator, Any)
 
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.data.base_pack import PackType
-from forte.data import DataPack, MultiPack
-from forte.common.types import DataRequest
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
+from forte.data.types import DataRequest
 from forte.data.data_utils_io import merge_batches, batch_instances
-from forte.data.ontology import Entry, Annotation
+from forte.data.ontology.top import Annotation
+from forte.data.ontology.core import Entry
 
 __all__ = [
     "ProcessingBatcher",
@@ -50,8 +53,7 @@ class ProcessingBatcher(Generic[PackType]):
 
         self.cross_pack: bool = cross_pack
 
-    def initialize(  # pylint: disable=unused-argument
-            self, config: Optional[HParams]):
+    def initialize(self, _):
         r"""The implementation should initialize the batcher and setup the
         internal states of this batcher.
         This batcher will be called at the pipeline initialize stage.
@@ -126,17 +128,16 @@ class ProcessingBatcher(Generic[PackType]):
         """
         raise NotImplementedError
 
+    @classmethod
+    @abstractmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        raise NotImplementedError
+
 
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
-    def __init__(self, cross_pack=True):
-        super().__init__(cross_pack)
-        self.batch_is_full = False
-        default_config = HParams(None, self.default_configs())
-        self.batch_size = default_config.batch_size
-
-    def initialize(self, config: HParams):
-        config_ = HParams(config, self.default_configs())
-        self.batch_size = config_.batch_size
+    def initialize(self, config: Config):
+        super(FixedSizeDataPackBatcher, self).initialize(config)
+        self.batch_size = config.batch_size
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
@@ -156,6 +157,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
         """
         instances: List[Dict] = []
         current_size = sum(self.current_batch_sources)
+
         for data in data_pack.get_data(context_type, requests, offset):
             instances.append(data)
             if len(instances) == self.batch_size - current_size:
@@ -170,8 +172,8 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
-    @staticmethod
-    def default_configs() -> Dict:
+    @classmethod
+    def default_configs(cls) -> Dict:
         return {
             'batch_size': 10
         }
@@ -196,16 +198,10 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
         super().__init__(cross_pack)
         self.batch_is_full = False
 
-        default_config = HParams(None, self.default_configs())
-        self.input_pack_name = default_config.input_pack_name
-        self.batch_size = default_config.batch_size
-        self.initialize(default_config)
-
-    def initialize(self, config: HParams):
+    def initialize(self, config: Config):
         super().initialize(config)
         self.input_pack_name = config.input_pack_name
         self.batch_size = config.batch_size
-
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
@@ -213,9 +209,7 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
 
     # TODO: Principled way of get data from multi pack?
     def _get_data_batch(
-            self,
-            data_pack: MultiPack,
-            context_type: Type[Annotation],
+            self, multi_pack: MultiPack, context_type: Type[Annotation],
             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
         r"""Try to get batches of size ``batch_size``. If the tail instances
@@ -227,7 +221,7 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             containing the required annotations and context, and ``cnt`` is
             the number of instances in the batch.
         """
-        input_pack = data_pack.get_pack(self.input_pack_name)
+        input_pack = multi_pack.get_pack(self.input_pack_name)
 
         instances: List[Dict] = []
         current_size = sum(self.current_batch_sources)
@@ -244,8 +238,8 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
             batch = batch_instances(instances)
             yield (batch, len(instances))
 
-    @staticmethod
-    def default_configs() -> Dict:
+    @classmethod
+    def default_configs(cls) -> Dict:
         return {
             'batch_size': 10,
             'input_pack_name': 'source'

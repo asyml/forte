@@ -15,21 +15,18 @@
 # pylint: disable=logging-fstring-interpolation
 import logging
 import os
-from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
 import torch
-from texar.torch.hyperparams import HParams
 
-from forte.models.ner.model_factory import BiRecurrentConvCRF
-from forte.common.evaluation import Evaluator
+from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
-from forte.common.types import DataRequest
-from forte.data.datasets.conll import conll_utils
 from forte.data.ontology import Annotation
+from forte.data.types import DataRequest
 from forte.models.ner import utils
+from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 from ft.onto.base_ontology import Token, Sentence, EntityMention
 
@@ -61,23 +58,23 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         self.train_instances_cache = []
 
         self.batch_size = 3
-        self.batcher = self.define_batcher()
 
-    def define_context(self) -> Type[Annotation]:
+    @staticmethod
+    def _define_context() -> Type[Annotation]:
         return Sentence
 
-    def _define_input_info(self) -> DataRequest:
+    @staticmethod
+    def _define_input_info() -> DataRequest:
         input_info: DataRequest = {
             Token: [],
             Sentence: [],
         }
         return input_info
 
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
 
-        self.define_batcher()
-
-        self.resource = resource
+        self.resource = resources
         self.config_model = configs.config_model
         self.config_data = configs.config_data
 
@@ -90,13 +87,13 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
         self.resource.load(keys=missing_keys, path=resource_path)
 
-        self.word_alphabet = resource.get("word_alphabet")
-        self.char_alphabet = resource.get("char_alphabet")
-        self.ner_alphabet = resource.get("ner_alphabet")
-        word_embedding_table = resource.get("word_embedding_table")
+        self.word_alphabet = resources.get("word_alphabet")
+        self.char_alphabet = resources.get("char_alphabet")
+        self.ner_alphabet = resources.get("ner_alphabet")
+        word_embedding_table = resources.get("word_embedding_table")
 
-        if resource.get("device"):
-            self.device = resource.get("device")
+        if resources.get("device"):
+            self.device = resources.get("device")
         else:
             self.device = torch.device('cuda') if torch.cuda.is_available() \
                 else torch.device('cpu')
@@ -117,7 +114,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
 
             self.resource.load(keys={"model": load_model}, path=resource_path)
 
-        self.model = resource.get("model")
+        self.model = resources.get("model")
         self.model.to(self.device)
         self.model.eval()
 
@@ -190,10 +187,11 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 orig_token: Token = data_pack.get_entry(tid)  # type: ignore
                 ner_tag: str = output_dict["Token"]["ner"][i][j]
 
-                orig_token.set_fields(ner=ner_tag)
+                orig_token.ner = ner_tag
 
                 token = orig_token
-                token_ner = token.get_field("ner")
+                token_ner = token.ner
+                assert isinstance(token_ner, str)
                 if token_ner[0] == "B":
                     current_entity_mention = (token.span.begin, token_ner[2:])
                 elif token_ner[0] == "I":
@@ -205,19 +203,15 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                     if token_ner[2:] != current_entity_mention[1]:
                         continue
 
-                    kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = EntityMention(data_pack,
                                            current_entity_mention[0],
                                            token.span.end)
-                    entity.set_fields(**kwargs_i)
-                    data_pack.add_or_get_entry(entity)
+                    entity.ner_type = current_entity_mention[1]
                 elif token_ner[0] == "S":
                     current_entity_mention = (token.span.begin, token_ner[2:])
-                    kwargs_i = {"ner_type": current_entity_mention[1]}
                     entity = EntityMention(data_pack, current_entity_mention[0],
                                            token.span.end)
-                    entity.set_fields(**kwargs_i)
-                    data_pack.add_or_get_entry(entity)
+                    entity.ner_type = current_entity_mention[1]
 
     def get_batch_tensor(
             self, data: List[Tuple[List[int], List[List[int]]]],
@@ -285,11 +279,15 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         return words, chars, masks, lengths
 
     # TODO: change this to manageable size
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""Default config for NER Predictor"""
 
-        return {
+        configs = super().default_configs()
+        # TODO: Batcher in NER need to be update to use the sytem one.
+        configs["batcher"] = {"batch_size": 10}
+
+        more_configs = {
             "config_data": {
                 "train_path": "",
                 "val_path": "",
@@ -342,63 +340,11 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
                 },
                 "model_path": "",
                 "resource_dir": ""
-            }
-        }
-
-
-class CoNLLNEREvaluator(Evaluator):
-    def __init__(self, config: Optional[HParams] = None):
-        super().__init__(config)
-        self.test_component = CoNLLNERPredictor().component_name
-        self.output_file = "tmp_eval.txt"
-        self.score_file = "tmp_eval.score"
-        self.scores: Dict[str, float] = {}
-
-    def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
-        pred_getdata_args = {
-            "context_type": Sentence,
-            "request": {
-                Token: {
-                    "fields": ["ner"],
-                },
-                Sentence: [],  # span by default
             },
-        }
-
-        refer_getdata_args = {
-            "context_type": Sentence,
-            "request": {
-                Token: {
-                    "fields": ["chunk", "pos", "ner"]},
-                Sentence: [],  # span by default
+            "batcher": {
+                "batch_size": 16
             }
         }
 
-        conll_utils.write_tokens_to_file(pred_pack=pred_pack,
-                                         pred_request=pred_getdata_args,
-                                         refer_pack=refer_pack,
-                                         refer_request=refer_getdata_args,
-                                         output_filename=self.output_file)
-        eval_script = \
-            Path(os.path.abspath(__file__)).parents[1] / \
-            "utils/eval_scripts/conll03eval.v2"
-        os.system(f"perl {eval_script} < {self.output_file} > "
-                  f"{self.score_file}")
-        with open(self.score_file, "r") as fin:
-            fin.readline()
-            line = fin.readline()
-            fields = line.split(";")
-            acc = float(fields[0].split(":")[1].strip()[:-1])
-            precision = float(fields[1].split(":")[1].strip()[:-1])
-            recall = float(fields[2].split(":")[1].strip()[:-1])
-            f1 = float(fields[3].split(":")[1].strip())
-
-        self.scores = {
-            "accuracy": acc,
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
-        }
-
-    def get_result(self):
-        return self.scores
+        configs.update(more_configs)
+        return configs

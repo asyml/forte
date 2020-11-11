@@ -16,18 +16,18 @@ Base reader type to be inherited by all readers.
 """
 import logging
 import os
-
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, Union
 
+from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
-from forte.common.types import ReplaceOperationsType
+from forte.data import data_utils
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.data.types import ReplaceOperationsType
 from forte.pipeline_component import PipelineComponent
-from forte.process_manager import ProcessManager
 from forte.utils.utils import get_full_module_name
 
 __all__ = [
@@ -37,8 +37,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-process_manager = ProcessManager()
 
 
 class BaseReader(PipelineComponent[PackType], ABC):
@@ -66,14 +64,14 @@ class BaseReader(PipelineComponent[PackType], ABC):
                  from_cache: bool = False,
                  cache_directory: Optional[str] = None,
                  append_to_cache: bool = False):
-
+        super().__init__()
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""Returns a `dict` of configurations of the reader with default
         values. Used to replace the missing values of input `configs`
         during pipeline construction.
@@ -91,9 +89,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
     @property
     def pack_type(self):
         raise NotImplementedError
-
-    def __reader_name(self):
-        return self.__class__.__name__
 
     @abstractmethod
     def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
@@ -117,8 +112,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
         This internally setup the component meta data. Users should implement
         the :meth:`_parse_pack` method.
         """
-        process_manager.set_current_component(self.component_name)
-        yield from self._parse_pack(collection)
+        if collection is None:
+            raise ProcessExecutionException(
+                "Got None collection, cannot parse as data pack.")
+
+        for p in self._parse_pack(collection):
+            p.add_all_remaining_entries(self.name)
+            yield p
 
     @abstractmethod
     def _parse_pack(self, collection: Any) -> Iterator[PackType]:
@@ -132,15 +132,15 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def _cache_key_function(self, collection: Any) -> str:
+    def _cache_key_function(self, collection: Any) -> Optional[str]:
+        # pylint: disable=unused-argument
         r"""Computes the cache key based on the type of data.
 
         Args:
             collection: Any object that provides information to identify the
                 name and location of the cache file
         """
-        raise NotImplementedError
+        return None
 
     # pylint: disable=unused-argument
     def text_replace_operation(self, text: str) -> ReplaceOperationsType:
@@ -156,7 +156,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         return []
 
-    def _get_cache_location(self, collection: Any) -> Path:
+    def _get_cache_location(self, collection: Any) -> str:
         r"""Gets the path to the cache file for a collection.
 
         Args:
@@ -164,30 +164,37 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         Returns (Path): file path to the cache file for a Pack.
         """
+        # pylint: disable=assignment-from-none
         file_path = self._cache_key_function(collection)
-        return Path(os.path.join(str(self._cache_directory), file_path))
+        if file_path is None:
+            raise ProcessExecutionException(
+                "Cache key is None. You probably set `from_cache` to true but "
+                "fail to implement the _cache_key_function")
+
+        return os.path.join(str(self._cache_directory), file_path)
 
     def _lazy_iter(self, *args, **kwargs):
         for collection in self._collect(*args, **kwargs):
             if self.from_cache:
                 for pack in self.read_from_cache(
                         self._get_cache_location(collection)):
+                    pack.add_all_remaining_entries()
                     yield pack
             else:
                 not_first = False
                 for pack in self.parse_pack(collection):
                     # write to the cache if _cache_directory specified
-
                     if self._cache_directory is not None:
-                        self.cache_data(
-                            collection, pack, not_first)
+                        self.cache_data(collection, pack, not_first)
 
                     if not isinstance(pack, self.pack_type):
                         raise ValueError(
                             f"No Pack object read from the given "
                             f"collection {collection}, returned {type(pack)}."
                         )
+
                     not_first = True
+                    pack.add_all_remaining_entries()
                     yield pack
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:
@@ -223,7 +230,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
             append: Whether to allow appending to the cache.
         """
         if not self._cache_directory:
-            raise ValueError(f"Can not cache without a cache_directory!")
+            raise ValueError("Can not cache without a cache_directory!")
 
         os.makedirs(self._cache_directory, exist_ok=True)
 
@@ -240,7 +247,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
             with open(cache_filename, 'w') as cache:
                 cache.write(pack.serialize() + "\n")
 
-    def read_from_cache(self, cache_filename: Path) -> Iterator[PackType]:
+    def read_from_cache(
+            self, cache_filename: Union[Path, str]) -> Iterator[PackType]:
         r"""Reads one or more Packs from ``cache_filename``, and yields Pack(s)
         from the cache file.
 
@@ -250,13 +258,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Returns: List of cached data packs.
         """
         logger.info("reading from cache file %s", cache_filename)
-        with cache_filename.open("r") as cache_file:
+        with open(cache_filename, "r") as cache_file:
             for line in cache_file:
-                pack = DataPack.deserialize(line.strip())
+                pack = data_utils.deserialize(line.strip())
                 if not isinstance(pack, self.pack_type):
-                    raise TypeError(f"Pack deserialized from {cache_filename} "
-                                    f"is {type(pack)},"
-                                    f"but expect {self.pack_type}")
+                    raise TypeError(
+                        f"Pack deserialized from {cache_filename} "
+                        f"is {type(pack)}, but expect {self.pack_type}")
                 yield pack
 
     def finish(self, resources: Resources):

@@ -1,56 +1,77 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# ***automatically_generated***
+# ***source json:forte/ontology_specs/base_ontology.json***
+# flake8: noqa
+# mypy: ignore-errors
+# pylint: skip-file
 """
-This class defines the basic ontology supported by our system
+Automatically generated ontology base_ontology. Do not change manually.
 """
-from typing import Optional, Dict, List, Set, Type
+
+from dataclasses import dataclass
 from forte.data.data_pack import DataPack
-from forte.data.ontology import Entry, Annotation, Link, Group
+from forte.data.multi_pack import MultiPack
+from forte.data.ontology.core import Entry
+from forte.data.ontology.core import FList
+from forte.data.ontology.top import Annotation
+from forte.data.ontology.top import Group
+from forte.data.ontology.top import Link
+from forte.data.ontology.top import MultiPackLink
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Set
 
 __all__ = [
     "Token",
-    "Sentence",
+    "Subword",
     "Document",
-    "EntityMention",
     "LinkedMention",
+    "Sentence",
     "Phrase",
+    "UtteranceContext",
+    "Utterance",
     "PredicateArgument",
+    "EntityMention",
+    "EventMention",
     "PredicateMention",
     "PredicateLink",
-    "CoreferenceGroup",
     "Dependency",
-    "RelationLink"
+    "EnhancedDependency",
+    "RelationLink",
+    "CrossDocEntityRelation",
+    "CoreferenceGroup",
+    "EventRelation",
+    "CrossDocEventRelation",
+    "ConstituentNode",
+    "Title",
 ]
 
 
+@dataclass
 class Token(Annotation):
     """
-    A span based annotation :class:`Token`.
-
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the token.
-        end (int): The offset of the last character in the token + 1.
-
+    A span based annotation :class:`Token`, used to represent a token or a word.
     Attributes:
-        ud_xpos (str): Language specific pos tag. Used in CoNLL-U Format. Refer
-        https://universaldependencies.org/format.html
-        lemma (str): Lemma or stem of word form.
-        is_root (bool): If the token is a root of, say, dependency tree.
-        ud_misc (Dict[str, List[str]]): Miscellaneous ud_features. Used in
-        CoNLL-U Format. Refer https://universaldependencies.org/format.html
+        pos (Optional[str])
+        ud_xpos (Optional[str])	Language specific pos tag. Used in CoNLL-U Format. Refer to https://universaldependencies.org/format.html
+        lemma (Optional[str])	Lemma or stem of word form.
+        chunk (Optional[str])
+        ner (Optional[str])
+        sense (Optional[str])
+        is_root (Optional[bool])
+        ud_features (Dict[str, str])
+        ud_misc (Dict[str, str])
     """
+
+    pos: Optional[str]
+    ud_xpos: Optional[str]
+    lemma: Optional[str]
+    chunk: Optional[str]
+    ner: Optional[str]
+    sense: Optional[str]
+    is_root: Optional[bool]
+    ud_features: Dict[str, str]
+    ud_misc: Dict[str, str]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
@@ -61,65 +82,78 @@ class Token(Annotation):
         self.ner: Optional[str] = None
         self.sense: Optional[str] = None
         self.is_root: Optional[bool] = None
-        self.ud_features: Optional[Dict[str, List[str]]] = None
-        self.ud_misc: Optional[Dict[str, List[str]]] = None
+        self.ud_features: Dict[str, str] = dict()
+        self.ud_misc: Dict[str, str] = dict()
 
 
-class Sentence(Annotation):
+@dataclass
+class Subword(Annotation):
     """
-    A span based annotation :class:`Sentence`.
-
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the sentence.
-        end (int): The offset of the last character in the sentence + 1.
+    Used to represent subword tokenization results.
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self._sentiment: Dict[str, float] = {}
-
-    @property
-    def sentiment(self):
-        return self._sentiment
-
-    @sentiment.setter
-    def sentiment(self, scores: Dict[str, float]):
-        self._sentiment = scores
-
-    def add_sentiment(self, key: str, value: float):
-        self._sentiment[key] = value
 
 
+@dataclass
 class Document(Annotation):
     """
-    A span based annotation :class:`Document`.
-
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the document.
-        end (int): The offset of the last character in the document + 1.
+    A span based annotation `Document`, normally used to represent a document.
+    Attributes:
+        document_class (List[str])	A list of class names that the document belongs to.
+        sentiment (Dict[str, float])
     """
+
+    document_class: List[str]
+    sentiment: Dict[str, float]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.document_class: List[str] = []
+        self.sentiment: Dict[str, float] = dict()
 
 
-class EntityMention(Annotation):
+@dataclass
+class Sentence(Annotation):
     """
-    A span based annotation :class:`EntityMention`.
-
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the entity mention.
-        end (int): The offset of the last character in the entity mention + 1.
+    A span based annotation `Sentence`, normally used to represent a sentence.
+    Attributes:
+        speaker (Optional[str])
+        part_id (Optional[int])
+        sentiment (Dict[str, float])
     """
+
+    speaker: Optional[str]
+    part_id: Optional[int]
+    sentiment: Dict[str, float]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.ner_type: Optional[str] = None
+        self.speaker: Optional[str] = None
+        self.part_id: Optional[int] = None
+        self.sentiment: Dict[str, float] = dict()
 
 
+@dataclass
+class Phrase(Annotation):
+    """
+    A span based annotation `Phrase`.
+    Attributes:
+        phrase_type (Optional[str])
+        headword (Optional[Token])
+    """
+
+    phrase_type: Optional[str]
+    headword: Optional[Token]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.phrase_type: Optional[str] = None
+        self.headword: Optional[Token] = None
+
+
+@dataclass
 class LinkedMention(Annotation):
     """
     A span based annotation :class:`LinkedMention`.
@@ -152,151 +186,278 @@ class LinkedMention(Annotation):
         self.set_fields(_kb=k_base)
 
 
-class Phrase(Annotation):
+@dataclass
+class UtteranceContext(Annotation):
     """
-    A span based annotation :class:`Phrase`.
-
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the phrase.
-        end (int): The offset of the last character in the phrase + 1.
+    `UtteranceContext` represents the context part in dialogue.
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.phrase_type: Optional[str] = None
 
 
+@dataclass
+class Utterance(Annotation):
+    """
+    A span based annotation `Utterance`, normally used to represent an utterance in dialogue.
+    Attributes:
+        speaker (Optional[str])
+    """
+
+    speaker: Optional[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.speaker: Optional[str] = None
+
+
+@dataclass
 class PredicateArgument(Annotation):
     """
-    A span based annotation :class:`PredicateArgument`.
-
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the predicate
-            argument.
-        end (int): The offset of the last character in the predicate argument
-            + 1.
+    A span based annotation `PredicateArgument`, normally used to represent an argument of a predicate, can be linked to the predicate via the predicate link.
+    Attributes:
+        ner_type (Optional[str])
+        predicate_lemma (Optional[str])
+        is_verb (Optional[bool])
     """
+
+    ner_type: Optional[str]
+    predicate_lemma: Optional[str]
+    is_verb: Optional[bool]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.ner_type: Optional[str] = None
+        self.predicate_lemma: Optional[str] = None
+        self.is_verb: Optional[bool] = None
 
 
-class PredicateMention(Annotation):
+@dataclass
+class EntityMention(Annotation):
     """
-    A span based annotation :class:`PredicateMention`.
-
-    Args:
-        begin (int): The offset of the first character in the predicate mention.
-        end (int): The offset of the last character in the predicate mention
-            + 1.
+    A span based annotation `EntityMention`, normally used to represent an Entity Mention in a piece of text.
+    Attributes:
+        ner_type (Optional[str])
     """
+
+    ner_type: Optional[str]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.ner_type: Optional[str] = None
 
 
+@dataclass
+class EventMention(Annotation):
+    """
+    A span based annotation `EventMention`, used to refer to a mention of an event.
+    Attributes:
+        event_type (Optional[str])
+    """
+
+    event_type: Optional[str]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.event_type: Optional[str] = None
+
+
+@dataclass
+class PredicateMention(Phrase):
+    """
+    A span based annotation `PredicateMention`, normally used to represent a predicate (normally verbs) in a piece of text.
+    Attributes:
+        predicate_lemma (Optional[str])
+        framenet_id (Optional[str])
+        is_verb (Optional[bool])
+    """
+
+    predicate_lemma: Optional[str]
+    framenet_id: Optional[str]
+    is_verb: Optional[bool]
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.predicate_lemma: Optional[str] = None
+        self.framenet_id: Optional[str] = None
+        self.is_verb: Optional[bool] = None
+
+
+@dataclass
 class PredicateLink(Link):
     """
-    A :class:`Link` type entry which take :class:`PredicateMention` as parent
-    and :class:`PredicateArgument` as child.
-
-    Args:
-        parent (Entry, optional): the parent entry of the link.
-        child (Entry, optional): the child entry of the link.
+    A `Link` type entry which represent a semantic role link between a predicate and its argument.
+    Attributes:
+        arg_type (Optional[str])	The predicate link type.
     """
+
+    arg_type: Optional[str]
 
     ParentType = PredicateMention
-    """The entry type of the parent node of :class:`PredicateLink`."""
-
     ChildType = PredicateArgument
-    """The entry type of the child node of :class:`PredicateLink`."""
 
-    def __init__(self,
-                 pack: DataPack,
-                 parent: Optional[PredicateMention] = None,
-                 child: Optional[PredicateArgument] = None):
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
-        self.arg_type = None
+        self.arg_type: Optional[str] = None
 
 
-# pylint: disable=duplicate-bases
+@dataclass
+class Dependency(Link):
+    """
+    A `Link` type entry which represent a syntactic dependency.
+    Attributes:
+        dep_label (Optional[str])	The dependency label.
+        rel_type (Optional[str])
+    """
+
+    dep_label: Optional[str]
+    rel_type: Optional[str]
+
+    ParentType = Token
+    ChildType = Token
+
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self.dep_label: Optional[str] = None
+        self.rel_type: Optional[str] = None
+
+
+@dataclass
+class EnhancedDependency(Link):
+    """
+    A `Link` type entry which represent a enhanced dependency: 
+     https://universaldependencies.org/u/overview/enhanced-syntax.html
+    Attributes:
+        dep_label (Optional[str])	The enhanced dependency label in Universal Dependency.
+    """
+
+    dep_label: Optional[str]
+
+    ParentType = Token
+    ChildType = Token
+
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self.dep_label: Optional[str] = None
+
+
+@dataclass
+class RelationLink(Link):
+    """
+    A `Link` type entry which represent a relation between two entity mentions
+    Attributes:
+        rel_type (Optional[str])	The type of the relation.
+    """
+
+    rel_type: Optional[str]
+
+    ParentType = EntityMention
+    ChildType = EntityMention
+
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self.rel_type: Optional[str] = None
+
+
+@dataclass
+class CrossDocEntityRelation(MultiPackLink):
+    """
+    A `Link` type entry which represent a relation between two entity mentions across the packs.
+    Attributes:
+        rel_type (Optional[str])	The type of the relation.
+    """
+
+    rel_type: Optional[str]
+
+    ParentType = EntityMention
+    ChildType = EntityMention
+
+    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+        super().__init__(pack, parent, child)
+        self.rel_type: Optional[str] = None
+
+
+@dataclass
 class CoreferenceGroup(Group):
     """
-    A :class:`Group` type entry which take :class:`EntityMention` as
-    members.
-
-    Args:
-        members (Set[EntityMention], optional): a set of
-            :class:`EntityMention` objects which are the members of the
-            group.
+    A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.
     """
-    MemberType = EntityMention
-    """The entry type of group members of :class:`CoreferenceGroup`."""
 
-    def __init__(
-            self,
-            pack: DataPack,
-            members: Optional[Set[Entry]] = None
-    ):
+    def __init__(self, pack: DataPack, members: Optional[Set[Entry]] = None):
         super().__init__(pack, members)
 
 
-class Dependency(Link):
+@dataclass
+class EventRelation(Link):
     """
-    A :class:`Link` type entry which represent a syntactic dependency.
+    A `Link` type entry which represent a relation between two event mentions.
+    Attributes:
+        rel_type (Optional[str])	The type of the relation.
     """
-    ParentType = Token
-    """The entry type of the parent node of :class:`Dependency`."""
 
-    ChildType = Token
-    """The entry type of the child node of :class:`Dependency`."""
+    rel_type: Optional[str]
 
-    def __init__(self,
-                 pack: DataPack,
-                 parent: Optional[Token] = None,
-                 child: Optional[Token] = None):
+    ParentType = EventMention
+    ChildType = EventMention
+
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
-        self.dep_label: Optional[str] = None
-        self.rel_type: Optional[Type] = None
-        self.dep_type: Optional[Type] = None
+        self.rel_type: Optional[str] = None
 
 
-class RelationLink(Link):
+@dataclass
+class CrossDocEventRelation(MultiPackLink):
     """
-    A :class:`~ft.onto.base.Link` type entry which takes
-    :class:`~ft.onto.base_ontology.EntityMention` objects as parent and child.
-
-    Args:
-        pack (DataPack): the containing pack of this link.
-        parent (Entry, optional): the parent entry of the link.
-        child (Entry, optional): the child entry of the link.
+    A `Link` type entry which represent a relation between two event mentions across the packs.
+    Attributes:
+        rel_type (Optional[str])	The type of the relation.
     """
-    ParentType = EntityMention
-    """The entry type of the parent node of :class:`RelationLink`."""
-    ChildType = EntityMention
-    """The entry type of the child node of :class:`RelationLink`."""
 
-    def __init__(
-            self,
-            pack: DataPack,
-            parent: Optional[EntityMention] = None,
-            child: Optional[EntityMention] = None):
+    rel_type: Optional[str]
+
+    ParentType = EventMention
+    ChildType = EventMention
+
+    def __init__(self, pack: MultiPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
-        self.rel_type: Optional[Type] = None
+        self.rel_type: Optional[str] = None
 
 
-class Utterance(Annotation):
-    r"""An annotation based entry useful for dialogue.
+@dataclass
+class ConstituentNode(Annotation):
+    """
+    A span based annotation `ConstituentNode` to represent constituents in constituency parsing. This can also sentiment values annotated on the nodes.
+    Attributes:
+        label (Optional[str])
+        sentiment (Dict[str, float])
+        is_root (Optional[bool])
+        is_leaf (Optional[bool])
+        parent_node (Optional['ConstituentNode'])
+        children_nodes (FList['ConstituentNode'])
+    """
 
-    Args:
-        pack (DataPack): The data pack this token belongs to.
-        begin (int): The offset of the first character in the entity mention.
-        end (int): The offset of the last character in the entity mention + 1.
+    label: Optional[str]
+    sentiment: Dict[str, float]
+    is_root: Optional[bool]
+    is_leaf: Optional[bool]
+    parent_node: Optional['ConstituentNode']
+    children_nodes: FList['ConstituentNode']
 
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
+        self.label: Optional[str] = None
+        self.sentiment: Dict[str, float] = dict()
+        self.is_root: Optional[bool] = None
+        self.is_leaf: Optional[bool] = None
+        self.parent_node: Optional['ConstituentNode'] = None
+        self.children_nodes: FList['ConstituentNode'] = FList(self)
+
+
+@dataclass
+class Title(Annotation):
+    """
+    A span based annotation `Title`, normally used to represent a title.
     """
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
-        self.seq_num: str

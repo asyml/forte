@@ -16,14 +16,12 @@
 The reader that reads text data from a terminal and packs into a Multipack.
 """
 import logging
-from typing import Iterator
+from typing import Iterator, Dict, Any
 
-from texar.torch import HParams
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
-
 from ft.onto.base_ontology import Utterance
 
 logger = logging.getLogger(__name__)
@@ -41,8 +39,8 @@ class MultiPackTerminalReader(MultiPackReader):
         super().__init__()
 
     # pylint: disable=unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
-        self.resource = resource
+    def initialize(self, resources: Resources, configs: Config):
+        self.resource = resources
         self.config = configs
 
     # pylint: disable=unused-argument
@@ -70,23 +68,26 @@ class MultiPackTerminalReader(MultiPackReader):
 
         Returns: MultiPack containing a datapack for the current query.
         """
-
         multi_pack = MultiPack()
 
         # use context to build the query
         if self.resource.get("user_utterance"):
-            user_pack = self.resource.get("user_utterance")[-1]
-            multi_pack.update_pack({"user_utterance": user_pack})
+            multi_pack.add_pack_(
+                self.resource.get("user_utterance")[-1], "user_utterance")
 
         if self.resource.get("bot_utterance"):
-            bot_pack = self.resource.get("bot_utterance")[-1]
-            multi_pack.update_pack({"bot_utterance": bot_pack})
+            multi_pack.add_pack_(
+                self.resource.get("bot_utterance")[-1], "bot_utterance")
 
-        pack = DataPack()
-        utterance = Utterance(pack, 0, len(data_source))
-        pack.add_entry(utterance)
-
+        pack = multi_pack.add_pack(self.config.pack_name)
         pack.set_text(data_source, replace_func=self.text_replace_operation)
-        multi_pack.update_pack({self.config.pack_name: pack})
+
+        Utterance(pack, 0, len(data_source))
 
         yield multi_pack
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        configs = super().default_configs()
+        configs["pack_name"] = "query"
+        return configs

@@ -73,13 +73,10 @@ class CoNLL03Reader(PackReader):
                 word_end = offset + len(word)
 
                 # Add tokens.
-                kwargs_i = {"pos": pos,
-                            "chunk": chunk_id,
-                            "ner": ner_tag}
                 token = Token(pack, word_begin, word_end)
-
-                token.set_fields(**kwargs_i)
-                pack.add_or_get_entry(token)
+                token.pos = pos
+                token.chunk = chunk_id
+                token.ner = ner_tag
 
                 text += word + " "
                 offset = word_end + 1
@@ -89,8 +86,7 @@ class CoNLL03Reader(PackReader):
                     # Skip consecutive empty lines.
                     continue
                 # add sentence
-                sent = Sentence(pack, sentence_begin, offset - 1)
-                pack.add_or_get_entry(sent)
+                Sentence(pack, sentence_begin, offset - 1)
 
                 sentence_begin = offset
                 sentence_cnt += 1
@@ -98,19 +94,14 @@ class CoNLL03Reader(PackReader):
 
         if has_rows:
             # Add the last sentence if exists.
-            sent = Sentence(pack, sentence_begin, offset - 1)
+            Sentence(pack, sentence_begin, offset - 1)
             sentence_cnt += 1
-            pack.add_or_get_entry(sent)
-
-        document = Document(pack, 0, len(text))
-        pack.add_or_get_entry(document)
 
         pack.set_text(text, replace_func=self.text_replace_operation)
-        pack.meta.doc_id = file_path
+
+        Document(pack, 0, len(text))
+
+        pack.pack_name = file_path
         doc.close()
 
         yield pack
-
-    @staticmethod
-    def default_configs():
-        return {}

@@ -15,25 +15,40 @@
 Forte Container module.
 """
 
+# Disable some pylint check for stub and overloads.
+# pylint: disable=function-redefined,multiple-statements
+
 from abc import abstractmethod
 from typing import Dict, Generic, Set, Tuple, TypeVar
 
 from forte.data.span import Span
-from forte.process_manager import ProcessManager
 
 __all__ = [
-    "IdManager",
+    "EntryIdManager",
     "EntryContainer",
+    "ContainerType",
+    "BasePointer",
 ]
 
 E = TypeVar('E')
 L = TypeVar('L')
 G = TypeVar('G')
 
-process_manager = ProcessManager()
+
+class BasePointer:
+    """
+    Objects to point to other objects in the data pack.
+    """
+
+    def __str__(self):
+        raise NotImplementedError
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
 
 
-class IdManager:
+class EntryIdManager:
     r"""Control the ids assigned to each entry."""
 
     def __init__(self, initial_id_count: int = 0):
@@ -58,7 +73,7 @@ class EntryContainer(Generic[E, L, G]):
         self.field_records: Dict[str, Set[Tuple[int, str]]] = {}
 
         # The Id manager controls the ID management in this container
-        self._id_manager = IdManager()
+        self._id_manager = EntryIdManager()
 
     def __getstate__(self):
         r"""In serialization:
@@ -77,23 +92,21 @@ class EntryContainer(Generic[E, L, G]):
         r"""In deserialization,
             - The :class:`IdManager` is recreated from the id count.
         """
-        self._id_manager = IdManager(state['serialization']['next_id'])
         self.__dict__.update(state)
         self.__dict__.pop('serialization')
+        self._id_manager = EntryIdManager(state['serialization']['next_id'])
 
-    def add_entry_creation_record(self, entry_id: int):
-        c = process_manager.component
-        try:
-            self.creation_records[c].add(entry_id)
-        except KeyError:
-            self.creation_records[c] = {entry_id}
+    @abstractmethod
+    def on_entry_creation(self, entry: E):
+        raise NotImplementedError
 
-    def add_field_record(self, entry_id: int, field_name: str):
-        c = process_manager.component
-        try:
-            self.field_records[c].add((entry_id, field_name))
-        except KeyError:
-            self.field_records[c] = {(entry_id, field_name)}
+    @abstractmethod
+    def regret_creation(self, entry: E):
+        raise NotImplementedError
+
+    @abstractmethod
+    def record_field(self, entry_id: int, field_name: str):
+        raise NotImplementedError
 
     @abstractmethod
     def validate(self, item: E) -> bool:
@@ -107,7 +120,8 @@ class EntryContainer(Generic[E, L, G]):
         """
         raise NotImplementedError
 
-    def get_entry(self, tid: int):
+    @abstractmethod
+    def get_entry(self, ptr: int) -> E:
         raise NotImplementedError
 
     def get_span_text(self, span: Span):

@@ -11,16 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
+from typing import List, Any, Dict
 
-from typing import List
-
-import stanfordnlp
-from texar.torch import HParams
-
-from ft.onto.base_ontology import Token, Sentence, Dependency
+import stanza
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data import DataPack
+from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
+from ft.onto.base_ontology import Token, Sentence, Dependency
 
 __all__ = [
     "StandfordNLPProcessor",
@@ -28,76 +27,86 @@ __all__ = [
 
 
 class StandfordNLPProcessor(PackProcessor):
-    def __init__(self, models_path: str):
+    def __init__(self):
         super().__init__()
-        self.processors = ""
         self.nlp = None
-        self.MODELS_DIR = models_path
-        self.lang = 'en'  # English is default
+        self.processors = set()
 
     def set_up(self):
-        stanfordnlp.download(self.lang, self.MODELS_DIR)
+        stanza.download(self.configs.lang, self.configs.dir)
+        self.processors = set(self.configs.processors.split(','))
 
     # pylint: disable=unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
-        self.processors = configs.processors
-        self.lang = configs.lang
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
         self.set_up()
-        self.nlp = stanfordnlp.Pipeline(**configs.todict(),
-                                        models_dir=self.MODELS_DIR)
+        self.nlp = stanza.Pipeline(
+            lang=self.configs.lang,
+            dir=self.configs.dir,
+            use_gpu=self.configs.use_gpu,
+            processors=self.configs.processors,
+        )
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
         """
         This defines a basic config structure for StanfordNLP.
         :return:
         """
-        return {
-            'processors': 'tokenize,pos,lemma,depparse',
-            'lang': 'en',
-            # Language code for the language to build the Pipeline
-            'use_gpu': False,
-        }
+        config = super().default_configs()
+        config.update(
+            {
+                'processors': 'tokenize,pos,lemma,depparse',
+                'lang': 'en',
+                # Language code for the language to build the Pipeline
+                'use_gpu': False,
+                'dir': '.',
+            })
+        return config
 
     def _process(self, input_pack: DataPack):
         doc = input_pack.text
-        end_pos = 0
+
+        if len(doc) == 0:
+            logging.warning("Find empty text in doc.")
 
         # sentence parsing
-        sentences = self.nlp(doc).sentences  # type: ignore
+        sentences = self.nlp(doc).sentences
 
         # Iterating through stanfordnlp sentence objects
         for sentence in sentences:
-            begin_pos = doc.find(sentence.words[0].text, end_pos)
-            end_pos = doc.find(sentence.words[-1].text, begin_pos) + len(
-                sentence.words[-1].text)
-            sentence_entry = Sentence(input_pack, begin_pos, end_pos)
-            input_pack.add_or_get_entry(sentence_entry)
+            Sentence(input_pack, sentence.tokens[0].start_char,
+                     sentence.tokens[-1].end_char)
 
             tokens: List[Token] = []
             if "tokenize" in self.processors:
-                offset = sentence_entry.span.begin
-                end_pos_word = 0
-
                 # Iterating through stanfordnlp word objects
                 for word in sentence.words:
-                    begin_pos_word = sentence_entry.text. \
-                        find(word.text, end_pos_word)
-                    end_pos_word = begin_pos_word + len(word.text)
-                    token = Token(input_pack,
-                                  begin_pos_word + offset,
-                                  end_pos_word + offset
-                                  )
+                    misc = word.misc.split('|')
+
+                    t_start = -1
+                    t_end = -1
+                    for m in misc:
+                        k, v = m.split('=')
+                        if k == 'start_char':
+                            t_start = int(v)
+                        elif k == 'end_char':
+                            t_end = int(v)
+
+                    if t_start < 0 or t_end < 0:
+                        raise ValueError(
+                            "Cannot determine word start or end for "
+                            "stanfordnlp.")
+
+                    token = Token(input_pack, t_start, t_end)
 
                     if "pos" in self.processors:
-                        token.set_fields(pos=word.pos)
-                        token.set_fields(upos=word.upos)
-                        token.set_fields(xpos=word.xpos)
+                        token.pos = word.pos
+                        token.ud_xpos = word.xpos
 
                     if "lemma" in self.processors:
-                        token.set_fields(lemma=word.lemma)
+                        token.lemma = word.lemma
 
-                    token = input_pack.add_or_get_entry(token)
                     tokens.append(token)
 
             # For each sentence, get the dependency relations among tokens
@@ -105,9 +114,6 @@ class StandfordNLPProcessor(PackProcessor):
                 # Iterating through token entries in current sentence
                 for token, word in zip(tokens, sentence.words):
                     child = token  # current token
-                    parent = tokens[word.governor - 1]  # Root token
+                    parent = tokens[word.head - 1]  # Head token
                     relation_entry = Dependency(input_pack, parent, child)
-                    relation_entry.set_fields(
-                        rel_type=word.dependency_relation)
-
-                    input_pack.add_or_get_entry(relation_entry)
+                    relation_entry.rel_type = word.deprel

@@ -12,18 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import texar.torch as tx
 import torch
 
-import texar.torch as tx
-
-from texar.torch import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.ontology.top import Annotation
 from forte.data.data_pack import DataPack
+from forte.data.ontology.top import Annotation
 from forte.processors.base import PackProcessor
 from forte.utils.utils import get_class
-
 
 __all__ = [
     "PretrainedEncoder",
@@ -41,6 +38,7 @@ class PretrainedEncoder(PackProcessor):
     vector for all entries matching the specified entry type. The resulting
     vector can be accessed by the embedding field of the annotations.
     """
+
     def __init__(self):
         super().__init__()
         self.tokenizer = None
@@ -111,7 +109,7 @@ class PretrainedEncoder(PackProcessor):
         return list(self.name2tokenizer.keys())
 
     # pylint: disable=unused-argument
-    def initialize(self, resource: Resources, configs: HParams):
+    def initialize(self, resources: Resources, configs: Config):
         if configs.pretrained_model_name in self.name2tokenizer:
             self.tokenizer = \
                 self.name2tokenizer[configs.pretrained_model_name](
@@ -138,8 +136,8 @@ class PretrainedEncoder(PackProcessor):
             output, _ = self.encoder(input_ids, input_length, segment_ids)
             entry.embedding = output.tolist()
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""This default configurations for :class:`PretrainedEncoder`.
 
         Here:
@@ -168,7 +166,8 @@ class PretrainedEncoder(PackProcessor):
                   12-layer, 768-hidden, 12-heads, 110M parameters.
 
             * **BioBERT**: proposed in (`Lee et al`. 2019)
-              `BioBERT: a pre-trained biomedical language representation model for biomedical text mining`_
+              `BioBERT: a pre-trained biomedical language representation model
+              for biomedical text mining`_
               . A domain specific language representation model pre-trained on
               large-scale biomedical corpora. Based on the BERT architecture,
               BioBERT effectively transfers the knowledge from a large amount
@@ -235,7 +234,8 @@ class PretrainedEncoder(PackProcessor):
               The T5 model examines factors relevant for leveraging transfer
               learning at scale from pure unsupervised pre-training to
               supervised tasks. It is discussed in much detail in
-              `Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer`_
+              `Exploring the Limits of Transfer Learning with a Unified
+              Text-to-Text Transformer`_
               from Google.
 
               The available T5 models are as follows:
@@ -247,7 +247,8 @@ class PretrainedEncoder(PackProcessor):
               * ``T5-11B``: A version of T5 with 11 billion parameters.
 
             * The XLNet model was proposed in
-              `XLNet: Generalized Autoregressive Pretraining for Language Understanding`_
+              `XLNet: Generalized Autoregressive Pretraining for Language
+              Understanding`_
               by `Yang et al.` It is based on the Transformer-XL model,
               pre-trained on a large corpus using a language modeling objective
               that considers all permutations of the input sentence.
@@ -262,10 +263,12 @@ class PretrainedEncoder(PackProcessor):
         `"entry_type"`: str
             The annotation type that user want to generate embbeding on .
 
-        .. _`BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding`:
+        .. _`BERT: Pre-training of Deep Bidirectional Transformers for Language
+         Understanding`:
             https://arxiv.org/abs/1810.04805
 
-        .. _`BioBERT: a pre-trained biomedical language representation model for biomedical text mining`:
+        .. _`BioBERT: a pre-trained biomedical language representation model
+        for biomedical text mining`:
             https://arxiv.org/abs/1901.08746
 
         .. _`SciBERT: A Pretrained Language Model for Scientific Text`:
@@ -277,13 +280,17 @@ class PretrainedEncoder(PackProcessor):
         .. _`RoBERTa: A Robustly Optimized BERT Pretraining Approach`:
             https://arxiv.org/abs/1907.11692
 
-        .. _`Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer`:
+        .. _`Exploring the Limits of Transfer Learning with a Unified
+        Text-to-Text Transformer`:
             https://arxiv.org/abs/1910.10683
 
-        .. _`XLNet: Generalized Autoregressive Pretraining for Language Understanding`:
+        .. _`XLNet: Generalized Autoregressive Pretraining for Language
+        Understanding`:
             http://arxiv.org/abs/1906.08237
         """
-        return {
+        config = super().default_configs()
+        config.update({
             'pretrained_model_name': 'bert-base-uncased',
             'entry_type': 'ft.onto.base_ontology.Sentence',
-        }
+        })
+        return config

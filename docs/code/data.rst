@@ -26,6 +26,9 @@ core
 
 top
 ----------
+.. autoclass:: forte.data.ontology.top.Generics
+    :members:
+
 .. autoclass:: forte.data.ontology.top.Annotation
     :members:
 
@@ -35,13 +38,16 @@ top
 .. autoclass:: forte.data.ontology.top.Group
     :members:
 
+.. autoclass:: forte.data.ontology.top.MultiPackGeneric
+    :members:
+
 .. autoclass:: forte.data.ontology.top.MultiPackGroup
     :members:
 
 .. autoclass:: forte.data.ontology.top.MultiPackLink
     :members:
 
-.. autoclass:: forte.data.ontology.top.SubEntry
+.. autoclass:: forte.data.ontology.top.Query
     :members:
 
 Packs
@@ -105,14 +111,19 @@ Readers
 .. autoclass:: forte.data.readers.conllu_ud_reader.ConllUDReader
     :members:
 
-:hidden:`CorpusReader`
-------------------------
-.. autoclass:: forte.data.readers.corpus_reader.CorpusReader
+:hidden:`BaseDeserializeReader`
+--------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.BaseDeserializeReader
     :members:
 
-:hidden:`DeserializeReader`
-----------------------------
-.. autoclass:: forte.data.readers.deserialize_reader.DeserializeReader
+:hidden:`RawDataDeserializeReader`
+-----------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.RawDataDeserializeReader
+    :members:
+
+:hidden:`RecursiveDirectoryDeserializeReader`
+----------------------------------------------
+.. autoclass:: forte.data.readers.deserialize_reader.RecursiveDirectoryDeserializeReader
     :members:
 
 :hidden:`HTMLReader`
@@ -158,6 +169,16 @@ Readers
 :hidden:`StringReader`
 ------------------------
 .. autoclass:: forte.data.readers.string_reader.StringReader
+    :members:
+
+:hidden:`SemEvalTask8Reader`
+------------------------------
+.. autoclass:: forte.data.readers.sem_eval_task8_reader.SemEvalTask8Reader
+    :members:
+
+:hidden:`OpenIEReader`
+------------------------
+.. autoclass:: forte.data.readers.openie_reader.OpenIEReader
     :members:
 
 Batchers

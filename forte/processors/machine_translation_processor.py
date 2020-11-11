@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
-from urllib.parse import urlencode
-from os import getenv
 import uuid
-from typing import Optional
+from os import getenv
+from typing import Optional, Dict, Any
+from urllib.parse import urlencode
+
 import requests
 
-from texar.torch.hyperparams import HParams
-
+from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data import DataPack, MultiPack
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
 from forte.processors.base import MultiPackProcessor
-
 from ft.onto.base_ontology import Document, Utterance
 
 __all__ = [
@@ -52,15 +52,15 @@ class MicrosoftBingTranslator(MultiPackProcessor):
 
     # pylint: disable=unused-argument
     def initialize(self, resources: Optional[Resources],
-                   configs: Optional[HParams]):
+                   configs: Optional[Config]):
         r"""Initialize the processor with `resources` and `configs`. This method
         is called by the pipeline during the initialization.
 
         Args:
-            - resources (Resources): An object of class
+            resources (Resources): An object of class
                 :class:`forte.common.Resources` that holds references to objects
                 that can be shared throughout the pipeline.
-            - configs (HParams): A configuration to initialize the
+            configs (Config): A configuration to initialize the
                 processor. This processor is expected to hold the following
                 (key, value) pairs
 
@@ -96,12 +96,19 @@ class MicrosoftBingTranslator(MultiPackProcessor):
             raise RuntimeError(response.json()['error']['message'])
 
         text = response.json()[0]["translations"][0]["text"]
-        pack = DataPack()
-
-        document = Document(pack, 0, len(text))
-        utterance = Utterance(pack, 0, len(text))
-        pack.add_entry(document)
-        pack.add_entry(utterance)
-
+        pack: DataPack = input_pack.add_pack(self.out_pack_name)
         pack.set_text(text=text)
-        input_pack.update_pack({self.out_pack_name: pack})
+
+        Document(pack, 0, len(text))
+        Utterance(pack, 0, len(text))
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        config = super().default_configs()
+        config.update({
+            'src_language': 'en',
+            'target_language': 'de',
+            'in_pack_name': 'doc_0',
+            'out_pack_name': 'response',
+        })
+        return config

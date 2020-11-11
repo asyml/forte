@@ -47,12 +47,12 @@ Task Processors
 .. autoclass:: forte.processors.srl_predictor.SRLPredictor
     :members:
 
-:hidden:`Alphabet`
-----------------------------------
-.. autoclass:: forte.processors.vocabulary_processor.Alphabet
-    :members:
-
 :hidden:`VocabularyProcessor`
 ----------------------------------
 .. autoclass:: forte.processors.vocabulary_processor.VocabularyProcessor
+    :members:
+
+:hidden:`Alphabet`
+----------------------------------
+.. autoclass:: forte.processors.vocabulary_processor.Alphabet
     :members:

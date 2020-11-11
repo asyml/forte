@@ -20,18 +20,18 @@ This reader is based on DBpedia's extracted datasets.
 """
 import logging
 from collections import defaultdict
-from typing import Any, Iterator, Dict, List, DefaultDict, Tuple
+from typing import Iterator, Dict, List, DefaultDict, Tuple
 
-from texar.torch import HParams
 import rdflib
 
-from forte import Resources
-from forte.data import DataPack
+from forte.common import Resources
+from forte.common.configuration import Config
+from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     NIFParser, NIFBufferedContextReader, get_resource_attribute,
     get_resource_name, get_resource_fragment,
     print_progress)
-from forte.data.readers import PackReader
+from forte.data.readers.base_reader import PackReader
 from ft.onto.wikipedia import (WikiPage, WikiSection, WikiParagraph, WikiTitle,
                                WikiAnchor, WikiInfoBoxMapped)
 
@@ -45,17 +45,26 @@ def add_struct(pack: DataPack, struct_statements: List):
             range_ = get_resource_attribute(nif_range, 'char')
             begin, end = [int(d) for d in range_.split(',')]
 
+            if end > len(pack.text):
+                # Some nif dataset are off by a bit, mostly when there are
+                # new line characters, we cannot correct them.
+                # but we need to make sure they don't go longer than the text.
+                logging.info("NIF Structure end is %d by %s, "
+                             "clipped to fit with the text.", end, nif_range)
+                end = len(pack.text)
+
+            if end <= begin:
+                logging.info("Provided struct [%d:%d] is invalid.", begin, end)
+                continue
+
             struct_ = get_resource_fragment(struct_type)
 
             if struct_ == 'Section':
-                section = WikiSection(pack, begin, end)
-                pack.add_entry(section)
+                WikiSection(pack, begin, end)
             elif struct_ == 'Paragraph':
-                para = WikiParagraph(pack, begin, end)
-                pack.add_entry(para)
+                WikiParagraph(pack, begin, end)
             elif struct_ == 'Title':
-                title = WikiTitle(pack, begin, end)
-                pack.add_entry(title)
+                WikiTitle(pack, begin, end)
             else:
                 logging.warning("Unknown struct type: %s", struct_type)
 
@@ -71,6 +80,19 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
 
     for range_, link_infos in link_grouped.items():
         begin, end = [int(d) for d in range_.split(',')]
+
+        if end > len(pack.text):
+            # Some nif dataset are off by a bit, mostly when there are
+            # new line characters, we cannot correct them.
+            # but we need to make sure they don't go longer than the text.
+            logging.info("Provided anchor end is %d, "
+                         "clipped to fit with the text.", end)
+            end = len(pack.text)
+
+        if end <= begin:
+            logging.info("Provided anchor [%d:%d is invalid.]", begin, end)
+            continue
+
         anchor = WikiAnchor(pack, begin, end)
         for info_key, info_value in link_infos.items():
             if info_key == 'type':
@@ -81,8 +103,7 @@ def add_anchor_links(pack: DataPack, text_link_statements: List[state_type],
                 target_page_name = get_resource_name(info_value)
                 if target_page_name in redirects:
                     target_page_name = redirects[target_page_name]
-                anchor.set_target_page_name(target_page_name)
-        pack.add_entry(anchor)
+                anchor.target_page_name = target_page_name
 
 
 def add_info_boxes(pack: DataPack, info_box_statements: List):
@@ -90,9 +111,8 @@ def add_info_boxes(pack: DataPack, info_box_statements: List):
         slot_name = v.toPython()
         slot_value = get_resource_name(o)
         info_box = WikiInfoBoxMapped(pack)
-        info_box.set_key(slot_name)
-        info_box.set_value(slot_value)
-        pack.add_entry(info_box)
+        info_box.key = slot_name
+        info_box.value = slot_value
 
 
 class DBpediaWikiReader(PackReader):
@@ -102,8 +122,8 @@ class DBpediaWikiReader(PackReader):
         self.link_reader = None
         self.redirects: Dict[str, str] = {}
 
-    def initialize(self, resource: Resources, configs: HParams):
-        self.redirects = resource.get('redirects')
+    def initialize(self, resources: Resources, configs: Config):
+        self.redirects = resources.get('redirects')
 
         # These NIF readers organize the statements in the specific RDF context,
         # in this case each context correspond to one wiki page, this allows
@@ -150,9 +170,8 @@ class DBpediaWikiReader(PackReader):
 
         pack.set_text(full_text)
         page = WikiPage(pack, 0, len(full_text))
-        pack.add_entry(page)
-        page.set_page_id(str_data['oldid'])
-        page.set_page_name(doc_name)
+        page.page_id = str_data['oldid']
+        page.page_name = doc_name
 
         if len(node_data['struct']) > 0:
             add_struct(pack, node_data['struct'])
@@ -164,15 +183,12 @@ class DBpediaWikiReader(PackReader):
         else:
             logging.warning('Links for [%s] not found.', doc_name)
 
-        pack.meta.doc_id = doc_name
+        pack.pack_name = doc_name
 
         yield pack
 
-    def _cache_key_function(self, collection: Any) -> str:
-        pass
-
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         """
         This defines a basic config structure
         :return:

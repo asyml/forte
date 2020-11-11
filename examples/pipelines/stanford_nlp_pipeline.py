@@ -12,31 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 
 from termcolor import colored
-from texar.torch import HParams
 
+from forte.common.configuration import Config
+from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
-
 from ft.onto.base_ontology import Token, Sentence, Dependency
 
 
 def stanford_nlp_example(lang: str, text: str):
-    pl = Pipeline()
+    pl = Pipeline[DataPack]()
     pl.set_reader(StringReader())
 
-    models_path = os.getcwd()
-    config = HParams({
+    config = Config({
         'processors': 'tokenize,pos,lemma,depparse',
         'lang': lang,
         # Language code for the language to build the Pipeline
         'use_gpu': False
     }, StandfordNLPProcessor.default_configs())
-    pl.add_processor(processor=StandfordNLPProcessor(models_path),
-                     config=config)
+    pl.add(component=StandfordNLPProcessor(),
+           config=config)
 
     pl.initialize()
 
@@ -62,7 +60,6 @@ def stanford_nlp_example(lang: str, text: str):
 
 
 def main():
-
     eng_text = "The plain green Norway spruce is displayed in the gallery's " \
                "foyer. Wentworth worked as an assistant to sculptor Henry " \
                "Moore in the late 1960s. His reputation as a sculptor grew " \
