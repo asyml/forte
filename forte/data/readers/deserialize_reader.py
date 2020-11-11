@@ -81,7 +81,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         """
         for root, _, files in os.walk(data_dir):
             for file in files:
-                if not self.configs.suffix or file.endswith(
+                if "suffix" not in self.configs or file.endswith(
                         self.configs.suffix):
                     with open(os.path.join(root, file)) as f:
                         yield f.read()

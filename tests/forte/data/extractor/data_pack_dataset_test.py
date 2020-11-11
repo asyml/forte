@@ -15,6 +15,7 @@ import unittest
 
 from typing import List
 
+from forte.data.extractor.datapack_loader import DataPackLoader
 from forte.data.data_pack import DataPack
 
 from ft.onto.base_ontology import Sentence
@@ -26,20 +27,24 @@ from forte.data.extractor.data_pack_dataset import \
 
 class DataPackDatasetTest(unittest.TestCase):
     def setUp(self):
-        file_path: str = "../../../../data_samples/data_pack_dataset_test"
+        file_path: str = "data_samples/data_pack_dataset_test"
         reader = CoNLL03Reader()
         context_type = Sentence
         request = {Sentence: []}
         skip_k = 0
 
         self.input_files = [
-            "../../../../data_samples/data_pack_dataset_test/conll03_1.conll",
-            "../../../../data_samples/data_pack_dataset_test/conll03_2.conll"
+            "data_samples/data_pack_dataset_test/conll03_1.conll",
+            "data_samples/data_pack_dataset_test/conll03_2.conll"
         ]
         self.feature_schemes = {}
 
-        self.data_source: DataPackDataSource = DataPackDataSource(file_path,
-                                                                  reader,
+        pack_loader: DataPackLoader = DataPackLoader(reader,
+                                                     "foo",
+                                                     {"cache": False,
+                                                      "src_dir": file_path})
+
+        self.data_source: DataPackDataSource = DataPackDataSource(pack_loader,
                                                                   context_type,
                                                                   request,
                                                                   skip_k)

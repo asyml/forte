@@ -13,12 +13,9 @@
 #  limitations under the License.
 import unittest
 
-from typing import Dict, Any, Type, List
-import torch
+from typing import Dict, Any
 from torch import Tensor
 
-from forte.data.ontology.core import EntryType
-from forte.data.extractor.feature import Feature
 from forte.data.extractor.converter import Converter
 from forte.data.extractor.train_pipeline import TrainPipeline
 from forte.data.extractor.trainer import Trainer
@@ -32,8 +29,8 @@ class TrainPipelineTest(unittest.TestCase):
     def setUp(self):
         self.config = {
             "max_char_length": 45,
-            "train_path": "../../../../data_samples/train_pipeline_test",
-            "val_path": "../../../../data_samples/train_pipeline_test",
+            "train_path": "data_samples/train_pipeline_test",
+            "val_path": "data_samples/train_pipeline_test",
             "num_epochs": 1,
             "batch_size_tokens": 5,
             "learning_rate": 0.01,
@@ -41,7 +38,7 @@ class TrainPipelineTest(unittest.TestCase):
             "nesterov": True
         }
 
-        self.data_request = {
+        self.request = {
             "scope": Sentence,
             "schemes": {
                 "text_tag": {
@@ -95,38 +92,52 @@ class TrainPipelineTest(unittest.TestCase):
                                create_criterion_fn=create_criterion_fn,
                                train_forward_fn=train_forward_fn)
 
-        dataset_hparams = {"batch_size": self.config["batch_size_tokens"]}
+        config = {
+            "data_pack": {
+                "train_loader": {
+                    "src_dir": self.config["train_path"],
+                    "cache": False
+                },
+                "val_loader": {
+                    "src_dir": self.config["val_path"],
+                    "cache": False
+                }
+            },
+            "train": {
+                "num_epochs": self.config["num_epochs"]
+            },
+            "dataset": {
+                "batch_size": self.config["batch_size_tokens"]
+            }
+        }
 
         self.train_pipeline = \
             TrainPipeline(train_reader=self.reader,
-                          dev_reader=self.reader,
+                          val_reader=self.reader,
                           trainer=self.trainer,
-                          train_path=self.config["train_path"],
                           predictor=None,
                           evaluator=None,
-                          val_path=self.config["val_path"],
-                          num_epochs=self.config["num_epochs"],
-                          dataset_hparams=dataset_hparams)
+                          config=config)
 
         # TODO: calculate expected loss
 
     def test_parse_request(self):
-        self.train_pipeline._parse_request(self.data_request)
-        self.assertTrue(self.train_pipeline._feature_resource is not None)
-        self.assertTrue("scope" in self.train_pipeline._feature_resource)
-        self.assertTrue("schemes" in self.train_pipeline._feature_resource)
+        self.train_pipeline._parse_request(self.request)
+        self.assertTrue(self.train_pipeline.feature_resource is not None)
+        self.assertTrue("scope" in self.train_pipeline.feature_resource)
+        self.assertTrue("schemes" in self.train_pipeline.feature_resource)
 
-        self.assertTrue(len(self.train_pipeline._feature_resource["schemes"]),
+        self.assertTrue(len(self.train_pipeline.feature_resource["schemes"]),
                         3)
         self.assertTrue(
-            "text_tag" in self.train_pipeline._feature_resource["schemes"])
+            "text_tag" in self.train_pipeline.feature_resource["schemes"])
         self.assertTrue(
-            "char_tag" in self.train_pipeline._feature_resource["schemes"])
+            "char_tag" in self.train_pipeline.feature_resource["schemes"])
         self.assertTrue(
-            "ner_tag" in self.train_pipeline._feature_resource["schemes"])
+            "ner_tag" in self.train_pipeline.feature_resource["schemes"])
 
         for tag, scheme in \
-                self.train_pipeline._feature_resource["schemes"].items():
+                self.train_pipeline.feature_resource["schemes"].items():
             self.assertTrue("extractor" in scheme)
             self.assertTrue("converter" in scheme)
             self.assertTrue(issubclass(type(scheme["extractor"]),
@@ -136,35 +147,34 @@ class TrainPipelineTest(unittest.TestCase):
         # TODO: test invalid request
 
     def test_build_vocab(self):
-        self.train_pipeline._parse_request(self.data_request)
+        self.train_pipeline._parse_request(self.request)
 
         self.train_pipeline._build_vocab()
 
         schemes: Dict[str, Any] = \
-            self.train_pipeline._feature_resource["schemes"]
+            self.train_pipeline.feature_resource["schemes"]
 
         text_extractor: TextExtractor = schemes["text_tag"]["extractor"]
-        self.assertTrue(text_extractor.contains("EU"))
-        self.assertTrue(text_extractor.contains("Peter"))
+        self.assertTrue(text_extractor.has_key("EU"))
+        self.assertTrue(text_extractor.has_key("Peter"))
 
         char_extractor: CharExtractor = schemes["char_tag"]["extractor"]
-        self.assertTrue(char_extractor.contains("a"))
-        self.assertTrue(char_extractor.contains("b"))
-        self.assertTrue(char_extractor.contains("."))
+        self.assertTrue(char_extractor.has_key("a"))
+        self.assertTrue(char_extractor.has_key("b"))
+        self.assertTrue(char_extractor.has_key("."))
 
         ner_extractor: AnnotationSeqExtractor = schemes["ner_tag"]["extractor"]
-        self.assertTrue(ner_extractor.contains(("PER", "B")))
-        self.assertTrue(ner_extractor.contains((None, "O")))
-        self.assertTrue(ner_extractor.contains(("MISC", "I")))
+        self.assertTrue(ner_extractor.has_key(("PER", "B")))
+        self.assertTrue(ner_extractor.has_key((None, "O")))
+        self.assertTrue(ner_extractor.has_key(("MISC", "I")))
 
     def test_build_train_dataset_iterator(self):
-        self.train_pipeline._parse_request(self.data_request)
+        self.train_pipeline._parse_request(self.request)
         self.train_pipeline._build_vocab()
 
         train_iterator = \
             self.train_pipeline._build_dataset_iterator(
-                self.train_pipeline._train_path,
-                self.train_pipeline._train_reader)
+                self.train_pipeline._train_data_pack_loader)
 
         batchs = []
         for batch in train_iterator:
