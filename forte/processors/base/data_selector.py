@@ -14,8 +14,10 @@
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=useless-super-delegation
 """
-An elastic search indexer needs to be created first in order to perform data selection.
-Refer to examples/data_augmentation/data_select_index_pipeline.py for indexer creation.
+An elastic search indexer needs to be created first
+in order to perform data selection.
+Refer to examples/data_augmentation/data_select_index_pipeline.py
+for indexer creation.
 """
 
 from typing import Iterator, Any, Dict, Optional

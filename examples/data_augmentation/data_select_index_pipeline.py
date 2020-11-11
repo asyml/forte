@@ -43,7 +43,8 @@ class CreateIndexerPipeline:
     def __init__(self, reader, reader_config, indexer_config=None):
         self.reader = reader
         self.reader_config = reader_config
-        self.config = indexer_config if indexer_config is not None else self.default_config()
+        self.config = indexer_config if indexer_config is not None \
+            else self.default_config()
         self.config = Config(self.config, default_hparams=None)
         self.create_pipeline()
 
@@ -57,7 +58,7 @@ class CreateIndexerPipeline:
     def create_index(self, datapath):
         for idx, _ in enumerate(self.nlp.process_dataset(datapath)):
             if idx + 1 > 0 and (idx + 1) % 10000 == 0:
-                logging.info(f"Indexed {idx + 1} packs")
+                logging.info(f"Indexed %d packs", idx + 1)
 
     @classmethod
     def default_config(cls) -> Dict[str, Any]:
