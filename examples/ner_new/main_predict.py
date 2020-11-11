@@ -13,27 +13,40 @@
 # limitations under the License.
 
 import yaml
-
+import torch
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.predictor import Predictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention
+from forte.data.extractor.unpadder import SameLengthUnpadder
 
-config_data = yaml.safe_load(open("configs/config_data.yml", "r"))
+
 config_predict = yaml.safe_load(open("configs/config_predict.yml", "r"))
 
-config = Config({}, default_hparams=None)
-config.add_hparam("config_data", config_data)
 
-pl = Pipeline[DataPack]()
+pretrain_model = torch.load(config_predict['model_path'])
+
+def predict_forward_fn(model, batch):
+    word = batch["text_tag"]["tensor"]
+    char = batch["char_tag"]["tensor"]
+    word_masks = batch["text_tag"]["mask"][0]
+    output = model.decode(input_word=word, input_char=char, mask=word_masks)
+    output = output.numpy()
+    return {'ner_tag': output}
+
+
+train_state = torch.load(config_predict['train_state_path'])
+
+pl = Pipeline()
 pl.set_reader(CoNLL03Reader())
-pl.add(Predictor())
-
+pl.add(Predictor(batch_size=config_predict['batch_size'],
+                predict_foward_fn=lambda x: predict_forward_fn(pretrain_model, x),
+                feature_resource=train_state['feature_resource']))
 pl.initialize()
 
-for pack in pl.process_dataset(config.config_data.test_path):
+for pack in pl.process_dataset(config_predict['test_path']):
     for instance in pack.get(Sentence):
         sent = instance.text
         ner_tags = []
@@ -42,4 +55,3 @@ for pack in pl.process_dataset(config.config_data.test_path):
         print('---------')
         print(sent)
         print(ner_tags)
-

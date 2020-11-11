@@ -23,6 +23,7 @@ import torch
 import itertools
 from copy import copy
 
+from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
@@ -41,57 +42,16 @@ from forte.data import slice_batch
 from forte.data.data_utils_io import merge_batches, batch_instances
 
 
-class Predictor(BaseProcessor):
-    def __init__(self):
-        super().__init__()
+class Batcher:
+    def __init__(self, batch_size, feature_resource):
+        self.batch_size = batch_size
+        self.feature_resource = feature_resource
         self.pack_pools = []
         self.instance_pools = []
         self.features_pools = []
 
-    def initialize(self, resources: Resources, configs: Optional[Config]):
-        super().initialize(resources, configs)
-        # TODO: load these params from outside
-        self.batch_size = 11
-        self.scope = Sentence
-
-        config1 = {
-            "scope": Sentence,
-            "entry": Token,
-            "vocab_use_unk": True
-        }
-        extractor1 = TextExtractor(config1)
-        converter1 = Converter(need_pad=True)
-
-        config2 = {
-            "scope": Sentence,
-            "entry": EntityMention,
-            "attribute": "ner_type",
-            "based_on": Token,
-            "strategy": "BIO",
-            "vocab_use_unk": True
-        }
-        extractor2 = AnnotationSeqExtractor(config2)
-        extractor2.add_entry(("PER", "B"))
-        converter2 = Converter(need_pad=True)
-
-        self.feature_scheme = {"text_tag": {
-                                    "extractor":  extractor1,
-                                    "converter": converter1
-                                },
-                                "ner_tag": {
-                                    "extractor":  extractor2,
-                                    "converter": converter2
-                                }
-                            }
-
-        class Model:
-            def __call__(self, tensor):
-                # Input shape: [Batch, length]
-                # Output shape: [Batch]
-                batch_size = len(tensor)
-                length = len(tensor[0])
-                return [[2 for _ in range(length)] for _ in range(batch_size)]
-        self.model = Model()
+    def current_pack_len(self):
+        return len(set(self.pack_pools))
 
     def convert(self, feature_collections):
         example_collection = {}
@@ -103,24 +63,23 @@ class Predictor(BaseProcessor):
 
         tensor_collection = {}
         for tag, features in example_collection.items():
-            converter = self.feature_scheme[tag]["converter"]
+            converter = self.feature_resource['schemes'][tag]["converter"]
             tensor, mask = converter.convert(features)
-
             if tag not in tensor_collection:
                 tensor_collection[tag] = {}
-
             tensor_collection[tag]["tensor"] = tensor
             tensor_collection[tag]["mask"] = mask
         return tensor_collection
 
     def yield_batch(self, pack):
-        for instance in pack.get(self.scope):
+        for instance in pack.get(self.feature_resource['scope']):
             feature_collection = {}
-            for tag, scheme in self.feature_scheme.items():
-                extractor = scheme["extractor"]
-                feature = extractor.extract(pack, instance)
-                feature_collection[tag] = feature
-            
+            for tag, scheme in self.feature_resource['schemes'].items():
+                if scheme['type'] == DATA_INPUT:
+                    extractor = scheme["extractor"]
+                    feature = extractor.extract(pack, instance)
+                    feature_collection[tag] = feature
+
             self.pack_pools.append(pack)
             self.instance_pools.append(instance)
             self.features_pools.append(feature_collection)
@@ -129,7 +88,7 @@ class Predictor(BaseProcessor):
                 yield self.convert(self.features_pools[:self.batch_size]), \
                     self.pack_pools[:self.batch_size], \
                     self.instance_pools[:self.batch_size]
-                
+
                 self.features_pools.clear()
                 self.pack_pools.clear()
                 self.instance_pools.clear()
@@ -142,16 +101,43 @@ class Predictor(BaseProcessor):
             self.pack_pools.clear()
             self.instance_pools.clear()
 
+
+class Predictor(BaseProcessor):
+    def __init__(self, batch_size, predict_foward_fn, feature_resource):
+        super().__init__()
+        self.feature_resource = feature_resource
+        self.batcher = Batcher(batch_size = batch_size,
+                                feature_resource = feature_resource)
+        self.predict_foward_fn = predict_foward_fn
+
+    def unpad(self, predictions, packs, instances):
+        new_predictions = {}
+        for tag, preds in predictions.items():
+            new_preds = []
+            for pred, pack, instance in zip(preds, packs, instances):
+                new_preds.append(self.feature_resource['schemes'][tag]['unpadder'].unpad(
+                    pred, pack, instance))
+            new_predictions[tag] = new_preds
+        return new_predictions
+
+    def add_to_pack(self, predictions, packs, instances):
+        for tag, preds in predictions.items():
+            for pred, pack, instance in zip(preds, packs, instances):
+                self.feature_resource['schemes'][tag]['extractor'].add_to_pack(
+                            pack, instance, pred)
+                pack.add_all_remaining_entries()
+
     def _process(self, input_pack: PackType):
-        for tensor_collection, packs, instances in self.yield_batch(input_pack):
-            predictions = self.predict(tensor_collection)
-            self.add_to_pack(predictions, tensor_collection, packs, instances)
+        for tensor_collection, packs, instances in self.batcher.yield_batch(input_pack):
+            predictions = self.predict_foward_fn(tensor_collection)
+            predictions = self.unpad(predictions, packs, instances)
+            self.add_to_pack(predictions, packs, instances)
 
         # update the status of the jobs. The jobs which were removed from
         # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
         q_index = self._process_manager.current_queue_index
         u_index = self._process_manager.unprocessed_queue_indices[q_index]
-        data_pool_length = len(set(self.pack_pools))
+        data_pool_length = self.batcher.current_pack_len()
         current_queue = self._process_manager.current_queue
 
         for i, job_i in enumerate(
@@ -162,33 +148,15 @@ class Predictor(BaseProcessor):
                 job_i.set_status(ProcessJobStatus.QUEUED)
 
     def flush(self):
-        for tensor_collection, packs, instances in self.flush_batch():
-            predictions = self.predict(tensor_collection)
-            self.add_to_pack(predictions, tensor_collection, packs, instances)
-            pack = packs[0]
+        for tensor_collection, packs, instances in self.batcher.flush_batch():
+            predictions = self.predict_foward_fn(tensor_collection)
+            predictions = self.unpad(predictions, packs, instances)
+            self.add_to_pack(predictions, packs, instances)
 
         current_queue = self._process_manager.current_queue
         for job in current_queue:
             job.set_status(ProcessJobStatus.PROCESSED)
 
-    def predict(self, tensor_collection):
-        predictions = self.model(tensor_collection["text_tag"]["tensor"])
-        return predictions
-
-    def add_to_pack(self, predictions, tensor_collection, packs, instances):
-        prev_pack = None
-        for pred, mask, pack, instance in zip(predictions,
-                                        tensor_collection["text_tag"]["mask"][0],
-                                         packs, instances):
-            self.feature_scheme["ner_tag"]["extractor"].add_to_pack(
-                pack, instance, pred[:sum(mask)]
-            )
-            if prev_pack is not None and prev_pack != pack:
-                prev_pack.add_all_remaining_entries()
-            prev_pack = pack
-
-        if prev_pack is not None:
-            prev_pack.add_all_remaining_entries()
 
     def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
         return DataPack(pack_name)
