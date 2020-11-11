@@ -14,17 +14,13 @@
 
 import yaml
 import torch
-from forte.common.configuration import Config
-from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.predictor import Predictor
-from ft.onto.base_ontology import Token, Sentence, EntityMention
-from forte.data.extractor.unpadder import SameLengthUnpadder
+from ft.onto.base_ontology import Sentence, EntityMention
 
 
 config_predict = yaml.safe_load(open("configs/config_predict.yml", "r"))
-
 
 pretrain_model = torch.load(config_predict['model_path'])
 
@@ -35,7 +31,6 @@ def predict_forward_fn(model, batch):
     output = model.decode(input_word=word, input_char=char, mask=word_masks)
     output = output.numpy()
     return {'ner_tag': output}
-
 
 train_state = torch.load(config_predict['train_state_path'])
 
@@ -52,6 +47,6 @@ for pack in pl.process_dataset(config_predict['test_path']):
         ner_tags = []
         for entry in pack.get(EntityMention, instance):
             ner_tags.append((entry.text, entry.ner_type))
-        print('---------')
-        print(sent)
-        print(ner_tags)
+        print('---- example -----')
+        print("sentence: ", sent)
+        print("ner_tags: ", ner_tags)

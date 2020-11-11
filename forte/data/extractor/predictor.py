@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2020 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,48 +12,57 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=logging-fstring-interpolation
-import logging
-import os
-from abc import abstractmethod
-from typing import Dict, List, Optional, Tuple, Type, Any, Union, Iterable, Generic, Iterator
 
-import numpy as np
-import torch
+from typing import Dict, List, Callable, Optional, Any
 import itertools
-from copy import copy
-
-from forte.data.types import DATA_INPUT, DATA_OUTPUT
-from forte.common.configuration import Config
-from forte.common.resources import Resources
+from forte.data.types import DATA_INPUT
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
-from forte.data.ontology.core import Entry
-from forte.data.types import DataRequest
-from forte.models.ner import utils
-from forte.data.base_pack import PackType
-from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.processors.base.base_processor import BaseProcessor
-from ft.onto.base_ontology import Token, Sentence, EntityMention
-from forte.data.extractor.extractor import TextExtractor, AnnotationSeqExtractor
-from forte.data.extractor.converter import Converter
 from forte.process_manager import ProcessJobStatus
-from forte.data import slice_batch
-from forte.data.data_utils_io import merge_batches, batch_instances
-
 
 class Batcher:
-    def __init__(self, batch_size, feature_resource):
+    '''This class will creat a pool of pack, instance and feature. When
+    the pool is filled with a batch size of elements. It will generate them
+    in a batch. The batched data will be pass to the prediction function in the
+    Predictor. Note that the extract, convert process is done during this batching
+    process.
+    '''
+    def __init__(self, batch_size: int, feature_resource: Dict):
+        '''Feature_resource is prodcued from train pipeline. An example looks like
+        {
+        'scope': ft.onto.base_ontology.Sentence,
+        'schemes': {
+            'text_tag': {
+                'extractor': <forte.data.extractor.extractor.TextExtractor>,
+                'converter': <forte.data.extractor.converter.Converter>,
+                'type': DATA_INPUT
+            },
+ 
+            'char_tag': {
+                'extractor': <forte.data.extractor.extractor.CharExtractor>,
+                'converter': <forte.data.extractor.converter.Converter>,
+                'type': DATA_INPUT
+            },
+
+            'ner_tag': {
+                'extractor': <forte.data.extractor.extractor.AnnotationSeqExtractor>,
+                'converter': <forte.data.extractor.converter.Converter>,
+                'type': DATA_OUTPUT,
+                'unpadder': <forte.data.extractor.converter.SameLengthUnpadder>}
+            }
+        }
+        '''
         self.batch_size = batch_size
         self.feature_resource = feature_resource
         self.pack_pools = []
         self.instance_pools = []
         self.features_pools = []
 
-    def current_pack_len(self):
+    def current_pack_len(self) -> int:
         return len(set(self.pack_pools))
 
-    def convert(self, feature_collections):
+    def convert(self, feature_collections: List) -> Dict:
         example_collection = {}
         for features_collection in feature_collections:
             for tag, feature in features_collection.items():
@@ -71,7 +80,7 @@ class Batcher:
             tensor_collection[tag]["mask"] = mask
         return tensor_collection
 
-    def yield_batch(self, pack):
+    def yield_batch(self, pack: DataPack) -> Dict:
         for instance in pack.get(self.feature_resource['scope']):
             feature_collection = {}
             for tag, scheme in self.feature_resource['schemes'].items():
@@ -93,7 +102,7 @@ class Batcher:
                 self.pack_pools.clear()
                 self.instance_pools.clear()
 
-    def flush_batch(self):
+    def flush_batch(self) -> Dict:
         if len(self.features_pools) > 0:
             yield self.convert(self.features_pools), self.pack_pools, \
                 self.instance_pools
@@ -103,32 +112,37 @@ class Batcher:
 
 
 class Predictor(BaseProcessor):
-    def __init__(self, batch_size, predict_foward_fn, feature_resource):
+    def __init__(self, batch_size: int, predict_foward_fn: Callable,
+                    feature_resource: Dict):
         super().__init__()
         self.feature_resource = feature_resource
         self.batcher = Batcher(batch_size = batch_size,
                                 feature_resource = feature_resource)
         self.predict_foward_fn = predict_foward_fn
 
-    def unpad(self, predictions, packs, instances):
+    def unpad(self, predictions: Dict, packs: List[DataPack],
+                    instances: List[Annotation]):
         new_predictions = {}
         for tag, preds in predictions.items():
             new_preds = []
             for pred, pack, instance in zip(preds, packs, instances):
-                new_preds.append(self.feature_resource['schemes'][tag]['unpadder'].unpad(
-                    pred, pack, instance))
+                new_preds.append(
+                    self.feature_resource['schemes'][tag]['unpadder'].unpad(
+                        pred, pack, instance))
             new_predictions[tag] = new_preds
         return new_predictions
 
-    def add_to_pack(self, predictions, packs, instances):
+    def add_to_pack(self, predictions: Dict, packs: List[DataPack],
+                    instances: List[Annotation]):
         for tag, preds in predictions.items():
             for pred, pack, instance in zip(preds, packs, instances):
                 self.feature_resource['schemes'][tag]['extractor'].add_to_pack(
                             pack, instance, pred)
                 pack.add_all_remaining_entries()
 
-    def _process(self, input_pack: PackType):
-        for tensor_collection, packs, instances in self.batcher.yield_batch(input_pack):
+    def _process(self, input_pack: DataPack):
+        for tensor_collection, packs, instances in \
+                                self.batcher.yield_batch(input_pack):
             predictions = self.predict_foward_fn(tensor_collection)
             predictions = self.unpad(predictions, packs, instances)
             self.add_to_pack(predictions, packs, instances)
