@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
+import logging
 import os
 
-import tensorflow as tf
-import texar.tf as tx
+import torch
+import torch.nn.functional as F
+import texar.torch as tx
 
 # pylint: disable=no-name-in-module
 from forte.models.imdb_text_classifier.utils import data_utils, model_utils
@@ -28,7 +31,8 @@ class IMDBClassifier:
     An example usage can be found at examples/text_classification.
     """
 
-    def __init__(self, config_data, config_classifier, checkpoint=None, pretrained_model_name="bert-base-uncased"):
+    def __init__(self, config_data, config_classifier, checkpoint=None,
+        pretrained_model_name="bert-base-uncased"):
         """Constructs the text classifier.
         Args:
             config_data: string, data config file.
@@ -37,202 +41,210 @@ class IMDBClassifier:
         self.config_classifier = config_classifier
         self.checkpoint = checkpoint
         self.pretrained_model_name = pretrained_model_name
-    
+
     def prepare_data(self, csv_data_dir):
         """Prepares data.
         """
-        tf.logging.info("Loading data")
+        logging.info("Loading data")
 
-        if self.config_data.tfrecord_data_dir is None:
-            tfrecord_output_dir = csv_data_dir
+        if self.config_data.pickle_data_dir is None:
+            output_dir = csv_data_dir
         else:
-            tfrecord_output_dir = self.config_data.tfrecord_data_dir
-        tx.utils.maybe_create_dir(tfrecord_output_dir)
-        
+            output_dir = self.config_data.pickle_data_dir
+        tx.utils.maybe_create_dir(output_dir)
+
         processor = data_utils.IMDbProcessor()
 
         num_classes = len(processor.get_labels())
         num_train_data = len(processor.get_train_examples(csv_data_dir))
-        tf.logging.info(
-            'num_classes:%d; num_train_data:%d' % (num_classes, num_train_data))
+        logging.info(
+            'num_classes:%d; num_train_data:%d', num_classes, num_train_data)
 
         tokenizer = tx.data.BERTTokenizer(
             pretrained_model_name=self.pretrained_model_name)
 
-        # Produces TFRecord files
-        data_utils.prepare_TFRecord_data(
+        data_utils.prepare_record_data(
             processor=processor,
             tokenizer=tokenizer,
             data_dir=csv_data_dir,
             max_seq_length=self.config_data.max_seq_length,
-            output_dir=tfrecord_output_dir)
+            output_dir=output_dir,
+            feature_types=self.config_data.feature_types)
 
     def run(self, do_train, do_eval, do_test, output_dir="output/"):
         """
         Builds the model and runs.
         """
-        tf.logging.set_verbosity(tf.logging.INFO)
-
         tx.utils.maybe_create_dir(output_dir)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        logging.root.setLevel(logging.INFO)
 
         # Loads data
         num_train_data = self.config_data.num_train_data
 
-        train_dataset = tx.data.TFRecordData(hparams=self.config_data.train_hparam)
-        eval_dataset = tx.data.TFRecordData(hparams=self.config_data.eval_hparam)
-        test_dataset = tx.data.TFRecordData(hparams=self.config_data.test_hparam)
-
-        iterator = tx.data.FeedableDataIterator({
-            'train': train_dataset, 'eval': eval_dataset, 'test': test_dataset})
-        batch = iterator.get_next()
-        input_ids = batch["input_ids"]
-        segment_ids = batch["segment_ids"]
-        batch_size = tf.shape(input_ids)[0]
-        input_length = tf.reduce_sum(1 - tf.cast(tf.equal(input_ids, 0), tf.int32),
-                                    axis=1)
-        # Builds BERT
         hparams = {
-            'clas_strategy': 'cls_time'
-        }
+            k: v for k, v in self.config_classifier.__dict__.items()
+            if not k.startswith('__') and k != "hyperparams"}
+
+        # Builds BERT
         model = tx.modules.BERTClassifier(
             pretrained_model_name=self.pretrained_model_name,
             hparams=hparams)
-        logits, preds = model(input_ids, input_length, segment_ids)
+        model.to(device)
 
-        accu = tx.evals.accuracy(batch['label_ids'], preds)
-
-        # Optimization
-        loss = tf.losses.sparse_softmax_cross_entropy(
-            labels=batch["label_ids"], logits=logits)
-        global_step = tf.Variable(0, trainable=False)
-
-        # Builds learning rate decay scheduler
-        static_lr = self.config_classifier.lr['static_lr']
         num_train_steps = int(num_train_data / self.config_data.train_batch_size
                             * self.config_data.max_train_epoch)
-        num_warmup_steps = int(num_train_steps * self.config_data.warmup_proportion)
-        lr = model_utils.get_lr(global_step, num_train_steps,  # lr is a Tensor
-                                num_warmup_steps, static_lr)
+        num_warmup_steps = int(num_train_steps
+                            * self.config_data.warmup_proportion)
 
-        opt = tx.core.get_optimizer(
-            global_step=global_step,
-            learning_rate=lr,
-            hparams=self.config_classifier.opt
+        # Builds learning rate decay scheduler
+        static_lr = 2e-5
+
+        vars_with_decay = []
+        vars_without_decay = []
+        for name, param in model.named_parameters():
+            if 'layer_norm' in name or name.endswith('bias'):
+                vars_without_decay.append(param)
+            else:
+                vars_with_decay.append(param)
+
+        opt_params = [{
+            'params': vars_with_decay,
+            'weight_decay': 0.01,
+        }, {
+            'params': vars_without_decay,
+            'weight_decay': 0.0,
+        }]
+        optim = tx.core.BertAdam(
+            opt_params, betas=(0.9, 0.999), eps=1e-6, lr=static_lr)
+
+        scheduler = torch.optim.lr_scheduler.LambdaLR(
+            optim, functools.partial(model_utils.get_lr_multiplier,
+                                     total_steps=num_train_steps,
+                                     warmup_steps=num_warmup_steps))
+
+        train_dataset = tx.data.RecordData(
+            hparams=self.config_data.train_hparam, device=device)
+        eval_dataset = tx.data.RecordData(
+            hparams=self.config_data.eval_hparam, device=device)
+        test_dataset = tx.data.RecordData(
+            hparams=self.config_data.test_hparam, device=device)
+
+        iterator = tx.data.DataIterator(
+            {"train": train_dataset, "eval": eval_dataset, "test": test_dataset}
         )
 
-        train_op = tf.contrib.layers.optimize_loss(
-            loss=loss,
-            global_step=global_step,
-            learning_rate=None,
-            optimizer=opt)
+        def _compute_loss(logits, labels):
+            r"""Compute loss.
+            """
+            if model.is_binary:
+                loss = F.binary_cross_entropy(
+                    logits.view(-1), labels.view(-1), reduction='mean')
+            else:
+                loss = F.cross_entropy(
+                    logits.view(-1, model.num_classes),
+                    labels.view(-1), reduction='mean')
+            return loss
 
-        # Train/eval/test routine
-
-        def _train_epoch(sess):
-            """Trains on the training set, and evaluates on the dev set
+        def _train_epoch():
+            r"""Trains on the training set, and evaluates on the dev set
             periodically.
             """
-            iterator.restart_dataset(sess, 'train')
+            iterator.switch_to_dataset("train")
+            model.train()
 
-            fetches = {
-                'train_op': train_op,
-                'loss': loss,
-                'batch_size': batch_size,
-                'step': global_step
-            }
+            for batch in iterator:
+                optim.zero_grad()
+                input_ids = batch["input_ids"]
+                segment_ids = batch["segment_ids"]
+                labels = batch["label_ids"]
 
-            while True:
-                try:
-                    feed_dict = {
-                        iterator.handle: iterator.get_handle(sess, 'train'),
-                        tx.global_mode(): tf.estimator.ModeKeys.TRAIN,
-                    }
-                    rets = sess.run(fetches, feed_dict)
-                    step = rets['step']
+                input_length = (1 - (input_ids == 0).int()).sum(dim=1)
 
-                    dis_steps = self.config_data.display_steps
-                    if dis_steps > 0 and step % dis_steps == 0:
-                        tf.logging.info('step:%d; loss:%f;' % (step, rets['loss']))
+                logits, _ = model(input_ids, input_length, segment_ids)
 
-                    eval_steps = self.config_data.eval_steps
-                    if eval_steps > 0 and step % eval_steps == 0:
-                        _eval_epoch(sess)
+                loss = _compute_loss(logits, labels)
+                loss.backward()
+                optim.step()
+                scheduler.step()
+                step = scheduler.last_epoch
 
-                except tf.errors.OutOfRangeError:
-                    break
+                dis_steps = self.config_data.display_steps
+                if dis_steps > 0 and step % dis_steps == 0:
+                    logging.info("step: %d; loss: %f", step, loss)
 
-        def _eval_epoch(sess):
+                eval_steps = self.config_data.eval_steps
+                if eval_steps > 0 and step % eval_steps == 0:
+                    _eval_epoch()
+                    model.train()
+
+        @torch.no_grad()
+        def _eval_epoch():
             """Evaluates on the dev set.
             """
-            iterator.restart_dataset(sess, 'eval')
+            iterator.switch_to_dataset("eval")
+            model.eval()
 
-            cum_acc = 0.0
-            cum_loss = 0.0
             nsamples = 0
-            fetches = {
-                'accu': accu,
-                'loss': loss,
-                'batch_size': batch_size,
-            }
-            while True:
-                try:
-                    feed_dict = {
-                        iterator.handle: iterator.get_handle(sess, 'eval'),
-                        tx.context.global_mode(): tf.estimator.ModeKeys.EVAL,
-                    }
-                    rets = sess.run(fetches, feed_dict)
+            avg_rec = tx.utils.AverageRecorder()
+            for batch in iterator:
+                input_ids = batch["input_ids"]
+                segment_ids = batch["segment_ids"]
+                labels = batch["label_ids"]
 
-                    cum_acc += rets['accu'] * rets['batch_size']
-                    cum_loss += rets['loss'] * rets['batch_size']
-                    nsamples += rets['batch_size']
-                except tf.errors.OutOfRangeError:
-                    break
+                input_length = (1 - (input_ids == 0).int()).sum(dim=1)
 
-            tf.logging.info('eval accu: {}; loss: {}; nsamples: {}'.format(
-                cum_acc / nsamples, cum_loss / nsamples, nsamples))
+                logits, preds = model(input_ids, input_length, segment_ids)
 
-        def _test_epoch(sess):
+                loss = _compute_loss(logits, labels)
+                accu = tx.evals.accuracy(labels, preds)
+                batch_size = input_ids.size()[0]
+                avg_rec.add([accu, loss], batch_size)
+                nsamples += batch_size
+            logging.info("eval accu: %.4f; loss: %.4f; nsamples: %d",
+                        avg_rec.avg(0), avg_rec.avg(1), nsamples)
+
+        @torch.no_grad()
+        def _test_epoch():
             """Does predictions on the test set.
             """
-            iterator.restart_dataset(sess, 'test')
+            iterator.switch_to_dataset("test")
+            model.eval()
 
             _all_preds = []
-            while True:
-                try:
-                    feed_dict = {
-                        iterator.handle: iterator.get_handle(sess, 'test'),
-                        tx.context.global_mode(): tf.estimator.ModeKeys.PREDICT,
-                    }
-                    _preds = sess.run(preds, feed_dict=feed_dict)
-                    _all_preds.extend(_preds.tolist())
-                except tf.errors.OutOfRangeError:
-                    break
+            for batch in iterator:
+                input_ids = batch["input_ids"]
+                segment_ids = batch["segment_ids"]
+
+                input_length = (1 - (input_ids == 0).int()).sum(dim=1)
+
+                _, preds = model(input_ids, input_length, segment_ids)
+
+                _all_preds.extend(preds.tolist())
 
             output_file = os.path.join(output_dir, "test_results.tsv")
-            with tf.gfile.GFile(output_file, "w") as writer:
-                writer.write('\n'.join(str(p) for p in _all_preds))
+            with open(output_file, "w+") as writer:
+                writer.write("\n".join(str(p) for p in _all_preds))
+            logging.info("test output written to %s", output_file)
 
-        session_config = tf.ConfigProto()
+        if self.checkpoint:
+            ckpt = torch.load(self.checkpoint)
+            model.load_state_dict(ckpt['model'])
+            optim.load_state_dict(ckpt['optimizer'])
+            scheduler.load_state_dict(ckpt['scheduler'])
+        if do_train:
+            for _ in range(self.config_data.max_train_epoch):
+                _train_epoch()
+            states = {
+                'model': model.state_dict(),
+                'optimizer': optim.state_dict(),
+                'scheduler': scheduler.state_dict(),
+            }
+            torch.save(states, os.path.join(output_dir, 'model.ckpt'))
 
-        with tf.Session(config=session_config) as sess:
-            sess.run(tf.global_variables_initializer())
-            sess.run(tf.local_variables_initializer())
-            sess.run(tf.tables_initializer())
+        if do_eval:
+            _eval_epoch()
 
-            # Restores trained model if specified
-            saver = tf.train.Saver()
-            if self.checkpoint:
-                saver.restore(sess, self.checkpoint)
-
-            iterator.initialize_dataset(sess)
-
-            if do_train:
-                for i in range(self.config_data.max_train_epoch):
-                    _train_epoch(sess)
-                saver.save(sess, output_dir + '/model.ckpt')
-
-            if do_eval:
-                _eval_epoch(sess)
-
-            if do_test:
-                _test_epoch(sess)
+        if do_test:
+            _test_epoch()

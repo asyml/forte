@@ -1,25 +1,11 @@
-hidden_dim = 768
+name = "bert_classifier"
+hidden_size = 768
+clas_strategy = "cls_time"
+dropout = 0.1
+num_classes = 2
 
-opt = {
-    'optimizer': {
-        'type': 'AdamWeightDecayOptimizer',
-        'kwargs': {
-            'weight_decay_rate': 0.01,
-            'beta_1': 0.9,
-            'beta_2': 0.999,
-            'epsilon': 1e-6,
-            'exclude_from_weight_decay': ['LayerNorm', 'layer_norm', 'bias']
-        }
-    },
-    'gradient_clip': {
-        'type': 'clip_by_global_norm',
-        'kwargs': {
-            'clip_norm': 1.0,
-        }
-    }
-}
-
-# By default, we use warmup and linear decay for learinng rate
-lr = {
-    'static_lr': 3e-5, # default 2e-5
+# This hyperparams is used in bert_with_hypertuning_main.py example
+hyperparams = {
+    "optimizer.warmup_steps": {"start": 10000, "end": 20000, "dtype": int},
+    "optimizer.static_lr": {"start": 1e-3, "end": 1e-2, "dtype": float}
 }

@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import os
 
 from forte.models.imdb_text_classifier.model import IMDBClassifier
 import config_data
 import config_classifier
 
-def main(argv=None):
+
+def main():
     model = IMDBClassifier(config_data, config_classifier)
-    if not os.path.isfile("data/IMDB/train.tf_record"):
+    if not os.path.isfile("data/IMDB/train.pkl"):
         model.prepare_data("data/IMDB")
     model.run(do_train=True, do_eval=True, do_test=False)
+
 
 if __name__ == "__main__":
     main()

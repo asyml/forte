@@ -48,7 +48,7 @@ class CoNLL03Reader(PackReader):
         return os.path.basename(conll_file)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = self.new_pack()
+        pack = DataPack()
         doc = codecs.open(file_path, "r", encoding="utf8")
 
         text = ""
