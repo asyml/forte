@@ -14,13 +14,13 @@
 import torch
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union
 
+from forte.data.extractor.datapack_loader import DataPackLoader
 from forte.data.data_pack import DataPack
 from forte.data.extractor.converter import Converter
 from forte.data.extractor.extractor import BaseExtractor
 from forte.data.extractor.feature import Feature
 from forte.data.ontology.top import Annotation
 from forte.data.ontology.core import EntryType
-from forte.data.readers.base_reader import PackReader
 from forte.data.types import DataRequest
 from texar.torch import HParams
 from texar.torch.data import IterDataSource, DatasetBase, Batch
@@ -33,31 +33,20 @@ FeatureCollection = Dict[str, Feature]
 
 class DataPackIterator:
     def __init__(self,
-                 file_path: str,
-                 reader: PackReader,
+                 data_pack_loader: DataPackLoader,
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
-                 skip_k: int = 0,
-                 data_packs: Optional[List[DataPack]] = None):
-        self._file_path: str = file_path
-        self._reader: PackReader = reader
+                 skip_k: int = 0):
         self._get_data_args = {
             "context_type": context_type,
             "request": request,
             "skip_k": skip_k
         }
 
-        if data_packs:
-            # Read data packs from input
-            self._data_pack_iter: Iterator[DataPack] = \
-                iter(data_packs)
-        else:
-            # Read data packs from disk files
-            self._data_pack_iter: Iterator[DataPack] = \
-                self._reader.iter(self._file_path)
+        self._data_pack_loader = data_pack_loader
+        self._data_pack_iter: Iterator[DataPack] = data_pack_loader.load()
         self._instance_iter: Optional[Iterator[RawExample]] = None
         self._curr_data_pack: Optional[DataPack] = None
-        self._data_packs = data_packs
 
     def __iter__(self):
         return self
@@ -86,18 +75,14 @@ class DataPackIterator:
 
 class DataPackDataSource(IterDataSource):
     def __init__(self,
-                 file_path: str,
-                 reader: PackReader,
+                 data_pack_loader: DataPackLoader,
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
-                 skip_k: int = 0,
-                 data_packs: Optional[List[DataPack]] = None):
-        self._iterator: Iterator = DataPackIterator(file_path,
-                                                    reader,
+                 skip_k: int = 0):
+        self._iterator: Iterator = DataPackIterator(data_pack_loader,
                                                     context_type,
                                                     request,
-                                                    skip_k,
-                                                    data_packs)
+                                                    skip_k)
         super().__init__(self)
 
     def __iter__(self):
