@@ -17,6 +17,8 @@ import time
 from typing import Optional, Dict, Type, Any, Union, List
 
 import torch
+from tqdm import tqdm
+
 from forte.data.base_pack import BasePack
 
 from texar.torch import HParams
@@ -328,7 +330,7 @@ class TrainPipeline:
             logger.info("Training epoch: %s", epoch)
             epoch += 1
 
-            for batch in train_iterator:
+            for batch in tqdm(train_iterator):
                 self._trainer.train(batch)
 
             # TODO: evaluation process
