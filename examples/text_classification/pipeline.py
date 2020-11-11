@@ -51,15 +51,24 @@ def main(argv=None):
         "algorithms.dictionary.WordnetDictionary"
     )
 
+    dict_path = (
+        "forte.processors.data_augment."
+        "algorithms.dictionary.WordnetDictionary"
+    )
+
     processor_config = {
         'augment_entry': "ft.onto.base_ontology.Token",
         'other_entry_policy': {
-            "ft.onto.base_ontology.Sentence": "auto_align",
-            "ft.onto.base_ontology.Document": "auto_align"
+            "entry": [
+                "ft.onto.base_ontology.Document",
+                "ft.onto.base_ontology.Sentence"
+            ],
+            "policy": ["auto_align", "auto_align"],
         },
         'replacement_op': "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
         'replacement_op_config': {
             "dictionary": dict_path,
+            "prob": 0.5,
             "lang": "eng",
         }
     }
