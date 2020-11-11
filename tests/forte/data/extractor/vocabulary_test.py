@@ -12,18 +12,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import unittest
-from itertools import product
 from forte.data.extractor.vocabulary import Vocabulary
-
+from itertools import product
 
 class VocabularyTest(unittest.TestCase):
     def argmax(self, one_hot):
         idx = -1
         for i, flag in enumerate(one_hot):
             if flag:
-                self.assertTrue(idx == -1)
+                self.assertTrue(idx==-1)
                 idx = i
-        self.assertTrue(idx != -1)
+        self.assertTrue(idx!=-1)
         return idx
 
     def test_indexing(self):
@@ -42,7 +41,7 @@ class VocabularyTest(unittest.TestCase):
             for tok in tokens:
                 vocab.add_entry(tok)
 
-            self.assertEqual(len(set(tokens)) + int(use_unk) + int(use_pad), vocab.size())
+            self.assertEqual(len(set(tokens))+int(use_unk)+int(use_pad), vocab.size())
 
             ids = [vocab.entry2id(tok) for tok in tokens]
             if method == "indexing":

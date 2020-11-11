@@ -14,16 +14,7 @@
 from collections import defaultdict
 from typing import Any
 
-
 class Vocabulary:
-    '''This class is used to save the mapping table from
-    tokens, words, labels etc. to indexes.
-    There are two methods used for the mapping table.
-    One is indexing, which will map the entry to a sigle interger.
-    The other one is one-hot, which will map the entry to an
-    one-hot vector
-    '''
-
     PAD_ENTRY = "<PAD>"
     UNK_ENTRY = "<UNK>"
 
@@ -36,9 +27,9 @@ class Vocabulary:
         if use_unk:
             self.add_entry(self.UNK_ENTRY)
             self.id2entry_dict.default_factory = \
-                lambda: self.UNK_ENTRY
+                lambda : self.UNK_ENTRY
             self.entry2id_dict.default_factory = \
-                lambda: self.entry2id_dict[self.UNK_ENTRY]
+                lambda : self.entry2id_dict[self.UNK_ENTRY]
 
         assert method in ("indexing", "one-hot")
         self.method = method
