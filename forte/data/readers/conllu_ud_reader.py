@@ -75,7 +75,7 @@ class ConllUDReader(PackReader):
 
         token_feature_fields = ["ud_features", "ud_misc"]
 
-        data_pack: DataPack = self.new_pack()
+        data_pack: DataPack = DataPack()
         doc_sent_begin: int = 0
         doc_num_sent: int = 0
         doc_text: str = ''
