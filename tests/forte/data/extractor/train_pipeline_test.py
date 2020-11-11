@@ -77,19 +77,25 @@ class TrainPipelineTest(unittest.TestCase):
         def create_optim_fn(model):
             pass
 
-        def pass_tensor_to_model_fn(model,
-                                    tensors: Dict[str, Dict[str, Tensor]]):
+        def create_criterion_fn(model):
+            pass
+
+        def train_forward_fn(model,
+                             tensors: Dict[str, Dict[str, Tensor]]):
             pass
 
         self.create_model_fn = create_model_fn
         self.create_optim_fn = create_optim_fn
-        self.pass_tensor_to_model_fn = pass_tensor_to_model_fn
+        self.train_forward_fn = train_forward_fn
 
         self.reader = CoNLL03Reader()
 
         self.trainer = Trainer(create_model_fn=create_model_fn,
                                create_optim_fn=create_optim_fn,
-                               pass_tensor_to_model_fn=pass_tensor_to_model_fn)
+                               create_criterion_fn=create_criterion_fn,
+                               train_forward_fn=train_forward_fn)
+
+        dataset_hparams = {"batch_size": self.config["batch_size_tokens"]}
 
         self.train_pipeline = \
             TrainPipeline(train_reader=self.reader,
@@ -100,27 +106,27 @@ class TrainPipelineTest(unittest.TestCase):
                           evaluator=None,
                           val_path=self.config["val_path"],
                           num_epochs=self.config["num_epochs"],
-                          batch_size=self.config["batch_size_tokens"])
+                          dataset_hparams=dataset_hparams)
 
         # TODO: calculate expected loss
 
     def test_parse_request(self):
         self.train_pipeline._parse_request(self.data_request)
-        self.assertTrue(self.train_pipeline.feature_resource is not None)
-        self.assertTrue("scope" in self.train_pipeline.feature_resource)
-        self.assertTrue("schemes" in self.train_pipeline.feature_resource)
+        self.assertTrue(self.train_pipeline._feature_resource is not None)
+        self.assertTrue("scope" in self.train_pipeline._feature_resource)
+        self.assertTrue("schemes" in self.train_pipeline._feature_resource)
 
-        self.assertTrue(len(self.train_pipeline.feature_resource["schemes"]),
+        self.assertTrue(len(self.train_pipeline._feature_resource["schemes"]),
                         3)
         self.assertTrue(
-            "text_tag" in self.train_pipeline.feature_resource["schemes"])
+            "text_tag" in self.train_pipeline._feature_resource["schemes"])
         self.assertTrue(
-            "char_tag" in self.train_pipeline.feature_resource["schemes"])
+            "char_tag" in self.train_pipeline._feature_resource["schemes"])
         self.assertTrue(
-            "ner_tag" in self.train_pipeline.feature_resource["schemes"])
+            "ner_tag" in self.train_pipeline._feature_resource["schemes"])
 
         for tag, scheme in \
-                self.train_pipeline.feature_resource["schemes"].items():
+                self.train_pipeline._feature_resource["schemes"].items():
             self.assertTrue("extractor" in scheme)
             self.assertTrue("converter" in scheme)
             self.assertTrue(issubclass(type(scheme["extractor"]),
@@ -135,7 +141,7 @@ class TrainPipelineTest(unittest.TestCase):
         self.train_pipeline._build_vocab()
 
         schemes: Dict[str, Any] = \
-            self.train_pipeline.feature_resource["schemes"]
+            self.train_pipeline._feature_resource["schemes"]
 
         text_extractor: TextExtractor = schemes["text_tag"]["extractor"]
         self.assertTrue(text_extractor.contains("EU"))
@@ -157,8 +163,8 @@ class TrainPipelineTest(unittest.TestCase):
 
         train_iterator = \
             self.train_pipeline._build_dataset_iterator(
-                self.train_pipeline.train_path,
-                self.train_pipeline.train_reader)
+                self.train_pipeline._train_path,
+                self.train_pipeline._train_reader)
 
         batchs = []
         for batch in train_iterator:
