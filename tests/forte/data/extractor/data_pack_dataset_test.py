@@ -67,3 +67,6 @@ class DataPackDatasetTest(unittest.TestCase):
         self.assertEqual(raw_examples_2[1][0]['context'],
                          "Peter Blackburn")
 
+
+if __name__ == '__main__':
+    unittest.main()
