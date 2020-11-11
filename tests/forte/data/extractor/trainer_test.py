@@ -14,8 +14,9 @@
 import unittest
 
 import torch
+from texar.torch.data import Batch
 from torch import nn, Tensor
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from torch.optim import SGD
 
@@ -68,8 +69,11 @@ class TrainPipelineTest(unittest.TestCase):
                 nesterov=self.config["nesterov"])
             return optim
 
-        def pass_tensor_to_model_fn(model,
-                                    tensors: Dict[str, Dict[str, Any]]):
+        def create_criterion_fn(model: nn.Module) -> Optional[nn.Module]:
+            return None
+
+        def train_forward_fn(model, criterion: Optional[nn.Module],
+                             tensors: Dict[str, Dict[str, Any]]):
             input1 = tensors["input1"]["tensor"]
             input1_mask = tensors["input1"]["mask"][0]
             input2 = tensors["input2"]["tensor"]
@@ -81,11 +85,13 @@ class TrainPipelineTest(unittest.TestCase):
 
         self.create_model_fn = create_model_fn
         self.create_optim_fn = create_optim_fn
-        self.pass_tensor_to_model_fn = pass_tensor_to_model_fn
+        self.create_criterion_fn = create_criterion_fn
+        self.train_forward_fn = train_forward_fn
 
         self.trainer = Trainer(create_model_fn=create_model_fn,
                                create_optim_fn=create_optim_fn,
-                               pass_tensor_to_model_fn=pass_tensor_to_model_fn)
+                               create_criterion_fn=create_criterion_fn,
+                               train_forward_fn=train_forward_fn)
 
     def test_train(self):
         self.trainer.setup({"input1": {
@@ -127,6 +133,8 @@ class TrainPipelineTest(unittest.TestCase):
             }
         }
 
+        batch = Batch(3, **batch_tensors)
+
         gold_model: MockModel = MockModel()
 
         gold_model.linear1.weight.data = \
@@ -143,7 +151,7 @@ class TrainPipelineTest(unittest.TestCase):
                                                 input1_mask[0],
                                                 input2_mask[1])
 
-        self.trainer.train(batch_tensors)
+        self.trainer.train(batch)
 
         self.actual_loss = self.model.loss_hooked
 
