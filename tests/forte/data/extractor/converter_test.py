@@ -35,9 +35,10 @@ class ConverterTest(unittest.TestCase):
                                [[7, 8, 9, 0], [1, 2, 5, 6], [4, 0, 0, 0]])))
         self.assertEqual(len(mask_list), 1)
         self.assertTrue(
-            torch.allclose(mask_list[0],
-                           torch.tensor(
-                               [[1, 1, 1, 0], [1, 1, 1, 1], [1, 0, 0, 0]])))
+            torch.equal(mask_list[0],
+                        torch.tensor(
+                            [[1, 1, 1, 0], [1, 1, 1, 1], [1, 0, 0, 0]],
+                            dtype=torch.bool)))
 
     def test_convert2(self):
         features2: List[Feature] = self.create_features2()
@@ -60,27 +61,29 @@ class ConverterTest(unittest.TestCase):
                                  [7, 11, 0, 0]]])))
         self.assertEqual(len(mask_list), 2)
         self.assertTrue(
-            torch.allclose(mask_list[0],
-                           torch.tensor(
-                               [[1, 1, 1, 0],
-                                [1, 1, 0, 0],
-                                [1, 1, 1, 1]]
-                           )))
+            torch.equal(mask_list[0],
+                        torch.tensor(
+                            [[1, 1, 1, 0],
+                             [1, 1, 0, 0],
+                             [1, 1, 1, 1]],
+                            dtype=torch.bool
+                        )))
         self.assertTrue(
-            torch.allclose(mask_list[1],
-                           torch.tensor(
-                               [[[1, 1, 1, 0],
-                                 [1, 1, 0, 0],
-                                 [1, 1, 1, 1],
-                                 [0, 0, 0, 0]],
-                                [[1, 1, 0, 0],
-                                 [1, 1, 0, 0],
-                                 [0, 0, 0, 0],
-                                 [0, 0, 0, 0]],
-                                [[1, 1, 0, 0],
-                                 [1, 0, 0, 0],
-                                 [1, 1, 0, 0],
-                                 [1, 1, 0, 0]]])))
+            torch.equal(mask_list[1],
+                        torch.tensor(
+                            [[[1, 1, 1, 0],
+                              [1, 1, 0, 0],
+                              [1, 1, 1, 1],
+                              [0, 0, 0, 0]],
+                             [[1, 1, 0, 0],
+                              [1, 1, 0, 0],
+                              [0, 0, 0, 0],
+                              [0, 0, 0, 0]],
+                             [[1, 1, 0, 0],
+                              [1, 0, 0, 0],
+                              [1, 1, 0, 0],
+                              [1, 1, 0, 0]]],
+                            dtype=torch.bool)))
 
     def test_convert3(self):
         features3: List[Feature] = self.create_features3()
@@ -98,27 +101,29 @@ class ConverterTest(unittest.TestCase):
                                 [[[0, 1, 0], [0, 0, 1]],
                                  [[1, 0, 0], [1, 0, 0]],
                                  [[0, 1, 0], [1, 0, 0]]]
-                                 ])))
+                                ])))
         self.assertEqual(len(mask_list), 2)
         self.assertTrue(
-            torch.allclose(mask_list[0],
-                           torch.tensor(
-                               [[1, 1, 0],
-                                [1, 0, 0],
-                                [1, 1, 1]]
-                           )))
+            torch.equal(mask_list[0],
+                        torch.tensor(
+                            [[1, 1, 0],
+                             [1, 0, 0],
+                             [1, 1, 1]],
+                            dtype=torch.bool
+                        )))
         self.assertTrue(
-            torch.allclose(mask_list[1],
-                           torch.tensor(
-                               [[[1, 1],
-                                 [1, 1],
-                                 [0, 0]],
-                                [[1, 1],
-                                 [0, 0],
-                                 [0, 0]],
-                                [[1, 0],
-                                 [1, 1],
-                                 [1, 1]]])))
+            torch.equal(mask_list[1],
+                        torch.tensor(
+                            [[[1, 1],
+                              [1, 1],
+                              [0, 0]],
+                             [[1, 1],
+                              [0, 0],
+                              [0, 0]],
+                             [[1, 0],
+                              [1, 1],
+                              [1, 1]]],
+                            dtype=torch.bool)))
 
     def create_features1(self, data_list=None, pad_id=None, dim=None):
         if not data_list:

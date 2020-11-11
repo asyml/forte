@@ -24,6 +24,7 @@ class Converter:
     This class has the functionality of converting a batch of Feature to a
     PyTorch tensor. It will also do the padding for the given batch of data.
     """
+
     def __init__(self, need_pad=True):
         self._need_pad = need_pad
 
@@ -79,12 +80,15 @@ class Converter:
             padded_feature, mask_list = feature.unroll(self._need_pad)
             batch_padded_features.append(padded_feature)
             batch_masks.append(mask_list)
+        batch_padded_features_tensor: Tensor = \
+            torch.tensor(batch_padded_features, dtype=torch.long)
 
-        stack_masks = []
+        batch_masks_tensor_list: List[Tensor] = []
         for i in range(features[0].dim):
             curr_dim_masks = []
             for mask in batch_masks:
                 curr_dim_masks.append(mask[i])
-            stack_masks.append(torch.tensor(curr_dim_masks))
+            batch_masks_tensor_list.append(torch.tensor(curr_dim_masks,
+                                                        dtype=torch.bool))
 
-        return torch.tensor(batch_padded_features), stack_masks
+        return batch_padded_features_tensor, batch_masks_tensor_list
