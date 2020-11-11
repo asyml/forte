@@ -37,7 +37,8 @@ class DataPackIterator:
                  reader: PackReader,
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
-                 skip_k: int = 0):
+                 skip_k: int = 0,
+                 data_packs: Optional[List[DataPack]] = None):
         self._file_path: str = file_path
         self._reader: PackReader = reader
         self._get_data_args = {
@@ -45,10 +46,18 @@ class DataPackIterator:
             "request": request,
             "skip_k": skip_k
         }
-        self._data_pack_iter: Iterator[DataPack] = \
-            self._reader.iter(self._file_path)
+
+        if data_packs:
+            # Read data packs from input
+            self._data_pack_iter: Iterator[DataPack] = \
+                iter(data_packs)
+        else:
+            # Read data packs from disk files
+            self._data_pack_iter: Iterator[DataPack] = \
+                self._reader.iter(self._file_path)
         self._instance_iter: Optional[Iterator[RawExample]] = None
         self._curr_data_pack: Optional[DataPack] = None
+        self._data_packs = data_packs
 
     def __iter__(self):
         return self
@@ -81,12 +90,14 @@ class DataPackDataSource(IterDataSource):
                  reader: PackReader,
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
-                 skip_k: int = 0):
+                 skip_k: int = 0,
+                 data_packs: Optional[List[DataPack]] = None):
         self._iterator: Iterator = DataPackIterator(file_path,
                                                     reader,
                                                     context_type,
                                                     request,
-                                                    skip_k)
+                                                    skip_k,
+                                                    data_packs)
         super().__init__(self)
 
     def __iter__(self):

@@ -14,9 +14,11 @@
 import logging
 import pickle
 import time
-from typing import Optional, Dict, Type, Any, Union
+from typing import Optional, Dict, Type, Any, Union, List
 
 import torch
+from forte.data.base_pack import BasePack
+
 from texar.torch import HParams
 from texar.torch.data import DataIterator
 
@@ -248,14 +250,16 @@ class TrainPipeline:
         scope: EntryType = self._feature_resource["scope"]
         schemes: Dict = self._feature_resource["schemes"]
 
-        # TODO: read all data packs is not memory friendly. Probably should
-        #  cache data pack when retrieve it multiple times
         # TODO: clear vocab?
+        # TODO: serialize datapack to disk
+        self._data_packs: List[BasePack] = []
         for data_pack in self._train_reader.iter(self._train_path):
             for instance in data_pack.get(scope):
                 for tag, scheme in schemes.items():
                     extractor: BaseExtractor = scheme["extractor"]
                     extractor.update_vocab(data_pack, instance)
+
+            self._data_packs.append(data_pack)
 
     def _build_dataset_iterator(self, file_path: str, reader: BaseReader) \
             -> DataIterator:
@@ -265,7 +269,8 @@ class TrainPipeline:
         data_source = DataPackDataSource(file_path,
                                          reader,
                                          scope,
-                                         {scope: []})
+                                         {scope: []},
+                                         data_packs=self._data_packs)
 
         dataset = DataPackDataset(data_source,
                                   schemes,
