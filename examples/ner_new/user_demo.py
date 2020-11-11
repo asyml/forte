@@ -36,8 +36,6 @@ from ft.onto.base_ontology import Sentence, Token, EntityMention
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
     # All the configs
     config_data = yaml.safe_load(open("configs/config_data.yml", "r"))
     config_model = yaml.safe_load(open("configs/config_model.yml", "r"))
@@ -137,22 +135,36 @@ if __name__ == "__main__":
                       train_forward_fn=train_forward_fn)
 
     # TODO:
+    predictor = None
     evaluator = None
 
-    # All not specified parameters are set by default in Texar.
+    # All not specified dataset parameters are set by default in Texar.
     # Default settings can be found here:
     # https://texar-pytorch.readthedocs.io/en/latest/code/data.html#texar.torch.data.DatasetBase.default_hparams
-    dataset_hparams = {"batch_size": config.config_data.batch_size_tokens}
+    pl_config = {
+        "data_pack": {
+            "train_loader": {
+                "src_dir": config.config_data.train_path,
+            },
+            "val_loader": {
+                "src_dir": config.config_data.val_path
+            }
+        },
+        "train": {
+            "num_epochs": config.config_data.num_epochs
+        },
+        "dataset": {
+            "batch_size": config.config_data.batch_size_tokens
+        }
+    }
 
     train_pipeline = \
         TrainPipeline(train_reader=reader,
-                      dev_reader=reader,
+                      val_reader=reader,
                       trainer=trainer,
-                      train_path=config.config_data.train_path,
+                      predictor=predictor,
                       evaluator=evaluator,
-                      val_path=config.config_data.val_path,
-                      num_epochs=config.config_data.num_epochs,
-                      dataset_hparams=dataset_hparams)
+                      config=pl_config)
 
     data_request = {
         "scope": Sentence,
