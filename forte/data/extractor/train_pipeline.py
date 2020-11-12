@@ -18,6 +18,8 @@ import torch
 from torch import device
 from typing import Optional, Dict, Type, Any, Union
 
+from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
+from forte.data.types import DATA_OUTPUT
 from forte.data.extractor.datapack_loader import DataPackLoader
 from forte.data.extractor.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
@@ -62,15 +64,19 @@ class TrainPipeline:
         "schemes": {
             "text_tag": {
                 "extractor":  Extractor,
-                "converter": Converter
+                "converter": Converter,
+                "type": DATA_INPUT
             },
             "char_tag" {
                 "extractor":  Extractor,
-                "converter": Converter
+                "converter": Converter,
+                "type": DATA_INPUT
             }
             "ner_tag": {
                 "extractor":  Extractor,
-                "converter": Converter
+                "converter": Converter,
+                "unpadder": Unpadder,
+                "type": DATA_OUTPUT
             }
         }
     }
@@ -184,7 +190,8 @@ class TrainPipeline:
         for tag, scheme in data_request["schemes"].items():
             assert "extractor" in scheme, \
                 "Field not found for data request scheme: `extractor`"
-
+            assert "type" in scheme, \
+                "Field not found for data request scheme: `type`"
             resource_schemes[tag] = {}
 
             # Build config and extractor
@@ -214,7 +221,14 @@ class TrainPipeline:
                 need_pad: bool = \
                     scheme["need_pad"] if "need_pad" in scheme else True
                 converter: Converter = Converter(need_pad=need_pad)
-                resource_schemes[tag]['converter'] = converter
+                resource_schemes[tag]["converter"] = converter
+                resource_schemes[tag]["type"] = scheme["type"]
+
+                if scheme["type"] == DATA_OUTPUT:
+                    unpadder: BaseUnpadder = \
+                        unpadder_selector(scheme["strategy"])(config)
+                    resource_schemes[tag]["unpadder"] = unpadder
+
             except Exception as e:
                 logger.error("Error instantiate extractor: " + str(e))
                 raise
@@ -338,3 +352,15 @@ class TrainPipeline:
     def finish(self):
         self._train_data_pack_loader.finish()
         self._val_data_pack_loader.finish()
+
+
+def unpadder_selector(encode_strategy: str) -> Type[BaseUnpadder]:
+    mapping = {
+        "BIO": SameLengthUnpadder
+    }
+
+    if encode_strategy not in mapping:
+        raise ValueError("Cannot suitable unpadder for encode strategy: "
+                         + encode_strategy)
+
+    return mapping[encode_strategy]

@@ -16,6 +16,7 @@ import unittest
 from typing import Dict, Any
 from torch import Tensor
 
+from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.data.extractor.converter import Converter
 from forte.data.extractor.train_pipeline import TrainPipeline
 from forte.data.extractor.trainer import Trainer
@@ -46,6 +47,7 @@ class TrainPipelineTest(unittest.TestCase):
                     "repr": "text_repr",
                     "conversion_method": "indexing",
                     "vocab_use_pad": True,
+                    "type": DATA_INPUT,
                     "extractor": TextExtractor
                 },
                 "char_tag": {
@@ -54,6 +56,7 @@ class TrainPipelineTest(unittest.TestCase):
                     "conversion_method": "indexing",
                     "max_char_length": self.config['max_char_length'],
                     "vocab_use_pad": True,
+                    "type": DATA_INPUT,
                     "extractor": CharExtractor
                 },
                 "ner_tag": {
@@ -63,6 +66,7 @@ class TrainPipelineTest(unittest.TestCase):
                     "strategy": "BIO",
                     "conversion_method": "indexing",
                     "vocab_use_pad": True,
+                    "type": DATA_OUTPUT,
                     "extractor": AnnotationSeqExtractor
                 }
             }
