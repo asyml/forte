@@ -273,8 +273,15 @@ class BioSeqTaggingExtractor(BaseExtractor):
             # It is same tag
             else:
                 # TODO: handle not current tag as output
-                assert tag[0] == tag_type
-                tag_end = entry.end
+                if tag[0] == tag_type:
+                    tag_end = entry.end
+                else:
+                    if tag_type:
+                        entity_mention = EntityMention(pack, tag_start, tag_end)
+                        entity_mention.ner_type = tag_type
+                    tag_start = entry.begin
+                    tag_end = entry.end
+                    tag_type = tag[0]
             cnt += 1
 
         # Handle the final tag
