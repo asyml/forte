@@ -135,7 +135,7 @@ class TrainPipeline:
         }
 
     def _validate_config(self):
-        # TODO: validate config
+        # Placeholder
         pass
 
     def _parse_request(self, data_request: Dict):
