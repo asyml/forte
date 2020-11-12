@@ -66,6 +66,12 @@ class BaseExtractor(ABC):
     @property
     def entry_type(self):
         return self.config.entry_type
+    
+    def items(self):
+        return self.vocab.items()
+    
+    def size(self):
+        return len(self.vocab)
 
     @abstractmethod
     def update_vocab(self, pack: DataPack, instance: Annotation):
