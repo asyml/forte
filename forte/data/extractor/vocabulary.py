@@ -27,7 +27,7 @@ class Vocabulary(object):
     PAD_ENTRY = "<PAD>"
     UNK_ENTRY = "<UNK>"
 
-    def __init__(self, method: str, use_pad: bool, use_unk: bool):
+    def __init__(self, method: str, use_pad: bool, use_unk: bool, predefined: set):
         self.element2id_dict = defaultdict()
         self.id2element_dict = defaultdict()
 
@@ -47,6 +47,9 @@ class Vocabulary(object):
         self.method = method
         self.use_pad = use_pad
         self.use_unk = use_unk
+
+        for element in predefined:
+            self.add(element)
 
     def get_pad_id(self):
         if self.use_pad:

@@ -19,7 +19,7 @@ import numpy as np
 import torch
 from torch import Tensor
 from abc import ABC, abstractmethod
-from typing import Iterator, Dict, List, Any, Union, Set, Tuple
+from typing import Iterator, Dict, List, Any, Union, Set, Tuple, Union
 
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -45,13 +45,20 @@ class BaseExtractor(ABC):
                 vocabulary class.
         Vocab_predefined: a set of elements needed to be added to the vocabulary.
         '''
-        self.config = Config(config, default_hparams = self.default_configs(),
+        defaults = {
+            "entry_type": None,
+            "vocab_use_pad": True,
+            "vocab_use_unk": False,
+            "vocab_method": "indexing",
+            "vocab_predefined": set()
+            }
+        self.config = Config(config, default_hparams = defaults,
                                     allow_new_hparam = True)
 
         if self.config.entry_type is None:
             raise AttributeError("Entry_type is needed in the config.")
-
-        self.vocab = Vocabulary(method = self.config.method,
+        print(self.config.vocab_use_pad)
+        self.vocab = Vocabulary(method = self.config.vocab_method,
                                 use_pad = self.config.vocab_use_pad,
                                 use_unk = self.config.vocab_use_unk,
                                 predefined = self.config.vocab_predefined)
@@ -76,24 +83,19 @@ class BaseExtractor(ABC):
         '''
         raise NotImplementedError()
 
-    @staticmethod
-    def default_configs():
-        return {
-            "entry_type": None,
-            "vocab_use_pad": True,
-            "vocab_use_unk": False,
-            "vocab_method": "indexing",
-            "vocab_predefined": set()
-        }
+
 
 
 class AttributeExtractor(BaseExtractor):
     '''This type of extractor will get the attribute on entry_type
     within one instance.
-    '''
+    '''    
     def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
-        self.config = Config(self.config, default_hparams = self.default_configs(),
+        defaults = {
+            "attribute": None,
+        }
+        self.config = Config(self.config, default_hparams = defaults,
                                             allow_new_hparam = True)
         if self.config.attribute is None:
             raise AttributeError("Attribute is needed for AttributeExtractor.")
@@ -119,11 +121,7 @@ class AttributeExtractor(BaseExtractor):
         for entry, attr in zip(pack.get(self.config.entry_type, instance), attrs):
             setattr(entry, self.config.attribute, attr)
 
-    @staticmethod
-    def default_configs():
-        return {
-            "attribute": None,
-        }
+
 
 
 class TextExtractor(AttributeExtractor):
@@ -131,16 +129,19 @@ class TextExtractor(AttributeExtractor):
     It extract the text attribute on entry within one instance.
     '''
     def __init__(self, config: Union[Dict, Config]):
+        config["attribute"] = 'text'
         super().__init__(config)
-        self.config['attribute'] = 'text'
 
 
 class CharExtractor(BaseExtractor):
     '''CharExtractor will get each char for each token in the instance.'''
     def __init__(self, config: Union[Dict, Config]):
+        defaults = {
+                "max_char_length": None
+            }
         super().__init__(config)
         self.config = Config(self.config,
-                                default_hparams = self.default_configs(),
+                                default_hparams = defaults,
                                 allow_new_hparam = True)
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
@@ -162,33 +163,30 @@ class CharExtractor(BaseExtractor):
         if self.config.max_char_length is not None:
             max_char_length = min(self.config.max_char_length,
                                     max_char_length)
-        
         # For each token, the output is a list of characters.
         # Therefore the dim is 2.
-        return Feature(data = data, pad_value = self.vocab.get_pad_id(),
+        ans = Feature(data = data, pad_value = self.vocab.get_pad_id(),
                         dim = 2)
-
-    @staticmethod
-    def default_configs():
-        return {
-            "max_char_length": None
-        }
+        return ans
 
 
-class AnnotationSeqExtractor(BaseExtractor):
-    def __init__(self, config: Dict):
+class BioSeqTaggingExtractor(BaseExtractor):
+
+    def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
-        self.entry = config["entry"]
-        self.attribute = config["attribute"]
-        self.strategy = config["strategy"]
-        self.based_on = config["based_on"]
+        defaults = {
+            "attribute": None,
+            "strategy": None,
+            "based_on": None
+        }
+        self.config = Config(self.config,
+                                default_hparams = defaults,
+                                allow_new_hparam = True)
 
-    @classmethod
-    def bio_variance(cls, tag):
+    def bio_variance(self, tag):
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
-    @classmethod
-    def bio_tag(cls, instance_based_on, instance_entry):
+    def bio_tag(self, instance_based_on, instance_entry):
         tagged = []
         cur_entry_id = 0
         prev_entry_id = None
@@ -229,15 +227,15 @@ class AnnotationSeqExtractor(BaseExtractor):
                 raise AssertionError("Unconsidered case.")
         return tagged
 
-    def update_vocab(self, pack: DataPack, instance: EntryType):
-        for entry in pack.get(self.entry, instance):
-            attribute = getattr(entry, self.attribute)
+    def update_vocab(self, pack: DataPack, instance: Annotation):
+        for entry in pack.get(self.config.entry_type, instance):
+            attribute = getattr(entry, self.config.attribute)
             for tag_variance in self.bio_variance(attribute):
-                self.add(tag_variance)
+                self.vocab.add(tag_variance)
 
-    def extract(self, pack: DataPack, instance: EntryType):
-        instance_based_on = list(pack.get(self.based_on, instance))
-        instance_entry = list(pack.get(self.entry, instance))
+    def extract(self, pack: DataPack, instance: Annotation):
+        instance_based_on = list(pack.get(self.config.based_on, instance))
+        instance_entry = list(pack.get(self.config.entry_type, instance))
         instance_tagged = self.bio_tag(instance_based_on, instance_entry)
 
         data = []
@@ -245,18 +243,18 @@ class AnnotationSeqExtractor(BaseExtractor):
             if pair[0] is None:
                 new_pair = (None, pair[1])
             else:
-                new_pair = (getattr(pair[0], self.attribute), pair[1])
-            data.append(self.element2id(new_pair))
+                new_pair = (getattr(pair[0], self.config.attribute), pair[1])
+            data.append(self.vocab.element2id(new_pair))
 
-        return Feature(data, self.get_pad_id(), 1)
+        return Feature(data, self.vocab.get_pad_id(), 1)
 
     def add_to_pack(self, pack: DataPack, instance: EntryType, prediction: List):
-        tags = [self.id2element(x) for x in prediction]
+        tags = [self.vocab.id2element(x) for x in prediction]
         tag_start = None
         tag_end = None
         tag_type = None
         cnt = 0
-        for entry, tag in zip(pack.get(self.based_on, instance), tags):
+        for entry, tag in zip(pack.get(self.config.based_on, instance), tags):
             # A new tag occurs
             if tag[1] == "O" or tag[1] == "B":
                 # Handle previous tag
@@ -277,3 +275,4 @@ class AnnotationSeqExtractor(BaseExtractor):
         if tag_type:
             entity_mention = EntityMention(pack, tag_start, tag_end)
             entity_mention.ner_type = tag_type
+
