@@ -66,10 +66,10 @@ class BaseExtractor(ABC):
     @property
     def entry_type(self):
         return self.config.entry_type
-    
+
     def items(self):
         return self.vocab.items()
-    
+
     def size(self):
         return len(self.vocab)
 
@@ -273,7 +273,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
             # It is same tag
             else:
                 # TODO: handle not current tag as output
-                assert entry[0] == tag_type
+                assert tag[0] == tag_type
                 tag_end = entry.end
             cnt += 1
 
