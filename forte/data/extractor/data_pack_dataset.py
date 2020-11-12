@@ -14,7 +14,7 @@
 import torch
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union
 
-from forte.data.extractor.datapack_loader import DataPackLoader
+from forte.data.extractor.data_pack_loader import DataPackLoader
 from forte.data.data_pack import DataPack
 from forte.data.extractor.converter import Converter
 from forte.data.extractor.extractor import BaseExtractor

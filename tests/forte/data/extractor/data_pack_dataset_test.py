@@ -15,7 +15,7 @@ import unittest
 
 from typing import List
 
-from forte.data.extractor.datapack_loader import DataPackLoader
+from forte.data.extractor.data_pack_loader import DataPackLoader
 from forte.data.data_pack import DataPack
 
 from ft.onto.base_ontology import Sentence

@@ -20,7 +20,7 @@ from typing import Optional, Dict, Type, Any, Union
 
 from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
 from forte.data.types import DATA_OUTPUT
-from forte.data.extractor.datapack_loader import DataPackLoader
+from forte.data.extractor.data_pack_loader import DataPackLoader
 from forte.data.extractor.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.processors.base.base_processor import BaseProcessor
