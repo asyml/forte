@@ -45,22 +45,22 @@ class BaseExtractor:
     # so that vocab is not directly exposed to
     # outside user.
     def size(self):
-        return self.__vocab.size()
+        return len(self.__vocab)
 
-    def contains(self, entry: Any):
-        return self.__vocab.contians(entry)
+    def has_key(self, entry: Any):
+        return self.__vocab.has_key(entry)
 
     def items(self):
         return self.__vocab.items()
 
-    def add_entry(self, entry):
-        self.__vocab.add_entry(entry)
+    def add(self, entry):
+        self.__vocab.add(entry)
 
-    def entry2id(self, entry):
-        return self.__vocab.entry2id(entry)
+    def element2id(self, entry):
+        return self.__vocab.element2id(entry)
 
-    def id2entry(self, idx):
-        return self.__vocab.id2entry(idx)
+    def id2element(self, idx):
+        return self.__vocab.id2element(idx)
 
     def get_pad_id(self):
         return self.__vocab.get_pad_id()
@@ -83,12 +83,12 @@ class AttributeExtractor(BaseExtractor):
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
         for entry in pack.get(self.entry, instance):
-            self.add_entry(getattr(entry, self.attribute))
+            self.add(getattr(entry, self.attribute))
 
     def extract(self, pack: DataPack, instance: EntryType):
         data = []
         for entry in pack.get(self.entry, instance):
-            idx = self.entry2id(getattr(entry, self.attribute))
+            idx = self.element2id(getattr(entry, self.attribute))
             data.append(idx)
         return Feature(data, self.get_pad_id(), 1)
 
@@ -107,7 +107,7 @@ class CharExtractor(BaseExtractor):
     def update_vocab(self, pack: DataPack, instance: EntryType):
         for word in pack.get(self.entry, instance):
             for char in word.text:
-                self.add_entry(char)
+                self.add(char)
 
     def extract(self, pack: DataPack, instance: EntryType):
         data = []
@@ -116,7 +116,7 @@ class CharExtractor(BaseExtractor):
         for word in pack.get(self.entry, instance):
             tmp = []
             for char in word.text:
-                tmp.append(self.entry2id(char))
+                tmp.append(self.element2id(char))
             data.append(tmp)
             max_char_length = max(max_char_length, len(tmp))
 
@@ -184,7 +184,7 @@ class AnnotationSeqExtractor(BaseExtractor):
         for entry in pack.get(self.entry, instance):
             attribute = getattr(entry, self.attribute)
             for tag_variance in self.bio_variance(attribute):
-                self.add_entry(tag_variance)
+                self.add(tag_variance)
 
     def extract(self, pack: DataPack, instance: EntryType):
         instance_based_on = list(pack.get(self.based_on, instance))
@@ -197,7 +197,7 @@ class AnnotationSeqExtractor(BaseExtractor):
                 new_pair = (None, pair[1])
             else:
                 new_pair = (getattr(pair[0], self.attribute), pair[1])
-            data.append(self.entry2id(new_pair))
+            data.append(self.element2id(new_pair))
 
         return Feature(data, self.get_pad_id(), 1)
 
