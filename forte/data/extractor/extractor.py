@@ -57,11 +57,15 @@ class BaseExtractor(ABC):
 
         if self.config.entry_type is None:
             raise AttributeError("Entry_type is needed in the config.")
-        print(self.config.vocab_use_pad)
+
         self.vocab = Vocabulary(method = self.config.vocab_method,
                                 use_pad = self.config.vocab_use_pad,
                                 use_unk = self.config.vocab_use_unk,
                                 predefined = self.config.vocab_predefined)
+
+    @property
+    def entry_type(self):
+        return self.config.entry_type
 
     @abstractmethod
     def update_vocab(self, pack: DataPack, instance: Annotation):
@@ -82,8 +86,6 @@ class BaseExtractor(ABC):
         type of extractor.
         '''
         raise NotImplementedError()
-
-
 
 
 class AttributeExtractor(BaseExtractor):
@@ -120,8 +122,6 @@ class AttributeExtractor(BaseExtractor):
         attrs = [self.vocab.id2element(x) for x in prediction]
         for entry, attr in zip(pack.get(self.config.entry_type, instance), attrs):
             setattr(entry, self.config.attribute, attr)
-
-
 
 
 class TextExtractor(AttributeExtractor):
