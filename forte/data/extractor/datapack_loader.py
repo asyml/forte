@@ -65,8 +65,9 @@ class DataPackLoader():
         }
 
     def _validate_config(self):
-        # TODO: validate config
-        pass
+        assert self._config.src_dir is not None
+        if self._config.cache or self._config.read_from_cache:
+            assert self._config.cache_writer.output_dir is not None
 
     def _write_data_pack(self, data_pack: DataPack):
         # TODO: currently access private method. Any better way?
