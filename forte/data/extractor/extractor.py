@@ -18,8 +18,10 @@ import os
 import numpy as np
 import torch
 from torch import Tensor
+from abc import ABC, abstractmethod
 from typing import Iterator, Dict, List, Any, Union, Set, Tuple
 
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
@@ -30,100 +32,147 @@ from forte.data.extractor.vocabulary import Vocabulary
 from forte.data.extractor.feature import Feature
 
 
-class BaseExtractor:
-    def __init__(self, config: Dict):
-        self.config = config
-        self.entry = config["entry"]
-        use_pad = config.get("vocab_use_pad", True)
-        use_unk = config.get("vocab_use_unk", False)
-        method = config.get("vocab_method", "indexing")
-        self.__vocab = Vocabulary(method = method,
-                                use_pad = use_pad,
-                                use_unk = use_unk)
+class BaseExtractor(ABC):
+    '''This class is used to get feature from the datapack and also
+    add prediction back to datapack.
+    '''
+    def __init__(self, config: Union[Dict, Config]):
+        '''Config will need to contains some value to initialize the
+        extractor.
+        Entry_type: Type[EntryType], every ectractor will get feature by loop on
+            one type of entry in the instance. e.g. Token, EntityMention.
+        Vocab_use_pad, Vocab_use_unk, Vocab_method" are used to configurate the
+                vocabulary class.
+        Vocab_predefined: a set of elements needed to be added to the vocabulary.
+        '''
+        self.config = Config(config, default_hparams = self.default_configs(),
+                                    allow_new_hparam = True)
 
-    # Wrapper functions for vocabulary class,
-    # so that vocab is not directly exposed to
-    # outside user.
-    def size(self):
-        return len(self.__vocab)
+        if self.config.entry_type is None:
+            raise AttributeError("Entry_type is needed in the config.")
 
-    def has_key(self, entry: Any):
-        return self.__vocab.has_key(entry)
+        self.vocab = Vocabulary(method = self.config.method,
+                                use_pad = self.config.vocab_use_pad,
+                                use_unk = self.config.vocab_use_unk,
+                                predefined = self.config.vocab_predefined)
 
-    def items(self):
-        return self.__vocab.items()
-
-    def add(self, entry):
-        self.__vocab.add(entry)
-
-    def element2id(self, entry):
-        return self.__vocab.element2id(entry)
-
-    def id2element(self, idx):
-        return self.__vocab.id2element(idx)
-
-    def get_pad_id(self):
-        return self.__vocab.get_pad_id()
-
-    def update_vocab(self, pack: DataPack, instance: EntryType):
+    @abstractmethod
+    def update_vocab(self, pack: DataPack, instance: Annotation):
+        '''This function is used when user want to add element to vocabulary
+        using the current instance. e.g. add all tokens in one sentence to
+        the vocabulary.
+        '''
         raise NotImplementedError()
 
-    def extract(self, pack: DataPack, 
-            instance: EntryType) -> Feature:
+    @abstractmethod
+    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
+        '''This function will extract feature from one instance in the pack.
+        '''
         raise NotImplementedError()
 
-    def add_to_pack(self, pack: DataPack, instance: EntryType, feature: Feature):
+    def add_to_pack(self, pack: DataPack, instance: Annotation, prediction: Any):
+        '''This function will add prediction to the pack according to different
+        type of extractor.
+        '''
         raise NotImplementedError()
+
+    @staticmethod
+    def default_configs():
+        return {
+            "entry_type": None,
+            "vocab_use_pad": True,
+            "vocab_use_unk": False,
+            "vocab_method": "indexing",
+            "vocab_predefined": set()
+        }
 
 
 class AttributeExtractor(BaseExtractor):
-    def __init__(self, config: Dict):
+    '''This type of extractor will get the attribute on entry_type
+    within one instance.
+    '''
+    def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
-        self.attribute = config["attribute"]
+        self.config = Config(self.config, default_hparams = self.default_configs(),
+                                            allow_new_hparam = True)
+        if self.config.attribute is None:
+            raise AttributeError("Attribute is needed for AttributeExtractor.")
 
-    def update_vocab(self, pack: DataPack, instance: EntryType):
-        for entry in pack.get(self.entry, instance):
-            self.add(getattr(entry, self.attribute))
+    def update_vocab(self, pack: DataPack, instance: Annotation):
+        for entry in pack.get(self.config.entry_type, instance):
+            self.vocab.add(getattr(entry, self.config.attribute))
 
-    def extract(self, pack: DataPack, instance: EntryType):
+    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
+        '''The AttributeExtractor only extract one attribute for one entry
+        in the instance. There for the output feature will have same number
+        of attributes as entries in one instance.
+        '''
         data = []
-        for entry in pack.get(self.entry, instance):
-            idx = self.element2id(getattr(entry, self.attribute))
+        for entry in pack.get(self.config.entry_type, instance):
+            idx = self.vocab.element2id(getattr(entry, self.config.attribute))
             data.append(idx)
-        return Feature(data, self.get_pad_id(), 1)
+        # One attribute correspond to one entry, therefore the dim is 1.
+        return Feature(data = data, pad_value = self.vocab.get_pad_id(), dim = 1)
+
+    def add_to_pack(self, pack: DataPack, instance: Annotation, prediction: Any):
+        attrs = [self.vocab.id2element(x) for x in prediction]
+        for entry, attr in zip(pack.get(self.config.entry_type, instance), attrs):
+            setattr(entry, self.config.attribute, attr)
+
+    @staticmethod
+    def default_configs():
+        return {
+            "attribute": None,
+        }
 
 
 class TextExtractor(AttributeExtractor):
-    def __init__(self, config: Dict):
-        config["attribute"] = "text"
+    '''A special type of AttributeExtractor, TextExtractor.
+    It extract the text attribute on entry within one instance.
+    '''
+    def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
+        self.config['attribute'] = 'text'
 
 
 class CharExtractor(BaseExtractor):
-    def __init__(self, config: Dict):
-        self.max_char_length = getattr(config, "max_char_length", None)
+    '''CharExtractor will get each char for each token in the instance.'''
+    def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
+        self.config = Config(self.config,
+                                default_hparams = self.default_configs(),
+                                allow_new_hparam = True)
 
     def update_vocab(self, pack: DataPack, instance: EntryType):
-        for word in pack.get(self.entry, instance):
+        for word in pack.get(self.config.entry_type, instance):
             for char in word.text:
-                self.add(char)
+                self.vocab.add(char)
 
-    def extract(self, pack: DataPack, instance: EntryType):
+    def extract(self, pack: DataPack, instance: EntryType) -> Feature:
         data = []
         max_char_length = -1
 
-        for word in pack.get(self.entry, instance):
+        for word in pack.get(self.config.entry_type, instance):
             tmp = []
             for char in word.text:
-                tmp.append(self.element2id(char))
+                tmp.append(self.vocab.element2id(char))
             data.append(tmp)
             max_char_length = max(max_char_length, len(tmp))
 
-        if self.max_char_length is not None:
-            max_char_length = min(self.max_char_length, max_char_length)
+        if self.config.max_char_length is not None:
+            max_char_length = min(self.config.max_char_length,
+                                    max_char_length)
+        
+        # For each token, the output is a list of characters.
+        # Therefore the dim is 2.
+        return Feature(data = data, pad_value = self.vocab.get_pad_id(),
+                        dim = 2)
 
-        return Feature(data, self.get_pad_id(), 2)
+    @staticmethod
+    def default_configs():
+        return {
+            "max_char_length": None
+        }
 
 
 class AnnotationSeqExtractor(BaseExtractor):
@@ -202,7 +251,7 @@ class AnnotationSeqExtractor(BaseExtractor):
         return Feature(data, self.get_pad_id(), 1)
 
     def add_to_pack(self, pack: DataPack, instance: EntryType, prediction: List):
-        tags = [self.id2entry(x) for x in prediction]
+        tags = [self.id2element(x) for x in prediction]
         tag_start = None
         tag_end = None
         tag_type = None
