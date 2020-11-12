@@ -210,13 +210,15 @@ class TrainPipeline:
 
                 # Track dependency
                 if hasattr(extractor, "based_on"):
-                    if extractor.entry not in scheme_group["dependent"]:
-                        scheme_group["dependent"][extractor.entry] = set()
-                    scheme_group["dependent"][extractor.entry].add(extractor)
+                    if extractor.entry_type not in scheme_group["dependent"]:
+                        scheme_group["dependent"][extractor.entry_type] = set()
+                    scheme_group["dependent"][extractor.entry_type].add(
+                        extractor)
                 else:
-                    if extractor.entry not in scheme_group["dependee"]:
-                        scheme_group["dependee"][extractor.entry] = set()
-                    scheme_group["dependee"][extractor.entry].add(extractor)
+                    if extractor.entry_type not in scheme_group["dependee"]:
+                        scheme_group["dependee"][extractor.entry_type] = set()
+                    scheme_group["dependee"][extractor.entry_type].add(
+                        extractor)
 
                 need_pad: bool = \
                     scheme["need_pad"] if "need_pad" in scheme else True

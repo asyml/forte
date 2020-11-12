@@ -16,13 +16,14 @@ import unittest
 from typing import Dict, Any
 from torch import Tensor
 
+from forte.data.extractor.vocabulary import Vocabulary
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.data.extractor.converter import Converter
 from forte.data.extractor.train_pipeline import TrainPipeline
 from forte.data.extractor.trainer import Trainer
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.extractor import TextExtractor, CharExtractor, \
-    AnnotationSeqExtractor, BaseExtractor
+    BioSeqTaggingExtractor, BaseExtractor
 from ft.onto.base_ontology import Sentence, Token, EntityMention
 
 
@@ -43,7 +44,7 @@ class TrainPipelineTest(unittest.TestCase):
             "scope": Sentence,
             "schemes": {
                 "text_tag": {
-                    "entry": Token,
+                    "entry_type": Token,
                     "repr": "text_repr",
                     "conversion_method": "indexing",
                     "vocab_use_pad": True,
@@ -51,7 +52,7 @@ class TrainPipelineTest(unittest.TestCase):
                     "extractor": TextExtractor
                 },
                 "char_tag": {
-                    "entry": Token,
+                    "entry_type": Token,
                     "repr": "char_repr",
                     "conversion_method": "indexing",
                     "max_char_length": self.config['max_char_length'],
@@ -60,14 +61,14 @@ class TrainPipelineTest(unittest.TestCase):
                     "extractor": CharExtractor
                 },
                 "ner_tag": {
-                    "entry": EntityMention,
+                    "entry_type": EntityMention,
                     "attribute": "ner_type",
                     "based_on": Token,
                     "strategy": "BIO",
-                    "conversion_method": "indexing",
+                    "vocab_method": "indexing",
                     "vocab_use_pad": True,
                     "type": DATA_OUTPUT,
-                    "extractor": AnnotationSeqExtractor
+                    "extractor": BioSeqTaggingExtractor
                 }
             }
         }
@@ -159,18 +160,21 @@ class TrainPipelineTest(unittest.TestCase):
             self.train_pipeline.feature_resource["schemes"]
 
         text_extractor: TextExtractor = schemes["text_tag"]["extractor"]
-        self.assertTrue(text_extractor.has_key("EU"))
-        self.assertTrue(text_extractor.has_key("Peter"))
+        vocab: Vocabulary = text_extractor.vocab
+        self.assertTrue(vocab.has_key("EU"))
+        self.assertTrue(vocab.has_key("Peter"))
 
         char_extractor: CharExtractor = schemes["char_tag"]["extractor"]
-        self.assertTrue(char_extractor.has_key("a"))
-        self.assertTrue(char_extractor.has_key("b"))
-        self.assertTrue(char_extractor.has_key("."))
+        vocab: Vocabulary = char_extractor.vocab
+        self.assertTrue(vocab.has_key("a"))
+        self.assertTrue(vocab.has_key("b"))
+        self.assertTrue(vocab.has_key("."))
 
-        ner_extractor: AnnotationSeqExtractor = schemes["ner_tag"]["extractor"]
-        self.assertTrue(ner_extractor.has_key(("PER", "B")))
-        self.assertTrue(ner_extractor.has_key((None, "O")))
-        self.assertTrue(ner_extractor.has_key(("MISC", "I")))
+        ner_extractor: BioSeqTaggingExtractor = schemes["ner_tag"]["extractor"]
+        vocab: Vocabulary = ner_extractor.vocab
+        self.assertTrue(vocab.has_key(("PER", "B")))
+        self.assertTrue(vocab.has_key((None, "O")))
+        self.assertTrue(vocab.has_key(("MISC", "I")))
 
     def test_build_train_dataset_iterator(self):
         self.train_pipeline._parse_request(self.request)
