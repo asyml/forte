@@ -26,7 +26,7 @@ from torch.optim.optimizer import Optimizer
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.data.extractor.extractor import \
-    AnnotationSeqExtractor, TextExtractor, CharExtractor, BaseExtractor
+    BioSeqTaggingExtractor, TextExtractor, CharExtractor, BaseExtractor
 from forte.data.extractor.trainer import Trainer
 from forte.data.extractor.train_pipeline import TrainPipeline
 from forte.models.ner.utils import load_glove_embedding
@@ -170,7 +170,7 @@ if __name__ == "__main__":
         "scope": Sentence,
         "schemes": {
             "text_tag": {
-                "entry": Token,
+                "entry_type": Token,
                 "repr": "text_repr",
                 "conversion_method": "indexing",
                 "vocab_use_pad": True,
@@ -178,7 +178,7 @@ if __name__ == "__main__":
                 "extractor": TextExtractor
             },
             "char_tag": {
-                "entry": Token,
+                "entry_type": Token,
                 "repr": "char_repr",
                 "conversion_method": "indexing",
                 "max_char_length": config.config_data.max_char_length,
@@ -187,14 +187,14 @@ if __name__ == "__main__":
                 "extractor": CharExtractor
             },
             "ner_tag": {
-                "entry": EntityMention,
+                "entry_type": EntityMention,
                 "attribute": "ner_type",
                 "based_on": Token,
                 "strategy": "BIO",
-                "conversion_method": "indexing",
+                "vocab_method": "indexing",
                 "vocab_use_pad": True,
                 "type": DATA_OUTPUT,
-                "extractor": AnnotationSeqExtractor
+                "extractor": BioSeqTaggingExtractor
             }
         }
     }
