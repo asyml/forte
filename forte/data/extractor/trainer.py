@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 from typing import Dict, List, Callable, Any, Optional
 
 from texar.torch.data import Batch
@@ -18,6 +19,8 @@ from torch import Tensor, nn
 from torch.optim.optimizer import Optimizer
 
 from forte.data.extractor.extractor import BaseExtractor
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: this class should be replaced with existing library like
@@ -42,11 +45,6 @@ class Trainer:
         self.criterion = self.create_criterion_fn(self.model)
 
     def train(self, batch: Batch):
-        step = 0
-        train_err = 0.0
-        train_total = 0.0
-
-        step += 1
         self.optim.zero_grad()
 
         # Pass a batch data to the model
@@ -55,5 +53,6 @@ class Trainer:
         loss.backward()
         self.optim.step()
 
-        train_err += loss.item() * batch.batch_size
-        train_total += batch.batch_size
+        train_err = loss.item() * batch.batch_size
+
+        return train_err, batch.batch_size
