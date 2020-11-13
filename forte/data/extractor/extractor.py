@@ -12,22 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import codecs
-import logging
-import os
-import numpy as np
-import torch
-from torch import Tensor
 from abc import ABC, abstractmethod
-from typing import Iterator, Dict, List, Any, Union, Set, Tuple, Union
-
+from typing import Dict, Any, Union, Iterable, Type
+from ft.onto.base_ontology import Annotation, EntityMention
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
-from forte.data.data_utils_io import dataset_path_iterator
-from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Token, Sentence, Document, Annotation, EntityMention
-from forte.data.ontology.core import EntryType
-from forte.data.span import Span
 from forte.data.extractor.vocabulary import Vocabulary
 from forte.data.extractor.feature import Feature
 
@@ -39,18 +28,18 @@ class BaseExtractor(ABC):
     def __init__(self, config: Union[Dict, Config]):
         '''Config will need to contains some value to initialize the
         extractor.
-        Entry_type: Type[EntryType], every ectractor will get feature by loop on
+        Entry_type: Type[EntryType], every extractor will get feature by loop on
             one type of entry in the instance. e.g. Token, EntityMention.
         Vocab_use_pad, Vocab_use_unk, Vocab_method" are used to configurate the
                 vocabulary class.
-        Vocab_predefined: a set of elements needed to be added to the vocabulary.
+        Vocab_predefined: a set of elements be added to the vocabulary.
         '''
         defaults = {
             "entry_type": None,
             "vocab_use_pad": True,
             "vocab_use_unk": False,
             "vocab_method": "indexing",
-            "vocab_predefined": set()
+            "vocab_predefined": None
             }
         self.config = Config(config, default_hparams = defaults,
                                     allow_new_hparam = True)
@@ -60,20 +49,27 @@ class BaseExtractor(ABC):
 
         self.vocab = Vocabulary(method = self.config.vocab_method,
                                 use_pad = self.config.vocab_use_pad,
-                                use_unk = self.config.vocab_use_unk,
-                                predefined = self.config.vocab_predefined)
+                                use_unk = self.config.vocab_use_unk)
+        if self.config.vocab_predefined is not None:
+            self.predefined_vocab(self.config.vocab_predefined)
 
     @property
-    def entry_type(self):
+    def entry_type(self) -> Type[Annotation]:
         return self.config.entry_type
 
-    def items(self):
+    def items(self) -> Iterable:
         return self.vocab.items()
 
-    def size(self):
+    def size(self) -> int:
         return len(self.vocab)
 
-    @abstractmethod
+    def predefined_vocab(self, predefined: set):
+        '''This function will add elements from the passed-in predefined
+        set to the vocab. Different extractor might have different strategies
+        to add these elements.
+        '''
+        raise NotImplementedError()
+
     def update_vocab(self, pack: DataPack, instance: Annotation):
         '''This function is used when user want to add element to vocabulary
         using the current instance. e.g. add all tokens in one sentence to
@@ -87,7 +83,8 @@ class BaseExtractor(ABC):
         '''
         raise NotImplementedError()
 
-    def add_to_pack(self, pack: DataPack, instance: Annotation, prediction: Any):
+    def add_to_pack(self, pack: DataPack, instance: Annotation,
+                    prediction: Any):
         '''This function will add prediction to the pack according to different
         type of extractor.
         '''
@@ -97,16 +94,20 @@ class BaseExtractor(ABC):
 class AttributeExtractor(BaseExtractor):
     '''This type of extractor will get the attribute on entry_type
     within one instance.
-    '''    
+    '''
     def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
         defaults = {
             "attribute": None,
         }
-        self.config = Config(self.config, default_hparams = defaults,
-                                            allow_new_hparam = True)
+        self.config = Config(self.config, default_hparams=defaults,
+                                            allow_new_hparam=True)
         if self.config.attribute is None:
             raise AttributeError("Attribute is needed for AttributeExtractor.")
+
+    def predefined_vocab(self, predefined: set):
+        for element in predefined:
+            self.vocab.add(element)
 
     def update_vocab(self, pack: DataPack, instance: Annotation):
         for entry in pack.get(self.config.entry_type, instance):
@@ -122,11 +123,14 @@ class AttributeExtractor(BaseExtractor):
             idx = self.vocab.element2id(getattr(entry, self.config.attribute))
             data.append(idx)
         # One attribute correspond to one entry, therefore the dim is 1.
-        return Feature(data = data, pad_value = self.vocab.get_pad_id(), dim = 1)
+        return Feature(data = data, pad_value = self.vocab.get_pad_id(),
+                        dim = 1)
 
-    def add_to_pack(self, pack: DataPack, instance: Annotation, prediction: Any):
+    def add_to_pack(self, pack: DataPack, instance: Annotation,
+                    prediction: Any):
         attrs = [self.vocab.id2element(x) for x in prediction]
-        for entry, attr in zip(pack.get(self.config.entry_type, instance), attrs):
+        for entry, attr in zip(pack.get(self.config.entry_type, instance),
+                                attrs):
             setattr(entry, self.config.attribute, attr)
 
 
@@ -150,12 +154,16 @@ class CharExtractor(BaseExtractor):
                                 default_hparams = defaults,
                                 allow_new_hparam = True)
 
-    def update_vocab(self, pack: DataPack, instance: EntryType):
+    def predefined_vocab(self, predefined: set):
+        for element in predefined:
+            self.vocab.add(element)
+
+    def update_vocab(self, pack: DataPack, instance: Annotation):
         for word in pack.get(self.config.entry_type, instance):
             for char in word.text:
                 self.vocab.add(char)
 
-    def extract(self, pack: DataPack, instance: EntryType) -> Feature:
+    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
         data = []
         max_char_length = -1
 
@@ -230,8 +238,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 # Entry: [....]
                 cur_entry_id += 1
             else:
-                raise AssertionError("Unconsidered case.")
+                raise AssertionError("Unconsidered case. The entry is \
+                            within the span of based-on entry.")
         return tagged
+
+    def predefined_vocab(self, predefined: set):
+        for tag in predefined:
+            for element in self.bio_variance(tag):
+                self.vocab.add(element)
 
     def update_vocab(self, pack: DataPack, instance: Annotation):
         for entry in pack.get(self.config.entry_type, instance):
@@ -239,7 +253,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
             for tag_variance in self.bio_variance(attribute):
                 self.vocab.add(tag_variance)
 
-    def extract(self, pack: DataPack, instance: Annotation):
+    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
         instance_based_on = list(pack.get(self.config.based_on, instance))
         instance_entry = list(pack.get(self.config.entry_type, instance))
         instance_tagged = self.bio_tag(instance_based_on, instance_entry)
@@ -254,25 +268,26 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         return Feature(data, self.vocab.get_pad_id(), 1)
 
-    def add_to_pack(self, pack: DataPack, instance: EntryType, prediction: List):
+    def add_to_pack(self, pack: DataPack, instance: Annotation,
+                    prediction: Any):
+        '''This function add the output tag back to the pack. If we
+        encounter "I" while its tag is different from the previous tag,
+        we will consider this "I" as a "B" and start a new tag here.
+        '''
         tags = [self.vocab.id2element(x) for x in prediction]
         tag_start = None
         tag_end = None
         tag_type = None
         cnt = 0
         for entry, tag in zip(pack.get(self.config.based_on, instance), tags):
-            # A new tag occurs
             if tag[1] == "O" or tag[1] == "B":
-                # Handle previous tag
                 if tag_type:
                     entity_mention = EntityMention(pack, tag_start, tag_end)
                     entity_mention.ner_type = tag_type
                 tag_start = entry.begin
                 tag_end = entry.end
                 tag_type = tag[0]
-            # It is same tag
             else:
-                # TODO: handle not current tag as output
                 if tag[0] == tag_type:
                     tag_end = entry.end
                 else:
@@ -288,4 +303,3 @@ class BioSeqTaggingExtractor(BaseExtractor):
         if tag_type:
             entity_mention = EntityMention(pack, tag_start, tag_end)
             entity_mention.ner_type = tag_type
-

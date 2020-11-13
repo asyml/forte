@@ -13,13 +13,9 @@
 #  limitations under the License.
 import unittest
 
-from typing import List, Tuple
-from torch import Tensor
-import torch
+from ft.onto.base_ontology import Sentence, Token, EntityMention
 from forte.pipeline import Pipeline
-from forte.common.configuration import Config
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
-from ft.onto.base_ontology import Sentence, Token, Document, EntityMention
 from forte.data.data_pack import DataPack
 from forte.data.extractor.extractor import TextExtractor, CharExtractor, BioSeqTaggingExtractor
 
@@ -29,18 +25,6 @@ class ExtractorTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "data_samples/conll03_new"
-
-
-    def test1(self):
-        tmp = {
-            "scope": Sentence,
-            "entry_type": Token,
-            "attribute": "text"
-        }
-
-        # config = Config(tmp, default_hparams={})
-
-        extractor = TextExtractor(tmp)
 
     def test_TextExtractor(self):
         pipeline = Pipeline[DataPack]()
@@ -66,7 +50,7 @@ class ExtractorTest(unittest.TestCase):
                 features.append(extractor.extract(pack, instance))
 
         for feat in features:
-            recovered = [extractor.vocab.id2element(idx) for idx in feat.data]
+            recovered = [extractor.vocab.id2element(idx) for idx in feat._data]
             self.assertEqual(" ".join(recovered), sentence)
 
     def test_CharExtractor(self):
@@ -92,12 +76,12 @@ class ExtractorTest(unittest.TestCase):
             for instance in pack.get(Sentence):
                 features.append(extractor.extract(pack, instance))
         for feat in features:
-            recovered = [[extractor.vocab.id2element(char) for char in f.data] \
-                                            for f in feat.get_sub_features()]
+            recovered = [[extractor.vocab.id2element(char) for char in sent]
+                                            for sent in feat.unroll()[0]]
 
             recovered = ["".join(chars) for chars in recovered]
             recovered = " ".join(recovered)
-            self.assertEqual(recovered , sentence)
+            self.assertEqual(recovered, sentence)
 
     def test_BioSeqTaggingExtractor(self):
         pipeline = Pipeline[DataPack]()
@@ -126,8 +110,9 @@ class ExtractorTest(unittest.TestCase):
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
                 feature = extractor.extract(pack, instance)
-                feature = [extractor.vocab.id2element(idx) for idx in feature.data]
+                feature = [extractor.vocab.id2element(idx) for idx in feature._data]
                 self.assertListEqual(feature, expected)
+
 
 if __name__ == '__main__':
     unittest.main()
