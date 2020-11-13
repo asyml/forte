@@ -51,15 +51,6 @@ class TmpReplacer(TextReplacementOp):
         return True, self.token_replacement.get(input.text, input.text)
 
 
-class TmpInserter(TextReplacementOp):
-    def __init__(self, configs):
-        super().__init__(configs)
-
-    # pylint: disable=unused-argument
-    def replace(self, input):
-        return True, " NLP "
-
-
 @ddt
 class TestReplacementDataAugmentProcessor(unittest.TestCase):
     def setUp(self):
@@ -111,8 +102,6 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         processor = TmpReplacementDataAugmentProcessor()
         processor.initialize(resources=None, configs=processor_config)
 
-        inserter = TmpInserter({})
-
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
             src_pack = m_pack.get_pack('input_src')
             tgt_pack = m_pack.get_pack('output_tgt')
@@ -134,9 +123,9 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             # Test the insertion and deletion
             for pack in (src_pack, tgt_pack):
                 # Insert an "NLP" at the beginning
-                processor.insert(inserter, pack, 0)
-                processor.insert(inserter, pack, 18)
-                processor.insert(inserter, pack, len(pack.text) - 2)
+                processor.insert(" NLP ", pack, 0)
+                processor.insert(" NLP ", pack, 18)
+                processor.insert(" NLP ", pack, len(pack.text) - 2)
                 # Delete the second token "and"
                 processor.delete(list(pack.get(Token))[1])
 

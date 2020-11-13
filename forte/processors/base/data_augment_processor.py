@@ -163,7 +163,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
     def insert(
             self,
-            replacement_op: TextReplacementOp,
+            inserted_text: str,
             data_pack: DataPack,
             pos: int
     ) -> bool:
@@ -183,13 +183,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Returns:
             A bool value. True if the insertion happened, False otherwise.
         """
-        pid: int = data_pack.meta.pack_idx
+        pid: int = data_pack.meta.pack_id
         if self._is_span_overlap(pid, pos, pos):
             return False
-        inserted_text: str
-        is_inserted: bool
-        is_inserted, inserted_text = replacement_op.replace("")
-        if is_inserted and pos not in self.inserted_annos[pid]:
+
+        if pos not in self.inserted_annos[pid]:
             self.replaced_annos[pid].append((Span(pos, pos), inserted_text))
             self.inserted_annos[pid][pos] = len(inserted_text)
             return True
