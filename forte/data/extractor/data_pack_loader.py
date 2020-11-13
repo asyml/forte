@@ -76,25 +76,25 @@ class DataPackLoader():
     def load(self) -> Iterator[DataPack]:
         if not self._data_packs:
             if self._config.read_from_cache:
-                logger.info("Read data packs from disk cache")
+                logger.debug("Read data packs from disk cache")
                 # Read data packs from disk cache
                 cache_dir = self._config.cache_writer.output_dir
                 for data_pack in self._cache_reader.iter(cache_dir):
                     self._data_packs.append(data_pack)
                     yield data_pack
             else:
-                logger.info("Parse data packs by reader")
+                logger.debug("Parse data packs by reader")
                 # Ask reader to parse data packs
                 for data_pack in self._reader.iter(self._config.src_dir):
                     if self._config.cache:
                         assert hasattr(self, "_cache_writer"), \
                             "Missing cache writer while caching"
-                        logger.info("Cache parses data packs to disk")
+                        logger.debug("Cache parsed data packs to disk")
                         self._write_data_pack(data_pack)
                     self._data_packs.append(data_pack)
                     yield data_pack
         else:
-            logger.info("Read data packs from memory cache")
+            logger.debug("Read data packs from memory cache")
             # data packs already stored in memory
             for data_pack in self._data_packs:
                 yield data_pack
