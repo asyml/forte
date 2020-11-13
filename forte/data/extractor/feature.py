@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from typing import List, Any, Tuple, Union
+import torch
 
 
 class Feature:
@@ -35,11 +36,31 @@ class Feature:
         1 dim one-hot-encoding feature
         pad_len = 3
         pad_value = [0,0,1]
+    A typical usage of this class will be like the following:
+    .. code-block:: python
+                # create a feature
+                feature = Feature(data=[[1,2],[3,4,5],[9]],
+                                  pad_value=0,
+                                  dim=2)
+                # Pad current dim with max_len=4
+                feature.pad(4)
+
+                # Pad each 2nd dim (the base dim) with max_len=3
+                for sub_feature in feature.get_sub_features():
+                    sub_feature.pad(3)
+
+                # Retrieve the actual data
+                data = feature.unroll()
+
+                # The data is a list of list which looks like the following:
+                # data = [[1,2,0],[3,4,5],[9,0,0],[0,0,0]]
+                ...
     """
     def __init__(self,
                  data: List,
                  pad_value: Union[int, List],
-                 dim: int):
+                 dim: int,
+                 dtype: torch.dtype = torch.long):
         """
         Args:
             data (List):
@@ -53,22 +74,23 @@ class Feature:
                 If the data is a list of value, the `dim` should be 1 and this
                 feature is called base feature.
         """
-        self.pad_value: Union[int, List] = pad_value
-        self.dim: int = dim
+        self._pad_value: Union[int, List] = pad_value
+        self._dim: int = dim
+        self._dtype = dtype
 
         # Indicating whether current Feature is the inner most feature.
-        self._is_base_feature: bool = dim == 1
+        self._base_feature: bool = dim == 1
         # Only base feature has actual `data`
-        self.data: Union[None, List] = None
+        self._data: Union[None, List] = None
         # Only non-base features have `sub_features`. It can be considered as
         # a list of Feature instances
-        self.sub_features: List = []
+        self._sub_features: List = []
         # The elements of mask will indicate whether the corresponding value
         # in the data is the actual value or padded data. `mask` will only
         # indicate feature along current dimension. Sub-dimension mask will
         # be stored inside sub features in `sub_features` It will be updated
         # when the method `pad` is called.
-        self.mask: List = []
+        self._mask: List = []
 
         self._parse_sub_features(data)
         self._validate_input()
@@ -77,12 +99,12 @@ class Feature:
         """
         Validate input parameters based on some pre-conditions.
         """
-        assert (self.is_base_feature and self.data is not None or
-                (not self.is_base_feature
-                 and self.data is None
-                 and self.sub_features is not None))
-        assert type(self.pad_value) == int or type(self.pad_value) == list
-        assert self.dim >= 1
+        assert (self.base_feature and self._data is not None or
+                (not self.base_feature
+                 and self._data is None
+                 and self._sub_features is not None))
+        assert type(self._pad_value) == int or type(self._pad_value) == list
+        assert self._dim >= 1
 
     def _parse_sub_features(self, data):
         """
@@ -94,40 +116,51 @@ class Feature:
                 A list of features, where each feature can be the value or
                 another list of features.
         """
-        if self.is_base_feature:
-            self.data: List = data
+        if self.base_feature:
+            self._data: List = data
         else:
-            self.sub_features: List = []
+            self._sub_features: List = []
             for sub_data in data:
-                self.sub_features.append(
-                    Feature(sub_data, self.pad_value, self.dim - 1))
+                self._sub_features.append(
+                    Feature(sub_data,
+                            self._pad_value,
+                            self._dim - 1,
+                            self.dtype))
 
-        self.mask: List = [1] * len(data)
+        self._mask: List = [1] * len(data)
 
     @property
-    def is_base_feature(self) -> bool:
+    def base_feature(self) -> bool:
         """
         Return whether or not the current feature is the base feature.
         Returns: True if current feature is base feature. Otherwise, False.
         """
-        return self._is_base_feature
+        return self._base_feature
 
-    def get_sub_features(self) -> List['Feature']:
+    @property
+    def dtype(self) -> torch.dtype:
+        """
+        Returns: the data type of this feature
+        """
+        return self._dtype
+
+    @property
+    def sub_features(self) -> List['Feature']:
         """
         Retrieve a list of sub features. The call is valid only when current
         dimension is not the base dimension.
         Returns: a list of sub features.
         """
-        assert not self.is_base_feature, \
+        assert not self.base_feature, \
             "Base feature does not have sub features"
-        assert self.dim > 1, \
+        assert self._dim > 1, \
             "Non-base feature should have as least 2 dimension"
 
-        return self.sub_features
+        return self._sub_features
 
     def __len__(self):
-        return len(self.data) if self.is_base_feature else \
-            len(self.sub_features)
+        return len(self._data) if self.base_feature else \
+            len(self._sub_features)
 
     def pad(self, max_len: int):
         """
@@ -141,11 +174,11 @@ class Feature:
             "Feature length should not exceed given max_len"
 
         for i in range(max_len - len(self)):
-            if self.is_base_feature:
-                self.data.append(self.pad_value)
+            if self.base_feature:
+                self._data.append(self._pad_value)
             else:
-                self.sub_features.append(Feature([], self.pad_value, self.dim - 1))
-            self.mask.append(0)
+                self._sub_features.append(Feature([], self._pad_value, self._dim - 1))
+            self._mask.append(0)
 
     def unroll(self, need_pad: bool = True) -> Tuple[List[Any], List[Any]]:
         """
@@ -170,22 +203,22 @@ class Feature:
              [1,1,0])                   # mask
         """
         if not need_pad:
-            return self.data, []
+            return self._data, []
 
-        if self.is_base_feature:
-            return self.data, [self.mask]
+        if self.base_feature:
+            return self._data, [self._mask]
         else:
             unroll_features: List = []
             sub_stack_masks: List = []
 
-            for feature in self.get_sub_features():
+            for feature in self.sub_features:
                 sub_unroll_features, sub_masks = feature.unroll()
 
-                for i in range(self.dim - 1):
+                for i in range(self._dim - 1):
                     if i == len(sub_stack_masks):
                         sub_stack_masks.append([])
                     sub_stack_masks[i].append(sub_masks[i])
 
                 unroll_features.append(sub_unroll_features)
 
-            return unroll_features, [self.mask] + sub_stack_masks
+            return unroll_features, [self._mask] + sub_stack_masks
