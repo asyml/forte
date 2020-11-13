@@ -22,15 +22,18 @@ from forte.data.ontology import Annotation
 from forte.processors.base.base_processor import BaseProcessor
 from forte.process_manager import ProcessJobStatus
 
-class Batcher(object):
+
+class Batcher:
     '''This class will create a pool of pack, instance and feature. When
     the pool is filled with a batch size of elements. It will generate them
     in a batch. The batched data will be pass to the prediction function in the
-    Predictor. Note that the extract, convert process is done during this batching
-    process.
+    Predictor. Note that the extract, convert process is done during
+    this batching process.
     '''
     def __init__(self, batch_size: int, feature_resource: Dict):
-        '''Feature_resource is prodcued from train pipeline. An example looks like
+        # pylint: disable=line-too-long
+        '''Feature_resource is prodcued from train pipeline.
+        An example looks like
         {
         'scope': ft.onto.base_ontology.Sentence,
         'schemes': {
@@ -120,8 +123,8 @@ class Predictor(BaseProcessor):
             predict_forward_fn: Callable, feature_resource: Dict):
         super().__init__()
         self.feature_resource = feature_resource
-        self.batcher = Batcher(batch_size = batch_size,
-                                feature_resource = feature_resource)
+        self.batcher = Batcher(batch_size=batch_size,
+                                feature_resource=feature_resource)
         self.pretrain_model = pretrain_model
         self.predict_forward_fn = predict_forward_fn
 
@@ -148,7 +151,8 @@ class Predictor(BaseProcessor):
     def _process(self, input_pack: DataPack):
         for tensor_collection, packs, instances in \
                                 self.batcher.yield_batch(input_pack):
-            predictions = self.predict_forward_fn(self.pretrain_model, tensor_collection)
+            predictions = self.predict_forward_fn(self.pretrain_model,
+                                                    tensor_collection)
             predictions = self.unpad(predictions, packs, instances)
             self.add_to_pack(predictions, packs, instances)
 
@@ -168,7 +172,8 @@ class Predictor(BaseProcessor):
 
     def flush(self):
         for tensor_collection, packs, instances in self.batcher.flush_batch():
-            predictions = self.predict_forward_fn(self.pretrain_model, tensor_collection)
+            predictions = self.predict_forward_fn(self.pretrain_model,
+                                                    tensor_collection)
             predictions = self.unpad(predictions, packs, instances)
             self.add_to_pack(predictions, packs, instances)
 
