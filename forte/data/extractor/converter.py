@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Optional
 
 import torch
 from torch import Tensor
@@ -25,8 +25,9 @@ class Converter:
     PyTorch tensor. It will also do the padding for the given batch of data.
     """
 
-    def __init__(self, need_pad=True):
+    def __init__(self, need_pad=True, default_dtype: torch.dtype = torch.long):
         self._need_pad = need_pad
+        self._default_dtype = default_dtype
 
     def convert(self, features: List[Feature]) -> \
             Tuple[Tensor, List[Tensor]]:
@@ -47,12 +48,18 @@ class Converter:
         [batch_size, feature_dim1_max, ..., feature_dimi_max]
         """
         # Padding the features if needed
+        dtype: Optional[torch.dtype] = None
+
         if self._need_pad:
             # BFS to pad each dimension
             queue: List[Feature] = []
             curr_max_len: int = -1
 
             for feature in features:
+                if not dtype:
+                    dtype = feature.dtype
+                else:
+                    assert dtype == feature.dtype
                 queue.append(feature)
                 curr_max_len = max(curr_max_len, len(feature))
 
@@ -63,8 +70,8 @@ class Converter:
                     feature: Feature = queue.pop(0)
                     feature.pad(curr_max_len)
 
-                    if not feature.is_base_feature:
-                        for sub_feature in feature.get_sub_features():
+                    if not feature.base_feature:
+                        for sub_feature in feature.sub_features:
                             next_max_len = max(next_max_len,
                                                len(sub_feature))
                             queue.append(sub_feature)
@@ -72,6 +79,11 @@ class Converter:
                     size -= 1
 
                 curr_max_len = next_max_len
+        else:
+            if len(features) > 0:
+                dtype = features[0].dtype
+            else:
+                dtype = self._default_dtype
 
         # Convert features to tensors
         batch_padded_features: List[List[Any]] = []
@@ -81,10 +93,10 @@ class Converter:
             batch_padded_features.append(padded_feature)
             batch_masks.append(mask_list)
         batch_padded_features_tensor: Tensor = \
-            torch.tensor(batch_padded_features, dtype=torch.long)
+            torch.tensor(batch_padded_features, dtype=dtype)
 
         batch_masks_tensor_list: List[Tensor] = []
-        for i in range(features[0].dim):
+        for i in range(features[0]._dim):
             curr_dim_masks = []
             for mask in batch_masks:
                 curr_dim_masks.append(mask[i])
