@@ -125,7 +125,39 @@ class ConverterTest(unittest.TestCase):
                               [1, 1]]],
                             dtype=torch.bool)))
 
-    def create_features1(self, data_list=None, pad_id=None, dim=None):
+    def test_convert_dtype(self):
+        features1: List[Feature] = self.create_features1(dtype=torch.float)
+        tensor, mask_list = self.converter.convert(features1)
+        self.assertTrue(
+            torch.allclose(tensor,
+                           torch.tensor(
+                               [[7, 8, 9, 0], [1, 2, 5, 6], [4, 0, 0, 0]],
+                               dtype=torch.float)))
+
+        features2: List[Feature] = self.create_features2(dtype=torch.float)
+        tensor, mask_list = self.converter.convert(features2)
+        self.assertTrue(
+            torch.allclose(tensor,
+                           torch.tensor(
+                               [[[6, 11, 2, 0],
+                                 [7, 8, 0, 0],
+                                 [6, 7, 5, 4],
+                                 [0, 0, 0, 0]],
+                                [[4, 3, 0, 0],
+                                 [7, 6, 0, 0],
+                                 [0, 0, 0, 0],
+                                 [0, 0, 0, 0]],
+                                [[6, 3, 0, 0],
+                                 [5, 0, 0, 0],
+                                 [7, 12, 0, 0],
+                                 [7, 11, 0, 0]]],
+                               dtype=torch.float)))
+
+    def create_features1(self,
+                         data_list=None,
+                         pad_id=None,
+                         dim=None,
+                         dtype=torch.long):
         if not data_list:
             data_list = [[7, 8, 9], [1, 2, 5, 6], [4]]
             pad_id: int = 0 if pad_id is None else pad_id
@@ -133,12 +165,16 @@ class ConverterTest(unittest.TestCase):
 
         features: List[Feature] = []
         for data in data_list:
-            feature: Feature = Feature(data, pad_id, dim)
+            feature: Feature = Feature(data, pad_id, dim, dtype)
             features.append(feature)
 
         return features
 
-    def create_features2(self, data_list=None, pad_id=None, dim=None):
+    def create_features2(self,
+                         data_list=None,
+                         pad_id=None,
+                         dim=None,
+                         dtype=torch.long):
         if not data_list:
             data_list = [[[6, 11, 2], [7, 8], [6, 7, 5, 4]],
                          [[4, 3], [7, 6]],
@@ -148,12 +184,16 @@ class ConverterTest(unittest.TestCase):
 
         features: List[Feature] = []
         for data in data_list:
-            feature: Feature = Feature(data, pad_id, dim)
+            feature: Feature = Feature(data, pad_id, dim, dtype)
             features.append(feature)
 
         return features
 
-    def create_features3(self, data_list=None, pad_id=None, dim=None):
+    def create_features3(self,
+                         data_list=None,
+                         pad_id=None,
+                         dim=None,
+                         dtype=torch.long):
         if not data_list:
             data_list: List = \
                 [  # Instance 1:
@@ -171,7 +211,7 @@ class ConverterTest(unittest.TestCase):
 
         features: List[Feature] = []
         for data in data_list:
-            feature: Feature = Feature(data, pad_id, dim)
+            feature: Feature = Feature(data, pad_id, dim, dtype)
             features.append(feature)
 
         return features
