@@ -180,7 +180,7 @@ class Feature:
                 self._sub_features.append(Feature([], self._pad_value, self._dim - 1))
             self._mask.append(0)
 
-    def unroll(self, need_pad: bool = True) -> Tuple[List[Any], List[Any]]:
+    def unroll(self) -> Tuple[List[Any], List[Any]]:
         """
         It will return the actual data stored. Internally, it will recursively
         retrieve data from inner dimension features. Meanwhile, it will also
@@ -202,9 +202,6 @@ class Feature:
             ([[0,1,0],[1,0,0],[0,0,1]], # data
              [1,1,0])                   # mask
         """
-        if not need_pad:
-            return self._data, []
-
         if self.base_feature:
             return self._data, [self._mask]
         else:
