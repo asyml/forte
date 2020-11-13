@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+
+from forte.data.extractor.predictor import Predictor
+from forte.pipeline import Pipeline
 from texar.torch.data import DataIterator
 from tqdm import tqdm
 import torch
 from torch import device
-from typing import Optional, Dict, Type, Any, Union
+from typing import Optional, Dict, Type, Any, Union, Callable
 
 from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
 from forte.data.types import DATA_OUTPUT
@@ -86,7 +89,7 @@ class TrainPipeline:
                  train_reader: PackReader,
                  val_reader: PackReader,
                  trainer: Trainer,
-                 predictor: Optional[BaseProcessor] = None,
+                 predict_forward_fn: Callable,
                  evaluator: Optional[Evaluator] = None,
                  config: Optional[Union[Config, Dict]] = None):
         self._config = Config(config, default_hparams=self.default_configs())
@@ -95,9 +98,14 @@ class TrainPipeline:
         self._train_reader = train_reader
         self._val_reader = val_reader
 
+        self._predict_forward_fn = predict_forward_fn
         self._trainer: Trainer = trainer
-        self._predictor = predictor
-        self._evaluator = evaluator
+
+        if self._config.pipeline.evaluate:
+            assert evaluator is not None, \
+                "Evaluator should be set when evaluate is enabled."
+            self._predictor: Optional[Predictor] = None
+            self._evaluator: Optional[Evaluator] = evaluator
 
         self._train_data_pack_loader = \
             DataPackLoader(reader=self._train_reader,
@@ -119,6 +127,7 @@ class TrainPipeline:
     def default_configs():
         return {
             "pipeline": {
+                "evaluate": True,
                 "logging": True
             },
             "data_pack": {
@@ -178,8 +187,8 @@ class TrainPipeline:
             "Field not found for data request: `schemes`"
 
         self._user_request: Dict = data_request
-        self.feature_resource.clear()
-        self.feature_resource["scope"] = data_request["scope"]
+        self._feature_resource.clear()
+        self._feature_resource["scope"] = data_request["scope"]
 
         resource_schemes = {}
         # Used for check dependency between different extractors
@@ -243,11 +252,11 @@ class TrainPipeline:
                     raise "Cannot found based on entry {} for extractor {}". \
                         format(based_on, dependent_extractor.tag)
 
-        self.feature_resource["schemes"] = resource_schemes
+        self._feature_resource["schemes"] = resource_schemes
 
     def _build_vocab(self):
-        scope: EntryType = self.feature_resource["scope"]
-        schemes: Dict = self.feature_resource["schemes"]
+        scope: EntryType = self._feature_resource["scope"]
+        schemes: Dict = self._feature_resource["schemes"]
 
         # TODO: clear vocab?
         for data_pack in self._train_data_pack_loader.load():
@@ -258,8 +267,8 @@ class TrainPipeline:
 
     def _build_dataset_iterator(self, data_pack_loader: DataPackLoader) \
             -> DataIterator:
-        scope: Type[EntryType] = self.feature_resource["scope"]
-        schemes: Dict[str, Dict[str, Any]] = self.feature_resource["schemes"]
+        scope: Type[EntryType] = self._feature_resource["scope"]
+        schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
 
         data_source = \
             DataPackDataSource(data_pack_loader=data_pack_loader,
@@ -297,7 +306,7 @@ class TrainPipeline:
     @property
     def state(self) -> Dict:
         return {
-            "feature_resource": self.feature_resource,
+            "feature_resource": self._feature_resource,
             "train_config": self._config.train,
             "user_request": self.user_request
         }
@@ -324,14 +333,19 @@ class TrainPipeline:
         self._build_vocab()
 
         # Model can only be initialized after here as it needs the built vocab
-        schemes: Dict[str, Dict[str, Any]] = self.feature_resource["schemes"]
+        schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
 
         logger.info("Setup trainer.")
         self._trainer.setup(schemes)
 
-        # TODO: evaluation setup
-        if self._evaluator:
-            pass
+        # Setup evaluation pipeline
+        if self._config.pipeline.evaluate:
+            self._predictor = Predictor(
+                batch_size=self._config.dataset.batch_size,
+                pretrain_model=self._trainer.model,
+                predict_forward_fn=self._predict_forward_fn,
+                feature_resource=self._feature_resource,
+                cross_pack=False)
 
         train_iterator = \
             self._build_dataset_iterator(self._train_data_pack_loader)
@@ -339,15 +353,27 @@ class TrainPipeline:
         logger.info("Start training.")
         epoch = 0
         while epoch < self.num_epochs:
-            logger.info("Training epoch: %s", epoch)
+            logger.info("Epoch: %s", epoch)
             epoch += 1
 
+            logger.info("Epoch training")
+            train_err = 0.0
+            train_total = 0.0
             for batch in tqdm(train_iterator):
-                self._trainer.train(batch)
+                batch_train_err, batch_size = self._trainer.train(batch)
+                # post training
+                train_err += batch_train_err
+                train_total += batch_size
 
-            # TODO: evaluation process
-        #     if self.evaluator:
-        #         pass
+            logger.info("Epoch evaluating")
+            # Evaluation will explicitly call loader to iterate over each
+            # data pack. The batching will be handled internally by predictor.
+            for orig_pack in tqdm(self._val_data_pack_loader.load()):
+                predicted_pack = orig_pack.view()
+                self._predictor.predict(predicted_pack)
+                self._evaluator.consume_next(predicted_pack, orig_pack)
+
+            logger.info("eval result: %s", self._evaluator.get_result())
 
         self.finish()
 

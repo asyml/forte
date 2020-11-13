@@ -14,7 +14,10 @@
 import unittest
 
 from typing import Dict, Any
-from torch import Tensor
+
+from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
+from texar.torch.data import Batch
+from torch import Tensor, nn
 
 from forte.data.extractor.vocabulary import Vocabulary
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
@@ -76,14 +79,17 @@ class TrainPipelineTest(unittest.TestCase):
         def create_model_fn(schemes: Dict[str, Dict[str, Any]]):
             pass
 
-        def create_optim_fn(model):
+        def create_optim_fn(model: nn.Module):
             pass
 
-        def create_criterion_fn(model):
+        def create_criterion_fn(model: nn.Module):
             pass
 
-        def train_forward_fn(model,
-                             tensors: Dict[str, Dict[str, Tensor]]):
+        def train_forward_fn(model: nn.Module,
+                             tensors: Batch):
+            pass
+
+        def predict_forward_fn(model: nn.Module, batch: Dict):
             pass
 
         self.create_model_fn = create_model_fn
@@ -96,6 +102,8 @@ class TrainPipelineTest(unittest.TestCase):
                                create_optim_fn=create_optim_fn,
                                create_criterion_fn=create_criterion_fn,
                                train_forward_fn=train_forward_fn)
+
+        self.evaluator = CoNLLNEREvaluator()
 
         config = {
             "data_pack": {
@@ -120,8 +128,8 @@ class TrainPipelineTest(unittest.TestCase):
             TrainPipeline(train_reader=self.reader,
                           val_reader=self.reader,
                           trainer=self.trainer,
-                          predictor=None,
-                          evaluator=None,
+                          evaluator=self.evaluator,
+                          predict_forward_fn=predict_forward_fn,
                           config=config)
 
         # TODO: calculate expected loss
