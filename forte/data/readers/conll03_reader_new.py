@@ -11,14 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-The reader that reads CoNLL ner_data into our internal json data datasets.
-"""
-import codecs
+
 import logging
 import os
 from typing import Iterator, Any
-
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
@@ -44,19 +40,19 @@ class CoNLL03Reader(PackReader):
         logging.info("Reading .conll from %s", conll_directory)
         return dataset_path_iterator(conll_directory, "conll")
 
-    def _cache_key_function(self, conll_file: str) -> str:
-        return os.path.basename(conll_file)
+    def _cache_key_function(self, collection: str) -> str:
+        return os.path.basename(collection)
 
-    def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = self.new_pack()
-        doc = codecs.open(file_path, "r", encoding="utf8")
+    def _parse_pack(self, collection: str) -> Iterator[DataPack]:
+        pack: DataPack = DataPack()
+        doc = open(collection, "r", encoding="utf8")
 
-        text = ""
-        offset = 0
-        has_rows = False
+        text: str = ""
+        offset: int = 0
+        has_rows: bool = False
 
-        sentence_begin = 0
-        sentence_cnt = 0
+        sentence_begin: int = 0
+        sentence_cnt: int = 0
 
         # NER tag is either "O" or in the format "X-Y",
         # where X is one of B, I,
@@ -84,7 +80,7 @@ class CoNLL03Reader(PackReader):
                                                 start_index, offset - 1)
                         entity_mention.ner_type = prev_y
 
-                    # Start process curent ner tag.
+                    # Start process current ner tag.
                     if ner_tag == "O":
                         # Current ner tag is O, reset information.
                         prev_x = None
@@ -143,7 +139,7 @@ class CoNLL03Reader(PackReader):
 
         Document(pack, 0, len(text))
 
-        pack.pack_name = file_path
+        pack.pack_name = collection
         doc.close()
 
         yield pack
