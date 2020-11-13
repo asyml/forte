@@ -55,7 +55,8 @@ class TmpInserter(TextReplacementOp):
     def __init__(self, configs):
         super().__init__(configs)
 
-    def replace(self):
+    # pylint: disable=unused-argument
+    def replace(self, input):
         return True, " NLP "
 
 

@@ -177,18 +177,18 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Args:
             - replacement_op: The class for data augmentation algorithm.
                 For insertion, it should be able to generate a string
-                without input.
+                with an empty input.
             - data_pack: The datapack for insertion.
             - pos: The position(index) of insertion.
         Returns:
             A bool value. True if the insertion happened, False otherwise.
         """
-        pid: int = data_pack.meta.pack_id
+        pid: int = data_pack.meta.pack_idx
         if self._is_span_overlap(pid, pos, pos):
             return False
         inserted_text: str
         is_inserted: bool
-        is_inserted, inserted_text = replacement_op.replace()
+        is_inserted, inserted_text = replacement_op.replace("")
         if is_inserted and pos not in self.inserted_annos[pid]:
             self.replaced_annos[pid].append((Span(pos, pos), inserted_text))
             self.inserted_annos[pid][pos] = len(inserted_text)
