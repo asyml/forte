@@ -15,12 +15,12 @@ import logging
 
 import numpy as np
 import torch
+from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from texar.torch.data import Batch
-from torch import Tensor, nn
+from torch import nn
 from torch.optim import SGD
 import yaml
-from typing import Dict, Any, Optional
-
+from typing import Dict, Optional
 from torch.optim.optimizer import Optimizer
 
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
@@ -72,7 +72,6 @@ if __name__ == "__main__":
             table[index, :] = embedding
         return torch.from_numpy(table)
 
-
     def create_model_fn(schemes: Dict[str, Dict[str, BaseExtractor]]):
         text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
         char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
@@ -116,7 +115,9 @@ if __name__ == "__main__":
         return None
 
 
-    def train_forward_fn(model, criterion: Optional[nn.Module], batch: Batch):
+    def train_forward_fn(model: nn.Module,
+                         criterion: Optional[nn.Module],
+                         batch: Batch):
         word = batch["text_tag"]["tensor"]
         char = batch["char_tag"]["tensor"]
         ner = batch["ner_tag"]["tensor"]
@@ -127,6 +128,14 @@ if __name__ == "__main__":
         return loss
 
 
+    def predict_forward_fn(model: nn.Module, batch: Dict):
+        word = batch["text_tag"]["tensor"]
+        char = batch["char_tag"]["tensor"]
+        word_masks = batch["text_tag"]["mask"][0]
+        output = model.decode(input_word=word, input_char=char, mask=word_masks)
+        output = output.numpy()
+        return {'ner_tag': output}
+
     reader = CoNLL03Reader()
 
     trainer = Trainer(create_model_fn=create_model_fn,
@@ -136,7 +145,7 @@ if __name__ == "__main__":
 
     # TODO:
     predictor = None
-    evaluator = None
+    evaluator = CoNLLNEREvaluator()
 
     # All not specified dataset parameters are set by default in Texar.
     # Default settings can be found here:
@@ -144,7 +153,7 @@ if __name__ == "__main__":
     pl_config = {
         "data_pack": {
             "train_loader": {
-                "src_dir": config.config_data.train_path,
+                "src_dir": config.config_data.train_path
             },
             "val_loader": {
                 "src_dir": config.config_data.val_path
@@ -162,7 +171,7 @@ if __name__ == "__main__":
         TrainPipeline(train_reader=reader,
                       val_reader=reader,
                       trainer=trainer,
-                      predictor=predictor,
+                      predict_forward_fn=predict_forward_fn,
                       evaluator=evaluator,
                       config=pl_config)
 
