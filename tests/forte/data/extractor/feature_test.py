@@ -120,6 +120,19 @@ class FeatureTest(unittest.TestCase):
                                  [0, 0, 0],
                                  [0, 0, 0]]])
 
+    def test_unroll_nopad(self):
+        feature, mask = self.feature1.unroll()
+        self.assertEqual(feature, [7, 8, 9])
+
+        feature, mask = self.feature2.unroll()
+        self.assertEqual(feature, [[6, 11, 2],
+                                   [7, 8],
+                                   [6, 7, 5, 4]])
+
+        feature, mask = self.feature3.unroll()
+        self.assertEqual(feature, [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
+                                   [[1, 0, 0], [0, 1, 0]]])
+
     def test_unroll_dtype(self):
         self.feature1 = self.create_feature1(dtype=torch.float)
         self.assertEqual(self.feature1.dtype, torch.float)
