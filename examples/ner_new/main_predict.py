@@ -19,11 +19,6 @@ from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.predictor import Predictor
 from ft.onto.base_ontology import Sentence, EntityMention
 
-
-config_predict = yaml.safe_load(open("configs/config_predict.yml", "r"))
-
-pretrain_model = torch.load(config_predict['model_path'])
-
 def predict_forward_fn(model, batch):
     word = batch["text_tag"]["tensor"]
     char = batch["char_tag"]["tensor"]
@@ -32,14 +27,18 @@ def predict_forward_fn(model, batch):
     output = output.numpy()
     return {'ner_tag': output}
 
+config_predict = yaml.safe_load(open("configs/config_predict.yml", "r"))
+pretrain_model = torch.load(config_predict['model_path'])
 train_state = torch.load(config_predict['train_state_path'])
 
 pl = Pipeline()
 pl.set_reader(CoNLL03Reader())
 pl.add(Predictor(batch_size=config_predict['batch_size'],
-                predict_foward_fn=lambda x: predict_forward_fn(pretrain_model, x),
-                feature_resource=train_state['feature_resource']))
+                pretrain_model = pretrain_model,
+                predict_forward_fn = predict_forward_fn,
+                feature_resource = train_state['feature_resource']))
 pl.initialize()
+
 
 for pack in pl.process_dataset(config_predict['test_path']):
     for instance in pack.get(Sentence):
