@@ -152,6 +152,23 @@ pip install .
 * [Documentation](https://asyml-forte.readthedocs.io/)
 * Currently we are working on some interesting [tutorials](https://github.com/asyml/forte/wiki)
 
+### Trouble Shooting
+1. If you try to run `generate_ontology` script but encounter the following
+    ```
+    Traceback (most recent call last):
+      File "~/anaconda3/bin/generate_ontology", line 33, in <module>
+        sys.exit(load_entry_point('forte', 'console_scripts', 'generate_ontology')())
+      File "~/anaconda3/bin/generate_ontology", line 22, in importlib_load_entry_point
+        for entry_point in distribution(dist_name).entry_points
+      File "~/anaconda3/lib/python3.6/site-packages/importlib_metadata/__init__.py", line 418, in distribution
+        return Distribution.from_name(package)
+      File "~/anaconda3/lib/python3.6/site-packages/importlib_metadata/__init__.py", line 184, in from_name
+        raise PackageNotFoundError(name)
+    importlib_metadata.PackageNotFoundError: forte
+    ```
+    This is likely to be caused by multiple conflicting installation, such as
+    installing both from source or from PIP. One way to solve this is to manually
+    remove the script `~/anaconda3/bin/generate_ontology` and re-install the package.
 
 ### Contributing
 If you are interested in making enhancement to Forte, please first go over our [Code of Conduct](https://github.com/asyml/forte/blob/master/CODE_OF_CONDUCT.md) and [Contribution Guideline](https://github.com/asyml/forte/blob/master/CONTRIBUTING.md)

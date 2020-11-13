@@ -73,7 +73,7 @@ class SemEvalTask8Reader(PackReader):
             self.configs.sem_eval_task8_file_extension)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack: DataPack = self.new_pack()
+        pack: DataPack = DataPack()
 
         with open(file_path, 'r', encoding='utf8') as fp:
             txt = ""
