@@ -15,7 +15,7 @@ from collections import defaultdict
 from typing import List, Tuple, Any, Iterable
 
 
-class Vocabulary(object):
+class Vocabulary:
     '''This class is used to save the mapping table from
     tokens, words, labels etc. to indexes.
     There are two methods used for the mapping table.
@@ -27,7 +27,8 @@ class Vocabulary(object):
     PAD_ENTRY = "<PAD>"
     UNK_ENTRY = "<UNK>"
 
-    def __init__(self, method: str, use_pad: bool, use_unk: bool, predefined: set):
+    def __init__(self, method: str, use_pad: bool,
+                use_unk: bool, predefined: set = None):
         self.element2id_dict = defaultdict()
         self.id2element_dict = defaultdict()
 
@@ -48,8 +49,9 @@ class Vocabulary(object):
         self.use_pad = use_pad
         self.use_unk = use_unk
 
-        for element in predefined:
-            self.add(element)
+        if predefined is not None:
+            for element in predefined:
+                self.add(element)
 
     def get_pad_id(self):
         if self.use_pad:

@@ -15,14 +15,15 @@ import unittest
 from forte.data.extractor.vocabulary import Vocabulary
 from itertools import product
 
+
 class VocabularyTest(unittest.TestCase):
     def argmax(self, one_hot):
         idx = -1
         for i, flag in enumerate(one_hot):
             if flag:
-                self.assertTrue(idx==-1)
+                self.assertTrue(idx == -1)
                 idx = i
-        self.assertTrue(idx!=-1)
+        self.assertTrue(idx != -1)
         return idx
 
     def test_indexing(self):
@@ -41,7 +42,7 @@ class VocabularyTest(unittest.TestCase):
             for tok in tokens:
                 vocab.add(tok)
 
-            self.assertEqual(len(set(tokens))+int(use_unk)+int(use_pad), len(vocab))
+            self.assertEqual(len(set(tokens)) + int(use_unk) + int(use_pad), len(vocab))
 
             ids = [vocab.element2id(tok) for tok in tokens]
             if method == "indexing":
