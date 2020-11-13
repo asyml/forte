@@ -89,7 +89,7 @@ class Converter:
         batch_padded_features: List[List[Any]] = []
         batch_masks: List[List[Any]] = []
         for feature in features:
-            padded_feature, mask_list = feature.unroll(self._need_pad)
+            padded_feature, mask_list = feature.unroll()
             batch_padded_features.append(padded_feature)
             batch_masks.append(mask_list)
         batch_padded_features_tensor: Tensor = \
