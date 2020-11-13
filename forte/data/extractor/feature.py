@@ -145,6 +145,13 @@ class Feature:
         return self._dtype
 
     @property
+    def data(self) -> List:
+        assert self.base_feature, \
+            "Non-base feature does not have data"
+
+        return self._data
+
+    @property
     def sub_features(self) -> List['Feature']:
         """
         Retrieve a list of sub features. The call is valid only when current
