@@ -30,7 +30,8 @@ class Batcher:
     Predictor. Note that the extract, convert process is done during
     this batching process.
     '''
-    def __init__(self, batch_size: int, feature_resource: Dict):
+    def __init__(self, batch_size: int, feature_resource: Dict,
+                cross_pack=True):
         # pylint: disable=line-too-long
         '''Feature_resource is prodcued from train pipeline.
         An example looks like
@@ -59,6 +60,7 @@ class Batcher:
         '''
         self.batch_size = batch_size
         self.feature_resource = feature_resource
+        self.cross_pack = cross_pack
         self.pack_pools = []
         self.instance_pools = []
         self.features_pools = []
@@ -106,6 +108,14 @@ class Batcher:
                 self.pack_pools.clear()
                 self.instance_pools.clear()
 
+        if not self.cross_pack and len(self.features_pools) > 0:
+            yield self.convert(self.features_pools), \
+                self.pack_pools, \
+                self.instance_pools
+            self.features_pools.clear()
+            self.pack_pools.clear()
+            self.instance_pools.clear()
+
     def flush_batch(self) -> Dict:
         if len(self.features_pools) > 0:
             yield self.convert(self.features_pools), self.pack_pools, \
@@ -120,11 +130,13 @@ class Predictor(BaseProcessor):
     back to the datapack.
     '''
     def __init__(self, batch_size: int, pretrain_model: Module,
-            predict_forward_fn: Callable, feature_resource: Dict):
+            predict_forward_fn: Callable, feature_resource: Dict,
+            cross_pack=True):
         super().__init__()
         self.feature_resource = feature_resource
         self.batcher = Batcher(batch_size=batch_size,
-                                feature_resource=feature_resource)
+                                feature_resource=feature_resource,
+                                cross_pack=cross_pack)
         self.pretrain_model = pretrain_model
         self.predict_forward_fn = predict_forward_fn
 
@@ -148,13 +160,16 @@ class Predictor(BaseProcessor):
                             pack, instance, pred)
                 pack.add_all_remaining_entries()
 
-    def _process(self, input_pack: DataPack):
+    def predict(self, input_pack: DataPack):
         for tensor_collection, packs, instances in \
                                 self.batcher.yield_batch(input_pack):
             predictions = self.predict_forward_fn(self.pretrain_model,
                                                     tensor_collection)
             predictions = self.unpad(predictions, packs, instances)
             self.add_to_pack(predictions, packs, instances)
+
+    def _process(self, input_pack: DataPack):
+        self.predict(input_pack)
 
         # update the status of the jobs. The jobs which were removed from
         # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
