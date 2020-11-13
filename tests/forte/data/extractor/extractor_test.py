@@ -13,14 +13,11 @@
 #  limitations under the License.
 import unittest
 
-from typing import List, Tuple
-from torch import Tensor
-import torch
+from ft.onto.base_ontology import Sentence, Token, EntityMention
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
-from ft.onto.base_ontology import Sentence, Token, Document, EntityMention
 from forte.data.data_pack import DataPack
-from forte.data.extractor.extractor import TextExtractor, CharExtractor, AnnotationSeqExtractor
+from forte.data.extractor.extractor import TextExtractor, CharExtractor, BioSeqTaggingExtractor
 
 
 class ExtractorTest(unittest.TestCase):
@@ -37,7 +34,7 @@ class ExtractorTest(unittest.TestCase):
 
         config = {
             "scope": Sentence,
-            "entry": Token,
+            "entry_type": Token,
         }
         extractor = TextExtractor(config)
 
@@ -53,7 +50,7 @@ class ExtractorTest(unittest.TestCase):
                 features.append(extractor.extract(pack, instance))
 
         for feat in features:
-            recovered = [extractor.id2entry(idx) for idx in feat.data]
+            recovered = [extractor.vocab.id2element(idx) for idx in feat._data]
             self.assertEqual(" ".join(recovered), sentence)
 
     def test_CharExtractor(self):
@@ -64,7 +61,7 @@ class ExtractorTest(unittest.TestCase):
 
         config = {
             "scope": Sentence,
-            "entry": Token,
+            "entry_type": Token,
         }
         extractor = CharExtractor(config)
 
@@ -78,16 +75,15 @@ class ExtractorTest(unittest.TestCase):
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
                 features.append(extractor.extract(pack, instance))
-
         for feat in features:
-            recovered = [[extractor.id2entry(char) for char in sent] \
-                                            for sent in feat.data]
+            recovered = [[extractor.vocab.id2element(char) for char in sent]
+                                            for sent in feat.unroll()[0]]
 
             recovered = ["".join(chars) for chars in recovered]
             recovered = " ".join(recovered)
-            self.assertEqual(recovered , sentence)
+            self.assertEqual(recovered, sentence)
 
-    def test_AnnotationSeqExtractor(self):
+    def test_BioSeqTaggingExtractor(self):
         pipeline = Pipeline[DataPack]()
         reader = CoNLL03Reader()
         pipeline.set_reader(reader)
@@ -95,7 +91,7 @@ class ExtractorTest(unittest.TestCase):
 
         config = {
             "scope": Sentence,
-            "entry": EntityMention,
+            "entry_type": EntityMention,
             "attribute": "ner_type",
             "based_on": Token,
             "strategy": "BIO",
@@ -105,7 +101,7 @@ class ExtractorTest(unittest.TestCase):
                     (None, 'O'), (None, 'O'), (None, 'O'),
                     ('MISC', 'B'), (None, 'O'), (None, 'O')]
 
-        extractor = AnnotationSeqExtractor(config)
+        extractor = BioSeqTaggingExtractor(config)
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
@@ -114,8 +110,9 @@ class ExtractorTest(unittest.TestCase):
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
                 feature = extractor.extract(pack, instance)
-                feature = [extractor.id2entry(idx) for idx in feature.data]
+                feature = [extractor.vocab.id2element(idx) for idx in feature._data]
                 self.assertListEqual(feature, expected)
+
 
 if __name__ == '__main__':
     unittest.main()
