@@ -60,12 +60,14 @@ def main(argv=None):
             ],
             "policy": ["auto_align", "auto_align"],
         },
-        'replacement_op': "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
-        'replacement_op_config': {
-            "dictionary": dict_path,
-            "prob": 0.5,
-            "lang": "eng",
-        }
+        "kwargs": {
+            'data_aug_op': "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
+            'data_aug_op_config': {
+                "dictionary": dict_path,
+                "prob": 0.5,
+                "lang": "eng",
+            }
+        },
     }
 
     processor = TmpReplacementDataAugmentProcessor()
