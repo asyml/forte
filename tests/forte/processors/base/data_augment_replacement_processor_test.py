@@ -38,7 +38,7 @@ class TmpReplacementDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
 
 class TmpReplacer(TextReplacementOp):
-    def __init__(self, configs):
+    def __init__(self, configs={}):
         super().__init__(configs)
         self.token_replacement = {
             "Mary": "Virgin",
@@ -77,11 +77,11 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         nlp.initialize()
 
         expected_outputs = [
-            "Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus.\n"
+            " NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus NLP .\n"
         ]
 
         expected_tokens = [
-            ["Virgin", "and", "Samantha", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", "."],
+            [" NLP ", "Virgin", "Samantha", " NLP ", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", " NLP ", "."],
         ]
 
         processor_config = {
@@ -93,8 +93,10 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 ],
                 "policy": ["auto_align", "auto_align"]
             },
-            'replacement_op': "tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer",
-            'replacement_op_config': {}
+            "kwargs": {
+                'data_aug_op': "tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer",
+                'data_aug_op_config': {}
+            }
         }
 
         processor = TmpReplacementDataAugmentProcessor()
@@ -118,6 +120,15 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                     )
                 )
 
+            # Test the insertion and deletion
+            for pack in (src_pack, tgt_pack):
+                # Insert an "NLP" at the beginning
+                processor.insert(" NLP ", pack, 0)
+                processor.insert(" NLP ", pack, 18)
+                processor.insert(" NLP ", pack, len(pack.text) - 2)
+                # Delete the second token "and"
+                processor.delete(list(pack.get(Token))[1])
+
             processor._process(m_pack)
 
             new_src_pack = m_pack.get_pack('augmented_input_src')
@@ -128,7 +139,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 self.assertEqual(token.text, expected_tokens[idx][j])
 
             for sent in new_src_pack.get(Sentence):
-                self.assertEqual(sent.text, expected_outputs[idx].strip())
+                self.assertEqual(sent.text.strip(), expected_outputs[idx].strip())
 
             for mpl in m_pack.get(MultiPackLink):
                 parent = mpl.get_parent()
