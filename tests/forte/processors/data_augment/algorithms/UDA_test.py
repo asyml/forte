@@ -16,9 +16,8 @@ Unit tests for HTMLReader
 """
 import tempfile
 import unittest
-import texar.torch as tx
 import torch
-
+import texar.torch as tx
 from forte.processors.data_augment.algorithms.UDA import UDAIterator
 from texar.torch.utils.shapes import get_rank
 
