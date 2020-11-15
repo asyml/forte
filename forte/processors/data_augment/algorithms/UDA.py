@@ -18,7 +18,7 @@ Unsupervised Data Augmentation for Consistency Training
 (https://arxiv.org/abs/1904.12848)
 (https://github.com/google-research/uda)
 """
-from typing import Optional, List, Callable, Tuple
+from typing import Optional, List, Callable, Tuple, Iterator
 from torch import Tensor
 from texar.torch.losses.info_loss import kl_divg_loss_with_logits
 from texar.torch.data import DataIterator
@@ -94,8 +94,8 @@ class UDAIterator:
 
         # The flag for returning the unsupervised data.
         self.use_unsup = True
-        self.sup_iter: Optional[DataIterator[Batch]] = None
-        self.unsup_iter: Optional[DataIterator[Batch]] = None
+        self.sup_iter: Iterator[Batch]
+        self.unsup_iter: Iterator[Batch]
 
     def __len__(self):
         return self.sup_iterator.__len__()
