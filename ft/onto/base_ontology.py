@@ -23,6 +23,7 @@ from typing import Set
 
 __all__ = [
     "Token",
+    "Subword",
     "Document",
     "Sentence",
     "Phrase",
@@ -82,6 +83,16 @@ class Token(Annotation):
         self.is_root: Optional[bool] = None
         self.ud_features: Dict[str, str] = dict()
         self.ud_misc: Dict[str, str] = dict()
+
+
+@dataclass
+class Subword(Annotation):
+    """
+    Used to represent subword tokenization results.
+    """
+
+    def __init__(self, pack: DataPack, begin: int, end: int):
+        super().__init__(pack, begin, end)
 
 
 @dataclass
