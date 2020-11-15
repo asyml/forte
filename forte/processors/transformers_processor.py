@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Tokenizer from 
-from typing import List, Dict, Any
+# Tokenizer from
+from typing import Dict, Any
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
-from ft.onto.base_ontology import EntityMention, Token, Sentence, Phrase, Subword
+from ft.onto.base_ontology import Subword
 
 from nltk.tokenize.util import align_tokens
 from transformers import AutoTokenizer
@@ -32,17 +32,21 @@ class BERTTokenizer(PackProcessor):
     def __init__(self):
         super().__init__()
         self.tokenizer = None
-        
+
     # pylint: disable=unused-argument
     def initialize(self, resources: Resources, configs: Config):
         self.tokenizer = AutoTokenizer.from_pretrained(configs.model_path)
 
     def _process(self, input_pack: DataPack):
         inputs = self.tokenizer(input_pack.text, return_tensors="pt")
-        tokens = self.tokenizer.convert_ids_to_tokens(inputs['input_ids'][0].tolist())[1:-1]
-        tokens_clean = [token.replace('##', '') if token.startswith('##') else token for token in tokens]
-        
-        for i, (begin, end) in enumerate(align_tokens(tokens_clean, input_pack.text.lower())):
+        tokens = self.tokenizer.convert_ids_to_tokens(\
+                     inputs['input_ids'][0].tolist()
+                 )[1:-1]
+        tokens_clean = [token.replace('##', '') if token.startswith('##') \
+                        else token for token in tokens]
+
+        for i, (begin, end) in enumerate(align_tokens(tokens_clean,
+                                                      input_pack.text.lower())):
             subword = Subword(input_pack, begin, end)
             subword.is_subword = tokens[i].startswith('##')
 
