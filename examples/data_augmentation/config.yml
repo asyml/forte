@@ -1,5 +1,0 @@
-data:
-  relative_path: "data/collectionandqueries"
-
-reader:
-  pack_name: "query"

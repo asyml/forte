@@ -19,10 +19,9 @@ import os
 
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-# from forte.processors.data_augment import DataSelectorIndexProcessor
+from forte.processors.data_augment import DataSelectorIndexProcessor
 from forte.data.readers import MSMarcoPassageReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
-from forte.processors.ir import ElasticSearchIndexProcessor
 
 
 class TestDataSelectorIndexProcessor(unittest.TestCase):
@@ -36,49 +35,50 @@ class TestDataSelectorIndexProcessor(unittest.TestCase):
         corpus_file = os.path.join(self.abs_data_dir, 'collection.tsv')
 
         self.expected_content = set()
-        self.size = 0
         with open(corpus_file, 'r') as f:
             for line in f.readlines():
                 key, value = tuple(line.split('\t', 1))
                 self.expected_content.add(value)
-                self.size += 1
 
+        self.index_name = "test_indexer"
         indexer_config = {
             "batch_size": 5,
             "fields":
-                ["doc_id", "content"],
+                ["doc_id", "content", "pack_info"],
             "indexer": {
                 "name": "ElasticSearchIndexer",
                 "hparams":
-                    {"index_name": "test_indexer",
+                    {"index_name": self.index_name,
                       "hosts": "localhost:9200",
-                      "algorithm": "bm25",},
+                      "algorithm": "bm25"},
                 "other_kwargs": {
                     "request_timeout": 10,
-                    "refresh": False
+                    "refresh": True
                 }
             }
         }
+        self.indexer = ElasticSearchIndexer(config={"index_name": self.index_name})
 
         self.nlp: Pipeline[DataPack] = Pipeline()
         self.reader = MSMarcoPassageReader()
-        # self.processor = DataSelectorIndexProcessor()
-        self.processor = ElasticSearchIndexProcessor()
+        self.processor = DataSelectorIndexProcessor()
         self.nlp.set_reader(self.reader)
         self.nlp.add(self.processor, config=indexer_config)
         self.nlp.initialize()
 
+    def tearDown(self):
+        self.indexer.elasticsearch.indices.delete(
+            index=self.index_name, ignore=[400, 404])
+
     def test_pipeline(self):
+        size = 0
+        for _ in self.nlp.process_dataset(self.abs_data_dir):
+            size += 1
 
-        for data_pack in self.nlp.process_dataset(self.abs_data_dir):
-            print(data_pack)
-
-        indexer = ElasticSearchIndexer(config={"index_name": "test_indexer"})
-
-        retrieved_document = indexer.search(
-            query={"query": {"match_all": {}}}, size=self.size)
+        retrieved_document = self.indexer.search(
+            query={"query": {"match_all": {}}}, index_name=self.index_name, size=size)
 
         hits = retrieved_document["hits"]["hits"]
-        self.assertEqual(len(hits), self.size)
+        self.assertEqual(len(hits), size)
         results = set([hit["_source"]["content"] for hit in hits])
         self.assertEqual(results, self.expected_content)

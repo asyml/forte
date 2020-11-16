@@ -129,17 +129,16 @@ class RandomDataSelector(BaseElasticSearchDataSelector):
 
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
-        r"""random select num_of_doc documents from the indexer.
+        r"""random select `size` documents from the indexer.
         Returns: Selected document's original datapack.
         """
-        for _ in range(self.configs["num_of_doc"]):
-            query: Dict = self._create_search_key()
-            results = self.index.search(query)
-            hits = results["hits"]["hits"]
+        query: Dict = self._create_search_key()
+        results = self.index.search(query)
+        hits = results["hits"]["hits"]
 
-            for _, hit in enumerate(hits):
-                document = hit["_source"]
-                yield document["pack_info"]
+        for _, hit in enumerate(hits):
+            document = hit["_source"]
+            yield document["pack_info"]
 
     def _create_search_key(self) -> Dict[str, Any]:  # type: ignore
         return {
@@ -149,7 +148,8 @@ class RandomDataSelector(BaseElasticSearchDataSelector):
                  "functions": [
                     {
                        "random_score": {
-                          "seed": "1477072619038"
+                          "seed": "1477072619038",
+                           "field": "_seq_no"
                        }
                     }
                  ]
@@ -161,6 +161,6 @@ class RandomDataSelector(BaseElasticSearchDataSelector):
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
         config.update({
-            "size": 1000000,
+            "size": 1000000
         })
         return config

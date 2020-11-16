@@ -101,7 +101,7 @@ class DataSelectorIndexProcessor(IndexProcessorWithDatapack):
         for document in self.documents:
             doc_dict = {}
             for i in range(len(self.config.fields)):
-                doc_dict[i] = document[i]
+                doc_dict[self.config.fields[i]] = document[i]
             docs.append(doc_dict)
 
         self.indexer.add_bulk(docs, **self.config.indexer.other_kwargs)
