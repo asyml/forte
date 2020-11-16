@@ -14,7 +14,7 @@
 
 """
 Data augmentation processors from the paper "EDA: Easy Data Augmentation
-Techniques for Boosting Performance onText Classification Tasks", including
+Techniques for Boosting Performance on Text Classification Tasks", including
 Random Swap, Random Insertion and Random Deletion. All three processors are
 implemented based on the ReplacementDataAugmentProcessor.
 """
