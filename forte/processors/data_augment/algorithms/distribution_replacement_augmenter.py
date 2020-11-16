@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import random
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import nltk
 from nltk.corpus import words, stopwords
@@ -110,3 +110,40 @@ class DistributionReplacementAugmenter(ReplacementDataAugmenter):
             'unigram': ""
         })
         return config
+
+class Sampler:
+
+    def __init__(self, config:Optional[Dict]):
+        self.config = config
+
+    def sample(self) -> List[str]:
+        raise NotImplementedError
+
+
+class UniformSampler(Sampler):
+    def __init__(self, config:Optional[Dict]):
+        super().__init__(config)
+        if self.config is None:
+            self.config = self.default_config()
+        # set distribution
+        if self.config.distribution == "nltk":
+            try:
+                self.vocab = set(words.words())
+                self.stop_words = set(stopwords.words(self.configs['lang']))
+            except LookupError:
+                nltk.download('words')
+                nltk.download('stopwords')
+                self.vocab = set(words.words('en'))
+                self.stop_words = set(stopwords.words(self.configs['lang']))
+            self.vocab -= self.stop_words
+        else:
+            raise NotImplementedError
+
+
+    def sample(self) -> List[str]:
+
+    def default_config(self) -> Dict[str:str]:
+        return {
+            "distribution": "nltk"
+        }
+
