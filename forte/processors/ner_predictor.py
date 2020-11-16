@@ -355,6 +355,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         configs.update(more_configs)
         return configs
 
+    
 class BioBERTNERPredictor(FixedSizeBatchProcessor):
     """
        An Named Entity Recognizer fine-tuned on BioBERT
@@ -373,7 +374,6 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
         self.model_config = None
         self.model = None
         self.tokenizer = None
-
 
     @staticmethod
     def _define_context() -> Type[Annotation]:
@@ -419,7 +419,7 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
         inputs = {key: value.to(self.device) for key, value in inputs.items()}
         outputs = self.model(**inputs)[0].cpu().numpy()
         score = np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True)
-        labels_idx = score.argmax(axis=-1)[:, 1:-1] # Remove placeholders
+        labels_idx = score.argmax(axis=-1)[:, 1:-1]  # Remove placeholders.
 
         pred: Dict = {"Subword": {"ner": [], "tid": []}}
 
@@ -499,8 +499,8 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
 
             entities = []
             # Filter to labels not in `self.ignore_labels`
-            entities = [dict(idx=idx, label=label, tid=tid) \
-                        for idx, (label, tid) in enumerate(zip(labels, tids))\
+            entities = [dict(idx=idx, label=label, tid=tid)
+                        for idx, (label, tid) in enumerate(zip(labels, tids))
                         if label not in self.ft_configs.ignore_labels]
 
             entity_groups = self._group_entities(entities, data_pack, tids)
