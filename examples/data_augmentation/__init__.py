@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.processors.data_augment.data_selector_index_processor import *
+from examples.data_augmentation.data_select_index_pipeline import *

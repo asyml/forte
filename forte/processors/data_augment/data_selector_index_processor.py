@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2020 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@ from forte import utils
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
-from forte.processors.base import IndexProcessor
+from forte.processors.base import IndexProcessorWithDatapack
+
 
 __all__ = [
-    "ElasticSearchIndexProcessor"
+    "DataSelectorIndexProcessor"
 ]
 
 
-class ElasticSearchIndexProcessor(IndexProcessor):
+class DataSelectorIndexProcessor(IndexProcessorWithDatapack):
     r"""This processor indexes the data packs into an Elasticsearch index."""
 
     # pylint: disable=useless-super-delegation
@@ -36,6 +37,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         super().initialize(resources, configs)
         cls = utils.get_class(self.config.indexer.name,
                               module_paths=["forte.indexers"])
+
         self.indexer = cls(self.config.indexer.hparams)
 
     @classmethod
@@ -81,8 +83,8 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         """
         config = super().default_configs()
         config.update({
-            **IndexProcessor.default_configs(),
-            "fields": ["doc_id", "content"],
+            **IndexProcessorWithDatapack.default_configs(),
+            "fields": ["doc_id", "content", "pack_info"],
             "indexer": {
                 "name": "ElasticSearchIndexer",
                 "hparams": ElasticSearchIndexer.default_configs(),
@@ -95,7 +97,11 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         return config
 
     def _bulk_process(self):
-        documents = [{self.config.fields[0]: document[0],
-                      self.config.fields[1]: document[1]}
-                     for document in self.documents]
-        self.indexer.add_bulk(documents, **self.config.indexer.other_kwargs)
+        docs = []
+        for document in self.documents:
+            doc_dict = {}
+            for i in range(len(self.config.fields)):
+                doc_dict[self.config.fields[i]] = document[i]
+            docs.append(doc_dict)
+
+        self.indexer.add_bulk(docs, **self.config.indexer.other_kwargs)
