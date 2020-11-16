@@ -122,10 +122,8 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
 
             new_src_pack = m_pack.get_pack('augmented_input_src')
 
-            print(new_src_pack.text)
             self.assertEqual(new_src_pack.text, expected_text)
             for j, token in enumerate(new_src_pack.get(Token)):
-                print(token.text, expected_tokens[j])
                 self.assertEqual(token.text, expected_tokens[j])
 
 
@@ -137,8 +135,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             with open(file_path, 'w') as f:
                 f.write(text)
 
-        expected_tokens = ['await ', 'await Mary', ' Mary and', 'y and Samantha', 'antha arrived', 'rived at', 'ed at the', 't the bus', 'e bus station', 'ation early', ' station', 'station but', 'ion but waited', ' waited until', 'd until noon', 'il noon for', 'oon for the', 'for the bus', ' station', ' station.']
-
+        expected_tokens = []
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
@@ -242,7 +239,6 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             result = []
             for j, token in enumerate(new_src_pack.get(Token)):
                 result.append(token.text)
-            print(result)
 
 
 if __name__ == "__main__":
