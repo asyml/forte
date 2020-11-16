@@ -21,6 +21,7 @@ from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.processors.data_augment import DataSelectorIndexProcessor
 from forte.data.readers import MSMarcoPassageReader
+from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 
 class TestDataSelectorIndexProcessor(unittest.TestCase):
@@ -53,9 +54,10 @@ class TestDataSelectorIndexProcessor(unittest.TestCase):
         for data_pack in self.nlp.process_dataset(self.abs_data_dir):
             print(data_pack)
 
-        retrieved_document = self.processor.indexer.search(
-            query={"query": {"match_all": {}}},
-            index_name="elastic_indexer", size=self.size)
+        indexer = ElasticSearchIndexer(config=ElasticSearchIndexer.default_configs())
+
+        retrieved_document = indexer.search(
+            query={"query": {"match_all": {}}}, size=self.size)
 
         hits = retrieved_document["hits"]["hits"]
         self.assertEqual(len(hits), self.size)
