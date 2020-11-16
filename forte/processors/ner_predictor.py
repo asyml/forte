@@ -503,8 +503,8 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
                         if label not in self.ft_configs.ignore_labels]
 
             entity_groups = self._group_entities(entities, data_pack, tids)
-            # Add NER tags and create EntityMention ontologies
-            for first_tid, last_tid in entity_groups:                
+            # Add NER tags and create EntityMention ontologies.
+            for first_tid, last_tid in entity_groups:
                 first_token: Subword = data_pack.get_entry(  # type: ignore
                     first_tid)
                 first_token.ner = 'B-' + self.ft_configs.ner_type
