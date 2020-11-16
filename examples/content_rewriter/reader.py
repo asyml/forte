@@ -29,7 +29,7 @@ class TableReader(PackReader):
                     yield line.split(':', 1)[1].strip()
 
     def _parse_pack(self, table: str) -> Iterator[DataPack]:
-        p: DataPack = self.new_pack(pack_name='table_' + table.split("|")[0])
+        p: DataPack = DataPack(pack_name='table_' + table.split("|")[0])
         p.set_text(table)
 
         # Create the table.
