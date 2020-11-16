@@ -19,6 +19,11 @@ from typing import Dict, List, Optional, Tuple, Type
 
 import numpy as np
 import torch
+from transformers import (
+    AutoConfig,
+    AutoModelForTokenClassification,
+    AutoTokenizer,
+)
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -29,12 +34,6 @@ from forte.models.ner import utils
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.processors.base.batch_processor import FixedSizeBatchProcessor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, Subword
-
-from transformers import (
-    AutoConfig,
-    AutoModelForTokenClassification,
-    AutoTokenizer,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -355,7 +354,7 @@ class CoNLLNERPredictor(FixedSizeBatchProcessor):
         configs.update(more_configs)
         return configs
 
-    
+
 class BioBERTNERPredictor(FixedSizeBatchProcessor):
     """
        An Named Entity Recognizer fine-tuned on BioBERT
@@ -505,14 +504,13 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
 
             entity_groups = self._group_entities(entities, data_pack, tids)
             # Add NER tags and create EntityMention ontologies
-            for first_tid, last_tid in entity_groups:
-                # type: ignore
-                first_token: Subword = data_pack.get_entry(first_tid)
+            for first_tid, last_tid in entity_groups:                
+                first_token: Subword = data_pack.get_entry(  # type: ignore
+                    first_tid)
                 first_token.ner = 'B-' + self.ft_configs.ner_type
 
                 for tid in range(first_tid + 1, last_tid + 1):
-                    # type: ignore
-                    token: Subword = data_pack.get_entry(tid)
+                    token: Subword = data_pack.get_entry(tid)  # type: ignore
                     token.ner = 'I-' + self.ft_configs.ner_type
 
                 begin = first_token.span.begin
