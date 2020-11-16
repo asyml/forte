@@ -36,7 +36,7 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         super().initialize(resources, configs)
         cls = utils.get_class(self.config.indexer.name,
                               module_paths=["forte.indexers"])
-        self.indexer = cls(hparams=self.config.indexer.hparams)
+        self.indexer = cls(self.config.indexer.hparams)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

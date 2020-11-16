@@ -114,25 +114,13 @@ class TestElasticSearchIndexer(unittest.TestCase):
                          f"ElasticSearchIndexer" for i in range(size)])
         self.indexer.add_bulk([{"key": document} for document in documents],
                               refresh="wait_for")
-
-        # chloe's test
-        self.indexer2 = ElasticSearchIndexer(
-            config={"index_name": "test_index"})
-        retrieved_document = self.indexer2.search(
+        retrieved_document = self.indexer.search(
             query={"query": {"match_all": {}}},
             index_name="test_index", size=size)
         hits = retrieved_document["hits"]["hits"]
         self.assertEqual(len(hits), size)
         results = set([hit["_source"]["key"] for hit in hits])
         self.assertEqual(results, documents)
-
-        # retrieved_document = self.indexer.search(
-        #     query={"query": {"match_all": {}}},
-        #     index_name="test_index", size=size)
-        # hits = retrieved_document["hits"]["hits"]
-        # self.assertEqual(len(hits), size)
-        # results = set([hit["_source"]["key"] for hit in hits])
-        # self.assertEqual(results, documents)
 
     @performance_test
     @data([100, 0.3], [500, 0.3], [1000, 0.3])
