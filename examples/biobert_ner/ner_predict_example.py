@@ -20,10 +20,11 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
-from forte.processors import BERTTokenizer, BioBERTNERPredictor
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
-
 from ft.onto.base_ontology import Subword, Sentence, EntityMention
+
+from transformers_processor import BERTTokenizer
+from bio_ner_predictor import BioBERTNERPredictor
 
 config = yaml.safe_load(open("config.yml", "r"))
 

@@ -5,7 +5,7 @@ from typing import Any, Iterator, Union, List
 
 from smart_open import open
 
-from examples.clinical_pipeline.demo.clinical import Description, Body
+from demo.clinical import Description, Body
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 
@@ -26,8 +26,7 @@ class Mimic3DischargeNoteReader(PackReader):
 
     def _collect(self, mimic3_path: Union[Path, str]) -> Iterator[Any]:
         with open(mimic3_path) as f:
-            with csv.reader(f) as reader:
-                yield from reader
+            yield from csv.reader(f)
 
     def _parse_pack(self, row: List[str]) -> Iterator[DataPack]:
         if len(self.headers) == 0:
@@ -48,3 +47,4 @@ class Mimic3DischargeNoteReader(PackReader):
 
             Description(pack, 0, len(description))
             Body(pack, len(description) + 1, len(full_text))
+            yield pack
