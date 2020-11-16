@@ -338,12 +338,13 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             # If there is an inserted span, it will
             # always be the first of those spans with
             # the same begin index.
-            if last_span_ind > 0:
+            if last_span_ind >= 0:
                 if is_inclusive:
                     if is_begin:
                         # When inclusive, move the begin index
                         # to the left to include the inserted span.
-                        if old_spans[last_span_ind - 1][0] == index:
+                        if last_span_ind > 0 and \
+                                old_spans[last_span_ind - 1][0] == index:
                             # Old spans: [0, 1], [1, 1], [1, 3]
                             # Target index: 1
                             # Change last_span_index from 2 to 1
@@ -360,7 +361,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                     if not is_begin:
                         # When exclusive, move the end index
                         # to the left to exclude the inserted span.
-                        if old_spans[last_span_ind - 1][0] == index:
+                        if last_span_ind > 0 and \
+                                old_spans[last_span_ind - 1][0] == index:
                             # Old spans: [0, 1], [1, 1], [1, 3]
                             # Target index: 1
                             # Change last_span_index from 2 to 0
@@ -383,7 +385,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                                old_spans[last_span_ind][0]
 
             if old_spans[last_span_ind][0] == old_spans[last_span_ind][1] \
-                    and is_begin:
+                    and old_spans[last_span_ind][0] == index \
+                    and is_begin \
+                    and is_inclusive:
                 return index + delta_index
 
             if old_spans[last_span_ind][1] <= index:
@@ -409,38 +413,55 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             key=lambda x: x[0]
         )
 
+        def _insert_new_span(
+                insert_ind: int,
+                inserted_annos: List[Tuple[int, int]],
+                new_pack: DataPack,
+                spans: List[Tuple[int, int]],
+                new_spans: List[Tuple[int, int]]
+        ):
+            r"""
+            An internal helper function for insertion.
+            """
+            pos: int
+            length: int
+            pos, length = inserted_annos[insert_ind]
+            insert_end: int = modify_index(
+                pos,
+                spans,
+                new_spans,
+                is_begin=False,
+                # Include the inserted span itself.
+                is_inclusive=True
+            )
+            insert_begin: int = insert_end - length
+            new_anno = create_class_with_kwargs(
+                entry,
+                {
+                    "pack": new_pack,
+                    "begin": insert_begin,
+                    "end": insert_end
+                }
+            )
+            new_pack.add_entry(new_anno)
+
         # Iterate over all the original entries and modify their spans.
         for entry in entries_to_copy:
             for orig_anno in data_pack.get(get_class(entry)):
                 # Dealing with insertion/deletion only for augment_entry.
                 if entry == self.configs['augment_entry']:
-                    # Insertion
                     while insert_ind < len(inserted_annos) and \
                             inserted_annos[insert_ind][0] <= orig_anno.begin:
                         # Preserve the order of the spans with merging sort.
                         # It is a 2-way merging from the inserted spans
                         # and original spans based on the begin index.
-                        pos: int
-                        length: int
-                        pos, length = inserted_annos[insert_ind]
-                        insert_end: int = modify_index(
-                            pos,
+                        _insert_new_span(
+                            insert_ind,
+                            inserted_annos,
+                            new_pack,
                             spans,
-                            new_spans,
-                            is_begin=False,
-                            # Include the inserted span itself.
-                            is_inclusive=True
+                            new_spans
                         )
-                        insert_begin: int = insert_end - length
-                        new_anno = create_class_with_kwargs(
-                            entry,
-                            {
-                                "pack": new_pack,
-                                "begin": insert_begin,
-                                "end": insert_end
-                            }
-                        )
-                        new_pack.add_entry(new_anno)
                         insert_ind += 1
 
                     # Deletion
@@ -473,6 +494,18 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 )
                 new_pack.add_entry(new_anno)
                 anno_map[orig_anno.tid] = new_anno.tid
+
+            # Deal with spans after the last annotation in the original pack.
+            if entry == self.configs['augment_entry']:
+                while insert_ind < len(inserted_annos):
+                    _insert_new_span(
+                        insert_ind,
+                        inserted_annos,
+                        new_pack,
+                        spans,
+                        new_spans
+                    )
+                    insert_ind += 1
 
         # Iterate over and copy the links in the datapack.
         for link in data_pack.get(Link):
@@ -615,6 +648,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 "entry": [],
                 "policy": [],
             },
+            "type": "data_augmentation_op",
             "kwargs": {
                 'data_aug_op': "",
                 'data_aug_op_config': {}
