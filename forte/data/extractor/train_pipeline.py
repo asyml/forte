@@ -14,26 +14,23 @@
 import logging
 
 from forte.data.extractor.predictor import Predictor
-from forte.pipeline import Pipeline
+from forte.data.extractor.model_processor import ModelProcessor
 from texar.torch.data import DataIterator
 from tqdm import tqdm
 import torch
 from torch import device
-from typing import Optional, Dict, Type, Any, Union, Callable
+from typing import Optional, Dict, Type, Any, Union
 
 from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
 from forte.data.types import DATA_OUTPUT
 from forte.data.extractor.data_pack_loader import DataPackLoader
 from forte.data.extractor.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
-from forte.processors.base.base_processor import BaseProcessor
 from forte.data.extractor.converter import Converter
 from forte.common.configuration import Config
-from forte.data.extractor.trainer import Trainer
 from forte.data.ontology.core import EntryType
 from forte.data.extractor.extractor import BaseExtractor
 from forte.data.ontology.core import Entry
-from forte.evaluation.base import Evaluator
 from forte.data.readers.base_reader import PackReader
 
 logger = logging.getLogger(__name__)
@@ -88,47 +85,48 @@ class TrainPipeline:
     def __init__(self,
                  train_reader: PackReader,
                  val_reader: PackReader,
-                 trainer: Trainer,
-                 predict_forward_fn: Callable,
-                 evaluator: Optional[Evaluator] = None,
+                 model_processor: ModelProcessor,
+                 request: Dict,
                  config: Optional[Union[Config, Dict]] = None):
-        self._config = Config(config, default_hparams=self.default_configs())
+        self._config: Config = \
+            Config(config, default_hparams=self.default_configs())
         self._validate_config()
-
-        self._train_reader = train_reader
-        self._val_reader = val_reader
-
-        self._predict_forward_fn = predict_forward_fn
-        self._trainer: Trainer = trainer
-
-        if self._config.pipeline.evaluate:
-            assert evaluator is not None, \
-                "Evaluator should be set when evaluate is enabled."
-            self._predictor: Optional[Predictor] = None
-            self._evaluator: Optional[Evaluator] = evaluator
-
-        self._train_data_pack_loader = \
-            DataPackLoader(reader=self._train_reader,
-                           cache_dir=self._config.data_pack.train_cache_dir,
-                           config=self._config.data_pack.train_loader)
-
-        self._val_data_pack_loader = \
-            DataPackLoader(reader=self._val_reader,
-                           cache_dir=self._config.data_pack.val_cache_dir,
-                           config=self._config.data_pack.val_loader)
-
-        self._user_request: Dict = {}
-        self._feature_resource: Dict = {}
 
         if self._config.pipeline.logging:
             logging.basicConfig(level=logging.INFO)
 
+        self._train_reader: PackReader = train_reader
+        self._val_reader: PackReader = val_reader
+        self._model_processor: ModelProcessor = model_processor
+        self._predictor: Optional[Predictor] = None
+
+        self._train_data_pack_loader: DataPackLoader = \
+            DataPackLoader(reader=self._train_reader,
+                           cache_dir=self._config.data_pack.train_cache_dir,
+                           config=self._config.data_pack.train_loader)
+
+        self._val_data_pack_loader: DataPackLoader = \
+            DataPackLoader(reader=self._val_reader,
+                           cache_dir=self._config.data_pack.val_cache_dir,
+                           config=self._config.data_pack.val_loader)
+
+        self._user_request: Dict = request
+
+        if self._config.pipeline.lazy_parse_request:
+            self._feature_resource: Dict = {}
+        else:
+            self._feature_resource: Dict = \
+                self._parse_request(self._feature_resource)
+
+        self._device: device = torch.device(self._config.train.device)
+
     @staticmethod
     def default_configs():
+        # Configs should be serializable
         return {
             "pipeline": {
-                "evaluate": True,
-                "logging": True
+                "logging": True,
+                "lazy_parse_request": True
             },
             "data_pack": {
                 "train_loader": DataPackLoader.default_configs(),
@@ -137,7 +135,7 @@ class TrainPipeline:
                 "val_cache_dir": ".val_data_pack_cache"
             },
             "train": {
-                "device": torch.device("cpu"),
+                "device": "cpu",
                 "num_epochs": 10,
             },
             "dataset": DataPackDataset.default_hparams()
@@ -297,7 +295,7 @@ class TrainPipeline:
 
     @property
     def device(self) -> device:
-        return self._config.train.device
+        return self._device
 
     @property
     def config(self) -> Config:
@@ -307,27 +305,32 @@ class TrainPipeline:
     def state(self) -> Dict:
         return {
             "feature_resource": self._feature_resource,
-            "train_config": self._config.train,
-            "user_request": self.user_request
+            "user_request": self.user_request,
+            "configs": self._config
         }
 
     def save_state(self, filename: str):
         torch.save(self.state, filename)
 
-    def save_model(self, filename: str):
-        torch.save(self._trainer.model, filename)
-
-    def run(self, data_request):
+    def run(self):
         # Steps:
         # 1. parse request
         # 2. build vocab
-        # 3. for each data pack, do:
-        #   Extract + Caching -> Batching -> Padding
-        # 4. send batched & padded tensors to trainer
+        # 3. for each train data pack, do:
+        #       extract + Caching -> Batching -> Padding
+        #       send batched & padded tensors to model_processor::train
+        # 4. for each val data pack, do:
+        #       copy -> Extract + Caching -> Batching -> Padding
+        #       send batched & padded tensors to predictor to get pred pack
+        #       send pred pack & orig pack to model_processor::evaluate_consume
+        # 5. Call model_processor::evaluate_finish
 
         # Parse and validate data request
-        logger.info("Parse user request.")
-        self._parse_request(data_request)
+        if self.config.pipeline.lazy_parse_request:
+            logger.info("Parse user request.")
+            self._parse_request(self._user_request)
+        else:
+            assert self._feature_resource, "Feature recourse is not parsed"
 
         logger.info("Build vocabulary.")
         self._build_vocab()
@@ -335,15 +338,14 @@ class TrainPipeline:
         # Model can only be initialized after here as it needs the built vocab
         schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
 
-        logger.info("Setup trainer.")
-        self._trainer.setup(schemes)
+        # Setup
+        logger.info("Setup pipeline")
+        self._model_processor.setup(schemes)
 
-        # Setup evaluation pipeline
         if self._config.pipeline.evaluate:
             self._predictor = Predictor(
                 batch_size=self._config.dataset.batch_size,
-                pretrain_model=self._trainer.model,
-                predict_forward_fn=self._predict_forward_fn,
+                model_processor=self._model_processor,
                 feature_resource=self._feature_resource,
                 cross_pack=False)
 
@@ -356,24 +358,20 @@ class TrainPipeline:
             logger.info("Epoch: %s", epoch)
             epoch += 1
 
-            logger.info("Epoch training")
-            train_err = 0.0
-            train_total = 0.0
             for batch in tqdm(train_iterator):
-                batch_train_err, batch_size = self._trainer.train(batch)
-                # post training
-                train_err += batch_train_err
-                train_total += batch_size
+                self._model_processor.train(batch)
 
-            logger.info("Epoch evaluating")
+            self._model_processor.train_finish(epoch)
+
             # Evaluation will explicitly call loader to iterate over each
             # data pack. The batching will be handled internally by predictor.
             for orig_pack in tqdm(self._val_data_pack_loader.load()):
                 predicted_pack = orig_pack.view()
                 self._predictor.predict(predicted_pack)
-                self._evaluator.consume_next(predicted_pack, orig_pack)
+                self._model_processor.evaluate(predicted_pack,
+                                                       orig_pack)
 
-            logger.info("eval result: %s", self._evaluator.get_result())
+            self._model_processor.evaluate_finish(epoch)
 
         self.finish()
 
