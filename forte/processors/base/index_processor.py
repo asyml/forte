@@ -60,10 +60,7 @@ class IndexProcessor(PackProcessor, ABC):
         raise NotImplementedError
 
     def _process(self, input_pack: DataPack):
-        if input_pack.pack_name:
-            self.documents.append((input_pack.pack_name, input_pack.text))
-        else:
-            self.documents.append(("DOC", input_pack.text))
+        self.documents.append(str(input_pack.pack_id), input_pack.text))
 
         if len(self.documents) == self.config.batch_size:
             self._bulk_process()
@@ -109,11 +106,8 @@ class IndexProcessorWithDatapack(PackProcessor, ABC):
     def _process(self, input_pack: DataPack):
         serialized_datapack: str = input_pack.serialize()
 
-        if input_pack.pack_name:
-            self.documents.append((input_pack.pack_name, input_pack.text,
-                                   serialized_datapack))
-        else:
-            self.documents.append(("DOC", input_pack.text, serialized_datapack))
+        self.documents.append((str(input_pack.pack_id), input_pack.text,
+                               serialized_datapack))
 
         if len(self.documents) == self.config.batch_size:
             self._bulk_process()
