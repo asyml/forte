@@ -44,8 +44,7 @@ def main():
         "14 (35%) with upper respiratory tract infections, and 2 (5%) with bronchiolitis. "
         "The 3 patients who died of M pneumoniae pneumonia had other comorbidities. ")
     pack = pl.process(text)
-    
-    
+
     for sentence in pack.get(Sentence):
         sent_text = sentence.text
         print(colored("Sentence:", 'red'), sent_text, "\n")
