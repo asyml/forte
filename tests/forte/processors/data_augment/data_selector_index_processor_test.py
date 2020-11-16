@@ -25,7 +25,6 @@ from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.processors.ir import ElasticSearchIndexProcessor
 
 
-
 class TestDataSelectorIndexProcessor(unittest.TestCase):
 
     def setUp(self):
