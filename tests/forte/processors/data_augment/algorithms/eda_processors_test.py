@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for data augment processors
+Unit tests for EDA data augment processors
 """
 
 import unittest
@@ -34,25 +34,6 @@ from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
 from ft.onto.base_ontology import Token, Sentence, Document, Annotation
 
 from ddt import ddt, data, unpack
-
-
-class TmpReplacementDataAugmentProcessor(ReplacementDataAugmentProcessor):
-    def new_pack(self):
-        return MultiPack()
-
-
-class TmpReplacer(TextReplacementOp):
-    def __init__(self, configs={}):
-        super().__init__(configs)
-        self.token_replacement = {
-            "Mary": "Virgin",
-            "noon": "12",
-            "station": "stop",
-            "until": "til",
-        }
-
-    def replace(self, input):
-        return True, self.token_replacement.get(input.text, input.text)
 
 
 @ddt
@@ -80,9 +61,9 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             with open(file_path, 'w') as f:
                 f.write(text)
 
-
         expected_text = "Mary early Samantha arrived at the bus station and but waited until for noon the .bus\n"
-        expected_tokens = ['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'and', 'but', 'waited', 'until', 'for', 'noon', 'the', '.', 'bus']
+        expected_tokens = ['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'and', 'but',
+                           'waited', 'until', 'for', 'noon', 'the', '.', 'bus']
 
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
@@ -126,7 +107,6 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             for j, token in enumerate(new_src_pack.get(Token)):
                 self.assertEqual(token.text, expected_tokens[j])
 
-
     @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
     @unpack
     def test_random_insert(self, texts):
@@ -135,7 +115,11 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             with open(file_path, 'w') as f:
                 f.write(text)
 
-        expected_tokens = []
+        expected_text = \
+            "await Mary and Samantha arrived at the bus station early station but waited until noon for the bus.\n"
+        expected_tokens = ['await ', 'Mary', 'and', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'early',
+                           ' station', 'but', 'waited', 'until', 'noon', 'for', 'the', 'bus', '.']
+
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
@@ -146,7 +130,8 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 "policy": ["auto_align", "auto_align"],
             },
             "kwargs": {
-                'data_aug_op': "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
+                'data_aug_op':
+                    "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
                 'data_aug_op_config': {
                     "dictionary": (
                         "forte.processors.data_augment."
@@ -156,7 +141,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                     "lang": "eng",
                 }
             },
-            'n': 1,
+            'n': 2,
         }
 
         insert_processor = RandomInsertionDataAugmentProcessor()
@@ -184,11 +169,9 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
 
             new_src_pack = m_pack.get_pack('augmented_input_src')
 
-            print(new_src_pack.text)
-            result = []
+            self.assertEqual(new_src_pack.text, expected_text)
             for j, token in enumerate(new_src_pack.get(Token)):
-                result.append(token.text)
-            print(result)
+                self.assertEqual(token.text, expected_tokens[j])
 
     @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
     @unpack
@@ -197,6 +180,10 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
             with open(file_path, 'w') as f:
                 f.write(text)
+
+        expected_text = \
+            "Mary and   at  bus   but waited until  for the .\n"
+        expected_tokens = ['Mary', 'and', 'at', 'bus', 'but', 'waited', 'until', 'for', 'the', '.']
 
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
@@ -235,10 +222,9 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
 
             new_src_pack = m_pack.get_pack('augmented_input_src')
 
-            print(new_src_pack.text)
-            result = []
+            self.assertEqual(new_src_pack.text, expected_text)
             for j, token in enumerate(new_src_pack.get(Token)):
-                result.append(token.text)
+                self.assertEqual(token.text, expected_tokens[j])
 
 
 if __name__ == "__main__":
