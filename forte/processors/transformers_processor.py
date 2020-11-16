@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Tokenizer from
 from typing import Dict, Any
+
+from nltk.tokenize.util import align_tokens
+from transformers import AutoTokenizer
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Subword
-
-from nltk.tokenize.util import align_tokens
-from transformers import AutoTokenizer
 
 
 class BERTTokenizer(PackProcessor):
