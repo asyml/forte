@@ -22,7 +22,7 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import MSMarcoPassageReader
 from forte.pipeline import Pipeline
-from forte.processors.ir import ElasticSearchIndexProcessor
+from forte.processors.ir import ElasticSearchTextIndexProcessor
 
 logging.basicConfig(level=logging.INFO)
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     nlp: Pipeline[DataPack] = Pipeline()
     nlp.set_reader(MSMarcoPassageReader())
-    nlp.add(ElasticSearchIndexProcessor(), config=config.create_index)
+    nlp.add(ElasticSearchTextIndexProcessor(), config=config.create_index)
     nlp.initialize()
 
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
