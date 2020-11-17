@@ -11,18 +11,119 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import torch
+import logging
+from typing import Iterator, Dict, List
 
-from examples.ner_new.ner_model_processor import NerModelProcessor
+import numpy as np
+import torch
+from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
+
+from forte.data.extractor.predictor import Predictor
+from forte.data.data_pack import DataPack
+
+from forte.models.ner.model_factory import BiRecurrentConvCRF
+from texar.torch.data import Batch
+from torch import nn
+from torch.optim import SGD
+from torch.optim.optimizer import Optimizer
+from tqdm import tqdm
 import yaml
 
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.data.extractor.extractor import \
-    BioSeqTaggingExtractor, TextExtractor, CharExtractor
-from forte.data.extractor.train_pipeline import TrainPipeline
+    BioSeqTaggingExtractor, TextExtractor, CharExtractor, BaseExtractor
+from forte.data.extractor.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from ft.onto.base_ontology import Sentence, Token, EntityMention
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.INFO)
+
+def construct_word_embedding_table(embed_dict, extractor: BaseExtractor):
+    embedding_dim = list(embed_dict.values())[0].shape[-1]
+
+    scale = np.sqrt(3.0 / embedding_dim)
+    table = np.empty(
+        [extractor.size(), embedding_dim], dtype=np.float32
+    )
+    oov = 0
+    for word, index in extractor.items():
+        if word in embed_dict:
+            embedding = embed_dict[word]
+        elif word.lower() in embed_dict:
+            embedding = embed_dict[word.lower()]
+        else:
+            embedding = np.random.uniform(
+                -scale, scale, [1, embedding_dim]
+            ).astype(np.float32)
+            oov += 1
+        table[index, :] = embedding
+    return torch.from_numpy(table)
+
+
+def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
+                 config: Config):
+    text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
+    char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
+    ner_extractor: BaseExtractor = schemes["ner_tag"]["extractor"]
+
+    # embedding_dict = \
+    #     load_glove_embedding(config.config_preprocessor.embedding_path)
+    #
+    # for word in embedding_dict:
+    #     if not text_extractor.contains(word):
+    #         text_extractor.add_entry(word)
+    #
+
+    # TODO: temporarily make fake pretrained emb for debugging
+    embedding_dict = {}
+    fake_tensor = torch.tensor([0.0 for i in range(100)])
+    for word, index in text_extractor.items():
+        embedding_dict[word] = fake_tensor
+
+    word_embedding_table = \
+        construct_word_embedding_table(embedding_dict, text_extractor)
+
+    model: nn.Module = \
+        BiRecurrentConvCRF(word_embedding_table=word_embedding_table,
+                           char_vocab_size=char_extractor.size(),
+                           tag_vocab_size=ner_extractor.size(),
+                           config_model=config.config_model)
+
+    return model
+
+
+def train(batch: Batch):
+    word = batch["text_tag"]["tensor"]
+    char = batch["char_tag"]["tensor"]
+    ner = batch["ner_tag"]["tensor"]
+    word_masks = batch["text_tag"]["mask"][0]
+
+    optim.zero_grad()
+
+    loss = model(word, char, ner, mask=word_masks)
+
+    loss.backward()
+    optim.step()
+
+    batch_train_err = loss.item() * batch.batch_size
+
+    return batch_train_err
+
+
+def predict(batch: Dict) -> Dict:
+    word = batch["text_tag"]["tensor"]
+    char = batch["char_tag"]["tensor"]
+    word_masks = batch["text_tag"]["mask"][0]
+
+    output = model.decode(input_word=word,
+                          input_char=char,
+                          mask=word_masks)
+    output = output.numpy()
+    return {'ner_tag': output}
+
 
 # All the configs
 config_data = yaml.safe_load(open("configs/config_data.yml", "r"))
@@ -35,7 +136,10 @@ config.add_hparam('config_data', config_data)
 config.add_hparam('config_model', config_model)
 config.add_hparam('preprocessor', config_preprocess)
 
-request = {
+device = torch.device("cuda") if torch.cuda.is_available() \
+    else torch.device("cpu")
+
+tp_request = {
     "scope": Sentence,
     "schemes": {
         "text_tag": {
@@ -71,7 +175,10 @@ request = {
 # All not specified dataset parameters are set by default in Texar.
 # Default settings can be found here:
 # https://texar-pytorch.readthedocs.io/en/latest/code/data.html#texar.torch.data.DatasetBase.default_hparams
-config = {
+tp_config = {
+    "pipeline": {
+        "device": device.type
+    },
     "data_pack": {
         "train_loader": {
             "src_dir": config.config_data.train_path
@@ -80,27 +187,81 @@ config = {
             "src_dir": config.config_data.val_path
         }
     },
-    "train": {
-        "device": "cuda" if torch.cuda.is_available() else "cpu",
-        "num_epochs": config.config_data.num_epochs
-    },
     "dataset": {
         "batch_size": config.config_data.batch_size_tokens
     }
 }
 
 ner_reader = CoNLL03Reader()
-ner_model_processor = NerModelProcessor()
 
-train_pipeline = \
-    TrainPipeline(train_reader=ner_reader,
-                  val_reader=ner_reader,
-                  model_processor=ner_model_processor,
-                  request=request,
-                  config=config)
+train_preprocessor = TrainPreprocessor(train_reader=ner_reader,
+                                       val_reader=ner_reader,
+                                       request=tp_request,
+                                       config=tp_config)
 
-train_pipeline.run()
+model: nn.Module = \
+    create_model(schemes=train_preprocessor.feature_resource["schemes"],
+                 config=config)
+model.to(device)
+
+optim: Optimizer = SGD(model.parameters(),
+                       lr=config.config_model.learning_rate,
+                       momentum=config.config_model.momentum,
+                       nesterov=True)
+
+predictor = Predictor(batch_size=train_preprocessor.config.dataset.batch_size,
+                      pretrain_model=model,
+                      predict_forward_fn=predict,
+                      feature_resource=train_preprocessor.feature_resource,
+                      cross_pack=False)
+
+evaluator = CoNLLNEREvaluator()
+
+epoch = 0
+train_err: float = 0.0
+train_total: float = 0.0
+val_scores: List = []
+output_file = "tmp_eval.txt"
+score_file = "tmp_eval.score"
+scores: Dict[str, float] = {}
+
+logger.info("Start training.")
+while epoch < config.config_data.num_epochs:
+    epoch += 1
+
+    # Get iterator of preprocessed batch of train data
+    train_batch_iter: Iterator[Batch] = \
+        train_preprocessor.get_train_batch_iterator()
+
+    for batch in tqdm(train_batch_iter):
+        batch_train_err = train(batch)
+
+        train_err += batch_train_err
+        train_total += batch.batch_size
+
+    logger.info("%dth Epoch training, train error rate: %f",
+                epoch, train_err / train_total)
+
+    train_err: float = 0.0
+    train_total: float = 0.0
+
+    # TODO: check how forte pipeline catch golden truth pack
+    # TODO: should we directly use prediction pipeline instead of explicitly
+    #       call to val_pack_iter?
+    # Get iterator of val data pack
+    # val_pack_iter: Iterator[DataPack] = \
+    #     train_preprocessor.get_val_pack_iterator()
+    #
+    # for orig_pack in tqdm(val_pack_iter):
+    #     predicted_pack = orig_pack.view()
+    #     predictor.predict(predicted_pack)
+    #     evaluator.consume_next(predicted_pack, orig_pack)
+    #
+    # val_result = evaluator.get_result()
+    # logger.info("%dth Epoch evaluating, val result: %s", val_result)
 
 # Save training result to disk
 # train_pipeline.save_state(config.config_data.train_state_path)
 # torch.save(ner_model_processor, config.config_model.model_path)
+
+train_preprocessor.finish()
