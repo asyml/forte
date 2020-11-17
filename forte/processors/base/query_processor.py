@@ -73,9 +73,10 @@ class QueryProcessor(MultiPackProcessor, ABC):
         query_pack, query_value = self._process_query(input_pack)
 
         # Make sure we only have one query on this pack.
+        query: Query
         try:
-            query: Query = query_pack.get_single(Query)  # type: ignore
+            query = query_pack.get_single(Query)  # type: ignore
         except EntryNotFoundError:
-            query: Query = Query(pack=query_pack)
+            query = Query(pack=query_pack)
 
         query.value = query_value

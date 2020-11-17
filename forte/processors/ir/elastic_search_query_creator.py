@@ -15,8 +15,6 @@
 # pylint: disable=attribute-defined-outside-init
 from typing import Any, Dict, Tuple
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base import QueryProcessor
