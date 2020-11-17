@@ -34,7 +34,7 @@ class Sampler(ABC):
         random.seed()
 
     @abstractmethod
-    def sample(self) -> List[str]:
+    def sample(self) -> str:
         raise NotImplementedError
 
 
@@ -62,14 +62,13 @@ class UniformSampler(Sampler):
                 nltk.download('stopwords')
                 self.vocab = set(words.words('en'))
                 self.stop_words = set(stopwords.words('english'))
-            self.vocab -= self.stop_words
-            self.vocab = list(self.vocab)
+            self.word_list: List[str] = list(self.vocab - self.stop_words)
 
         else:
             raise NotImplementedError
 
     def sample(self) -> str:
-        word: str = random.choice(self.vocab)
+        word: str = random.choice(self.word_list)
         return word
 
     def default_config(self) -> Dict[str, str]:
@@ -104,5 +103,6 @@ class UnigramSampler(Sampler):
         return unigram
 
     def sample(self) -> str:
-        word: str = random.choices(list(self.unigram.keys()), list(self.unigram.values()))[0]
+        word: str = random.choices(list(self.unigram.keys()),
+                                   list(self.unigram.values()))[0]
         return word

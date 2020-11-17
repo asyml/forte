@@ -60,7 +60,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         getting the augmented text, it will register the input & output
         for later batch process of building the new data pack.
         """
-        replaced_text: str = replacement_op.replace(input)
+        _, replaced_text = replacement_op.replace(input)
         self.replaced_spans.append((input, replaced_text))
 
     def auto_align_annotations(

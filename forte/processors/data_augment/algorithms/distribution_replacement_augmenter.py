@@ -29,7 +29,8 @@ class DistributionReplacementOp(TextReplacementOp):
     r"""
     This class is a replacement op sampling from a distribution
     to generate word-level new text.
-    todo: subject to change if TextReplacementOp and ReplacementDataAugmentProcessor change.
+    todo: subject to change if TextReplacementOp
+    todo: and ReplacementDataAugmentProcessor change.
     """
     def __init__(self, sampler: Sampler, configs: Config):
         super().__init__(configs)

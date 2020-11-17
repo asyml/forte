@@ -43,7 +43,6 @@ class TestSampler(unittest.TestCase):
         config = {"unigram_path": file_path}
         sampler = UnigramSampler(config)
         word = sampler.sample()
-        print("word1", word)
         unigram = ('apple', 'banana', 'lemon', 'orange')
         self.assertIn(word, unigram)
 
@@ -51,7 +50,6 @@ class TestSampler(unittest.TestCase):
         config = {"distribution": "nltk"}
         sampler = UniformSampler(config)
         word = sampler.sample()
-        print("word2", word)
         self.assertIn(word, sampler.vocab)
 
 
