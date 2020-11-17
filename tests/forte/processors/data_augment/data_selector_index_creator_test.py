@@ -19,7 +19,7 @@ import os
 
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-from forte.processors.data_augment import DataSelectorIndexProcessor
+from forte.processors.data_augment.selectors import DataSelectorIndexProcessor
 from forte.data.readers import MSMarcoPassageReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
