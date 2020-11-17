@@ -42,8 +42,10 @@ def main():
     text = (
         "More than three-quarters of patients (77.5%) had comorbidities. "
         "Twenty-four isolates (60%) were associated with pneumonia, "
-        "14 (35%) with upper respiratory tract infections, and 2 (5%) with bronchiolitis. "
-        "The 3 patients who died of M pneumoniae pneumonia had other comorbidities. ")
+        "14 (35%) with upper respiratory tract infections, "
+        "and 2 (5%) with bronchiolitis. "
+        "The 3 patients who died of M pneumoniae pneumonia "
+        "had other comorbidities. ")
     pack = pl.process(text)
 
     for sentence in pack.get(Sentence):

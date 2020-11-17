@@ -8,14 +8,13 @@ from examples.biobert_ner.transformers_processor import BERTTokenizer
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
+from forte.processors.ir import ElasticSearchPackIndexProcessor
 from forte.processors.nltk_processors import NLTKSentenceSegmenter, \
     NLTKWordTokenizer, NLTKPOSTagger, NLTKNER
-
-# Prepare the data.
 from forte.processors.writers import PackIdJsonPackWriter
 
 
-def main(input_path: str, output_path: str):
+def main(input_path: str, output_path: str, max_packs: int = -1):
     pl = Pipeline[DataPack]()
     pl.set_reader(Mimic3DischargeNoteReader())
     pl.add(NLTKSentenceSegmenter())
@@ -28,6 +27,7 @@ def main(input_path: str, output_path: str):
 
     pl.add(BERTTokenizer(), config=config.BERTTokenizer)
     pl.add(BioBERTNERPredictor(), config=config.BioBERTNERPredictor)
+    pl.add(ElasticSearchPackIndexProcessor())
 
     pl.add(
         PackIdJsonPackWriter(),
@@ -35,10 +35,20 @@ def main(input_path: str, output_path: str):
             'output_dir': output_path,
             'indent': 2,
             'overwrite': True,
+            'drop_record': True,
         }
     )
 
-    pl.run(input_path)
+    pl.initialize()
+
+    print()
+    for idx, pack in enumerate(pl.process_dataset(input_path)):
+        if (idx + 1) % 10 == 0:
+            print(f"\rProcessed {idx + 1} packs")
+        if 0 < max_packs < idx:
+            break
+
+    print()
 
 
-main(sys.argv[1], sys.argv[2])
+main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
