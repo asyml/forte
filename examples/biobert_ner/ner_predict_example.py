@@ -20,10 +20,11 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
-from forte.processors import BERTTokenizer, BioBERTNERPredictor
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
-
 from ft.onto.base_ontology import Subword, Sentence, EntityMention
+
+from examples.biobert_ner.transformers_processor import BERTTokenizer
+from examples.biobert_ner.bio_ner_predictor import BioBERTNERPredictor
 
 config = yaml.safe_load(open("config.yml", "r"))
 
@@ -41,8 +42,10 @@ def main():
     text = (
         "More than three-quarters of patients (77.5%) had comorbidities. "
         "Twenty-four isolates (60%) were associated with pneumonia, "
-        "14 (35%) with upper respiratory tract infections, and 2 (5%) with bronchiolitis. "
-        "The 3 patients who died of M pneumoniae pneumonia had other comorbidities. ")
+        "14 (35%) with upper respiratory tract infections, "
+        "and 2 (5%) with bronchiolitis. "
+        "The 3 patients who died of M pneumoniae pneumonia "
+        "had other comorbidities. ")
     pack = pl.process(text)
 
     for sentence in pack.get(Sentence):

@@ -22,10 +22,11 @@ from ddt import ddt, data, unpack
 
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-from forte.processors.data_augment import DataSelectorIndexProcessor
+from forte.processors.data_augment.selectors import DataSelectorIndexProcessor
 from forte.data.readers import MSMarcoPassageReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
-from forte.processors.base.data_selector import QueryDataSelector, RandomDataSelector
+from forte.processors.base.data_selector import QueryDataSelector, \
+    RandomDataSelector
 
 
 @ddt
@@ -37,7 +38,7 @@ class TestDataSelector(unittest.TestCase):
         data_dir = 'data_samples/ms_marco_passage_retrieval'
         self.abs_data_dir = os.path.abspath(os.path.join(file_dir_path,
                                                          *([os.pardir] * 4),
-                                                           data_dir))
+                                                         data_dir))
         self.index_name = "final"
         indexer_config = {
             "batch_size": 5,
@@ -47,15 +48,16 @@ class TestDataSelector(unittest.TestCase):
                 "name": "ElasticSearchIndexer",
                 "hparams":
                     {"index_name": self.index_name,
-                      "hosts": "localhost:9200",
-                      "algorithm": "bm25"},
+                     "hosts": "localhost:9200",
+                     "algorithm": "bm25"},
                 "other_kwargs": {
                     "request_timeout": 10,
                     "refresh": True
                 }
             }
         }
-        self.indexer = ElasticSearchIndexer(config={"index_name": self.index_name})
+        self.indexer = ElasticSearchIndexer(
+            config={"index_name": self.index_name})
         nlp: Pipeline[DataPack] = Pipeline()
         nlp.set_reader(MSMarcoPassageReader())
         nlp.add(DataSelectorIndexProcessor(), config=indexer_config)
@@ -91,7 +93,8 @@ class TestDataSelector(unittest.TestCase):
             text.append(pack.text)
 
         self.assertEqual(len(text), 1)
-        self.assertIn("The presence of communication amid scientific minds was", text[0])
+        self.assertIn("The presence of communication amid scientific minds was",
+                      text[0])
 
     def test_random_data_selector(self):
         size = 2

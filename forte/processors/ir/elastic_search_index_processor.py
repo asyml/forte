@@ -11,32 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=attribute-defined-outside-init
-from typing import Dict, Any
+from abc import ABC
+from typing import Dict, Any, List
 
-from forte import utils
 from forte.common.configuration import Config
 from forte.common.resources import Resources
+from forte.data.data_pack import DataPack
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.processors.base import IndexProcessor
 
 __all__ = [
-    "ElasticSearchIndexProcessor"
+    "ElasticSearchTextIndexProcessor",
+    "ElasticSearchPackIndexProcessor",
 ]
 
 
-class ElasticSearchIndexProcessor(IndexProcessor):
-    r"""This processor indexes the data packs into an Elasticsearch index."""
+# pylint: disable=attribute-defined-outside-init
 
-    # pylint: disable=useless-super-delegation
-    def __init__(self) -> None:
-        super().__init__()
+
+class ElasticSearchIndexerBase(IndexProcessor, ABC):
+    r"""This processor implements the basic functions to add the data packs
+    into an Elasticsearch index."""
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        cls = utils.get_class(self.config.indexer.name,
-                              module_paths=["forte.indexers"])
-        self.indexer = cls(self.config.indexer.hparams)
+        self.indexer = ElasticSearchIndexer(self.configs.indexer.hparams)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -81,7 +80,6 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         """
         config = super().default_configs()
         config.update({
-            **IndexProcessor.default_configs(),
             "fields": ["doc_id", "content"],
             "indexer": {
                 "name": "ElasticSearchIndexer",
@@ -95,7 +93,46 @@ class ElasticSearchIndexProcessor(IndexProcessor):
         return config
 
     def _bulk_process(self):
-        documents = [{self.config.fields[0]: document[0],
-                      self.config.fields[1]: document[1]}
-                     for document in self.documents]
-        self.indexer.add_bulk(documents, **self.config.indexer.other_kwargs)
+        self.indexer.add_bulk(self.documents,
+                              **self.configs.indexer.other_kwargs)
+
+
+class ElasticSearchTextIndexProcessor(ElasticSearchIndexerBase):
+    r"""This processor indexes the text of data packs into an
+      Elasticsearch index."""
+
+    def _content_for_index(self, input_pack: DataPack) -> List[str]:
+        """
+        Index two fields, the pack id and the input pack text.
+
+        Args:
+            input_pack:
+
+        Returns:
+
+        """
+        return [str(input_pack.pack_id), input_pack.text]
+
+    def _field_names(self) -> List[str]:
+        return ["doc_id", "content"]
+
+
+class ElasticSearchPackIndexProcessor(ElasticSearchIndexerBase):
+    r"""This processor indexes the data packs into an Elasticsearch index."""
+
+    def _content_for_index(self, input_pack: DataPack) -> List[str]:
+        """
+        Index 3 fields, the pack id, the input pack text and the
+          raw pack content.
+
+        Args:
+            input_pack:
+
+        Returns:
+
+        """
+        return [str(input_pack.pack_id), input_pack.text,
+                input_pack.serialize(True)]
+
+    def _field_names(self) -> List[str]:
+        return ["doc_id", "content", "pack_info"]

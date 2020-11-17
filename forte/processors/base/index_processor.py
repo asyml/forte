@@ -38,12 +38,8 @@ class IndexProcessor(PackProcessor, ABC):
     # pylint: disable=useless-super-delegation
     def __init__(self) -> None:
         super().__init__()
-        self.documents: List[Tuple[str, str]] = []
-
-    # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, configs: Config):
-        self.resources = resources
-        self.config = configs
+        # self.documents: List[List[str]] = []
+        self.documents: List[Dict[str, str]] = []
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -55,14 +51,31 @@ class IndexProcessor(PackProcessor, ABC):
 
     def _bulk_process(self):
         r"""Subclasses of :class:`IndexProcessor` should implement this method
-        to bulk add the documents into the index.
+          to bulk add the documents into the index.
         """
         raise NotImplementedError
 
-    def _process(self, input_pack: DataPack):
-        self.documents.append((str(input_pack.pack_id), input_pack.text))
+    def _field_names(self) -> List[str]:
+        r"""Subclasses of :class:`IndexProcessor` should implement this method
+          to provide the field name for indexing.
+          The return value from :func:`_content_for_index` will be added into
+          these fields. The length of the return value of this function should
+          be the same as the return value for :func:`_content_for_index`.
+        Returns:
 
-        if len(self.documents) == self.config.batch_size:
+        """
+        raise NotImplementedError
+
+    def _content_for_index(self, input_pack: DataPack) -> List[str]:
+        raise NotImplementedError
+
+    def _process(self, input_pack: DataPack):
+        # self.documents.append((str(input_pack.pack_id), input_pack.text))
+        index_pairs: Dict[str, str] = dict(
+            zip(self._field_names(), self._content_for_index(input_pack)))
+        self.documents.append(index_pairs)
+
+        if len(self.documents) == self.configs.batch_size:
             self._bulk_process()
             self.documents = []
 

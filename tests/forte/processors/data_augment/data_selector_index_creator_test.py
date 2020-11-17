@@ -19,7 +19,7 @@ import os
 
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-from forte.processors.data_augment import DataSelectorIndexProcessor
+from forte.processors.data_augment.selectors import DataSelectorIndexProcessor
 from forte.data.readers import MSMarcoPassageReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
@@ -31,7 +31,7 @@ class TestDataSelectorIndexProcessor(unittest.TestCase):
         data_dir = 'data_samples/ms_marco_passage_retrieval'
         self.abs_data_dir = os.path.abspath(os.path.join(file_dir_path,
                                                          *([os.pardir] * 4),
-                                                           data_dir))
+                                                         data_dir))
         corpus_file = os.path.join(self.abs_data_dir, 'collection.tsv')
 
         self.expected_content = set()
@@ -49,15 +49,16 @@ class TestDataSelectorIndexProcessor(unittest.TestCase):
                 "name": "ElasticSearchIndexer",
                 "hparams":
                     {"index_name": self.index_name,
-                      "hosts": "localhost:9200",
-                      "algorithm": "bm25"},
+                     "hosts": "localhost:9200",
+                     "algorithm": "bm25"},
                 "other_kwargs": {
                     "request_timeout": 10,
                     "refresh": True
                 }
             }
         }
-        self.indexer = ElasticSearchIndexer(config={"index_name": self.index_name})
+        self.indexer = ElasticSearchIndexer(
+            config={"index_name": self.index_name})
 
         self.nlp: Pipeline[DataPack] = Pipeline()
         self.reader = MSMarcoPassageReader()
@@ -76,7 +77,8 @@ class TestDataSelectorIndexProcessor(unittest.TestCase):
             size += 1
 
         retrieved_document = self.indexer.search(
-            query={"query": {"match_all": {}}}, index_name=self.index_name, size=size)
+            query={"query": {"match_all": {}}}, index_name=self.index_name,
+            size=size)
 
         hits = retrieved_document["hits"]["hits"]
         self.assertEqual(len(hits), size)

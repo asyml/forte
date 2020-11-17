@@ -30,8 +30,7 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.pipeline import Pipeline
-from forte.processors.data_augment import DataSelectorIndexProcessor
-
+from forte.processors.data_augment.selectors import DataSelectorIndexProcessor
 
 __all__ = [
     "CreateIndexerPipeline",
