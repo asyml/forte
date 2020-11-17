@@ -93,10 +93,6 @@ class ElasticSearchIndexerBase(IndexProcessor, ABC):
         return config
 
     def _bulk_process(self):
-        # documents = dict(zip(self._field_names(), self._content_for_index()))
-        # documents = [{self.configs.fields[0]: document[0],
-        #               self.configs.fields[1]: document[1]}
-        #              for document in self.documents]
         self.indexer.add_bulk(self.documents,
                               **self.configs.indexer.other_kwargs)
 
