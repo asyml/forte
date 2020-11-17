@@ -16,21 +16,19 @@ import unittest
 from typing import Dict, Any
 
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
-from texar.torch.data import Batch
-from torch import Tensor, nn
+from torch import Tensor
 
 from forte.data.extractor.vocabulary import Vocabulary
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.data.extractor.converter import Converter
-from forte.data.extractor.train_pipeline import TrainPipeline
-from forte.data.extractor.trainer import Trainer
+from forte.data.extractor.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.extractor import TextExtractor, CharExtractor, \
     BioSeqTaggingExtractor, BaseExtractor
 from ft.onto.base_ontology import Sentence, Token, EntityMention
 
 
-class TrainPipelineTest(unittest.TestCase):
+class TrainPreprocessorTest(unittest.TestCase):
     def setUp(self):
         self.config = {
             "max_char_length": 45,
@@ -43,7 +41,7 @@ class TrainPipelineTest(unittest.TestCase):
             "nesterov": True
         }
 
-        self.request = {
+        self.tp_request = {
             "scope": Sentence,
             "schemes": {
                 "text_tag": {
@@ -76,36 +74,11 @@ class TrainPipelineTest(unittest.TestCase):
             }
         }
 
-        def create_model_fn(schemes: Dict[str, Dict[str, Any]]):
-            pass
-
-        def create_optim_fn(model: nn.Module):
-            pass
-
-        def create_criterion_fn(model: nn.Module):
-            pass
-
-        def train_forward_fn(model: nn.Module,
-                             tensors: Batch):
-            pass
-
-        def predict_forward_fn(model: nn.Module, batch: Dict):
-            pass
-
-        self.create_model_fn = create_model_fn
-        self.create_optim_fn = create_optim_fn
-        self.train_forward_fn = train_forward_fn
-
         self.reader = CoNLL03Reader()
-
-        self.trainer = Trainer(create_model_fn=create_model_fn,
-                               create_optim_fn=create_optim_fn,
-                               create_criterion_fn=create_criterion_fn,
-                               train_forward_fn=train_forward_fn)
 
         self.evaluator = CoNLLNEREvaluator()
 
-        config = {
+        self.tp_config = {
             "data_pack": {
                 "train_loader": {
                     "src_dir": self.config["train_path"],
@@ -116,41 +89,33 @@ class TrainPipelineTest(unittest.TestCase):
                     "cache": False
                 }
             },
-            "train": {
-                "num_epochs": self.config["num_epochs"]
-            },
             "dataset": {
                 "batch_size": self.config["batch_size_tokens"]
             }
         }
 
-        self.train_pipeline = \
-            TrainPipeline(train_reader=self.reader,
-                          val_reader=self.reader,
-                          trainer=self.trainer,
-                          evaluator=self.evaluator,
-                          predict_forward_fn=predict_forward_fn,
-                          config=config)
-
-        # TODO: calculate expected loss
+        self.train_preprocessor = \
+            TrainPreprocessor(train_reader=self.reader,
+                              val_reader=self.reader,
+                              request=self.tp_request,
+                              config=self.tp_config)
 
     def test_parse_request(self):
-        self.train_pipeline._parse_request(self.request)
-        self.assertTrue(self.train_pipeline.feature_resource is not None)
-        self.assertTrue("scope" in self.train_pipeline.feature_resource)
-        self.assertTrue("schemes" in self.train_pipeline.feature_resource)
+        self.assertTrue(self.train_preprocessor.feature_resource is not None)
+        self.assertTrue("scope" in self.train_preprocessor.feature_resource)
+        self.assertTrue("schemes" in self.train_preprocessor.feature_resource)
 
-        self.assertTrue(len(self.train_pipeline.feature_resource["schemes"]),
-                        3)
         self.assertTrue(
-            "text_tag" in self.train_pipeline.feature_resource["schemes"])
+            len(self.train_preprocessor.feature_resource["schemes"]), 3)
         self.assertTrue(
-            "char_tag" in self.train_pipeline.feature_resource["schemes"])
+            "text_tag" in self.train_preprocessor.feature_resource["schemes"])
         self.assertTrue(
-            "ner_tag" in self.train_pipeline.feature_resource["schemes"])
+            "char_tag" in self.train_preprocessor.feature_resource["schemes"])
+        self.assertTrue(
+            "ner_tag" in self.train_preprocessor.feature_resource["schemes"])
 
         for tag, scheme in \
-                self.train_pipeline.feature_resource["schemes"].items():
+                self.train_preprocessor.feature_resource["schemes"].items():
             self.assertTrue("extractor" in scheme)
             self.assertTrue("converter" in scheme)
             self.assertTrue(issubclass(type(scheme["extractor"]),
@@ -160,12 +125,8 @@ class TrainPipelineTest(unittest.TestCase):
         # TODO: test invalid request
 
     def test_build_vocab(self):
-        self.train_pipeline._parse_request(self.request)
-
-        self.train_pipeline._build_vocab()
-
         schemes: Dict[str, Any] = \
-            self.train_pipeline.feature_resource["schemes"]
+            self.train_preprocessor.feature_resource["schemes"]
 
         text_extractor: TextExtractor = schemes["text_tag"]["extractor"]
         vocab: Vocabulary = text_extractor.vocab
@@ -184,13 +145,10 @@ class TrainPipelineTest(unittest.TestCase):
         self.assertTrue(vocab.has_key((None, "O")))
         self.assertTrue(vocab.has_key(("MISC", "I")))
 
-    def test_build_train_dataset_iterator(self):
-        self.train_pipeline._parse_request(self.request)
-        self.train_pipeline._build_vocab()
-
+    def test_build_dataset_iterator(self):
         train_iterator = \
-            self.train_pipeline._build_dataset_iterator(
-                self.train_pipeline._train_data_pack_loader)
+            self.train_preprocessor._build_dataset_iterator(
+                self.train_preprocessor._train_data_pack_loader)
 
         batchs = []
         for batch in train_iterator:
@@ -216,8 +174,6 @@ class TrainPipelineTest(unittest.TestCase):
                     self.assertEqual(len(tensors["mask"]), 2)
                     self.assertEqual(type(tensors["mask"][0]), Tensor)
                     self.assertEqual(type(tensors["mask"][1]), Tensor)
-
-    # TODO: add a test for testing TrainPipeline::run
 
 
 if __name__ == '__main__':

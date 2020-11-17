@@ -13,13 +13,13 @@
 # limitations under the License.
 import logging
 
+from forte.data.data_pack import DataPack
+
 from forte.data.extractor.predictor import Predictor
-from forte.data.extractor.model_processor import ModelProcessor
-from texar.torch.data import DataIterator
-from tqdm import tqdm
+from texar.torch.data import DataIterator, Batch
 import torch
 from torch import device
-from typing import Optional, Dict, Type, Any, Union
+from typing import Optional, Dict, Type, Any, Union, Iterator
 
 from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
 from forte.data.types import DATA_OUTPUT
@@ -36,28 +36,27 @@ from forte.data.readers.base_reader import PackReader
 logger = logging.getLogger(__name__)
 
 
-# TODO: BasePack or DataPack
-
-class TrainPipeline:
+class TrainPreprocessor:
     """
-    TrainPipeline serves as the manager of training a model including: build
-    vocabulary, preprocess and extract the features, do the actual training and
-    evaluation. The training entry point is `run` method.
+    `TrainPreprocessor` provides the functionality of doing pre-processing work
+    including building vocabulary, extracting the features, batching and
+    padding. It will provide methods to return the iterator over batch of
+    padded tensors.
 
-    `TrainPipeline` will maintain a Config that stores all the configurable
-    parameters for various components inside TrainPipeline. In addition, those
+    `TrainPreprocessor` will maintain a Config that stores all the configurable
+    parameters for various components. In addition, those
     parameters are organized in a hierarchical way.
 
-    For example, at first level, it will contain four parts: pipeline,
-    train, data_pack and dataset. The `default_config` will return the
-    default value for all configurable parameters.
+    For example, at first level, it will contain: pipeline, data_pack and
+    dataset. The `default_config` will return the default value for all
+    configurable parameters.
 
     Particularly, the `dataset` config is exactly the same as what
     texar.torch.data.DatasetBase::default_config will return.
 
-    `TrainPipeline` will also accept a user request given as the input to the
-    method `run`. Internally it will parse this user request and store the
-    parsed result as a dictionary into `feature_resource`.
+    `TrainPreprocessor` will also accept a user request. Internally it will
+    parse this user request and store the parsed result as a dictionary
+    into `feature_resource`.
     An example `feature_resource` is:
     feature_resource: {
         "scope": ft.onto.Sentence
@@ -85,19 +84,14 @@ class TrainPipeline:
     def __init__(self,
                  train_reader: PackReader,
                  val_reader: PackReader,
-                 model_processor: ModelProcessor,
                  request: Dict,
                  config: Optional[Union[Config, Dict]] = None):
         self._config: Config = \
             Config(config, default_hparams=self.default_configs())
         self._validate_config()
 
-        if self._config.pipeline.logging:
-            logging.basicConfig(level=logging.INFO)
-
         self._train_reader: PackReader = train_reader
         self._val_reader: PackReader = val_reader
-        self._model_processor: ModelProcessor = model_processor
         self._predictor: Optional[Predictor] = None
 
         self._train_data_pack_loader: DataPackLoader = \
@@ -111,32 +105,29 @@ class TrainPipeline:
                            config=self._config.data_pack.val_loader)
 
         self._user_request: Dict = request
+        self._feature_resource: Dict = {}
 
-        if self._config.pipeline.lazy_parse_request:
-            self._feature_resource: Dict = {}
-        else:
-            self._feature_resource: Dict = \
-                self._parse_request(self._feature_resource)
+        if not self._config.pipeline.lazy_parse_request:
+            self._parse_request(self._user_request)
 
-        self._device: device = torch.device(self._config.train.device)
+        if not self._config.pipeline.lazy_build_vocab:
+            assert not self._config.pipeline.lazy_parse_request
+            self._build_vocab()
 
     @staticmethod
     def default_configs():
         # Configs should be serializable
         return {
             "pipeline": {
-                "logging": True,
-                "lazy_parse_request": True
+                "lazy_parse_request": False,
+                "lazy_build_vocab": False,
+                "device": "cpu",
             },
             "data_pack": {
                 "train_loader": DataPackLoader.default_configs(),
                 "train_cache_dir": ".train_data_pack_cache",
                 "val_loader": DataPackLoader.default_configs(),
                 "val_cache_dir": ".val_data_pack_cache"
-            },
-            "train": {
-                "device": "cpu",
-                "num_epochs": 10,
             },
             "dataset": DataPackDataset.default_hparams()
         }
@@ -290,12 +281,8 @@ class TrainPipeline:
         return self._user_request
 
     @property
-    def num_epochs(self) -> int:
-        return self._config.train.num_epochs
-
-    @property
     def device(self) -> device:
-        return self._device
+        return torch.device(self._config.pipeline.device)
 
     @property
     def config(self) -> Config:
@@ -312,68 +299,40 @@ class TrainPipeline:
     def save_state(self, filename: str):
         torch.save(self.state, filename)
 
-    def run(self):
-        # Steps:
-        # 1. parse request
-        # 2. build vocab
-        # 3. for each train data pack, do:
-        #       extract + Caching -> Batching -> Padding
-        #       send batched & padded tensors to model_processor::train
-        # 4. for each val data pack, do:
-        #       copy -> Extract + Caching -> Batching -> Padding
-        #       send batched & padded tensors to predictor to get pred pack
-        #       send pred pack & orig pack to model_processor::evaluate_consume
-        # 5. Call model_processor::evaluate_finish
+    def get_train_pack_iterator(self) -> Iterator[DataPack]:
+        return self._train_data_pack_loader.load()
 
-        # Parse and validate data request
+    def get_val_pack_iterator(self) -> Iterator[DataPack]:
+        return self._val_data_pack_loader.load()
+
+    def get_train_batch_iterator(self) -> Iterator[Batch]:
         if self.config.pipeline.lazy_parse_request:
-            logger.info("Parse user request.")
             self._parse_request(self._user_request)
         else:
             assert self._feature_resource, "Feature recourse is not parsed"
 
-        logger.info("Build vocabulary.")
-        self._build_vocab()
+        if self._config.pipeline.lazy_build_vocab:
+            self._build_vocab()
+        else:
+            assert self._feature_resource, "Feature recourse is not parsed"
 
-        # Model can only be initialized after here as it needs the built vocab
-        schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
-
-        # Setup
-        logger.info("Setup pipeline")
-        self._model_processor.setup(schemes)
-
-        if self._config.pipeline.evaluate:
-            self._predictor = Predictor(
-                batch_size=self._config.dataset.batch_size,
-                model_processor=self._model_processor,
-                feature_resource=self._feature_resource,
-                cross_pack=False)
-
-        train_iterator = \
+        dataset_iter = \
             self._build_dataset_iterator(self._train_data_pack_loader)
 
-        logger.info("Start training.")
-        epoch = 0
-        while epoch < self.num_epochs:
-            logger.info("Epoch: %s", epoch)
-            epoch += 1
+        return iter(dataset_iter)
 
-            for batch in tqdm(train_iterator):
-                self._model_processor.train(batch)
+    def get_val_batch_iterator(self) -> Iterator[Batch]:
+        if self.config.pipeline.lazy_parse_request:
+            self._parse_request(self._user_request)
+        else:
+            assert self._feature_resource, "Feature recourse is not parsed"
 
-            self._model_processor.train_finish(epoch)
+        # Assume vocab is already built
 
-            # Evaluation will explicitly call loader to iterate over each
-            # data pack. The batching will be handled internally by predictor.
-            for orig_pack in tqdm(self._val_data_pack_loader.load()):
-                predicted_pack = orig_pack.view()
-                self._predictor.predict(predicted_pack)
-                self._model_processor.evaluate(predicted_pack,
-                                                       orig_pack)
+        dataset_iter = \
+            self._build_dataset_iterator(self._val_data_pack_loader)
 
-            self._model_processor.evaluate_finish(epoch)
-
-        self.finish()
+        return iter(dataset_iter)
 
     def finish(self):
         self._train_data_pack_loader.finish()
