@@ -42,9 +42,10 @@ class Mimic3DischargeNoteReader(PackReader):
             pack: DataPack = DataPack()
             description: str = row[self.description_col]
             text: str = row[self.text_col]
-            full_text = description + '\n' + text
+            delimiter = '\n-----------------\n'
+            full_text = description + delimiter + text
             pack.set_text(full_text)
 
             Description(pack, 0, len(description))
-            Body(pack, len(description) + 1, len(full_text))
+            Body(pack, len(description) + len(delimiter), len(full_text))
             yield pack

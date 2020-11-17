@@ -79,9 +79,18 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
 
         inputs = self.tokenizer(sentences, return_tensors="pt", padding=True)
         inputs = {key: value.to(self.device) for key, value in inputs.items()}
-        outputs = self.model(**inputs)[0].cpu().numpy()
-        score = np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True)
-        labels_idx = score.argmax(axis=-1)[:, 1:-1]  # Remove placeholders.
+
+        input_shape = inputs['input_ids'].shape
+        if input_shape[1] > 512:
+            # TODO: Temporarily work around the length problem.
+            #   The real solution should further split up the sentences to make
+            #   the sentences shorter.
+            labels_idx = inputs['input_ids'].new_full(
+                input_shape, 2, device='cpu')[:, 1:-1].numpy()
+        else:
+            outputs = self.model(**inputs)[0].cpu().numpy()
+            score = np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True)
+            labels_idx = score.argmax(axis=-1)[:, 1:-1]  # Remove placeholders.
 
         pred: Dict = {"Subword": {"ner": [], "tid": []}}
 

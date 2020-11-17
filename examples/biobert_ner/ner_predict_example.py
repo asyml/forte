@@ -23,8 +23,8 @@ from forte.pipeline import Pipeline
 from forte.processors.nltk_processors import NLTKSentenceSegmenter
 from ft.onto.base_ontology import Subword, Sentence, EntityMention
 
-from transformers_processor import BERTTokenizer
-from bio_ner_predictor import BioBERTNERPredictor
+from examples.biobert_ner.transformers_processor import BERTTokenizer
+from examples.biobert_ner.bio_ner_predictor import BioBERTNERPredictor
 
 config = yaml.safe_load(open("config.yml", "r"))
 
