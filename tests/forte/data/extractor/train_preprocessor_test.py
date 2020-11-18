@@ -79,15 +79,8 @@ class TrainPreprocessorTest(unittest.TestCase):
         self.evaluator = CoNLLNEREvaluator()
 
         self.tp_config = {
-            "data_pack": {
-                "train_loader": {
-                    "src_dir": self.config["train_path"],
-                    "cache": False
-                },
-                "val_loader": {
-                    "src_dir": self.config["val_path"],
-                    "cache": False
-                }
+            "preprocess": {
+                "pack_dir": self.config["train_path"]
             },
             "dataset": {
                 "batch_size": self.config["batch_size_tokens"]
@@ -96,7 +89,6 @@ class TrainPreprocessorTest(unittest.TestCase):
 
         self.train_preprocessor = \
             TrainPreprocessor(train_reader=self.reader,
-                              val_reader=self.reader,
                               request=self.tp_request,
                               config=self.tp_config)
 
@@ -147,8 +139,7 @@ class TrainPreprocessorTest(unittest.TestCase):
 
     def test_build_dataset_iterator(self):
         train_iterator = \
-            self.train_preprocessor._build_dataset_iterator(
-                self.train_preprocessor._train_data_pack_loader)
+            self.train_preprocessor._build_dataset_iterator()
 
         batchs = []
         for batch in train_iterator:
