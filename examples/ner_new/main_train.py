@@ -220,6 +220,7 @@ val_pl.add(evaluator)
 epoch = 0
 train_err: float = 0.0
 train_total: float = 0.0
+train_sentence_len_sum: int = 0
 val_scores: List = []
 output_file = "tmp_eval.txt"
 score_file = "tmp_eval.score"
@@ -242,17 +243,22 @@ while epoch < config.config_data.num_epochs:
 
         train_err += batch_train_err
         train_total += batch.batch_size
+        train_sentence_len_sum += torch.sum(batch["text_tag"]["mask"][0]).item()
 
-    logger.info("%dth Epoch training, train error rate: %f",
-                epoch, train_err / train_total)
+    logger.info(f"{epoch}th Epoch training, "
+                f"total number of examples: {train_total}, "
+                f"Average sentence length: "
+                f"{(train_sentence_len_sum / train_total):0.3f}, "
+                f"loss: {(train_err / train_total):0.3f}")
 
     train_err: float = 0.0
     train_total: float = 0.0
+    train_sentence_len_sum: int = 0
 
     val_pl.run(config.config_data.train_path)
 
-    logger.info("%dth Epoch evaluating, val result: %s",
-                epoch, evaluator.get_result())
+    logger.info(f"{epoch}th Epoch evaluating, "
+                f"val result: {evaluator.get_result()}")
 
 # Save training result to disk
 # train_pipeline.save_state(config.config_data.train_state_path)
