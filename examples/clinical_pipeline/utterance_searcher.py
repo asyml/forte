@@ -38,7 +38,7 @@ def create_links(url_stub: str, ids: List[int]) -> List[str]:
     url_stub: str = url_stub.strip('/')
     for temp_idm in ids:
         links.append(
-            f'<a href="{url_stub}/documents/{temp_idm}> Report #{temp_idm} </a>'
+            f'<a href={url_stub}/documents/{temp_idm}>Report #{temp_idm}</a>'
         )
     return links
 
@@ -52,7 +52,7 @@ class LastUtteranceSearcher(PackProcessor):
         if self.configs.query_result_project_id < 0:
             raise ProcessorConfigError("Query Result Project is not set.")
 
-        if os.path.exists(self.configs.stave_db_path):
+        if not os.path.exists(self.configs.stave_db_path):
             raise ProcessorConfigError(
                 f"Cannot find Stave DB at: {self.configs.stave_db_path}")
 
@@ -104,8 +104,9 @@ class LastUtteranceSearcher(PackProcessor):
                           "No results found. Please try another query.", 'ai')
         else:
             links: List[str] = create_links(self.configs.url_stub, answers)
-            response_text: str = "I found the following results: \n --" \
-                                 + "\n --".join(links)
+            response_text: str = "I found the following results: <br> -- " \
+                                 + "<br> -- ".join(links)
+            print(response_text)
 
             new_utterance(input_pack, response_text, 'ai')
 
