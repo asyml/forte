@@ -23,7 +23,6 @@ from typing import Optional, Dict, Type, Any, Union, Iterator
 
 from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
 from forte.data.types import DATA_OUTPUT
-from forte.data.extractor.data_pack_loader import DataPackLoader
 from forte.data.extractor.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.data.extractor.converter import Converter
@@ -44,12 +43,7 @@ class TrainPreprocessor:
     padded tensors.
 
     `TrainPreprocessor` will maintain a Config that stores all the configurable
-    parameters for various components. In addition, those
-    parameters are organized in a hierarchical way.
-
-    For example, at first level, it will contain: pipeline, data_pack and
-    dataset. The `default_config` will return the default value for all
-    configurable parameters.
+    parameters for various components.
 
     Particularly, the `dataset` config is exactly the same as what
     texar.torch.data.DatasetBase::default_config will return.
@@ -83,7 +77,6 @@ class TrainPreprocessor:
 
     def __init__(self,
                  train_reader: PackReader,
-                 val_reader: PackReader,
                  request: Dict,
                  config: Optional[Union[Config, Dict]] = None):
         self._config: Config = \
@@ -91,43 +84,29 @@ class TrainPreprocessor:
         self._validate_config()
 
         self._train_reader: PackReader = train_reader
-        self._val_reader: PackReader = val_reader
         self._predictor: Optional[Predictor] = None
-
-        self._train_data_pack_loader: DataPackLoader = \
-            DataPackLoader(reader=self._train_reader,
-                           cache_dir=self._config.data_pack.train_cache_dir,
-                           config=self._config.data_pack.train_loader)
-
-        self._val_data_pack_loader: DataPackLoader = \
-            DataPackLoader(reader=self._val_reader,
-                           cache_dir=self._config.data_pack.val_cache_dir,
-                           config=self._config.data_pack.val_loader)
 
         self._user_request: Dict = request
         self._feature_resource: Dict = {}
+        self._feature_resource_ready: bool = False
+        self._vocab_ready: bool = False
 
-        if not self._config.pipeline.lazy_parse_request:
+        if not self._config.preprocess.lazy_parse_request:
             self._parse_request(self._user_request)
 
-        if not self._config.pipeline.lazy_build_vocab:
-            assert not self._config.pipeline.lazy_parse_request
+        if not self._config.preprocess.lazy_build_vocab:
+            assert not self._config.preprocess.lazy_parse_request
             self._build_vocab()
 
     @staticmethod
     def default_configs():
         # Configs should be serializable
         return {
-            "pipeline": {
+            "preprocess": {
+                "pack_dir": "",
                 "lazy_parse_request": False,
                 "lazy_build_vocab": False,
                 "device": "cpu",
-            },
-            "data_pack": {
-                "train_loader": DataPackLoader.default_configs(),
-                "train_cache_dir": ".train_data_pack_cache",
-                "val_loader": DataPackLoader.default_configs(),
-                "val_cache_dir": ".val_data_pack_cache"
             },
             "dataset": DataPackDataset.default_hparams()
         }
@@ -242,25 +221,30 @@ class TrainPreprocessor:
                         format(based_on, dependent_extractor.tag)
 
         self._feature_resource["schemes"] = resource_schemes
+        self._feature_resource_ready = True
 
     def _build_vocab(self):
         scope: EntryType = self._feature_resource["scope"]
         schemes: Dict = self._feature_resource["schemes"]
 
         # TODO: clear vocab?
-        for data_pack in self._train_data_pack_loader.load():
+        for data_pack in \
+                self._train_reader.iter(self._config.preprocess.pack_dir):
             for instance in data_pack.get(scope):
                 for tag, scheme in schemes.items():
                     extractor: BaseExtractor = scheme["extractor"]
                     extractor.update_vocab(data_pack, instance)
 
-    def _build_dataset_iterator(self, data_pack_loader: DataPackLoader) \
+        self._vocab_ready = True
+
+    def _build_dataset_iterator(self) \
             -> DataIterator:
         scope: Type[EntryType] = self._feature_resource["scope"]
         schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
 
         data_source = \
-            DataPackDataSource(data_pack_loader=data_pack_loader,
+            DataPackDataSource(reader=self._train_reader,
+                               pack_dir=self._config.preprocess.pack_dir,
                                context_type=scope,
                                request={scope: []})
 
@@ -274,6 +258,8 @@ class TrainPreprocessor:
 
     @property
     def feature_resource(self) -> Dict:
+        if not self._feature_resource_ready:
+            self._parse_request(self._user_request)
         return self._feature_resource
 
     @property
@@ -282,7 +268,7 @@ class TrainPreprocessor:
 
     @property
     def device(self) -> device:
-        return torch.device(self._config.pipeline.device)
+        return torch.device(self._config.preprocess.device)
 
     @property
     def config(self) -> Config:
@@ -299,44 +285,21 @@ class TrainPreprocessor:
     def save_state(self, filename: str):
         torch.save(self.state, filename)
 
-    def get_train_pack_iterator(self) -> Iterator[DataPack]:
-        return self._train_data_pack_loader.load()
-
-    def get_val_pack_iterator(self) -> Iterator[DataPack]:
-        return self._val_data_pack_loader.load()
-
     def get_train_batch_iterator(self) -> Iterator[Batch]:
-        if self.config.pipeline.lazy_parse_request:
+        if self._config.preprocess.lazy_parse_request:
             self._parse_request(self._user_request)
         else:
-            assert self._feature_resource, "Feature recourse is not parsed"
+            assert self._feature_resource_ready, \
+                "Feature recourse is not parsed"
 
-        if self._config.pipeline.lazy_build_vocab:
+        if self._config.preprocess.lazy_build_vocab:
             self._build_vocab()
         else:
-            assert self._feature_resource, "Feature recourse is not parsed"
+            assert self._vocab_ready, "Vocab is not built"
 
-        dataset_iter = \
-            self._build_dataset_iterator(self._train_data_pack_loader)
-
-        return iter(dataset_iter)
-
-    def get_val_batch_iterator(self) -> Iterator[Batch]:
-        if self.config.pipeline.lazy_parse_request:
-            self._parse_request(self._user_request)
-        else:
-            assert self._feature_resource, "Feature recourse is not parsed"
-
-        # Assume vocab is already built
-
-        dataset_iter = \
-            self._build_dataset_iterator(self._val_data_pack_loader)
+        dataset_iter = self._build_dataset_iterator()
 
         return iter(dataset_iter)
-
-    def finish(self):
-        self._train_data_pack_loader.finish()
-        self._val_data_pack_loader.finish()
 
 
 def unpadder_selector(encode_strategy: str) -> Type[BaseUnpadder]:
