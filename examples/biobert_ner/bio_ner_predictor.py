@@ -115,10 +115,15 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
         last_idx = entity_groups_disagg[-1]['idx']
         last_tid = entity_groups_disagg[-1]['tid']
 
-        while last_idx < len(tids) and data_pack.get_entry(last_tid + 1) \
-                .is_subword:
-            last_idx += 1
-            last_tid += 1
+        # TODO: this piece of code guesses the internal id assignment, this
+        #  could be unstable. Temporary work around.
+        try:
+            while last_idx < len(tids) and data_pack.get_entry(last_tid + 1) \
+                    .is_subword:
+                last_idx += 1
+                last_tid += 1
+        except KeyError:
+            print('Encounter get entry error.')
 
         return first_tid, last_tid
 
@@ -168,7 +173,6 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
             tids = output_dict["Subword"]["tid"][i]
             labels = output_dict["Subword"]["ner"][i]
 
-            entities = []
             # Filter to labels not in `self.ignore_labels`
             entities = [dict(idx=idx, label=label, tid=tid)
                         for idx, (label, tid) in enumerate(zip(labels, tids))
