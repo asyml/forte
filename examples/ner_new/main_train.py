@@ -16,6 +16,8 @@ from typing import Iterator, Dict, List
 
 import numpy as np
 import torch
+from forte.pipeline import Pipeline
+
 from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
 
 from forte.data.extractor.predictor import Predictor
@@ -40,6 +42,7 @@ from ft.onto.base_ontology import Sentence, Token, EntityMention
 logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
+
 
 def construct_word_embedding_table(embed_dict, extractor: BaseExtractor):
     embedding_dim = list(embed_dict.values())[0].shape[-1]
@@ -113,7 +116,7 @@ def train(batch: Batch):
     return batch_train_err
 
 
-def predict(batch: Dict) -> Dict:
+def predict_forward_fn(model: nn.Module, batch: Dict) -> Dict:
     word = batch["text_tag"]["tensor"]
     char = batch["char_tag"]["tensor"]
     word_masks = batch["text_tag"]["mask"][0]
@@ -176,26 +179,19 @@ tp_request = {
 # Default settings can be found here:
 # https://texar-pytorch.readthedocs.io/en/latest/code/data.html#texar.torch.data.DatasetBase.default_hparams
 tp_config = {
-    "pipeline": {
+    "preprocess": {
+        "pack_dir": config.config_data.train_path,
         "device": device.type
-    },
-    "data_pack": {
-        "train_loader": {
-            "src_dir": config.config_data.train_path
-        },
-        "val_loader": {
-            "src_dir": config.config_data.val_path
-        }
     },
     "dataset": {
         "batch_size": config.config_data.batch_size_tokens
     }
 }
 
-ner_reader = CoNLL03Reader()
+ner_train_reader = CoNLL03Reader(cache_in_memory=True)
+ner_val_reader = CoNLL03Reader(cache_in_memory=True)
 
-train_preprocessor = TrainPreprocessor(train_reader=ner_reader,
-                                       val_reader=ner_reader,
+train_preprocessor = TrainPreprocessor(train_reader=ner_train_reader,
                                        request=tp_request,
                                        config=tp_config)
 
@@ -211,11 +207,15 @@ optim: Optimizer = SGD(model.parameters(),
 
 predictor = Predictor(batch_size=train_preprocessor.config.dataset.batch_size,
                       pretrain_model=model,
-                      predict_forward_fn=predict,
+                      predict_forward_fn=predict_forward_fn,
                       feature_resource=train_preprocessor.feature_resource,
                       cross_pack=False)
-
 evaluator = CoNLLNEREvaluator()
+
+val_pl = Pipeline()
+val_pl.set_reader(ner_val_reader)
+val_pl.add(predictor)
+val_pl.add(evaluator)
 
 epoch = 0
 train_err: float = 0.0
@@ -229,6 +229,10 @@ logger.info("Start training.")
 while epoch < config.config_data.num_epochs:
     epoch += 1
 
+    # TODO: For training, we need to do shuffle batch across all data packs.
+    #       This is not naturally supported by Forte pipeline which assumes
+    #       processing one data pack at a time.
+    #       Any way to make use of Forte pipeline for training as well?
     # Get iterator of preprocessed batch of train data
     train_batch_iter: Iterator[Batch] = \
         train_preprocessor.get_train_batch_iterator()
@@ -245,23 +249,11 @@ while epoch < config.config_data.num_epochs:
     train_err: float = 0.0
     train_total: float = 0.0
 
-    # TODO: check how forte pipeline catch golden truth pack
-    # TODO: should we directly use prediction pipeline instead of explicitly
-    #       call to val_pack_iter?
-    # Get iterator of val data pack
-    # val_pack_iter: Iterator[DataPack] = \
-    #     train_preprocessor.get_val_pack_iterator()
-    #
-    # for orig_pack in tqdm(val_pack_iter):
-    #     predicted_pack = orig_pack.view()
-    #     predictor.predict(predicted_pack)
-    #     evaluator.consume_next(predicted_pack, orig_pack)
-    #
-    # val_result = evaluator.get_result()
-    # logger.info("%dth Epoch evaluating, val result: %s", val_result)
+    val_pl.run(config.config_data.train_path)
+
+    logger.info("%dth Epoch evaluating, val result: %s",
+                epoch, evaluator.get_result())
 
 # Save training result to disk
 # train_pipeline.save_state(config.config_data.train_state_path)
 # torch.save(ner_model_processor, config.config_model.model_path)
-
-train_preprocessor.finish()

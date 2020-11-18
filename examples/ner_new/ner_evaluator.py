@@ -74,7 +74,7 @@ class CoNLLNEREvaluator(Evaluator):
         self.test_component = CoNLLNERPredictor().name
         self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
-        self.scores = []
+        self.scores = {}
 
     def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
         pred_getdata_args = {
@@ -119,14 +119,12 @@ class CoNLLNEREvaluator(Evaluator):
             recall = float(fields[2].split(":")[1].strip()[:-1])
             f1 = float(fields[3].split(":")[1].strip())
 
-        val_score = {
+        self.scores = {
             "accuracy": acc,
             "precision": precision,
             "recall": recall,
             "f1": f1,
         }
-
-        self.scores.append(val_score)
 
     def get_result(self):
         return self.scores
