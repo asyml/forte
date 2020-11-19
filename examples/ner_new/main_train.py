@@ -24,9 +24,10 @@ from tqdm import tqdm
 import yaml
 
 from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
+from forte.models.ner.utils import load_glove_embedding
+from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.pipeline import Pipeline
 from forte.data.extractor.predictor import Predictor
-from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.data.extractor.extractor import \
@@ -72,9 +73,8 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
     #     load_glove_embedding(config.config_preprocessor.embedding_path)
     #
     # for word in embedding_dict:
-    #     if not text_extractor.contains(word):
-    #         text_extractor.add_entry(word)
-    #
+    #     if not text_extractor.has_key(word):
+    #         text_extractor.add(word)
 
     # TODO: temporarily make fake pretrained emb for debugging
     embedding_dict = {}
