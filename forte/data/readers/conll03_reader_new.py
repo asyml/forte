@@ -63,7 +63,8 @@ class CoNLL03Reader(PackReader):
         for line in doc:
             line = line.strip()
 
-            if line != "" and not line.startswith("#"):
+            if line != "" and not line.startswith("#") and \
+                line.find("DOCSTART") == -1:
                 conll_components = line.split()
 
                 word = conll_components[0]
