@@ -129,7 +129,7 @@ class Predictor(BaseProcessor):
     '''This class will predict using the passed in model and add output
     back to the datapack.
     '''
-    def __init__(self, batch_size: int, pretrain_model: Module,
+    def __init__(self, batch_size: int, model: Module,
             predict_forward_fn: Callable, feature_resource: Dict,
             cross_pack=True):
         super().__init__()
@@ -137,7 +137,7 @@ class Predictor(BaseProcessor):
         self.batcher = Batcher(batch_size=batch_size,
                                 feature_resource=feature_resource,
                                 cross_pack=cross_pack)
-        self.pretrain_model = pretrain_model
+        self.model = model
         self.predict_forward_fn = predict_forward_fn
 
     def unpad(self, predictions: Dict, packs: List[DataPack],
@@ -163,7 +163,7 @@ class Predictor(BaseProcessor):
     def predict(self, input_pack: DataPack):
         for tensor_collection, packs, instances in \
                                 self.batcher.yield_batch(input_pack):
-            predictions = self.predict_forward_fn(self.pretrain_model,
+            predictions = self.predict_forward_fn(self.model,
                                                     tensor_collection)
             predictions = self.unpad(predictions, packs, instances)
             self.add_to_pack(predictions, packs, instances)
@@ -187,7 +187,7 @@ class Predictor(BaseProcessor):
 
     def flush(self):
         for tensor_collection, packs, instances in self.batcher.flush_batch():
-            predictions = self.predict_forward_fn(self.pretrain_model,
+            predictions = self.predict_forward_fn(self.model,
                                                     tensor_collection)
             predictions = self.unpad(predictions, packs, instances)
             self.add_to_pack(predictions, packs, instances)
