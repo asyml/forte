@@ -19,6 +19,7 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.extractor.vocabulary import Vocabulary
 from forte.data.extractor.feature import Feature
+from forte.data.extractor.utils import bio_tagging
 
 
 class BaseExtractor(ABC):
@@ -37,7 +38,7 @@ class BaseExtractor(ABC):
         defaults = {
             "entry_type": None,
             "vocab_use_pad": True,
-            "vocab_use_unk": False,
+            "vocab_use_unk": True,
             "vocab_method": "indexing",
             "vocab_predefined": None
             }
@@ -62,6 +63,15 @@ class BaseExtractor(ABC):
 
     def size(self) -> int:
         return len(self.vocab)
+
+    def add(self, element: Any):
+        self.vocab.add(element)
+
+    def has_key(self, element: Any):
+        return self.vocab.has_key(element)
+
+    def id2element(self, idx:int):
+        return self.vocab.id2element(idx)
 
     def predefined_vocab(self, predefined: set):
         '''This function will add elements from the passed-in predefined
@@ -200,48 +210,6 @@ class BioSeqTaggingExtractor(BaseExtractor):
     def bio_variance(self, tag):
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
-    def bio_tag(self, instance_based_on, instance_entry):
-        tagged = []
-        cur_entry_id = 0
-        prev_entry_id = None
-        cur_based_on_id = 0
-
-        while cur_based_on_id < len(instance_based_on):
-            base_begin = instance_based_on[cur_based_on_id].begin
-            base_end = instance_based_on[cur_based_on_id].end
-
-            if cur_entry_id < len(instance_entry):
-                entry_begin = instance_entry[cur_entry_id].begin
-                entry_end = instance_entry[cur_entry_id].end
-            else:
-                lastone = len(instance_based_on) - 1
-                entry_begin = instance_based_on[lastone].end + 1
-                entry_end = instance_based_on[lastone].end + 1
-
-            if base_end < entry_begin:
-                # Base: [...]
-                # Entry       [....]
-                tagged.append((None, "O"))
-                prev_entry_id = None
-                cur_based_on_id += 1
-            elif base_begin >= entry_begin and base_end <= entry_end:
-                # Base:    [...]
-                # Entry:  [.......]
-                if prev_entry_id == cur_entry_id:
-                    tagged.append((instance_entry[cur_entry_id], "I"))
-                else:
-                    tagged.append((instance_entry[cur_entry_id], "B"))
-                prev_entry_id = cur_entry_id
-                cur_based_on_id += 1
-            elif base_begin > entry_end:
-                # Base:         [...]
-                # Entry: [....]
-                cur_entry_id += 1
-            else:
-                raise AssertionError("Unconsidered case. The entry is \
-                            within the span of based-on entry.")
-        return tagged
-
     def predefined_vocab(self, predefined: set):
         for tag in predefined:
             for element in self.bio_variance(tag):
@@ -256,7 +224,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
         instance_based_on = list(pack.get(self.config.based_on, instance))
         instance_entry = list(pack.get(self.config.entry_type, instance))
-        instance_tagged = self.bio_tag(instance_based_on, instance_entry)
+        instance_tagged = bio_tagging(instance_based_on, instance_entry)
 
         data = []
         for pair in instance_tagged:
