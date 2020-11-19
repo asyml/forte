@@ -18,7 +18,7 @@ from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.predictor import Predictor
 from ft.onto.base_ontology import Sentence, EntityMention
-from ner_evaluator import CoNLLNEREvaluator
+from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
 
 def predict_forward_fn(model, batch):
     word = batch["text_tag"]["tensor"]
