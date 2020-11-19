@@ -18,52 +18,41 @@ from pathlib import Path
 from forte.data.data_pack import DataPack
 from forte.evaluation.base import Evaluator
 from forte.processors.ner_predictor import CoNLLNERPredictor
+from forte.data.extractor.utils import bio_tagging
 from ft.onto.base_ontology import Sentence, Token, EntityMention
 
 
-# TODO: generalize this class to be Forte library code
+def _post_edit(element):
+    if element[0] is None:
+        return "O"
+    return "%s-%s" % (element[1], element[0].ner_type)
+
+def _get_tag(data, pack):
+    based_on = [pack.get_entry(x) for x in data["Token"]['tid']]
+    entry = [pack.get_entry(x) for x in data["EntityMention"]['tid']]
+    tag = bio_tagging(based_on, entry)
+    tag = [_post_edit(x) for x in tag]
+    return tag
 
 def _write_tokens_to_file(pred_pack, pred_request,
                           refer_pack, refer_request,
                           output_filename):
     opened_file = open(output_filename, "w+")
-    for pred_sentence, tgt_sentence in zip(
-            pred_pack.get_data(**pred_request),
-            refer_pack.get_data(**refer_request)
+    for pred_data, refer_data in zip(
+        pred_pack.get_data(**pred_request),
+        refer_pack.get_data(**refer_request)
     ):
+        pred_tag = _get_tag(pred_data, pred_pack)
+        refer_tag = _get_tag(refer_data, refer_pack)
+        words = refer_data["Token"]["text"]
+        pos = refer_data["Token"]["pos"]
+        chunk = refer_data["Token"]["chunk"]
 
-        pred_entity_mention, tgt_entity_mention = \
-            pred_sentence["EntityMention"], tgt_sentence["EntityMention"]
-        tgt_tokens = tgt_sentence["Token"]
-
-        tgt_ptr, pred_ptr = 0, 0
-
-        for i in range(len(tgt_tokens["text"])):
-            w = tgt_tokens["text"][i]
-            p = tgt_tokens["pos"][i]
-            ch = tgt_tokens["chunk"][i]
-            # TODO: This is not correct and probably we need a utility to do
-            #       BIO encoding to get ner_type?
-            if tgt_ptr < len(tgt_entity_mention["span"]) and \
-                    (tgt_entity_mention["span"][tgt_ptr] ==
-                     tgt_tokens["span"][i]).all():
-                tgt = tgt_entity_mention["ner_type"][tgt_ptr]
-                tgt_ptr += 1
-            else:
-                tgt = "O"
-
-            if pred_ptr < len(pred_entity_mention["span"]) and \
-                    (pred_entity_mention["span"][pred_ptr] ==
-                     tgt_tokens["span"][i]).all():
-                pred = pred_entity_mention["ner_type"][pred_ptr]
-                pred_ptr += 1
-            else:
-                pred = "O"
-
+        for i, (w, p, ch, tgt, pred) in enumerate(zip(words, pos, chunk,
+                                            refer_tag, pred_tag)):
             opened_file.write(
-                "%d %s %s %s %s %s\n" % (i + 1, w, p, ch, tgt, pred)
+                "%d %s %s %s %s %s\n" % (i, w, p, ch, tgt, pred)
             )
-
         opened_file.write("\n")
     opened_file.close()
 
@@ -80,11 +69,14 @@ class CoNLLNEREvaluator(Evaluator):
         pred_getdata_args = {
             "context_type": Sentence,
             "request": {
+                Token: {
+                    "fields": ["chunk", "pos"]
+                },
                 EntityMention: {
                     "fields": ["ner_type"],
                 },
                 Sentence: [],  # span by default
-            },
+            }
         }
 
         refer_getdata_args = {
@@ -101,10 +93,10 @@ class CoNLLNEREvaluator(Evaluator):
         }
 
         _write_tokens_to_file(pred_pack=pred_pack,
-                              pred_request=pred_getdata_args,
-                              refer_pack=refer_pack,
-                              refer_request=refer_getdata_args,
-                              output_filename=self.output_file)
+                                pred_request=pred_getdata_args,
+                                refer_pack=refer_pack,
+                                refer_request=refer_getdata_args,
+                                output_filename=self.output_file)
         eval_script = \
             Path(os.path.abspath(__file__)).parents[2] / \
             "forte/utils/eval_scripts/conll03eval.v2"
