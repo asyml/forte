@@ -49,7 +49,7 @@ def _write_tokens_to_file(pred_pack, pred_request,
         chunk = refer_data["Token"]["chunk"]
 
         for i, (w, p, ch, tgt, pred) in enumerate(zip(words, pos, chunk,
-                                            refer_tag, pred_tag)):
+                                            refer_tag, pred_tag), 1):
             opened_file.write(
                 "%d %s %s %s %s %s\n" % (i, w, p, ch, tgt, pred)
             )
