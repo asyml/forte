@@ -18,6 +18,7 @@ from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.predictor import Predictor
 from ft.onto.base_ontology import Sentence, EntityMention
+from ner_evaluator import CoNLLNEREvaluator
 
 def predict_forward_fn(model, batch):
     word = batch["text_tag"]["tensor"]
@@ -28,15 +29,16 @@ def predict_forward_fn(model, batch):
     return {'ner_tag': output}
 
 config_predict = yaml.safe_load(open("configs/config_predict.yml", "r"))
-pretrain_model = torch.load(config_predict['model_path'])
+model = torch.load(config_predict['model_path'])
 train_state = torch.load(config_predict['train_state_path'])
 
 pl = Pipeline()
 pl.set_reader(CoNLL03Reader())
 pl.add(Predictor(batch_size=config_predict['batch_size'],
-                pretrain_model = pretrain_model,
+                model = model,
                 predict_forward_fn = predict_forward_fn,
                 feature_resource = train_state['feature_resource']))
+pl.add(CoNLLNEREvaluator())
 pl.initialize()
 
 
