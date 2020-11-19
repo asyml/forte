@@ -42,14 +42,16 @@ class BackTranslationOp(TextReplacementOp):
             configs['model_to'],
             class_args={
                 "src_lang": configs['src_language'],
-                "tgt_lang": configs['tgt_language']
+                "tgt_lang": configs['tgt_language'],
+                "device": configs["device"]
             }
         )
         self.model_back = create_class_with_kwargs(
             configs['model_back'],
             class_args={
                 "src_lang": configs['tgt_language'],
-                "tgt_lang": configs['src_language']
+                "tgt_lang": configs['src_language'],
+                "device": configs["device"]
             }
         )
 

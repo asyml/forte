@@ -33,10 +33,12 @@ class MachineTranslator:
     Args:
         - src_lang: The source language.
         - tgt_lang: The target language.
+        - device: "cuda" for gpu, "cpu" otherwise.
     """
-    def __init__(self, src_lang: str, tgt_lang: str):
+    def __init__(self, src_lang: str, tgt_lang: str, device: str):
         self.src_lang: str = src_lang
         self.tgt_lang: str = tgt_lang
+        self.device = device
 
     @abstractmethod
     def translate(self, src_text: str) -> str:
@@ -56,17 +58,23 @@ class MarianMachineTranslator(MachineTranslator):
     (https://huggingface.co/transformers/model_doc/marian.html).
     Please refer to their doc for supported languages.
     """
-    def __init__(self, src_lang: str = 'en', tgt_lang: str = 'fr'):
-        super().__init__(src_lang, tgt_lang)
+    def __init__(
+            self,
+            src_lang: str = 'en',
+            tgt_lang: str = 'fr',
+            device: str = "cpu"
+    ):
+        super().__init__(src_lang, tgt_lang, device)
         self.model_name = 'Helsinki-NLP/opus-mt-{src}-{tgt}'.format(
             src=src_lang, tgt=tgt_lang
         )
         self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
         self.model = MarianMTModel.from_pretrained(self.model_name)
+        self.model = self.model.to(self.device)
 
     def translate(self, src_text: str) -> str:
         translated: List[str] = self.model.generate(
-            **self.tokenizer.prepare_seq2seq_batch([src_text])
+            **self.tokenizer.prepare_seq2seq_batch([src_text]).to(self.device)
         )
         tgt_texts: List[str] = [
             self.tokenizer.decode(t, skip_special_tokens=True)

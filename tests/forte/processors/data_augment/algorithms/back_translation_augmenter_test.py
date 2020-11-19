@@ -35,6 +35,7 @@ class TestBackTranslationAugmenter(unittest.TestCase):
                 "model_back": model_class_name,
                 "src_language": "en",
                 "tgt_language": "fr",
+                "device": "cpu"
             }
         )
 
