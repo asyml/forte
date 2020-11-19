@@ -16,21 +16,17 @@ from typing import Iterator, Dict, List
 
 import numpy as np
 import torch
-from forte.pipeline import Pipeline
-
-from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
-
-from forte.data.extractor.predictor import Predictor
-from forte.data.data_pack import DataPack
-
-from forte.models.ner.model_factory import BiRecurrentConvCRF
-from texar.torch.data import Batch
 from torch import nn
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
+from texar.torch.data import Batch
 from tqdm import tqdm
 import yaml
 
+from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
+from forte.pipeline import Pipeline
+from forte.data.extractor.predictor import Predictor
+from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.data.extractor.extractor import \
@@ -149,7 +145,6 @@ tp_request = {
             "entry_type": Token,
             "repr": "text_repr",
             "conversion_method": "indexing",
-            "vocab_use_pad": True,
             "type": DATA_INPUT,
             "extractor": TextExtractor
         },
@@ -158,7 +153,6 @@ tp_request = {
             "repr": "char_repr",
             "conversion_method": "indexing",
             "max_char_length": config.config_data.max_char_length,
-            "vocab_use_pad": True,
             "type": DATA_INPUT,
             "extractor": CharExtractor
         },
@@ -168,7 +162,6 @@ tp_request = {
             "based_on": Token,
             "strategy": "BIO",
             "vocab_method": "indexing",
-            "vocab_use_pad": True,
             "type": DATA_OUTPUT,
             "extractor": BioSeqTaggingExtractor
         }
@@ -206,7 +199,7 @@ optim: Optimizer = SGD(model.parameters(),
                        nesterov=True)
 
 predictor = Predictor(batch_size=train_preprocessor.config.dataset.batch_size,
-                      pretrain_model=model,
+                      model=model,
                       predict_forward_fn=predict_forward_fn,
                       feature_resource=train_preprocessor.feature_resource,
                       cross_pack=False)
@@ -255,7 +248,7 @@ while epoch < config.config_data.num_epochs:
     train_total: float = 0.0
     train_sentence_len_sum: int = 0
 
-    val_pl.run(config.config_data.train_path)
+    val_pl.run(config.config_data.val_path)
 
     logger.info(f"{epoch}th Epoch evaluating, "
                 f"val result: {evaluator.get_result()}")
