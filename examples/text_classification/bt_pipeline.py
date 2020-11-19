@@ -66,7 +66,7 @@ def main(argv=None):
                 "model_to": model_class_name,
                 "model_back": model_class_name,
                 "src_language": "en",
-                "tgt_language": "fr",
+                "tgt_language": "de",
             }
         },
     }
@@ -87,7 +87,7 @@ def main(argv=None):
         "train": os.path.join(output_path, "train.csv"),
         "test": os.path.join(output_path, "test.csv")
     }
-    labels = ["pos", "neg"]
+
     headers = ["content", "label", "id"]
 
     for split in ["train", "test"]:
