@@ -1,4 +1,5 @@
 import sys
+import time
 
 import yaml
 from mimic3_note_reader import Mimic3DischargeNoteReader
@@ -33,14 +34,15 @@ def main(input_path: str, output_path: str, max_packs: int = -1):
             'indent': 2,
             'overwrite': True,
             'drop_record': True,
+            'zip_pack': True
         }
     )
 
     pl.initialize()
 
     for idx, pack in enumerate(pl.process_dataset(input_path)):
-        if (idx + 1) % 10 == 0:
-            print(f"Processed {idx + 1} packs")
+        if (idx + 1) % 50 == 0:
+            print(f"{time.strftime('%m-%d %H:%M')}: Processed {idx + 1} packs")
 
 
 main(sys.argv[1], sys.argv[2], int(sys.argv[3]))

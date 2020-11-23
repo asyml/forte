@@ -1,15 +1,14 @@
+import os
 import logging
-from typing import Dict, Any, Optional
+import sqlite3
+from typing import Dict, Any, Optional, List
 
-from forte.common import Resources
+from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.indexers import ElasticSearchIndexer
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance
-
-
-# pylint: disable=attribute-defined-outside-init
 
 
 def new_utterance(input_pack: DataPack, text: str, speaker: str):
@@ -23,10 +22,39 @@ def new_utterance(input_pack: DataPack, text: str, speaker: str):
     u.speaker = speaker
 
 
+def sqlite_insert(conn, table, row):
+    cols: str = ', '.join('"{}"'.format(col) for col in row.keys())
+    vals: str = ', '.join(':{}'.format(col) for col in row.keys())
+    sql: str = 'INSERT INTO "{0}" ({1}) VALUES ({2})'.format(table, cols, vals)
+    cursor = conn.cursor()
+    cursor.execute(sql, row)
+    conn.commit()
+    return cursor.lastrowid
+
+
+def create_links(url_stub: str, ids: List[int]) -> List[str]:
+    links: List[str] = []
+
+    url_stub: str = url_stub.strip('/')
+    for temp_idm in ids:
+        links.append(
+            f'<a href={url_stub}/documents/{temp_idm}>Report #{temp_idm}</a>'
+        )
+    return links
+
+
 class LastUtteranceSearcher(PackProcessor):
+    # pylint: disable=attribute-defined-outside-init
+
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self.index = ElasticSearchIndexer(self.configs.indexer.hparams)
+        if self.configs.query_result_project_id < 0:
+            raise ProcessorConfigError("Query Result Project is not set.")
+
+        if not os.path.exists(self.configs.stave_db_path):
+            raise ProcessorConfigError(
+                f"Cannot find Stave DB at: {self.configs.stave_db_path}")
 
     def _process(self, input_pack: DataPack):
         # Make sure we take the last utterance from the user.
@@ -55,6 +83,9 @@ class LastUtteranceSearcher(PackProcessor):
         results = self.index.search(query_value)
         hits = results["hits"]["hits"]
 
+        conn = sqlite3.connect(self.configs.stave_db_path)
+
+        answers = []
         for idx, hit in enumerate(hits):
             source = hit["_source"]
             # The raw pack string and pack id (not database id)
@@ -62,7 +93,22 @@ class LastUtteranceSearcher(PackProcessor):
             pack_id: str = source["doc_id"]
 
             # Now you can write the pack into the database, and generate url.
-            print(pack_id)
+            item = {"name": f"clinical_results_{idx}",
+                    "textPack": raw_pack_str, "project_id": 5}
+            db_id = sqlite_insert(conn, 'nlpviewer_backend_document', item)
+            answers += [db_id]
+            print(pack_id, db_id)
+
+        if len(answers) == 0:
+            new_utterance(input_pack,
+                          "No results found. Please try another query.", 'ai')
+        else:
+            links: List[str] = create_links(self.configs.url_stub, answers)
+            response_text: str = "I found the following results: <br> -- " \
+                                 + "<br> -- ".join(links)
+            print(response_text)
+
+            new_utterance(input_pack, response_text, 'ai')
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -77,6 +123,9 @@ class LastUtteranceSearcher(PackProcessor):
                     "request_timeout": 10,
                     "refresh": False
                 }
-            }
+            },
+            "stave_db_path": "~/projects/stave/simple-backend/db.sqlite3",
+            "url_stub": "http://localhost:3000",
+            "query_result_project_id": -1
         })
         return config
