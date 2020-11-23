@@ -90,9 +90,13 @@ class Subword(Annotation):
     """
     Used to represent subword tokenization results.
     """
+    is_subword: Optional[bool]
+    ner: Optional[str]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
+        self.is_subword: Optional[bool] = None
+        self.ner: Optional[str] = None
 
 
 @dataclass

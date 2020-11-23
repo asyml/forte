@@ -53,7 +53,8 @@ setuptools.setup(
                      'torch>=1.5.0,<1.6.0'],
         'cliner': ['marisa-trie==0.7.4', 'scipy==1.5.0',
                    'scikit-learn==0.23.1', 'repoze.lru==0.7',
-                   'tensorflow-gpu==1.12.0', 'python-crfsuite==0.9.7']
+                   'tensorflow-gpu==1.12.0', 'python-crfsuite==0.9.7'],
+        'augment': ['elasticsearch==7.5.1']
     },
     entry_points={
         'console_scripts': [

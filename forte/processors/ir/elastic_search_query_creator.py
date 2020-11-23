@@ -15,8 +15,6 @@
 # pylint: disable=attribute-defined-outside-init
 from typing import Any, Dict, Tuple
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base import QueryProcessor
@@ -35,10 +33,6 @@ class ElasticSearchQueryCreator(QueryProcessor):
     def __init__(self) -> None:
         super().__init__()
 
-    def initialize(self, resources: Resources, configs: Config):
-        self.resource = resources
-        self.config = configs
-
     def _build_query(self, text: str) -> Dict[str, Any]:
         r"""Constructs Elasticsearch query that will be consumed by
         Elasticsearch processor.
@@ -50,8 +44,8 @@ class ElasticSearchQueryCreator(QueryProcessor):
                 :meth:`ElasticSearchQueryCreator::initialize`. If `config` does
                 not contain the key `field`, we will set it to "content"
         """
-        size = self.config.size or 1000
-        field = self.config.field or "content"
+        size = self.configs.size or 1000
+        field = self.configs.field or "content"
         return {"query": {"match": {field: text}}, "size": size}
 
     @classmethod
@@ -66,6 +60,6 @@ class ElasticSearchQueryCreator(QueryProcessor):
 
     def _process_query(self, input_pack: MultiPack) -> \
             Tuple[DataPack, Dict[str, Any]]:
-        query_pack = input_pack.get_pack(self.config.query_pack_name)
+        query_pack = input_pack.get_pack(self.configs.query_pack_name)
         query = self._build_query(text=query_pack.text)
         return query_pack, query
