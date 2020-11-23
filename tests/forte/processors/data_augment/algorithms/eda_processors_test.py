@@ -61,9 +61,9 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             with open(file_path, 'w') as f:
                 f.write(text)
 
-        expected_text = "Mary early Samantha arrived at the bus station and but waited until for noon the .bus\n"
+        expected_text = "Mary early Samantha arrived at the bus station and but waited until for noon the bus.\n"
         expected_tokens = ['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'and', 'but',
-                           'waited', 'until', 'for', 'noon', 'the', '.', 'bus']
+                           'waited', 'until', 'for', 'noon', 'the', 'bus', '.']
 
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
@@ -75,7 +75,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 "policy": ["auto_align", "auto_align"],
             },
             "kwargs": {},
-            'n': 3,
+            'alpha': 0.1,
         }
 
         swap_processor = RandomSwapDataAugmentProcessor()
@@ -116,9 +116,9 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 f.write(text)
 
         expected_text = \
-            "await Mary and Samantha arrived at the bus station early station but waited until noon for the bus.\n"
+            "await Mary and Samantha arrived at the bus station early but waited until noon for the bus.\n"
         expected_tokens = ['await ', 'Mary', 'and', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'early',
-                           ' station', 'but', 'waited', 'until', 'noon', 'for', 'the', 'bus', '.']
+                           'but', 'waited', 'until', 'noon', 'for', 'the', 'bus', '.']
 
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
@@ -141,7 +141,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                     "lang": "eng",
                 }
             },
-            'n': 2,
+            'alpha': 0.1,
         }
 
         insert_processor = RandomInsertionDataAugmentProcessor()
@@ -194,7 +194,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 ],
                 "policy": ["auto_align", "auto_align"],
             },
-            "prob": 0.5,
+            "alpha": 0.5,
         }
 
         delete_processor = RandomDeletionDataAugmentProcessor()

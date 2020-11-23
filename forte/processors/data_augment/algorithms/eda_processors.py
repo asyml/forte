@@ -22,7 +22,7 @@ implemented based on the ReplacementDataAugmentProcessor.
 import random
 from typing import List, Tuple, Dict
 from nltk.corpus import stopwords
-
+from math import ceil
 
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -51,7 +51,7 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
             annotations = list(data_pack.get(augment_entry))
             if len(annotations) > 0:
                 replace_map: Dict = {}
-                for _ in range(self.configs['n']):
+                for _ in range(ceil(self.configs['alpha'] * len(annotations))):
                     swap_idx = random.sample(range(len(annotations)), 2)
                     new_idx_0 = swap_idx[1] if swap_idx[1] not in replace_map \
                         else replace_map[swap_idx[1]]
@@ -98,7 +98,7 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 "policy": ["auto_align", "auto_align"],
             },
             "kwargs": {},
-            'n': 1,
+            'alpha': 0.1
         })
         return config
 
@@ -129,7 +129,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     annotations.append(anno)
                     pos.append(anno.end)
             if len(annotations) > 0:
-                for _ in range(self.configs['n']):
+                for _ in range(ceil(self.configs['alpha'] * len(annotations))):
                     src_anno = random.choice(annotations)
                     _, replaced_text = replacement_op.replace(src_anno)
                     insert_pos = random.choice(pos)
@@ -187,7 +187,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     "lang": "eng",
                 }
             },
-            'n': 1,
+            'alpha': 0.1,
         })
         return config
 
@@ -204,7 +204,7 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name, data_pack in input_pack.iter_packs():
             for anno in data_pack.get(augment_entry):
-                if random.random() < self.configs['prob']:
+                if random.random() < self.configs['alpha']:
                     self.delete(anno)
             new_pack_name = "augmented_" + pack_name
             new_pack = self.auto_align_annotations(
@@ -238,6 +238,6 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 ],
                 "policy": ["auto_align", "auto_align"],
             },
-            'prob': 0.1,
+            'alpha': 0.1,
         })
         return config
