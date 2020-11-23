@@ -17,6 +17,11 @@ from forte.data.multi_pack import MultiPack
 from forte.processors.base.writers import JsonPackWriter, MultiPackWriter
 
 
+class PackIdJsonPackWriter(JsonPackWriter):
+    def sub_output_path(self, pack: DataPack) -> str:
+        return str(pack.pack_id)
+
+
 class PackNameJsonPackWriter(JsonPackWriter):
     def sub_output_path(self, pack: DataPack) -> str:
         if pack.pack_name is None:
