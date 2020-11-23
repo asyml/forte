@@ -1,0 +1,44 @@
+## A Clinical Information Processing Example
+
+This project shows how we can construct projects to make Forte and Stave work
+ side by side.
+ 
+## Downloading the models
+
+In this example, we use an NER model fine-tuned on the NCBI-disease dataset, which predicts 
+named entities corresponding to diseases, symptoms and related concepts. 
+Before running the pipeline, we need to download the models
+
+```bash
+python ../biobert_ner/download_models.py 
+```
+
+**Note**: The above script will save the model in `resources/NCBI-disease`. Use `--path` option to save the 
+model into a different directory.
+
+## Run indexer
+First, you should start an Elastic Indexer backend.
+
+Second, you can run the following command to parse some files and index them.
+```bash
+python clinical_processing_pipeline.py
+```
+
+Now we are ready on the data processing part. Let's start the GUI.
+
+## Stave 
+First, set up Stave following the instructions.
+
+Second, create an empty project with the [default ontology](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json),
+ now record the project id.
+
+Set up the following environment variables:
+```bash
+export stave_db_path=[path_to_stave]/simple_backend/db.sqlite3
+export url_stub=http://localhost:3000
+export query_result_project_id=[the project id above]
+```
+
+Now, create another project with default ontology.
+
+Upload the `query_chatbot.json` file (you can find it in the directory of the README) to the project.
