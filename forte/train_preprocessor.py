@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-
-from forte.data.extractor.predictor import Predictor
-from texar.torch.data import DataIterator, Batch
-import torch
-from torch import device
 from typing import Optional, Dict, Type, Any, Union, Iterator
 
-from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
-from forte.data.types import DATA_OUTPUT
+import torch
+from texar.torch.data import DataIterator, Batch
+from torch import device
+
+from forte.common.configuration import Config
+from forte.data.converter.converter import Converter
 from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
-from forte.data.converter.converter import Converter
-from forte.common.configuration import Config
-from forte.data.ontology.core import EntryType
 from forte.data.extractor.extractor import BaseExtractor
+from forte.data.extractor.predictor import Predictor
+from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
 from forte.data.ontology.core import Entry
+from forte.data.ontology.core import EntryType
 from forte.data.readers.base_reader import PackReader
+from forte.data.types import DATA_OUTPUT
 
 logger = logging.getLogger(__name__)
 
@@ -152,13 +152,13 @@ class TrainPreprocessor:
         assert "schemes" in data_request, \
             "Field not found for data request: `schemes`"
 
-        self._user_request: Dict = data_request
+        self._user_request = data_request
         self._feature_resource.clear()
         self._feature_resource["scope"] = data_request["scope"]
 
-        resource_schemes = {}
+        resource_schemes: Dict[str, Dict] = {}
         # Used for check dependency between different extractors
-        scheme_group = {
+        scheme_group: Dict[str, Dict] = {
             "dependent": {}, "dependee": {}
         }
 
@@ -176,8 +176,8 @@ class TrainPreprocessor:
                     config[field] = value
 
             if not issubclass(scheme["extractor"], BaseExtractor):
-                raise RuntimeError("Invalid extractor class: "
-                                   , scheme["extractor"])
+                raise RuntimeError("Invalid extractor class: ",
+                                   scheme["extractor"])
 
             try:
                 extractor: BaseExtractor = scheme["extractor"](config)
@@ -207,7 +207,7 @@ class TrainPreprocessor:
                     resource_schemes[tag]["unpadder"] = unpadder
 
             except Exception as e:
-                logger.error("Error instantiate extractor: " + str(e))
+                logger.error("Error instantiate extractor: %s", str(e))
                 raise
 
         # Check dependency
@@ -215,8 +215,9 @@ class TrainPreprocessor:
             for dependent_extractor in dependent_extractors:
                 based_on: Entry = dependent_extractor.based_on
                 if based_on not in scheme_group["dependee"]:
-                    raise "Cannot found based on entry {} for extractor {}". \
-                        format(based_on, dependent_extractor.tag)
+                    raise ValueError(
+                        "Cannot found based on entry {} for extractor {}".
+                        format(based_on, dependent_extractor.tag))
 
         self._feature_resource["schemes"] = resource_schemes
         self._feature_resource_ready = True
@@ -229,7 +230,7 @@ class TrainPreprocessor:
         for data_pack in \
                 self._train_reader.iter(self._config.preprocess.pack_dir):
             for instance in data_pack.get(scope):
-                for tag, scheme in schemes.items():
+                for _, scheme in schemes.items():
                     extractor: BaseExtractor = scheme["extractor"]
                     extractor.update_vocab(data_pack, instance)
 
@@ -237,7 +238,7 @@ class TrainPreprocessor:
 
     def _build_dataset_iterator(self) \
             -> DataIterator:
-        scope: Type[EntryType] = self._feature_resource["scope"]
+        scope: Type[EntryType] = self._feature_resource["scope"]  # type: ignore
         schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
 
         data_source = \

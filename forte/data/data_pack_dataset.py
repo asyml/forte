@@ -11,19 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import torch
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union
 
-from forte.data.readers.base_reader import PackReader
-from forte.data.data_pack import DataPack
-from forte.data.converter.converter import Converter
-from forte.data.extractor.extractor import BaseExtractor
-from forte.data.converter.feature import Feature
-from forte.data.ontology.top import Annotation
-from forte.data.ontology.core import EntryType
-from forte.data.types import DataRequest
+import torch
 from texar.torch import HParams
 from texar.torch.data import IterDataSource, DatasetBase, Batch
+
+from forte.data.converter.converter import Converter
+from forte.data.converter.feature import Feature
+from forte.data.data_pack import DataPack
+from forte.data.extractor.extractor import BaseExtractor
+from forte.data.ontology.core import EntryType
+from forte.data.ontology.top import Annotation
+from forte.data.readers.base_reader import PackReader
+from forte.data.types import DataRequest
 
 # An instance is a single data point from data pack
 Instance = Dict
@@ -48,7 +49,7 @@ class DataPackIterator:
 
         self._data_pack_iter: Iterator[DataPack] = \
             self._reader.iter(self._pack_dir)
-        self._instance_iter: Optional[Iterator[RawExample]] = None
+        self._instance_iter: Optional[Iterator[Instance]] = None
         self._curr_data_pack: Optional[DataPack] = None
 
     def __iter__(self):
@@ -108,7 +109,8 @@ class DataPackDataset(DatasetBase):
     def process(self, raw_example: RawExample) -> FeatureCollection:
         instance: Instance = raw_example[0]
         data_pack: DataPack = raw_example[1]
-        instance_entry: EntryType = data_pack.get_entry(instance["tid"])
+        instance_entry: EntryType = data_pack.get_entry(  # type: ignore
+            instance["tid"])
         feature_collection: FeatureCollection = {}
 
         for tag, scheme in self._feature_scheme.items():
