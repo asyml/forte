@@ -20,7 +20,7 @@ from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Sentence
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 
-from forte.data.extractor.data_pack_dataset import \
+from forte.data.data_pack_dataset import \
     DataPackDataSource, RawExample
 
 

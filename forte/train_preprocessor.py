@@ -13,8 +13,6 @@
 # limitations under the License.
 import logging
 
-from forte.data.data_pack import DataPack
-
 from forte.data.extractor.predictor import Predictor
 from texar.torch.data import DataIterator, Batch
 import torch
@@ -23,9 +21,9 @@ from typing import Optional, Dict, Type, Any, Union, Iterator
 
 from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
 from forte.data.types import DATA_OUTPUT
-from forte.data.extractor.data_pack_dataset import DataPackDataSource, \
+from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
-from forte.data.extractor.converter import Converter
+from forte.data.converter.converter import Converter
 from forte.common.configuration import Config
 from forte.data.ontology.core import EntryType
 from forte.data.extractor.extractor import BaseExtractor

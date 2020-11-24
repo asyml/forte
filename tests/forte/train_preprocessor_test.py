@@ -20,8 +20,8 @@ from torch import Tensor
 
 from forte.data.extractor.vocabulary import Vocabulary
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
-from forte.data.extractor.converter import Converter
-from forte.data.extractor.train_preprocessor import TrainPreprocessor
+from forte.data.converter.converter import Converter
+from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.extractor import TextExtractor, CharExtractor, \
     BioSeqTaggingExtractor, BaseExtractor
