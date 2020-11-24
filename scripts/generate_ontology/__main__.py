@@ -172,5 +172,6 @@ def main():
         OntologyGenerationParser().print_help()
         sys.exit(2)
 
-    if __name__ == "__main__":
-        main()
+
+if __name__ == "__main__":
+    main()
