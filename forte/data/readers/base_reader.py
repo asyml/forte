@@ -18,7 +18,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Any, Iterator, Optional, Union
+from typing import Any, Iterator, Optional, Union, List
 
 from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
@@ -72,7 +72,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self.append_to_cache = append_to_cache
         self._cache_in_memory = cache_in_memory
         self._cache_ready: bool = False
-        self._data_packs = []
+        self._data_packs: List[PackType] = []
 
     @classmethod
     def default_configs(cls):
