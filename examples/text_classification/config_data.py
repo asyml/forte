@@ -66,3 +66,30 @@ test_hparam = {
     },
     "shuffle": False
 }
+
+unsup_feature_types = {
+    # Reading features from pickled data file.
+    # E.g., Reading feature "input_ids" as dtype `int64`;
+    # "FixedLenFeature" indicates its length is fixed for all data instances;
+    # and the sequence length is limited by `max_seq_length`.
+    "input_ids": ["int64", "stacked_tensor", max_seq_length],
+    "input_mask": ["int64", "stacked_tensor", max_seq_length],
+    "segment_ids": ["int64", "stacked_tensor", max_seq_length],
+    "label_ids": ["int64", "stacked_tensor"],
+    "aug_input_ids": ["int64", "stacked_tensor", max_seq_length],
+    "aug_input_mask": ["int64", "stacked_tensor", max_seq_length],
+    "aug_segment_ids": ["int64", "stacked_tensor", max_seq_length],
+    "aug_label_ids": ["int64", "stacked_tensor"]
+}
+
+unsup_hparam = {
+    "allow_smaller_final_batch": True,
+    "batch_size": train_batch_size,
+    "dataset": {
+        "data_name": "data",
+        "feature_types": unsup_feature_types,
+        "files": "{}/unsup.pkl".format(pickle_data_dir)
+    },
+    "shuffle": True,
+    "shuffle_buffer_size": None,
+}

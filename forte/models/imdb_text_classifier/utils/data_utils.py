@@ -502,7 +502,7 @@ def convert_unsup_examples_to_features_and_output_to_files(
 
 def prepare_record_data(processor, tokenizer,
                         data_dir, max_seq_length, output_dir,
-                        feature_types):
+                        feature_types, unsup_feature_types=None):
     r"""Prepare record data.
     Args:
         processor: Data Preprocessor, which must have get_labels,
@@ -540,4 +540,4 @@ def prepare_record_data(processor, tokenizer,
     unsup_file = os.path.join(output_dir, "unsup.pkl")
     convert_unsup_examples_to_features_and_output_to_files(
         unsup_examples, unsup_aug_examples, unsup_label_list,
-        max_seq_length, tokenizer, unsup_file, feature_types)
+        max_seq_length, tokenizer, unsup_file, unsup_feature_types)
