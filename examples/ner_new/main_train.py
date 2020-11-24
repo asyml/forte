@@ -24,7 +24,6 @@ from tqdm import tqdm
 import yaml
 
 from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
-from forte.models.ner.utils import load_glove_embedding
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.pipeline import Pipeline
 from forte.data.extractor.predictor import Predictor
@@ -32,7 +31,7 @@ from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.data.extractor.extractor import \
     BioSeqTaggingExtractor, TextExtractor, CharExtractor, BaseExtractor
-from forte.data.extractor.train_preprocessor import TrainPreprocessor
+from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from ft.onto.base_ontology import Sentence, Token, EntityMention
 
