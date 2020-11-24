@@ -11,3 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# pylint: disable=attribute-defined-outside-init
+from forte.processors.ir import ElasticSearchPackIndexProcessor
+
+__all__ = [
+    "DataSelectorIndexProcessor"
+]
+
+
+class DataSelectorIndexProcessor(ElasticSearchPackIndexProcessor):
+    r"""This selector index directly reuse a default PackIndexProcessor."""
