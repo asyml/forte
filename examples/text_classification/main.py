@@ -22,7 +22,10 @@ import config_classifier
 
 def main():
     model = IMDBClassifier(config_data, config_classifier)
-    if not os.path.isfile("data/IMDB/train.pkl"):
+    if not os.path.isfile("data/IMDB/train.pkl")\
+            or not os.path.isfile("data/IMDB/eval.pkl")\
+            or not os.path.isfile("data/IMDB/predict.pkl")\
+            or not os.path.isfile("data/IMDB/unsup.pkl"):
         model.prepare_data("data/IMDB")
     model.run(do_train=True, do_eval=True, do_test=False)
 

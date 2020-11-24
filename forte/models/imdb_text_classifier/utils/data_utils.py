@@ -78,11 +78,11 @@ class DataProcessor():
     @classmethod
     def _read_tsv(cls, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with tf.gfile.Open(input_file, "r") as f:
-            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+        with open(input_file, "r", encoding="utf-8") as f:
+            # reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
             lines = []
-            for line in reader:
-                lines.append(line)
+            for line in f.readlines():
+                lines.append(line.split('\t'))
         return lines
 
 
@@ -124,6 +124,12 @@ class IMDbProcessor(DataProcessor):
                            quotechar='"'), "train")
 
     def get_dev_examples(self, raw_data_dir):
+        """The IMDB dataset does not have a dev set so we just use test set"""
+        return self._create_examples(
+            self._read_tsv(os.path.join(raw_data_dir, "test.csv"),
+                           quotechar='"'), "test")
+
+    def get_test_examples(self, raw_data_dir):
         """See base class."""
         return self._create_examples(
             self._read_tsv(os.path.join(raw_data_dir, "test.csv"),
@@ -137,7 +143,17 @@ class IMDbProcessor(DataProcessor):
                                quotechar='"'), "unsup_ext", skip_unsup=False)
         elif unsup_set == "unsup_in":
             return self._create_examples(
-                self._read_tsv(os.path.join(raw_data_dir, "train.csv"),
+                self._read_tsv(os.path.join(raw_data_dir, "train.csv"),quotechar='"'), "unsup_in", skip_unsup=False)
+
+    def get_unsup_aug_examples(self, raw_data_dir, unsup_set):
+        """See base class."""
+        if unsup_set == "unsup_ext":
+            return self._create_examples(
+                self._read_tsv(os.path.join(raw_data_dir, "unsup_ext.csv"),
+                               quotechar='"'), "unsup_ext", skip_unsup=False)
+        elif unsup_set == "unsup_in":
+            return self._create_examples(
+                self._read_tsv(os.path.join(raw_data_dir, "train_aug.csv"),
                                quotechar='"'), "unsup_in", skip_unsup=False)
 
     def get_labels(self):
@@ -147,17 +163,21 @@ class IMDbProcessor(DataProcessor):
     def _create_examples(self, lines, set_type, skip_unsup=True):
         """Creates examples for the training and dev sets."""
         examples = []
+        print(len(lines))
         for (i, line) in enumerate(lines):
             if i == 0:
                 continue
-            if skip_unsup and line[1] == "unsup":
+            if skip_unsup and line[-2] == "unsup":
                 continue
-            if line[1] == "unsup" and len(line[0]) < 500:
+            # Original UDA implementation
+            # if line[-2] == "unsup" and len(line[0]) < 500:
                 # tf.logging.info("skipping short samples:{:s}".format(line[0]))
-                continue
-            guid = "%s-%s" % (set_type, line[2])
-            text_a = line[0]
-            label = line[1]
+                # continue
+            guid = "%s-%s" % (set_type, line[-1])
+            text_a = " ".join(line[:-2])
+            label = line[-2]
+            if label not in ["pos", "neg", "unsup"]:
+                print(line)
             text_a = clean_web_text(text_a)
             examples.append(InputExample(guid=guid, text_a=text_a,
                              text_b=None, label=label))
@@ -452,6 +472,34 @@ def convert_examples_to_features_and_output_to_files(
             writer.write(features)
 
 
+def convert_unsup_examples_to_features_and_output_to_files(
+        examples, aug_examples, label_list, max_seq_length, tokenizer, output_file,
+        feature_types):
+    r"""Convert a set of `InputExample`s to a pickled file."""
+
+    with tx.data.RecordData.writer(output_file, feature_types) as writer:
+        print(len(examples), "unsup examples")
+        print(len(aug_examples), "augmented unsup examples")
+        assert(len(examples) == len(aug_examples))
+        for (ex_index, (example, aug_example)) in enumerate(zip(examples, aug_examples)):
+            feature = convert_single_example(ex_index, example, label_list,
+                                             max_seq_length, tokenizer)
+            aug_feature = convert_single_example(ex_index, aug_example, label_list,
+                                                 max_seq_length, tokenizer)
+
+            features = {
+                "input_ids": feature.input_ids,
+                "input_mask": feature.input_mask,
+                "segment_ids": feature.segment_ids,
+                "label_ids": feature.label_id,
+                "aug_input_ids": aug_feature.input_ids,
+                "aug_input_mask": aug_feature.input_mask,
+                "aug_segment_ids": aug_feature.segment_ids,
+                "aug_label_ids": aug_feature.label_id,
+            }
+            writer.write(features)
+
+
 def prepare_record_data(processor, tokenizer,
                         data_dir, max_seq_length, output_dir,
                         feature_types):
@@ -485,3 +533,11 @@ def prepare_record_data(processor, tokenizer,
     convert_examples_to_features_and_output_to_files(
         test_examples, label_list,
         max_seq_length, tokenizer, test_file, feature_types)
+
+    unsup_label_list = label_list + ["unsup"]
+    unsup_examples = processor.get_unsup_examples(data_dir, "unsup_in")
+    unsup_aug_examples = processor.get_unsup_aug_examples(data_dir, "unsup_in")
+    unsup_file = os.path.join(output_dir, "unsup.pkl")
+    convert_unsup_examples_to_features_and_output_to_files(
+        unsup_examples, unsup_aug_examples, unsup_label_list,
+        max_seq_length, tokenizer, unsup_file, feature_types)
