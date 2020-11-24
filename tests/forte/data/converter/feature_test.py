@@ -17,7 +17,7 @@ from typing import List
 
 import torch
 
-from forte.data.extractor.feature import Feature
+from forte.data.converter.feature import Feature
 
 
 class FeatureTest(unittest.TestCase):
