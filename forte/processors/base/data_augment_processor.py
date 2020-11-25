@@ -20,10 +20,13 @@ from copy import deepcopy
 from collections import defaultdict
 from typing import List, Tuple, Dict, DefaultDict, Set
 from bisect import bisect_right
-from forte.data.ontology.core import Entry
+from sortedcontainers import SortedList, SortedDict
+from forte.data.ontology.core import Entry, BaseLink
 from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.ontology.top import Annotation, MultiPackLink, Link
+from forte.data.ontology.top import (
+    Annotation, MultiPackLink, Link, MultiPackGroup, Group
+)
 from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -37,6 +40,128 @@ __all__ = [
     "BaseDataAugmentProcessor",
     "ReplacementDataAugmentProcessor"
 ]
+
+
+def modify_index(
+        index: int,
+        old_spans: List[Tuple[int, int]],
+        new_spans: List[Tuple[int, int]],
+        is_begin: bool,
+        is_inclusive: bool
+) -> int:
+    r"""
+    A helper function to map an index before replacement
+    to the index after replacement. The old spans and
+    new spans are anchor indices for the mapping.
+
+    Args:
+        - index: The index to map.
+        - old_spans: The spans before replacement.
+        - new_spans: The spans after replacement.
+        - is_begin: True if the index is a span begin index.
+        - is_inclusive: True if the span constructed by the aligned
+            index should include inserted spans.
+    Returns:
+        The aligned index.
+
+    If the old spans are:
+        [0, 1], [2, 3], [4, 6]
+    the new spans are:
+        [0, 4], [5, 7], [8, 9]
+    the input index is:
+        3
+    and there are no insertions,
+    the algorithm will first locate the last span with
+    a begin index less or equal than the target index,
+    ([2,3]), and find the corresponding span in new spans([5,7]).
+    Then we calculate the delta index(7-3=4) and update our
+    input index(3+4=7). The output then is 7.
+
+    When insertion is considered, there will be spans
+    with the same begin index, for example,
+    [0, 1], [1, 1], [1, 2]. The output will depend on
+    whether to include the inserted span, and whether the
+    input index is a begin or an end index.
+
+    If the old spans are:
+        [0, 1], [1, 1], [1, 2]
+    the new spans are:
+        [0, 2], [2, 4], [4, 5]
+    the input index is:
+        1,
+    the output will be 2 if both is_inclusive and is_begin are True,
+    because the inserted [1, 1] should be included in the span.
+    If the is_inclusive=True but is_begin=False, the output will be
+    4 because the index is an end index of the span.
+    """
+
+    # Get the max index for binary search.
+    max_index: int = old_spans[-1][1] + 1
+
+    last_span_ind: int = bisect_right(
+        old_spans, (index, max_index)
+    ) - 1
+
+    # If there is an inserted span, it will
+    # always be the first of those spans with
+    # the same begin index.
+    if last_span_ind >= 0:
+        if is_inclusive:
+            if is_begin:
+                # When inclusive, move the begin index
+                # to the left to include the inserted span.
+                if last_span_ind > 0 and \
+                        old_spans[last_span_ind - 1][0] == index:
+                    # Old spans: [0, 1], [1, 1], [1, 3]
+                    # Target index: 1
+                    # Change last_span_index from 2 to 1
+                    # to include the [1, 1] span.
+                    last_span_ind -= 1
+                else:
+                    # Old spans: [0, 1], [1, 1], [2, 3]
+                    # Target index: 1
+                    # last_span_index: 1
+                    # No need to change.
+                    pass
+
+        else:
+            if not is_begin:
+                # When exclusive, move the end index
+                # to the left to exclude the inserted span.
+                if last_span_ind > 0 and \
+                        old_spans[last_span_ind - 1][0] == index:
+                    # Old spans: [0, 1], [1, 1], [1, 3]
+                    # Target index: 1
+                    # Change last_span_index from 2 to 0
+                    # to exclude the [1, 1] span.
+                    last_span_ind -= 2
+                elif old_spans[last_span_ind][0] == index and \
+                        old_spans[last_span_ind][1] == index:
+                    # Old spans: [0, 1], [1, 1], [2, 3]
+                    # Target index: 1
+                    # Change last_span_index from 1 to 0
+                    # to exclude the [1, 1] span.
+                    last_span_ind -= 1
+
+    if last_span_ind < 0:
+        # There is no replacement before this index.
+        return index
+    # Find the nearest anchor point on the left of current index.
+    # Start from the span's begin index.
+    delta_index: int = new_spans[last_span_ind][0] - \
+                       old_spans[last_span_ind][0]
+
+    if old_spans[last_span_ind][0] == old_spans[last_span_ind][1] \
+            and old_spans[last_span_ind][0] == index \
+            and is_begin \
+            and is_inclusive:
+        return index + delta_index
+
+    if old_spans[last_span_ind][1] <= index:
+        # Use the span's end index as anchor, if possible.
+        delta_index = new_spans[last_span_ind][1] - \
+                      old_spans[last_span_ind][1]
+    return index + delta_index
 
 
 class BaseDataAugmentProcessor(BaseProcessor):
@@ -55,65 +180,54 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     levels: character, word, sentence or document.
     """
     def __init__(self):
-        r"""
-        - replaced_annos: {datapack id: List[span, text]}
-            It records the spans replaced by new texts.
-            It is a map from datapack id to a list of tuples
-            (span, new text) inserted by :func: replace.
-            The new text will be used for building new data pack.
-
-        - inserted_annos: {datapack id: Dict{position: length}}
-            It records the inserted spans, mapping from datapack id
-            to a dictionary (position -> length) inserted
-            by :func: insert.
-            The position is the index in the original datapack
-            of insertion, and the length is the length of the
-            inserted string.
-
-        - deleted_annos: {datapack id: Set[annotation tid]}
-            It records the deleted spans, mapping from datapack id
-            to a set of annotation tids appended by :func: delete.
-
-        - data_pack_map: {orig pack id: new pack id}
-            It maintains a mapping from the pack id
-            of the original pack to the pack id of augmented pack.
-            It is used when copying the MultiPackLink.
-
-        - anno_maps: {datapack id: Dict{orig tid, new tid}}
-            It is a map for tracking the annotation ids
-            before and after the auto align. It maps the
-            original annotation tid to the new annotation tid.
-            It is used when copying the MultiPackLink.
-        """
         super().__init__()
-        self.replaced_annos: DefaultDict[int, List[Tuple[Span, str]]] = \
-            defaultdict(list)
-        self.inserted_annos: DefaultDict[int, Dict[int, int]] = \
-            defaultdict(dict)
-        self.deleted_annos: DefaultDict[int, Set[int]] = defaultdict(set)
 
-        self.data_pack_map: Dict[int, int] = {}
-        self.anno_maps: Dict[int, Dict[int, int]] = {}
-        self.other_entry_policy: Dict[str, str] = {}
+        # _replaced_annos: {datapack id: SortedList[span, new text]}
+        # It records the spans replaced by new texts.
+        # It is a map from datapack id to a list of tuples
+        # (span, new text) inserted by :func: replace.
+        # The new text will be used for building new data pack.
+        self._replaced_annos: DefaultDict[int, SortedList[Tuple[Span, str]]] = \
+            defaultdict(
+                lambda: SortedList([], key=lambda x: (x[0].begin, x[0].end))
+            )
+
+        # _inserted_annos: {datapack id: Dict{position: length}}
+        # It records the inserted spans, mapping from datapack id
+        # to a dictionary (position -> length) inserted by :func: insert.
+        # The position is the index in the original datapack
+        # of insertion, and the length is the length of the inserted string.
+
+        self._inserted_annos: DefaultDict[int, SortedDict[int, int]] = \
+            defaultdict(
+                lambda: SortedDict({})
+            )
+
+        # _deleted_annos: {datapack id: Set[annotation tid]}
+        # It records the deleted spans, mapping from datapack id
+        # to a set of annotation tids appended by :func: delete.
+
+        self._deleted_annos: DefaultDict[int, Set[int]] = defaultdict(set)
+
+        # _data_pack_map: {orig pack id: new pack id}
+        # It maintains a mapping from the pack id
+        # of the original pack to the pack id of augmented pack.
+        # It is used when copying the MultiPackLink and MultiPackGroup.
+        self._data_pack_map: Dict[int, int] = {}
+
+        # _entry_maps: {datapack id: Dict{orig tid, new tid}}
+        # It is a map for tracking the annotation ids
+        # before and after the auto align. It maps the
+        # original annotation tid to the new annotation tid.
+        # It is used when copying the Link/Group/MultiPackLink/MultiPackGroup.
+        self._entry_maps: Dict[int, Dict[int, int]] = {}
+        self._other_entry_policy: Dict[str, str] = {}
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        # Parse the "other_entry_policy" in the configuration.
-        self.other_entry_policy = self._get_other_entry_policy_dict()
+        self._other_entry_policy = self.configs["other_entry_policy"]["kwargs"]
 
-    def _get_other_entry_policy_dict(self) -> Dict[str, str]:
-        r"""
-        A helper function for parsing the "other_entry_policy"
-        configuration.
-        """
-        entries = self.configs['other_entry_policy']["entry"]
-        policies = self.configs['other_entry_policy']["policy"]
-        other_entry_policy = {}
-        for entry, policy in zip(entries, policies):
-            other_entry_policy[entry] = policy
-        return other_entry_policy
-
-    def _is_span_overlap(self, pid: int, begin: int, end: int) -> bool:
+    def _overlap_with_existing(self, pid: int, begin: int, end: int) -> bool:
         r"""
         This function will check whether the new span
         has an overlap with any existing spans.
@@ -125,12 +239,12 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             True if the input span overlaps with
             any existing spans, False otherwise.
         """
-        for span, _ in self.replaced_annos[pid]:
+        for span, _ in self._replaced_annos[pid]:
             if not(span.begin >= end or span.end <= begin):
                 return True
         return False
 
-    def replace(
+    def _replace(
             self,
             replacement_op: TextReplacementOp,
             input: Annotation
@@ -151,17 +265,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         """
         # Ignore the new annotation if overlap.
         pid: int = input.pack.meta.pack_id
-        if self._is_span_overlap(pid, input.begin, input.end):
+        if self._overlap_with_existing(pid, input.begin, input.end):
             return False
         replaced_text: str
         is_replace: bool
         is_replace, replaced_text = replacement_op.replace(input)
         if is_replace:
-            self.replaced_annos[pid].append((input.span, replaced_text))
+            self._replaced_annos[pid].add((input.span, replaced_text))
             return True
         return False
 
-    def insert(
+    def _insert(
             self,
             inserted_text: str,
             data_pack: DataPack,
@@ -173,27 +287,26 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         for later batch process of building the new data pack.
 
         The insertion at each position can only occur once. If there
-        is already an insertion at current position, it will abort.
+        is already an insertion at current position, it will abort the
+        insertion and return False.
         Args:
-            - replacement_op: The class for data augmentation algorithm.
-                For insertion, it should be able to generate a string
-                with an empty input.
+            - inserted_text: The text string to insert.
             - data_pack: The datapack for insertion.
             - pos: The position(index) of insertion.
         Returns:
             A bool value. True if the insertion happened, False otherwise.
         """
         pid: int = data_pack.meta.pack_id
-        if self._is_span_overlap(pid, pos, pos):
+        if self._overlap_with_existing(pid, pos, pos):
             return False
 
-        if pos not in self.inserted_annos[pid]:
-            self.replaced_annos[pid].append((Span(pos, pos), inserted_text))
-            self.inserted_annos[pid][pos] = len(inserted_text)
+        if pos not in self._inserted_annos[pid]:
+            self._replaced_annos[pid].add((Span(pos, pos), inserted_text))
+            self._inserted_annos[pid][pos] = len(inserted_text)
             return True
         return False
 
-    def delete(
+    def _delete(
             self,
             input: Annotation
     ) -> bool:
@@ -206,15 +319,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             A bool value. True if the deletion happened, False otherwise.
         """
         pid: int = input.pack.meta.pack_id
-        self.replaced_annos[pid].append((input.span, ""))
-        self.deleted_annos[pid].add(input.tid)
+        self._replaced_annos[pid].add((input.span, ""))
+        self._deleted_annos[pid].add(input.tid)
         return True
 
-    def auto_align_annotations(
+    def _auto_align_annotations(
         self,
         data_pack: DataPack,
-        replaced_annotations: List[Tuple[Span, str]],
-
+        replaced_annotations: SortedList,
     ) -> DataPack:
         r"""
         Function to replace some annotations with new strings.
@@ -224,9 +336,12 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         The links are also copied if its parent & child are
         both present in the new pack.
 
+        The groups are copied if all its members are present
+        in the new pack.
+
         Args:
             - data_pack: The Datapack holding the replaced annotations.
-            - replaced_annotations: A list of tuples(span, new string).
+            - replaced_annotations: A SortedList of tuples(span, new string).
             The text and span of the annotations will be updated
             with the new string.
 
@@ -234,15 +349,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             A new data_pack holds the text after replacement. The annotations
             in the original data pack will be copied and auto-aligned as
             instructed by the "other_entry_policy" in the configuration.
+            The links and groups will be copied if there members are copied.
         """
         if len(replaced_annotations) == 0:
             return deepcopy(data_pack)
 
-        # Sort the annotations by span beginning index.
-        replaced_annotations = sorted(
-            replaced_annotations,
-            key=lambda x: (x[0].begin, x[0].end)
-        )
         spans: List[Tuple[int, int]] = [
             (span.begin, span.end) for span, _ in replaced_annotations]
         replacement_strs: List[str] = [
@@ -275,142 +386,19 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_spans.append((new_begin, new_end))
             bias = new_end - old_end
 
-        def modify_index(
-                index: int,
-                old_spans: List[Tuple[int, int]],
-                new_spans: List[Tuple[int, int]],
-                is_begin: bool,
-                is_inclusive: bool
-        ) -> int:
-            r"""
-            A helper function to map an index before replacement
-            to the index after replacement. The old spans and
-            new spans are anchor indices for the mapping.
-
-            Args:
-                - index: The index to map.
-                - old_spans: The spans before replacement.
-                - new_spans: The spans after replacement.
-                - is_begin: True if the index is a span begin index.
-                - is_inclusive: True if the span constructed by the aligned
-                    index should include inserted spans.
-            Returns:
-                The aligned index.
-
-            If the old spans are:
-                [0, 1], [2, 3], [4, 6]
-            the new spans are:
-                [0, 4], [5, 7], [8, 9]
-            the input index is:
-                3
-            and we ignore the insertions,
-            the algorithm will first locate the last span with
-            a begin index less or equal than the target index,
-            ([2,3]), and find the corresponding span in new spans([5,7]).
-            Then we calculate the delta index(7-3=4) and update our
-            input index(3+4=7). The output then is 7.
-
-            When insertion is considered, there will be spans
-            with the same begin index, for example,
-            [0, 1], [1, 1], [1, 2]. The output will depend on
-            whether to include the inserted span, and whether the
-            input index is a begin or an end index.
-
-            If the old spans are:
-                [0, 1], [1, 1], [1, 2]
-            the new spans are:
-                [0, 2], [2, 4], [4, 5]
-            the input index is:
-                1,
-            the output will be 2 if both is_inclusive and is_begin are True,
-            because the inserted [1, 1] should be included in the span.
-            If the is_inclusive=True but is_begin=False, the output will be
-            4 because the index is an end index of the span.
-            """
-
-            # Get the max index for binary search.
-            max_index: int = old_spans[-1][1] + 1
-
-            last_span_ind: int = bisect_right(
-                old_spans, (index, max_index)
-            ) - 1
-
-            # If there is an inserted span, it will
-            # always be the first of those spans with
-            # the same begin index.
-            if last_span_ind >= 0:
-                if is_inclusive:
-                    if is_begin:
-                        # When inclusive, move the begin index
-                        # to the left to include the inserted span.
-                        if last_span_ind > 0 and \
-                                old_spans[last_span_ind - 1][0] == index:
-                            # Old spans: [0, 1], [1, 1], [1, 3]
-                            # Target index: 1
-                            # Change last_span_index from 2 to 1
-                            # to include the [1, 1] span.
-                            last_span_ind -= 1
-                        else:
-                            # Old spans: [0, 1], [1, 1], [2, 3]
-                            # Target index: 1
-                            # last_span_index: 1
-                            # No need to change.
-                            pass
-
-                else:
-                    if not is_begin:
-                        # When exclusive, move the end index
-                        # to the left to exclude the inserted span.
-                        if last_span_ind > 0 and \
-                                old_spans[last_span_ind - 1][0] == index:
-                            # Old spans: [0, 1], [1, 1], [1, 3]
-                            # Target index: 1
-                            # Change last_span_index from 2 to 0
-                            # to exclude the [1, 1] span.
-                            last_span_ind -= 2
-                        elif old_spans[last_span_ind][0] == index and \
-                            old_spans[last_span_ind][1] == index:
-                            # Old spans: [0, 1], [1, 1], [2, 3]
-                            # Target index: 1
-                            # Change last_span_index from 1 to 0
-                            # to exclude the [1, 1] span.
-                            last_span_ind -= 1
-
-            if last_span_ind < 0:
-                # There is no replacement before this index.
-                return index
-            # Find the nearest anchor point on the left of current index.
-            # Start from the span's begin index.
-            delta_index: int = new_spans[last_span_ind][0] - \
-                               old_spans[last_span_ind][0]
-
-            if old_spans[last_span_ind][0] == old_spans[last_span_ind][1] \
-                    and old_spans[last_span_ind][0] == index \
-                    and is_begin \
-                    and is_inclusive:
-                return index + delta_index
-
-            if old_spans[last_span_ind][1] <= index:
-                # Use the span's end index as anchor, if possible.
-                delta_index = new_spans[last_span_ind][1] - \
-                              old_spans[last_span_ind][1]
-            return index + delta_index
-
         new_pack: DataPack = DataPack()
         new_pack.set_text(new_text)
 
         entries_to_copy: List[str] = \
-            list(self.other_entry_policy.keys()) + \
+            list(self._other_entry_policy.keys()) + \
             [self.configs['augment_entry']]
 
-        anno_map: Dict[int, int] = {}
-
+        entry_map: Dict[int, int] = {}
         insert_ind: int = 0
         pid: int = data_pack.meta.pack_id
 
-        inserted_annos: List[Tuple[int, int]] = sorted(
-            list(self.inserted_annos[pid].items()),
-            key=lambda x: x[0]
+        inserted_annos: List[Tuple[int, int]] = list(
+            self._inserted_annos[pid].items()
         )
 
         def _insert_new_span(
@@ -465,7 +453,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                         insert_ind += 1
 
                     # Deletion
-                    if orig_anno.tid in self.deleted_annos[pid]:
+                    if orig_anno.tid in self._deleted_annos[pid]:
                         continue
 
                 # Auto align the spans.
@@ -473,7 +461,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 span_new_end: int = orig_anno.end
 
                 if entry == self.configs['augment_entry'] \
-                        or self.other_entry_policy[entry] \
+                        or self._other_entry_policy[entry] \
                         == 'auto_align':
                     # Only inclusive when the entry is not augmented.
                     # E.g.: A Sentence include the inserted Token on the edge.
@@ -493,7 +481,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                     }
                 )
                 new_pack.add_entry(new_anno)
-                anno_map[orig_anno.tid] = new_anno.tid
+                entry_map[orig_anno.tid] = new_anno.tid
 
             # Deal with spans after the last annotation in the original pack.
             if entry == self.configs['augment_entry']:
@@ -507,20 +495,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                     )
                     insert_ind += 1
 
-        # Iterate over and copy the links in the datapack.
+        # Iterate over and copy the links/groups in the datapack.
         for link in data_pack.get(Link):
-            parent: Entry = link.parent
-            child: Entry = link.child
-            if parent.tid not in anno_map or child.tid not in anno_map:
-                continue
-            new_parent: Entry = new_pack.get_entry(anno_map[parent.tid])
-            new_child: Entry = new_pack.get_entry(anno_map[child.tid])
-            new_link = type(link)(
-                new_pack, new_parent, new_child)  # type: ignore
-            new_pack.add_entry(new_link)
+            self._copy_link_or_group(link, entry_map, new_pack)
+        for group in data_pack.get(Group):
+            self._copy_link_or_group(group, entry_map, new_pack)
 
-        self.data_pack_map[pid] = new_pack.meta.pack_id
-        self.anno_maps[pid] = anno_map
+        self._data_pack_map[pid] = new_pack.meta.pack_id
+        self._entry_maps[pid] = entry_map
         return new_pack
 
     def _clear_states(self):
@@ -528,65 +510,142 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This function clears the states. It should be
         called after processing a multipack.
         """
-        self.replaced_annos.clear()
-        self.inserted_annos.clear()
-        self.deleted_annos.clear()
-        self.data_pack_map.clear()
-        self.anno_maps.clear()
+        self._replaced_annos.clear()
+        self._inserted_annos.clear()
+        self._deleted_annos.clear()
+        self._data_pack_map.clear()
+        self._entry_maps.clear()
 
-    def _copy_multi_pack_links(self, multi_pack: MultiPack):
+    def _copy_link_or_group(
+            self,
+            entry: Entry,
+            entry_map: Dict[int, int],
+            new_pack: DataPack,
+    ) -> bool:
         r"""
-        This function copies the MultiPackLinks in the multipack.
+        This function copies a Link/Group in the data pack.
+        If the children Link/Group does not exist, it will recursively
+        create the children Link/Group. If the children Annotation
+        does not exist, it will abort and return False.
+
+        Args:
+            - entry: The Link/Group in the original data pack to copy.
+            - entry_map: The dictionary mapping original entry to copied entry.
+            - new_pack: The new data pack, which is the destination of copy.
+        Returns:
+            A bool value indicating whether the copy happens.
+        """
+
+        # If the entry has been copied, return True.
+        if entry.tid in entry_map:
+            return True
+
+        # The entry should be either Link or Group.
+        is_link: bool = isinstance(entry, Link)
+
+        # Get the children entries.
+        children: List[Entry]
+        if is_link:
+            children = [entry.get_parent(), entry.get_child()]
+        else:
+            children = entry.get_members()
+
+        # Copy the children entries.
+        new_children = []
+        for child_entry in children:
+            if isinstance(child_entry, Annotation):
+                # Children Annotation must have been copied.
+                if child_entry.tid not in entry_map:
+                    return False
+            else:
+                # Recursively copy the children Links/Groups.
+                if not self._copy_link_or_group(
+                        child_entry, entry_map, new_pack):
+                    return False
+            new_child: Annotation = new_pack.get_entry(
+                entry_map[child_entry.tid]
+            )
+            new_children.append(new_child)
+
+        # Create the new entry and add to the new pack.
+        if is_link:
+            new_link_parent: Entry = new_children[0]
+            new_link_child: Entry = new_children[1]
+            new_entry = type(entry)(
+                new_pack, new_link_parent, new_link_child)  # type: ignore
+        else:
+            new_entry = type(entry)(
+                new_pack, new_children
+            )
+        new_pack.add_entry(new_entry)
+        entry_map[entry.tid] = new_entry.tid
+
+    def _copy_multi_pack_link_or_group(
+            self,
+            entry: Entry,
+            multi_pack: MultiPack
+    ) -> bool:
+        r"""
+        This function copies a MultiPackLink/MultiPackGroup in the multipack.
         It could be used in tasks such as text generation, where
         MultiPackLink is used to align the source and target.
 
         Args:
-            - input: The input multi pack.
+            - entry: The MultiPackLink/MultiPackGroup to copy.
+            - multi_pack: The multi_pack contains the input entry.
+        Returns:
+            A bool value indicating whether the copy happens.
         """
-        for mpl in multi_pack.get(MultiPackLink):
-            # Get the original Entry and DataPack.
-            parent: Entry = mpl.get_parent()
-            child: Entry = mpl.get_child()
-            parent_pack: DataPack = parent.pack
-            child_pack: DataPack = child.pack
-            parent_pack_pid: int = parent_pack.meta.pack_id
+        # The entry should be either MultiPackLink or MultiPackGroup.
+        is_link: bool = isinstance(entry, BaseLink)
+        children: List[Entry]
+        if is_link:
+            children = [entry.get_parent(), entry.get_child()]
+        else:
+            children = entry.get_members()
+
+        # Get the copied children entries.
+        new_children = []
+        for child_entry in children:
+            child_pack: DataPack = child_entry.pack
             child_pack_pid: int = child_pack.meta.pack_id
-
-            # Only copy the link when both packs are present.
-            if parent_pack_pid not in self.data_pack_map \
-                    or child_pack_pid not in self.data_pack_map \
-                    or parent_pack_pid not in self.anno_maps \
-                    or child_pack_pid not in self.anno_maps:
-                continue
-            # Get the new Entry and DataPack.
-            new_parent_pack: DataPack = multi_pack.get_pack_at(
-                multi_pack.get_pack_index(self.data_pack_map[parent_pack_pid])
-            )
+            # The new pack should be present.
+            if child_pack_pid not in self._data_pack_map \
+                    or child_pack_pid not in self._entry_maps:
+                return False
             new_child_pack: DataPack = multi_pack.get_pack_at(
-                multi_pack.get_pack_index(self.data_pack_map[child_pack_pid])
+                multi_pack.get_pack_index(self._data_pack_map[child_pack_pid])
             )
+            # The new child entry should be present.
+            if child_entry.tid not in self._entry_maps[child_pack_pid]:
+                return False
+            new_child_tid: int = \
+                self._entry_maps[child_pack_pid][child_entry.tid]
+            new_child_entry: Entry = new_child_pack.get_entry(new_child_tid)
+            new_children.append(new_child_entry)
 
-            # Only copy the link when both entries are present.
-            if parent.tid not in self.anno_maps[parent_pack_pid] \
-                    or child.tid not in self.anno_maps[child_pack_pid]:
-                continue
-            new_parent_tid: int = self.anno_maps[parent_pack_pid][parent.tid]
-            new_child_tid: int = self.anno_maps[child_pack_pid][child.tid]
-            new_parent: Entry = new_parent_pack.get_entry(new_parent_tid)
-            new_child: Entry = new_child_pack.get_entry(new_child_tid)
-            # Copy the MultiPackLink.
+        # Create the new entry and add to the multi pack.
+        if is_link:
+            new_link_parent: Entry = new_children[0]
+            new_link_child: Entry = new_children[1]
             multi_pack.add_entry(
-                MultiPackLink(
-                    multi_pack, new_parent, new_child
+                type(entry)(
+                    multi_pack, new_link_parent, new_link_child
                 )
             )
-        self._clear_states()
+        else:
+            multi_pack.add_entry(
+                type(entry)(
+                    multi_pack, new_children
+                )
+            )
+        return True
 
     def _process(self, input_pack: MultiPack):
         replacement_op = create_class_with_kwargs(
-            self.configs["kwargs"]["data_aug_op"],
+            self.configs["data_aug_op"],
             class_args={
-                "configs": self.configs["kwargs"]["data_aug_op_config"]
+                "configs": self.configs["data_aug_op_config"]["kwargs"]
             }
         )
         augment_entry = get_class(self.configs["augment_entry"])
@@ -594,11 +653,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         for pack_name, data_pack in input_pack.iter_packs():
             for anno in data_pack.get(augment_entry):
-                self.replace(replacement_op, anno)
+                self._replace(replacement_op, anno)
             new_pack_name = "augmented_" + pack_name
-            new_pack = self.auto_align_annotations(
+            new_pack = self._auto_align_annotations(
                 data_pack=data_pack,
-                replaced_annotations=self.replaced_annos[
+                replaced_annotations=self._replaced_annos[
                     data_pack.meta.pack_id
                 ]
             )
@@ -607,7 +666,15 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         for new_pack_name, new_pack in new_packs:
             input_pack.add_pack_(new_pack, new_pack_name)
 
-        self._copy_multi_pack_links(input_pack)
+        # Copy the MultiPackLinks/MultiPackGroups
+        for mpl in input_pack.get(MultiPackLink):
+            self._copy_multi_pack_link_or_group(mpl, input_pack)
+        for mpg in input_pack.get(MultiPackGroup):
+            self._copy_multi_pack_link_or_group(mpg, input_pack)
+
+        # Must be called after processing each multipack
+        # to reset internal states.
+        self._clear_states()
 
     @classmethod
     def default_configs(cls):
@@ -615,43 +682,58 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - augment_entries: defines the entries the processor
-            will augment. It should be a full path to the entry class.
+            - augment_entry: defines the entry the processor will augment.
+                It should be a full qualified name of the entry class.
+                For example, "ft.onto.base_ontology.Sentence".
             - other_entry_policy: a dict specifying the policies for
-            other entries. It has two keys: "entry" and "policy".
+                other entries. The key should be a full qualified class name.
+                The policy(value of the dict) specifies how to process
+                the corresponding entries after replacement.
 
-            The values of "policy" are aligned with the values of "entry".
-            They are two aligned lists. The "entry" should be class name.
-            The "policy" specifies how to process the corresponding entries
-            after replacement.
+                If the policy is "auto_align", the span of the entry
+                will be automatically modified according to its original
+                location. However, some spans might become invalid after
+                the augmentation, for example, the tokens within a
+                replaced sentence may disappear.
 
-            If the policy is "auto_align", the span of the entry
-            will be automatically modified according to its original location.
-            However, some spans might become invalid after the augmentation,
-            for example, the tokens within a replaced sentence may disappear.
+                Annotations not in the "other_entry_policy" will not
+                be copied to the new data pack. The Links and Groups
+                will be copied as well if the annotations they are
+                attached to are copied.
 
-            Entries not in the "entry" will not be copied to the new data pack.
+                Example:
+                'other_entry_policy': {
+                    "kwargs": {
+                        "ft.onto.base_ontology.Document": "auto_align",
+                        "ft.onto.base_ontology.Sentence": "auto_align",
+                    }
+                }
+            - type: Should not modify this field, in order to use the kwargs.
+            - data_aug_op: The data augmentation Op for the processor.
+                It should be a full qualified class name.
 
-            Example:
-            {
-                "entry": [
-                    "ft.onto.base_ontology.Document",
-                    "ft.onto.base_ontology.Sentence"
-                ],
-                "policy": ["auto_align", "auto_align"]
-            }
+                Example:
+                "forte.processors.data_augment.algorithms.text_replacement_op.
+                TextReplacementOp"
+            - data_aug_op_config: The configuration for data augmentation Op.
+                Example:
+                "data_aug_op_config": {
+                    'kwargs': {
+                        "lang": "en",
+                        "use_gpu": False
+                    }
+                }
         """
         config = super().default_configs()
         config.update({
-            'augment_entry': "ft.onto.base_ontology.Sentence",
+            'augment_entry': 'ft.onto.base_ontology.Sentence',
             'other_entry_policy': {
-                "entry": [],
-                "policy": [],
+                "kwargs": {}
             },
-            "type": "data_augmentation_op",
-            "kwargs": {
-                'data_aug_op': "",
-                'data_aug_op_config': {}
+            'type': 'data_augmentation_op',
+            'data_aug_op': '',
+            "data_aug_op_config": {
+                'kwargs': {}
             }
         })
         return config
