@@ -29,13 +29,14 @@ class Dictionary:
     Given an input word and its pos_tag(optional), the dictionary
     will outputs its synonyms, antonyms, hypernyns and hyponyms.
     """
+
+    # pylint: disable=unused-argument
     def get_synonyms(
             self,
             word: str,
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
-        # pylint: disable=unused-argument
         r"""
         Args:
             - word: The input string.
@@ -52,7 +53,6 @@ class Dictionary:
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
-        # pylint: disable=unused-argument
         r"""
         Args:
             - word: The input string.
@@ -69,7 +69,6 @@ class Dictionary:
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
-        # pylint: disable=unused-argument
         r"""
         Args:
             - word: The input string.
@@ -86,7 +85,6 @@ class Dictionary:
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
-        # pylint: disable=unused-argument
         r"""
         Args:
             - word: The input string.

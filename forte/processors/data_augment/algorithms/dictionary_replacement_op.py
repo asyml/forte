@@ -13,7 +13,7 @@
 # limitations under the License.
 import random
 from typing import Tuple
-from ft.onto.base_ontology import Entry
+from ft.onto.base_ontology import Token
 from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op \
@@ -32,18 +32,18 @@ class DictionaryReplacementOp(TextReplacementOp):
     retrieving synonyms with the same POS.
 
     The config should contain the following fields:
-        - dictionary: The full path to the dictionary class.
+        - dictionary: The full qualified name of the dictionary class.
         - prob: The probability of replacement, should fall in [0, 1].
         - lang: The language of the text.
     """
     def __init__(self, configs: Config):
         super().__init__(configs)
         self.dictionary = create_class_with_kwargs(
-            configs["dictionary"],
+            configs["dictionary_class"],
             class_args={}
         )
 
-    def replace(self, token: Entry) -> Tuple[bool, str]:
+    def replace(self, token: Token) -> Tuple[bool, str]:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
         Args:
