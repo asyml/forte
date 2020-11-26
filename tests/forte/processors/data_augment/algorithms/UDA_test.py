@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for HTMLReader
+Unit tests for Unsupervised Data Augmentation.
 """
 import tempfile
 import unittest
@@ -86,27 +86,6 @@ class UDAPipelineTest(unittest.TestCase):
             "shuffle": True
         }
 
-        self.output_sample_features_to_file(
-            self.sample_feature,
-            self.feature_types,
-            self.train_path,
-            dup_num=50
-        )
-
-        self.output_sample_features_to_file(
-            self.sample_feature,
-            self.feature_types,
-            self.test_path,
-            dup_num=10
-        )
-
-        self.output_sample_features_to_file(
-            self.unsup_sample_feature,
-            self.unsup_feature_types,
-            self.unsup_path,
-            dup_num=25
-        )
-
     def tearDown(self):
         self.pickle_data_dir.cleanup()
 
@@ -121,7 +100,28 @@ class UDAPipelineTest(unittest.TestCase):
             for i in range(dup_num):
                 writer.write(feature)
 
-    def test_UDA_pipeline(self):
+    def UDA_pipeline(self, train_num, test_num, unsup_num):
+        self.output_sample_features_to_file(
+            self.sample_feature,
+            self.feature_types,
+            self.train_path,
+            dup_num=train_num
+        )
+
+        self.output_sample_features_to_file(
+            self.sample_feature,
+            self.feature_types,
+            self.test_path,
+            dup_num=test_num
+        )
+
+        self.output_sample_features_to_file(
+            self.unsup_sample_feature,
+            self.unsup_feature_types,
+            self.unsup_path,
+            dup_num=unsup_num
+        )
+
         train_dataset = tx.data.RecordData(
             hparams=self.train_hparam, device=torch.device("cpu"))
         test_dataset = tx.data.RecordData(
@@ -154,7 +154,6 @@ class UDAPipelineTest(unittest.TestCase):
         iterator = UDAIterator(
             sup_iterator,
             unsup_iterator,
-            unsup_forward_fn,
             softmax_temperature=1.0,
             confidence_threshold=-1,
             reduction="mean"
@@ -166,7 +165,9 @@ class UDAPipelineTest(unittest.TestCase):
         for epoch in range(num_epoch):
             iterator.switch_to_dataset("train", use_unsup=True)
 
-            for batch, unsup_batch, unsup_loss in iterator:
+            for batch, unsup_batch in iterator:
+                orig_loss, aug_loss = unsup_forward_fn(unsup_batch)
+                unsup_loss = iterator.calculate_uda_loss(orig_loss, aug_loss)
                 self.assertLess(unsup_loss, 1e-5)
 
                 sup_rank = get_rank(batch["input_ids"])
@@ -179,9 +180,18 @@ class UDAPipelineTest(unittest.TestCase):
                 self.assertEqual(unsup_aug_rank, 2)
 
             iterator.switch_to_dataset("test", use_unsup=False)
-            for batch, _, _ in iterator:
+            for batch, _ in iterator:
                 sup_rank = get_rank(batch["input_ids"])
                 self.assertEqual(sup_rank, 2)
+
+    def test_UDA_pipeline_unsup_more(self):
+        self.UDA_pipeline(train_num=10, test_num=10, unsup_num=50)
+
+    def test_UDA_pipeline_sup_more(self):
+        self.UDA_pipeline(train_num=50, test_num=50, unsup_num=10)
+
+    def test_UDA_pipeline_equal(self):
+        self.UDA_pipeline(train_num=50, test_num=50, unsup_num=50)
 
 
 if __name__ == "__main__":
