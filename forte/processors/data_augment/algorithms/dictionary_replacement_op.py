@@ -13,7 +13,7 @@
 # limitations under the License.
 import random
 from typing import Tuple
-from ft.onto.base_ontology import Token
+from ft.onto.base_ontology import Entry
 from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op \
@@ -32,9 +32,9 @@ class DictionaryReplacementOp(TextReplacementOp):
     retrieving synonyms with the same POS.
 
     The config should contain the following fields:
-        - dictionary: The full qualified name of the dictionary class.
-        - prob: The probability of replacement, should fall in [0, 1].
-        - lang: The language of the text.
+        - `dictionary`: The full qualified name of the dictionary class.
+        - `prob`: The probability of replacement, should fall in [0, 1].
+        - `lang`: The language of the text.
     """
     def __init__(self, configs: Config):
         super().__init__(configs)
@@ -43,14 +43,16 @@ class DictionaryReplacementOp(TextReplacementOp):
             class_args={}
         )
 
-    def replace(self, token: Token) -> Tuple[bool, str]:
+    def replace(self, token: Entry) -> Tuple[bool, str]:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
+
         Args:
-            - token: The input entry.
+            token(Entry): The input entry.
         Returns:
-            - A boolean value, True if the replacement happens.
-            - A synonym of the word.
+            A tuple of two values, where the first element is a boolean value
+            indicating whether the replacement happens, and the second
+            element is the replaced string.
         """
         # If the replacement does not happen, return False.
         if random.random() > self.configs["prob"]:
