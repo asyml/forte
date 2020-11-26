@@ -18,7 +18,7 @@ and create a new pack with them.
 """
 from copy import deepcopy
 from collections import defaultdict
-from typing import List, Tuple, Dict, DefaultDict, Set, Union
+from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast
 from bisect import bisect_right
 from sortedcontainers import SortedList, SortedDict
 from forte.data.ontology.core import Entry, BaseLink
@@ -559,7 +559,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                     return False
             elif isinstance(child_entry, (Link, Group)):
                 # Recursively copy the children Links/Groups.
-                child_entry: Union[Link, Group]
+                child_entry = cast(Union[Link, Group], child_entry)
                 if not self._copy_link_or_group(
                         child_entry, entry_map, new_pack):
                     return False
@@ -571,16 +571,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_children.append(new_child)
 
         # Create the new entry and add to the new pack.
+        new_entry: Entry
         if is_link:
-            entry: Link
+            entry = cast(Link, entry)
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
-            new_entry: Link = type(entry)(
+            new_entry = type(entry)(
                 new_pack, new_link_parent, new_link_child
             )  # type: ignore
         else:
-            entry: Group
-            new_entry: Group = type(entry)(
+            entry = cast(Group, entry)
+            new_entry = type(entry)(
                 new_pack, new_children
             )  # type: ignore
         new_pack.add_entry(new_entry)
@@ -632,20 +633,20 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_children.append(new_child_entry)
 
         # Create the new entry and add to the multi pack.
+        new_entry: Entry
         if is_link:
-            entry: MultiPackLink
+            entry = cast(MultiPackLink, entry)
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
-            new_entry: MultiPackLink = type(entry)(
+            new_entry = type(entry)(
                 multi_pack, new_link_parent, new_link_child
             )  # type: ignore
-            multi_pack.add_entry(new_entry)
         else:
-            entry: MultiPackGroup
-            new_entry: MultiPackGroup = type(entry)(
+            entry = cast(MultiPackGroup, entry)
+            new_entry = type(entry)(
                 multi_pack, new_children
             )  # type: ignore
-            multi_pack.add_entry(new_entry)
+        multi_pack.add_entry(new_entry)
         return True
 
     def _process(self, input_pack: MultiPack):
