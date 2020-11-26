@@ -28,7 +28,7 @@ __all__ = [
 class TextReplacementOp(ABC):
     r"""
     The base class holds the data augmentation algorithm.
-    We leave the :func: replace method to be implemented
+    We leave the :func:`replace` method to be implemented
     by subclasses.
     """
     def __init__(self, configs: Config):
@@ -44,9 +44,10 @@ class TextReplacementOp(ABC):
         as replacement-based methods on different levels.
 
         Args:
-            - input: the input annotation to be replaced.
+            input: the input annotation to be replaced.
+
         Returns:
-            - A tuple, where the first element is a boolean value indicating
+            A tuple, where the first element is a boolean value indicating
             whether the replacement happens, and the second element is the
             replaced string.
         """

@@ -55,22 +55,18 @@ def modify_index(
     new spans are anchor indices for the mapping.
 
     Args:
-        - index: The index to map.
-        - old_spans: The spans before replacement.
-        - new_spans: The spans after replacement.
-        - is_begin: True if the index is a span begin index.
-        - is_inclusive: True if the span constructed by the aligned
+        index (int): The index to map.
+        old_spans (List): The spans before replacement.
+        new_spans (List): The spans after replacement.
+        is_begin (bool): True if the index is a span begin index.
+        is_inclusive (bool): True if the span constructed by the aligned
             index should include inserted spans.
     Returns:
         The aligned index.
 
-    If the old spans are:
-        [0, 1], [2, 3], [4, 6]
-    the new spans are:
-        [0, 4], [5, 7], [8, 9]
-    the input index is:
-        3
-    and there are no insertions,
+    If the old spans are [0, 1], [2, 3], [4, 6],
+    the new spans are [0, 4], [5, 7], [8, 9],
+    the input index is 3, and there are no insertions,
     the algorithm will first locate the last span with
     a begin index less or equal than the target index,
     ([2,3]), and find the corresponding span in new spans([5,7]).
@@ -83,13 +79,10 @@ def modify_index(
     whether to include the inserted span, and whether the
     input index is a begin or an end index.
 
-    If the old spans are:
-        [0, 1], [1, 1], [1, 2]
-    the new spans are:
-        [0, 2], [2, 4], [4, 5]
-    the input index is:
-        1,
-    the output will be 2 if both is_inclusive and is_begin are True,
+    If the old spans are [0, 1], [1, 1], [1, 2],
+    the new spans are [0, 2], [2, 4], [4, 5],
+    the input index is 1, the output will be 2 if both
+    is_inclusive and is_begin are True,
     because the inserted [1, 1] should be included in the span.
     If the is_inclusive=True but is_begin=False, the output will be
     4 because the index is an end index of the span.
@@ -182,7 +175,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     def __init__(self):
         super().__init__()
 
-        # `_replaced_annos`: {datapack id: SortedList[span, new text]}
+        # :attr:`_replaced_annos`: {datapack id: SortedList[span, new text]}
         # It records the spans replaced by new texts.
         # It is a map from datapack id to a list of tuples
         # (span, new text) inserted by :func:`replace`.
@@ -192,7 +185,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 lambda: SortedList([], key=lambda x: (x[0].begin, x[0].end))
             )
 
-        # `_inserted_annos`: {datapack id: Dict{position: length}}
+        # :attr:`_inserted_annos`: {datapack id: Dict{position: length}}
         # It records the inserted spans, mapping from datapack id
         # to a dictionary (position -> length) inserted by :func:`insert`.
         # The position is the index in the original datapack
@@ -203,19 +196,19 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 lambda: SortedDict({})
             )
 
-        # `_deleted_annos`: {datapack id: Set[annotation tid]}
+        # :attr:`_deleted_annos`: {datapack id: Set[annotation tid]}
         # It records the deleted spans, mapping from datapack id
         # to a set of annotation tids appended by :func:`delete`.
 
         self._deleted_annos: DefaultDict[int, Set[int]] = defaultdict(set)
 
-        # `_data_pack_map`: {orig pack id: new pack id}
+        # :attr:`_data_pack_map`: {orig pack id: new pack id}
         # It maintains a mapping from the pack id
         # of the original pack to the pack id of augmented pack.
         # It is used when copying the MultiPackLink and MultiPackGroup.
         self._data_pack_map: Dict[int, int] = {}
 
-        # `_entry_maps`: {datapack id: Dict{orig tid, new tid}}
+        # :attr:`_entry_maps`: {datapack id: Dict{orig tid, new tid}}
         # It is a map for tracking the annotation ids
         # before and after the auto align. It maps the
         # original annotation tid to the new annotation tid.
@@ -232,9 +225,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This function will check whether the new span
         has an overlap with any existing spans.
         Args:
-            - pid: Datapack Id.
-            - begin: The span begin index.
-            - end: The span end index.
+            pid: Datapack Id.
+            begin: The span begin index.
+            end: The span end index.
         Returns:
             True if the input span overlaps with
             any existing spans, False otherwise.
@@ -258,8 +251,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         augmented spans.
 
         Args:
-            - replacement_op: The class for data augmentation algorithm.
-            - input: The entry to be replaced.
+            replacement_op: The class for data augmentation algorithm.
+            input: The entry to be replaced.
         Returns:
             A bool value. True if the replacement happened, False otherwise.
         """
@@ -290,9 +283,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         is already an insertion at current position, it will abort the
         insertion and return False.
         Args:
-            - inserted_text: The text string to insert.
-            - data_pack: The datapack for insertion.
-            - pos: The position(index) of insertion.
+            inserted_text: The text string to insert.
+            data_pack: The datapack for insertion.
+            pos: The position(index) of insertion.
         Returns:
             A bool value. True if the insertion happened, False otherwise.
         """
@@ -314,7 +307,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         This is a wrapper function to delete an annotation.
 
         Args:
-            -input: The annotation to remove.
+            input: The annotation to remove.
         Returns:
             A bool value. True if the deletion happened, False otherwise.
         """
@@ -340,10 +333,10 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         in the new pack.
 
         Args:
-            - data_pack: The Datapack holding the replaced annotations.
-            - replaced_annotations: A SortedList of tuples(span, new string).
-            The text and span of the annotations will be updated
-            with the new string.
+            data_pack: The Datapack holding the replaced annotations.
+            replaced_annotations: A SortedList of tuples(span, new string).
+                The text and span of the annotations will be updated
+                with the new string.
 
         Returns:
             A new data_pack holds the text after replacement. The annotations
@@ -529,9 +522,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         does not exist, it will abort and return False.
 
         Args:
-            - entry: The Link/Group in the original data pack to copy.
-            - entry_map: The dictionary mapping original entry to copied entry.
-            - new_pack: The new data pack, which is the destination of copy.
+            entry: The Link/Group in the original data pack to copy.
+            entry_map: The dictionary mapping original entry to copied entry.
+            new_pack: The new data pack, which is the destination of copy.
         Returns:
             A bool value indicating whether the copy happens.
         """
@@ -580,7 +573,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         else:
             entry = cast(Group, entry)
             new_entry = type(entry)(
-                new_pack, set(new_children))  # type: ignore
+                new_pack, new_children)  # type: ignore
         new_pack.add_entry(new_entry)
         entry_map[entry.tid] = new_entry.tid
         return True
@@ -596,8 +589,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         MultiPackLink is used to align the source and target.
 
         Args:
-            - entry: The MultiPackLink/MultiPackGroup to copy.
-            - multi_pack: The multi_pack contains the input entry.
+            entry: The MultiPackLink/MultiPackGroup to copy.
+            multi_pack: The multi_pack contains the input entry.
         Returns:
             A bool value indicating whether the copy happens.
         """
@@ -640,7 +633,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         else:
             entry = cast(MultiPackGroup, entry)
             new_entry = type(entry)(
-                multi_pack, set(new_children))  # type: ignore
+                multi_pack, new_children)  # type: ignore
         multi_pack.add_entry(new_entry)
         return True
 
@@ -685,11 +678,13 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - augment_entry: defines the entry the processor will augment.
+            - augment_entry:
+                Defines the entry the processor will augment.
                 It should be a full qualified name of the entry class.
                 For example, "ft.onto.base_ontology.Sentence".
-            - other_entry_policy: a dict specifying the policies for
-                other entries. The key should be a full qualified class name.
+            - other_entry_policy:
+                A dict specifying the policies for other entries.
+                The key should be a full qualified class name.
                 The policy(value of the dict) specifies how to process
                 the corresponding entries after replacement.
 
@@ -705,27 +700,36 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 attached to are copied.
 
                 Example:
-                'other_entry_policy': {
-                    "kwargs": {
-                        "ft.onto.base_ontology.Document": "auto_align",
-                        "ft.onto.base_ontology.Sentence": "auto_align",
-                    }
-                }
-            - type: Should not modify this field, in order to use the kwargs.
-            - data_aug_op: The data augmentation Op for the processor.
+                    .. code-block:: python
+
+                        'other_entry_policy': {
+                            "kwargs": {
+                                "ft.onto.base_ontology.Document": "auto_align",
+                                "ft.onto.base_ontology.Sentence": "auto_align",
+                            }
+                        }
+
+            - type:
+                Should not modify this field, in order to use the kwargs.
+            - data_aug_op:
+                The data augmentation Op for the processor.
                 It should be a full qualified class name.
 
                 Example:
-                "forte.processors.data_augment.algorithms.text_replacement_op.
-                TextReplacementOp"
-            - data_aug_op_config: The configuration for data augmentation Op.
+                    "forte.processors.data_augment.algorithms.
+                    text_replacement_op.TextReplacementOp"
+            - data_aug_op_config:
+                The configuration for data augmentation Op.
+
                 Example:
-                "data_aug_op_config": {
-                    'kwargs': {
-                        "lang": "en",
-                        "use_gpu": False
-                    }
-                }
+                    .. code-block:: python
+
+                        "data_aug_op_config": {
+                            'kwargs': {
+                                "lang": "en",
+                                "use_gpu": False
+                            }
+                        }
         """
         config = super().default_configs()
         config.update({
