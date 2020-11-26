@@ -182,7 +182,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     def __init__(self):
         super().__init__()
 
-        # _replaced_annos: {datapack id: SortedList[span, new text]}
+        # `_replaced_annos`: {datapack id: SortedList[span, new text]}
         # It records the spans replaced by new texts.
         # It is a map from datapack id to a list of tuples
         # (span, new text) inserted by :func:`replace`.
@@ -192,7 +192,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 lambda: SortedList([], key=lambda x: (x[0].begin, x[0].end))
             )
 
-        # _inserted_annos: {datapack id: Dict{position: length}}
+        # `_inserted_annos`: {datapack id: Dict{position: length}}
         # It records the inserted spans, mapping from datapack id
         # to a dictionary (position -> length) inserted by :func:`insert`.
         # The position is the index in the original datapack
@@ -203,19 +203,19 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 lambda: SortedDict({})
             )
 
-        # _deleted_annos: {datapack id: Set[annotation tid]}
+        # `_deleted_annos`: {datapack id: Set[annotation tid]}
         # It records the deleted spans, mapping from datapack id
         # to a set of annotation tids appended by :func:`delete`.
 
         self._deleted_annos: DefaultDict[int, Set[int]] = defaultdict(set)
 
-        # _data_pack_map: {orig pack id: new pack id}
+        # `_data_pack_map`: {orig pack id: new pack id}
         # It maintains a mapping from the pack id
         # of the original pack to the pack id of augmented pack.
         # It is used when copying the MultiPackLink and MultiPackGroup.
         self._data_pack_map: Dict[int, int] = {}
 
-        # _entry_maps: {datapack id: Dict{orig tid, new tid}}
+        # `_entry_maps`: {datapack id: Dict{orig tid, new tid}}
         # It is a map for tracking the annotation ids
         # before and after the auto align. It maps the
         # original annotation tid to the new annotation tid.
@@ -551,17 +551,20 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             children = entry.get_members()
 
         # Copy the children entries.
-        new_children = []
+        new_children: List[Entry] = []
         for child_entry in children:
             if isinstance(child_entry, Annotation):
                 # Children Annotation must have been copied.
                 if child_entry.tid not in entry_map:
                     return False
-            else:
+            elif isinstance(child_entry, (Link, Group)):
                 # Recursively copy the children Links/Groups.
+                child_entry: Union[Link, Group]
                 if not self._copy_link_or_group(
                         child_entry, entry_map, new_pack):
                     return False
+            else:
+                return False
             new_child: Entry = new_pack.get_entry(
                 entry_map[child_entry.tid]
             )
@@ -569,14 +572,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         # Create the new entry and add to the new pack.
         if is_link:
+            entry: Link
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
-            new_entry = type(entry)(
-                new_pack, new_link_parent, new_link_child)
+            new_entry: Link = type(entry)(
+                new_pack, new_link_parent, new_link_child
+            )  # type: ignore
         else:
-            new_entry = type(entry)(
+            entry: Group
+            new_entry: Group = type(entry)(
                 new_pack, new_children
-            )
+            )  # type: ignore
         new_pack.add_entry(new_entry)
         entry_map[entry.tid] = new_entry.tid
         return True
@@ -606,7 +612,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             children = entry.get_members()
 
         # Get the copied children entries.
-        new_children = []
+        new_children: List[Entry] = []
         for child_entry in children:
             child_pack: DataPack = child_entry.pack
             child_pack_pid: int = child_pack.meta.pack_id
@@ -627,19 +633,19 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         # Create the new entry and add to the multi pack.
         if is_link:
+            entry: MultiPackLink
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
-            multi_pack.add_entry(
-                type(entry)(
-                    multi_pack, new_link_parent, new_link_child
-                )
-            )
+            new_entry: MultiPackLink = type(entry)(
+                multi_pack, new_link_parent, new_link_child
+            )  # type: ignore
+            multi_pack.add_entry(new_entry)
         else:
-            multi_pack.add_entry(
-                type(entry)(
-                    multi_pack, new_children
-                )
-            )
+            entry: MultiPackGroup
+            new_entry: MultiPackGroup = type(entry)(
+                multi_pack, new_children
+            )  # type: ignore
+            multi_pack.add_entry(new_entry)
         return True
 
     def _process(self, input_pack: MultiPack):
