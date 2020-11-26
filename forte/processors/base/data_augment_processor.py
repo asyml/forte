@@ -185,7 +185,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         # _replaced_annos: {datapack id: SortedList[span, new text]}
         # It records the spans replaced by new texts.
         # It is a map from datapack id to a list of tuples
-        # (span, new text) inserted by :func: replace.
+        # (span, new text) inserted by :func:`replace`.
         # The new text will be used for building new data pack.
         self._replaced_annos: DefaultDict[int, SortedList[Tuple[Span, str]]] = \
             defaultdict(
@@ -194,7 +194,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         # _inserted_annos: {datapack id: Dict{position: length}}
         # It records the inserted spans, mapping from datapack id
-        # to a dictionary (position -> length) inserted by :func: insert.
+        # to a dictionary (position -> length) inserted by :func:`insert`.
         # The position is the index in the original datapack
         # of insertion, and the length is the length of the inserted string.
 
@@ -205,7 +205,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         # _deleted_annos: {datapack id: Set[annotation tid]}
         # It records the deleted spans, mapping from datapack id
-        # to a set of annotation tids appended by :func: delete.
+        # to a set of annotation tids appended by :func:`delete`.
 
         self._deleted_annos: DefaultDict[int, Set[int]] = defaultdict(set)
 
