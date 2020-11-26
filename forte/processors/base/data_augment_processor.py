@@ -18,7 +18,7 @@ and create a new pack with them.
 """
 from copy import deepcopy
 from collections import defaultdict
-from typing import List, Tuple, Dict, DefaultDict, Set
+from typing import List, Tuple, Dict, DefaultDict, Set, Union
 from bisect import bisect_right
 from sortedcontainers import SortedList, SortedDict
 from forte.data.ontology.core import Entry, BaseLink
@@ -518,7 +518,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
     def _copy_link_or_group(
             self,
-            entry: Entry,
+            entry: Union[Link, Group],
             entry_map: Dict[int, int],
             new_pack: DataPack,
     ) -> bool:
@@ -562,7 +562,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 if not self._copy_link_or_group(
                         child_entry, entry_map, new_pack):
                     return False
-            new_child: Annotation = new_pack.get_entry(
+            new_child: Entry = new_pack.get_entry(
                 entry_map[child_entry.tid]
             )
             new_children.append(new_child)
@@ -572,17 +572,18 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
             new_entry = type(entry)(
-                new_pack, new_link_parent, new_link_child)  # type: ignore
+                new_pack, new_link_parent, new_link_child)
         else:
             new_entry = type(entry)(
                 new_pack, new_children
             )
         new_pack.add_entry(new_entry)
         entry_map[entry.tid] = new_entry.tid
+        return True
 
     def _copy_multi_pack_link_or_group(
             self,
-            entry: Entry,
+            entry: Union[MultiPackLink, MultiPackGroup],
             multi_pack: MultiPack
     ) -> bool:
         r"""
