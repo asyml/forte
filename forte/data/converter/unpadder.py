@@ -20,8 +20,10 @@ class BaseUnpadder:
     def unpad(self, prediction, pack, instance):
         pass
 
+
 class SameLengthUnpadder(BaseUnpadder):
     def __init__(self, config):
+        super().__init__()
         self.config = config
         self.based_on = config["based_on"]
 
