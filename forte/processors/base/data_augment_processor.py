@@ -559,7 +559,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                     return False
             elif isinstance(child_entry, (Link, Group)):
                 # Recursively copy the children Links/Groups.
-                child_entry = cast(Union[Link, Group], child_entry)
                 if not self._copy_link_or_group(
                         child_entry, entry_map, new_pack):
                     return False
@@ -577,13 +576,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
             new_entry = type(entry)(
-                new_pack, new_link_parent, new_link_child
-            )  # type: ignore
+                new_pack, new_link_parent, new_link_child)  # type: ignore
         else:
             entry = cast(Group, entry)
             new_entry = type(entry)(
-                new_pack, new_children
-            )  # type: ignore
+                new_pack, set(new_children))  # type: ignore
         new_pack.add_entry(new_entry)
         entry_map[entry.tid] = new_entry.tid
         return True
@@ -639,13 +636,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
             new_entry = type(entry)(
-                multi_pack, new_link_parent, new_link_child
-            )  # type: ignore
+                multi_pack, new_link_parent, new_link_child)  # type: ignore
         else:
             entry = cast(MultiPackGroup, entry)
             new_entry = type(entry)(
-                multi_pack, new_children
-            )  # type: ignore
+                multi_pack, set(new_children))  # type: ignore
         multi_pack.add_entry(new_entry)
         return True
 
