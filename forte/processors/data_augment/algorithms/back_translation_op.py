@@ -35,6 +35,23 @@ class BackTranslationOp(TextReplacementOp):
     input is translated to another language, then translated
     back to the original language, with pretrained
     machine-translation models.
+
+    Args:
+        configs (Config): The configuration for back translation model.
+            It should have the following fields:
+
+            - ``'src_lang'``:
+                The source language of back translation.
+            - ``'tgt_lang'``:
+                The target language of back translation.
+            - ``'model_to'``:
+                The full qualified name of the model from source language
+                to target language.
+            - ``'model_back'``:
+                The full qualified name of the model from target language
+                to source language.
+            - ``'device'``:
+                "cpu" for the CPU or "cuda" for GPU.
     """
     def __init__(self, configs: Config):
         super().__init__(configs)
@@ -58,11 +75,14 @@ class BackTranslationOp(TextReplacementOp):
     def replace(self, input: Entry) -> Tuple[bool, str]:
         r"""
         This function replaces a piece of text with back translation.
+
         Args:
-            input: a string, could be a word, sentence or document.
+            input (Entry): An Entry, could be a word, sentence or document.
+
         Returns:
-            a bool value indicating that the replacement happened.
-            a string with a similar semantic meaning.
+            A tuple, where the first element is a boolean value indicating
+            whether the replacement happens, and the second element is the
+            replaced string.
         """
         intermediate_text: str = self.model_to.translate(input.text)
         return True, self.model_back.translate(intermediate_text)

@@ -30,10 +30,11 @@ __all__ = [
 class MachineTranslator:
     r"""
     This class is a wrapper for machine translation models.
+
     Args:
-        - src_lang: The source language.
-        - tgt_lang: The target language.
-        - device: "cuda" for gpu, "cpu" otherwise.
+        src_lang: The source language.
+        tgt_lang: The target language.
+        device: "cuda" for gpu, "cpu" otherwise.
     """
     def __init__(self, src_lang: str, tgt_lang: str, device: str):
         self.src_lang: str = src_lang
@@ -44,10 +45,11 @@ class MachineTranslator:
     def translate(self, src_text: str) -> str:
         r"""
         This function translates the input text into target language.
+
         Args:
-            - src_text: The input text in source language.
+            src_text (str): The input text in source language.
         Returns:
-            - The output text in target language.
+            The output text in target language.
         """
         raise NotImplementedError
 
