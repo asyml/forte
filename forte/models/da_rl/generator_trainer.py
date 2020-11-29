@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import texar.torch as tx
-from texar.torch.modules.classifiers.bert_classifier import BERTClassifier
-import copy
+from torch.nn import functional as F
 import torch
+import random
+import math
+
+from forte.models.da_rl.magic_model import MetaModule
 
 
 class MetaAugmentationWrapper:
@@ -27,19 +30,64 @@ class MetaAugmentationWrapper:
     let phi be the parameters of the augmentation model
 
     '''
-    def __init__(self, augmentation_model):
-        self.generator = augmentation_model
-        self.optimizer_phi = augmentation_model.get_optimizer()
+    def __init__(self, augmentation_model, augmentation_optimizer, aug_tokenizer,
+                 device, num_aug):
+        self._aug_model = augmentation_model
+        self._aug_optimizer = augmentation_optimizer
+        self._aug_tokenizer = aug_tokenizer
+        self._device = device
+        self.num_aug = num_aug
 
-    def augment(self, classifier, batch):
-        r"""
-        args: classifer as model_theta
-        return: augmented_batch_examples
-        """
-        self.update_phi(classifier, batch)
-        return self.generator(batch)
+    def startup_train_batch(self):
+        self._aug_model.train()
+        self._aug_model.zero_grad()
 
-    def update_phi(self, classifier, train_batch):
+    def _augment_example(self, features, num_aug):
+        init_ids, input_mask, segment_ids, _ = \
+            (t.view(1, -1).to(self._device) for t in features)
+
+        len = int(tx.sum(input_mask).item())
+        if len >= 4:
+            mask_idx = sorted(
+                random.sample(list(range(1, len - 1)), max(len // 7, 2)))
+        else:
+            mask_idx = [1]
+
+        init_ids[0][mask_idx] = \
+            self._aug_tokenizer.convert_tokens_to_ids(['[MASK]'])[0]
+        logits = self._aug_model(init_ids, segment_ids, input_mask)[0]
+
+        # Get samples
+        aug_probs_all = []
+        for _ in range(num_aug):
+            # might need a gumbel trick here in order to keep phi as variables
+            probs = F.gumbel_softmax(logits, hard=False)
+            aug_probs = torch.zeros_like(probs).scatter_(
+                1, init_ids[0].unsqueeze(1), 1.)    # Todo: torch
+
+            for t in mask_idx:
+                aug_probs = tx.utils.pad_and_concat(
+                    [aug_probs[:t], probs[t:t + 1], aug_probs[t + 1:]], dim=0)
+
+            aug_probs_all.append(aug_probs)
+
+        aug_probs = tx.utils.pad_and_concat([ap.unsqueeze(0) for ap in aug_probs_all], dim=0)
+
+        return aug_probs
+
+    def augment_example(self, features):
+        aug_probs = self._augment_example(features, self.num_aug)
+
+        _, input_mask, segment_ids, label_ids = \
+            (t.to(self._device).unsqueeze(0) for t in features)
+        num_aug_len = len(aug_probs)
+        assert(num_aug_len==self.num_aug)
+        input_mask_aug = tx.utils.pad_and_concat([input_mask] * self.num_aug, dim=0)
+        segment_ids_aug = tx.utils.pad_and_concat([segment_ids] * self.num_aug, dim=0)
+        label_ids_aug = tx.utils.pad_and_concat([label_ids] * self.num_aug, dim=0)
+        return aug_probs, input_mask_aug, segment_ids_aug, label_ids_aug
+
+    def update_meta_classifier(self, loss, classifier, classifier_optimizer):
         r"""
         equations:
         theta'(phi) = theta - \nabla_{theta} L_{train}(theta, phi)
@@ -47,10 +95,7 @@ class MetaAugmentationWrapper:
         """
 
         # grads_theta(phi) = \nabla_{theta} L_{train}(theta, phi)
-        # might need a gumbel trick here in order to keep phi as variables
-        augmented_batch = self._generator(train_batch)  # with phi as var   # Todo
-
-        grads_theta = calculate_grads(augmented_batch, classifier)   # see example below
+        grads_theta = self.calculate_grads(loss, classifier, classifier_optimizer)
 
         # meta model is used to calculate \nabla_{phi} L_{val}(theta'(phi)),
         # where it needs gradients applied to phi
@@ -60,92 +105,62 @@ class MetaAugmentationWrapper:
         # theta'(phi) = theta - grads_theta(phi)
         meta_model.update_parameters(grads_theta)
 
-        for val_batch in val_data:
-            # L_{val}(theta'(phi))
-            val_loss = meta_model(val_batch)
+        return meta_model
 
-            # apply gradients to phi
-            val_loss.backward()
+    def update_phi(self):
+        # phi = phi - \nabla_{phi} L_{val}(theta'(phi))
+        self._aug_optimizer.step()
 
-            # phi = phi - \nabla_{phi} L_{val}(theta'(phi))
-            self.optimizer_phi.step()
-
-
-
-def calculate_grads(augmented_batch, classifier):
-    return
-
-
-class MetaModule(tx.modules):
-    '''
-    input: a pytorch module
-
-    implement the calculation:
-    L(theta - \nabla_{theta} L_{train}(theta, phi))
-    after the calculation, we need phi is derivable
-
-    there is an example code for this class here:
-    https://github.com/tanyuqian/learning-data-manipulation/blob/master/magic_module.py
-    '''
-
-    def __init__(self, module):
-        tx.modules.__init__(self)
-        self._type = type(module)
-
-        for key, value in module._parameters.items():
-            if value is not None:
-                self.register_parameter('_origin_' + key, value)
-                self.register_buffer(key, value.data)
-            else:
-                self.register_buffer(key, None)
-
-        for key, value in module._buffers.items():
-            self.register_buffer(key, copy.deepcopy(value))
-
-        for key, value in module._modules.items():
-            self.add_module(key, MetaModule(value))
-
-        for key, value in module.__dict__.items():
-            if (not key in self.__dict__) and\
-                    (not key in self._buffers) and\
-                    (not key in self._modules):
-                self.__setattr__(key, value)
-
-    def update_params(self, deltas):
-        sub_params = {}
-        for key, delta in deltas.items():
-            if not ('.' in key):
-                self._buffers[key] = self._buffers[key] + delta
-            else:
-                attr = key.split('.')[0]
-                if not (attr in sub_params):
-                    sub_params[attr] = {}
-                sub_params[attr]['.'.join(key.split('.')[1:])] = delta
-        for key, value in sub_params.items():
-            self._modules[key].update_params(value)
-
-
-# An example of classifier calculate_grads
-# from https://github.com/tanyuqian/learning-data-manipulation/blob/master/augmentation/classifier.py
-
-class Classifier:
-    def __init__(self):
-        self._model = BERTClassifier('bert-base-uncased')
-
-    def calculate_grads(self):
-        self._model.zero_grad()
-        loss = self._model(
-            aug_probs, segment_ids_aug, input_mask_aug, label_ids_aug,
-            use_input_probs=True)
+    def calculate_grads(self, loss, classifier, classifier_optimizer):
         grads = torch.autograd.grad(
-            loss, [param for name, param in self._model.named_parameters()],
+            loss, [param for name, param in classifier.named_parameters()],
             create_graph=True)
-
         grads = {param: grads[i] for i, (name, param) in enumerate(
-            self._model.named_parameters())}
-
-        deltas = _adam_delta(self._optimizer, self._model, grads)
+            classifier.named_parameters())}
+        deltas = _adam_delta(classifier_optimizer, classifier, grads)
         return deltas
+
+    def augment_batch(self, input_ids, input_mask, segment_ids, labels):
+        self._aug_model.eval()
+
+        aug_examples = []
+        features = []
+        for i in range(len(input_ids)):
+            feature = (input_ids[i], input_mask[i], segment_ids[i], labels[i])
+            features.append(feature)
+            with torch.no_grad():
+                aug_probs = self._augment_example(feature, num_aug=1)
+                aug_examples.append(aug_probs)
+
+        input_ids_or_probs, input_masks, segment_ids, label_ids = [tx.utils.pad_and_concat(
+            [t[i].unsqueeze(0) for t in features], dim=0).to(
+            self._device) for i in range(4)]
+
+        num_aug = len(aug_examples[0])
+        assert(num_aug==1)
+
+        input_ids_or_probs_aug = []
+        for i in range(num_aug):
+            for aug_probs in aug_examples:
+                input_ids_or_probs_aug.append(aug_probs[i:i + 1])
+        input_ids_or_probs_aug = \
+            tx.utils.pad_and_concat(input_ids_or_probs_aug, dim=0).to(self._device)
+
+        inputs_onehot = torch.zeros_like(
+            input_ids_or_probs_aug[:len(input_ids_or_probs)]).scatter_(
+            2, input_ids_or_probs.unsqueeze(2), 1.)
+        input_ids_or_probs = tx.utils.pad_and_concat(
+            [inputs_onehot, input_ids_or_probs_aug], dim=0).to(self._device)
+
+        segment_ids = \
+            tx.utils.pad_and_concat([segment_ids] * (num_aug + 1), dim=0).to(self._device)
+        input_masks = \
+            tx.utils.pad_and_concat([input_masks] * (num_aug + 1), dim=0).to(self._device)
+        label_ids = \
+            tx.utils.pad_and_concat([label_ids] * (num_aug + 1), dim=0).to(self._device)
+
+        return input_ids_or_probs, input_masks, segment_ids, label_ids
+
 
 def _adam_delta(optimizer, model, grads):
     deltas = {}

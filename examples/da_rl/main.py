@@ -11,65 +11,330 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Example of building a sentence classifier based on pre-trained BERT model.
+"""
 
 import argparse
+import functools
+# import importlib
+import logging
+import os
+
 import torch
+import torch.nn.functional as F
 import texar.torch as tx
 
-from forte.models.da_rl import (MetaAugmentationWrapper, DaRlTrainer)
+from examples.da_rl import config_data
+from examples.da_rl import config_classifier
+from examples.da_rl.utils import data_utils, model_utils
+from forte.models.da_rl.generator_trainer import MetaAugmentationWrapper
+from pytorch_pretrained_bert.modeling import BertForMaskedLM
+
 
 parser = argparse.ArgumentParser()
-
-# data
-parser.add_argument("--task", default="sst-5", type=str)
-parser.add_argument('--train_num_per_class', default=None, type=int)
-parser.add_argument('--dev_num_per_class', default=None, type=int)
-parser.add_argument('--data_seed', default=159, type=int)
-
-# train
-parser.add_argument("--batch_size", default=8, type=int)
-parser.add_argument("--classifier_lr", default=4e-5, type=float)
-parser.add_argument("--classifier_pretrain_epochs", default=1, type=int)
-parser.add_argument("--epochs", default=10, type=int)
-parser.add_argument("--min_epochs", default=0, type=int)
-
-# augmentation
-parser.add_argument("--generator_lr", default=4e-5, type=float)
-parser.add_argument("--generator_pretrain_epochs", default=60, type=int)
-parser.add_argument('--n_aug', default=2, type=int)
-
+parser.add_argument(
+    '--pretrained-model-name', type=str, default='bert-base-uncased',
+    choices=tx.modules.BERTEncoder.available_checkpoints(),
+    help="Name of the pre-trained downstream checkpoint to load.")
+parser.add_argument(
+    "--output-dir", default="output/",
+    help="The output directory where the model checkpoints will be written.")
+parser.add_argument(
+    "--checkpoint", type=str, default=None,
+    help="Path to a model checkpoint (including bert modules) to restore from.")
+parser.add_argument(
+    "--do-train", action="store_true", help="Whether to run training.")
+parser.add_argument(
+    "--do-eval", action="store_true",
+    help="Whether to run eval on the dev set.")
+parser.add_argument(
+    "--do-test", action="store_true",
+    help="Whether to run test on the test set.")
+parser.add_argument(
+    '--augmentation-model-name', type=str, default='bert-base-uncased',
+    choices=tx.modules.BERTEncoder.available_checkpoints(),
+    help="Name of the pre-trained augmentation model checkpoint to load.")
+parser.add_argument(
+    '--aug-num', type=int, default=4,
+    help = "number of augmentation samples when fine-tuning aug model")
 args = parser.parse_args()
 
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logging.root.setLevel(logging.INFO)
+config_downstream = {
+    k: v for k, v in config_classifier.__dict__.items()
+    if not k.startswith('__') and k != "hyperparams"}
+
+
+def run():
+    """
+    Builds the model and runs.
+    """
+    tx.utils.maybe_create_dir(args.output_dir)
+
+    # Loads data
+    num_train_data = config_data.num_train_data
+
+    # Builds data augmentation BERT
+    aug_model = BertForMaskedLM.from_pretrained(args.augmentation_model_name)
+    # todo binary label
+    aug_model.to(device)
+
+    aug_tokenizer = tx.data.BERTTokenizer(
+        pretrained_model_name=args.augmentation_model_name)
+
+    # Builds augmentation optimizer
+    aug_lr = 4e-5
+    param_optimizer = list(aug_model.named_parameters())
+    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in param_optimizer if
+                    not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+        {'params': [p for n, p in param_optimizer if
+                    any(nd in n for nd in no_decay)], 'weight_decay': 0.0}]
+    aug_optim = tx.core.BertAdam(
+        optimizer_grouped_parameters, betas=(0.9, 0.999), eps=1e-6, lr=aug_lr)
+
+    aug_wrapper = MetaAugmentationWrapper(aug_model, aug_optim, aug_tokenizer,
+                                          device, args.num_aug)
+
+
+    # Builds downstream BERT
+    model = tx.modules.BERTClassifier(
+        pretrained_model_name=args.pretrained_model_name,
+        hparams=config_downstream)
+    model.to(device)
+
+    num_train_steps = int(num_train_data / config_data.train_batch_size
+                          * config_data.max_train_epoch)
+    num_warmup_steps = int(num_train_steps
+                           * config_data.warmup_proportion)
+
+    # Builds learning rate decay scheduler
+    classifier_lr = 2e-5
+
+    vars_with_decay = []
+    vars_without_decay = []
+    for name, param in model.named_parameters():
+        if 'layer_norm' in name or name.endswith('bias'):
+            vars_without_decay.append(param)
+        else:
+            vars_with_decay.append(param)
+
+    opt_params = [{
+        'params': vars_with_decay,
+        'weight_decay': 0.01,
+    }, {
+        'params': vars_without_decay,
+        'weight_decay': 0.0,
+    }]
+    optim = tx.core.BertAdam(
+        opt_params, betas=(0.9, 0.999), eps=1e-6, lr=classifier_lr)
+
+    scheduler = torch.optim.lr_scheduler.LambdaLR(
+        optim, functools.partial(model_utils.get_lr_multiplier,
+                                 total_steps=num_train_steps,
+                                 warmup_steps=num_warmup_steps))
+
+    train_dataset = tx.data.RecordData(
+        hparams=config_data.train_hparam, device=device)
+    eval_dataset = tx.data.RecordData(
+        hparams=config_data.eval_hparam, device=device)
+    test_dataset = tx.data.RecordData(
+        hparams=config_data.test_hparam, device=device)
+
+    iterator = tx.data.DataIterator(
+        {"train": train_dataset, "eval": eval_dataset, "test": test_dataset}
+    )
+
+    eval_data_iterator = tx.data.DataIterator({"eval": eval_dataset})
+    eval_data_iterator.switch_to_dataset("eval")
+
+    def _compute_loss(logits, labels):
+        r"""Compute loss.
+        """
+        if model.is_binary:
+            loss = F.binary_cross_entropy(
+                logits.view(-1), labels.view(-1), reduction='mean')
+        else:
+            loss = F.cross_entropy(
+                logits.view(-1, model.num_classes),
+                labels.view(-1), reduction='mean')
+        return loss
+
+    def _train_epoch():
+        r"""Trains on the training set, and evaluates on the dev set
+        periodically.
+        """
+        iterator.switch_to_dataset("train")
+        model.train()
+
+        for batch in iterator:
+            input_ids = batch["input_ids"]
+            input_mask = batch["input_mask"]
+            segment_ids = batch["segment_ids"]
+            labels = batch["label_ids"]
+            assert len(input_ids) == len(segment_ids) == len(input_mask) == len(labels)
+
+            # train augmentation model params
+            aug_wrapper.startup_train_batch()
+            for i in range(len(input_ids)):
+                features = (input_ids[i], input_mask[i], segment_ids[i], labels[i])
+                aug_probs, input_mask_aug, segment_ids_aug, label_ids_aug = \
+                    aug_wrapper.augment_example(features)
+
+                # todo
+                # input_length = (1 - (aug_probs == 0).int()).sum(dim=1)
+
+                model.zero_grad()
+                logits, _ = model(aug_probs, input_mask_aug, segment_ids_aug)
+                loss = _compute_loss(logits, label_ids_aug)
+
+                meta_model = aug_wrapper.update_meta_classifier(loss, model, optim)
+
+                for val_batch in eval_data_iterator:
+                    val_input_ids = val_batch["input_ids"]
+                    val_segment_ids = val_batch["segment_ids"]
+                    val_labels = val_batch["label_ids"]
+                    val_input_length = (1 - (val_input_ids == 0).int()).sum(dim=1)
+                    val_logits, _ = meta_model(val_input_ids, val_input_length, val_segment_ids)
+                    val_loss = _compute_loss(val_logits, val_labels)
+                    # L_{val}(theta'(phi))
+                    # apply gradients to phi
+                    val_loss.backward()
+
+            aug_wrapper.update_phi()
+            input_probs, input_masks, segment_ids, label_ids = \
+                aug_wrapper.augment_batch(input_ids, input_mask, segment_ids, labels)
+
+            # train classifier
+            optim.zero_grad()
+
+            # input_length = (1 - (input_ids == 0).int()).sum(dim=1)
+            #
+            # logits, _ = model(input_ids_or_probs, input_length, segment_ids)
+
+            logits, _ = model(input_probs, input_masks, segment_ids)
+
+            loss = _compute_loss(logits, label_ids)
+            loss.backward()
+            optim.step()
+            scheduler.step()
+            step = scheduler.last_epoch
+
+            dis_steps = config_data.display_steps
+            if dis_steps > 0 and step % dis_steps == 0:
+                logging.info("step: %d; loss: %f", step, loss)
+
+            eval_steps = config_data.eval_steps
+            if eval_steps > 0 and step % eval_steps == 0:
+                _eval_epoch()
+                model.train()
+
+    @torch.no_grad()
+    def _eval_epoch():
+        """Evaluates on the dev set.
+        """
+        iterator.switch_to_dataset("eval")
+        model.eval()
+
+        nsamples = 0
+        avg_rec = tx.utils.AverageRecorder()
+        for batch in iterator:
+            input_ids = batch["input_ids"]
+            segment_ids = batch["segment_ids"]
+            labels = batch["label_ids"]
+
+            input_length = (1 - (input_ids == 0).int()).sum(dim=1)
+
+            logits, preds = model(input_ids, input_length, segment_ids)
+
+            loss = _compute_loss(logits, labels)
+            accu = tx.evals.accuracy(labels, preds)
+            batch_size = input_ids.size()[0]
+            avg_rec.add([accu, loss], batch_size)
+            nsamples += batch_size
+        logging.info("eval accu: %.4f; loss: %.4f; nsamples: %d",
+                     avg_rec.avg(0), avg_rec.avg(1), nsamples)
+
+    @torch.no_grad()
+    def _test_epoch():
+        """Does predictions on the test set.
+        """
+        iterator.switch_to_dataset("test")
+        model.eval()
+
+        _all_preds = []
+        for batch in iterator:
+            input_ids = batch["input_ids"]
+            segment_ids = batch["segment_ids"]
+
+            input_length = (1 - (input_ids == 0).int()).sum(dim=1)
+
+            _, preds = model(input_ids, input_length, segment_ids)
+
+            _all_preds.extend(preds.tolist())
+
+        output_file = os.path.join(args.output_dir, "test_results.tsv")
+        with open(output_file, "w+") as writer:
+            writer.write("\n".join(str(p) for p in _all_preds))
+        logging.info("test output written to %s", output_file)
+
+    if args.checkpoint:
+        ckpt = torch.load(args.checkpoint)
+        model.load_state_dict(ckpt['model'])
+        optim.load_state_dict(ckpt['optimizer'])
+        scheduler.load_state_dict(ckpt['scheduler'])
+    if args.do_train:
+        for _ in range(config_data.max_train_epoch):
+            _train_epoch()
+        states = {
+            'model': model.state_dict(),
+            'optimizer': optim.state_dict(),
+            'scheduler': scheduler.state_dict(),
+        }
+        torch.save(states, os.path.join(args.output_dir, 'model.ckpt'))
+
+    if args.do_eval:
+        _eval_epoch()
+
+    if args.do_test:
+        _test_epoch()
+
+
+def prepare_data(self, csv_data_dir):
+    """Prepares data.
+    """
+    logging.info("Loading data")
+
+    if config_data.pickle_data_dir is None:
+        output_dir = csv_data_dir
+    else:
+        output_dir = config_data.pickle_data_dir
+    tx.utils.maybe_create_dir(output_dir)
+
+    processor = data_utils.IMDbProcessor()
+
+    num_classes = len(processor.get_labels())
+    num_train_data = len(processor.get_train_examples(csv_data_dir))
+    logging.info(
+        'num_classes:%d; num_train_data:%d', num_classes, num_train_data)
+
+    tokenizer = tx.data.BERTTokenizer(
+        pretrained_model_name=args.pretrained_model_name)
+
+    data_utils.prepare_record_data(
+        processor=processor,
+        tokenizer=tokenizer,
+        data_dir=csv_data_dir,
+        max_seq_length=config_data.max_seq_length,
+        output_dir=output_dir,
+        feature_types=config_data.feature_types)
+
+
 def main():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # prepare data
-    examples, label_list = get_data(
-        task=args.task,
-        train_num_per_class=args.train_num_per_class,
-        dev_num_per_class=args.dev_num_per_class,
-        data_seed=args.data_seed)
+    if not os.path.isfile("data/IMDB/train.pkl"):
+        prepare_data("data/IMDB")
 
-    # prepare classifier model
-    classifier = tx.modules...
-    # prepare augmentation model
-    augmentation_model = tx.modules...
-    # prepare generator
-    generator = MetaAugmentationWrapper(augmentation_model)
-    # prepare joint trainer
-    trainer = DaRlTrainer(classifier, generator, args)
-
-    # pre-train
-    trainer.pretrain(examples['train'])
-
-    # joint train
-    for epoch in range(args.epochs):
-        trainer.train_epoch(
-            epoch=epoch,
-            train_examples=examples['train'])
-
-        dev_acc = classifier.evaluate(examples['dev'])
-
-
-if __name__ == '__main__':
-    main()
+    run()

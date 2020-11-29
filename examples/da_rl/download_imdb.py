@@ -12,8 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This package contains Information Retrieval Processors, to use processor in
-# this package, run the 'ir' option in setup.py
+import os
+import sys
+import subprocess
 
-from forte.models.da_rl.generator_trainer import *
-from forte.models.da_rl.magic_model import *
+
+def main():
+    if not os.path.exists("data/IMDB_raw"):
+        subprocess.run("mkdir data/IMDB_raw", shell=True, check=True)
+    # pylint: disable=line-too-long
+    subprocess.run(
+        'wget -P data/IMDB_raw/ https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz',
+        shell=True, check=True)
+    subprocess.run(
+        'tar xzvf data/IMDB_raw/aclImdb_v1.tar.gz -C data/IMDB_raw/ && rm data/IMDB_raw/aclImdb_v1.tar.gz',
+        shell=True, check=True)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
