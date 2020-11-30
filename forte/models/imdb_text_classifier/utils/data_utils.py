@@ -502,7 +502,7 @@ def convert_unsup_examples_to_features_and_output_to_files(
 
 def prepare_record_data(processor, tokenizer,
                         data_dir, max_seq_length, output_dir,
-                        feature_types, unsup_feature_types=None):
+                        feature_types, unsup_feature_types=None, sup_size_limit=None):
     r"""Prepare record data.
     Args:
         processor: Data Preprocessor, which must have get_labels,
@@ -516,28 +516,62 @@ def prepare_record_data(processor, tokenizer,
     """
     label_list = processor.get_labels()
 
-    train_examples = processor.get_train_examples(data_dir)
     train_file = os.path.join(output_dir, "train.pkl")
-    convert_examples_to_features_and_output_to_files(
-        train_examples, label_list, max_seq_length,
-        tokenizer, train_file, feature_types)
+    if not os.path.isfile(train_file):
+        train_examples = processor.get_train_examples(data_dir)
+        if sup_size_limit is not None:
+            train_examples = get_data_by_size_lim(train_examples, processor, sup_size_limit)
+        convert_examples_to_features_and_output_to_files(
+            train_examples, label_list, max_seq_length,
+            tokenizer, train_file, feature_types)
 
-    eval_examples = processor.get_dev_examples(data_dir)
     eval_file = os.path.join(output_dir, "eval.pkl")
-    convert_examples_to_features_and_output_to_files(
-        eval_examples, label_list,
-        max_seq_length, tokenizer, eval_file, feature_types)
+    if not os.path.isfile(eval_file):
+        eval_examples = processor.get_dev_examples(data_dir)
+        convert_examples_to_features_and_output_to_files(
+            eval_examples, label_list,
+            max_seq_length, tokenizer, eval_file, feature_types)
 
-    test_examples = processor.get_test_examples(data_dir)
     test_file = os.path.join(output_dir, "predict.pkl")
-    convert_examples_to_features_and_output_to_files(
-        test_examples, label_list,
-        max_seq_length, tokenizer, test_file, feature_types)
+    if not os.path.isfile(test_file):
+        test_examples = processor.get_test_examples(data_dir)
+        convert_examples_to_features_and_output_to_files(
+            test_examples, label_list,
+            max_seq_length, tokenizer, test_file, feature_types)
 
-    unsup_label_list = label_list + ["unsup"]
-    unsup_examples = processor.get_unsup_examples(data_dir, "unsup_in")
-    unsup_aug_examples = processor.get_unsup_aug_examples(data_dir, "unsup_in")
     unsup_file = os.path.join(output_dir, "unsup.pkl")
-    convert_unsup_examples_to_features_and_output_to_files(
-        unsup_examples, unsup_aug_examples, unsup_label_list,
-        max_seq_length, tokenizer, unsup_file, unsup_feature_types)
+    if not os.path.isfile(unsup_file):
+        unsup_label_list = label_list + ["unsup"]
+        unsup_examples = processor.get_unsup_examples(data_dir, "unsup_in")
+        unsup_aug_examples = processor.get_unsup_aug_examples(data_dir, "unsup_in")
+        import pdb
+        pdb.set_trace()
+        convert_unsup_examples_to_features_and_output_to_files(
+            unsup_examples, unsup_aug_examples, unsup_label_list,
+            max_seq_length, tokenizer, unsup_file, unsup_feature_types)
+
+
+def get_data_by_size_lim(train_examples, processor, sup_size):
+    """Deterministicly get a dataset with only sup_size examples."""
+    # Assuming sup_size < number of labeled data and
+    # that there are same number of examples for each category
+    assert sup_size % len(processor.get_labels()) == 0
+    per_label_size = sup_size // len(processor.get_labels())
+    per_label_examples = {}
+    for i in range(len(train_examples)):
+        label = train_examples[i].label
+        if label not in per_label_examples:
+            per_label_examples[label] = []
+        per_label_examples[label] += [train_examples[i]]
+
+    for label in processor.get_labels():
+        assert len(per_label_examples[label]) >= per_label_size, (
+            "label {} only has {} examples while the limit"
+            "is {}".format(label, len(per_label_examples[label]), per_label_size))
+
+    new_train_examples = []
+    for i in range(per_label_size):
+        for label in processor.get_labels():
+            new_train_examples += [per_label_examples[label][i]]
+    train_examples = new_train_examples
+    return train_examples

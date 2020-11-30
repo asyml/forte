@@ -1,7 +1,8 @@
 pickle_data_dir = "data/IMDB"
 max_seq_length = 64
 num_classes = 2
-num_train_data = 25000
+num_train_data = 32 # supervised
+# num_unsup_data
 
 # used for bert executor example
 max_batch_tokens = 128

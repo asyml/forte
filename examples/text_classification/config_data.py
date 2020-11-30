@@ -7,7 +7,7 @@ num_train_data = 25000
 max_batch_tokens = 128
 
 train_batch_size = 32
-max_train_epoch = 5
+max_train_epoch = 20
 display_steps = 50  # Print training loss every display_steps; -1 to disable
 
 # tbx config
@@ -15,7 +15,7 @@ tbx_logging_steps = 5  # log the metrics for tbX visualization
 tbx_log_dir = "runs/"
 exp_number = 1  # experiment number
 
-eval_steps = 100  # Eval on the dev set every eval_steps; -1 to disable
+eval_steps = -1  # Eval on the dev set every eval_steps; -1 to disable
 # Proportion of training to perform linear learning rate warmup for.
 # E.g., 0.1 = 10% of training.
 warmup_proportion = 0.1
@@ -67,11 +67,11 @@ test_hparam = {
     "shuffle": False
 }
 
+# UDA config
+tsa = False
+tsa_schedule = "linear_schedule" # linear_schedule, exp_schedule, log_schedule
+
 unsup_feature_types = {
-    # Reading features from pickled data file.
-    # E.g., Reading feature "input_ids" as dtype `int64`;
-    # "FixedLenFeature" indicates its length is fixed for all data instances;
-    # and the sequence length is limited by `max_seq_length`.
     "input_ids": ["int64", "stacked_tensor", max_seq_length],
     "input_mask": ["int64", "stacked_tensor", max_seq_length],
     "segment_ids": ["int64", "stacked_tensor", max_seq_length],
