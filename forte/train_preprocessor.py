@@ -23,8 +23,8 @@ from forte.data.converter.converter import Converter
 from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.data.extractor.extractor import BaseExtractor
-from forte.data.extractor.predictor import Predictor
-from forte.data.extractor.unpadder import BaseUnpadder, SameLengthUnpadder
+from forte.predictor import Predictor
+from forte.data.converter.unpadder import BaseUnpadder, SameLengthUnpadder
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.readers.base_reader import PackReader
