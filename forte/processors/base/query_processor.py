@@ -19,6 +19,7 @@ from typing import Union, Tuple, Dict, Any
 
 import numpy as np
 
+from forte.common import EntryNotFoundError
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Query
@@ -70,5 +71,12 @@ class QueryProcessor(MultiPackProcessor, ABC):
 
     def _process(self, input_pack: MultiPack):
         query_pack, query_value = self._process_query(input_pack)
-        query = Query(pack=query_pack)
+
+        # Make sure we only have one query on this pack.
+        query: Query
+        try:
+            query = query_pack.get_single(Query)  # type: ignore
+        except EntryNotFoundError:
+            query = Query(pack=query_pack)
+
         query.value = query_value
