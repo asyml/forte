@@ -11,8 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Any, Tuple, Union
+from copy import deepcopy
+from typing import List, Any, Tuple, Union, Dict, Optional
 import torch
+
+from forte.data.extractor.vocabulary import Vocabulary
 
 
 class Feature:
@@ -20,9 +23,6 @@ class Feature:
     This class represents a type of feature for a single data instance. The
     Feature can be multiple dimensions. It has methods to do padding and
     retrieve the actual multi-dimension data.
-    The `data` contains the actual value. The `pad_value` is the pad that
-    will be used to do padding. The `dim` indicates the total number of
-    dimension for this feature.
     Here are some examples for how the padding works:
     i) [2,7,8] -> [2,7,8,0]
         1 dim feature
@@ -40,8 +40,11 @@ class Feature:
     .. code-block:: python
                 # create a feature
                 feature = Feature(data=[[1,2],[3,4,5],[9]],
-                                  pad_value=0,
-                                  dim=2)
+                                  {
+                                    "pad_value": 0,
+                                    "dim": 2,
+                                    "dtype": torch.long
+                                  })
                 # Pad current dim with max_len=4
                 feature.pad(4)
 
@@ -58,28 +61,35 @@ class Feature:
     """
     def __init__(self,
                  data: List,
-                 pad_value: Union[int, List],
-                 dim: int,
-                 dtype: torch.dtype = torch.long):
+                 metadata: Dict,
+                 vocab: Optional[Vocabulary] = None):
         """
         Args:
             data (List):
                 A list of features, where each feature can be the value or
                 another list of features.
-            pad_value (int or List):
-                a single integer or a list of integer representing <PAD>. Only
-                the base dimension will actually use `pad_value`.
-            dim (int):
-                Total number of dimensions for the data. `dim` is always >= 1.
-                If the data is a list of value, the `dim` should be 1 and this
-                feature is called base feature.
+                The `data` contains the actual value.
+            metadata(Dict):
+                A dictionary of metadata for this feature. Mandatory metadata
+                fields includes: `pad_value`, `dim`, `dtype`.
+                The `pad_value` is the pad that will be used to do padding.
+                The `dim` indicates the total number of dimension for this
+                feature.
+                The `dtype` is the value type. For example, it can be
+                torch.long.
+            vocab(Vocabulary):
+                An optional fields about the vocabulary used to build this
+                feature.
         """
-        self._pad_value: Union[int, List] = pad_value
-        self._dim: int = dim
-        self._dtype = dtype
+        self._meta_data: Dict = metadata
+        self._validate_metadata()
+
+        self._pad_value: Union[int, List] = self._meta_data["pad_value"]
+        self._dim: int = self._meta_data["dim"]
+        self._dtype = self._meta_data["dtype"]
 
         # Indicating whether current Feature is the inner most feature.
-        self._base_feature: bool = dim == 1
+        self._base_feature: bool = self._dim == 1
         # Only base feature has actual `data`
         self._data: Union[None, List] = None
         # Only non-base features have `sub_features`. It can be considered as
@@ -92,8 +102,16 @@ class Feature:
         # when the method `pad` is called.
         self._mask: List = []
 
+        self._vocab: Vocabulary = vocab
+
         self._parse_sub_features(data)
         self._validate_input()
+
+    def _validate_metadata(self):
+        necessary_fields = ["pad_value", "dim", "dtype"]
+        for field in necessary_fields:
+            assert field in self._meta_data, \
+                "Field not found in metadata: {}".format(field)
 
     def _validate_input(self):
         """
@@ -121,11 +139,12 @@ class Feature:
         else:
             self._sub_features: List = []
             for sub_data in data:
+                sub_metadata = deepcopy(self._meta_data)
+                sub_metadata["dim"] = sub_metadata["dim"]-1
                 self._sub_features.append(
-                    Feature(sub_data,
-                            self._pad_value,
-                            self._dim - 1,
-                            self.dtype))
+                    Feature(data=sub_data,
+                            metadata=sub_metadata,
+                            vocab=self._vocab))
 
         self._mask: List = [1] * len(data)
 
@@ -165,6 +184,14 @@ class Feature:
 
         return self._sub_features
 
+    @property
+    def meta_data(self) -> Dict:
+        return self._meta_data
+
+    @property
+    def vocab(self) -> Vocabulary:
+        return self._vocab
+
     def __len__(self):
         return len(self._data) if self.base_feature else \
             len(self._sub_features)
@@ -184,7 +211,11 @@ class Feature:
             if self.base_feature:
                 self._data.append(self._pad_value)
             else:
-                self._sub_features.append(Feature([], self._pad_value, self._dim - 1))
+                sub_metadata = deepcopy(self._meta_data)
+                sub_metadata["dim"] = sub_metadata["dim"] - 1
+                self._sub_features.append(Feature(data=[],
+                                                  metadata=sub_metadata,
+                                                  vocab=self._vocab))
             self._mask.append(0)
 
     def unroll(self) -> Tuple[List[Any], List[Any]]:

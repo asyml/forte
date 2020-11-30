@@ -165,7 +165,10 @@ class ConverterTest(unittest.TestCase):
 
         features: List[Feature] = []
         for data in data_list:
-            feature: Feature = Feature(data, pad_id, dim, dtype)
+            feature: Feature = Feature(data, {"pad_value": pad_id,
+                                              "dim": dim,
+                                              "dtype": dtype
+                                             })
             features.append(feature)
 
         return features
@@ -184,7 +187,10 @@ class ConverterTest(unittest.TestCase):
 
         features: List[Feature] = []
         for data in data_list:
-            feature: Feature = Feature(data, pad_id, dim, dtype)
+            feature: Feature = Feature(data, {"pad_value": pad_id,
+                                              "dim": dim,
+                                              "dtype": dtype
+                                             })
             features.append(feature)
 
         return features
@@ -211,7 +217,10 @@ class ConverterTest(unittest.TestCase):
 
         features: List[Feature] = []
         for data in data_list:
-            feature: Feature = Feature(data, pad_id, dim, dtype)
+            feature: Feature = Feature(data, {"pad_value": pad_id,
+                                              "dim": dim,
+                                              "dtype": dtype
+                                             })
             features.append(feature)
 
         return features

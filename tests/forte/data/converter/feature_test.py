@@ -151,7 +151,10 @@ class FeatureTest(unittest.TestCase):
         data: List = [7, 8, 9] if data is None else data
         pad_id: int = 0 if pad_id is None else pad_id
         dim: int = 1 if dim is None else dim
-        feature: Feature = Feature(data, pad_id, dim, dtype)
+        feature: Feature = Feature(data, {"pad_value": pad_id,
+                                          "dim": dim,
+                                          "dtype": dtype
+                                         })
 
         return feature
 
@@ -164,7 +167,10 @@ class FeatureTest(unittest.TestCase):
             if data is None else data
         pad_id: int = 0 if pad_id is None else pad_id
         dim: int = 2 if dim is None else dim
-        feature: Feature = Feature(data, pad_id, dim, dtype)
+        feature: Feature = Feature(data, {"pad_value": pad_id,
+                                          "dim": dim,
+                                          "dtype": dtype
+                                         })
 
         return feature
 
@@ -177,7 +183,10 @@ class FeatureTest(unittest.TestCase):
                       [[1, 0, 0], [0, 1, 0]]] if data is None else data
         pad_id: List = [0, 0, 1] if pad_id is None else pad_id
         dim: int = 2 if dim is None else dim
-        feature: Feature = Feature(data, pad_id, dim, dtype)
+        feature: Feature = Feature(data, {"pad_value": pad_id,
+                                          "dim": dim,
+                                          "dtype": dtype
+                                         })
 
         return feature
 
