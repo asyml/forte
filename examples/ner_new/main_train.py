@@ -26,7 +26,7 @@ import yaml
 from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.pipeline import Pipeline
-from forte.data.extractor.predictor import Predictor
+from forte.predictor import Predictor
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.data.extractor.extractor import \
@@ -143,14 +143,14 @@ tp_request = {
         "text_tag": {
             "entry_type": Token,
             "repr": "text_repr",
-            "conversion_method": "indexing",
+            "vocab_method": "indexing",
             "type": DATA_INPUT,
             "extractor": TextExtractor
         },
         "char_tag": {
             "entry_type": Token,
             "repr": "char_repr",
-            "conversion_method": "indexing",
+            "vocab_method": "indexing",
             "max_char_length": config.config_data.max_char_length,
             "type": DATA_INPUT,
             "extractor": CharExtractor
