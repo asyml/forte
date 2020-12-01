@@ -25,8 +25,7 @@ class Converter:
     PyTorch tensor. It will also do the padding for the given batch of data.
     """
 
-    def __init__(self, need_pad=True, default_dtype: torch.dtype = torch.long):
-        self._need_pad = need_pad
+    def __init__(self, default_dtype: torch.dtype = torch.long):
         self._default_dtype = default_dtype
 
     def convert(self, features: List[Feature]) -> \
@@ -47,43 +46,36 @@ class Converter:
         mask tensor along ith dimension and will have the shape:
         [batch_size, feature_dim1_max, ..., feature_dimi_max]
         """
-        # Padding the features if needed
         dtype: Optional[torch.dtype] = None
 
-        if self._need_pad:
-            # BFS to pad each dimension
-            queue: List[Feature] = []
-            curr_max_len: int = -1
+        # BFS to pad each dimension
+        queue: List[Feature] = []
+        curr_max_len: int = -1
 
-            for feature in features:
-                if not dtype:
-                    dtype = feature.dtype
-                else:
-                    assert dtype == feature.dtype
-                queue.append(feature)
-                curr_max_len = max(curr_max_len, len(feature))
-
-            while len(queue) > 0:
-                size: int = len(queue)
-                next_max_len = -1
-                while size > 0:
-                    feature: Feature = queue.pop(0)
-                    feature.pad(curr_max_len)
-
-                    if not feature.base_feature:
-                        for sub_feature in feature.sub_features:
-                            next_max_len = max(next_max_len,
-                                               len(sub_feature))
-                            queue.append(sub_feature)
-
-                    size -= 1
-
-                curr_max_len = next_max_len
-        else:
-            if len(features) > 0:
-                dtype = features[0].dtype
+        for feature in features:
+            if not dtype:
+                dtype = feature.dtype
             else:
-                dtype = self._default_dtype
+                assert dtype == feature.dtype
+            queue.append(feature)
+            curr_max_len = max(curr_max_len, len(feature))
+
+        while len(queue) > 0:
+            size: int = len(queue)
+            next_max_len = -1
+            while size > 0:
+                feature: Feature = queue.pop(0)
+                feature.pad(curr_max_len)
+
+                if not feature.base_feature:
+                    for sub_feature in feature.sub_features:
+                        next_max_len = max(next_max_len,
+                                           len(sub_feature))
+                        queue.append(sub_feature)
+
+                size -= 1
+
+            curr_max_len = next_max_len
 
         # Convert features to tensors
         batch_padded_features: List[List[Any]] = []
