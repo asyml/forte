@@ -340,7 +340,6 @@ class IMDBClassifier:
         uda_iterator = UDAIterator(
             iterator,
             unsup_iterator,
-            unsup_forward_fn,
             softmax_temperature=1.0,
             confidence_threshold=-1,
             reduction="mean")
@@ -400,14 +399,8 @@ class IMDBClassifier:
             uda_iterator.switch_to_dataset("train", use_unsup=True)
             iter(uda_iterator)
             nsamples = 0
-            # while True:
-            #     # zero grad before unsup_loss is computed
-            #     optim.zero_grad()
-            #     try:
-                #     batch, unsup_batch, unsup_loss = next(iterator)
-                # except StopIteration:
-                #     break
-            for batch, unsup_batch, unsup_loss in uda_iterator:
+            for batch, unsup_batch in uda_iterator:
+                optim.zero_grad()
                 input_ids = batch["input_ids"]
                 segment_ids = batch["segment_ids"]
                 labels = batch["label_ids"]
@@ -416,15 +409,18 @@ class IMDBClassifier:
                 nsamples += batch_size
 
                 input_length = (1 - (input_ids == 0).int()).sum(dim=1)
-
+                
+                # sup loss
                 logits, _ = model(input_ids, input_length, segment_ids)
-
                 loss = _compute_loss_tsa(logits, labels, scheduler.last_epoch,\
                     num_train_steps)
+                # unsup loss
+                unsup_logits, unsup_aug_logits = unsup_forward_fn(unsup_batch)
+                unsup_loss = uda_iterator.calculate_uda_loss(unsup_logits, unsup_aug_logits)
+
                 loss = loss + unsup_loss # unsup coefficient = 1
                 loss.backward()
                 optim.step()
-                optim.zero_grad() # zero_grad after because gradient is computed inside iterator
                 scheduler.step()
                 step = scheduler.last_epoch
 
@@ -448,7 +444,7 @@ class IMDBClassifier:
 
             nsamples = 0
             avg_rec = tx.utils.AverageRecorder()
-            for batch, _, _ in uda_iterator:
+            for batch, _ in uda_iterator:
                 input_ids = batch["input_ids"]
                 segment_ids = batch["segment_ids"]
                 labels = batch["label_ids"]
@@ -473,7 +469,7 @@ class IMDBClassifier:
             model.eval()
 
             _all_preds = []
-            for batch, _, _ in uda_iterator:
+            for batch, _ in uda_iterator:
                 input_ids = batch["input_ids"]
                 segment_ids = batch["segment_ids"]
 
@@ -497,7 +493,8 @@ class IMDBClassifier:
             for i in range(self.config_data.max_train_epoch):
                 print("Epoch", i)
                 _train_epoch()
-                _eval_epoch() # eval after epoch because switch_dataset just resets the iterator
+                if self.config_data.eval_steps == -1:
+                    _eval_epoch() # eval after epoch because switch_dataset just resets the iterator
             states = {
                 'model': model.state_dict(),
                 'optimizer': optim.state_dict(),
