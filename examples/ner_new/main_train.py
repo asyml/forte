@@ -93,7 +93,7 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
     return model
 
 
-def train(batch: Batch):
+def train(model: nn.Module, batch: Batch):
     word = batch["text_tag"]["tensor"]
     char = batch["char_tag"]["tensor"]
     ner = batch["ner_tag"]["tensor"]
@@ -231,7 +231,7 @@ while epoch < config.config_data.num_epochs:
         train_preprocessor.get_train_batch_iterator()
 
     for batch in tqdm(train_batch_iter):
-        batch_train_err = train(batch)
+        batch_train_err = train(model, batch)
 
         train_err += batch_train_err
         train_total += batch.batch_size
