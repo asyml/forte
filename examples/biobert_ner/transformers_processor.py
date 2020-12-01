@@ -47,7 +47,7 @@ class BERTTokenizer(PackProcessor):
         for i, (begin, end) in enumerate(align_tokens(tokens_clean,
                                                       input_pack.text.lower())):
             subword = Subword(input_pack, begin, end)
-            subword.is_subword = tokens[i].startswith('##')
+            subword.is_first_segment = not tokens[i].startswith('##')
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

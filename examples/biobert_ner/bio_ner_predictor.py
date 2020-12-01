@@ -119,13 +119,14 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
 
         first_idx: int = subword_entities[0]['idx']
         first_tid = subword_entities[0]['tid']
-        while first_idx > 0 and data_pack.get_entry(first_tid).is_subword:
+        while first_idx > 0 and not data_pack.get_entry(
+            first_tid).is_first_segment:
             first_idx -= 1
             first_tid = tids[first_idx]
 
         last_idx: int = subword_entities[-1]['idx']
-        while last_idx < len(tids) - 1 and data_pack.get_entry(
-            tids[last_idx + 1]).is_subword:
+        while last_idx < len(tids) - 1 and not data_pack.get_entry(
+            tids[last_idx + 1]).is_first_segment:
             last_idx += 1
 
         return first_idx, last_idx
@@ -162,7 +163,7 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
         for entity in entities:
             subword = data_pack.get_entry(entity['tid'])
 
-            if entity['label'] == 'B' and not subword.is_subword:
+            if entity['label'] == 'B' and subword.is_first_segment:
                 # Flush the existing entity and start a new entity
                 if subword_entities:
                     complete_entity = \
@@ -176,21 +177,21 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
                 subword_entities.append(entity)
 
         if subword_entities:
-            subword_entities = self._complete_entity(subword_entities,
-                                                     data_pack,
-                                                     tids)
-            complete_entities.append(subword_entities)
+            complete_entity = self._complete_entity(subword_entities,
+                                                    data_pack,
+                                                    tids)
+            complete_entities.append(complete_entity)
 
         return complete_entities
 
     def pack(self, data_pack: DataPack,
-             output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
+             output_dict: Optional[Dict[str, Dict[str, List[Any]]]] = None):
         """
         Write the prediction results back to datapack. by writing the predicted
         ner to the original subwords and convert predictions to something that
         makes sense in a word-by-word segmentation
         """
-        # print(list(data_pack.get(Sentence)))
+
         if output_dict is None:
             return
 
@@ -208,12 +209,7 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
             for first_idx, last_idx in entity_groups:
                 first_token: Subword = data_pack.get_entry(  # type: ignore
                     tids[first_idx])
-                first_token.ner = 'B-' + self.ft_configs.ner_type
                 begin = first_token.span.begin
-
-                for tid in tids[(first_idx + 1):(last_idx + 1)]:
-                    token: Subword = data_pack.get_entry(tid)  # type: ignore
-                    token.ner = 'I-' + self.ft_configs.ner_type
 
                 last_token: Subword = data_pack.get_entry(  # type: ignore
                     tids[last_idx])
