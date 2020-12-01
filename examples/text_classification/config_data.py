@@ -1,5 +1,5 @@
 pickle_data_dir = "data/IMDB"
-max_seq_length = 128 # the input will be truncated to max_seq_length
+max_seq_length = 128  # the input will be truncated to max_seq_length
 num_classes = 2
 num_train_data = 25000
 
