@@ -28,7 +28,7 @@ python utils/imdb_format.py --raw_data_dir=data/IMDB_raw/aclImdb --train_id_path
 
 The next step is to generate augment training data (using your favorite back translation model) and output to a CSV file `train_aug.csv` with the same format as the training data. Each example in `train_aug.csv` should correspond to the same line in `train.csv`.
 
-For demonstration purpose, we provide the processed and augmented data files `train.csv`, `train_aug.csv`, `test.csv` (TODO: add link). Place the CSV files in directory `data/IMDB`. (Hint: to achieve better performance, you will want to generate back-translation data yourself.)
+For demonstration purpose, we provide the processed and augmented data files [`train.csv`, `train_aug.csv`, `test.csv`](https://drive.google.com/file/d/1OKrbS76mbGCIz3FcFQ8-qPpMTQkQy8bP/view?usp=sharing). Place the CSV files in directory `data/IMDB`. (Hint: to achieve better performance, you will want to generate back-translation data yourself.)
 
 ### Train
 
