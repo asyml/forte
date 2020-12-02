@@ -544,8 +544,6 @@ def prepare_record_data(processor, tokenizer,
         unsup_label_list = label_list + ["unsup"]
         unsup_examples = processor.get_unsup_examples(data_dir, "unsup_in")
         unsup_aug_examples = processor.get_unsup_aug_examples(data_dir, "unsup_in")
-        import pdb
-        pdb.set_trace()
         convert_unsup_examples_to_features_and_output_to_files(
             unsup_examples, unsup_aug_examples, unsup_label_list,
             max_seq_length, tokenizer, unsup_file, unsup_feature_types)

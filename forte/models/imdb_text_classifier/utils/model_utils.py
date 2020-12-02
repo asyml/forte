@@ -1,6 +1,7 @@
 """
 Model utility functions
 """
+import math
 import torch
 
 
@@ -32,10 +33,10 @@ def get_tsa_threshold(schedule, global_step, num_train_steps, start, end):
         threshold = training_progress
     elif schedule == "exp_schedule":
         scale = 5
-        threshold = torch.exp((training_progress - 1) * scale)
+        threshold = math.exp((training_progress - 1) * scale) 
         # [exp(-5), exp(0)] = [1e-2, 1]
     elif schedule == "log_schedule":
         scale = 5
         # [1 - exp(0), 1 - exp(-5)] = [0, 0.99]
-        threshold = 1 - torch.exp((-training_progress) * scale)
+        threshold = 1 - math.exp((-training_progress) * scale)
     return threshold * (end - start) + start

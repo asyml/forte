@@ -1,13 +1,13 @@
 pickle_data_dir = "data/IMDB"
-max_seq_length = 64
+max_seq_length = 128
 num_classes = 2
-num_train_data = 320 # supervised data limit. max 25000
+num_train_data = 24  # supervised data limit. max 25000
 
 # used for bert executor example
 max_batch_tokens = 128
 
-train_batch_size = 32
-max_train_epoch = 1000
+train_batch_size = 24
+max_train_epoch = 3000
 display_steps = 50  # Print training loss every display_steps; -1 to disable
 
 # tbx config
@@ -68,7 +68,7 @@ test_hparam = {
 }
 
 # UDA config
-tsa = False
+tsa = True
 tsa_schedule = "linear_schedule" # linear_schedule, exp_schedule, log_schedule
 
 unsup_feature_types = {

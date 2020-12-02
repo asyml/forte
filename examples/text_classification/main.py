@@ -27,7 +27,7 @@ def main():
             or not os.path.isfile("data/IMDB/predict.pkl")\
             or not os.path.isfile("data/IMDB/unsup.pkl"):
         model.prepare_data("data/IMDB")
-    # model.run(do_train=True, do_eval=False, do_test=False)
+    # model.run(do_train=True, do_eval=True, do_test=False)
     model.run_uda(do_train=True, do_eval=True, do_test=False)
 
 

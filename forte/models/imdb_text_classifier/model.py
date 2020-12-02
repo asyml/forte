@@ -240,6 +240,8 @@ class IMDBClassifier:
         if do_train:
             for _ in range(self.config_data.max_train_epoch):
                 _train_epoch()
+                if self.config_data.eval_steps == -1:
+                    _eval_epoch()
             states = {
                 'model': model.state_dict(),
                 'optimizer': optim.state_dict(),
