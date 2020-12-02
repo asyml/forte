@@ -3,17 +3,9 @@ max_seq_length = 128
 num_classes = 2
 num_train_data = 24  # supervised data limit. max 25000
 
-# used for bert executor example
-max_batch_tokens = 128
-
 train_batch_size = 24
 max_train_epoch = 3000
 display_steps = 50  # Print training loss every display_steps; -1 to disable
-
-# tbx config
-tbx_logging_steps = 5  # log the metrics for tbX visualization
-tbx_log_dir = "runs/"
-exp_number = 1  # experiment number
 
 eval_steps = 100  # Eval on the dev set every eval_steps; if -1 will eval every epoch
 # Proportion of training to perform linear learning rate warmup for.
