@@ -21,8 +21,6 @@ import os
 import csv
 import logging
 
-import tensorflow as tf
-
 import texar.torch as tx
 
 

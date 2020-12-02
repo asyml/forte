@@ -23,6 +23,9 @@ def main():
         subprocess.run("mkdir data/IMDB_raw", shell=True, check=True)
     # pylint: disable=line-too-long
     subprocess.run(
+        'wget -P data/IMDB_raw/ https://github.com/google-research/uda/blob/master/text/data/IMDB_raw/train_id_list.txt',
+        shell=True, check=True)
+    subprocess.run(
         'wget -P data/IMDB_raw/ https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz',
         shell=True, check=True)
     subprocess.run(
