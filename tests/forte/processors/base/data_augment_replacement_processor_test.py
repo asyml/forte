@@ -23,18 +23,15 @@ from forte.processors.data_augment.algorithms.text_replacement_op import TextRep
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology.top import MultiPackLink
+from forte.data.ontology.top import MultiPackLink, MultiPackGroup, Link, Group
 from forte.data.readers import MultiPackSentenceReader
 from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
 from ft.onto.base_ontology import Token, Sentence, Document, Annotation
+# from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
+# from forte.common.configuration import Config
 
 from ddt import ddt, data, unpack
-
-
-class TmpReplacementDataAugmentProcessor(ReplacementDataAugmentProcessor):
-    def new_pack(self):
-        return MultiPack()
 
 
 class TmpReplacer(TextReplacementOp):
@@ -71,9 +68,15 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         }
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
 
+        # config = Config({
+        #     'processors': 'tokenize,pos,lemma,depparse',
+        #     'lang': "en",
+        #     'use_gpu': False,
+        # }, StandfordNLPProcessor.default_configs())
+        # nlp.add(component=StandfordNLPProcessor(), config=config, selector=AllPackSelector())
+
         nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
         nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
-
         nlp.initialize()
 
         expected_outputs = [
@@ -84,28 +87,33 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             [" NLP ", "Virgin", "Samantha", " NLP ", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", " NLP ", "."],
         ]
 
+        expected_links = [
+            "til", "12", "for", "the", "bus", "."
+        ]
+
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
-                "entry": [
-                    "ft.onto.base_ontology.Document",
-                    "ft.onto.base_ontology.Sentence"
-                ],
-                "policy": ["auto_align", "auto_align"]
+                "kwargs": {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align"
+                }
             },
-            "kwargs": {
-                'data_aug_op': "tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer",
-                'data_aug_op_config': {}
+            'type': 'data_augmentation_op',
+            'data_aug_op': 'tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer',
+            "data_aug_op_config": {
+                'kwargs': {}
             }
         }
 
-        processor = TmpReplacementDataAugmentProcessor()
+        processor = ReplacementDataAugmentProcessor()
         processor.initialize(resources=None, configs=processor_config)
 
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
             src_pack = m_pack.get_pack('input_src')
             tgt_pack = m_pack.get_pack('output_tgt')
 
+            num_mpl_orig, num_mpg_orig = 0, 0
             # Copy the source pack to target pack.
             tgt_pack.set_text(src_pack.text)
             for anno in src_pack.get(Annotation):
@@ -114,24 +122,80 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 )
                 tgt_pack.add_entry(new_anno)
 
+                # Create MultiPackLink.
                 m_pack.add_entry(
                     MultiPackLink(
                         m_pack, anno, new_anno
                     )
                 )
 
+                # Create MultiPackGroup.
+                m_pack.add_entry(
+                    MultiPackGroup(
+                        m_pack, [anno, new_anno]
+                    )
+                )
+
+                # Count the number of MultiPackLink/MultiPackGroup.
+                num_mpl_orig += 1
+                num_mpg_orig += 1
+
+            # Create Links in the source pack.
+            # The Links should be a tree:
+            #
+            #                           Link 3
+            #                    _________|_________
+            #                   |                  |
+            #                 Link 2               |
+            #            _______|________          |
+            #           |               |          |
+            #         Link 1            |          |
+            #     ______|_____          |          |
+            #    |           |          |          |
+            # token 1     token 2    token 3    token 4 ... ...
+            prev_entry = None
+            for i, token in enumerate(src_pack.get(Token)):
+                # Avoid overlapping with deleted tokens.
+                if i < 10:
+                    continue
+                if prev_entry:
+                    link = Link(src_pack, prev_entry, token)
+                    src_pack.add_entry(
+                        link
+                    )
+                    prev_entry = link
+                else:
+                    prev_entry = token
+
+            # Create Groups in the target pack.
+            # The Groups should be a tree like the Links.
+            prev_entry = None
+            for i, token in enumerate(tgt_pack.get(Token)):
+                # Avoid overlapping with deleted tokens.
+                if i < 10:
+                    continue
+                if prev_entry:
+                    group = Group(tgt_pack, [prev_entry, token])
+                    tgt_pack.add_entry(
+                        group
+                    )
+                    prev_entry = group
+                else:
+                    prev_entry = token
+
             # Test the insertion and deletion
             for pack in (src_pack, tgt_pack):
                 # Insert an "NLP" at the beginning
-                processor.insert(" NLP ", pack, 0)
-                processor.insert(" NLP ", pack, 18)
-                processor.insert(" NLP ", pack, len(pack.text) - 2)
+                processor._insert(" NLP ", pack, 0)
+                processor._insert(" NLP ", pack, 18)
+                processor._insert(" NLP ", pack, len(pack.text) - 2)
                 # Delete the second token "and"
-                processor.delete(list(pack.get(Token))[1])
+                processor._delete(list(pack.get(Token))[1])
 
             processor._process(m_pack)
 
             new_src_pack = m_pack.get_pack('augmented_input_src')
+            new_tgt_pack = m_pack.get_pack('augmented_output_tgt')
 
             self.assertEqual(new_src_pack.text, expected_outputs[idx])
 
@@ -141,11 +205,52 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             for sent in new_src_pack.get(Sentence):
                 self.assertEqual(sent.text.strip(), expected_outputs[idx].strip())
 
+            # Test the copied Links.
+            prev_link = None
+            for i, link in enumerate(new_src_pack.get(Link)):
+                if prev_link:
+                    self.assertEqual(link.get_parent().tid, prev_link.tid)
+                    self.assertEqual(link.get_child().text, expected_links[i])
+                prev_link = link
+
+            # Test the copied Groups.
+            prev_group = None
+            for i, group in enumerate(new_tgt_pack.get(Group)):
+                members = group.get_members()
+                if isinstance(members[0], Token):
+                    member_token = members[0]
+                    member_group = members[1]
+                else:
+                    member_token = members[1]
+                    member_group = members[0]
+
+                if prev_group:
+                    self.assertEqual(isinstance(member_token, Token), True)
+                    self.assertEqual(isinstance(member_group, Group), True)
+                    self.assertEqual(member_group.tid, prev_group.tid)
+                    self.assertEqual(member_token.text, expected_links[i])
+
+                prev_group = group
+
+            # Test the MultiPackLink/MultiPackGroup
+            num_mpl_aug, num_mpg_aug = 0, 0
             for mpl in m_pack.get(MultiPackLink):
                 parent = mpl.get_parent()
                 child = mpl.get_child()
+                num_mpl_aug += 1
                 self.assertEqual(parent.text, child.text)
                 self.assertNotEqual(parent.pack.meta.pack_id, child.pack.meta.pack_id)
+
+            for mpg in m_pack.get(MultiPackGroup):
+                members = mpg.get_members()
+                num_mpg_aug += 1
+                self.assertEqual(members[0].text, members[1].text)
+                self.assertNotEqual(members[0].pack.meta.pack_id, members[1].pack.meta.pack_id)
+
+            # Test the number of MultiPackLink/MultiPackGroup.
+            # The number should be doubled, except for one deletion.
+            self.assertEqual(num_mpl_aug, num_mpl_orig * 2 - 1)
+            self.assertEqual(num_mpg_aug, num_mpg_orig * 2 - 1)
 
 
 if __name__ == "__main__":
