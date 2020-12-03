@@ -19,8 +19,6 @@ train_POS = 40
 train_NEG = 40
 eval_POS = 5
 eval_NEG = 5
-test_POS = 400
-test_NEG = 400
 
 
 def read_train_csv(input_file, train_output_file,
@@ -63,35 +61,6 @@ def read_train_csv(input_file, train_output_file,
                         num_pos += 1
 
 
-def read_test_csv(input_file, output_file, pos, neg):
-    num_pos, num_neg = 0, 0
-
-    with open(input_file, mode='r') as fin:
-        with open(output_file, mode='w') as fout:
-            csv_reader = csv.reader(fin, delimiter='\t', quotechar='"')
-            cvs_writer = csv.writer(fout, delimiter='\t', quotechar='"')
-
-            for row in csv_reader:
-                if num_neg == neg and num_pos == pos:
-                    break
-                if len(row) == 0:
-                    continue
-                if row[1] == "unsup":
-                    continue
-                if row[1] == "neg" and num_neg == neg:
-                    continue
-                if row[1] == "pos" and num_pos == pos:
-                    continue
-                if row[1] == "neg":
-                    cvs_writer.writerow(row)
-                    num_neg += 1
-                if row[1] == "pos":
-                    cvs_writer.writerow(row)
-                    num_pos += 1
-
-
 read_train_csv("data/IMDB/train.csv", "data/IMDB/train_small.csv",
                "data/IMDB/eval_small.csv", train_POS, train_NEG,
                eval_POS, eval_NEG)
-read_test_csv("data/IMDB/test.csv", "data/IMDB/test_small.csv",
-              test_POS, test_NEG)

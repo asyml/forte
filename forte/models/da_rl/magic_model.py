@@ -4,6 +4,8 @@ import copy
 from typing import Optional, Tuple
 import operator
 
+from torch.nn.modules.utils import _pair
+
 
 class MetaModule(nn.Module):
     # pylint: disable=line-too-long
@@ -66,6 +68,15 @@ class MetaModule(nn.Module):
     def __len__(self):
         return len(self._modules)
 
+    @property
+    def _flat_weights(self):
+        return [p for layerparams in self.all_weights for p in layerparams]
+
+    @property
+    def all_weights(self):
+        return [[getattr(self, weight) for weight in weights] for weights in
+                self._all_weights]
+
     def _get_abs_string_index(self, idx):
         """Get the absolute index for the list of modules"""
         idx = operator.index(idx)
@@ -120,3 +131,28 @@ class MetaModule(nn.Module):
         num_heads, dim = t.size()[-2:]
         assert num_heads == self._hparams.num_heads
         return torch.reshape(t, (t.size(0), t.size(1), num_heads * dim))
+
+    def transpose_for_scores(self, x):
+        new_x_shape = x.size()[:-1] + (
+            self.num_attention_heads, self.attention_head_size)
+        x = x.view(*new_x_shape)
+        return x.permute(0, 2, 1, 3)
+
+    def conv2d_forward(self, input, weight):
+        assert issubclass(self._type, nn.Conv2d)
+
+        if self.padding_mode == 'circular':
+            expanded_padding = ((self.padding[1] + 1) // 2, self.padding[1] // 2,
+                                (self.padding[0] + 1) // 2, self.padding[0] // 2)
+            return nn.functional.conv2d(nn.functional.pad(
+                input, expanded_padding, mode='circular'),
+                weight, self.bias, self.stride,
+                _pair(0), self.dilation, self.groups)
+        return nn.functional.conv2d(input, weight, self.bias, self.stride,
+                        self.padding, self.dilation, self.groups)
+
+    def _check_input_dim(self, input):
+        assert issubclass(self._type, nn.BatchNorm2d)
+        if input.dim() != 4:
+            raise ValueError('expected 4D input (got {}D input)'
+                             .format(input.dim()))

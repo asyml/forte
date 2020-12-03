@@ -130,7 +130,7 @@ class IMDbProcessor(DataProcessor):
     def get_test_examples(self, raw_data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(raw_data_dir, "test_small.csv"),
+            self._read_tsv(os.path.join(raw_data_dir, "test.csv"),
                            quotechar='"'), "test")
 
     def get_unsup_examples(self, raw_data_dir, unsup_set):
