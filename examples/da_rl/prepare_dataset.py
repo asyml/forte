@@ -36,6 +36,9 @@ def read_train_csv(input_file, train_output_file,
                 cvs_writer_eval = \
                     csv.writer(fout_eval, delimiter='\t', quotechar='"')
 
+                cvs_writer_train.writerow(["content", "label", "id"])
+                cvs_writer_eval.writerow(["content", "label", "id"])
+
                 for row in csv_reader:
                     if num_eval_pos == eval_pos and num_eval_neg == eval_neg:
                         break

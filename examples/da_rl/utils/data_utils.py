@@ -152,7 +152,7 @@ class IMDbProcessor(DataProcessor):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
-            if len(line) == 0:
+            if i == 0 or len(line) == 0:
                 continue
             if skip_unsup and line[1] == "unsup":
                 continue
