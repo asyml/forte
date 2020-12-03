@@ -637,7 +637,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         multi_pack.add_entry(new_entry)
         return True
 
-    def _process(self, input_pack: MultiPack):
+    def _augment(self, input_pack: MultiPack):
+        r"""
+        This function calls the data augmentation ops and
+        modifies the input in-place. This function only applies for
+        replacement-based methods. The subclasses should override
+        this function to implement other data augmentation methods, such
+        as Easy Data Augmentation.
+        """
         replacement_op = create_class_with_kwargs(
             self.configs["data_aug_op"],
             class_args={
@@ -645,11 +652,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             }
         )
         augment_entry = get_class(self.configs["augment_entry"])
-        new_packs: List[Tuple[str, DataPack]] = []
-
-        for pack_name, data_pack in input_pack.iter_packs():
+        for _, data_pack in input_pack.iter_packs():
             for anno in data_pack.get(augment_entry):
                 self._replace(replacement_op, anno)
+
+    def _process(self, input_pack: MultiPack):
+        self._augment(input_pack)
+        new_packs: List[Tuple[str, DataPack]] = []
+        for pack_name, data_pack in input_pack.iter_packs():
             new_pack_name = "augmented_" + pack_name
             new_pack = self._auto_align_annotations(
                 data_pack=data_pack,
