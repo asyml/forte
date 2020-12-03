@@ -40,7 +40,7 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
     r"""
     Data augmentation processor for the Random Swap operation.
     Randomly choose two words in the sentence and swap their positions.
-    Do this n times.
+    Do this n times, where n = alpha * input length.
     """
 
     def _process(self, input_pack: MultiPack):
@@ -85,7 +85,9 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
             Additional keys for Random Swap:
-            - n: the number of times we perform the Random Swap operation
+            - alpha: indicates the percent of the words in a sentence are changed.
+                The processor will perform the Random Swap operation 
+                (input length * alpha) times.
         """
         config = super().default_configs()
         config.update({
@@ -108,7 +110,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     Data augmentation processor for the Random Insertion operation.
     Find a random synonym of a random word in the sentence that is
     not a stop word. Insert that synonym into a random position in
-    the sentence. Do this n times.
+    the sentence. Do this n times, where n = alpha * input length.
     """
 
     def _process(self, input_pack: MultiPack):
@@ -162,7 +164,9 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             By default, we use Dictionary Replacement with Wordnet to get
             synonyms to insert.
             Additional keys for Random Swap:
-            - n: the number of times we perform the Random Insertion operation
+            - alpha: indicates the percent of the words in a sentence are changed.
+                The processor will perform the Random Insertion operation 
+                (input length * alpha) times.
         """
         config = super().default_configs()
         config.update({
@@ -195,7 +199,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
 class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     r"""
     Data augmentation processor for the Random Insertion operation.
-    Randomly remove each word in the sentence with probability p.
+    Randomly remove each word in the sentence with probability alpha.
     """
 
     def _process(self, input_pack: MultiPack):
@@ -226,7 +230,7 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
             Additional keys for Random Deletion:
-            - prob: the probability to delete each word
+            - alpha: the probability to delete each word
         """
         config = super().default_configs()
         config.update({
