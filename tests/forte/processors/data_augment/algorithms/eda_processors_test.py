@@ -68,13 +68,11 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
-                "entry": [
-                    "ft.onto.base_ontology.Document",
-                    "ft.onto.base_ontology.Sentence"
-                ],
-                "policy": ["auto_align", "auto_align"],
+                "kwargs": {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align"
+                }
             },
-            "kwargs": {},
             'alpha': 0.1,
         }
 
@@ -123,23 +121,22 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
-                "entry": [
-                    "ft.onto.base_ontology.Document",
-                    "ft.onto.base_ontology.Sentence"
-                ],
-                "policy": ["auto_align", "auto_align"],
+                'kwargs': {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align"
+                }
             },
-            "kwargs": {
-                'data_aug_op':
-                    "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
-                'data_aug_op_config': {
+            'data_aug_op':
+                "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
+            'data_aug_op_config': {
+                "kwargs": {
                     "dictionary": (
                         "forte.processors.data_augment."
                         "algorithms.dictionary.WordnetDictionary"
                     ),
                     "prob": 1.0,
                     "lang": "eng",
-                }
+                },
             },
             'alpha': 0.1,
         }
@@ -188,11 +185,13 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
-                "entry": [
-                    "ft.onto.base_ontology.Document",
-                    "ft.onto.base_ontology.Sentence"
-                ],
-                "policy": ["auto_align", "auto_align"],
+                "kwargs": {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align"
+                }
+            },
+            "data_aug_op_config": {
+                'kwargs': {}
             },
             "alpha": 0.5,
         }

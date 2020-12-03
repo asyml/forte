@@ -43,10 +43,8 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
     Do this n times, where n = alpha * input length.
     """
 
-    def _process(self, input_pack: MultiPack):
+    def _augment(self, input_pack: MultiPack):
         augment_entry = get_class(self.configs["augment_entry"])
-        new_packs: List[Tuple[str, DataPack]] = []
-
         for pack_name, data_pack in input_pack.iter_packs():
             annotations = list(data_pack.get(augment_entry))
             if len(annotations) > 0:
@@ -61,23 +59,9 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     replace_map[swap_idx[1]] = new_idx_1
                 pid: int = data_pack.pack_id
                 for idx in replace_map:
-                    self.replaced_annos[pid]\
-                        .append((annotations[idx].span,
+                    self._replaced_annos[pid]\
+                        .add((annotations[idx].span,
                                  annotations[replace_map[idx]].text))
-
-            new_pack_name = "augmented_" + pack_name
-            new_pack = self.auto_align_annotations(
-                data_pack=data_pack,
-                replaced_annotations=self.replaced_annos[
-                    data_pack.meta.pack_id
-                ]
-            )
-            new_packs.append((new_pack_name, new_pack))
-
-        for new_pack_name, new_pack in new_packs:
-            input_pack.add_pack_(new_pack, new_pack_name)
-
-        self._copy_multi_pack_links(input_pack)
 
     @classmethod
     def default_configs(cls):
@@ -93,14 +77,12 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
         config.update({
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
-                "entry": [
-                    "ft.onto.base_ontology.Document",
-                    "ft.onto.base_ontology.Sentence"
-                ],
-                "policy": ["auto_align", "auto_align"],
+                "kwargs": {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align"
+                }
             },
-            "kwargs": {},
-            'alpha': 0.1
+            'alpha': 0.1,
         })
         return config
 
@@ -113,11 +95,11 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     the sentence. Do this n times, where n = alpha * input length.
     """
 
-    def _process(self, input_pack: MultiPack):
+    def _augment(self, input_pack: MultiPack):
         replacement_op = create_class_with_kwargs(
-            self.configs["kwargs"]["data_aug_op"],
+            self.configs["data_aug_op"],
             class_args={
-                "configs": self.configs["kwargs"]["data_aug_op_config"]
+                "configs": self.configs["data_aug_op_config"]["kwargs"]
             }
         )
         augment_entry = get_class(self.configs["augment_entry"])
@@ -139,22 +121,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                         replaced_text = " " + replaced_text
                     else:
                         replaced_text = replaced_text + " "
-                    self.insert(replaced_text, data_pack, insert_pos)
-
-            new_pack_name = "augmented_" + pack_name
-            new_pack = self.auto_align_annotations(
-                data_pack=data_pack,
-                replaced_annotations=self.replaced_annos[
-                    data_pack.meta.pack_id
-                ]
-
-            )
-            new_packs.append((new_pack_name, new_pack))
-
-        for new_pack_name, new_pack in new_packs:
-            input_pack.add_pack_(new_pack, new_pack_name)
-
-        self._copy_multi_pack_links(input_pack)
+                    self._insert(replaced_text, data_pack, insert_pos)
 
     @classmethod
     def default_configs(cls):
@@ -172,24 +139,22 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
         config.update({
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
-                "entry": [
-                    "ft.onto.base_ontology.Document",
-                    "ft.onto.base_ontology.Sentence"
-                ],
-                "policy": ["auto_align", "auto_align"],
+                'kwargs': {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align"
+                }
             },
-            "kwargs": {
-                'data_aug_op':
-                    "forte.processors.data_augment.algorithms."
-                    "dictionary_replacement_op.DictionaryReplacementOp",
-                'data_aug_op_config': {
+            'data_aug_op':
+                "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
+            'data_aug_op_config': {
+                "kwargs": {
                     "dictionary": (
                         "forte.processors.data_augment."
                         "algorithms.dictionary.WordnetDictionary"
                     ),
                     "prob": 1.0,
                     "lang": "eng",
-                }
+                },
             },
             'alpha': 0.1,
         })
@@ -202,27 +167,13 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     Randomly remove each word in the sentence with probability alpha.
     """
 
-    def _process(self, input_pack: MultiPack):
+    def _augment(self, input_pack: MultiPack):
         augment_entry = get_class(self.configs["augment_entry"])
-        new_packs: List[Tuple[str, DataPack]] = []
 
         for pack_name, data_pack in input_pack.iter_packs():
             for anno in data_pack.get(augment_entry):
                 if random.random() < self.configs['alpha']:
-                    self.delete(anno)
-            new_pack_name = "augmented_" + pack_name
-            new_pack = self.auto_align_annotations(
-                data_pack=data_pack,
-                replaced_annotations=self.replaced_annos[
-                    data_pack.meta.pack_id
-                ]
-            )
-            new_packs.append((new_pack_name, new_pack))
-
-        for new_pack_name, new_pack in new_packs:
-            input_pack.add_pack_(new_pack, new_pack_name)
-
-        self._copy_multi_pack_links(input_pack)
+                    self._delete(anno)
 
     @classmethod
     def default_configs(cls):
@@ -236,12 +187,14 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
         config.update({
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
-                "entry": [
-                    "ft.onto.base_ontology.Document",
-                    "ft.onto.base_ontology.Sentence"
-                ],
-                "policy": ["auto_align", "auto_align"],
+                "kwargs": {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align"
+                }
             },
-            'alpha': 0.1,
+            "data_aug_op_config": {
+                'kwargs': {}
+            },
+            "alpha": 0.1,
         })
         return config
