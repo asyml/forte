@@ -21,8 +21,6 @@ import os
 import csv
 import logging
 
-import tensorflow as tf
-
 import texar.torch as tx
 
 
@@ -34,11 +32,11 @@ class InputExample():
         Args:
             guid: Unique id for the example.
             text_a: string. The untokenized text of the first sequence.
-                For single sequence tasks, only this sequence must be specified.
+                For single sequence tasks, only this sequence must be specified
             text_b: (Optional) string. The untokenized text of the second
                 sequence. Only must be specified for sequence pair tasks.
             label: (Optional) string. The label of the example. This should be
-                specified for train and dev examples, but not for test examples.
+                specified for train and dev examples, but not for test examples
         """
         self.guid = guid
         self.text_a = text_a
@@ -78,7 +76,7 @@ class DataProcessor():
     @classmethod
     def _read_tsv(cls, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with tf.gfile.Open(input_file, "r") as f:
+        with open(input_file, "r", encoding='utf-8') as f:
             reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
             lines = []
             for line in reader:
@@ -120,13 +118,19 @@ class IMDbProcessor(DataProcessor):
     def get_train_examples(self, raw_data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(raw_data_dir, "train.csv"),
+            self._read_tsv(os.path.join(raw_data_dir, "train_small.csv"),
                            quotechar='"'), "train")
 
     def get_dev_examples(self, raw_data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(raw_data_dir, "test.csv"),
+            self._read_tsv(os.path.join(raw_data_dir, "eval_small.csv"),
+                           quotechar='"'), "dev")
+
+    def get_test_examples(self, raw_data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(raw_data_dir, "test_small.csv"),
                            quotechar='"'), "test")
 
     def get_unsup_examples(self, raw_data_dir, unsup_set):
@@ -148,12 +152,12 @@ class IMDbProcessor(DataProcessor):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
-            if i == 0:
+            if len(line) == 0:
                 continue
             if skip_unsup and line[1] == "unsup":
                 continue
             if line[1] == "unsup" and len(line[0]) < 500:
-                # tf.logging.info("skipping short samples:{:s}".format(line[0]))
+                # logging.info("skipping short samples:{:s}".format(line[0]))
                 continue
             guid = "%s-%s" % (set_type, line[2])
             text_a = line[0]
@@ -164,10 +168,10 @@ class IMDbProcessor(DataProcessor):
         return examples
 
     def get_train_size(self):
-        return 25000
+        return 80
 
     def get_dev_size(self):
-        return 25000
+        return 10
 
 
 def convert_single_example(ex_index, example, label_list, max_seq_length,
@@ -191,7 +195,8 @@ def convert_single_example(ex_index, example, label_list, max_seq_length,
         logging.info("input_ids: %s", " ".join([str(x) for x in input_ids]))
         logging.info("input_ids length: %d", len(input_ids))
         logging.info("input_mask: %s", " ".join([str(x) for x in input_mask]))
-        logging.info("segment_ids: %s", " ".join([str(x) for x in segment_ids]))
+        logging.info("segment_ids: %s",
+                     " ".join([str(x) for x in segment_ids]))
         logging.info("label: %s (id = %d)", example.label, label_id)
 
     feature = InputFeatures(input_ids=input_ids,

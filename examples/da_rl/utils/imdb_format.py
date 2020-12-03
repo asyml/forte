@@ -14,19 +14,15 @@
 # limitations under the License.
 """Read all data in IMDB and merge them to a csv file."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import csv
 import os
-from absl import app
-from absl import flags
+import argparse
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string("raw_data_dir", "", "raw data dir")
-flags.DEFINE_string("output_dir", "", "output_dir")
-flags.DEFINE_string("train_id_path", "", "path of id list")
+parser = argparse.ArgumentParser(description="Process input and output")
+parser.add_argument('--raw_data_dir', help='raw data directory')
+parser.add_argument('--output_dir', help='output directory')
+parser.add_argument('--train_id_path', help='path of id list')
+args = parser.parse_args()
 
 
 def dump_raw_data(contents, file_path):
@@ -68,7 +64,8 @@ def load_data_by_id(sub_set, id_path):
     for example_id in id_list:
         example_id = example_id.strip()
         label = example_id.split("_")[0]
-        file_path = os.path.join(FLAGS.raw_data_dir, sub_set, label, example_id[len(label) + 1:])
+        file_path = os.path.join(args.raw_data_dir, sub_set, label,
+                                 example_id[len(label) + 1:])
         with open(file_path, encoding="utf-8") as inf:
             st_list = inf.readlines()
             assert len(st_list) == 1
@@ -80,7 +77,7 @@ def load_data_by_id(sub_set, id_path):
 def load_all_data(sub_set):
     contents = []
     for label in ["pos", "neg", "unsup"]:
-        data_path = os.path.join(FLAGS.raw_data_dir, sub_set, label)
+        data_path = os.path.join(args.raw_data_dir, sub_set, label)
         if not os.path.exists(data_path):
             continue
         for filename in os.listdir(data_path):
@@ -94,23 +91,23 @@ def load_all_data(sub_set):
     return contents
 
 
-def main(_):
+def main():
     # load train
     header = ["content", "label", "id"]
-    contents = load_data_by_id("train", FLAGS.train_id_path)
-    if not os.path.exists(FLAGS.output_dir):
-        os.mkdir(FLAGS.output_dir)
+    contents = load_data_by_id("train", args.train_id_path)
+    if not os.path.exists(args.output_dir):
+        os.mkdir(args.output_dir)
     dump_raw_data(
         [header] + contents,
-        os.path.join(FLAGS.output_dir, "train.csv"),
+        os.path.join(args.output_dir, "train.csv"),
         )
     # load test
     contents = load_all_data("test")
     dump_raw_data(
         [header] + contents,
-        os.path.join(FLAGS.output_dir, "test.csv"),
+        os.path.join(args.output_dir, "test.csv"),
         )
 
 
 if __name__ == "__main__":
-    app.run(main)
+    main()

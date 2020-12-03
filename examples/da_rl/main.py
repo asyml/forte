@@ -11,24 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Example of building a sentence classifier based on pre-trained BERT model.
+"""Example of building a reinforcement learning based,
+data augmentation enhanced
+sentence classifier based on pre-trained BERT model,
+with IMDB Dataset.
 """
 
 import argparse
 import functools
-# import importlib
 import logging
 import os
 
 import torch
 import torch.nn.functional as F
 import texar.torch as tx
+from pytorch_pretrained_bert.modeling import BertForMaskedLM
 
 from examples.da_rl import config_data
 from examples.da_rl import config_classifier
 from examples.da_rl.utils import data_utils, model_utils
 from forte.models.da_rl.generator_trainer import MetaAugmentationWrapper
-from pytorch_pretrained_bert.modeling import BertForMaskedLM
 
 
 parser = argparse.ArgumentParser()
@@ -55,8 +57,11 @@ parser.add_argument(
     choices=tx.modules.BERTEncoder.available_checkpoints(),
     help="Name of the pre-trained augmentation model checkpoint to load.")
 parser.add_argument(
-    '--aug-num', type=int, default=4,
-    help = "number of augmentation samples when fine-tuning aug model")
+    '--num-aug', type=int, default=4,
+    help="number of augmentation samples when fine-tuning aug model")
+parser.add_argument(
+    '--classifier-pretrain-epoch', type=int, default=3,
+    help="number of epochs to pretrain the classifier")
 args = parser.parse_args()
 
 
@@ -78,7 +83,6 @@ def run():
 
     # Builds data augmentation BERT
     aug_model = BertForMaskedLM.from_pretrained(args.augmentation_model_name)
-    # todo binary label
     aug_model.to(device)
 
     aug_tokenizer = tx.data.BERTTokenizer(
@@ -90,15 +94,16 @@ def run():
     no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
     optimizer_grouped_parameters = [
         {'params': [p for n, p in param_optimizer if
-                    not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+                    not any(nd in n for nd in no_decay)],
+                    'weight_decay': 0.01},
         {'params': [p for n, p in param_optimizer if
-                    any(nd in n for nd in no_decay)], 'weight_decay': 0.0}]
+                    any(nd in n for nd in no_decay)],
+                    'weight_decay': 0.0}]
     aug_optim = tx.core.BertAdam(
         optimizer_grouped_parameters, betas=(0.9, 0.999), eps=1e-6, lr=aug_lr)
 
     aug_wrapper = MetaAugmentationWrapper(aug_model, aug_optim, aug_tokenizer,
                                           device, args.num_aug)
-
 
     # Builds downstream BERT
     model = tx.modules.BERTClassifier(
@@ -112,7 +117,7 @@ def run():
                            * config_data.warmup_proportion)
 
     # Builds learning rate decay scheduler
-    classifier_lr = 2e-5
+    classifier_lr = 4e-5
 
     vars_with_decay = []
     vars_without_decay = []
@@ -163,60 +168,95 @@ def run():
                 labels.view(-1), reduction='mean')
         return loss
 
+    def _pre_train_classifier_epoch():
+        iterator.switch_to_dataset("train")
+        model.train()
+
+        for _ in range(args.classifier_pretrain_epoch):
+            for batch in iterator:
+                optim.zero_grad()
+                input_ids = batch["input_ids"]
+                segment_ids = batch["segment_ids"]
+                labels = batch["label_ids"]
+
+                input_length = (1 - (input_ids == 0).int()).sum(dim=1)
+
+                logits, _ = model(input_ids, input_length, segment_ids)
+
+                loss = _compute_loss(logits, labels)
+                loss.backward()
+                optim.step()
+                scheduler.step()
+                step = scheduler.last_epoch
+
+                dis_steps = config_data.display_steps
+                if dis_steps > 0 and step % dis_steps == 0:
+                    logging.info("step: %d; loss: %f", step, loss)
+
     def _train_epoch():
         r"""Trains on the training set, and evaluates on the dev set
         periodically.
         """
         iterator.switch_to_dataset("train")
         model.train()
+        optim.zero_grad()
 
         for batch in iterator:
             input_ids = batch["input_ids"]
             input_mask = batch["input_mask"]
             segment_ids = batch["segment_ids"]
             labels = batch["label_ids"]
-            assert len(input_ids) == len(segment_ids) == len(input_mask) == len(labels)
 
             # train augmentation model params
-            aug_wrapper.startup_train_batch()
-            for i in range(len(input_ids)):
-                features = (input_ids[i], input_mask[i], segment_ids[i], labels[i])
+            aug_wrapper.reset_model()
+
+            num_examples = len(input_ids)
+            for i in range(num_examples):
+                features = (input_ids[i], input_mask[i],
+                            segment_ids[i], labels[i])
+
+                # augmented example with params phi exposed
                 aug_probs, input_mask_aug, segment_ids_aug, label_ids_aug = \
                     aug_wrapper.augment_example(features)
 
-                # todo
-                # input_length = (1 - (aug_probs == 0).int()).sum(dim=1)
+                input_length_aug = ((input_mask_aug == 1).int()).sum(dim=1)
 
                 model.zero_grad()
-                logits, _ = model(aug_probs, input_mask_aug, segment_ids_aug)
+                logits, _ = model(aug_probs, input_length_aug, segment_ids_aug)
                 loss = _compute_loss(logits, label_ids_aug)
 
-                meta_model = aug_wrapper.update_meta_classifier(loss, model, optim)
+                meta_model = aug_wrapper.update_meta_classifier(loss,
+                                                                model,
+                                                                optim)
 
+                # compute grads of aug model on eval data
                 for val_batch in eval_data_iterator:
                     val_input_ids = val_batch["input_ids"]
                     val_segment_ids = val_batch["segment_ids"]
                     val_labels = val_batch["label_ids"]
-                    val_input_length = (1 - (val_input_ids == 0).int()).sum(dim=1)
-                    val_logits, _ = meta_model(val_input_ids, val_input_length, val_segment_ids)
+                    val_input_length = \
+                        (1 - (val_input_ids == 0).int()).sum(dim=1)
+                    val_logits, _ = meta_model(val_input_ids,
+                                               val_input_length,
+                                               val_segment_ids)
                     val_loss = _compute_loss(val_logits, val_labels)
                     # L_{val}(theta'(phi))
                     # apply gradients to phi
+                    val_loss = val_loss / num_examples / args.num_aug \
+                               / len(eval_data_iterator)
                     val_loss.backward()
 
             aug_wrapper.update_phi()
+
+            # train classifier with augmented batch
             input_probs, input_masks, segment_ids, label_ids = \
-                aug_wrapper.augment_batch(input_ids, input_mask, segment_ids, labels)
+                aug_wrapper.augment_batch(input_ids, input_mask,
+                                          segment_ids, labels)
 
-            # train classifier
+            input_length = ((input_masks == 1).int()).sum(dim=1)
+
             optim.zero_grad()
-
-            # input_length = (1 - (input_ids == 0).int()).sum(dim=1)
-            #
-            # logits, _ = model(input_ids_or_probs, input_length, segment_ids)
-
-            logits, _ = model(input_probs, input_masks, segment_ids)
-
+            logits, _ = model(input_probs, input_length, segment_ids)
             loss = _compute_loss(logits, label_ids)
             loss.backward()
             optim.step()
@@ -259,27 +299,41 @@ def run():
                      avg_rec.avg(0), avg_rec.avg(1), nsamples)
 
     @torch.no_grad()
-    def _test_epoch():
+    def _test_epoch(test_file):
         """Does predictions on the test set.
         """
         iterator.switch_to_dataset("test")
         model.eval()
 
         _all_preds = []
+        nsamples = 0
+        avg_rec = tx.utils.AverageRecorder()
         for batch in iterator:
             input_ids = batch["input_ids"]
             segment_ids = batch["segment_ids"]
+            labels = batch["label_ids"]
 
             input_length = (1 - (input_ids == 0).int()).sum(dim=1)
 
-            _, preds = model(input_ids, input_length, segment_ids)
+            logits, preds = model(input_ids, input_length, segment_ids)
+
+            loss = _compute_loss(logits, labels)
+            accu = tx.evals.accuracy(labels, preds)
+            batch_size = input_ids.size()[0]
+            avg_rec.add([accu, loss], batch_size)
+            nsamples += batch_size
 
             _all_preds.extend(preds.tolist())
 
-        output_file = os.path.join(args.output_dir, "test_results.tsv")
+        logging.info("test accu: %.4f; loss: %.4f; nsamples: %d",
+                     avg_rec.avg(0), avg_rec.avg(1), nsamples)
+
+        output_file = os.path.join(args.output_dir, test_file)
         with open(output_file, "w+") as writer:
             writer.write("\n".join(str(p) for p in _all_preds))
         logging.info("test output written to %s", output_file)
+
+    _pre_train_classifier_epoch()
 
     if args.checkpoint:
         ckpt = torch.load(args.checkpoint)
@@ -287,23 +341,23 @@ def run():
         optim.load_state_dict(ckpt['optimizer'])
         scheduler.load_state_dict(ckpt['scheduler'])
     if args.do_train:
-        for _ in range(config_data.max_train_epoch):
+        for k in range(config_data.max_train_epoch):
+            logging.info("training epoch %d", k)
             _train_epoch()
+
         states = {
             'model': model.state_dict(),
             'optimizer': optim.state_dict(),
             'scheduler': scheduler.state_dict(),
         }
         torch.save(states, os.path.join(args.output_dir, 'model.ckpt'))
-
     if args.do_eval:
         _eval_epoch()
-
     if args.do_test:
-        _test_epoch()
+        _test_epoch("test_results.tsv")
 
 
-def prepare_data(self, csv_data_dir):
+def prepare_data(csv_data_dir):
     """Prepares data.
     """
     logging.info("Loading data")
@@ -334,7 +388,13 @@ def prepare_data(self, csv_data_dir):
 
 
 def main():
-    if not os.path.isfile("data/IMDB/train.pkl"):
+    if not os.path.isfile("data/IMDB/train.pkl") \
+            or not os.path.isfile("data/IMDB/eval.pkl") \
+            or not os.path.isfile("data/IMDB/predict.pkl"):
         prepare_data("data/IMDB")
 
     run()
+
+
+if __name__ == "__main__":
+    main()

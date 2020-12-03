@@ -1,14 +1,14 @@
 pickle_data_dir = "data/IMDB"
 max_seq_length = 64
 num_classes = 2
-num_train_data = 25000
+num_train_data = 80
 
 # used for bert executor example
 max_batch_tokens = 128
 
-train_batch_size = 32
-max_train_epoch = 5
-display_steps = 50  # Print training loss every display_steps; -1 to disable
+train_batch_size = 8
+max_train_epoch = 20
+display_steps = 5  # Print training loss every display_steps; -1 to disable
 
 # tbx config
 tbx_logging_steps = 5  # log the metrics for tbX visualization
@@ -19,7 +19,7 @@ eval_steps = 100  # Eval on the dev set every eval_steps; -1 to disable
 # Proportion of training to perform linear learning rate warmup for.
 # E.g., 0.1 = 10% of training.
 warmup_proportion = 0.1
-eval_batch_size = 8
+eval_batch_size = 10
 test_batch_size = 8
 
 feature_types = {

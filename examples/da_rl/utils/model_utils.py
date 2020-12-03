@@ -4,9 +4,9 @@ Model utility functions
 
 
 def get_lr_multiplier(step: int, total_steps: int, warmup_steps: int) -> float:
-    r"""Calculate the learning rate multiplier given current step and the number
-    of warm-up steps. The learning rate schedule follows a linear warm-up and
-    linear decay.
+    r"""Calculate the learning rate multiplier given current step
+    and the number of warm-up steps. The learning rate schedule follows
+    a linear warm-up and linear decay.
     """
     step = min(step, total_steps)
 
