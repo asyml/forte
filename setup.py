@@ -40,7 +40,7 @@ setuptools.setup(
     extras_require={
         'nltk': ['nltk==3.4.5'],
         'ner': ['torch>=1.1.0', 'torchtext==0.4.0', 'tqdm==4.36.1'],
-        'srl': ['allennlp==1.0.0'],
+        'srl': ['allennlp==1.1.0'],
         'sentiment': ['vaderSentiment==3.2.1'],
         'txtgen': ['regex', 'tensorflow'],
         'stanza': ['stanza==1.0.1'],
