@@ -106,29 +106,32 @@ def generpad(num):
         pad.append(padidx)
     return pad
 
-
 imdb_train_reader = IMDBReader(cache_in_memory=True)
-imdb_val_reader = IMDBReader(cache_in_memory=True)
+imdb_test_reader = IMDBReader(cache_in_memory=True)
 
 traininput = transform_reader(imdb_train_reader)
 trainlabellist = traininput[0]
 trainwordlistlist = traininput[1]
 
-valinput = transform_reader(imdb_val_reader)
-validlabellist = valinput[0]
-validwordlistlist = valinput[1]
+
+testinput = transform_reader(imdb_test_reader)
+testlabellist = testinput[0] # Do not use label in test
+testwordlistlist = testinput[1]
 
 
 orderedlabel=list(set(trainlabellist.copy()))
 orderedlabel.sort() # Let label to a fix number each time
 label2num = {}
+num2label = {}
 i = 0
+
 for label in orderedlabel:
     label2num[label] = i
+    num2label[i] = label
     i = i + 1
 
 class MyDataset(data.Dataset):
-    def __init__(self, xlistlist, ylist):
+    def __init__(self, xlistlist):
         sentencelist = []
         for xlist in xlistlist:
             indexlist = []
@@ -143,34 +146,18 @@ class MyDataset(data.Dataset):
             sentencelist.append(indexlist)
         self.x = torch.LongTensor(sentencelist)
 
-        labellist = []
-        for label in ylist:
-            labellist.append(label2num[label])
-        self.y = torch.LongTensor(labellist)
-
     def __len__(self):
-        return len(self.y)
+        return len(self.x)
 
     def __getitem__(self, index):
-
         X = self.x[index]
-        Y = self.y[index]
+        return X
 
-        return X, Y
-
-train_dataset = MyDataset(trainwordlistlist,trainlabellist)
-train_loader_args = dict(shuffle = True, batch_size=1,
+test_dataset = MyDataset(testwordlistlist)
+test_loader_args = dict(shuffle = False, batch_size=1,
                          num_workers=8, pin_memory = True) \
-    if cuda else dict(shuffle=True, batch_size=1)
-train_loader = data.DataLoader(train_dataset, **train_loader_args)
-
-
-val_dataset = MyDataset(validwordlistlist,validlabellist)
-val_loader_args = dict(shuffle = False, batch_size=1,
-                       num_workers=8, pin_memory = True) \
     if cuda else dict(shuffle=False, batch_size=1)
-val_loader = data.DataLoader(val_dataset,**val_loader_args)
-
+test_loader = data.DataLoader(test_dataset, **test_loader_args)
 
 class MyConv(nn.Module):
     def __init__(self, embmatrix):
@@ -188,7 +175,7 @@ class MyConv(nn.Module):
         self.dropout = nn.Dropout(0.5)
         self.fc1 = nn.Linear(300, 16)
 
-    def forward(self, x):  # For a sentence (300,60)
+    def forward(self, x):  # for a sentence (300,60)
         # x = x.permute(0, 2, 1)
         x = self.embedding(x)
         x = x.permute(0, 2, 1)
@@ -202,66 +189,29 @@ class MyConv(nn.Module):
         return x
 
 model = MyConv(construct_word_embedding_table())
+model.load_state_dict(torch.load("1epochembedsl.t7") )
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 device = torch.device("cuda" if cuda else "cpu")
 model.to(device)
 #print(model)
 
-def train_epoch(model, train_loader, criterion, optimizer):
-    model.train()
-    running_loss = 0.0
-
-    for batch_idx, (data, target) in enumerate(train_loader):
-        print("batch_idx", batch_idx)
-
-        optimizer.zero_grad()
-        data = data.to(device)
-        target = target.to(device)
-
-        outputs = model(data)
-
-        loss = criterion(outputs, target)
-        running_loss += loss.item()
-        loss.backward()
-        optimizer.step()
-
-    running_loss /= len(train_loader)
-    print('Training Loss: ', running_loss)
-    return running_loss
-
-
-def val_model(model, val_loader, criterion):
+def pred_model(model, test_loader):
     with torch.no_grad():
         model.eval()
+        predLabel = []
 
-        running_loss = 0.0
-        total_predictions = 0.0
-        correct_predictions = 0.0
-
-        for batch_idx, (data, target) in enumerate(val_loader):
+        for batch_idx, data in enumerate(test_loader):
             data = data.to(device)
-            target = target.to(device)
+
             outputs = model(data)
             value, predicted = torch.max(outputs.data, 1)
-            total_predictions += target.size(0)
-            correct_predictions += (predicted == target).sum().item()
-            loss = criterion(outputs, target).detach()
-            running_loss += loss.item()
-        running_loss /= len(val_loader)
-        acc = (correct_predictions / total_predictions) * 100.0
-        print('Testing Loss: ', running_loss)
-        print('Testing Accuracy: ', acc, '%')
-        return running_loss, acc
 
-n_epochs = 2
+            predLabel = predLabel + predicted.tolist()
 
-for i in range(n_epochs):
-    print("Epoch: ", i+1)
-    train_loss = train_epoch(model, train_loader, criterion, optimizer)
-    test_loss, test_acc = val_model(model, val_loader, criterion)
+    return predLabel
 
-    print('='*20)
-    modelname = str(i+1) + "epochembedsl.t7"
-    torch.save(model.state_dict(),modelname)
+predLabel =pred_model(model,test_loader)
 
+for pred in predLabel:
+    print(num2label[pred])
