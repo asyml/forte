@@ -11,7 +11,8 @@ env:
   matrix:
     - TORCH_VER="1.5.0" TENSORFLOW_VER="1.15.0"
 install:
-  - pip install --upgrade pip
+  # Installing pip from master source due to https://github.com/pypa/pip/issues/9215
+  - pip install git+https://github.com/pypa/pip.git
   - pip install --progress-bar off torch==$TORCH_VER
   - pip install --progress-bar off tensorflow==$TENSORFLOW_VER
   - pip install --progress-bar off .[nltk,ner,srl,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp]
