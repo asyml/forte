@@ -132,14 +132,17 @@ class DataPackDataset(DatasetBase):
 
         tensor_collection: Dict[str, Dict[str, torch.Tensor]] = {}
         for tag, features in example_collection.items():
-            converter: Converter = \
-                self._feature_scheme[tag]["converter"]
-            tensor, mask = converter.convert(features)
+            need_pad: bool = self._feature_scheme[tag]["need_pad"]
+            if need_pad:
+                converter: Converter = \
+                    self._feature_scheme[tag]["converter"]
+                tensor, mask = converter.convert(features)
 
-            if tag not in tensor_collection:
-                tensor_collection[tag] = {}
+                if tag not in tensor_collection:
+                    tensor_collection[tag] = {}
 
-            tensor_collection[tag]["tensor"] = tensor
-            tensor_collection[tag]["mask"] = mask
+                tensor_collection[tag]["tensor"] = tensor
+                tensor_collection[tag]["mask"] = mask
+            tensor_collection[tag]["features"] = features
 
         return Batch(batch_size, **tensor_collection)

@@ -56,18 +56,21 @@ class TrainPreprocessor:
             "text_tag": {
                 "extractor":  Extractor,
                 "converter": Converter,
-                "type": DATA_INPUT
+                "type": DATA_INPUT,
+                "need_pad": True
             },
             "char_tag" {
                 "extractor":  Extractor,
                 "converter": Converter,
-                "type": DATA_INPUT
+                "type": DATA_INPUT,
+                "need_pad": True
             }
             "ner_tag": {
                 "extractor":  Extractor,
                 "converter": Converter,
                 "unpadder": Unpadder,
-                "type": DATA_OUTPUT
+                "type": DATA_OUTPUT,
+                "need_pad": True
             }
         }
     }
@@ -126,22 +129,28 @@ class TrainPreprocessor:
                 "text_tag": {
                     "entry": ft.onto.Token,
                     "repr": "text_repr",
-                    "conversion_method": "indexing",
-                    "extractor": AttributeExtractor
+                    "vocab_method": "indexing",
+                    "extractor": AttributeExtractor,
+                    "type": DATA_INPUT,
+                    "need_pad": True
                 },
                 "char_tag": {
                     "entry": ft.onto.Token,
                     "repr": "char_repr",
-                    "conversion_method": "indexing",
-                    "extractor": AttributeExtractor
+                    "vocab_method": "indexing",
+                    "extractor": AttributeExtractor,
+                    "type": DATA_INPUT,
+                    "need_pad": True
                 },
                 "ner_tag": {
                     "entry": ft.onto.EntityMention,
                     "attribute": "ner_type",
                     "based_on": ft.onto.Token,
                     "strategy": "BIO",
-                    "conversion_method": "indexing",
-                    "extractor": AnnotationSeqExtractor
+                    "vocab_method": "indexing",
+                    "extractor": AnnotationSeqExtractor,
+                    "type": DATA_OUTPUT,
+                    "need_pad": True
                 }
             }
         }
@@ -197,9 +206,10 @@ class TrainPreprocessor:
 
                 need_pad: bool = \
                     scheme["need_pad"] if "need_pad" in scheme else True
-                converter: Converter = Converter(need_pad=need_pad)
+                converter: Converter = Converter()
                 resource_schemes[tag]["converter"] = converter
                 resource_schemes[tag]["type"] = scheme["type"]
+                resource_schemes[tag]["need_pad"] = need_pad
 
                 if scheme["type"] == DATA_OUTPUT:
                     unpadder: BaseUnpadder = \
