@@ -1,3 +1,4 @@
+#type: ignore
 import builtins
 import pickle
 from typing import Any, Callable, Dict, IO, Iterator, List, Optional, Sequence, Tuple, Type, TypeVar, Union, overload
