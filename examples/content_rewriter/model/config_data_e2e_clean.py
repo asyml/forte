@@ -1,5 +1,7 @@
 import os
 
+from typing import Dict, Any
+
 dataset_dir = 'model/e2e_data'  # 'e2ev14_demo'#'e2e_0512_max5'
 
 modes = ['train', 'val', 'test']
@@ -27,7 +29,7 @@ batch_sizes = {
     'test': 1,  # eval_batch_size,
 }
 
-datas = {}
+datas: Dict[str, Any] = {}
 
 
 # pylint: disable=global-statement
