@@ -56,7 +56,7 @@ class StringReader(PackReader):
 
         Returns: :class:`DataPack` containing Document.
         """
-        pack = self.new_pack()
+        pack = DataPack()
 
         self.set_text(pack, data_source)
         Document(pack, 0, len(data_source))
