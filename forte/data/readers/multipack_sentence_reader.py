@@ -56,7 +56,7 @@ class MultiPackSentenceReader(MultiPackReader):
                     base_and_path: Tuple[str, str]) -> Iterator[MultiPack]:
         base_dir, file_path = base_and_path
 
-        m_pack: MultiPack = self.new_pack()
+        m_pack: MultiPack = MultiPack()
 
         input_pack_name = self.config.input_pack_name
         output_pack_name = self.config.output_pack_name

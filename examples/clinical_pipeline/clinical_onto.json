@@ -1,0 +1,26 @@
+{
+  "name": "clinical",
+  "additional_prefixes": [
+    "demo.clinical"
+  ],
+  "imports": [
+    "base_ontology.json"
+  ],
+  "definitions": [
+    {
+      "entry_name": "demo.clinical.ClinicalEntityMention",
+      "parent_entry": "ft.onto.base_ontology.EntityMention",
+      "description": "A span based annotation `ClinicalEntityMention`, normally used to represent an Entity Mention in a piece of clinical text."
+    },
+    {
+      "entry_name": "demo.clinical.Description",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `Description`, used to represent the description in a piece of clinical note."
+    },
+    {
+      "entry_name": "demo.clinical.Body",
+      "parent_entry": "forte.data.ontology.top.Annotation",
+      "description": "A span based annotation `Body`, used to represent the actual content in a piece of clinical note."
+    }
+  ]
+}

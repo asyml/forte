@@ -91,10 +91,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def new_pack(self, pack_name: Optional[str] = None) -> PackType:
-        raise NotImplementedError
-
-    @abstractmethod
     def _collect(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
         r"""Returns an iterator of data objects, and each individual object
         should contain sufficient information needed to construct or locate
@@ -283,9 +279,6 @@ class PackReader(BaseReader[DataPack], ABC):
     def pack_type(self):
         return DataPack
 
-    def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
-        return DataPack(pack_name)
-
     def set_text(self, pack: DataPack, text: str):
         r"""Assign the text value to the :class:`DataPack`. This function will
         pass the ``text_replace_operation`` to the :class:`DataPack` to conduct
@@ -306,6 +299,3 @@ class MultiPackReader(BaseReader[MultiPack], ABC):
     @property
     def pack_type(self):
         return MultiPack
-
-    def new_pack(self, pack_name: Optional[str] = None) -> MultiPack:
-        return MultiPack(pack_name)
