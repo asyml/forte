@@ -109,8 +109,8 @@ class Alphabet:
     def get_instance(self, index):
         try:
             return self.instances[index]
-        except IndexError:
-            raise IndexError("unknown index: %d" % index)
+        except IndexError as e:
+            raise IndexError("unknown index: %d" % index) from e
 
     def size(self):
         return len(self.instances)
