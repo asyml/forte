@@ -63,9 +63,9 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self.batcher.initialize(configs.batcher)
         except AttributeError as e:
             raise ProcessorConfigError(
-                e, "Error in handling batcher config, please provide the "
-                   "check the config to see if you have the key 'batcher'."
-            )
+                "Error in handling batcher config, please provide the "
+                "check the config to see if you have the key 'batcher'."
+            ) from e
 
     @staticmethod
     @abstractmethod

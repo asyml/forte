@@ -52,7 +52,7 @@ class WikiArticleWriter(JsonPackWriter):
         self.article_count: int = 0
 
     def initialize(self, resources: Resources, configs: Config):
-        super(WikiArticleWriter, self).initialize(resources, configs)
+        super().initialize(resources, configs)
         self.article_count = 0
         self.article_index = open(
             os.path.join(self.configs.output_dir, 'article.idx'), 'w')
@@ -77,7 +77,7 @@ class WikiArticleWriter(JsonPackWriter):
 
         Returns:
         """
-        super(WikiArticleWriter, self)._process(input_pack)
+        super()._process(input_pack)
 
         out_path = self.sub_output_path(input_pack)
         if self.zip_pack:

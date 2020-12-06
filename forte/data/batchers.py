@@ -136,7 +136,7 @@ class ProcessingBatcher(Generic[PackType]):
 
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def initialize(self, config: Config):
-        super(FixedSizeDataPackBatcher, self).initialize(config)
+        super().initialize(config)
         self.batch_size = config.batch_size
         self.batch_is_full = False
 
