@@ -320,7 +320,7 @@ class NonCompositeProperty(Property):
     def __init__(self, import_manager: ImportManager,
                  name: str, type_str: str, description: Optional[str] = None,
                  default_val: Any = None, self_ref: bool = False):
-        super(NonCompositeProperty, self).__init__(
+        super().__init__(
             import_manager, name, type_str, description, default_val)
 
         # Primitive type will use optional in type string, so we add the
