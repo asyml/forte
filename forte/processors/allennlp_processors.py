@@ -49,7 +49,7 @@ class AllenNLPProcessor(PackProcessor):
         if configs.tag_formalism not in MODEL2URL:
             raise ProcessorConfigError('Incorrect value for tag_formalism')
         model_url = MODEL2URL[configs.tag_formalism]
-        self.predictor = Predictor.from_path(model_url)
+        self.predictor: Predictor = Predictor.from_path(model_url)
 
         if configs.overwrite_entries:
             logger.warning("`overwrite_entries` is set to True, this means "
@@ -104,7 +104,8 @@ class AllenNLPProcessor(PackProcessor):
         self._process_existing_entries(input_pack)
 
         for sentence in input_pack.get(Sentence):
-            result = self.predictor.predict(sentence=sentence.text)
+            result = self.predictor.predict(  # type: ignore
+                sentence=sentence.text)
 
             if "tokenize" in self.configs.processors:
                 # creating new tokens and dependencies

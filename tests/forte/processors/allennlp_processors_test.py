@@ -44,7 +44,8 @@ class TestAllenNLPProcessor(unittest.TestCase):
 
         for dep_type in self.allens.keys():
             for sent in sentences:
-                results = self.allens[dep_type].predict(sentence=sent)
+                results = self.allens[dep_type].predict(  # type: ignore
+                    sentence=sent)
 
                 self.results[dep_type]['tokens'].append(results['words'])
                 self.results[dep_type]['pos'].append(results['pos'])
