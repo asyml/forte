@@ -45,19 +45,6 @@ class PackProcessor(BaseProcessor[DataPack], ABC):
     def _process(self, input_pack: DataPack):
         raise NotImplementedError
 
-    def new_pack(self, pack_name: Optional[str] = None) -> DataPack:
-        """
-        Create a new pack based using the current pack manager.
-
-        Args:
-            pack_name (str, Optional): The name to be used for the pack. If not
-              set, the pack name will remained unset.
-
-        Returns:
-
-        """
-        return DataPack(pack_name)
-
 
 class MultiPackProcessor(BaseProcessor[MultiPack], ABC):
     r"""The base class of processors that process :class:`MultiPack` each time.
@@ -65,19 +52,6 @@ class MultiPackProcessor(BaseProcessor[MultiPack], ABC):
 
     def _process(self, input_pack: MultiPack):
         raise NotImplementedError
-
-    def new_pack(self, pack_name: Optional[str] = None) -> MultiPack:
-        """
-        Create a new multi pack using the current pack manager.
-
-        Args:
-            pack_name (str, Optional): The name to be used for the pack. If not
-              set, the pack name will remained unset.
-
-        Returns:
-
-        """
-        return MultiPack(pack_name)
 
     def new_data_pack(self, pack_name: Optional[str] = None) -> DataPack:
         """
