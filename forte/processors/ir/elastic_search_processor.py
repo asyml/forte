@@ -37,9 +37,8 @@ class ElasticSearchProcessor(MultiPackProcessor):
         super().__init__()
 
     def initialize(self, resources: Resources, configs: Config):
-        self.resources = resources
-        self.config = configs
-        self.index = ElasticSearchIndexer(config=self.config.index_config)
+        super().initialize(resources, configs)
+        self.index = ElasticSearchIndexer(config=self.configs.index_config)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -63,7 +62,7 @@ class ElasticSearchProcessor(MultiPackProcessor):
         Args:
              input_pack: A multipack containing query as a pack.
         """
-        query_pack = input_pack.get_pack(self.config.query_pack_name)
+        query_pack = input_pack.get_pack(self.configs.query_pack_name)
 
         # ElasticSearchQueryCreator adds a Query entry to query pack. We now
         # fetch it as the first element.
@@ -81,11 +80,11 @@ class ElasticSearchProcessor(MultiPackProcessor):
             first_query.add_result(document["doc_id"], hit["_score"])
 
             pack: DataPack = input_pack.add_pack(
-                f"{self.config.response_pack_name_prefix}_{idx}"
+                f"{self.configs.response_pack_name_prefix}_{idx}"
             )
             pack.pack_name = document["doc_id"]
 
-            content = document[self.config.field]
+            content = document[self.configs.field]
             pack.set_text(content)
 
             Document(pack=pack, begin=0, end=len(content))

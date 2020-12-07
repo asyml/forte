@@ -68,7 +68,7 @@ class MultiPackTerminalReader(MultiPackReader):
 
         Returns: MultiPack containing a datapack for the current query.
         """
-        multi_pack = self.new_pack()
+        multi_pack = MultiPack()
 
         # use context to build the query
         if self.resource.get("user_utterance"):

@@ -11,10 +11,11 @@ env:
   matrix:
     - TORCH_VER="1.5.0" TENSORFLOW_VER="1.15.0"
 install:
-  - pip install --upgrade pip
+  # Installing pip from master source due to https://github.com/pypa/pip/issues/9215
+  - pip install git+https://github.com/pypa/pip.git
   - pip install --progress-bar off torch==$TORCH_VER
   - pip install --progress-bar off tensorflow==$TENSORFLOW_VER
-  - pip install --progress-bar off .[nltk,ner,srl,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp]
+  - pip install --progress-bar off .[nltk,ner,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp]
   - git clone https://github.com/asyml/texar-pytorch.git
   - cd texar-pytorch
   - pip install --progress-bar off .
@@ -25,8 +26,8 @@ install:
   - rm -rf elasticsearch-7.4.2-linux-x86_64.tar.gz
   - elasticsearch-7.4.2/bin/elasticsearch -d
   - pip install faiss-cpu
-  - pip install pylint==2.5.2 flake8==3.8.2
-  - pip install mypy==0.780
+  - pip install pylint==2.6.0 flake8==3.8.2
+  - pip install mypy==0.790
   - pip install pytest==5.1.3
   - pip install coverage codecov
 script:
