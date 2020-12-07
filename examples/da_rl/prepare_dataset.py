@@ -46,11 +46,11 @@ def read_train_csv(input_file, train_output_file,
                         continue
                     if row[1] == "unsup":
                         continue
-                    elif row[1] == "neg" and num_eval_neg == eval_neg:
+                    if row[1] == "neg" and num_eval_neg == eval_neg:
                         continue
-                    elif row[1] == "pos" and num_eval_pos == eval_pos:
+                    if row[1] == "pos" and num_eval_pos == eval_pos:
                         continue
-                    elif row[1] == "neg" and num_neg == train_neg:
+                    if row[1] == "neg" and num_neg == train_neg:
                         cvs_writer_eval.writerow(row)
                         num_eval_neg += 1
                     elif row[1] == "pos" and num_pos == train_pos:

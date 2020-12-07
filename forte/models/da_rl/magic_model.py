@@ -82,11 +82,11 @@ class MetaModule(nn.Module):
     def update_params(self, deltas):
         sub_params = {}
         for key, delta in deltas.items():
-            if not ('.' in key):
+            if '.' not in key:
                 self._buffers[key] = self._buffers[key] + delta
             else:
                 attr = key.split('.')[0]
-                if not (attr in sub_params):
+                if attr not in sub_params:
                     sub_params[attr] = {}
                 sub_params[attr]['.'.join(key.split('.')[1:])] = delta
         for key, value in sub_params.items():
@@ -113,6 +113,7 @@ class MetaModule(nn.Module):
     # pylint: disable=line-too-long
     # https://github.com/pytorch/pytorch/blob/master/torch/nn/modules/container.py#L150
     def _get_abs_string_index(self, idx):
+        # pylint: disable=C0325
         """Get the absolute index for the list of modules"""
         idx = operator.index(idx)
         if not (-len(self) <= idx < len(self)):
@@ -121,12 +122,12 @@ class MetaModule(nn.Module):
             idx += len(self)
         return str(idx)
 
-    # pylint: disable=line-too-long
     # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/embedders/embedder_base.py#L63
     def _get_noise_shape(self, dropout_strategy: str,
                          ids_rank: Optional[int] = None,
                          dropout_input: Optional[torch.Tensor] = None) \
             -> Optional[Tuple[int, ...]]:
+        # pylint: disable=line-too-long
 
         if dropout_strategy == 'element':
             noise_shape = None
@@ -134,10 +135,10 @@ class MetaModule(nn.Module):
             assert dropout_input is not None
             assert ids_rank is not None
             shape_a = dropout_input.size()[:ids_rank]
-            shape_b = (1,) * self._dim_rank
+            shape_b = (1,) * self._dim_rank # type: ignore
             noise_shape = shape_a + shape_b
         elif dropout_strategy == 'item_type':
-            noise_shape = (self._num_embeds,) + (1,) * self._dim_rank
+            noise_shape = (self._num_embeds,) + (1,) * self._dim_rank   # type: ignore
         else:
             raise ValueError(f"Unknown dropout strategy: {dropout_strategy}")
         return noise_shape
