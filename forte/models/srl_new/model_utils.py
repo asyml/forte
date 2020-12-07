@@ -121,7 +121,7 @@ class CustomBiLSTM(tx.modules.EncoderBase):
         self.dropout = nn.Dropout(self._hparams.dropout)
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "input_dim": 200,
             "hidden_dim": 200,
@@ -165,7 +165,7 @@ class CharCNN(tx.ModuleBase):
         self._max_filter_width = max(self._hparams.filter_widths)
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "char_embed_size": 8,
             "filter_widths": [3, 4, 5],
@@ -220,7 +220,7 @@ class CharCNN(tx.ModuleBase):
         """
         batch_size, max_length, max_word_length = batch.size()
         sentence_mask, word_mask = masks[0], masks[1]
-        sent_lengths = torch.sum(word_mask, dim=1).tolist()
+        sent_lengths = torch.sum(sentence_mask, dim=1).tolist()
 
         # indices: (len(all_words), max_word_length)
         indices = torch.cat([batch[i][:l] for i, l in enumerate(sent_lengths)],
@@ -319,7 +319,7 @@ class MLP(tx.ModuleBase):
         self.layers = nn.Sequential(*layers)
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "input_size": 300,
             "num_layers": 2,
@@ -346,7 +346,7 @@ class ConcatInputMLP(tx.ModuleBase):
         self.mlp = MLP(mlp_hparams)
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "input_sizes": [150, 150],
             "num_layers": 2,

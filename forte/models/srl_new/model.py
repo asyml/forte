@@ -34,7 +34,6 @@ from torch.nn import functional as F
 from mypy_extensions import TypedDict
 import texar.torch as tx
 
-from data.extractor.extractor import BaseExtractor
 from forte.data.converter.feature import Feature
 from forte.models.srl_new import model_utils as utils
 from forte.models.srl_new.data import Span
@@ -64,14 +63,12 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         self.word_embed: tx.modules.WordEmbedder = tx.modules.WordEmbedder(
             init_value=tx.data.Embedding(
                 vocab=self.word_vocab, hparams={
-                    "file": self._hparams.context_embeddings.path,
                     "dim": self._hparams.context_embeddings.size,
                     "read_fn": "load_glove",
                 }).word_vecs)
         self.head_embed = tx.modules.WordEmbedder(
             init_value=tx.data.Embedding(
                 vocab=self.word_vocab, hparams={
-                    "file": self._hparams.head_embeddings.path,
                     "dim": self._hparams.head_embeddings.size,
                     "read_fn": "load_glove",
                 }).word_vecs)
@@ -159,7 +156,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             })
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "filter_widths": [3, 4, 5],
             "filter_size": 50,
@@ -292,10 +289,14 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             srl_data: List = srl_feature.unroll()[0]
             srl_meta_data: Dict = srl_feature.meta_data
             for e_idx, srl in enumerate(srl_data):
-                e_meta_data: Dict = srl_meta_data["element_wise"][e_idx]
-                srl_start = e_meta_data["predicate_arg_span"][0]
-                srl_end = e_meta_data["predicate_arg_span"][-1]
-                srl_predicate = e_meta_data["predicate_idx"]
+                srl_start = srl_meta_data["child_unit_span"][e_idx][0]
+                srl_end = srl_meta_data["child_unit_span"][e_idx][-1]
+
+                assert srl_meta_data["parent_unit_span"][e_idx][1] - \
+                       srl_meta_data["parent_unit_span"][e_idx][0] == 1, \
+                    "predicate span larger than one"
+
+                srl_predicate = srl_meta_data["parent_unit_span"][e_idx][0]
                 span_idx = batch_spans[b_idx].get((srl_start, srl_end), None)
                 predicate_idx = batch_predicates[b_idx].get(srl_predicate, None)
                 if span_idx is not None and predicate_idx is not None:
