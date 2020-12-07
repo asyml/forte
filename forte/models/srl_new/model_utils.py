@@ -219,7 +219,7 @@ class CharCNN(tx.ModuleBase):
             padded with zero vectors.
         """
         batch_size, max_length, max_word_length = batch.size()
-        sentence_mask, word_mask = masks[0], masks[1]
+        sentence_mask = masks[0]
         sent_lengths = torch.sum(sentence_mask, dim=1).tolist()
 
         # indices: (len(all_words), max_word_length)
