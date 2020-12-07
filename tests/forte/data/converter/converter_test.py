@@ -23,7 +23,7 @@ from forte.data.converter.feature import Feature
 
 class ConverterTest(unittest.TestCase):
     def setUp(self):
-        self.converter: Converter = Converter(need_pad=True)
+        self.converter: Converter = Converter()
 
     def test_convert1(self):
         features1: List[Feature] = self.create_features1()
