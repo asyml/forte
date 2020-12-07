@@ -29,8 +29,10 @@ from forte.pipeline import Pipeline
 from forte.predictor import Predictor
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
-from forte.data.extractor.extractor import \
-    BioSeqTaggingExtractor, TextExtractor, CharExtractor, BaseExtractor
+from forte.data.extractor.attribute_extractor import TextExtractor
+from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.extractor.char_extractor import CharExtractor
+from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from ft.onto.base_ontology import Sentence, Token, EntityMention
@@ -159,7 +161,6 @@ tp_request = {
             "entry_type": EntityMention,
             "attribute": "ner_type",
             "based_on": Token,
-            "strategy": "BIO",
             "vocab_method": "indexing",
             "type": DATA_OUTPUT,
             "extractor": BioSeqTaggingExtractor
@@ -252,6 +253,6 @@ while epoch < config.config_data.num_epochs:
     logger.info(f"{epoch}th Epoch evaluating, "
                 f"val result: {evaluator.get_result()}")
 
-# Save training result to disk
+# Save training state to disk
 # train_pipeline.save_state(config.config_data.train_state_path)
-# torch.save(ner_model_processor, config.config_model.model_path)
+# torch.save(model, config.config_model.model_path)

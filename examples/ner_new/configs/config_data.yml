@@ -1,4 +1,4 @@
-train_path: "ner_data/conll03_english/train_tiny/"
+train_path: "ner_data/conll03_english/train/"
 val_path: "ner_data/conll03_english/dev/"
 test_path: "ner_data/conll03_english/test"
 train_state_path: "train_state.pkl"
