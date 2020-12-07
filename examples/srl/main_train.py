@@ -18,11 +18,12 @@ from texar.torch.data import Batch
 from torch import Tensor
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
-from tqdm import tqdm
 
 from forte.data.converter.feature import Feature
-from forte.data.extractor.extractor import TextExtractor, BaseExtractor, \
-    CharExtractor
+from forte.data.extractor.attribute_extractor import TextExtractor
+from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.extractor.char_extractor import CharExtractor
+from forte.data.extractor.link_extractor import LinkExtractor
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from ft.onto.base_ontology import Sentence, Token, PredicateLink
 from forte.train_preprocessor import TrainPreprocessor
@@ -31,6 +32,7 @@ from forte.models.srl_new.model import LabeledSpanGraphNetwork
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
 
 def create_model(schemes: Dict[str, Dict[str, BaseExtractor]]) -> \
         LabeledSpanGraphNetwork:
@@ -50,10 +52,12 @@ def train(model: LabeledSpanGraphNetwork,
     char_masks: List[Tensor] = batch["char_tag"]["mask"]
     text_tensor: Tensor = batch["text_tag"]["tensor"]
     text_mask: Tensor = batch["text_tag"]["mask"][0]
-    raw_text_features: Feature = batch["raw_text_tag"]["features"]
+    raw_text_features: List[Feature] = batch["raw_text_tag"]["features"]
     pred_link_features: List[Feature] = batch["pred_link_tag"]["features"]
 
-    text: List[List[str]] = raw_text_features.unroll()[0]
+    text: List[List[str]] = []
+    for feature in raw_text_features:
+        text.append(feature.unroll()[0])
 
     optim.zero_grad()
 
@@ -65,7 +69,7 @@ def train(model: LabeledSpanGraphNetwork,
               text_mask=text_mask,
               srl_features=pred_link_features)
 
-    output.loss.backward()
+    output["loss"].backward()
     optim.step()
 
     return output
@@ -105,12 +109,12 @@ tp_request = {
         },
         "pred_link_tag": {  # predicate link
             "entry_type": PredicateLink,
-            "attribute": "ner_type",
+            "attribute": "arg_type",
             "based_on": Token,
             "strategy": "BIO",
             "vocab_method": "indexing",
             "type": DATA_OUTPUT,
-            "extractor": ...,
+            "extractor": LinkExtractor,
             "need_pad": False
         }
     }
@@ -118,10 +122,10 @@ tp_request = {
 
 tp_config = {
     "preprocess": {
-        "pack_dir": "data/train/"
+        "pack_dir": "data/train_tiny/"
     },
     "dataset": {
-        "batch_size": 10
+        "batch_size": 64
     }
 }
 
@@ -148,9 +152,13 @@ while epoch < num_epochs:
     train_batch_iter: Iterator[Batch] = \
         train_preprocessor.get_train_batch_iterator()
 
-    for batch in tqdm(train_batch_iter):
+    for batch in train_batch_iter:
         train_output: LabeledSpanGraphNetwork.ReturnType = \
             train(model, optim, batch)
 
         logger.info(f"{epoch}th Epoch training, "
-                    f"loss: {train_output.loss}")
+                    f"loss: {train_output['loss']}")
+
+# Save training state to disk
+# train_pipeline.save_state("train_state.pkl")
+# torch.save(model, "model.pt")
