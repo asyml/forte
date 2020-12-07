@@ -20,6 +20,7 @@ from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Any, Iterator, Optional, Union, List
 
+from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
 from forte.data import data_utils
@@ -73,6 +74,12 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._cache_in_memory = cache_in_memory
         self._cache_ready: bool = False
         self._data_packs: List[PackType] = []
+
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+
+        # Clear memory cache
+        del self._data_packs[:]
 
     @classmethod
     def default_configs(cls):
