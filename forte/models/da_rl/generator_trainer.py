@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+A wrapper adding data augmentation to a model with arbitrary tasks.
+"""
 
 import texar.torch as tx
 from torch.nn import functional as F
@@ -20,22 +23,44 @@ import random
 from forte.models.da_rl.magic_model import MetaModule
 
 
+__all__ = [
+    "MetaAugmentationWrapper"
+]
+
+
 class MetaAugmentationWrapper:
-    '''
-    a wrapper adding data augmentation to a model with arbitrary tasks
-    see: https://arxiv.org/pdf/1910.12795.pdf
+    # pylint: disable=line-too-long
+    r"""A wrapper adding data augmentation to a model with arbitrary tasks.
+    See: https://arxiv.org/pdf/1910.12795.pdf
+    There is an example code for this class here:
+    https://github.com/tanyuqian/learning-data-manipulation/blob/master/augmentation/generator.py
+    Let theta be the parameters of the downstream (classifier) model.
+    Let phi be the parameters of the augmentation model.
+    Equations to update phi:
+    theta'(phi) = theta - \nabla_{theta} L_{train}(theta, phi)
+    phi = phi - \nabla_{phi} L_{val}(theta'(phi))
+    """
 
-    let theta be the parameters of the classifer model
-    let phi be the parameters of the augmentation model
-
-    '''
     def __init__(self, augmentation_model, augmentation_optimizer,
                  aug_tokenizer, device, num_aug):
+        r"""
+        :param augmentation_model:
+        A Bert-based language model for data augmentation.
+        :param augmentation_optimizer:
+        An optimizer.
+        :param aug_tokenizer:
+        A Bert-based tokenizer.
+        :param device:
+        The CUDA device to run the model on.
+        :param num_aug:
+        The number of samples from the LM for an augmented training example.
+        See :meth:`_augment_example` for implementation details.
+        """
         self._aug_model = augmentation_model
         self._aug_optimizer = augmentation_optimizer
         self._aug_tokenizer = aug_tokenizer
         self._device = device
-        self.num_aug = num_aug
+        self._num_aug = num_aug
 
     def reset_model(self):
         self._aug_model.train()
@@ -63,7 +88,8 @@ class MetaAugmentationWrapper:
         # Get samples
         aug_probs_all = []
         for _ in range(num_aug):
-            # need a gumbel trick here in order to keep phi as variables
+            # Need a gumbel trick here in order to keep phi as variables.
+            # Enable efficient gradient propagation through theta' to phi.
             probs = F.gumbel_softmax(logits, hard=False)
             aug_probs = torch.zeros_like(probs).scatter_(
                 1, init_ids[0].unsqueeze(1), 1.)
@@ -80,20 +106,53 @@ class MetaAugmentationWrapper:
         return aug_probs
 
     def augment_example(self, features):
-        aug_probs = self._augment_example(features, self.num_aug)
+        r"""Augment a training example.
+
+        Args:
+            features: A tuple of Bert features of one training example.
+                (input_ids, input_mask, segment_ids, label_ids).
+                `input_ids` is a tensor of Bert token ids.
+                It has shape `[seq_len, 1]`.
+
+        Returns:
+            A tuple of Bert features of augmented training examples.
+                (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
+                `input_probs_aug` is a tensor of soft Bert embeddings,
+                distributions over vocabulary.
+                It has shape `[num_aug, seq_len, vocab_size]`.
+                It keeps phi as variable so that after passing it to the classifier,
+                the gradients of theta will also apply to phi.
+        """
+
+        aug_probs = self._augment_example(features, self._num_aug)
 
         _, input_mask, segment_ids, label_ids = \
             (t.to(self._device).unsqueeze(0) for t in features)
         input_mask_aug = tx.utils.pad_and_concat(
-            [input_mask] * self.num_aug, axis=0)
+            [input_mask] * self._num_aug, axis=0)
         segment_ids_aug = tx.utils.pad_and_concat(
-            [segment_ids] * self.num_aug, axis=0)
+            [segment_ids] * self._num_aug, axis=0)
         label_ids_aug = tx.utils.pad_and_concat(
-            [label_ids] * self.num_aug, axis=0)
+            [label_ids] * self._num_aug, axis=0)
 
         return aug_probs, input_mask_aug, segment_ids_aug, label_ids_aug
 
     def augment_batch(self, input_ids, input_mask, segment_ids, labels):
+        r"""Augment a batch of training examples.
+
+        Args:
+            features: A tuple of Bert features of a batch training example.
+                (input_ids, input_mask, segment_ids, label_ids).
+                `input_ids` is a tensor of Bert token ids.
+                It has shape `[batch_size, seq_len, 1]`.
+
+        Returns:
+            A tuple of Bert features of augmented training examples.
+                (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
+                `input_probs_aug` is a tensor of soft Bert embeddings,
+                It has shape `[batch_size, seq_len, vocab_size]`.
+        """
+
         self._aug_model.eval()
 
         aug_examples = []
@@ -135,15 +194,23 @@ class MetaAugmentationWrapper:
         return input_ids_or_probs, input_masks, segment_ids, label_ids
 
     def update_meta_classifier(self, loss, classifier, classifier_optimizer):
-        r"""
-        equations:
-        theta'(phi) = theta - \nabla_{theta} L_{train}(theta, phi)
-        phi = phi - \nabla_{phi} L_{val}(theta'(phi))
+        r"""Update parameters theta.
+
+        Args:
+            loss: The loss of the downstream classifier that have taken
+                the augmented training examples.
+            classifier: The downstream classifier.
+            classifier_optimizer: The optimizer for the classifier.
+
+        Returns:
+            A meta model of :class:`~forte.forte.models.da_rl.MetaModule`.
+                Meta model is used to calculate
+                \nabla_{phi} L_{val}(theta'(phi)),
+                where it needs gradients applied to phi.
+                Meta model copies classifier's states to perform parameter
+                updates, and later applies gradient change to theta.
         """
 
-        # meta model is used to calculate \nabla_{phi} L_{val}(theta'(phi)),
-        # where it needs gradients applied to phi
-        # meta model copies classifier and applies grad change to theta
         meta_model = MetaModule(classifier)
 
         # grads_theta(phi) = \nabla_{theta} L_{train}(theta, phi)
@@ -155,7 +222,8 @@ class MetaAugmentationWrapper:
 
         return meta_model
 
-    def _calculate_grads(self, loss, classifier, classifier_optimizer):
+    @staticmethod
+    def _calculate_grads(loss, classifier, classifier_optimizer):
         grads = torch.autograd.grad(
             loss, [param for name, param in classifier.named_parameters()],
             create_graph=True)

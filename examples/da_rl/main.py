@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Example of building a reinforcement learning based,
-data augmentation enhanced
-sentence classifier based on pre-trained BERT model,
-with IMDB Dataset.
+"""
+Example of building a reinforcement learning based,
+data augmentation enhanced sentence classifier
+based on pre-trained BERT model, with IMDB Dataset.
 """
 
 import argparse
