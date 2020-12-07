@@ -148,7 +148,7 @@ class OntonotesReader(PackReader):
                 if start_new_doc:
                     pack = DataPack()
 
-                    words = []
+                    words: List = []
                     offset = 0
                     has_rows = False
 
@@ -332,9 +332,9 @@ class OntonotesReader(PackReader):
             label = label.strip()
             l_bracket_cnt, r_bracket_cnt = label.count('('), label.count(')')
             is_span_start: bool = \
-                label[0] == '(' and l_bracket_cnt-r_bracket_cnt == 1
+                label[0] == '(' and l_bracket_cnt - r_bracket_cnt == 1
             is_span_end: bool = \
-                label[-1] == ')' and r_bracket_cnt-l_bracket_cnt == 1
+                label[-1] == ')' and r_bracket_cnt - l_bracket_cnt == 1
 
             if is_span_start:
                 # Entering into a span
