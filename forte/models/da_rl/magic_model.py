@@ -1,26 +1,59 @@
-import torch
-import torch.nn as nn
+# Copyright 2020 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+A model that copies some necessary states of a pytorch module
+and performs parameter updates.
+"""
+
 import copy
 from typing import Optional, Tuple
 import operator
-
+import torch
+import torch.nn as nn
 from torch.nn.modules.utils import _pair
+
+
+__all__ = [
+    "MetaModule"
+]
 
 
 class MetaModule(nn.Module):
     # pylint: disable=line-too-long
-    '''
-    input: a pytorch module
+    r"""A model that copies some necessary states of a pytorch module
+    and performs parameter updates.
 
-    implement the calculation:
-    L(theta - \nabla_{theta} L_{train}(theta, phi))
-    after the calculation, we need phi is derivable
-
-    there is an example code for this class here:
+    There is an example code for this class here:
     https://github.com/tanyuqian/learning-data-manipulation/blob/master/magic_module.py
-    '''
+
+    It implements the calculation:
+        L(theta - \nabla_{theta} L_{train}(theta, phi)).
+
+    In order to perform :meth:`forward` the same way as the input module,
+    we need to copy some of the necessary functions that are needed during the runtime
+    of the nested `forward` into this class.
+    For example, if the input module is tx.modules.BERTClassifier,
+    :meth:`_get_noise_shape`, :meth:`_split_heads`, :meth:`_combine_heads` are needed
+    to be exposed in this class.
+    """
 
     def __init__(self, module):
+        r"""
+        Args:
+            module: A pytorch module.
+        """
+
         nn.Module.__init__(self)
         self._type = type(module)
 
@@ -38,9 +71,9 @@ class MetaModule(nn.Module):
             self.add_module(key, MetaModule(value))
 
         for key, value in module.__dict__.items():
-            if (key not in self.__dict__) and\
-                    (key not in self._buffers) and\
-                    (key not in self._modules):
+            if key not in self.__dict__ and\
+                    key not in self._buffers and\
+                    key not in self._modules:
                 self.__setattr__(key, value)
 
     def forward(self, *args, **kwargs):
@@ -77,6 +110,8 @@ class MetaModule(nn.Module):
         return [[getattr(self, weight) for weight in weights] for weights in
                 self._all_weights]
 
+    # pylint: disable=line-too-long
+    # https://github.com/pytorch/pytorch/blob/master/torch/nn/modules/container.py#L150
     def _get_abs_string_index(self, idx):
         """Get the absolute index for the list of modules"""
         idx = operator.index(idx)
@@ -86,7 +121,8 @@ class MetaModule(nn.Module):
             idx += len(self)
         return str(idx)
 
-    # functions for texar.torch
+    # pylint: disable=line-too-long
+    # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/embedders/embedder_base.py#L63
     def _get_noise_shape(self, dropout_strategy: str,
                          ids_rank: Optional[int] = None,
                          dropout_input: Optional[torch.Tensor] = None) \
@@ -106,7 +142,8 @@ class MetaModule(nn.Module):
             raise ValueError(f"Unknown dropout strategy: {dropout_strategy}")
         return noise_shape
 
-    # functions for texar.torch
+    # pylint: disable=line-too-long
+    # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/encoders/multihead_attention.py#L232
     def _split_heads(self, x: torch.Tensor) -> torch.Tensor:
         r"""Split channels (dimension 2) into multiple heads,
         becomes dimension 1). Must ensure ``x.shape[-1]`` can be
@@ -118,7 +155,8 @@ class MetaModule(nn.Module):
             self._hparams.num_heads, depth // self._hparams.num_heads))
         return split_x.permute((0, 2, 1, 3))
 
-    # functions for texar.torch
+    # pylint: disable=line-too-long
+    # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/encoders/multihead_attention.py#L243
     def _combine_heads(self, x: torch.Tensor) -> torch.Tensor:
         r"""
 

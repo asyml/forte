@@ -15,10 +15,10 @@
 A wrapper adding data augmentation to a model with arbitrary tasks.
 """
 
+import random
 import texar.torch as tx
 from torch.nn import functional as F
 import torch
-import random
 
 from forte.models.da_rl.magic_model import MetaModule
 
@@ -67,6 +67,8 @@ class MetaAugmentationWrapper:
         self._aug_model.zero_grad()
 
     def _augment_example(self, features, num_aug):
+        # pylint: disable=protected-access
+
         init_ids, input_mask, segment_ids, _ = \
             (t.view(1, -1).to(self._device) for t in features)
 
@@ -157,7 +159,8 @@ class MetaAugmentationWrapper:
 
         aug_examples = []
         features = []
-        for i in range(len(input_ids)):
+        num_example = len(input_ids)
+        for i in range(num_example):
             feature = (input_ids[i], input_mask[i], segment_ids[i], labels[i])
             features.append(feature)
             with torch.no_grad():
@@ -238,8 +241,13 @@ class MetaAugmentationWrapper:
 
 
 def _adam_delta(optimizer, model, grads):
+    # pylint: disable=line-too-long
     r"""compute adam delta function for texar-pytorch optimizer with
-    tx.core.BertAdam"""
+    tx.core.BertAdam
+
+    See more implementation details from:
+    https://github.com/asyml/texar-pytorch/blob/master/texar/torch/core/optimization.py#L398
+    """
 
     deltas = {}
     for group in optimizer.param_groups:

@@ -44,7 +44,7 @@ def read_train_csv(input_file, train_output_file,
                         break
                     if len(row) == 0:
                         continue
-                    elif row[1] == "unsup":
+                    if row[1] == "unsup":
                         continue
                     elif row[1] == "neg" and num_eval_neg == eval_neg:
                         continue
