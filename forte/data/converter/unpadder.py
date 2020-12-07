@@ -21,7 +21,7 @@ class BaseUnpadder:
         pass
 
 
-class SameLengthUnpadder(BaseUnpadder):
+class DefaultUnpadder(BaseUnpadder):
     def __init__(self, config):
         super().__init__()
         self.config = config

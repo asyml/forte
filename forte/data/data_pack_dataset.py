@@ -20,7 +20,7 @@ from texar.torch.data import IterDataSource, DatasetBase, Batch
 from forte.data.converter.converter import Converter
 from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
-from forte.data.extractor.extractor import BaseExtractor
+from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
 from forte.data.readers.base_reader import PackReader
@@ -133,16 +133,17 @@ class DataPackDataset(DatasetBase):
         tensor_collection: Dict[str, Dict[str, torch.Tensor]] = {}
         for tag, features in example_collection.items():
             need_pad: bool = self._feature_scheme[tag]["need_pad"]
+
+            if tag not in tensor_collection:
+                tensor_collection[tag] = {}
+
             if need_pad:
                 converter: Converter = \
                     self._feature_scheme[tag]["converter"]
                 tensor, mask = converter.convert(features)
-
-                if tag not in tensor_collection:
-                    tensor_collection[tag] = {}
-
                 tensor_collection[tag]["tensor"] = tensor
                 tensor_collection[tag]["mask"] = mask
+
             tensor_collection[tag]["features"] = features
 
         return Batch(batch_size, **tensor_collection)

@@ -22,9 +22,9 @@ from forte.common.configuration import Config
 from forte.data.converter.converter import Converter
 from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
-from forte.data.extractor.extractor import BaseExtractor
+from forte.data.extractor.base_extractor import BaseExtractor
 from forte.predictor import Predictor
-from forte.data.converter.unpadder import BaseUnpadder, SameLengthUnpadder
+from forte.data.converter.unpadder import BaseUnpadder, DefaultUnpadder
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.readers.base_reader import PackReader
@@ -212,8 +212,11 @@ class TrainPreprocessor:
                 resource_schemes[tag]["need_pad"] = need_pad
 
                 if scheme["type"] == DATA_OUTPUT:
-                    unpadder: BaseUnpadder = \
-                        unpadder_selector(scheme["strategy"])(config)
+                    if "unpadder" in scheme:
+                        unpadder: BaseUnpadder = \
+                            scheme["unpadder"](config)
+                    else:
+                        unpadder: BaseUnpadder = DefaultUnpadder(config)
                     resource_schemes[tag]["unpadder"] = unpadder
 
             except Exception as e:
@@ -242,7 +245,8 @@ class TrainPreprocessor:
             for instance in data_pack.get(scope):
                 for _, scheme in schemes.items():
                     extractor: BaseExtractor = scheme["extractor"]
-                    extractor.update_vocab(data_pack, instance)
+                    if extractor.config.vocab_method != "raw":
+                        extractor.update_vocab(data_pack, instance)
 
         self._vocab_ready = True
 

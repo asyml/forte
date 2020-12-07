@@ -23,8 +23,10 @@ from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.data.converter.converter import Converter
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
-from forte.data.extractor.extractor import TextExtractor, CharExtractor, \
-    BioSeqTaggingExtractor, BaseExtractor
+from forte.data.extractor.attribute_extractor import TextExtractor
+from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.extractor.char_extractor import CharExtractor
+from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
 from ft.onto.base_ontology import Sentence, Token, EntityMention
 
 
@@ -48,7 +50,6 @@ class TrainPreprocessorTest(unittest.TestCase):
                     "entry_type": Token,
                     "repr": "text_repr",
                     "conversion_method": "indexing",
-                    "vocab_use_pad": True,
                     "type": DATA_INPUT,
                     "extractor": TextExtractor
                 },
@@ -57,7 +58,6 @@ class TrainPreprocessorTest(unittest.TestCase):
                     "repr": "char_repr",
                     "conversion_method": "indexing",
                     "max_char_length": self.config['max_char_length'],
-                    "vocab_use_pad": True,
                     "type": DATA_INPUT,
                     "extractor": CharExtractor
                 },
@@ -65,9 +65,7 @@ class TrainPreprocessorTest(unittest.TestCase):
                     "entry_type": EntityMention,
                     "attribute": "ner_type",
                     "based_on": Token,
-                    "strategy": "BIO",
                     "vocab_method": "indexing",
-                    "vocab_use_pad": True,
                     "type": DATA_OUTPUT,
                     "extractor": BioSeqTaggingExtractor
                 }
