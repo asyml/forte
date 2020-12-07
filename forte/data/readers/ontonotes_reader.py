@@ -141,31 +141,55 @@ class OntonotesReader(PackReader):
         return self.ParsedFields(**fields)  # type: ignore
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = DataPack()
+        start_new_doc: bool = True
 
         with open(file_path, encoding="utf8") as doc:
-            words = []
-            offset = 0
-            has_rows = False
-
-            speaker = part_id = document_id = None
-            sentence_begin = 0
-
-            # auxiliary structures
-            current_entity_mention: Optional[Tuple[int, str]] = None
-            verbal_predicates: List[PredicateMention] = []
-
-            current_pred_arg: List[Optional[Tuple[int, str]]] = []
-            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]] = []
-
-            groups: DefaultDict[int, List[EntityMention]] = defaultdict(list)
-            coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
-
             for line in doc:
+                if start_new_doc:
+                    pack = DataPack()
+
+                    words = []
+                    offset = 0
+                    has_rows = False
+
+                    speaker = part_id = document_id = None
+                    sentence_begin = 0
+
+                    # auxiliary structures
+                    current_entity_mention: Optional[Tuple[int, str]] = None
+                    verbal_predicates: List[PredicateMention] = []
+
+                    current_pred_arg: List[Optional[Tuple[int, str]]] = []
+                    verbal_pred_args: List[
+                        List[Tuple[PredicateArgument, str]]] = []
+
+                    groups: DefaultDict[int, List[EntityMention]] = defaultdict(
+                        list)
+                    coref_stacks: DefaultDict[int, List[int]] = defaultdict(
+                        list)
+
+                    start_new_doc = False
+
                 line = line.strip()
 
                 if line.startswith("#end document"):
-                    break
+                    # group the coreference mentions in the whole document
+                    for _, mention_list in groups.items():
+                        group = CoreferenceGroup(pack)
+                        group.add_members(mention_list)
+
+                    text = " ".join(words)
+                    pack.set_text(text,
+                                  replace_func=self.text_replace_operation)
+
+                    _ = Document(pack, 0, len(text))
+                    if document_id is not None:
+                        pack.pack_name = document_id
+
+                    yield pack
+
+                    start_new_doc = True
+                    continue
 
                 if line != "" and not line.startswith("#"):
                     fields = self._parse_line(line)
@@ -264,19 +288,6 @@ class OntonotesReader(PackReader):
 
                     has_rows = False
 
-            # group the coreference mentions in the whole document
-            for _, mention_list in groups.items():
-                group = CoreferenceGroup(pack)
-                group.add_members(mention_list)
-
-            text = " ".join(words)
-            pack.set_text(text, replace_func=self.text_replace_operation)
-
-            _ = Document(pack, 0, len(text))
-            if document_id is not None:
-                pack.pack_name = document_id
-        yield pack
-
     def _process_entity_annotations(
             self,
             pack: DataPack,
@@ -316,13 +327,21 @@ class OntonotesReader(PackReader):
     ) -> None:
 
         for label_index, label in enumerate(labels):
+            # To find the span start/end, this is a workaround for input
+            # like `(ARG1(R-ARG2*)`. All inner spans will be ignored
+            label = label.strip()
+            l_bracket_cnt, r_bracket_cnt = label.count('('), label.count(')')
+            is_span_start: bool = \
+                label[0] == '(' and l_bracket_cnt-r_bracket_cnt == 1
+            is_span_end: bool = \
+                label[-1] == ')' and r_bracket_cnt-l_bracket_cnt == 1
 
-            if "(" in label:
+            if is_span_start:
                 # Entering into a span
                 arg_type = label.strip("()*")
                 current_pred_arg[label_index] = (word_begin, arg_type)
 
-            if ")" in label:
+            if is_span_end:
                 # Exiting a span
                 if current_pred_arg[label_index] is None:
                     raise ValueError(
