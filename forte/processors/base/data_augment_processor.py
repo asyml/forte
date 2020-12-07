@@ -54,7 +54,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         super().__init__()
         self.replaced_spans: List[Tuple[Entry, str]] = []
 
-    def replace(self, replacement_op: TextReplacementOp, input: Entry):
+    def replace(self, replacement_op: TextReplacementOp, input: Annotation):
         """
         This is a wrapper function to call the replacement op. After
         getting the augmented text, it will register the input & output
