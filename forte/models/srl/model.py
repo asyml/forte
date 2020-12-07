@@ -83,7 +83,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
                              num_output_representations=1)
             self._elmo_char_ids_fn = batch_to_ids
         else:
-            self.elmo = None
+            self.elmo = None  # type: ignore
 
         # LSTM
         single_hidden_dim = self._hparams.contextualization_size

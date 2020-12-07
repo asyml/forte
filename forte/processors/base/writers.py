@@ -92,7 +92,7 @@ class JsonPackWriter(PackProcessor, ABC):
         self.indent: Optional[int] = None
 
     def initialize(self, resources: Resources, configs: Config):
-        super(JsonPackWriter, self).initialize(resources, configs)
+        super().initialize(resources, configs)
 
         if not configs.output_dir:
             raise NotADirectoryError('Root output directory is not defined '

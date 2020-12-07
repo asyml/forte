@@ -407,9 +407,10 @@ class FDict(Generic[KeyType, ValueType], MutableMapping):
     def __setitem__(self, k: KeyType, v: ValueType) -> None:
         try:
             self.__data[k] = v.as_pointer(self.__parent_entry)
-        except AttributeError:
+        except AttributeError as e:
             raise AttributeError(
-                f"Item of the FDict must be of type entry, got {v.__class__}")
+                f"Item of the FDict must be of type entry, "
+                f"got {v.__class__}") from e
 
     def __delitem__(self, k: KeyType) -> None:
         del self.__data[k]
