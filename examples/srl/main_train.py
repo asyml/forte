@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
 
+
 def create_model(schemes: Dict[str, Dict[str, BaseExtractor]]) -> \
         LabeledSpanGraphNetwork:
     text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
