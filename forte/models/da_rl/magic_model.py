@@ -110,7 +110,6 @@ class MetaModule(nn.Module):
         return [[getattr(self, weight) for weight in weights] for weights in
                 self._all_weights]
 
-    # pylint: disable=line-too-long
     # https://github.com/pytorch/pytorch/blob/master/torch/nn/modules/container.py#L150
     def _get_abs_string_index(self, idx):
         # pylint: disable=C0325
@@ -135,7 +134,7 @@ class MetaModule(nn.Module):
             assert dropout_input is not None
             assert ids_rank is not None
             shape_a = dropout_input.size()[:ids_rank]
-            shape_b = (1,) * self._dim_rank # type: ignore
+            shape_b = (1,) * self._dim_rank     # type: ignore
             noise_shape = shape_a + shape_b
         elif dropout_strategy == 'item_type':
             noise_shape = (self._num_embeds,) + (1,) * self._dim_rank   # type: ignore
@@ -143,7 +142,6 @@ class MetaModule(nn.Module):
             raise ValueError(f"Unknown dropout strategy: {dropout_strategy}")
         return noise_shape
 
-    # pylint: disable=line-too-long
     # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/encoders/multihead_attention.py#L232
     def _split_heads(self, x: torch.Tensor) -> torch.Tensor:
         r"""Split channels (dimension 2) into multiple heads,
@@ -156,7 +154,6 @@ class MetaModule(nn.Module):
             self._hparams.num_heads, depth // self._hparams.num_heads))
         return split_x.permute((0, 2, 1, 3))
 
-    # pylint: disable=line-too-long
     # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/encoders/multihead_attention.py#L243
     def _combine_heads(self, x: torch.Tensor) -> torch.Tensor:
         r"""
