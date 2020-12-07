@@ -212,11 +212,11 @@ class TrainPreprocessor:
                 resource_schemes[tag]["need_pad"] = need_pad
 
                 if scheme["type"] == DATA_OUTPUT:
+                    unpadder: BaseUnpadder
                     if "unpadder" in scheme:
-                        unpadder: BaseUnpadder = \
-                            scheme["unpadder"](config)
+                        unpadder = scheme["unpadder"](config)
                     else:
-                        unpadder: BaseUnpadder = DefaultUnpadder(config)
+                        unpadder = DefaultUnpadder(config)
                     resource_schemes[tag]["unpadder"] = unpadder
 
             except Exception as e:
@@ -313,15 +313,3 @@ class TrainPreprocessor:
         dataset_iter = self._build_dataset_iterator()
 
         return iter(dataset_iter)
-
-
-def unpadder_selector(encode_strategy: str) -> Type[BaseUnpadder]:
-    mapping = {
-        "BIO": SameLengthUnpadder
-    }
-
-    if encode_strategy not in mapping:
-        raise ValueError("Cannot suitable unpadder for encode strategy: "
-                         + encode_strategy)
-
-    return mapping[encode_strategy]

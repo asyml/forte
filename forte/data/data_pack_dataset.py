@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Dict, Iterator, Type, Optional, List, Tuple, Union
+from typing import Dict, Iterator, Type, Optional, List, Tuple, Union, Any
 
 import torch
 from texar.torch import HParams
@@ -130,7 +130,7 @@ class DataPackDataset(DatasetBase):
                     example_collection[tag] = []
                 example_collection[tag].append(feature)
 
-        tensor_collection: Dict[str, Dict[str, torch.Tensor]] = {}
+        tensor_collection: Dict[str, Dict[str, Any]] = {}
         for tag, features in example_collection.items():
             need_pad: bool = self._feature_scheme[tag]["need_pad"]
 
