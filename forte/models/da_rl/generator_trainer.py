@@ -31,31 +31,36 @@ __all__ = [
 class MetaAugmentationWrapper:
     # pylint: disable=line-too-long
     r"""A wrapper adding data augmentation to a model with arbitrary tasks.
+
     See: https://arxiv.org/pdf/1910.12795.pdf
+
     There is an example code for this class here:
     https://github.com/tanyuqian/learning-data-manipulation/blob/master/augmentation/generator.py
+
     Let theta be the parameters of the downstream (classifier) model.
     Let phi be the parameters of the augmentation model.
     Equations to update phi:
+
     theta'(phi) = theta - \nabla_{theta} L_{train}(theta, phi)
+
     phi = phi - \nabla_{phi} L_{val}(theta'(phi))
+
+    Args:
+        augmentation_model:
+            A Bert-based language model for data augmentation.
+        augmentation_optimizer:
+            An optimizer.
+        aug_tokenizer:
+            A Bert-based tokenizer.
+        device:
+            The CUDA device to run the model on.
+        num_aug:
+            The number of samples from the LM for an augmented training example.
+            See :meth:`_augment_example` for implementation details.
     """
 
     def __init__(self, augmentation_model, augmentation_optimizer,
                  aug_tokenizer, device, num_aug):
-        r"""
-        :param augmentation_model:
-        A Bert-based language model for data augmentation.
-        :param augmentation_optimizer:
-        An optimizer.
-        :param aug_tokenizer:
-        A Bert-based tokenizer.
-        :param device:
-        The CUDA device to run the model on.
-        :param num_aug:
-        The number of samples from the LM for an augmented training example.
-        See :meth:`_augment_example` for implementation details.
-        """
         self._aug_model = augmentation_model
         self._aug_optimizer = augmentation_optimizer
         self._aug_tokenizer = aug_tokenizer
@@ -118,12 +123,12 @@ class MetaAugmentationWrapper:
 
         Returns:
             A tuple of Bert features of augmented training examples.
-                (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
-                `input_probs_aug` is a tensor of soft Bert embeddings,
-                distributions over vocabulary.
-                It has shape `[num_aug, seq_len, vocab_size]`.
-                It keeps phi as variable so that after passing it to the classifier,
-                the gradients of theta will also apply to phi.
+            (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
+            `input_probs_aug` is a tensor of soft Bert embeddings,
+            distributions over vocabulary.
+            It has shape `[num_aug, seq_len, vocab_size]`.
+            It keeps phi as variable so that after passing it to the classifier,
+            the gradients of theta will also apply to phi.
         """
 
         aug_probs = self._augment_example(features, self._num_aug)
@@ -150,9 +155,9 @@ class MetaAugmentationWrapper:
 
         Returns:
             A tuple of Bert features of augmented training examples.
-                (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
-                `input_probs_aug` is a tensor of soft Bert embeddings,
-                It has shape `[batch_size, seq_len, vocab_size]`.
+            (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
+            `input_probs_aug` is a tensor of soft Bert embeddings,
+            It has shape `[batch_size, seq_len, vocab_size]`.
         """
 
         self._aug_model.eval()
@@ -206,7 +211,7 @@ class MetaAugmentationWrapper:
             classifier_optimizer: The optimizer for the classifier.
 
         Returns:
-            A meta model of :class:`~forte.forte.models.da_rl.MetaModule`.
+            An instance of :class:`~forte.forte.models.da_rl.MetaModule`.
                 Meta model is used to calculate
                 \nabla_{phi} L_{val}(theta'(phi)),
                 where it needs gradients applied to phi.

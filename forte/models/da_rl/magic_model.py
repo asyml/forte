@@ -38,22 +38,20 @@ class MetaModule(nn.Module):
     https://github.com/tanyuqian/learning-data-manipulation/blob/master/magic_module.py
 
     It implements the calculation:
-        L(theta - \nabla_{theta} L_{train}(theta, phi)).
+    L(theta - \nabla_{theta} L_{train}(theta, phi)).
+
+    Args:
+        module: A pytorch module.
 
     In order to perform :meth:`forward` the same way as the input module,
     we need to copy some of the necessary functions that are needed during the runtime
-    of the nested `forward` into this class.
+    of the nested :meth:`forward` into this class.
     For example, if the input module is tx.modules.BERTClassifier,
     :meth:`_get_noise_shape`, :meth:`_split_heads`, :meth:`_combine_heads` are needed
     to be exposed in this class.
     """
 
     def __init__(self, module):
-        r"""
-        Args:
-            module: A pytorch module.
-        """
-
         nn.Module.__init__(self)
         self._type = type(module)
 
