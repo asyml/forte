@@ -171,8 +171,8 @@ class UDAIterator:
             return next(self._sup_iter), None
         try:
             sup_batch = next(self._sup_iter)
-        except StopIteration:
-            raise StopIteration
+        except StopIteration as e:
+            raise StopIteration from e
         try:
             unsup_batch = next(self._unsup_iter)
         except StopIteration:
