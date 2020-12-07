@@ -140,7 +140,7 @@ class Feature:
             self._sub_features: List = []
             for sub_data in data:
                 sub_metadata = deepcopy(self._meta_data)
-                sub_metadata["dim"] = sub_metadata["dim"]-1
+                sub_metadata["dim"] = sub_metadata["dim"] - 1
                 self._sub_features.append(
                     Feature(data=sub_data,
                             metadata=sub_metadata,
