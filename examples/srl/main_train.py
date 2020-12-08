@@ -87,7 +87,7 @@ tp_request = {
     "schemes": {
         "text_tag": {
             "entry_type": Token,
-            "get_attribute_fn": lambda x: x.text,
+            "attribute_get": "text",
             "vocab_method": "indexing",
             "type": DATA_INPUT,
             "extractor": AttributeExtractor,
@@ -102,7 +102,7 @@ tp_request = {
         },
         "raw_text_tag": {
             "entry_type": Token,
-            "get_attribute_fn": lambda x: x.text,
+            "attribute_get": "text",
             "vocab_method": "raw",
             "type": DATA_INPUT,
             "extractor": AttributeExtractor,
