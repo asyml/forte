@@ -15,7 +15,7 @@ from copy import deepcopy
 from typing import List, Any, Tuple, Union, Dict, Optional
 import torch
 
-from forte.data.extractor.vocabulary import Vocabulary
+from forte.data.vocabulary import Vocabulary
 
 
 class Feature:
