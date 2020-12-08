@@ -14,13 +14,14 @@
 import logging
 from typing import Iterator, Dict, List
 
+import torch
 from texar.torch.data import Batch
 from torch import Tensor
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 
 from forte.data.converter.feature import Feature
-from forte.data.extractor.attribute_extractor import TextExtractor
+from forte.data.extractor.attribute_extractor import AttributeExtractor
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.extractor.char_extractor import CharExtractor
 from forte.data.extractor.link_extractor import LinkExtractor
@@ -76,7 +77,7 @@ def train(model: LabeledSpanGraphNetwork,
     return output
 
 
-num_epochs = 10
+num_epochs = 5
 lr = 0.01
 momentum = 0.9
 nesterov = True
@@ -86,15 +87,14 @@ tp_request = {
     "schemes": {
         "text_tag": {
             "entry_type": Token,
-            "repr": "text_repr",
+            "get_attribute_fn": lambda x: x.text,
             "vocab_method": "indexing",
             "type": DATA_INPUT,
-            "extractor": TextExtractor,
+            "extractor": AttributeExtractor,
             "need_pad": True
         },
         "char_tag": {
             "entry_type": Token,
-            "repr": "char_repr",
             "vocab_method": "indexing",
             "type": DATA_INPUT,
             "extractor": CharExtractor,
@@ -102,10 +102,10 @@ tp_request = {
         },
         "raw_text_tag": {
             "entry_type": Token,
-            "repr": "text_repr",
+            "get_attribute_fn": lambda x: x.text,
             "vocab_method": "raw",
             "type": DATA_INPUT,
-            "extractor": TextExtractor,
+            "extractor": AttributeExtractor,
             "need_pad": False
         },
         "pred_link_tag": {  # predicate link
@@ -161,5 +161,5 @@ while epoch < num_epochs:
                     f"loss: {train_output['loss']}")
 
 # Save training state to disk
-# train_pipeline.save_state("train_state.pkl")
+# train_preprocessor.save_state("train_state.pkl")
 # torch.save(model, "model.pt")
