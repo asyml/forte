@@ -145,7 +145,7 @@ tp_request = {
         "text_tag": {
             "entry_type": Token,
             "vocab_method": "indexing",
-            "get_attribute_fn": lambda x: x.text,
+            "attribute_get": "text",
             "type": DATA_INPUT,
             "extractor": AttributeExtractor
         },
