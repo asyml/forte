@@ -20,7 +20,7 @@ from typing import Iterator, Iterable, List
 from forte.data.readers.imdb_reader import IMDBReader
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Sentence, Document
+from ft.onto.base_ontology import Sentence, Token, Document
 
 
 class IMDBReaderTest(unittest.TestCase):
@@ -62,7 +62,9 @@ class IMDBReaderTest(unittest.TestCase):
             lines: List[str] = expected_doc.split('\n')
             comment_lines = []
             sentiment_labels = []
+            wordlist = []
             for line in lines:
+                tempwordlist = []
                 #for empty or invalid line
                 if len(line) < 5:
                     continue
@@ -70,30 +72,30 @@ class IMDBReaderTest(unittest.TestCase):
                 sentiment_label = line.split("\",")[1]
                 comment_lines.append(comment)
                 sentiment_labels.append(sentiment_label)
-                # if sentiment_label == 'positive':
-                #     sentiment_labels.append(1.0)
-                # else:
-                #     sentiment_labels.append(-1.0)
 
+                tempwordlist = comment.split(" ")
+                for w in tempwordlist:
+                    wordlist.append(w)
 
             actual_sentences: Iterator[Sentence] = pack.get(Sentence)
+            actual_word: Iterator[Token] = pack.get(Token)
             # Force sorting as Link entries have no order when retrieving from
             # data pack.
-
             for line, label, actual_sentence in \
                     zip(comment_lines, sentiment_labels, actual_sentences):
                 line = line.strip()
                 label = label
                 comment = actual_sentence.text
-                print("comment:" + comment)
-                #print("label: " + str(label))
-                print("actual_sentence.sentiment[comment]: "+
-                      str(actual_sentence.sentiment[comment]))
                 # Test comment.
                 self.assertEqual(comment,line)
                 self.assertEqual(actual_sentence.sentiment[comment], label)
 
-
+            for word_read, word_in_pack in zip(wordlist,actual_word):
+                new_word_read = word_read
+                lastch = word_read[len(word_read) - 1]
+                if lastch == "," or lastch=='.':
+                    new_word_read = word_read[:len(word_read) - 1]
+                self.assertEqual(new_word_read, word_in_pack.text)
 
         self.assertEqual(count_packs, 1)
 

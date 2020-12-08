@@ -27,7 +27,7 @@ from forte.common.resources import Resources
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Sentence, Document
+from ft.onto.base_ontology import Sentence, Token, Document
 
 
 __all__ = [
@@ -74,7 +74,7 @@ class IMDBReader(PackReader):
         return os.path.basename(imdb_file)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack: DataPack = self.new_pack()
+        pack: DataPack = DataPack()
         text: str = ""
         offset: int = 0
 
@@ -85,18 +85,24 @@ class IMDBReader(PackReader):
                     line_list = line.split("\",")
                     sentence = line_list[0].strip("\"")
                     sentiment = line_list[1]
+
                     # Add sentence.
-
-                    #only for binary sentiment classification
-                    # sentiment_score  = -1.0
-                    # if sentiment == "positive":
-                    #     sentiment_score = 1.0
-
                     senobj = Sentence(pack, offset+1,
                                       offset + len(sentence)+1)
-                    print("sentence here is :" + sentence)
-
                     senobj.sentiment[sentence] = sentiment
+
+                    # Add token
+                    wordoffset = offset+1
+                    words = sentence.split(" ")
+                    for word in words:
+                        lastch = word[len(word)-1]
+                        new_word = word
+                        if lastch == "," or lastch=='.':
+                            new_word = word[:len(word)-1]
+                        Token(pack, wordoffset, wordoffset+len(new_word))
+                        wordoffset += len(word)
+                        # For space between words
+                        wordoffset += 1
 
                     # For \n
                     offset += len(line) + 1
