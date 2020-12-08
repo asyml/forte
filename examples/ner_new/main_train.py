@@ -29,7 +29,7 @@ from forte.pipeline import Pipeline
 from forte.predictor import Predictor
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
-from forte.data.extractor.attribute_extractor import TextExtractor
+from forte.data.extractor import AttributeExtractor
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.extractor.char_extractor import CharExtractor
 from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
@@ -144,14 +144,13 @@ tp_request = {
     "schemes": {
         "text_tag": {
             "entry_type": Token,
-            "repr": "text_repr",
             "vocab_method": "indexing",
+            "get_attribute_fn": lambda x: x.text,
             "type": DATA_INPUT,
-            "extractor": TextExtractor
+            "extractor": AttributeExtractor
         },
         "char_tag": {
             "entry_type": Token,
-            "repr": "char_repr",
             "vocab_method": "indexing",
             "max_char_length": config.config_data.max_char_length,
             "type": DATA_INPUT,
