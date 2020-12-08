@@ -18,12 +18,12 @@ from typing import Dict, Any
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from torch import Tensor
 
-from forte.data.extractor.vocabulary import Vocabulary
+from forte.data.vocabulary import Vocabulary
 from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.data.converter.converter import Converter
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
-from forte.data.extractor.attribute_extractor import TextExtractor
+from forte.data.extractor.attribute_extractor import AttributeExtractor
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.extractor.char_extractor import CharExtractor
 from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
@@ -48,14 +48,13 @@ class TrainPreprocessorTest(unittest.TestCase):
             "schemes": {
                 "text_tag": {
                     "entry_type": Token,
-                    "repr": "text_repr",
+                    "get_attribute_fn": lambda x: x.text,
                     "conversion_method": "indexing",
                     "type": DATA_INPUT,
-                    "extractor": TextExtractor
+                    "extractor": AttributeExtractor
                 },
                 "char_tag": {
                     "entry_type": Token,
-                    "repr": "char_repr",
                     "conversion_method": "indexing",
                     "max_char_length": self.config['max_char_length'],
                     "type": DATA_INPUT,
@@ -118,7 +117,7 @@ class TrainPreprocessorTest(unittest.TestCase):
         schemes: Dict[str, Any] = \
             self.train_preprocessor.feature_resource["schemes"]
 
-        text_extractor: TextExtractor = schemes["text_tag"]["extractor"]
+        text_extractor: AttributeExtractor = schemes["text_tag"]["extractor"]
         vocab: Vocabulary = text_extractor.vocab
         self.assertTrue(vocab.has_key("EU"))
         self.assertTrue(vocab.has_key("Peter"))

@@ -245,7 +245,7 @@ class TrainPreprocessor:
             for instance in data_pack.get(scope):
                 for _, scheme in schemes.items():
                     extractor: BaseExtractor = scheme["extractor"]
-                    if extractor.config.vocab_method != "raw":
+                    if extractor.vocab_method != "raw":
                         extractor.update_vocab(data_pack, instance)
 
         self._vocab_ready = True
