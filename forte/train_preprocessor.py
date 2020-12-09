@@ -24,7 +24,6 @@ from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.predictor import Predictor
-from forte.data.converter.unpadder import BaseUnpadder, DefaultUnpadder
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.readers.base_reader import PackReader
@@ -68,7 +67,6 @@ class TrainPreprocessor:
             "ner_tag": {
                 "extractor":  Extractor,
                 "converter": Converter,
-                "unpadder": Unpadder,
                 "type": DATA_OUTPUT,
                 "need_pad": True
             }
@@ -210,14 +208,6 @@ class TrainPreprocessor:
                 resource_schemes[tag]["converter"] = converter
                 resource_schemes[tag]["type"] = scheme["type"]
                 resource_schemes[tag]["need_pad"] = need_pad
-
-                if scheme["type"] == DATA_OUTPUT:
-                    unpadder: BaseUnpadder
-                    if "unpadder" in scheme:
-                        unpadder = scheme["unpadder"](config)
-                    else:
-                        unpadder = DefaultUnpadder(config)
-                    resource_schemes[tag]["unpadder"] = unpadder
 
             except Exception as e:
                 logger.error("Error instantiate extractor: %s", str(e))
