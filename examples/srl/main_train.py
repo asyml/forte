@@ -146,6 +146,9 @@ optim: Optimizer = SGD(model.parameters(),
 
 logger.info("Start training.")
 epoch = 0
+train_loss: float = 0.0
+train_total: int = 0
+
 while epoch < num_epochs:
     epoch += 1
 
@@ -156,9 +159,14 @@ while epoch < num_epochs:
     for batch in train_batch_iter:
         train_output: LabeledSpanGraphNetwork.ReturnType = \
             train(model, optim, batch)
+        train_loss += train_output["loss"]
+        train_total += batch.batch_size
 
-        logger.info(f"{epoch}th Epoch training, "
-                    f"loss: {train_output['loss']}")
+    logger.info(f"{epoch}th Epoch training, "
+                f"loss: {train_loss / train_total}")
+
+    train_loss = 0.0
+    train_total = 0
 
 # Save training state to disk
 # train_preprocessor.save_state("train_state.pkl")
