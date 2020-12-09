@@ -37,7 +37,7 @@ class CopyNetWrapperState(collections.namedtuple(
         return nest.map_structure(
             with_same_shape,
             self,
-            super(CopyNetWrapperState, self)._replace(**kwargs))
+            super()._replace(**kwargs))
 
 
 class CopyNetWrapper(tf.nn.rnn_cell.RNNCell):
@@ -47,7 +47,7 @@ class CopyNetWrapper(tf.nn.rnn_cell.RNNCell):
             coverity_dim=None, coverity_rnn_cell_hparams=None,
             disabled_vocab_size=0, eps=0.,
             reuse=tf.AUTO_REUSE, name=None):
-        super(CopyNetWrapper, self).__init__(name=name)
+        super().__init__(name=name)
 
         with tf.variable_scope("CopyNetWrapper", reuse=reuse):
             self._cell = cell

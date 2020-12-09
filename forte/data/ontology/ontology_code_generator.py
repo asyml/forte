@@ -27,7 +27,7 @@ from datetime import datetime
 from distutils import dir_util
 from pathlib import Path
 from types import ModuleType
-from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any, cast
+from typing import Dict, List, Optional, Tuple, Set, no_type_check, Any
 
 import jsonschema
 import typed_ast.ast3 as ast
@@ -470,7 +470,7 @@ class OntologyCodeGenerator:
         except Exception as exception:
             if type(exception).__name__.split('.')[0] == jsonschema.__name__ \
                     and hasattr(exception, 'message'):
-                raise OntologySpecValidationError(cast(Any, exception).message)
+                raise OntologySpecValidationError() from exception
             raise
 
         return import_path, visited_paths, rec_visited_paths

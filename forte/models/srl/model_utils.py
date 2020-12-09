@@ -239,13 +239,13 @@ def sum_list(xs: List[torch.Tensor]) -> torch.Tensor:
 
 # pylint: disable=unused-argument,function-redefined
 @overload
-def batch_gather(tensors: torch.Tensor,
-                 index: torch.LongTensor) -> torch.Tensor: ...
+def batch_gather(tensors: List[torch.Tensor],
+                 index: torch.LongTensor) -> List[torch.Tensor]: ...
 
 
 @overload
-def batch_gather(tensors: List[torch.Tensor],
-                 index: torch.LongTensor) -> List[torch.Tensor]: ...
+def batch_gather(tensors: torch.Tensor,
+                 index: torch.LongTensor) -> torch.Tensor: ...
 
 
 def batch_gather(tensors, index):

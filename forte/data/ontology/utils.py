@@ -32,7 +32,6 @@ from distutils import log
 
 import jsonschema
 
-
 AUTO_GEN_SIGNATURE = '***automatically_generated***'
 
 
@@ -48,7 +47,7 @@ def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
 
     if not dry_run and not os.path.isdir(src):
         raise DistutilsFileError(
-              "cannot copy tree '%s': not a directory" % src)
+            "cannot copy tree '%s': not a directory" % src)
     try:
         names = os.listdir(src)
     except OSError as e:
@@ -56,7 +55,7 @@ def copytree(src, dst, ignore_pattern_if_file_exists='*', preserve_mode=True,
             names = []
         else:
             raise DistutilsFileError(
-                  "error listing files in '%s': %s" % (src, e.strerror))
+                "error listing files in '%s': %s" % (src, e.strerror)) from e
 
     if not dry_run:
         mkpath(dst, verbose=verbose)
@@ -250,6 +249,7 @@ def get_generated_files_in_dir(path):
         with open(file_path, 'r') as f:
             lines = f.readlines()
             return len(lines) > 0 and lines[0] == f'# {AUTO_GEN_SIGNATURE}\n'
+
     ext_files = []
     for root, _, files in os.walk(path):
         for file in files:
