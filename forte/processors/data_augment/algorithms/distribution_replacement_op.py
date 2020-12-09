@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import random
 from typing import Tuple
+from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config
-from forte.data.ontology.core import Entry
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 from forte.processors.data_augment.algorithms.sampler import Sampler
@@ -27,22 +27,31 @@ __all__ = [
 
 class DistributionReplacementOp(TextReplacementOp):
     r"""
-    This class is a replacement op sampling from a distribution
-    to generate word-level new text.
-    todo: subject to change if TextReplacementOp
-    todo: and ReplacementDataAugmentProcessor change.
+    This class is a replacement op to replace the input word
+    with a new word that is sampled by a sampler from a distribution.
+
+    Args:
+        sampler: The sampler that samples a word from a distribution.
+        configs: The config should contain `prob`,
+            The probability of whether to replace the input,
+            it should fall in [0, 1].
     """
     def __init__(self, sampler: Sampler, configs: Config):
         super().__init__(configs)
         self.sampler = sampler
 
-    # pylint: disable=unused-argument
-    def replace(self, input: Entry) -> Tuple[bool, str]:
+    def replace(self, input: Annotation) -> Tuple[bool, str]:
         r"""
-        This function replaces a word from sampling a distribution.
+        This function replaces a word by sampling from a distribution.
+
         Args:
+            input (Annotation): The input annotation.
         Returns:
-            a word sampled from distribution
+            A tuple of two values, where the first element is a boolean value
+            indicating whether the replacement happens, and the second
+            element is the replaced word.
         """
+        if random.random() > self.configs["prob"]:
+            return False, input.text
         word: str = self.sampler.sample()
         return True, word

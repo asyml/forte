@@ -11,12 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import random
 from abc import abstractmethod, ABC
-from typing import Dict, List, Optional
-import nltk
-from nltk.corpus import words, stopwords
+from typing import Dict, List
 
 
 __all__ = [
@@ -28,7 +25,7 @@ __all__ = [
 
 class Sampler(ABC):
     r"""
-    A base sampler, an abstract class.
+    An abstract sampler class.
     """
     def __init__(self):
         random.seed()
@@ -40,67 +37,34 @@ class Sampler(ABC):
 
 class UniformSampler(Sampler):
     r"""
-    Sample from uniform distribution.
+    A sampler that samples a word from a uniform distribution.
+
+    Args:
+        word_list: A list of words that this sampler uniformly samples from.
     """
 
-    def __init__(self, configs: Optional[Dict]):
-        r"""
-        A different distribution type can be given in the configs.
-        The default distribution is NLTK.
-        """
+    def __init__(self, word_list: List[str]):
         super().__init__()
-        self.configs = configs if configs is not None \
-            else self.default_config()
-
-        # set distribution
-        if self.configs["distribution"] == "nltk":
-            try:
-                self.vocab = set(words.words())
-                self.stop_words = set(stopwords.words('english'))
-            except LookupError:
-                nltk.download('words')
-                nltk.download('stopwords')
-                self.vocab = set(words.words('en'))
-                self.stop_words = set(stopwords.words('english'))
-            self.word_list: List[str] = list(self.vocab - self.stop_words)
-
-        else:
-            raise NotImplementedError
+        self.word_list: List[str] = word_list
 
     def sample(self) -> str:
         word: str = random.choice(self.word_list)
         return word
 
-    def default_config(self) -> Dict[str, str]:
-        return {"distribution": "nltk"}
-
 
 class UnigramSampler(Sampler):
     r"""
-    Sample from a given unigram. A unigram file must be given in configs.
-    The file's format:
-        word1 count1
-        word2 count2
-        ......
+    A sampler that samples a word from a unigram distribution.
+
+    Args:
+        unigram: A dictionary.
+            The key is a word, the value is the word count or a probability.
+            This sampler samples from this word distribution.
     """
 
-    def __init__(self, configs: Dict[str, str]):
+    def __init__(self, unigram: Dict[str, float]):
         super().__init__()
-        if "unigram_path" not in configs.keys():
-            raise KeyError("unigram file path is missing.")
-        self.configs = configs
-
-        self.unigram: Dict[str, int] = self._construct_unigram()
-
-    def _construct_unigram(self) -> Dict[str, int]:
-        unigram: Dict[str, int] = {}
-        with open(self.configs['unigram_path'], 'r') as file:
-            for line in file:
-                if len(line) > 0:
-                    line = line.strip()
-                    word, count = line.split(' ')
-                    unigram[word] = int(count)
-        return unigram
+        self.unigram: Dict[str, float] = unigram
 
     def sample(self) -> str:
         word: str = random.choices(list(self.unigram.keys()),

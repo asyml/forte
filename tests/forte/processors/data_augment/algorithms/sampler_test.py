@@ -15,42 +15,31 @@
 Unit tests for distribution sampler.
 """
 import unittest
-import os
-import tempfile
-
-from ddt import ddt, data, unpack
 
 from forte.processors.data_augment.algorithms.sampler import \
     UniformSampler, UnigramSampler
 
 
-@ddt
 class TestSampler(unittest.TestCase):
-    def setUp(self):
-        self.test_dir = tempfile.mkdtemp()
-
-    @data((["apple 1",
-            "banana 5",
-            "orange 2",
-            "lemon 10"],))
-    @unpack
-    def test_unigram_sampler(self, texts):
-        file_path = os.path.join(self.test_dir, "unigram.txt")
-        with open(file_path, 'w') as f:
-            for text in texts:
-                f.write(text + '\n')
-
-        config = {"unigram_path": file_path}
-        sampler = UnigramSampler(config)
+    def test_unigram_sampler(self):
+        word_count = {"apple": 1,
+                      "banana": 2,
+                      "orange": 3}
+        sampler = UnigramSampler(word_count)
         word = sampler.sample()
-        unigram = ('apple', 'banana', 'lemon', 'orange')
-        self.assertIn(word, unigram)
+        self.assertIn(word, word_count)
+        word_prob = {"apple": 0.4,
+                      "banana": 0.4,
+                      "orange": 0.2}
+        sampler = UnigramSampler(word_prob)
+        word = sampler.sample()
+        self.assertIn(word, word_prob)
 
     def test_uniform_sampler(self):
-        config = {"distribution": "nltk"}
-        sampler = UniformSampler(config)
+        word_list = ["apple", "banana", "orange"]
+        sampler = UniformSampler(word_list)
         word = sampler.sample()
-        self.assertIn(word, sampler.vocab)
+        self.assertIn(word, word_list)
 
 
 if __name__ == "__main__":
