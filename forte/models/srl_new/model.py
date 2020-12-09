@@ -286,22 +286,23 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         for b_idx in range(batch_size):
             # TODO: update this block based on Feature meta data
             srl_feature: Feature = srl_features[b_idx]
-            srl_data: List = srl_feature.unroll()[0]
-            srl_meta_data: Dict = srl_feature.meta_data
-            for e_idx, srl in enumerate(srl_data):
-                srl_start = srl_meta_data["child_unit_span"][e_idx][0]
-                srl_end = srl_meta_data["child_unit_span"][e_idx][-1]
+            if srl_feature:
+                srl_data: List = srl_feature.unroll()[0]
+                srl_meta_data: Dict = srl_feature.meta_data
+                for e_idx, srl in enumerate(srl_data):
+                    srl_start = srl_meta_data["child_unit_span"][e_idx][0]
+                    srl_end = srl_meta_data["child_unit_span"][e_idx][-1]
 
-                assert srl_meta_data["parent_unit_span"][e_idx][1] - \
-                       srl_meta_data["parent_unit_span"][e_idx][0] == 1, \
-                    "predicate span larger than one"
+                    assert srl_meta_data["parent_unit_span"][e_idx][1] - \
+                           srl_meta_data["parent_unit_span"][e_idx][0] == 1, \
+                        "predicate span larger than one"
 
-                srl_predicate = srl_meta_data["parent_unit_span"][e_idx][0]
-                span_idx = batch_spans[b_idx].get((srl_start, srl_end), None)
-                predicate_idx = batch_predicates[b_idx].get(srl_predicate, None)
-                if span_idx is not None and predicate_idx is not None:
-                    label_idx = predicate_idx * num_spans + span_idx
-                    gold_labels[b_idx, label_idx] = srl
+                    srl_predicate = srl_meta_data["parent_unit_span"][e_idx][0]
+                    span_idx = batch_spans[b_idx].get((srl_start, srl_end), None)
+                    predicate_idx = batch_predicates[b_idx].get(srl_predicate, None)
+                    if span_idx is not None and predicate_idx is not None:
+                        label_idx = predicate_idx * num_spans + span_idx
+                        gold_labels[b_idx, label_idx] = srl
         gold_labels = gold_labels.to(device=device)
         return gold_labels
 
