@@ -46,15 +46,16 @@ class UDAIterator:
     (https://arxiv.org/abs/1904.12848)
 
     Args:
-        sup_iterator: The iterator for supervised data.
+        sup_iterator: The iterator for supervised data. Each item is a
+            training/eval/test example with key-value pairs as inputs.
         unsup_iterator: The iterator for unsupervised data. Each training
             example in it should contain both the original and augmented data.
         softmax_temperature: The softmax temperature for sharpening the
-            distribution. The value should be larger than 0.
+            distribution. The value should be larger than 0. Defaults to 1.
         confidence_threshold: The threshold for confidence-masking.
             It is a threshold of the probability in [0, 1],
             rather than of the logit. If set to -1, the threshold
-            will be ignored.
+            will be ignored. Defaults to -1.
         reduction: Default: 'mean'. This is the same as the `reduction`
             argument in
             :func:`texar.torch.losses.info_loss.kl_divg_loss_with_logits`.
