@@ -17,10 +17,14 @@ This is the Data Loading Pipeline for Sentence Classifier Task from:
     `https://github.com/google-research/bert/blob/master/run_classifier.py`
 """
 
+import copy
 import os
 import csv
 import logging
+import math
+import random
 
+import numpy as np
 import texar.torch as tx
 
 
@@ -141,7 +145,7 @@ class IMDbProcessor(DataProcessor):
                                quotechar='"'), "unsup_ext", skip_unsup=False)
         elif unsup_set == "unsup_in":
             return self._create_examples(
-                self._read_tsv(os.path.join(raw_data_dir, "train.csv"),quotechar='"'), "unsup_in", skip_unsup=False)
+                self._read_tsv(os.path.join(raw_data_dir, "unsup.csv"),quotechar='"'), "unsup_in", skip_unsup=False)
 
     def get_unsup_aug_examples(self, raw_data_dir, unsup_set):
         """See base class."""
@@ -163,7 +167,7 @@ class IMDbProcessor(DataProcessor):
         examples = []
         print(len(lines))
         for (i, line) in enumerate(lines):
-            if i == 0:
+            if i == 0 or len(line) == 1: # newline
                 continue
             if skip_unsup and line[-2] == "unsup":
                 continue
@@ -497,10 +501,86 @@ def convert_unsup_examples_to_features_and_output_to_files(
             }
             writer.write(features)
 
+def replace_with_length_check(
+        ori_text, new_text,
+        use_min_length,
+        use_max_length_diff_ratio):
+    """Use new_text if the text length satisfies several constraints."""
+    if len(ori_text) < use_min_length or len(new_text) < use_min_length:
+        if random.random() < 0.001:
+            print("not replacing due to short text: \n\tori: {:s}\n\tnew: {:s}\n".format(
+                            ori_text,
+                            new_text))
+        return ori_text
+    length_diff_ratio = 1.0 * (len(new_text) - len(ori_text)) / len(ori_text)
+    if math.fabs(length_diff_ratio) > use_max_length_diff_ratio:
+        if random.random() < 0.001:
+            print("not replacing due to too different text length:\n"
+                     "\tori: {:s}\n\tnew: {:s}\n".format(
+                             ori_text,
+                             new_text))
+        return ori_text
+    return new_text
+
+def back_translation(examples, back_translation_file, data_total_size):
+    """Run back translation."""
+    use_min_length = 10
+    use_max_length_diff_ratio = 0.5
+    logging.info("running bt augmentation")
+
+    text_per_example = 1
+
+    with open(back_translation_file, encoding='utf-8') as inf:
+        paraphrases = inf.readlines()
+    for i in range(len(paraphrases)):
+        paraphrases[i] = paraphrases[i].strip()
+    assert len(paraphrases) == data_total_size
+
+    aug_examples = []
+    aug_cnt = 0
+    for i in range(len(examples)):
+        ori_example = examples[i]
+        text_a = replace_with_length_check(
+                ori_example.text_a,
+                paraphrases[i * text_per_example],
+                use_min_length,
+                use_max_length_diff_ratio,
+                )
+        if text_a == paraphrases[i * text_per_example]:
+            aug_cnt += 1
+        if ori_example.text_b is not None:
+            text_b = replace_with_length_check(
+                    ori_example.text_b,
+                    paraphrases[i * text_per_example + 1],
+                    use_min_length,
+                    use_max_length_diff_ratio,
+                    )
+        else:
+            text_b = None
+
+        example = InputExample(
+                guid=ori_example.guid,
+                text_a=text_a,
+                text_b=text_b,
+                label=ori_example.label)
+        aug_examples += [example]
+        if np.random.random() < 0.0001:
+            pass
+            # tf.logging.info("\tori:\n\t\t{:s}\n\t\t{:s}\n\t\t{:s}\n".format(
+            #     ori_example.text_a, ori_example.text_b, ori_example.label))
+            # tf.logging.info("\tnew:\n\t\t{:s}\n\t\t{:s}\n\t\t{:s}\n".format(
+            #     example.text_a, example.text_b, example.label))
+        if i % 10000 == 0:
+            print("processing example # {:d}".format(i))
+    logging.info("applied back translation for {:.1f} percent of data".format(
+            aug_cnt * 1. / len(examples) * 100))
+    logging.info("finishing running back translation augmentation")
+    return aug_examples
+
 
 def prepare_record_data(processor, tokenizer,
                         data_dir, max_seq_length, output_dir,
-                        feature_types, unsup_feature_types=None, sup_size_limit=None):
+                        feature_types, unsup_feature_types=None, sup_size_limit=None, unsup_bt_file=None):
     r"""Prepare record data.
     Args:
         processor: Data Preprocessor, which must have get_labels,
@@ -541,7 +621,9 @@ def prepare_record_data(processor, tokenizer,
     if not os.path.isfile(unsup_file):
         unsup_label_list = label_list + ["unsup"]
         unsup_examples = processor.get_unsup_examples(data_dir, "unsup_in")
-        unsup_aug_examples = processor.get_unsup_aug_examples(data_dir, "unsup_in")
+        unsup_aug_examples = copy.deepcopy(unsup_examples)
+        unsup_aug_examples = back_translation(unsup_aug_examples, unsup_bt_file, len(unsup_aug_examples))
+        # unsup_aug_examples = processor.get_unsup_aug_examples(data_dir, "unsup_in")
         convert_unsup_examples_to_features_and_output_to_files(
             unsup_examples, unsup_aug_examples, unsup_label_list,
             max_seq_length, tokenizer, unsup_file, unsup_feature_types)

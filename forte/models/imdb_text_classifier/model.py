@@ -73,6 +73,7 @@ class IMDBClassifier:
             feature_types=self.config_data.feature_types,
             unsup_feature_types=self.config_data.unsup_feature_types,
             sup_size_limit=self.config_data.num_train_data,
+            unsup_bt_file=self.config_data.unsup_bt_file,
         )
 
     def run(self, do_train, do_eval, do_test, output_dir="output/"):

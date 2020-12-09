@@ -1,4 +1,5 @@
 pickle_data_dir = "data/IMDB"
+unsup_bt_file = "data/IMDB/para_0.txt"
 max_seq_length = 128
 num_classes = 2
 num_train_data = 24  # supervised data limit. max 25000
