@@ -81,6 +81,9 @@ num_epochs = 5
 lr = 0.01
 momentum = 0.9
 nesterov = True
+batch_size = 64
+
+train_path = "data/train_tiny/"
 
 tp_request = {
     "scope": Sentence,
@@ -123,10 +126,10 @@ tp_request = {
 
 tp_config = {
     "preprocess": {
-        "pack_dir": "data/train_tiny/"
+        "pack_dir": train_path
     },
     "dataset": {
-        "batch_size": 64
+        "batch_size": batch_size
     }
 }
 
@@ -160,7 +163,7 @@ while epoch < num_epochs:
         train_output: LabeledSpanGraphNetwork.ReturnType = \
             train(model, optim, batch)
         train_loss += train_output["loss"]
-        train_total += batch.batch_size
+        train_total += 1
 
     logger.info(f"{epoch}th Epoch training, "
                 f"loss: {train_loss / train_total}")
