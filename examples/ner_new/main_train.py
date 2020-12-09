@@ -253,5 +253,5 @@ while epoch < config.config_data.num_epochs:
                 f"val result: {evaluator.get_result()}")
 
 # Save training state to disk
-# train_pipeline.save_state(config.config_data.train_state_path)
+# train_preprocessor.save_state(config.config_data.train_state_path)
 # torch.save(model, config.config_model.model_path)
