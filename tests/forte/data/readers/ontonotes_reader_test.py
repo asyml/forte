@@ -16,12 +16,13 @@ Unit tests for OntonotesReader.
 """
 
 import unittest
+from typing import Tuple, List
 
 from forte.data.data_pack import DataPack
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.processors.base.pack_processor import PackProcessor
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Token, Sentence
+from ft.onto.base_ontology import Token, Sentence, PredicateLink
 
 
 class DummyPackProcessor(PackProcessor):
@@ -35,6 +36,7 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "data_samples/ontonotes/00"
+        self.dataset_path_nested_span = "data_samples/ontonotes/nested_spans"
 
         self.nlp = Pipeline[DataPack]()
 
@@ -55,6 +57,30 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
                 tokens = [token.text for token in pack.get(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
         self.assertTrue(doc_exists)
+
+    def test_nested_spans(self):
+        expected: List[Tuple[str, str]] = [
+            ("bring", "Tomorrow"),
+            ("bring", "Ehud Barak and Yasser Arafat"),
+            ("bring", "to the resort city of Sharm El"),
+            ("have", "years in terms of their statements and attitudes , "
+                     "six years or"),
+            ("statements", "their"),
+            ("statements", "or more -- before the Oslo accords ,")
+        ]
+        idx = 0
+
+        # get processed pack from dataset
+        for pack in self.nlp.process_dataset(self.dataset_path_nested_span):
+            # get sentence from pack
+            for sentence in pack.get(Sentence):
+                for pred_link in pack.get(PredicateLink, sentence):
+                    pred_link: PredicateLink
+                    self.assertEqual(pred_link.get_parent().text,
+                                     expected[idx][0])
+                    self.assertEqual(pred_link.get_child().text,
+                                     expected[idx][1])
+                    idx += 1
 
 
 if __name__ == '__main__':
