@@ -54,7 +54,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         super().__init__()
         self.replaced_spans: List[Tuple[Entry, str]] = []
 
-    def replace(self, replacement_op: TextReplacementOp, input: Entry):
+    def replace(self, replacement_op: TextReplacementOp, input: Annotation):
         """
         This is a wrapper function to call the replacement op. After
         getting the augmented text, it will register the input & output
@@ -84,24 +84,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
     @classmethod
     def default_configs(cls):
-        """
-        Returns:
-            A dictionary with the default config for this processor.
-        Following are the keys for this dictionary:
-            - augment_entries: defines the entries the processor
-            will augment. It should be a full path to the entry class.
-            - other_entry_policy: a dict specifying the policies for
-            other entries.
-            If "auto_align", the span of the entry will be automatically
-            modified according to its original location. However, some
-            spans might become invalid after the augmentation, for
-            example, the tokens within a replaced sentence may disappear.
-            Entries not in the dict will not be copied to the new data pack.
-            Example: {
-                "ft.onto.base_ontology.Document": "auto_align",
-                "ft.onto.base_ontology.Sentence": "auto_align"
-            }
-        """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Sentence",
