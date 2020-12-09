@@ -59,16 +59,17 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
         self.assertTrue(doc_exists)
 
     def test_nested_spans(self):
-        expected: List[Tuple[str, str]] = [
-            ("bring", "Tomorrow"),
-            ("bring", "Ehud Barak and Yasser Arafat"),
-            ("bring", "to the resort city of Sharm El"),
+        expected: List[Tuple] = [
+            ("bring", "Tomorrow", "ARG0"),
+            ("bring", "Ehud Barak and Yasser Arafat", "ARG2"),
+            ("bring", "to the resort city of Sharm El", "ARG4"),
             ("have", "years in terms of their statements and attitudes , "
-                     "six years or"),
-            ("statements", "their"),
-            ("statements", "or more -- before the Oslo accords ,")
+                     "six years or", "ARG0"),
+            ("statements", "their", "ARG0"),
+            ("statements", "or more -- before the Oslo accords ,", "ARG1")
         ]
-        idx = 0
+
+        actual: List[Tuple] = []
 
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path_nested_span):
@@ -76,11 +77,16 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
             for sentence in pack.get(Sentence):
                 for pred_link in pack.get(PredicateLink, sentence):
                     pred_link: PredicateLink
-                    self.assertEqual(pred_link.get_parent().text,
-                                     expected[idx][0])
-                    self.assertEqual(pred_link.get_child().text,
-                                     expected[idx][1])
-                    idx += 1
+                    actual.append((pred_link.tid,
+                                   pred_link.get_parent().text,
+                                   pred_link.get_child().text,
+                                   pred_link.arg_type))
+
+        # sort list by link tid
+        actual = [(x[1], x[2], x[3]) for x in
+                  sorted(actual, key=lambda x: x[0])]
+
+        self.assertEqual(actual, expected)
 
 
 if __name__ == '__main__':
