@@ -34,11 +34,9 @@ class DictionaryReplacementOp(TextReplacementOp):
     with `prob` as the probability of replacement.
 
     The config should contain the following fields:
-
-    Args:
-        `dictionary`: The full qualified name of the dictionary class.
-        `prob`: The probability of replacement, should fall in [0, 1].
-        `lang`: The language of the text.
+        - `dictionary`: The full qualified name of the dictionary class.
+        - `prob`: The probability of replacement, should fall in [0, 1].
+        - `lang`: The language of the text.
     """
     def __init__(self, configs: Config):
         super().__init__(configs)
