@@ -55,6 +55,7 @@ class BackTranslationOp(TextReplacementOp):
     """
     def __init__(self, configs: Config):
         super().__init__(configs)
+        self._validate_configs(configs)
         self.model_to = create_class_with_kwargs(
             configs['model_to'],
             class_args={
@@ -71,6 +72,31 @@ class BackTranslationOp(TextReplacementOp):
                 "device": configs["device"]
             }
         )
+
+    def _validate_configs(self, configs):
+        prob = configs["prob"]
+        if not prob or prob < 0 or prob > 1:
+            raise ValueError("The prob should be a float between 0 and 1!")
+
+        src_lang = configs["src_language"]
+        if not src_lang or len(src_lang) == 0:
+            raise ValueError("Please provide a valid source language!")
+
+        tgt_lang = configs["tgt_language"]
+        if not tgt_lang or len(tgt_lang) == 0:
+            raise ValueError("Please provide a valid target language!")
+
+        model_to = configs["model_to"]
+        if not model_to or len(model_to) == 0:
+            raise ValueError("Please provide a valid to-model!")
+
+        model_back = configs["model_back"]
+        if not model_back or len(model_back) == 0:
+            raise ValueError("Please provide a valid back-model!")
+
+        device = configs["device"]
+        if device not in ("cpu", "cuda"):
+            raise ValueError("The device must be 'cpu' or 'cuda'!")
 
     def replace(self, input: Annotation) -> Tuple[bool, str]:
         r"""
