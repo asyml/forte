@@ -275,16 +275,15 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         end_ids = end_ids.cpu().numpy()
         predicates = predicates.cpu().numpy()
         batch_predicates = [
-            {pred: idx for idx, pred in enumerate(preds)}
+            {pred.item(): idx for idx, pred in enumerate(preds)}
             for preds in predicates]
         batch_spans = [
-            {(l, r): idx for idx, (l, r) in enumerate(zip(starts, ends))}
+            {(l.item(), r.item()): idx for idx, (l, r) in enumerate(zip(starts, ends))}
             for starts, ends in zip(start_ids, end_ids)]
 
         gold_labels = torch.zeros(
             batch_size, num_predicates * num_spans, dtype=torch.long)
         for b_idx in range(batch_size):
-            # TODO: update this block based on Feature meta data
             srl_feature: Feature = srl_features[b_idx]
             if srl_feature:
                 srl_data: List = srl_feature.unroll()[0]
@@ -493,7 +492,8 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         loss_mask = ((arg_index_mask & arg_topk_mask).unsqueeze(1) &
                      (pred_index_mask & pred_topk_mask).unsqueeze(2)).view(-1)
         loss = torch.sum(unmasked_loss * loss_mask.type_as(unmasked_loss))
-        # loss = loss / batch_size
+        loss = loss / torch.sum(loss_mask)
+
         return {
             'loss': loss,
             'total_scores': total_scores,
