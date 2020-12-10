@@ -8,10 +8,6 @@ Data Augmentation
 Data Augmentation Processors
 ================================
 
-:hidden:`ReplacementDataAugmentProcessor`
----------------------------------------------
-.. autoclass:: forte.processors.base.data_augment_processor.ReplacementDataAugmentProcessor
-    :members:
 
 
 Data Augmentation Ops
@@ -33,4 +29,19 @@ Data Augmentation Ops
     :members:
 
 .. autoclass:: forte.processors.data_augment.algorithms.sampler.UnigramSampler
+    :members:
+
+:hidden:`DictionaryReplacementOp`
+---------------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp
+    :members:
+
+:hidden:`Dictionary`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.dictionary.Dictionary
+    :members:
+
+:hidden:`WordnetDictionary`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.dictionary.WordnetDictionary
     :members:

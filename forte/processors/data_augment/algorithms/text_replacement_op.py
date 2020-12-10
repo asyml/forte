@@ -42,7 +42,7 @@ class TextReplacementOp(ABC):
         r"""
         Most data augmentation algorithms can be considered
         as replacement-based methods on different levels.
-        This function takes in an entry as input and
+
         Args:
             input: An entry contains the input text.
         Returns:

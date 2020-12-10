@@ -17,8 +17,8 @@ replacement ops to generate texts similar to those in the input pack
 and create a new pack with them.
 """
 from typing import List, Tuple
+from ft.onto.base_ontology import Annotation
 from forte.data.ontology.core import Entry
-from forte.data.ontology.top import Annotation
 from forte.data.data_pack import DataPack
 from forte.processors.base.base_processor import BaseProcessor
 from forte.processors.data_augment.algorithms.text_replacement_op \
@@ -60,8 +60,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         getting the augmented text, it will register the input & output
         for later batch process of building the new data pack.
         """
-        _, replaced_text = replacement_op.replace(input)
-        self.replaced_spans.append((input, replaced_text))
+        replaced_text: str
+        is_replace: bool
+        is_replace, replaced_text = replacement_op.replace(input)
+        if is_replace:
+            self.replaced_spans.append((input, replaced_text))
 
     def auto_align_annotations(
         self,
@@ -84,6 +87,24 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
     @classmethod
     def default_configs(cls):
+        """
+        Returns:
+            A dictionary with the default config for this processor.
+        Following are the keys for this dictionary:
+            - augment_entries: defines the entries the processor
+            will augment. It should be a full path to the entry class.
+            - other_entry_policy: a dict specifying the policies for
+            other entries.
+            If "auto_align", the span of the entry will be automatically
+            modified according to its original location. However, some
+            spans might become invalid after the augmentation, for
+            example, the tokens within a replaced sentence may disappear.
+            Entries not in the dict will not be copied to the new data pack.
+            Example: {
+                "ft.onto.base_ontology.Document": "auto_align",
+                "ft.onto.base_ontology.Sentence": "auto_align"
+            }
+        """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Sentence",
