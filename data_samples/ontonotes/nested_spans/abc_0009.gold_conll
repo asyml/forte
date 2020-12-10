@@ -1,0 +1,62 @@
+#begin document (bn/abc/00/abc_0009); part 000
+bn/abc/00/abc_0009   0    0    Tomorrow     NN  (TOP(S(NP(NP*       -    -   -   -      (DATE)       (ARG0(ARG1*)*)      (9
+bn/abc/00/abc_0009   0    1          's    POS              *)      -    -   -   -          *             *        -
+bn/abc/00/abc_0009   0    2      summit     NN              *       -    -   -   -          *             *        -
+bn/abc/00/abc_0009   0    3     meeting     NN              *)      -    -   -   -          *             *        9)
+bn/abc/00/abc_0009   0    4        will     MD           (VP*       -    -   -   -          *             *        -
+bn/abc/00/abc_0009   0    5       bring     VB           (VP*    bring  01   1   -          *           (V*)       -
+bn/abc/00/abc_0009   0    6        Ehud    NNP        (NP(NP*       -    -   -   -   (PERSON*        (ARG2(ARG3*)   (3|(11
+bn/abc/00/abc_0009   0    7       Barak    NNP              *)      -    -   -   -          *)            *        3)
+bn/abc/00/abc_0009   0    8         and     CC              *       -    -   -   -          *             *        -
+bn/abc/00/abc_0009   0    9      Yasser    NNP           (NP*       -    -   -   -   (PERSON*             *       (8
+bn/abc/00/abc_0009   0   10      Arafat    NNP             *))      -    -   -   -          *)            *)   11)|8)
+bn/abc/00/abc_0009   0   11          to     IN           (PP*       -    -   -   -          *        (ARG4(ARG5*   -
+bn/abc/00/abc_0009   0   12         the     DT        (NP(NP*       -    -   -   -          *             *        -
+bn/abc/00/abc_0009   0   13      resort     NN              *       -    -   -   -          *             *        -
+bn/abc/00/abc_0009   0   14        city     NN              *)      -    -   -   -          *             *        -
+bn/abc/00/abc_0009   0   15          of     IN           (PP*       -    -   -   -          *             *)       -
+bn/abc/00/abc_0009   0   16       Sharm    NNP           (NP*       -    -   -   -      (GPE*             *        -
+bn/abc/00/abc_0009   0   17          El    NNP              *       -    -   -   -          *             *)       -
+bn/abc/00/abc_0009   0   18          -    HYPH              *       -    -   -   -          *             *        -
+bn/abc/00/abc_0009   0   19        eikh    NNP         *))))))      -    -   -   -          *)            *        -
+bn/abc/00/abc_0009   0   20           .      .             *))      -    -   -   -          *             *        -
+
+bn/abc/00/abc_0009   0    0            Both     DT      (TOP(S(NP*           -    -   -   -        *      *          *       (6
+bn/abc/00/abc_0009   0    1           sides    NNS               *)        side   -   3   -        *      *          *        6)
+bn/abc/00/abc_0009   0    2            have    VBP            (VP*         have  01   -   -        *    (V*)         *        -
+bn/abc/00/abc_0009   0    3          almost     RB          (ADVP*)          -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0    4         stepped    VBN            (VP*         step  01   1   -        *      *          *        -
+bn/abc/00/abc_0009   0    5            back     RB          (ADVP*)          -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0    6             six     CD         (NP(NP*           -    -   -   -   (DATE*      *          *       (1
+bn/abc/00/abc_0009   0    7           years    NNS              *))          -    -   -   -        *)  (ARG0         *        1)
+bn/abc/00/abc_0009   0    8              in     IN            (PP*           -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0    9           terms    NNS         (NP(NP*)        term   -   9   -        *      *          *        -
+bn/abc/00/abc_0009   0   10              of     IN            (PP*           -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0   11           their   PRP$            (NP*           -    -   -   -        *      *     (ARG0*)      (6)
+bn/abc/00/abc_0009   0   12      statements    NNS               *    statement  01   1   -        *   (ARG1       (V*)       -
+bn/abc/00/abc_0009   0   13             and     CC               *           -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0   14       attitudes    NNS            *))))    attitude   -   1   -        *      *          *        -
+bn/abc/00/abc_0009   0   15               ,      ,               *           -    -   -   -        *      *)         *        -
+bn/abc/00/abc_0009   0   16             six     CD            (NP*           -    -   -   -   (DATE*      *          *       (1
+bn/abc/00/abc_0009   0   17           years    NNS               *           -    -   -   -        *      *          *        1)
+bn/abc/00/abc_0009   0   18              or     CC            (QP*           -    -   -   -        *      *)    (ARG1*        -
+bn/abc/00/abc_0009   0   19            more    JJR              *))          -    -   -   -        *)     *          *        -
+bn/abc/00/abc_0009   0   20             --       :               *           -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0   21          before     IN            (PP*           -    -   -   -        *      *     (ARG2*        -
+bn/abc/00/abc_0009   0   22             the     DT         (NP(NP*           -    -   -   -    (LAW*      *          *        -
+bn/abc/00/abc_0009   0   23            Oslo    NNP               *           -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0   24         accords    NNS               *)      accord   -   2   -        *)     *          *        -
+bn/abc/00/abc_0009   0   25               ,      ,               *           -    -   -   -        *      *        *))        -
+bn/abc/00/abc_0009   0   26            when    WRB   (SBAR(WHADVP*)          -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0   27             the     DT        (S(S(NP*           -    -   -   -        *      *          *       (2
+bn/abc/00/abc_0009   0   28        Israelis   NNPS               *)          -    -   -   -    (NORP)     *          *        2)
+bn/abc/00/abc_0009   0   29        promised    VBD            (VP*      promise  01   1   -        *      *          *        -
+bn/abc/00/abc_0009   0   30            land     NN          (NP*)))        land   -   3   -        *      *          *        -
+bn/abc/00/abc_0009   0   31             and     CC               *           -    -   -   -        *      *          *        -
+bn/abc/00/abc_0009   0   32             the     DT          (S(NP*           -    -   -   -        *      *          *      (15
+bn/abc/00/abc_0009   0   33    Palestinians   NNPS               *)          -    -   -   -    (NORP)     *          *       15)
+bn/abc/00/abc_0009   0   34        promised    VBD            (VP*      promise  01   1   -        *      *          *        -
+bn/abc/00/abc_0009   0   35        security     NN    (NP*)))))))))    security   -   3   -        *      *          *        -
+bn/abc/00/abc_0009   0   36               .      .              *))          -    -   -   -        *      *          *        -
+
+#end document
