@@ -321,6 +321,10 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
+    'texar_pytorch': (
+        'https://texar-pytorch.readthedocs.io/en/latest/',
+        None
+    )
     # 'numpy': ('http://docs.scipy.org/docs/numpy/', None),
 }
 

@@ -17,8 +17,8 @@ replacement ops to generate texts similar to those in the input pack
 and create a new pack with them.
 """
 from typing import List, Tuple
+from ft.onto.base_ontology import Annotation
 from forte.data.ontology.core import Entry
-from forte.data.ontology.top import Annotation
 from forte.data.data_pack import DataPack
 from forte.processors.base.base_processor import BaseProcessor
 from forte.processors.data_augment.algorithms.text_replacement_op \
@@ -54,14 +54,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         super().__init__()
         self.replaced_spans: List[Tuple[Entry, str]] = []
 
-    def replace(self, replacement_op: TextReplacementOp, input: Entry):
+    def replace(self, replacement_op: TextReplacementOp, input: Annotation):
         """
         This is a wrapper function to call the replacement op. After
         getting the augmented text, it will register the input & output
         for later batch process of building the new data pack.
         """
-        replaced_text: str = replacement_op.replace(input)
-        self.replaced_spans.append((input, replaced_text))
+        replaced_text: str
+        is_replace: bool
+        is_replace, replaced_text = replacement_op.replace(input)
+        if is_replace:
+            self.replaced_spans.append((input, replaced_text))
 
     def auto_align_annotations(
         self,
