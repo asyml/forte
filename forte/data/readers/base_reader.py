@@ -79,6 +79,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         super().initialize(resources, configs)
 
         # Clear memory cache
+        self._cache_ready = False
         del self._data_packs[:]
 
     @classmethod
