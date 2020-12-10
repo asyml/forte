@@ -15,6 +15,7 @@ import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator
 
 import torch
+from forte.common.resources import Resources
 from texar.torch.data import DataIterator, Batch
 from torch import device
 
@@ -77,7 +78,8 @@ class TrainPreprocessor:
     def __init__(self,
                  train_reader: PackReader,
                  request: Dict,
-                 config: Optional[Union[Config, Dict]] = None):
+                 config: Optional[Union[Config, Dict]] = None,
+                 reader_config: Optional[Union[Config, Dict]] = None):
         self._config: Config = \
             Config(config, default_hparams=self.default_configs())
         self._validate_config()
@@ -89,6 +91,11 @@ class TrainPreprocessor:
         self._feature_resource: Dict = {}
         self._feature_resource_ready: bool = False
         self._vocab_ready: bool = False
+
+        # Initialize reader
+        self._train_reader.initialize(Resources(),
+                                      self._train_reader.make_configs(
+                                          configs=reader_config))
 
         if not self._config.preprocess.lazy_parse_request:
             self._parse_request(self._user_request)

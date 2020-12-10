@@ -48,7 +48,7 @@ class TrainPreprocessorTest(unittest.TestCase):
             "schemes": {
                 "text_tag": {
                     "entry_type": Token,
-                    "get_attribute_fn": lambda x: x.text,
+                    "attribute_get": "text",
                     "conversion_method": "indexing",
                     "type": DATA_INPUT,
                     "extractor": AttributeExtractor
@@ -119,20 +119,20 @@ class TrainPreprocessorTest(unittest.TestCase):
 
         text_extractor: AttributeExtractor = schemes["text_tag"]["extractor"]
         vocab: Vocabulary = text_extractor.vocab
-        self.assertTrue(vocab.has_key("EU"))
-        self.assertTrue(vocab.has_key("Peter"))
+        self.assertTrue(vocab.has_element("EU"))
+        self.assertTrue(vocab.has_element("Peter"))
 
         char_extractor: CharExtractor = schemes["char_tag"]["extractor"]
         vocab: Vocabulary = char_extractor.vocab
-        self.assertTrue(vocab.has_key("a"))
-        self.assertTrue(vocab.has_key("b"))
-        self.assertTrue(vocab.has_key("."))
+        self.assertTrue(vocab.has_element("a"))
+        self.assertTrue(vocab.has_element("b"))
+        self.assertTrue(vocab.has_element("."))
 
         ner_extractor: BioSeqTaggingExtractor = schemes["ner_tag"]["extractor"]
         vocab: Vocabulary = ner_extractor.vocab
-        self.assertTrue(vocab.has_key(("PER", "B")))
-        self.assertTrue(vocab.has_key((None, "O")))
-        self.assertTrue(vocab.has_key(("MISC", "I")))
+        self.assertTrue(vocab.has_element(("PER", "B")))
+        self.assertTrue(vocab.has_element((None, "O")))
+        self.assertTrue(vocab.has_element(("MISC", "I")))
 
     def test_build_dataset_iterator(self):
         train_iterator = \
