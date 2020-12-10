@@ -17,8 +17,8 @@ replacement ops to generate texts similar to those in the input pack
 and create a new pack with them.
 """
 from typing import List, Tuple
+from ft.onto.base_ontology import Annotation
 from forte.data.ontology.core import Entry
-from forte.data.ontology.top import Annotation
 from forte.data.data_pack import DataPack
 from forte.processors.base.base_processor import BaseProcessor
 from forte.processors.data_augment.algorithms.text_replacement_op \
