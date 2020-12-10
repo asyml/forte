@@ -26,9 +26,9 @@ You can use the following script to process the data into CSV format.
 python utils/imdb_format.py --raw_data_dir=data/IMDB_raw/aclImdb --train_id_path=data/IMDB_raw/train_id_list.txt --output_dir=data/IMDB
 ```
 
-The next step is to generate augment training data (using your favorite back translation model) and output to a CSV file `train_aug.csv` with the same format as the training data. Each example in `train_aug.csv` should correspond to the same line in `train.csv`.
+The next step is to generate augment training data (using your favorite back translation model) and output to a TXT file. Each example in the file should correspond to the same line in `train.csv`.
 
-For demonstration purpose, we provide the processed and augmented data files [`train.csv`, `train_aug.csv`, `test.csv`](https://drive.google.com/file/d/1OKrbS76mbGCIz3FcFQ8-qPpMTQkQy8bP/view?usp=sharing). Place the CSV files in directory `data/IMDB`. (Hint: to achieve better performance, you will want to generate back-translation data yourself.)
+For demonstration purpose, we provide the processed and augmented [data files](https://drive.google.com/file/d/1OKrbS76mbGCIz3FcFQ8-qPpMTQkQy8bP/view?usp=sharing). Place the CSV and txt files in directory `data/IMDB`.
 
 ### Train
 
@@ -50,7 +50,7 @@ With the provided data, you should be able to achieve performance similar to the
 
 | Number of Labeled Examples | BERT Accuracy | BERT+UDA Accuracy|
 | -------------------------- | ------------- | ------------------ |
-| 24                         | 61.54         | 79.00              |
+| 24                         | 61.54         | 84.92              |
 | 25000                      | 89.68         | 90.19              |
 
 When training with 24 examples, we use the Training Signal Annealing technique which can be turned on by setting `tsa=True`.
