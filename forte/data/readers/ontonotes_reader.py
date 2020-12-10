@@ -30,6 +30,8 @@ __all__ = [
     "OntonotesReader",
 ]
 
+Stack = List[Tuple[int, str]]
+
 
 class OntonotesReader(PackReader):
     r""":class:`OntonotesReader` is designed to read in the English OntoNotes
@@ -141,31 +143,55 @@ class OntonotesReader(PackReader):
         return self.ParsedFields(**fields)  # type: ignore
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        pack = DataPack()
+        start_new_doc: bool = True
 
         with open(file_path, encoding="utf8") as doc:
-            words = []
-            offset = 0
-            has_rows = False
-
-            speaker = part_id = document_id = None
-            sentence_begin = 0
-
-            # auxiliary structures
-            current_entity_mention: Optional[Tuple[int, str]] = None
-            verbal_predicates: List[PredicateMention] = []
-
-            current_pred_arg: List[Optional[Tuple[int, str]]] = []
-            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]] = []
-
-            groups: DefaultDict[int, List[EntityMention]] = defaultdict(list)
-            coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
-
             for line in doc:
+                if start_new_doc:
+                    pack = DataPack()
+
+                    words: List = []
+                    offset = 0
+                    has_rows = False
+
+                    speaker = part_id = document_id = None
+                    sentence_begin = 0
+
+                    # auxiliary structures
+                    current_entity_mention: Optional[Tuple[int, str]] = None
+                    verbal_predicates: List[PredicateMention] = []
+
+                    current_pred_arg: List[Stack] = []
+                    verbal_pred_args: List[
+                        List[Tuple[PredicateArgument, str]]] = []
+
+                    groups: DefaultDict[int, List[EntityMention]] = defaultdict(
+                        list)
+                    coref_stacks: DefaultDict[int, List[int]] = defaultdict(
+                        list)
+
+                    start_new_doc = False
+
                 line = line.strip()
 
                 if line.startswith("#end document"):
-                    break
+                    # group the coreference mentions in the whole document
+                    for _, mention_list in groups.items():
+                        group = CoreferenceGroup(pack)
+                        group.add_members(mention_list)
+
+                    text = " ".join(words)
+                    pack.set_text(text,
+                                  replace_func=self.text_replace_operation)
+
+                    _ = Document(pack, 0, len(text))
+                    if document_id is not None:
+                        pack.pack_name = document_id
+
+                    yield pack
+
+                    start_new_doc = True
+                    continue
 
                 if line != "" and not line.startswith("#"):
                     fields = self._parse_line(line)
@@ -210,7 +236,7 @@ class OntonotesReader(PackReader):
                             verbal_predicates.append(pred_mention)
 
                     if not verbal_pred_args:
-                        current_pred_arg = [None] * len(fields.predicate_labels)
+                        current_pred_arg = [[] for _ in fields.predicate_labels]
                         verbal_pred_args = [[] for _ in fields.predicate_labels]
 
                     # add predicate arguments
@@ -264,19 +290,6 @@ class OntonotesReader(PackReader):
 
                     has_rows = False
 
-            # group the coreference mentions in the whole document
-            for _, mention_list in groups.items():
-                group = CoreferenceGroup(pack)
-                group.add_members(mention_list)
-
-            text = " ".join(words)
-            pack.set_text(text, replace_func=self.text_replace_operation)
-
-            _ = Document(pack, 0, len(text))
-            if document_id is not None:
-                pack.pack_name = document_id
-        yield pack
-
     def _process_entity_annotations(
             self,
             pack: DataPack,
@@ -311,31 +324,79 @@ class OntonotesReader(PackReader):
             labels: List[str],
             word_begin: int,
             word_end: int,
-            current_pred_arg: List[Optional[Tuple[int, str]]],
+            current_pred_arg: List[Stack],
             verbal_pred_args: List[List[Tuple[PredicateArgument, str]]],
     ) -> None:
+        """
+        Various cases will be handled regarding nested spans including:
+        case 1:
+        (xxx(xxx*)*)
 
+        case 2:
+        (xxx(xxx*)
+        *
+        *)
+
+        case 3:
+        (xxx(xxx*
+        *
+        *)
+        *
+        *)
+
+        case 4:
+        (xxx*
+        *
+        (xxx
+        *
+        *)
+        *
+        *)
+        Where the `xxx` represents an argument type.
+        A stack will be maintained to parse nested spans.
+        """
+        # TODO: currently all nested spans will be parsed but only outer most
+        #  span will be stored into datapack.
         for label_index, label in enumerate(labels):
+            label = label.strip()
 
-            if "(" in label:
-                # Entering into a span
-                arg_type = label.strip("()*")
-                current_pred_arg[label_index] = (word_begin, arg_type)
+            arg_type: str = ""
+            i: int = 0
+            while i < len(label):
+                c: str = label[i]
+                if c == '*':
+                    i += 1
+                elif c == '(':
+                    # New argument span.
+                    j: int = i + 1
+                    while j < len(label):
+                        arg_type += label[j]
+                        if j == len(label) - 1 or label[j + 1] in ['(', ')']:
+                            break
+                        j += 1
+                    i = j + 1
+                    arg_type = arg_type.strip("* ")
 
-            if ")" in label:
-                # Exiting a span
-                if current_pred_arg[label_index] is None:
-                    raise ValueError(
-                        "current_pred_arg is None when meet right blanket.")
+                    stack: Stack = current_pred_arg[label_index]
+                    stack.append((word_begin, arg_type))
+                    arg_type = ""
+                elif c == ')':
+                    # End of current argument span.
+                    stack = current_pred_arg[label_index]
+                    assert len(stack) > 0, \
+                        "invalid parsing state: mismatch argument span"
 
-                arg_begin = current_pred_arg[label_index][0]  # type: ignore
-                arg_type = current_pred_arg[label_index][1]  # type: ignore
+                    arg_begin, arg_type = stack.pop()
 
-                if arg_type != "V":
-                    pred_arg = PredicateArgument(pack, arg_begin, word_end)
+                    if not stack:
+                        # The outer most span will be stored into data pack
+                        if arg_type != "V":
+                            pred_arg = PredicateArgument(pack, arg_begin,
+                                                         word_end)
 
-                    verbal_pred_args[label_index].append((pred_arg, arg_type))
-                current_pred_arg[label_index] = None
+                            verbal_pred_args[label_index].append(
+                                (pred_arg, arg_type))
+                    i += 1
 
     def _process_coref_annotations(
             self,
