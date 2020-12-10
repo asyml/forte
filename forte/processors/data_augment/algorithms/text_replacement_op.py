@@ -44,7 +44,7 @@ class TextReplacementOp(ABC):
         as replacement-based methods on different levels.
         This function takes in an annotation as input and
         returns the augmented string.
-        
+
         Args:
             input: An annotation contains the input text.
         Returns:
