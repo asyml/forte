@@ -745,11 +745,13 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         config.update({
             'augment_entry': 'ft.onto.base_ontology.Sentence',
             'other_entry_policy': {
-                "kwargs": {}
+                'type': '',
+                'kwargs': {}
             },
             'type': 'data_augmentation_op',
             'data_aug_op': '',
-            "data_aug_op_config": {
+            'data_aug_op_config': {
+                'type': '',
                 'kwargs': {}
             }
         })

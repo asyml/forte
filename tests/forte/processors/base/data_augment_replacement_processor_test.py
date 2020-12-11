@@ -55,6 +55,59 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
     @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
     @unpack
+    def test_pipeline(self, texts):
+        for idx, text in enumerate(texts):
+            file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
+            with open(file_path, 'w') as f:
+                f.write(text)
+
+        expected_outputs = [
+            "Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus.\n"
+        ]
+
+        expected_tokens = [
+            ["Virgin", "and", "Samantha", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", "."],
+        ]
+
+        nlp = Pipeline[MultiPack]()
+        reader_config = {
+            "input_pack_name": "input_src",
+            "output_pack_name": "output_tgt"
+        }
+
+        processor_config = {
+            'augment_entry': "ft.onto.base_ontology.Token",
+            'other_entry_policy': {
+                'type': '',
+                'kwargs': {
+                    "ft.onto.base_ontology.Document": "auto_align",
+                    "ft.onto.base_ontology.Sentence": "auto_align"
+                }
+            },
+            'type': 'data_augmentation_op',
+            'data_aug_op': 'tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer',
+            'data_aug_op_config': {
+                'type': '',
+                'kwargs': {}
+            }
+        }
+
+        nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
+        nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
+        nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
+        nlp.add(component=ReplacementDataAugmentProcessor(), config=processor_config)
+        nlp.initialize()
+
+        for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
+            new_src_pack = m_pack.get_pack('augmented_input_src')
+
+            self.assertEqual(new_src_pack.text, expected_outputs[idx])
+
+            for j, token in enumerate(new_src_pack.get(Token)):
+                self.assertEqual(token.text, expected_tokens[idx][j])
+
+    @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
+    @unpack
     def test_replace_token(self, texts):
         for idx, text in enumerate(texts):
             file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
@@ -77,6 +130,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
         nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
         nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
+
         nlp.initialize()
 
         expected_outputs = [
