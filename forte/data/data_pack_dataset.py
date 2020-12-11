@@ -17,8 +17,8 @@ import torch
 from texar.torch import HParams
 from texar.torch.data import IterDataSource, DatasetBase, Batch
 
-from forte.data.converter.converter import Converter
-from forte.data.converter.feature import Feature
+from forte.data.converter import Converter
+from forte.data.converter import Feature
 from forte.data.data_pack import DataPack
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.ontology.core import EntryType
@@ -33,6 +33,29 @@ FeatureCollection = Dict[str, Feature]
 
 
 class DataPackIterator:
+    """
+    An iterator over single data example from multiple data packs.
+
+    Args:
+        reader (PackReader): A reader of
+            :class:`forte.data.readers.base_reader.PackReader` that will
+            parse dataset files into data packs.
+        pack_dir (str): A string of the directory path that includes all the
+            dataset files to be parsed.
+        context_type: The granularity of a single example which
+            could be any ``Annotation`` type. For example, it can be
+            :class:`ft.onto.base_ontology.Sentence`, then each training example
+            will represent the information of a sentence.
+        request: The request of type `Dict` sent to
+            :class:`forte.data.readers.base_reader.PackReader` to query
+            specific data.
+        skip_k (int): Will skip the first `skip_k` instances and generate
+            data from the (`offset` + 1)th instance.
+
+    .. note::
+        For parameters `context_type`, `request`, `skip_k`, please refer to
+        :meth:`get_data()` in :class:`forte.data.data_pack.DataPack`.
+    """
     def __init__(self,
                  reader: PackReader,
                  pack_dir: str,
@@ -78,6 +101,30 @@ class DataPackIterator:
 
 
 class DataPackDataSource(IterDataSource):
+    """
+    A data source consists of data packs. It contains an iterator over
+    :class:`forte.data.data_pack_dataset.DataPackIterator`.
+
+    Args:
+        reader (PackReader): A reader of
+            :class:`forte.data.readers.base_reader.PackReader` that will
+            parse dataset files into data packs.
+        pack_dir (str): A string of the directory path that includes all the
+            dataset files to be parsed.
+        context_type: The granularity of a single example which
+            could be any ``Annotation`` type. For example, it can be
+            :class:`ft.onto.base_ontology.Sentence`, then each training example
+            will represent the information of a sentence.
+        request: The request of type `Dict` sent to
+            :class:`forte.data.readers.base_reader.PackReader` to query
+            specific data.
+        skip_k (int): Will skip the first `skip_k` instances and generate
+            data from the (`offset` + 1)th instance.
+
+    .. note::
+        For parameters `context_type`, `request`, `skip_k`, please refer to
+        :meth:`get_data()` in :class:`forte.data.data_pack.DataPack`.
+    """
     def __init__(self,
                  reader: PackReader,
                  pack_dir: str,
@@ -96,6 +143,29 @@ class DataPackDataSource(IterDataSource):
 
 
 class DataPackDataset(DatasetBase):
+    # pylint: disable=line-too-long
+    """
+    A dataset representing data packs. Calling an
+    `DataIterator
+    <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#dataiterator>`_
+    over this `DataPackDataset` will produce an `Iterate` over batch of examples
+    parsed by a reader from given data packs.
+
+    Args:
+        data_source: A data source of type
+            :class:`forte.data.data_pack_dataset.DataPackDataSource`.
+        feature_schemes (dict): A `Dict` containing all the information to do
+            data pre-processing. This is exactly the same as the `schemes` in
+            `feature_resource`. Please refer to :meth:`feature_resource` in
+            :class:`forte.train_preprocessor.TrainPreprocessor` for details.
+        hparams: A `dict` or instance of :
+            class:`forte.common.configuration.Config` containing
+            hyperparameters. See :meth:`default_hparams` in
+            `DatasetBase<https://texar-pytorch.readthedocs.io/en/latest/code/data.html#datasetbase>`
+            for the defaults.
+        device: The device of the produced batches. For GPU training,
+            set to current CUDA device.
+    """
     def __init__(self,
                  data_source: DataPackDataSource,
                  feature_schemes: Dict,
@@ -107,6 +177,27 @@ class DataPackDataset(DatasetBase):
         super().__init__(self._data_source, hparams, device)
 
     def process(self, raw_example: RawExample) -> FeatureCollection:
+        """
+        Given an input which is a single data example, extract feature from it.
+
+        Args:
+            raw_example (tuple(dict, DataPack)): A `Tuple` where
+
+                The first element is a `Dict` produced by :meth:`get_data()` in
+                :class:`forte.data.data_pack.DataPack`.
+
+                The second element is an instance of type
+                :class:`forte.data.data_pack.DataPack`.
+
+        Returns:
+            A `Dict` mapping from user-specified tags to the
+            :class:`forte.data.converter.Feature` extracted.
+
+            .. note::
+                Please refer to Please refer to :meth:`feature_resource` in
+                :class:`forte.train_preprocessor.TrainPreprocessor` for details
+                about user-specified tags.
+        """
         instance: Instance = raw_example[0]
         data_pack: DataPack = raw_example[1]
         instance_entry: EntryType = data_pack.get_entry(  # type: ignore
@@ -121,6 +212,59 @@ class DataPackDataset(DatasetBase):
         return feature_collection
 
     def collate(self, examples: List[FeatureCollection]) -> Batch:
+        # pylint: disable=line-too-long
+        """
+        Given a batch of output from :meth:`process`, produce a `Tensor`
+        containing pre-processed data including tensors, masks and features.
+
+        Args:
+            examples: A `List` of result from :meth:`process`.
+
+        Returns:
+            A texar `Batch
+            <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#batch>`_.
+            It can be treated as a `Dict` with the following structure:
+
+            .. code-block:: python
+
+                {
+                    "tag_a": {
+                        "tensor": <tensor>,
+                        "mask": [<tensor1>, <tensor2>, ...],
+                        "features": [<feature1>, <feature2>, ...]
+                    },
+                    "tag_b": {
+                        "tensor": Tensor,
+                        "mask": [<tensor1>, <tensor2>, ...],
+                        "features": [<feature1>, <feature2>, ...]
+                    }
+                }
+
+            `"tensor"`: Tensor
+                The tensor representing the Feature. This should be sent to
+                model for training.
+
+                If the option `need_pad` in input`request` is False, this is
+                not given.
+
+            `"mask"`: List[Tensor]
+                The `mask` is actually a list of tensors where each tensor
+                representing the mask for that dimension. For example, mask[i]
+                is a tensor representing the mask for dimension i.
+
+                If the option `need_pad` in input`request` is False, this is
+                not given.
+
+            `"features"`: List[Feature]
+                A List of :class:`forte.data.converter.feature.Feature`. This is
+                useful when users want to do customized pre-processing.
+
+            .. note::
+                The first level key in returned `batch` is the user-specified
+                tags. Please refer to :meth:`feature_resource`
+                in :class:`forte.train_preprocessor.TrainPreprocessor` for
+                details about user-specified tags.
+        """
         batch_size = len(examples)
 
         example_collection: Dict[str, List] = {}

@@ -19,7 +19,7 @@ from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from torch import Tensor
 
 from forte.data.vocabulary import Vocabulary
-from forte.data.converter.converter import Converter
+from forte.data.converter import Converter
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.extractor.attribute_extractor import AttributeExtractor

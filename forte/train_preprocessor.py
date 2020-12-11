@@ -19,7 +19,7 @@ from torch import device
 
 from forte.common.resources import Resources
 from forte.common.configuration import Config
-from forte.data.converter.converter import Converter
+from forte.data.converter import Converter
 from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.data.extractor.base_extractor import BaseExtractor
@@ -92,14 +92,14 @@ class TrainPreprocessor:
                         "vocab_method": "indexing",
                         "attribute_get": "text",
                         "type": TrainPreprocessor.DATA_OUTPUT,
-                        "extractor": AttributeExtractor
+                        "extractor": forte.data.extractor.AttributeExtractor
                     },
                     "char_tag": {
                         "entry_type": ft.onto.base_ontology.Token,
                         "vocab_method": "indexing",
                         "max_char_length": config.config_data.max_char_length,
                         "type": TrainPreprocessor.DATA_OUTPUT,
-                        "extractor": CharExtractor
+                        "extractor": forte.data.extractor.CharExtractor
                     },
                     "ner_tag": {
                         "entry_type": ft.onto.base_ontology.EntityMention,
@@ -107,7 +107,7 @@ class TrainPreprocessor:
                         "based_on": Token,
                         "vocab_method": "indexing",
                         "type": TrainPreprocessor.DATA_OUTPUT,
-                        "extractor": BioSeqTaggingExtractor
+                        "extractor": forte.data.extractor.BioSeqTaggingExtractor
                     }
                 }
             }
@@ -150,13 +150,15 @@ class TrainPreprocessor:
 
         .. code-block:: python
 
-            "preprocess": {
-                "pack_dir": "",
-                "lazy_parse_request": False,
-                "lazy_build_vocab": False,
-                "device": "cpu",
-            },
-            "dataset": DataPackDataset.default_hparams()
+            {
+                "preprocess": {
+                            "pack_dir": "",
+                            "lazy_parse_request": False,
+                            "lazy_build_vocab": False,
+                            "device": "cpu",
+                },
+                "dataset": DataPackDataset.default_hparams()
+            }
 
         Here:
 
@@ -208,31 +210,6 @@ class TrainPreprocessor:
         This method has two responsibilities:
         1. parse the given data request and stored internally into resource
         2. validate if the given data request is valid
-
-        An example `feature_resource` is:
-            feature_resource = {
-                "scope": ft.onto.Sentence
-                "schemes": {
-                    "text_tag": {
-                        "extractor":  Extractor,
-                        "converter": Converter,
-                        "type": TrainPreprocessor.DATA_INPUT,
-                        "need_pad": True
-                    },
-                    "char_tag" {
-                        "extractor":  Extractor,
-                        "converter": Converter,
-                        "type": TrainPreprocessor.DATA_INPUT,
-                        "need_pad": True
-                    }
-                    "ner_tag": {
-                        "extractor":  Extractor,
-                        "converter": Converter,
-                        "type": TrainPreprocessor.DATA_OUTPUT,
-                        "need_pad": True
-                    }
-                }
-            }
         """
 
         assert "scope" in data_request, \
@@ -344,6 +321,7 @@ class TrainPreprocessor:
 
     @property
     def feature_resource(self) -> Dict:
+        # pylint: disable=line-too-long
         r"""A `Dict` containing all the information needed for doing the
         pre-processing. This is obtained via parsing the input `request`
 
@@ -355,20 +333,20 @@ class TrainPreprocessor:
                 "scope": ft.onto.Sentence
                 "schemes": {
                     "text_tag": {
-                        "extractor": Extractor,
-                        "converter": Converter,
+                        "extractor": forte.data.extractor.AttributeExtractor,
+                        "converter": forte.data.converter.Converter,
                         "type": TrainPreprocessor.DATA_INPUT,
                         "need_pad": True
                     },
                     "char_tag" {
-                        "extractor": Extractor,
-                        "converter": Converter,
+                        "extractor": forte.data.extractor.CharExtractor,
+                        "converter": forte.data.converter.Converter,
                         "type": TrainPreprocessor.DATA_INPUT,
                         "need_pad": True
                     }
                     "ner_tag": {
-                        "extractor": Extractor,
-                        "converter": Converter,
+                        "extractor": forte.data.extractor.BioSeqTaggingExtractor,
+                        "converter": forte.data.converter.Converter,
                         "type": TrainPreprocessor.DATA_OUTPUT,
                         "need_pad": True
                     }
@@ -462,47 +440,10 @@ class TrainPreprocessor:
         Returns:
             An `Iterator` of the `Batch
             <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#batch>`_.
-            It can be treated as a `Dict` of the following structure:
 
-            .. code-block:: python
-
-                {
-                    "tag_a": {
-                        "tensor": <tensor>,
-                        "mask": [<tensor1>, <tensor2>, ...],
-                        "features": [<feature1>, <feature2>, ...]
-                    },
-                    "tag_b": {
-                        "tensor": Tensor,
-                        "mask": [<tensor1>, <tensor2>, ...],
-                        "features": [<feature1>, <feature2>, ...]
-                    }
-                }
-
-            `"tensor"`: Tensor
-                The tensor representing the Feature. This should be sent to
-                model for training.
-
-                If the option `need_pad` in input`request` is False, this is
-                not given.
-
-            `"mask"`: List[Tensor]
-                The `mask` is actually a list of tensors where each tensor
-                representing the mask for that dimension. For example, mask[i]
-                is a tensor representing the mask for dimension i.
-
-                If the option `need_pad` in input`request` is False, this is
-                not given.
-
-            `"features"`: List[Feature]
-                A List of :class:`forte.data.converter.feature.Feature`. This is
-                useful when users want to do customized pre-processing.
-
-            .. note::
-                The first level key in returned `batch` is the tag, which is a
-                string denoting a specific type of Feature (input or output).
-                Those tags are guaranteed to be same as the scheme tags given in
-                input `request`.
+            Please refer to :meth:`collate` in
+            :class:`forte.data.data_pack_dataset.DataPackDataset` for details
+            about its structure.
         """
         if self._config.preprocess.lazy_parse_request:
             self._parse_request(self._user_request)
