@@ -58,7 +58,7 @@ def train(model: LabeledSpanGraphNetwork,
 
     text: List[List[str]] = []
     for feature in raw_text_features:
-        text.append(feature.unroll()[0])
+        text.append(feature.data[0])
 
     optim.zero_grad()
 
