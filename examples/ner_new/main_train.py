@@ -27,7 +27,6 @@ from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.pipeline import Pipeline
 from forte.predictor import Predictor
-from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.common.configuration import Config
 from forte.data.extractor import AttributeExtractor
 from forte.data.extractor.base_extractor import BaseExtractor
@@ -146,14 +145,14 @@ tp_request = {
             "entry_type": Token,
             "vocab_method": "indexing",
             "attribute_get": "text",
-            "type": DATA_INPUT,
+            "type": TrainPreprocessor.DATA_OUTPUT,
             "extractor": AttributeExtractor
         },
         "char_tag": {
             "entry_type": Token,
             "vocab_method": "indexing",
             "max_char_length": config.config_data.max_char_length,
-            "type": DATA_INPUT,
+            "type": TrainPreprocessor.DATA_INPUT,
             "extractor": CharExtractor
         },
         "ner_tag": {
@@ -161,7 +160,7 @@ tp_request = {
             "attribute": "ner_type",
             "based_on": Token,
             "vocab_method": "indexing",
-            "type": DATA_OUTPUT,
+            "type": TrainPreprocessor.DATA_OUTPUT,
             "extractor": BioSeqTaggingExtractor
         }
     }
