@@ -23,7 +23,6 @@ from forte.data.converter.converter import Converter
 from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.data.extractor.base_extractor import BaseExtractor
-from forte.predictor import Predictor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.readers.base_reader import PackReader
@@ -127,7 +126,6 @@ class TrainPreprocessor:
         self._validate_config()
 
         self._train_reader: PackReader = train_reader
-        self._predictor: Optional[Predictor] = None
 
         self._user_request: Dict = request
         self._feature_resource: Dict = {}
