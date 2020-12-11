@@ -34,7 +34,7 @@ from torch.nn import functional as F
 from mypy_extensions import TypedDict
 import texar.torch as tx
 
-from forte.data.converter.feature import Feature
+from forte.data.converter import Feature
 from forte.models.srl_new import model_utils as utils
 from forte.models.srl_new.data import Span
 
@@ -286,7 +286,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         for b_idx in range(batch_size):
             srl_feature: Feature = srl_features[b_idx]
             if srl_feature:
-                srl_data: List = srl_feature.unroll()[0]
+                srl_data: List = srl_feature.data[0]
                 srl_meta_data: Dict = srl_feature.meta_data
                 for e_idx, srl in enumerate(srl_data):
                     srl_start = srl_meta_data["child_unit_span"][e_idx][0]
