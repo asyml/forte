@@ -54,10 +54,10 @@ class Feature:
         self._dtype = self._meta_data["dtype"]
 
         # Indicating whether current Feature is the inner most feature.
-        self._base_feature: bool = self._dim == 1
-        # Only base feature has actual `data`
+        self._leaf_feature: bool = self._dim == 1
+        # Only leaf feature has actual `data`
         self._data: Union[None, List] = None
-        # Only non-base features have `sub_features`. It can be considered as
+        # Only non-leaf features have `sub_features`. It can be considered as
         # a list of Feature instances
         self._sub_features: List = []
         # The elements of mask will indicate whether the corresponding value
@@ -82,8 +82,8 @@ class Feature:
         """
         Validate input parameters based on some pre-conditions.
         """
-        assert (self.base_feature and self._data is not None or
-                (not self.base_feature
+        assert (self.leaf_feature and self._data is not None or
+                (not self.leaf_feature
                  and self._data is None
                  and self._sub_features is not None))
         assert type(self._pad_value) == int or type(self._pad_value) == list
@@ -91,7 +91,7 @@ class Feature:
 
     def _parse_sub_features(self, data):
         """
-        If current feature is the base feature, store the input data. Otherwise,
+        If current feature is the leaf feature, store the input data. Otherwise,
         parse the data into sub features represented as a list of features.
         Meanwhile, update the mask list.
         Args:
@@ -99,7 +99,7 @@ class Feature:
                 A list of features, where each feature can be the value or
                 another list of features.
         """
-        if self.base_feature:
+        if self.leaf_feature:
             self._data: List = data
         else:
             self._sub_features: List = []
@@ -114,12 +114,12 @@ class Feature:
         self._mask: List = [1] * len(data)
 
     @property
-    def base_feature(self) -> bool:
+    def leaf_feature(self) -> bool:
         """
         Returns:
-            True if current feature is base feature. Otherwise, False.
+            True if current feature is leaf feature. Otherwise, False.
         """
-        return self._base_feature
+        return self._leaf_feature
 
     @property
     def dtype(self) -> torch.dtype:
@@ -134,12 +134,12 @@ class Feature:
         """
         Returns:
             A list of sub features. Raise exception if current feature is the
-            base feature.
+            leaf feature.
         """
-        assert not self.base_feature, \
-            "Base feature does not have sub features"
+        assert not self.leaf_feature, \
+            "Leaf feature does not have sub features"
         assert self._dim > 1, \
-            "Non-base feature should have as least 2 dimension"
+            "Non-leaf feature should have as least 2 dimension"
 
         return self._sub_features
 
@@ -160,7 +160,7 @@ class Feature:
         return self._vocab
 
     def __len__(self):
-        return len(self._data) if self.base_feature else \
+        return len(self._data) if self.leaf_feature else \
             len(self._sub_features)
 
     def pad(self, max_len: int):
@@ -176,7 +176,7 @@ class Feature:
             "Feature length should not exceed given max_len"
 
         for i in range(max_len - len(self)):
-            if self.base_feature:
+            if self.leaf_feature:
                 self._data.append(self._pad_value)
             else:
                 sub_metadata = deepcopy(self._meta_data)
@@ -300,7 +300,7 @@ class Feature:
             #  [1,1,0]
             # ]
         """
-        if self.base_feature:
+        if self.leaf_feature:
             return self._data, [self._mask]
         else:
             unroll_features: List = []

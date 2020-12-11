@@ -128,7 +128,7 @@ class Converter:
                 feature: Feature = queue.pop(0)
                 feature.pad(curr_max_len)
 
-                if not feature.base_feature:
+                if not feature.leaf_feature:
                     for sub_feature in feature.sub_features:
                         next_max_len = max(next_max_len,
                                            len(sub_feature))

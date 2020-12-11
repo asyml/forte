@@ -24,22 +24,22 @@ class FeatureTest(unittest.TestCase):
         self.feature2: Feature = self.create_feature2()
         self.feature3: Feature = self.create_feature3()
 
-    def test_is_base_feature(self):
-        self.assertTrue(self.feature1.base_feature)
-        self.assertFalse(self.feature2.base_feature)
-        self.assertFalse(self.feature3.base_feature)
+    def test_is_leaf_feature(self):
+        self.assertTrue(self.feature1.leaf_feature)
+        self.assertFalse(self.feature2.leaf_feature)
+        self.assertFalse(self.feature3.leaf_feature)
 
     def test_get_sub_feature(self):
         sub_features2: List[Feature] = self.feature2.sub_features
         for sub_feature in sub_features2:
-            self.assertTrue(sub_feature.base_feature)
+            self.assertTrue(sub_feature.leaf_feature)
         self.assertEqual(sub_features2[0]._data, [6, 11, 2])
         self.assertEqual(sub_features2[1]._data, [7, 8])
         self.assertEqual(sub_features2[2]._data, [6, 7, 5, 4])
 
         sub_features3: List[Feature] = self.feature3.sub_features
         for sub_feature in sub_features3:
-            self.assertTrue(sub_feature.base_feature)
+            self.assertTrue(sub_feature.leaf_feature)
         self.assertEqual(sub_features3[0]._data,
                          [[0, 1, 0], [1, 0, 0], [1, 0, 0]])
         self.assertEqual(sub_features3[1]._data, [[1, 0, 0], [0, 1, 0]])
@@ -70,19 +70,19 @@ class FeatureTest(unittest.TestCase):
 
         self.feature2.pad(4)
         self.assertEqual(len(self.feature2), 4)
-        base_feature_data = [i._data for i in self.feature2.sub_features]
-        self.assertEqual(base_feature_data[:-1],
+        leaf_feature_data = [i._data for i in self.feature2.sub_features]
+        self.assertEqual(leaf_feature_data[:-1],
                          [[6, 11, 2], [7, 8], [6, 7, 5, 4]])
-        self.assertEqual(len(base_feature_data[-1]), 0)
+        self.assertEqual(len(leaf_feature_data[-1]), 0)
 
         self.feature3.pad(4)
         self.assertEqual(len(self.feature3), 4)
-        base_feature_data = [i._data for i in self.feature3.sub_features]
-        self.assertEqual(base_feature_data[:-2],
+        leaf_feature_data = [i._data for i in self.feature3.sub_features]
+        self.assertEqual(leaf_feature_data[:-2],
                          [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
                           [[1, 0, 0], [0, 1, 0]]])
-        self.assertEqual(len(base_feature_data[-2]), 0)
-        self.assertEqual(len(base_feature_data[-1]), 0)
+        self.assertEqual(len(leaf_feature_data[-2]), 0)
+        self.assertEqual(len(leaf_feature_data[-1]), 0)
 
     def test_unroll(self):
         self.feature1.pad(4)
