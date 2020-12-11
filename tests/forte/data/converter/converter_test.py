@@ -11,14 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import torch
+from typing import List
 import unittest
 
-from typing import List
-
-import torch
-
-from forte.data.converter.converter import Converter
-from forte.data.converter.feature import Feature
+from forte.data.converter import Converter
+from forte.data.converter import Feature
 
 
 class ConverterTest(unittest.TestCase):

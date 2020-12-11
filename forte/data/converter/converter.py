@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from typing import List, Tuple, Any, Optional
-
 import torch
 from torch import Tensor
 
@@ -21,8 +20,13 @@ from forte.data.converter.feature import Feature
 
 class Converter:
     """
-    This class has the functionality of converting a batch of Feature to a
-    PyTorch tensor. It will also do the padding for the given batch of data.
+    This class has the functionality of converting a batch of
+    :class:`forte.data.converter.Feature` to a PyTorch `Tensor`. It will also
+    do the padding for the given batch of :class:`forte.data.converter.Feature`.
+
+    Args:
+        default_dtype: the `dtype` of resulted tensor that will be obtained via
+            converting the input features.
     """
 
     def __init__(self, default_dtype: torch.dtype = torch.long):
@@ -30,21 +34,78 @@ class Converter:
 
     def convert(self, features: List[Feature]) -> \
             Tuple[Tensor, List[Tensor]]:
+        # pylint: disable=line-too-long
         """
         Convert a list of Features to a Tensor. Internally it will use
         breadth-first search to pad all features and get the actual data and
         corresponding masks.
+
         Args:
-            features (List):
-                A list of features, where each feature can be the value or
-                another list of features.
-        Returns: A tuple containing two elements. The first element is a Tensor
-        representing the padded batch of data. The shape will be
-        [batch_size, feature_dim1_max, feature_dim2_max, ...].
-        The second element is a list of Tensors `masks` representing masks
-        along different feature dimensions. For example, the masks[i] is the
-        mask tensor along ith dimension and will have the shape:
-        [batch_size, feature_dim1_max, ..., feature_dimi_max]
+            features (List[Feature]):
+                A list of :class:`forte.data.converter.Feature`
+
+        Returns:
+            A `Tuple` containing two elements.
+
+            The first element is a `Tensor` representing the padded batch of
+            data. The shape will be
+            `(feature_num, feature_dim1_max, feature_dim2_max, ...)`
+
+            The second element is a `List` of `Tensor` representing masks
+            along different feature dimensions. For example, the masks[i] is the
+            mask `Tensor` along ith dimension and will have the shape:
+            `(feature_num, feature_dim1_max, ..., feature_dimi_max)`
+
+            Where `feature_num` equals to ``len(features)``.
+
+        Example 1:
+
+        .. code-block:: python
+
+            data = [[1,2,3], [4,5], [6,7,8,9]]
+            meta_data = {
+                "pad_value": 0
+                "dim": 1
+                "dtype": torch.long
+            }
+            features = [Feature(i, meta_data=meta_data) for i in data]
+            converter = Converter()
+
+            tensor, masks = converter.convert(features)
+
+            # tensor is:
+            # torch.tensor([[1,2,3,0], [4,5,0,0], [6,7,8,9]], dtype=torch.long)
+
+            # masks is:
+            # [
+            #     torch.tensor([[1,1,1,0], [1,1,0,0], [1,1,1,1]], dtype=torch.bool)
+            # ]
+
+        Example 2:
+
+        .. code-block:: python
+
+            data = [[[1,2,3], [4,5]], [[3]]]
+            meta_data = {
+                "pad_value": 0
+                "dim": 2
+                "dtype": torch.long
+            }
+            features = [Feature(i, meta_data=meta_data) for i in data]
+            converter = Converter()
+
+            tensor, masks = converter.convert(features)
+
+            # tensor is:
+            # torch.tensor([[[1,2,3], [4,5,0]],
+            #               [[3,0,0], [0,0,0]]], dtype=torch.long)
+
+            # masks is:
+            # [
+            #     torch.tensor([[1,1], [1,0]], dtype=torch.bool),
+            #     torch.tensor([[[1,1,1], [1,1,0]],
+            #                   [[1,0,0], [0,0,0]]], dtype=torch.bool)
+            # ]
         """
         dtype: Optional[torch.dtype] = None
 
@@ -81,7 +142,7 @@ class Converter:
         batch_padded_features: List[List[Any]] = []
         batch_masks: List[List[Any]] = []
         for feature in features:
-            padded_feature, mask_list = feature.unroll()
+            padded_feature, mask_list = feature.data
             batch_padded_features.append(padded_feature)
             batch_masks.append(mask_list)
         batch_padded_features_tensor: Tensor = \

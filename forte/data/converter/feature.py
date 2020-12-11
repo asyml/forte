@@ -23,64 +23,29 @@ class Feature:
     This class represents a type of feature for a single data instance. The
     Feature can be multiple dimensions. It has methods to do padding and
     retrieve the actual multi-dimension data.
-    Here are some examples for how the padding works:
-    i) [2,7,8] -> [2,7,8,0]
-        1 dim feature
-        pad_len = 4
-        pad_value = 0
-    ii) [[1,2],[3,4,5],[9]] -> [[1,2,0],[3,4,5],[9,0,0],[0,0,0]]
-        2 dim feature
-        pad_len_dim1 = 4, pad_len_dim2=3
-        pad_value = 0
-    iii) [[0,1,0],[1,0,0]] -> [[0,1,0],[1,0,0],[0,0,1]]
-        1 dim one-hot-encoding feature
-        pad_len = 3
-        pad_value = [0,0,1]
-    A typical usage of this class will be like the following:
-    .. code-block:: python
-                # create a feature
-                feature = Feature(data=[[1,2],[3,4,5],[9]],
-                                  {
-                                    "pad_value": 0,
-                                    "dim": 2,
-                                    "dtype": torch.long
-                                  })
-                # Pad current dim with max_len=4
-                feature.pad(4)
 
-                # Pad each 2nd dim (the base dim) with max_len=3
-                for sub_feature in feature.get_sub_features():
-                    sub_feature.pad(3)
+    Args:
+        data (list): A list of features, where each feature can be the value or
+            another list of features. Typically this should be the output from
+            :meth:`extract` in :class:`forte.data.extractor.BaseExtractor`.
+        metadata (dict): A dictionary of metadata for this feature. Mandatory
+            metadata fields includes: `pad_value`, `dim`, `dtype`.
 
-                # Retrieve the actual data
-                data = feature.unroll()
+            `pad_value` is the pad that will be used to do padding.
 
-                # The data is a list of list which looks like the following:
-                # data = [[1,2,0],[3,4,5],[9,0,0],[0,0,0]]
-                ...
+            `dim` indicates the total number of dimension for this
+            feature.
+
+            `dtype` is the value type. For example, it can be `torch.long`.
+        vocab (Vocabulary): An optional fields about the
+            :class:`forte.data.Vocabulary` used to build this feature.
+
+    Please refer to :meth:`data` for the typical usage of this class.
     """
     def __init__(self,
                  data: List,
                  metadata: Dict,
                  vocab: Optional[Vocabulary] = None):
-        """
-        Args:
-            data (List):
-                A list of features, where each feature can be the value or
-                another list of features.
-                The `data` contains the actual value.
-            metadata(Dict):
-                A dictionary of metadata for this feature. Mandatory metadata
-                fields includes: `pad_value`, `dim`, `dtype`.
-                The `pad_value` is the pad that will be used to do padding.
-                The `dim` indicates the total number of dimension for this
-                feature.
-                The `dtype` is the value type. For example, it can be
-                torch.long.
-            vocab(Vocabulary):
-                An optional fields about the vocabulary used to build this
-                feature.
-        """
         self._meta_data: Dict = metadata
         self._validate_metadata()
 
@@ -151,31 +116,25 @@ class Feature:
     @property
     def base_feature(self) -> bool:
         """
-        Return whether or not the current feature is the base feature.
-        Returns: True if current feature is base feature. Otherwise, False.
+        Returns:
+            True if current feature is base feature. Otherwise, False.
         """
         return self._base_feature
 
     @property
     def dtype(self) -> torch.dtype:
         """
-        Returns: the data type of this feature
+        Returns:
+            The data type of this feature.
         """
         return self._dtype
 
     @property
-    def data(self) -> List:
-        assert self.base_feature, \
-            "Non-base feature does not have data"
-
-        return self._data
-
-    @property
     def sub_features(self) -> List['Feature']:
         """
-        Retrieve a list of sub features. The call is valid only when current
-        dimension is not the base dimension.
-        Returns: a list of sub features.
+        Returns:
+            A list of sub features. Raise exception if current feature is the
+            base feature.
         """
         assert not self.base_feature, \
             "Base feature does not have sub features"
@@ -186,10 +145,18 @@ class Feature:
 
     @property
     def meta_data(self) -> Dict:
+        """
+        Returns:
+            A `Dict` of meta data describing this feature.
+        """
         return self._meta_data
 
     @property
     def vocab(self) -> Vocabulary:
+        """
+        Returns:
+            The :class:`forte.data.Vocabulary` used to build this feature.
+        """
         return self._vocab
 
     def __len__(self):
@@ -200,6 +167,7 @@ class Feature:
         """
         Pad the current feature dimension with the given `max_len`. It will use
         `pad_value` to do the padding.
+
         Args:
             max_len (int):
                 The padded length.
@@ -218,27 +186,119 @@ class Feature:
                                                   vocab=self._vocab))
             self._mask.append(0)
 
-    def unroll(self) -> Tuple[List[Any], List[Any]]:
+    @property
+    def data(self) -> Tuple[List[Any], List[Any]]:
         """
         It will return the actual data stored. Internally, it will recursively
         retrieve data from inner dimension features. Meanwhile, it will also
-        return a list of masks representing the mask along different dimension.
-        Args:
-            need_pad (bool):
-                Indicate whether or not the internal data need to be padded.
-        Returns: A tuple where the first element is the actual data and the
-        second element is a list of masks. masks[i] in this list represents the
-        mask along ith dimension.
-        Here are some examples:
-        i) unroll([2,7,8,0]) will return:
-            ([2,7,8,0], # data
-             [1,1,1,0]) # mask
-        ii) unroll([[1,2,0],[3,4,5],[9,0,0],[0,0,0]]) will return:
-            ([[1,2,0],[3,4,5],[9,0,0],[0,0,0]],                 # data
-             [[1,1,1,0],[[1,1,0],[1,1,1],[1,0,0,],[0,0,0]]])    # mask
-        iii) unroll([[0,1,0],[1,0,0]]) will return:
-            ([[0,1,0],[1,0,0],[0,0,1]], # data
-             [1,1,0])                   # mask
+        return a list of masks representing the mask along different dimensions.
+
+        Returns:
+            A `Tuple` where
+
+            The first element is the actual data representing this feature.
+
+            The second element is a list of masks. masks[i] in this list
+            represents the mask along ith dimension.
+
+        Here are some examples for how the padding works:
+
+        Example 1 (1-dim feature, no padding):
+
+        .. code-block:: python
+
+            data = [2,7,8]
+            meta_data = {
+                "pad_value": 0
+                "dim": 1
+                "dtype": torch.long
+            }
+            feature = Feature(data, meta_data=meta_data)
+
+            data, masks = feature.data
+
+            # data is:
+            # [2,7,8]
+
+            # masks is:
+            # [
+            #   [1,1,1]
+            # ]
+
+        Example 2 (1-dim feature, scalar padding):
+
+        .. code-block:: python
+
+            data = [2,7,8]
+            meta_data = {
+                "pad_value": 0
+                "dim": 1
+                "dtype": torch.long
+            }
+            feature = Feature(data, meta_data=meta_data)
+
+            feature.pad(max_len=4)
+
+            data, masks = feature.data
+
+            # data is:
+            # [2,7,8,0]
+
+            # masks is:
+            # [
+            #   [1,1,1,0]
+            # ]
+
+        Example 3 (2-dim feature, scalar padding):
+
+        .. code-block:: python
+
+            data = [[1,2,5], [3], [1,5]]
+            meta_data = {
+                "pad_value": 0
+                "dim": 2
+                "dtype": torch.long
+            }
+            feature = Feature(data, meta_data=meta_data)
+
+            feature.pad(max_len=4)
+            for sub_feature in feature.sub_features:
+                sub_feature.pad(max_len=3)
+
+            data, masks = feature.data
+
+            # data is:
+            # [[1,2,5], [3,0,0], [1,5,0], [0,0,0]]
+
+            # masks is:
+            # [
+            #   [1,1,1,0],
+            #   [[1,1,1], [1,0,0], [1,1,0], [0,0,0]]
+            # ]
+
+        Example 4 (1-dim feature, vector padding):
+
+        .. code-block:: python
+
+            data = [[0,1,0],[1,0,0]]
+            meta_data = {
+                "pad_value": [0,0,1]
+                "dim": 1
+                "dtype": torch.long
+            }
+            feature = Feature(data, meta_data=meta_data)
+
+            feature.pad(max_len=3)
+
+            data, masks = feature.data
+
+            # data is:
+            # [[0,1,0], [1,0,0], [0,0,1]]
+
+            # masks is:
+            # [
+            #  [1,1,0]
+            # ]
         """
         if self.base_feature:
             return self._data, [self._mask]
@@ -247,7 +307,7 @@ class Feature:
             sub_stack_masks: List = []
 
             for feature in self.sub_features:
-                sub_unroll_features, sub_masks = feature.unroll()
+                sub_unroll_features, sub_masks = feature.data
 
                 for i in range(self._dim - 1):
                     if i == len(sub_stack_masks):

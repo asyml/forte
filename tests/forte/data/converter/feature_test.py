@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
-
 from typing import List
-
 import torch
 
-from forte.data.converter.feature import Feature
+from forte.data.converter import Feature
 
 
 class FeatureTest(unittest.TestCase):
@@ -88,14 +86,14 @@ class FeatureTest(unittest.TestCase):
 
     def test_unroll(self):
         self.feature1.pad(4)
-        feature, mask = self.feature1.unroll()
+        feature, mask = self.feature1.data
         self.assertEqual(feature, [7, 8, 9, 0])
         self.assertEqual(mask, [[1, 1, 1, 0]])
 
         self.feature2.pad(4)
         for sub_feature in self.feature2.sub_features:
             sub_feature.pad(4)
-        feature, mask = self.feature2.unroll()
+        feature, mask = self.feature2.data
         self.assertEqual(feature, [[6, 11, 2, 0],
                                    [7, 8, 0, 0],
                                    [6, 7, 5, 4],
@@ -109,7 +107,7 @@ class FeatureTest(unittest.TestCase):
         self.feature3.pad(4)
         for sub_feature in self.feature3.sub_features:
             sub_feature.pad(3)
-        feature, mask = self.feature3.unroll()
+        feature, mask = self.feature3.data
         self.assertEqual(feature, [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
                                    [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
                                    [[0, 0, 1], [0, 0, 1], [0, 0, 1]],
@@ -121,15 +119,15 @@ class FeatureTest(unittest.TestCase):
                                  [0, 0, 0]]])
 
     def test_unroll_nopad(self):
-        feature, mask = self.feature1.unroll()
+        feature, mask = self.feature1.data
         self.assertEqual(feature, [7, 8, 9])
 
-        feature, mask = self.feature2.unroll()
+        feature, mask = self.feature2.data
         self.assertEqual(feature, [[6, 11, 2],
                                    [7, 8],
                                    [6, 7, 5, 4]])
 
-        feature, mask = self.feature3.unroll()
+        feature, mask = self.feature3.data
         self.assertEqual(feature, [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
                                    [[1, 0, 0], [0, 1, 0]]])
 
