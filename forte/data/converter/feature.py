@@ -15,6 +15,7 @@ from copy import deepcopy
 from typing import List, Any, Tuple, Union, Dict, Optional
 import torch
 
+from forte.common import ValidationError
 from forte.data.vocabulary import Vocabulary
 
 
@@ -75,19 +76,29 @@ class Feature:
     def _validate_metadata(self):
         necessary_fields = ["pad_value", "dim", "dtype"]
         for field in necessary_fields:
-            assert field in self._meta_data, \
-                "Field not found in metadata: {}".format(field)
+            if field not in self._meta_data:
+                raise ValidationError(
+                    "Field not found in metadata: {}".format(field))
 
     def _validate_input(self):
         """
         Validate input parameters based on some pre-conditions.
         """
-        assert (self.leaf_feature and self._data is not None or
-                (not self.leaf_feature
-                 and self._data is None
-                 and self._sub_features is not None))
-        assert type(self._pad_value) == int or type(self._pad_value) == list
-        assert self._dim >= 1
+        if self.leaf_feature and self._data is None:
+            raise ValidationError("Leaf feature should contain actual data.")
+        if not self.leaf_feature and self._data:
+            raise ValidationError(
+                "Non-leaf feature should not contain actual data.")
+        if not self.leaf_feature and not self._sub_features:
+            raise ValidationError(
+                "Non-leaf feature should contain sub features.")
+        if self._pad_value and \
+           type(self._pad_value) != int and type(self._pad_value) != list:
+            raise ValidationError(
+                "Invalid pad value type: {}.".format(type(self._pad_value)))
+        if self._dim < 1:
+            raise ValidationError(
+                "The `dim` in meta should be at least 1.")
 
     def _parse_sub_features(self, data):
         """
@@ -136,10 +147,11 @@ class Feature:
             A list of sub features. Raise exception if current feature is the
             leaf feature.
         """
-        assert not self.leaf_feature, \
-            "Leaf feature does not have sub features"
-        assert self._dim > 1, \
-            "Non-leaf feature should have as least 2 dimension"
+        if self._leaf_feature:
+            raise ValidationError("Leaf feature does not have sub features")
+        if self._dim <= 1:
+            raise ValidationError(
+                "Non-leaf feature should have as least 2 dimension")
 
         return self._sub_features
 
@@ -172,8 +184,9 @@ class Feature:
             max_len (int):
                 The padded length.
         """
-        assert len(self) <= max_len, \
-            "Feature length should not exceed given max_len"
+        if len(self) > max_len:
+            raise ValidationError(
+                "Feature length should not exceed given max_len")
 
         for i in range(max_len - len(self)):
             if self.leaf_feature:

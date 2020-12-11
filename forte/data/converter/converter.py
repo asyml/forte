@@ -15,6 +15,7 @@ from typing import List, Tuple, Any, Optional
 import torch
 from torch import Tensor
 
+from forte.common import ValidationError
 from forte.data.converter.feature import Feature
 
 
@@ -34,7 +35,6 @@ class Converter:
 
     def convert(self, features: List[Feature]) -> \
             Tuple[Tensor, List[Tensor]]:
-        # pylint: disable=line-too-long
         """
         Convert a list of Features to a Tensor. Internally it will use
         breadth-first search to pad all features and get the actual data and
@@ -78,7 +78,8 @@ class Converter:
 
             # masks is:
             # [
-            #     torch.tensor([[1,1,1,0], [1,1,0,0], [1,1,1,1]], dtype=torch.bool)
+            #     torch.tensor([[1,1,1,0], [1,1,0,0], [1,1,1,1]],
+            #                  dtype=torch.bool)
             # ]
 
         Example 2:
@@ -117,7 +118,9 @@ class Converter:
             if not dtype:
                 dtype = feature.dtype
             else:
-                assert dtype == feature.dtype
+                if dtype != feature.dtype:
+                    raise ValidationError(
+                        "The dtype should be same within a batch of Features")
             queue.append(feature)
             curr_max_len = max(curr_max_len, len(feature))
 
