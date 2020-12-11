@@ -13,12 +13,11 @@
 # limitations under the License.
 import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator
-
-import torch
-from forte.common.resources import Resources
 from texar.torch.data import DataIterator, Batch
+import torch
 from torch import device
 
+from forte.common.resources import Resources
 from forte.common.configuration import Config
 from forte.data.converter.converter import Converter
 from forte.data.data_pack_dataset import DataPackDataSource, \
@@ -28,51 +27,91 @@ from forte.predictor import Predictor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.readers.base_reader import PackReader
-from forte.data.types import DATA_OUTPUT
 
 logger = logging.getLogger(__name__)
 
 
 class TrainPreprocessor:
-    """
+    r"""
     `TrainPreprocessor` provides the functionality of doing pre-processing work
     including building vocabulary, extracting the features, batching and
-    padding. It will provide methods to return the iterator over batch of
-    padded tensors.
+    padding (optional). The main functionality is provided by its method
+    :meth:`get_train_batch_iterator` which will return an `iterator` over the
+    batch of preprocessed data. Please refer to the documentation of
+    that method for how the preprocessing is done.
 
     `TrainPreprocessor` will maintain a Config that stores all the configurable
     parameters for various components.
 
-    Particularly, the `dataset` config is exactly the same as what
-    texar.torch.data.DatasetBase::default_config will return.
-
     `TrainPreprocessor` will also accept a user request. Internally it will
     parse this user request and store the parsed result as a dictionary
     into `feature_resource`.
-    An example `feature_resource` is:
-    feature_resource: {
-        "scope": ft.onto.Sentence
-        "schemes": {
-            "text_tag": {
-                "extractor":  Extractor,
-                "converter": Converter,
-                "type": DATA_INPUT,
-                "need_pad": True
-            },
-            "char_tag" {
-                "extractor":  Extractor,
-                "converter": Converter,
-                "type": DATA_INPUT,
-                "need_pad": True
+
+    Args:
+        train_reader (PackReader): An object of class
+            :class:`forte.data.readers.PackReader` that parses given
+            dataset files.
+        request (Dict): A request that specifies how to do train pre-processing.
+            See below for details. An example is given below.
+        config: A `Dict` or :class:`forte.common.configuration.Config` that
+            configs this preprocessor. See :meth:`default_configs` for
+            the defaults.
+        reader_config: A `Dict` or :class:`forte.common.configuration.Config`
+            that configs the given `train_reader`. See `default_configs` for
+            the specific reader for defaults.
+
+    Here is the detailed explanation for `request`:
+
+    `"scope"`: Entry
+        A class of type :class:`forte.data.ontology.core.Entry` The granularity
+        to separate data into different examples. For example, if `scope` is
+        :class:`ft.onto.base_ontology.Sentence`, then each training example
+        will represent the information of a sentence.
+
+    `"schemes"`: Dict
+        The directory containing pre-processing information. It will guide the
+        `TrainPreprocessor` how to do pre-processing. The key will be
+        user-defined tags that denotes a type of Feature. The value will be
+        various options for how to pre-processing that Feature. Lots of the
+        options are for extracting process and those are all the options
+        supported by various :mod:`forte.data.extractor`. Please refer to
+        those documentations for detailed configuration.
+
+    `"schemes.tag.need_pad"`: bool
+        Whether `TrainPreprocessor` need to do padding after extracting data
+        into :class:`forte.data.converter.feature.Feature`. Default is True.
+
+    Example request
+
+        .. code-block:: python
+
+            data_request = {
+                "scope": Sentence,
+                "schemes": {
+                    "text_tag": {
+                        "entry_type": ft.onto.base_ontology.Token,
+                        "vocab_method": "indexing",
+                        "attribute_get": "text",
+                        "type": DATA_INPUT,
+                        "extractor": AttributeExtractor
+                    },
+                    "char_tag": {
+                        "entry_type": ft.onto.base_ontology.Token,
+                        "vocab_method": "indexing",
+                        "max_char_length": config.config_data.max_char_length,
+                        "type": DATA_INPUT,
+                        "extractor": CharExtractor
+                    },
+                    "ner_tag": {
+                        "entry_type": ft.onto.base_ontology.EntityMention,
+                        "attribute": "ner_type",
+                        "based_on": Token,
+                        "vocab_method": "indexing",
+                        "type": DATA_OUTPUT,
+                        "extractor": BioSeqTaggingExtractor
+                    }
+                }
             }
-            "ner_tag": {
-                "extractor":  Extractor,
-                "converter": Converter,
-                "type": DATA_OUTPUT,
-                "need_pad": True
-            }
-        }
-    }
     """
 
     def __init__(self,
@@ -106,6 +145,48 @@ class TrainPreprocessor:
 
     @staticmethod
     def default_configs():
+        r"""Returns a dictionary of default hyperparameters.
+
+        .. code-block:: python
+
+            "preprocess": {
+                "pack_dir": "",
+                "lazy_parse_request": False,
+                "lazy_build_vocab": False,
+                "device": "cpu",
+            },
+            "dataset": DataPackDataset.default_hparams()
+
+        Here:
+
+        `"preprocess.pack_dir"`: str
+            The directory containing all the training dataset files
+
+            .. note::
+                Different reader will require different file extensions. Please
+                refer to the specific reader for the file extension.
+
+        `"preprocessor.lazy_parse_request"`: bool
+            If False (default), preprocessor will parse input user request when
+            the `TrainPreprocessor` instance is created. If False, it will parse
+            user request when :meth:`get_train_batch_iterator` is called.
+
+        `"preprocessor.lazy_build_vocab"`: bool
+            If False (default), preprocessor will iterate over all dataset files
+            and build the vocabulary when the `TrainPreprocessor` instance is
+            created. If False, it will build the vocabulary when
+            :meth:`get_train_batch_iterator` is called.
+
+        `"preprocessor.device"`:
+            The device of the produced batches. For GPU training,
+            set to current CUDA device.
+
+        `"dataset"`:
+            This contains all the configurable options same as
+            :class:`forte.data.data_pack_dataset.DataPackDataset`.
+
+        """
+
         # Configs should be serializable
         return {
             "preprocess": {
@@ -123,42 +204,34 @@ class TrainPreprocessor:
 
     def _parse_request(self, data_request: Dict):
         """
-        Responsibilities:
+        This method has two responsibilities:
         1. parse the given data request and stored internally into resource
         2. validate if the given data request is valid
 
-        Example data_request
-        data_request = {
-            "scope": ft.onto.Sentence,
-            "schemes": {
-                "text_tag": {
-                    "entry": ft.onto.Token,
-                    "repr": "text_repr",
-                    "vocab_method": "indexing",
-                    "extractor": AttributeExtractor,
-                    "type": DATA_INPUT,
-                    "need_pad": True
-                },
-                "char_tag": {
-                    "entry": ft.onto.Token,
-                    "repr": "char_repr",
-                    "vocab_method": "indexing",
-                    "extractor": AttributeExtractor,
-                    "type": DATA_INPUT,
-                    "need_pad": True
-                },
-                "ner_tag": {
-                    "entry": ft.onto.EntityMention,
-                    "attribute": "ner_type",
-                    "based_on": ft.onto.Token,
-                    "strategy": "BIO",
-                    "vocab_method": "indexing",
-                    "extractor": AnnotationSeqExtractor,
-                    "type": DATA_OUTPUT,
-                    "need_pad": True
+        An example `feature_resource` is:
+            feature_resource = {
+                "scope": ft.onto.Sentence
+                "schemes": {
+                    "text_tag": {
+                        "extractor":  Extractor,
+                        "converter": Converter,
+                        "type": DATA_INPUT,
+                        "need_pad": True
+                    },
+                    "char_tag" {
+                        "extractor":  Extractor,
+                        "converter": Converter,
+                        "type": DATA_INPUT,
+                        "need_pad": True
+                    }
+                    "ner_tag": {
+                        "extractor":  Extractor,
+                        "converter": Converter,
+                        "type": DATA_OUTPUT,
+                        "need_pad": True
+                    }
                 }
             }
-        }
         """
 
         assert "scope" in data_request, \
@@ -268,24 +341,92 @@ class TrainPreprocessor:
 
     @property
     def feature_resource(self) -> Dict:
+        r"""A `Dict` containing all the information needed for doing the
+        pre-processing. This is obtained via parsing the input `request`
+
+        An example `feature_resource` is:
+
+        .. code-block:: python
+
+            feature_resource = {
+                "scope": ft.onto.Sentence
+                "schemes": {
+                    "text_tag": {
+                        "extractor": Extractor,
+                        "converter": Converter,
+                        "type": DATA_INPUT,
+                        "need_pad": True
+                    },
+                    "char_tag" {
+                        "extractor": Extractor,
+                        "converter": Converter,
+                        "type": DATA_INPUT,
+                        "need_pad": True
+                    }
+                    "ner_tag": {
+                        "extractor": Extractor,
+                        "converter": Converter,
+                        "type": DATA_OUTPUT,
+                        "need_pad": True
+                    }
+                }
+            }
+
+        Here:
+
+        `"scope"`: Entry
+            Same as the `scope` provided by input `request`.
+
+        `"schemes"`: Dict
+            A `Dict` containing the information about doing the pre-processing.
+            The `key` is the tags provided by input `request`. The `value` is a
+            `Dict` containing the information for doing pre-processing for that
+            feature.
+
+        `"schemes.tag.extractor"`: Extractor
+            An instance of type :class:`forte.data.extractor.BaseExtractor`.
+
+        `"schemes.tag.converter"`: Converter
+            An instance of type :class:`forte.data.converter.Converter`.
+
+        `"schemes.tag.type"`: DATA_INPUT/DATA_OUTPUT
+            Denoting whether this feature is the input or output feature.
+
+        `"schemes.tag.need_pad"`: bool
+            Whether the padding need to be done for this feature.
+
+        """
         if not self._feature_resource_ready:
             self._parse_request(self._user_request)
         return self._feature_resource
 
     @property
     def user_request(self) -> Dict:
+        r"""A `Dict` passed by users when
+        :class:`forte.train_preprocessor.TrainPreprocessor` instance is created.
+        Please refer to class documentation for the detailed format.
+        """
         return self._user_request
 
     @property
     def device(self) -> device:
+        r"""The device of the produced batches. For GPU training,
+        set to current CUDA device.
+        """
         return torch.device(self._config.preprocess.device)
 
     @property
     def config(self) -> Config:
+        r"""A :class:`forte.common.configuration.Config` maintaining all the
+        configurable options for this `TrainPreprocessor`.
+        """
         return self._config
 
     @property
     def state(self) -> Dict:
+        r"""A `Dict` maintaining all the serializable states for this
+        `TrainPreprocessor`. This is typically used to save the training state.
+        """
         return {
             "feature_resource": self._feature_resource,
             "user_request": self.user_request,
@@ -293,9 +434,73 @@ class TrainPreprocessor:
         }
 
     def save_state(self, filename: str):
+        r"""It will serialize `TrainPreprocessor` state into a disk file given
+        by `filename`.
+
+        Args:
+            filename (str): the file to save the state.
+        """
         torch.save(self.state, filename)
 
     def get_train_batch_iterator(self) -> Iterator[Batch]:
+        r"""
+        This method mainly has four steps:
+
+        1. Parse dataset file into :class:`forte.data.data_pack.DataPack`
+           via train reader
+        2. Extract :class:`forte.data.converter.feature.Feature` from
+           :class:`forte.data.data_pack.DataPack`
+        3. Batch :class:`forte.data.converter.feature.Feature`
+        4. (optional) Pad a batch of
+           :class:`forte.data.converter.feature.Feature`
+
+        It will return an `iterator` of a batch of preprocessed data.
+
+        Returns:
+            An `Iterator` of the `Batch
+            <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#batch>`_.
+            It can be treated as a `Dict` of the following structure:
+
+            .. code-block:: python
+
+                {
+                    "tag_a": {
+                        "tensor": <tensor>,
+                        "mask": [<tensor1>, <tensor2>, ...],
+                        "features": [<feature1>, <feature2>, ...]
+                    },
+                    "tag_b": {
+                        "tensor": Tensor,
+                        "mask": [<tensor1>, <tensor2>, ...],
+                        "features": [<feature1>, <feature2>, ...]
+                    }
+                }
+
+            `"tensor"`: Tensor
+                The tensor representing the Feature. This should be sent to
+                model for training.
+
+                If the option `need_pad` in input`request` is False, this is
+                not given.
+
+            `"mask"`: List[Tensor]
+                The `mask` is actually a list of tensors where each tensor
+                representing the mask for that dimension. For example, mask[i]
+                is a tensor representing the mask for dimension i.
+
+                If the option `need_pad` in input`request` is False, this is
+                not given.
+
+            `"features"`: List[Feature]
+                A List of :class:`forte.data.converter.feature.Feature`. This is
+                useful when users want to do customized pre-processing.
+
+            .. note::
+                The first level key in returned `batch` is the tag, which is a
+                string denoting a specific type of Feature (input or output).
+                Those tags are guaranteed to be same as the scheme tags given in
+                input `request`.
+        """
         if self._config.preprocess.lazy_parse_request:
             self._parse_request(self._user_request)
         else:
