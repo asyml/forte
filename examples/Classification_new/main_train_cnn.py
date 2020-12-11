@@ -17,6 +17,7 @@ from typing import Iterator, Dict, List
 import numpy as np
 import torch
 import torch.nn.functional as F
+import examples.Classification_new.cnn
 from torch import nn
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
@@ -34,7 +35,6 @@ from forte.data.extractor.base_extractor \
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.imdb_reader import IMDBReader
 from ft.onto.base_ontology import Sentence, Token
-from texar.torch.modules.classifiers.conv_classifiers import Conv1DClassifier
 from texar.torch.modules.embedders import WordEmbedder
 from examples.Classification_new.cnn import CNN_Classifier
 
@@ -109,6 +109,7 @@ def pad_each_bach(word, max_sen_len):
 
 
 def train(model: nn.Module, optim: Optimizer, batch: Batch):
+    print(type(model))
     labels = batch["label_tag"]["tensor"]
     optim.zero_grad()
 
@@ -272,5 +273,5 @@ while epoch < config.config_data.num_epochs:
     #             f"val result: {evaluator.get_result()}")
 
 # Save training result to disk
-# train_pipeline.save_state(config.config_data.train_state_path)
-# torch.save(ner_model_processor, config.config_model.model_path)
+train_preprocessor.save_state(config.config_data.train_state_path)
+torch.save(model, config.config_model.model_path)
