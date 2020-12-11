@@ -229,12 +229,12 @@ class DataPackDataset(DatasetBase):
                 {
                     "tag_a": {
                         "tensor": <tensor>,
-                        "mask": [<tensor1>, <tensor2>, ...],
+                        "masks": [<tensor1>, <tensor2>, ...],
                         "features": [<feature1>, <feature2>, ...]
                     },
                     "tag_b": {
                         "tensor": Tensor,
-                        "mask": [<tensor1>, <tensor2>, ...],
+                        "masks": [<tensor1>, <tensor2>, ...],
                         "features": [<feature1>, <feature2>, ...]
                     }
                 }
@@ -246,7 +246,7 @@ class DataPackDataset(DatasetBase):
                 If the option `need_pad` in input`request` is False, this is
                 not given.
 
-            `"mask"`: List[Tensor]
+            `"masks"`: List[Tensor]
                 The `mask` is actually a list of tensors where each tensor
                 representing the mask for that dimension. For example, mask[i]
                 is a tensor representing the mask for dimension i.
@@ -285,7 +285,7 @@ class DataPackDataset(DatasetBase):
                     self._feature_scheme[tag]["converter"]
                 tensor, mask = converter.convert(features)
                 tensor_collection[tag]["tensor"] = tensor
-                tensor_collection[tag]["mask"] = mask
+                tensor_collection[tag]["masks"] = mask
 
             tensor_collection[tag]["features"] = features
 

@@ -153,14 +153,14 @@ class TrainPreprocessorTest(unittest.TestCase):
             for tag, tensors in batch.items():
                 self.assertTrue("tensor" in tensors)
                 self.assertEqual(type(tensors["tensor"]), Tensor)
-                self.assertTrue("mask" in tensors)
+                self.assertTrue("masks" in tensors)
                 if tag == "text_tag" or tag == "ner_tag":
-                    self.assertEqual(len(tensors["mask"]), 1)
-                    self.assertEqual(type(tensors["mask"][0]), Tensor)
+                    self.assertEqual(len(tensors["masks"]), 1)
+                    self.assertEqual(type(tensors["masks"][0]), Tensor)
                 else:
-                    self.assertEqual(len(tensors["mask"]), 2)
-                    self.assertEqual(type(tensors["mask"][0]), Tensor)
-                    self.assertEqual(type(tensors["mask"][1]), Tensor)
+                    self.assertEqual(len(tensors["masks"]), 2)
+                    self.assertEqual(type(tensors["masks"][0]), Tensor)
+                    self.assertEqual(type(tensors["masks"][1]), Tensor)
 
 
 if __name__ == '__main__':
