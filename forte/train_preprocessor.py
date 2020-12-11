@@ -92,14 +92,14 @@ class TrainPreprocessor:
                         "entry_type": ft.onto.base_ontology.Token,
                         "vocab_method": "indexing",
                         "attribute_get": "text",
-                        "type": DATA_INPUT,
+                        "type": TrainPreprocessor.DATA_OUTPUT,
                         "extractor": AttributeExtractor
                     },
                     "char_tag": {
                         "entry_type": ft.onto.base_ontology.Token,
                         "vocab_method": "indexing",
                         "max_char_length": config.config_data.max_char_length,
-                        "type": DATA_INPUT,
+                        "type": TrainPreprocessor.DATA_OUTPUT,
                         "extractor": CharExtractor
                     },
                     "ner_tag": {
@@ -107,12 +107,15 @@ class TrainPreprocessor:
                         "attribute": "ner_type",
                         "based_on": Token,
                         "vocab_method": "indexing",
-                        "type": DATA_OUTPUT,
+                        "type": TrainPreprocessor.DATA_OUTPUT,
                         "extractor": BioSeqTaggingExtractor
                     }
                 }
             }
     """
+
+    DATA_INPUT = 0
+    DATA_OUTPUT = 1
 
     def __init__(self,
                  train_reader: PackReader,
@@ -215,19 +218,19 @@ class TrainPreprocessor:
                     "text_tag": {
                         "extractor":  Extractor,
                         "converter": Converter,
-                        "type": DATA_INPUT,
+                        "type": TrainPreprocessor.DATA_INPUT,
                         "need_pad": True
                     },
                     "char_tag" {
                         "extractor":  Extractor,
                         "converter": Converter,
-                        "type": DATA_INPUT,
+                        "type": TrainPreprocessor.DATA_INPUT,
                         "need_pad": True
                     }
                     "ner_tag": {
                         "extractor":  Extractor,
                         "converter": Converter,
-                        "type": DATA_OUTPUT,
+                        "type": TrainPreprocessor.DATA_OUTPUT,
                         "need_pad": True
                     }
                 }
@@ -356,19 +359,19 @@ class TrainPreprocessor:
                     "text_tag": {
                         "extractor": Extractor,
                         "converter": Converter,
-                        "type": DATA_INPUT,
+                        "type": TrainPreprocessor.DATA_INPUT,
                         "need_pad": True
                     },
                     "char_tag" {
                         "extractor": Extractor,
                         "converter": Converter,
-                        "type": DATA_INPUT,
+                        "type": TrainPreprocessor.DATA_INPUT,
                         "need_pad": True
                     }
                     "ner_tag": {
                         "extractor": Extractor,
                         "converter": Converter,
-                        "type": DATA_OUTPUT,
+                        "type": TrainPreprocessor.DATA_OUTPUT,
                         "need_pad": True
                     }
                 }
@@ -391,7 +394,7 @@ class TrainPreprocessor:
         `"schemes.tag.converter"`: Converter
             An instance of type :class:`forte.data.converter.Converter`.
 
-        `"schemes.tag.type"`: DATA_INPUT/DATA_OUTPUT
+        `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
             Denoting whether this feature is the input or output feature.
 
         `"schemes.tag.need_pad"`: bool

@@ -19,14 +19,9 @@ from forte.data.ontology.core import Entry
 
 __all__ = [
     "ReplaceOperationsType",
-    "DataRequest",
-    "DATA_INPUT",
-    "DATA_OUTPUT"
+    "DataRequest"
 ]
 
 ReplaceOperationsType = List[Tuple[Span, str]]
 
 DataRequest = Dict[Type[Entry], Union[Dict, List]]
-
-DATA_INPUT = 0
-DATA_OUTPUT = 1

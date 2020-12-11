@@ -19,7 +19,6 @@ from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from torch import Tensor
 
 from forte.data.vocabulary import Vocabulary
-from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from forte.data.converter.converter import Converter
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
@@ -50,14 +49,14 @@ class TrainPreprocessorTest(unittest.TestCase):
                     "entry_type": Token,
                     "attribute_get": "text",
                     "conversion_method": "indexing",
-                    "type": DATA_INPUT,
+                    "type": TrainPreprocessor.DATA_INPUT,
                     "extractor": AttributeExtractor
                 },
                 "char_tag": {
                     "entry_type": Token,
                     "conversion_method": "indexing",
                     "max_char_length": self.config['max_char_length'],
-                    "type": DATA_INPUT,
+                    "type": TrainPreprocessor.DATA_INPUT,
                     "extractor": CharExtractor
                 },
                 "ner_tag": {
@@ -65,7 +64,7 @@ class TrainPreprocessorTest(unittest.TestCase):
                     "attribute": "ner_type",
                     "based_on": Token,
                     "vocab_method": "indexing",
-                    "type": DATA_OUTPUT,
+                    "type": TrainPreprocessor.DATA_OUTPUT,
                     "extractor": BioSeqTaggingExtractor
                 }
             }
