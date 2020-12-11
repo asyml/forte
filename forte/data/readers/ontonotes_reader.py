@@ -128,6 +128,39 @@ class OntonotesReader(PackReader):
 
     @classmethod
     def default_configs(cls):
+        r"""
+        Returns a dictionary of default hyperparameters.
+
+        .. code-block:: python
+
+            {
+                "name": "reader",
+                "column_format": [
+                    "document_id",
+                    "part_number",
+                    None,
+                    "word",
+                    "pos_tag",
+                    None,
+                    "lemmatised_word",
+                    "framenet_id",
+                    "word_sense",
+                    "speaker",
+                    "entity_label",
+                    "*predicate_labels",
+                    "coreference",
+                ]
+            }
+
+        Here:
+
+        `"column_format"`: list
+            A `List` of default column types.
+
+            .. note::
+                A `None` field means that column in the dataset file will be
+                ignored during parsing.
+        """
         config: dict = super().default_configs()
 
         config.update({
