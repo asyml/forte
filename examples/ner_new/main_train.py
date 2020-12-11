@@ -145,7 +145,7 @@ tp_request = {
             "entry_type": Token,
             "vocab_method": "indexing",
             "attribute_get": "text",
-            "type": TrainPreprocessor.DATA_OUTPUT,
+            "type": TrainPreprocessor.DATA_INPUT,
             "extractor": AttributeExtractor
         },
         "char_tag": {
