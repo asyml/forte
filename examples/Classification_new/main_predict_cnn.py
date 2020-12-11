@@ -15,15 +15,18 @@
 
 import yaml
 import torch
+import examples.Classification_new.cnn
 from forte.pipeline import Pipeline
 from forte.predictor import Predictor
 from ft.onto.base_ontology import Sentence
 from forte.data.readers.imdb_reader import IMDBReader
 
+
 def predict_forward_fn(model, batch):
-    '''Use model and batch data to predict ner tag.'''
+    '''Use model and batch data to predict label.'''
     logits, pred = model(batch)
     pred = pred.numpy()
+    print(pred)
     return {"label_tag": pred}
 
 
@@ -31,7 +34,7 @@ config_predict = yaml.safe_load(open("config_predict.yml", "r"))
 saved_model = torch.load(config_predict['model_path'])
 train_state = torch.load(config_predict['train_state_path'])
 
-reader =  IMDBReader()
+reader = IMDBReader()
 predictor = Predictor(batch_size=config_predict['batch_size'],
                 model=saved_model,
                 predict_forward_fn=predict_forward_fn,
