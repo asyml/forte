@@ -299,7 +299,9 @@ class TrainPreprocessor:
                 based_on: Entry = dependent_extractor.based_on
                 if based_on not in scheme_group["dependee"]:
                     raise ValueError(
-                        "Cannot found based on entry {} for extractor {}".
+                        "Extractor {} needs the entry {} to do extraction "
+                        "processing but it is not extracted by any other "
+                        "extractors given in request".
                         format(based_on, dependent_extractor.tag))
 
         self._feature_resource["schemes"] = resource_schemes
