@@ -25,7 +25,6 @@ from forte.data.extractor.attribute_extractor import AttributeExtractor
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.extractor.char_extractor import CharExtractor
 from forte.data.extractor.link_extractor import LinkExtractor
-from forte.data.types import DATA_INPUT, DATA_OUTPUT
 from ft.onto.base_ontology import Sentence, Token, PredicateLink
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.ontonotes_reader import OntonotesReader
@@ -92,14 +91,14 @@ tp_request = {
             "entry_type": Token,
             "attribute_get": "text",
             "vocab_method": "indexing",
-            "type": DATA_INPUT,
+            "type": TrainPreprocessor.DATA_INPUT,
             "extractor": AttributeExtractor,
             "need_pad": True
         },
         "char_tag": {
             "entry_type": Token,
             "vocab_method": "indexing",
-            "type": DATA_INPUT,
+            "type": TrainPreprocessor.DATA_INPUT,
             "extractor": CharExtractor,
             "need_pad": True
         },
@@ -107,7 +106,7 @@ tp_request = {
             "entry_type": Token,
             "attribute_get": "text",
             "vocab_method": "raw",
-            "type": DATA_INPUT,
+            "type": TrainPreprocessor.DATA_INPUT,
             "extractor": AttributeExtractor,
             "need_pad": False
         },
@@ -117,7 +116,7 @@ tp_request = {
             "based_on": Token,
             "strategy": "BIO",
             "vocab_method": "indexing",
-            "type": DATA_OUTPUT,
+            "type": TrainPreprocessor.DATA_OUTPUT,
             "extractor": LinkExtractor,
             "need_pad": False
         }
