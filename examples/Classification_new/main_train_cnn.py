@@ -24,8 +24,6 @@ from texar.torch.data import Batch
 from tqdm import tqdm
 import yaml
 
-from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
-from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.pipeline import Pipeline
 #from forte.predictor import Predictor
 from forte.common.configuration import Config
@@ -38,6 +36,7 @@ from forte.data.readers.imdb_reader import IMDBReader
 from ft.onto.base_ontology import Sentence, Token
 from texar.torch.modules.classifiers.conv_classifiers import Conv1DClassifier
 from texar.torch.modules.embedders import WordEmbedder
+from examples.Classification_new.cnn import CNN_Classifier
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +89,8 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
         construct_word_embedding_table(embedding_dict, text_extractor)
 
     model: nn.Module = \
-        Conv1DClassifier(in_channels=in_channels,
-                         in_features=word_embedding_table.size()[0])
+        CNN_Classifier(in_channels=in_channels,
+                       word_embedding_table=word_embedding_table)
 
     return model, word_embedding_table
 
@@ -109,18 +108,11 @@ def pad_each_bach(word, max_sen_len):
     return torch.LongTensor(word_list)
 
 
-def train(model: nn.Module, optim: Optimizer, batch: Batch,
-          word_embedder: WordEmbedder, max_sen_len: int):
-    word = batch["text_tag"]["tensor"]
-    # Need padding here before sending word into CNN model
-    word_pad = pad_each_bach(word, max_sen_len)
+def train(model: nn.Module, optim: Optimizer, batch: Batch):
     labels = batch["label_tag"]["tensor"]
     optim.zero_grad()
-    word_pad = word_pad.to(device)
-    labels = labels.to(device)
-    word_pad_embed = word_embedder(word_pad)
 
-    logits, pred = model(word_pad_embed)
+    logits, pred = model(batch)
     labels_1D = torch.squeeze(labels)
     torch.add(labels_1D, -2, out=labels_1D)
 
@@ -257,8 +249,7 @@ while epoch < config.config_data.num_epochs:
     batchcount = 1 # Need remove later
     for batch in tqdm(train_batch_iter):
         print("batchcount", batchcount)
-        batch_train_err = train(model, optim, batch,word_embedder,
-                                max_sen_length)
+        batch_train_err = train(model, optim, batch)
 
         train_err += batch_train_err
         train_total += batch.batch_size
