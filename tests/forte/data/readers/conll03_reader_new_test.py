@@ -42,9 +42,13 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
     def test_process_next(self):
         doc_exists = False
 
-        expected_sentence = "EU rejects German call to boycott British lamb ."
+        expected_sentence = ['The', 'European', 'Commission', 'said', 'on',
+            'Thursday', 'it', 'disagreed', 'with', 'German', 'advice', 'to',
+            'consumers', 'to', 'shun', 'British', 'lamb', 'until', 'scientists',
+            'determine', 'whether', 'mad', 'cow', 'disease', 'can', 'be',
+            'transmitted', 'to', 'sheep', '.']
         expected_ner_type = ["ORG", "MISC", "MISC"]
-        expected_token = ["EU", "German", "British"]
+        expected_token = ["European Commission", "German", "British"]
 
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
@@ -54,10 +58,13 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
                 # sent_text sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in pack.get(Token, sentence)]
-                self.assertEqual(expected_sentence, " ".join(tokens))
+                print(tokens)
+                self.assertEqual(expected_sentence, tokens)
 
                 i = 0
                 for ner in pack.get(EntityMention, sentence):
+                    print(ner.text)
+                    print(ner.ner_type)
                     self.assertEqual(expected_token[i], ner.text)
                     self.assertEqual(expected_ner_type[i], ner.ner_type)
                     i += 1
