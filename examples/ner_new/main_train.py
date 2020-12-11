@@ -98,7 +98,7 @@ def train(model: nn.Module, optim: Optimizer, batch: Batch):
     word = batch["text_tag"]["tensor"]
     char = batch["char_tag"]["tensor"]
     ner = batch["ner_tag"]["tensor"]
-    word_masks = batch["text_tag"]["mask"][0]
+    word_masks = batch["text_tag"]["masks"][0]
 
     optim.zero_grad()
 
@@ -115,7 +115,7 @@ def train(model: nn.Module, optim: Optimizer, batch: Batch):
 def predict_forward_fn(model: nn.Module, batch: Dict) -> Dict:
     word = batch["text_tag"]["tensor"]
     char = batch["char_tag"]["tensor"]
-    word_masks = batch["text_tag"]["mask"][0]
+    word_masks = batch["text_tag"]["masks"][0]
 
     output = model.decode(input_word=word,
                           input_char=char,
@@ -234,7 +234,8 @@ while epoch < config.config_data.num_epochs:
 
         train_err += batch_train_err
         train_total += batch.batch_size
-        train_sentence_len_sum += torch.sum(batch["text_tag"]["mask"][0]).item()
+        train_sentence_len_sum += \
+            torch.sum(batch["text_tag"]["masks"][0]).item()
 
     logger.info(f"{epoch}th Epoch training, "
                 f"total number of examples: {train_total}, "
