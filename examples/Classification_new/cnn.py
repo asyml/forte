@@ -33,7 +33,7 @@ def pad_each_bach(word, max_sen_len):
 
 
 class CNN_Classifier(nn.Module):
-    def __init__(self, in_channels=None, word_embedding_table=None):
+    def __init__(self, in_channels, word_embedding_table):
         super().__init__()
         self.embedder = WordEmbedder(init_value=word_embedding_table)
 
