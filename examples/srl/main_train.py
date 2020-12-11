@@ -50,9 +50,9 @@ def train(model: LabeledSpanGraphNetwork,
           batch: Batch) -> \
         LabeledSpanGraphNetwork.ReturnType:
     char_tensor: Tensor = batch["char_tag"]["tensor"]
-    char_masks: List[Tensor] = batch["char_tag"]["mask"]
+    char_masks: List[Tensor] = batch["char_tag"]["masks"]
     text_tensor: Tensor = batch["text_tag"]["tensor"]
-    text_mask: Tensor = batch["text_tag"]["mask"][0]
+    text_mask: Tensor = batch["text_tag"]["masks"][0]
     raw_text_features: List[Feature] = batch["raw_text_tag"]["features"]
     pred_link_features: List[Feature] = batch["pred_link_tag"]["features"]
 
