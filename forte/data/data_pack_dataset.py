@@ -143,7 +143,6 @@ class DataPackDataSource(IterDataSource):
 
 
 class DataPackDataset(DatasetBase):
-    # pylint: disable=line-too-long
     """
     A dataset representing data packs. Calling an
     `DataIterator
@@ -161,7 +160,8 @@ class DataPackDataset(DatasetBase):
         hparams: A `dict` or instance of :
             class:`forte.common.configuration.Config` containing
             hyperparameters. See :meth:`default_hparams` in
-            `DatasetBase<https://texar-pytorch.readthedocs.io/en/latest/code/data.html#datasetbase>`
+            `DatasetBase
+            <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#datasetbase>`
             for the defaults.
         device: The device of the produced batches. For GPU training,
             set to current CUDA device.
@@ -212,7 +212,6 @@ class DataPackDataset(DatasetBase):
         return feature_collection
 
     def collate(self, examples: List[FeatureCollection]) -> Batch:
-        # pylint: disable=line-too-long
         """
         Given a batch of output from :meth:`process`, produce a `Tensor`
         containing pre-processed data including tensors, masks and features.
