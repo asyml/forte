@@ -21,7 +21,6 @@ from typing import Optional, Tuple
 import operator
 import torch
 import torch.nn as nn
-from torch.nn.modules.utils import _pair
 
 
 __all__ = [
@@ -44,7 +43,7 @@ class MetaModule(nn.Module):
         module: A pytorch module.
 
     In order to perform :meth:`forward` the same way as the input module,
-    we need to copy some of the necessary functions that are needed during the runtime
+    we need to copy some of the necessary functions during the runtime
     of the nested :meth:`forward` into this class.
     For example, if the input module is tx.modules.BERTClassifier,
     :meth:`_get_noise_shape`, :meth:`_split_heads`, :meth:`_combine_heads` are needed
@@ -171,19 +170,6 @@ class MetaModule(nn.Module):
             self.num_attention_heads, self.attention_head_size)
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
-
-    def conv2d_forward(self, input, weight):
-        assert issubclass(self._type, nn.Conv2d)
-
-        if self.padding_mode == 'circular':
-            expanded_padding = ((self.padding[1] + 1) // 2, self.padding[1] // 2,
-                                (self.padding[0] + 1) // 2, self.padding[0] // 2)
-            return nn.functional.conv2d(nn.functional.pad(
-                input, expanded_padding, mode='circular'),
-                weight, self.bias, self.stride,
-                _pair(0), self.dilation, self.groups)
-        return nn.functional.conv2d(input, weight, self.bias, self.stride,
-                        self.padding, self.dilation, self.groups)
 
     def _check_input_dim(self, input):
         assert issubclass(self._type, nn.BatchNorm2d)

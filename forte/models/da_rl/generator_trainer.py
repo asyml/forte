@@ -34,7 +34,7 @@ class MetaAugmentationWrapper:
 
     See: https://arxiv.org/pdf/1910.12795.pdf
 
-    There is an example code for this class here:
+    This code is adapted from:
     https://github.com/tanyuqian/learning-data-manipulation/blob/master/augmentation/generator.py
 
     Let theta be the parameters of the downstream (classifier) model.
@@ -49,14 +49,15 @@ class MetaAugmentationWrapper:
         augmentation_model:
             A Bert-based language model for data augmentation.
         augmentation_optimizer:
-            An optimizer.
+            An optimizer that is associated with the `augmentation_model`.
         input_mask_ids:
             Bert token id of '[MASK]'.
         device:
             The CUDA device to run the model on.
         num_aug:
-            The number of samples from the LM for an augmented training example.
-            See :meth:`_augment_example` for implementation details.
+            The number of samples from the augmentation model
+            for every augmented training instance.
+            See :meth:`_augment_instance` for implementation details.
     """
 
     def __init__(self, augmentation_model, augmentation_optimizer,
@@ -71,7 +72,7 @@ class MetaAugmentationWrapper:
         self._aug_model.train()
         self._aug_model.zero_grad()
 
-    def _augment_example(self, features, num_aug):
+    def _augment_instance(self, features, num_aug):
         init_ids, input_mask, segment_ids, _ = \
             (t.view(1, -1).to(self._device) for t in features)
 
@@ -106,17 +107,17 @@ class MetaAugmentationWrapper:
 
         return aug_probs
 
-    def augment_example(self, features):
-        r"""Augment a training example.
+    def augment_instance(self, features):
+        r"""Augment a training instance.
 
         Args:
-            features: A tuple of Bert features of one training example.
+            features: A tuple of Bert features of one training instance.
                 (input_ids, input_mask, segment_ids, label_ids).
                 `input_ids` is a tensor of Bert token ids.
                 It has shape `[seq_len, 1]`.
 
         Returns:
-            A tuple of Bert features of augmented training examples.
+            A tuple of Bert features of augmented training instances.
             (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
             `input_probs_aug` is a tensor of soft Bert embeddings,
             distributions over vocabulary.
@@ -125,7 +126,7 @@ class MetaAugmentationWrapper:
             the gradients of theta will also apply to phi.
         """
 
-        aug_probs = self._augment_example(features, self._num_aug)
+        aug_probs = self._augment_instance(features, self._num_aug)
 
         _, input_mask, segment_ids, label_ids = \
             (t.to(self._device).unsqueeze(0) for t in features)
@@ -139,16 +140,16 @@ class MetaAugmentationWrapper:
         return aug_probs, input_mask_aug, segment_ids_aug, label_ids_aug
 
     def augment_batch(self, input_ids, input_mask, segment_ids, labels):
-        r"""Augment a batch of training examples.
+        r"""Augment a batch of training instances.
 
         Args:
-            features: A tuple of Bert features of a batch training example.
+            features: A tuple of Bert features of a batch training instances.
                 (input_ids, input_mask, segment_ids, label_ids).
                 `input_ids` is a tensor of Bert token ids.
                 It has shape `[batch_size, seq_len, 1]`.
 
         Returns:
-            A tuple of Bert features of augmented training examples.
+            A tuple of Bert features of augmented training instances.
             (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
             `input_probs_aug` is a tensor of soft Bert embeddings,
             It has shape `[batch_size, seq_len, vocab_size]`.
@@ -156,26 +157,26 @@ class MetaAugmentationWrapper:
 
         self._aug_model.eval()
 
-        aug_examples = []
+        aug_instances = []
         features = []
-        num_example = len(input_ids)
-        for i in range(num_example):
+        num_instance = len(input_ids)
+        for i in range(num_instance):
             feature = (input_ids[i], input_mask[i], segment_ids[i], labels[i])
             features.append(feature)
             with torch.no_grad():
-                aug_probs = self._augment_example(feature, num_aug=1)
-                aug_examples.append(aug_probs)
+                aug_probs = self._augment_instance(feature, num_aug=1)
+                aug_instances.append(aug_probs)
 
         input_ids_or_probs, input_masks, segment_ids, label_ids = \
             [tx.utils.pad_and_concat(
                 [t[i].unsqueeze(0) for t in features], axis=0).to(
                 self._device) for i in range(4)]
 
-        num_aug = len(aug_examples[0])
+        num_aug = len(aug_instances[0])
 
         input_ids_or_probs_aug = []
         for i in range(num_aug):
-            for aug_probs in aug_examples:
+            for aug_probs in aug_instances:
                 input_ids_or_probs_aug.append(aug_probs[i:i + 1])
         input_ids_or_probs_aug = tx.utils.pad_and_concat(
             input_ids_or_probs_aug, axis=0).to(self._device)
@@ -200,7 +201,7 @@ class MetaAugmentationWrapper:
 
         Args:
             loss: The loss of the downstream classifier that have taken
-                the augmented training examples.
+                the augmented training instances.
             classifier: The downstream classifier.
             classifier_optimizer: The optimizer for the classifier.
 
