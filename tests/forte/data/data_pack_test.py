@@ -37,7 +37,7 @@ class DataPackTest(unittest.TestCase):
         data_path = os.path.join(file_dir_path, os.pardir, os.pardir,
                                  'test_data', 'ontonotes')
 
-        pipeline = Pipeline()
+        pipeline: Pipeline = Pipeline()
         pipeline.set_reader(OntonotesReader())
         pipeline.initialize()
         self.data_pack: DataPack = pipeline.process_one(data_path)
@@ -92,13 +92,17 @@ class DataPackTest(unittest.TestCase):
 
     def test_get_entries(self):
         # case 1: test get annotation
-        sent_texts: List[str] = []
+        sent_texts: List[Tuple[int, str]] = []
         for doc in self.data_pack.get(Document):
             for sent in self.data_pack.get(Sentence, doc):
-                sent_texts.append(sent.text)
+                sent_texts.append((sent.tid, sent.text))
+
+        # sort by sent tid
+        sorted_sents: List[str] = \
+            [x[1] for x in sorted(sent_texts, key=lambda x: x[0])]
 
         self.assertEqual(
-            sent_texts,
+            sorted_sents,
             [
                 "The Indonesian billionaire James Riady has agreed "
                 "to pay $ 8.5 million and plead guilty to illegally "
@@ -110,23 +114,23 @@ class DataPackTest(unittest.TestCase):
         )
 
         # case 2: test get link
-        links: List[Tuple[str, str, str]] = []
+        links: List[Tuple[int, str, str, str]] = []
         for doc in self.data_pack.get(Document):
             link: PredicateLink
             for link in self.data_pack.get(PredicateLink, doc):
                 links.append(
-                    (link.get_parent().text, link.get_child().text,
+                    (link.tid,
+                     link.get_parent().text,
+                     link.get_child().text,
                      link.arg_type))
+
+        # sort by link tid
+        sorted_links: List[Tuple[str, str, str]] = \
+            [(x[1], x[2], x[3]) for x in sorted(links, key=lambda x: x[0])]
+
         self.assertEqual(
-            links,
-            [('admits', 'He', 'ARG0'),
-             ('admits', 'he was trying to influence American policy on China',
-              'ARG1'),
-             ('trying', 'he', 'ARG0'),
-             ('trying', 'to influence American policy on China', 'ARG1'),
-             ('influence', 'he', 'ARG0'),
-             ('influence', 'American policy on China', 'ARG1'),
-             ('agreed', 'The Indonesian billionaire James Riady', 'ARG0'),
+            sorted_links,
+            [('agreed', 'The Indonesian billionaire James Riady', 'ARG0'),
              ('agreed',
               "to pay $ 8.5 million and plead guilty to illegally "
               "donating money for Bill Clinton 's 1992 presidential campaign",
@@ -141,7 +145,14 @@ class DataPackTest(unittest.TestCase):
              ('donating', 'illegally', 'ARGM-MNR'),
              ('donating', 'money', 'ARG1'),
              ('donating', "for Bill Clinton 's 1992 presidential campaign",
-              'ARG2')]
+              'ARG2'),
+             ('admits', 'He', 'ARG0'),
+             ('admits', 'he was trying to influence American policy on China',
+              'ARG1'),
+             ('trying', 'he', 'ARG0'),
+             ('trying', 'to influence American policy on China', 'ARG1'),
+             ('influence', 'he', 'ARG0'),
+             ('influence', 'American policy on China', 'ARG1')]
         )
 
         # test get groups
