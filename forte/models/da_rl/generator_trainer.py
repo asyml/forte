@@ -50,8 +50,8 @@ class MetaAugmentationWrapper:
             A Bert-based language model for data augmentation.
         augmentation_optimizer:
             An optimizer.
-        aug_tokenizer:
-            A Bert-based tokenizer.
+        input_mask_ids:
+            Bert token id of '[MASK]'.
         device:
             The CUDA device to run the model on.
         num_aug:
@@ -60,10 +60,10 @@ class MetaAugmentationWrapper:
     """
 
     def __init__(self, augmentation_model, augmentation_optimizer,
-                 aug_tokenizer, device, num_aug):
+                 input_mask_ids: int, device, num_aug: int):
         self._aug_model = augmentation_model
         self._aug_optimizer = augmentation_optimizer
-        self._aug_tokenizer = aug_tokenizer
+        self._input_mask_ids = input_mask_ids
         self._device = device
         self._num_aug = num_aug
 
@@ -72,8 +72,6 @@ class MetaAugmentationWrapper:
         self._aug_model.zero_grad()
 
     def _augment_example(self, features, num_aug):
-        # pylint: disable=protected-access
-
         init_ids, input_mask, segment_ids, _ = \
             (t.view(1, -1).to(self._device) for t in features)
 
@@ -84,11 +82,7 @@ class MetaAugmentationWrapper:
         else:
             mask_idx = [1]
 
-        # init_ids[0][mask_idx] = \
-        #     self._aug_tokenizer.convert_tokens_to_ids(['[MASK]'])[0]
-
-        input_mask_ids = self._aug_tokenizer._map_token_to_id('[MASK]')
-        init_ids[0][mask_idx] = input_mask_ids
+        init_ids[0][mask_idx] = self._input_mask_ids
 
         logits = self._aug_model(init_ids, segment_ids, input_mask)[0]
 

@@ -73,6 +73,7 @@ config_downstream = {
 
 
 def run():
+    # pylint: disable=protected-access
     """
     Builds the model and runs.
     """
@@ -88,6 +89,8 @@ def run():
     aug_tokenizer = tx.data.BERTTokenizer(
         pretrained_model_name=args.augmentation_model_name)
 
+    input_mask_ids = aug_tokenizer._map_token_to_id('[MASK]')
+
     # Builds augmentation optimizer
     aug_lr = 4e-5
     param_optimizer = list(aug_model.named_parameters())
@@ -102,7 +105,7 @@ def run():
     aug_optim = tx.core.BertAdam(
         optimizer_grouped_parameters, betas=(0.9, 0.999), eps=1e-6, lr=aug_lr)
 
-    aug_wrapper = MetaAugmentationWrapper(aug_model, aug_optim, aug_tokenizer,
+    aug_wrapper = MetaAugmentationWrapper(aug_model, aug_optim, input_mask_ids,
                                           device, args.num_aug)
 
     # Builds downstream BERT
