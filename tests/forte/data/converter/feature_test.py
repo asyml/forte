@@ -165,7 +165,6 @@ class FeatureTest(unittest.TestCase):
                           ['l', 'i', 'k', 'e', "<PAD>"],
                           ['F', 'o', 'r', 't', 'e']])
 
-
     def create_feature1(self,
                         data=None,
                         pad_id=None,
@@ -178,7 +177,7 @@ class FeatureTest(unittest.TestCase):
         feature: Feature = Feature(data, {"pad_value": pad_id,
                                           "dim": dim,
                                           "dtype": dtype
-                                         })
+                                          })
 
         return feature
 
@@ -195,7 +194,7 @@ class FeatureTest(unittest.TestCase):
         feature: Feature = Feature(data, {"pad_value": pad_id,
                                           "dim": dim,
                                           "dtype": dtype
-                                         })
+                                          })
 
         return feature
 
@@ -211,7 +210,7 @@ class FeatureTest(unittest.TestCase):
         feature: Feature = Feature(data, {"pad_value": pad_id,
                                           "dim": dim,
                                           "dtype": dtype
-                                         })
+                                          })
 
         return feature
 
