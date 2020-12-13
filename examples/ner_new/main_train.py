@@ -28,9 +28,8 @@ from forte.pipeline import Pipeline
 from forte.predictor import Predictor
 from forte.common.configuration import Config
 from forte.data.extractor import AttributeExtractor
-from forte.data.extractor.base_extractor import BaseExtractor
-from forte.data.extractor.char_extractor import CharExtractor
-from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
+from forte.data.extractor import \
+    BaseExtractor, BioSeqTaggingExtractor, CharExtractor
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from ft.onto.base_ontology import Sentence, Token, EntityMention
