@@ -55,14 +55,14 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
     def __init__(self,
                  word_vocab: Dict,
                  char_vocab_size: int,
-                 label_vocab_size: int,
-                 core_args_ids: Dict[str, int],
+                 label_vocab: Dict,
                  hparams=None):
         super().__init__(hparams)
 
         # Word vocabulary & representation
         self.word_vocab = word_vocab
-        self._core_args_ids = core_args_ids
+        self.label_vocab = label_vocab
+
         self.word_embed: tx.modules.WordEmbedder = tx.modules.WordEmbedder(
             init_value=tx.data.Embedding(
                 vocab=self.word_vocab, hparams={
@@ -149,7 +149,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             hparams={
                 **mlp_hparams,
                 "input_sizes": mlp_hparams["input_sizes"] + [hidden_dim],
-                "output_size": label_vocab_size,
+                "output_size": len(self.label_vocab),
                 "activation": "ReLU",
             })
 
@@ -263,8 +263,8 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         mask = mask.expand(batch_size, total_lines, max_len)
         return mask.to(device=self._device)
 
-    def _filter_labels(self, start_ids: torch.LongTensor,
-                       end_ids: torch.LongTensor, predicates: torch.Tensor,
+    def _filter_labels(self, start_ids: torch.Tensor,
+                       end_ids: torch.Tensor, predicates: torch.Tensor,
                        srl_features: Optional[List[Feature]]) -> torch.Tensor:
         batch_size, num_spans = start_ids.size()
         num_predicates = predicates.size(1)
@@ -276,7 +276,8 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             {pred.item(): idx for idx, pred in enumerate(preds)}
             for preds in predicates]
         batch_spans = [
-            {(l.item(), r.item()): idx for idx, (l, r) in enumerate(zip(starts, ends))}
+            {(l.item(), r.item()): idx for idx, (l, r) in
+             enumerate(zip(starts, ends))}
             for starts, ends in zip(start_ids, end_ids)]
 
         gold_labels = torch.zeros(
@@ -296,8 +297,10 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
                         "predicate span larger than one"
 
                     srl_predicate = srl_meta_data["parent_unit_span"][e_idx][0]
-                    span_idx = batch_spans[b_idx].get((srl_start, srl_end), None)
-                    predicate_idx = batch_predicates[b_idx].get(srl_predicate, None)
+                    span_idx = \
+                        batch_spans[b_idx].get((srl_start, srl_end), None)
+                    predicate_idx = \
+                        batch_predicates[b_idx].get(srl_predicate, None)
                     if span_idx is not None and predicate_idx is not None:
                         label_idx = predicate_idx * num_spans + span_idx
                         gold_labels[b_idx, label_idx] = srl
@@ -365,9 +368,9 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
     class ReturnType(TypedDict):
         loss: torch.Tensor
         total_scores: torch.Tensor
-        start_ids: torch.LongTensor
-        end_ids: torch.LongTensor
-        predicates: torch.LongTensor
+        start_ids: torch.Tensor
+        end_ids: torch.Tensor
+        predicates: torch.Tensor
 
     def _arange(self, *args, **kwargs):
         return torch.arange(*args, device=self._device, **kwargs)
@@ -526,7 +529,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             return []  # no spans at all, just return
         if enforce_constraint:
             label_states = [
-                self._core_args_ids.get(label, -1)
+                self._CORE_ARGS.get(self.label_vocab[label], -1)
                 if label != 0 else -1
                 for label in argmax_labels]
         else:
