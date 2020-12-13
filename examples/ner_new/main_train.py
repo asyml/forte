@@ -16,6 +16,7 @@ from typing import Iterator, Dict, List
 
 import numpy as np
 import torch
+from forte.models.ner.utils import load_glove_embedding
 from torch import nn
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
@@ -69,18 +70,12 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
     char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
     ner_extractor: BaseExtractor = schemes["ner_tag"]["extractor"]
 
-    # embedding_dict = \
-    #     load_glove_embedding(config.config_preprocessor.embedding_path)
-    #
-    # for word in embedding_dict:
-    #     if not text_extractor.has_key(word):
-    #         text_extractor.add(word)
+    embedding_dict = \
+        load_glove_embedding(config.preprocessor.embedding_path)
 
-    # TODO: temporarily make fake pretrained emb for debugging
-    embedding_dict = {}
-    fake_tensor = torch.tensor([0.0 for i in range(100)])
-    for word, index in text_extractor.items():
-        embedding_dict[word] = fake_tensor
+    for word in embedding_dict:
+        if not text_extractor.has_key(word):
+            text_extractor.add(word)
 
     word_embedding_table = \
         construct_word_embedding_table(embedding_dict, text_extractor)
@@ -221,10 +216,6 @@ logger.info("Start training.")
 while epoch < config.config_data.num_epochs:
     epoch += 1
 
-    # TODO: For training, we need to do shuffle batch across all data packs.
-    #       This is not naturally supported by Forte pipeline which assumes
-    #       processing one data pack at a time.
-    #       Any way to make use of Forte pipeline for training as well?
     # Get iterator of preprocessed batch of train data
     train_batch_iter: Iterator[Batch] = \
         train_preprocessor.get_train_batch_iterator()
