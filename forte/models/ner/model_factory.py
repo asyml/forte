@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
 import torch
 import torch.nn.functional as F
 import torch.nn.utils.rnn as rnn_utils
 from torch import nn
 import texar.torch as texar
 from texar.torch.modules.embedders import WordEmbedder
-from typing import Dict
 
 from forte.common.configuration import Config
 from forte.models.ner.conditional_random_field import ConditionalRandomField
