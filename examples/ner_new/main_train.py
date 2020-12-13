@@ -95,9 +95,9 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
 
 
 def train(model: nn.Module, optim: Optimizer, batch: Batch):
-    word = batch["text_tag"]["tensor"]
-    char = batch["char_tag"]["tensor"]
-    ner = batch["ner_tag"]["tensor"]
+    word = batch["text_tag"]["data"]
+    char = batch["char_tag"]["data"]
+    ner = batch["ner_tag"]["data"]
     word_masks = batch["text_tag"]["masks"][0]
 
     optim.zero_grad()
@@ -113,8 +113,8 @@ def train(model: nn.Module, optim: Optimizer, batch: Batch):
 
 
 def predict_forward_fn(model: nn.Module, batch: Dict) -> Dict:
-    word = batch["text_tag"]["tensor"]
-    char = batch["char_tag"]["tensor"]
+    word = batch["text_tag"]["data"]
+    char = batch["char_tag"]["data"]
     word_masks = batch["text_tag"]["masks"][0]
 
     output = model.decode(input_word=word,
