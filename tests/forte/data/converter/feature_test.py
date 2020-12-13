@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
-from typing import List
+from typing import List, Union, Type
 import torch
 
 from forte.data.converter import Feature
@@ -131,7 +131,7 @@ class FeatureTest(unittest.TestCase):
         self.assertEqual(feature, [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
                                    [[1, 0, 0], [0, 1, 0]]])
 
-    def test_unroll_dtype(self):
+    def test_unroll_dtype_float(self):
         self.feature1 = self.create_feature1(dtype=torch.float)
         self.assertEqual(self.feature1.dtype, torch.float)
 
@@ -141,14 +141,40 @@ class FeatureTest(unittest.TestCase):
         for sub_feature in self.feature2.sub_features:
             self.assertEqual(sub_feature.dtype, torch.float)
 
+    def test_unroll_dtype_str(self):
+        self.feature1 = self.create_feature1(data=["I", "like", "Forte"],
+                                             pad_id="<PAD>",
+                                             dtype=str)
+        self.assertEqual(self.feature1.dtype, str)
+        self.assertEqual(self.feature1.data[0], ["I", "like", "Forte"])
+
+        self.feature1.pad(max_len=4)
+        self.assertEqual(self.feature1.data[0], ["I", "like", "Forte", "<PAD>"])
+
+        self.feature2 = self.create_feature2(data=[['I'],
+                                                   ['l', 'i', 'k', 'e'],
+                                                   ['F', 'o', 'r', 't', 'e']],
+                                             pad_id="<PAD>",
+                                             dtype=str)
+        for sub_feature in self.feature2.sub_features:
+            sub_feature.pad(max_len=5)
+
+        self.assertEqual(self.feature2.dtype, str)
+        self.assertEqual(self.feature2.data[0],
+                         [['I', "<PAD>", "<PAD>", "<PAD>", "<PAD>"],
+                          ['l', 'i', 'k', 'e', "<PAD>"],
+                          ['F', 'o', 'r', 't', 'e']])
+
+
     def create_feature1(self,
                         data=None,
                         pad_id=None,
                         dim=None,
-                        dtype=torch.long):
+                        dtype=None):
         data: List = [7, 8, 9] if data is None else data
         pad_id: int = 0 if pad_id is None else pad_id
         dim: int = 1 if dim is None else dim
+        dtype = torch.long if dtype is None else dtype
         feature: Feature = Feature(data, {"pad_value": pad_id,
                                           "dim": dim,
                                           "dtype": dtype
@@ -160,11 +186,12 @@ class FeatureTest(unittest.TestCase):
                         data=None,
                         pad_id=None,
                         dim=None,
-                        dtype=torch.long):
+                        dtype=None):
         data: List = [[6, 11, 2], [7, 8], [6, 7, 5, 4]] \
             if data is None else data
         pad_id: int = 0 if pad_id is None else pad_id
         dim: int = 2 if dim is None else dim
+        dtype = torch.long if dtype is None else dtype
         feature: Feature = Feature(data, {"pad_value": pad_id,
                                           "dim": dim,
                                           "dtype": dtype

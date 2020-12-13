@@ -92,10 +92,6 @@ class Feature:
         if not self.leaf_feature and not self._sub_features:
             raise ValidationError(
                 "Non-leaf feature should contain sub features.")
-        if self._pad_value and \
-           type(self._pad_value) != int and type(self._pad_value) != list:
-            raise ValidationError(
-                "Invalid pad value type: {}.".format(type(self._pad_value)))
         if self._dim < 1:
             raise ValidationError(
                 "The `dim` in meta should be at least 1.")
