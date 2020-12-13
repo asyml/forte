@@ -190,7 +190,6 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     """
     def __init__(self):
         super().__init__()
-
         # :attr:`_replaced_annos`: {datapack id: SortedList[span, new text]}
         # It records the spans replaced by new texts.
         # It is a map from datapack id to a list of tuples
