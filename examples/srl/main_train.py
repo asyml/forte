@@ -29,6 +29,7 @@ from ft.onto.base_ontology import Sentence, Token, PredicateLink
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.models.srl_new.model import LabeledSpanGraphNetwork
+from forte.models.srl_new import data
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +40,17 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]]) -> \
         LabeledSpanGraphNetwork:
     text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
     char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
+    link_extractor: BaseExtractor = schemes["pred_link_tag"]["extractor"]
+
+    # This is used when enforce_constraint is enabled during decoding
+    core_args_ids: Dict[str, int] = {}
+    for core_arg in LabeledSpanGraphNetwork._CORE_ARGS:
+        core_args_ids[core_arg] = link_extractor.element2repr(core_arg)
+
     model = LabeledSpanGraphNetwork(word_vocab=text_extractor.get_dict(),
-                                    char_vocab_size=char_extractor.size())
+                                    char_vocab_size=char_extractor.size(),
+                                    label_vocab_size=link_extractor.size(),
+                                    core_args_ids=core_args_ids)
 
     return model
 
@@ -74,6 +84,42 @@ def train(model: LabeledSpanGraphNetwork,
     optim.step()
 
     return output
+
+
+def predict_forward_fn(model: LabeledSpanGraphNetwork, batch: Dict) -> Dict:
+    char_tensor: Tensor = batch["char_tag"]["tensor"]
+    char_masks: List[Tensor] = batch["char_tag"]["masks"]
+    text_tensor: Tensor = batch["text_tag"]["tensor"]
+    text_mask: Tensor = batch["text_tag"]["masks"][0]
+    raw_text_features: List[Feature] = batch["raw_text_tag"]["features"]
+
+    text: List[List[str]] = []
+    for feature in raw_text_features:
+        text.append(feature.data[0])
+
+    # TODO: test enable enforce_constriant
+    model_output: List[Dict[int, List[data.Span]]] = \
+        model.decode(text=text,
+                     char_batch=char_tensor,
+                     char_masks=char_masks,
+                     text_batch=text_tensor,
+                     text_mask=text_mask)
+
+    output: List[Dict] = []
+    for model_output_i in model_output:
+        # TODO: use extractor specified name
+        output_i = {
+            "data": [],
+            "parent_unit_span": [],
+            "child_unit_span": []
+        }
+        for predicate_id, span in model_output_i.items():
+            span: data.Span
+            output_i["data"].append(span.label)
+            output_i["parent_unit_span"].append((predicate_id, predicate_id+1))
+            output_i['child_unit_span'].append((span.start, span.end))
+
+    return {'pred_link_tag': output}
 
 
 num_epochs = 5
