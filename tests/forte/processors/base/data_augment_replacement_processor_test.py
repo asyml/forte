@@ -24,13 +24,11 @@ from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import MultiPackLink, MultiPackGroup, Link, Group
-from forte.data.readers import MultiPackSentenceReader
+from forte.data.readers import MultiPackSentenceReader, StringReader
+from forte.data.caster import MultiPackBoxer
 from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
 from ft.onto.base_ontology import Token, Sentence, Document, Annotation
-# from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
-# from forte.common.configuration import Config
-
 from ddt import ddt, data, unpack
 
 
@@ -56,13 +54,8 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
     @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
     @unpack
     def test_pipeline(self, texts):
-        for idx, text in enumerate(texts):
-            file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
-            with open(file_path, 'w') as f:
-                f.write(text)
-
         expected_outputs = [
-            "Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus.\n"
+            "Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus."
         ]
 
         expected_tokens = [
@@ -70,9 +63,9 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         ]
 
         nlp = Pipeline[MultiPack]()
-        reader_config = {
-            "input_pack_name": "input_src",
-            "output_pack_name": "output_tgt"
+
+        boxer_config = {
+            'pack_name': 'input'
         }
 
         processor_config = {
@@ -89,21 +82,27 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             'data_aug_op_config': {
                 'type': '',
                 'kwargs': {}
+            },
+            'augment_pack_names': {
+                'kwargs': {
+                    'input': 'augmented_input'
+                }
             }
         }
 
-        nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
+        nlp.set_reader(reader=StringReader())
+        nlp.add(component=MultiPackBoxer(), config=boxer_config)
         nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
         nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
         nlp.add(component=ReplacementDataAugmentProcessor(), config=processor_config)
         nlp.initialize()
 
-        for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
-            new_src_pack = m_pack.get_pack('augmented_input_src')
+        for idx, m_pack in enumerate(nlp.process_dataset(texts)):
+            aug_pack = m_pack.get_pack('augmented_input')
 
-            self.assertEqual(new_src_pack.text, expected_outputs[idx])
+            self.assertEqual(aug_pack.text, expected_outputs[idx])
 
-            for j, token in enumerate(new_src_pack.get(Token)):
+            for j, token in enumerate(aug_pack.get(Token)):
                 self.assertEqual(token.text, expected_tokens[idx][j])
 
     @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
@@ -121,20 +120,13 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         }
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
 
-        # config = Config({
-        #     'processors': 'tokenize,pos,lemma,depparse',
-        #     'lang': "en",
-        #     'use_gpu': False,
-        # }, StandfordNLPProcessor.default_configs())
-        # nlp.add(component=StandfordNLPProcessor(), config=config, selector=AllPackSelector())
-
         nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
         nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
 
         nlp.initialize()
 
         expected_outputs = [
-            " NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus NLP .\n"
+            " NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus NLP ."
         ]
 
         expected_tokens = [
@@ -156,6 +148,9 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             'type': 'data_augmentation_op',
             'data_aug_op': 'tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer',
             "data_aug_op_config": {
+                'kwargs': {}
+            },
+            'augment_pack_names': {
                 'kwargs': {}
             }
         }
@@ -251,13 +246,13 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             new_src_pack = m_pack.get_pack('augmented_input_src')
             new_tgt_pack = m_pack.get_pack('augmented_output_tgt')
 
-            self.assertEqual(new_src_pack.text, expected_outputs[idx])
+            self.assertEqual(new_src_pack.text, expected_outputs[idx] + "\n")
 
             for j, token in enumerate(new_src_pack.get(Token)):
                 self.assertEqual(token.text, expected_tokens[idx][j])
 
             for sent in new_src_pack.get(Sentence):
-                self.assertEqual(sent.text.strip(), expected_outputs[idx].strip())
+                self.assertEqual(sent.text, expected_outputs[idx])
 
             # Test the copied Links.
             prev_link = None

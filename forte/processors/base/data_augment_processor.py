@@ -44,6 +44,8 @@ __all__ = [
 
 def modify_index(
         index: int,
+        # Both of the following spans should be SortedList.
+        # Use List to avoid typing errors.
         old_spans: List[Tuple[int, int]],
         new_spans: List[Tuple[int, int]],
         is_begin: bool,
@@ -51,8 +53,19 @@ def modify_index(
 ) -> int:
     r"""
     A helper function to map an index before replacement
-    to the index after replacement. The old spans and
-    new spans are anchor indices for the mapping.
+    to the index after replacement.
+
+    An index is the character offset in the data pack.
+    The old_spans are the inputs of replacement, and the new_spans
+    are the outputs. Each of the span is a tuple with start and end
+    index. The old_spans and new_spans are anchors for the mapping,
+    because we depend on them to determine the position change of the
+    index.
+
+    Given an index, the function will find its nearest old span, and
+    calculate the difference between the position of the old
+    span and its corresponding new span. The position change is then
+    applied to the input index.
 
     Args:
         index (int): The index to map.
@@ -91,6 +104,9 @@ def modify_index(
     # Get the max index for binary search.
     max_index: int = old_spans[-1][1] + 1
 
+    # This is the last span that has a start index less than
+    # the input index. The position change of this span determines
+    # the modification we will apply to the input index.
     last_span_ind: int = bisect_right(
         old_spans, (index, max_index)
     ) - 1
@@ -185,22 +201,21 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 lambda: SortedList([], key=lambda x: (x[0].begin, x[0].end))
             )
 
-        # :attr:`_inserted_annos`: {datapack id: Dict{position: length}}
-        # It records the inserted spans, mapping from datapack id
-        # to a dictionary (position -> length) inserted by :func:`insert`.
+        # :attr:`_inserted_annos_pos_len`: {datapack id: Dict{position: length}}
+        # It records the position and length of inserted spans,
+        # mapping from datapack id to a dictionary (position -> length)
+        # inserted by :func:`insert`.
         # The position is the index in the original datapack
         # of insertion, and the length is the length of the inserted string.
-
-        self._inserted_annos: DefaultDict[int, SortedDict[int, int]] = \
+        self._inserted_annos_pos_len: DefaultDict[int, SortedDict[int, int]] = \
             defaultdict(
                 lambda: SortedDict({})
             )
 
-        # :attr:`_deleted_annos`: {datapack id: Set[annotation tid]}
-        # It records the deleted spans, mapping from datapack id
+        # :attr:`_deleted_annos_id`: {datapack id: Set[annotation tid]}
+        # It records the deleted span ids, mapping from datapack id
         # to a set of annotation tids appended by :func:`delete`.
-
-        self._deleted_annos: DefaultDict[int, Set[int]] = defaultdict(set)
+        self._deleted_annos_id: DefaultDict[int, Set[int]] = defaultdict(set)
 
         # :attr:`_data_pack_map`: {orig pack id: new pack id}
         # It maintains a mapping from the pack id
@@ -293,9 +308,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         if self._overlap_with_existing(pid, pos, pos):
             return False
 
-        if pos not in self._inserted_annos[pid]:
+        if pos not in self._inserted_annos_pos_len[pid]:
             self._replaced_annos[pid].add((Span(pos, pos), inserted_text))
-            self._inserted_annos[pid][pos] = len(inserted_text)
+            self._inserted_annos_pos_len[pid][pos] = len(inserted_text)
             return True
         return False
 
@@ -313,7 +328,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         """
         pid: int = input.pack.meta.pack_id
         self._replaced_annos[pid].add((input.span, ""))
-        self._deleted_annos[pid].add(input.tid)
+        self._deleted_annos_id[pid].add(input.tid)
         return True
 
     def _auto_align_annotations(
@@ -391,7 +406,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         pid: int = data_pack.meta.pack_id
 
         inserted_annos: List[Tuple[int, int]] = list(
-            self._inserted_annos[pid].items()
+            self._inserted_annos_pos_len[pid].items()
         )
 
         def _insert_new_span(
@@ -446,7 +461,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                         insert_ind += 1
 
                     # Deletion
-                    if orig_anno.tid in self._deleted_annos[pid]:
+                    if orig_anno.tid in self._deleted_annos_id[pid]:
                         continue
 
                 # Auto align the spans.
@@ -504,8 +519,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         called after processing a multipack.
         """
         self._replaced_annos.clear()
-        self._inserted_annos.clear()
-        self._deleted_annos.clear()
+        self._inserted_annos_pos_len.clear()
+        self._deleted_annos_id.clear()
         self._data_pack_map.clear()
         self._entry_maps.clear()
 
@@ -637,13 +652,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         multi_pack.add_entry(new_entry)
         return True
 
-    def _augment(self, input_pack: MultiPack):
+    def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         r"""
         This function calls the data augmentation ops and
         modifies the input in-place. This function only applies for
         replacement-based methods. The subclasses should override
         this function to implement other data augmentation methods, such
         as Easy Data Augmentation.
+
+        Args:
+            input_pack: The input MultiPack.
+            aug_pack_names: The packs names for DataPacks to be augmented.
         """
         replacement_op = create_class_with_kwargs(
             self.configs["data_aug_op"],
@@ -652,15 +671,33 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             }
         )
         augment_entry = get_class(self.configs["augment_entry"])
-        for _, data_pack in input_pack.iter_packs():
+
+        for pack_name in aug_pack_names:
+            data_pack: DataPack = input_pack.get_pack(pack_name)
             for anno in data_pack.get(augment_entry):
                 self._replace(replacement_op, anno)
 
     def _process(self, input_pack: MultiPack):
-        self._augment(input_pack)
+        # Get the pack names for augmentation.
+        aug_pack_names: List[str] = []
+
+        # Check if the DataPack exists.
+        for pack_name in self.configs["augment_pack_names"]["kwargs"].keys():
+            if pack_name in input_pack.pack_names:
+                aug_pack_names.append(pack_name)
+
+        if len(self.configs["augment_pack_names"]["kwargs"].keys()) == 0:
+            # Augment all the DataPacks if not specified.
+            aug_pack_names = list(input_pack.pack_names)
+
+        self._augment(input_pack, aug_pack_names)
         new_packs: List[Tuple[str, DataPack]] = []
-        for pack_name, data_pack in input_pack.iter_packs():
-            new_pack_name = "augmented_" + pack_name
+        for aug_pack_name in aug_pack_names:
+            new_pack_name: str = \
+                self.configs["augment_pack_names"]["kwargs"].get(
+                    aug_pack_name, "augmented_" + aug_pack_name
+                )
+            data_pack = input_pack.get_pack(aug_pack_name)
             new_pack = self._auto_align_annotations(
                 data_pack=data_pack,
                 replaced_annotations=self._replaced_annos[
@@ -734,10 +771,29 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 Example:
                     .. code-block:: python
 
-                        "data_aug_op_config": {
+                        'data_aug_op_config': {
                             'kwargs': {
-                                "lang": "en",
-                                "use_gpu": False
+                                'lang': 'en',
+                                'use_gpu': False
+                            }
+                        }
+            - augment_pack_names:
+                A dict specifies the DataPacks to augment and their output
+                names. It should be key-value pairs where the key is the
+                input DataPack name, and the value is the output DataPack
+                name after augmentation.
+
+                If empty, all the DataPacks will be augmented, and the output
+                names will be automatically generated by prepending
+                an "augmented_" prefix.
+
+                Example:
+                    .. code-block:: python
+
+                        'data_aug_op_config': {
+                            'kwargs': {
+                                'src': 'aug_src',
+                                'tgt': 'aug_tgt'
                             }
                         }
         """
@@ -751,6 +807,10 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             'type': 'data_augmentation_op',
             'data_aug_op': '',
             'data_aug_op_config': {
+                'type': '',
+                'kwargs': {}
+            },
+            'augment_pack_names': {
                 'type': '',
                 'kwargs': {}
             }
