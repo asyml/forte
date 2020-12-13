@@ -37,6 +37,8 @@ random_seed: 1234
 initializer:
     "type": "xavier_uniform_"
 
+embedding_path: "ner_data/glove.6B/glove.6B.100d.txt"
+
 # path to save model
 model_path: "best_ner_crf_model.ckpt"
 

@@ -42,46 +42,14 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-def construct_word_embedding_table(embed_dict, extractor: BaseExtractor):
-    embedding_dim = list(embed_dict.values())[0].shape[-1]
-
-    scale = np.sqrt(3.0 / embedding_dim)
-    table = np.empty(
-        [extractor.size(), embedding_dim], dtype=np.float32
-    )
-    oov = 0
-    for word, index in extractor.items():
-        if word in embed_dict:
-            embedding = embed_dict[word]
-        elif word.lower() in embed_dict:
-            embedding = embed_dict[word.lower()]
-        else:
-            embedding = np.random.uniform(
-                -scale, scale, [1, embedding_dim]
-            ).astype(np.float32)
-            oov += 1
-        table[index, :] = embedding
-    return torch.from_numpy(table)
-
-
 def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
                  config: Config):
     text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
     char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
     ner_extractor: BaseExtractor = schemes["ner_tag"]["extractor"]
 
-    embedding_dict = \
-        load_glove_embedding(config.preprocessor.embedding_path)
-
-    for word in embedding_dict:
-        if not text_extractor.has_key(word):
-            text_extractor.add(word)
-
-    word_embedding_table = \
-        construct_word_embedding_table(embedding_dict, text_extractor)
-
     model: nn.Module = \
-        BiRecurrentConvCRF(word_embedding_table=word_embedding_table,
+        BiRecurrentConvCRF(word_vocab=text_extractor.get_dict(),
                            char_vocab_size=char_extractor.size(),
                            tag_vocab_size=ner_extractor.size(),
                            config_model=config.config_model)
@@ -207,7 +175,6 @@ epoch = 0
 train_err: float = 0.0
 train_total: float = 0.0
 train_sentence_len_sum: int = 0
-val_scores: List = []
 output_file = "tmp_eval.txt"
 score_file = "tmp_eval.score"
 scores: Dict[str, float] = {}
