@@ -19,6 +19,9 @@ from collections import defaultdict
 from typing import (Any, DefaultDict, Iterator, List, NamedTuple, Optional,
                     Set, Tuple)
 
+from forte.common.exception import ProcessorConfigError
+from forte.common.configuration import Config
+from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
@@ -88,11 +91,17 @@ class OntonotesReader(PackReader):
     _STAR_FIELDS = {"predicate_labels"}
     _REQUIRED_FIELDS = ["word", "predicate_labels"]
 
-    def __init__(self, column_format: Optional[List[Optional[str]]] = None):
-        super().__init__()
-        column_format = column_format or self._DEFAULT_FORMAT
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+
+        if configs.column_format is None:
+            raise ProcessorConfigError(
+                "Configuration column_format not provided.")
+
+        column_format = configs.column_format
         # Validate column format.
         seen_fields: Set[str] = set()
+        # pylint: disable=attribute-defined-outside-init
         self._column_format: List[Optional[str]] = []
         self._star_pos = None
         for idx, field in enumerate(column_format):
@@ -116,6 +125,48 @@ class OntonotesReader(PackReader):
         for field in self._REQUIRED_FIELDS:
             if field not in seen_fields:
                 raise ValueError(f"'{field}' field is required")
+
+    @classmethod
+    def default_configs(cls):
+        r"""
+        Returns a dictionary of default hyperparameters.
+
+        .. code-block:: python
+
+            {
+                "name": "reader",
+                "column_format": [
+                    "document_id",
+                    "part_number",
+                    None,
+                    "word",
+                    "pos_tag",
+                    None,
+                    "lemmatised_word",
+                    "framenet_id",
+                    "word_sense",
+                    "speaker",
+                    "entity_label",
+                    "*predicate_labels",
+                    "coreference",
+                ]
+            }
+
+        Here:
+
+        `"column_format"`: list
+            A `List` of default column types.
+
+            .. note::
+                A `None` field means that column in the dataset file will be
+                ignored during parsing.
+        """
+        config: dict = super().default_configs()
+
+        config.update({
+            "column_format": cls._DEFAULT_FORMAT
+        })
+        return config
 
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
         r"""Iterator over *.gold_conll files in the data_source
