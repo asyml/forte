@@ -13,11 +13,10 @@
 # limitations under the License.
 import unittest
 
+import torch
 from typing import Dict, Any
 
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
-from torch import Tensor
-
 from forte.data.vocabulary import Vocabulary
 from forte.data.converter import Converter
 from forte.train_preprocessor import TrainPreprocessor
@@ -150,17 +149,17 @@ class TrainPreprocessorTest(unittest.TestCase):
             self.assertTrue(hasattr(batch, "char_tag"))
             self.assertTrue(hasattr(batch, "ner_tag"))
 
-            for tag, tensors in batch.items():
-                self.assertTrue("tensor" in tensors)
-                self.assertEqual(type(tensors["tensor"]), Tensor)
-                self.assertTrue("masks" in tensors)
+            for tag, batch_t in batch.items():
+                self.assertTrue("data" in batch_t)
+                self.assertEqual(type(batch_t["data"]), torch.Tensor)
+                self.assertTrue("masks" in batch_t)
                 if tag == "text_tag" or tag == "ner_tag":
-                    self.assertEqual(len(tensors["masks"]), 1)
-                    self.assertEqual(type(tensors["masks"][0]), Tensor)
+                    self.assertEqual(len(batch_t["masks"]), 1)
+                    self.assertEqual(type(batch_t["masks"][0]), torch.Tensor)
                 else:
-                    self.assertEqual(len(tensors["masks"]), 2)
-                    self.assertEqual(type(tensors["masks"][0]), Tensor)
-                    self.assertEqual(type(tensors["masks"][1]), Tensor)
+                    self.assertEqual(len(batch_t["masks"]), 2)
+                    self.assertEqual(type(batch_t["masks"][0]), torch.Tensor)
+                    self.assertEqual(type(batch_t["masks"][1]), torch.Tensor)
 
 
 if __name__ == '__main__':

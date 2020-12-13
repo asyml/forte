@@ -77,8 +77,13 @@ class TrainPreprocessor:
         those documentations for detailed configuration.
 
     `"schemes.tag.need_pad"`: bool
-        Whether `TrainPreprocessor` need to do padding after extracting data
-        into :class:`forte.data.converter.feature.Feature`. Default is True.
+        Please refer to :class:`forte.data.converter.Converter` for details.
+
+    `"schemes.tag.to_numpy"`: bool
+        Please refer to :class:`forte.data.converter.Converter` for details.
+
+    `"schemes.tag.to_torch"`: bool
+        Please refer to :class:`forte.data.converter.Converter` for details.
 
     Example request
 
@@ -92,7 +97,10 @@ class TrainPreprocessor:
                         "vocab_method": "indexing",
                         "attribute_get": "text",
                         "type": TrainPreprocessor.DATA_OUTPUT,
-                        "extractor": forte.data.extractor.AttributeExtractor
+                        "extractor": forte.data.extractor.AttributeExtractor,
+                        "need_pad": True,
+                        "to_numpy": True,
+                        "to_torch": True
                     },
                     "char_tag": {
                         "entry_type": ft.onto.base_ontology.Token,
@@ -146,7 +154,7 @@ class TrainPreprocessor:
 
     @staticmethod
     def default_configs():
-        r"""Returns a dictionary of default hyperparameters.
+        r"""Returns a dictionary of default hyper-parameters.
 
         .. code-block:: python
 
@@ -260,12 +268,9 @@ class TrainPreprocessor:
                     scheme_group["dependee"][extractor.entry_type].add(
                         extractor)
 
-                need_pad: bool = \
-                    scheme["need_pad"] if "need_pad" in scheme else True
-                converter: Converter = Converter()
+                converter: Converter = Converter(config)
                 resource_schemes[tag]["converter"] = converter
                 resource_schemes[tag]["type"] = scheme["type"]
-                resource_schemes[tag]["need_pad"] = need_pad
 
             except Exception as e:
                 logger.error("Error instantiate extractor: %s", str(e))
@@ -336,19 +341,17 @@ class TrainPreprocessor:
                         "extractor": forte.data.extractor.AttributeExtractor,
                         "converter": forte.data.converter.Converter,
                         "type": TrainPreprocessor.DATA_INPUT,
-                        "need_pad": True
                     },
                     "char_tag" {
                         "extractor": forte.data.extractor.CharExtractor,
                         "converter": forte.data.converter.Converter,
                         "type": TrainPreprocessor.DATA_INPUT,
-                        "need_pad": True
                     }
                     "ner_tag": {
-                        "extractor": forte.data.extractor.BioSeqTaggingExtractor,
+                        "extractor":
+                            forte.data.extractor.BioSeqTaggingExtractor,
                         "converter": forte.data.converter.Converter,
                         "type": TrainPreprocessor.DATA_OUTPUT,
-                        "need_pad": True
                     }
                 }
             }
@@ -372,10 +375,6 @@ class TrainPreprocessor:
 
         `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
             Denoting whether this feature is the input or output feature.
-
-        `"schemes.tag.need_pad"`: bool
-            Whether the padding need to be done for this feature.
-
         """
         if not self._feature_resource_ready:
             self._parse_request(self._user_request)

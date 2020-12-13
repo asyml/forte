@@ -213,8 +213,8 @@ class DataPackDataset(DatasetBase):
 
     def collate(self, examples: List[FeatureCollection]) -> Batch:
         """
-        Given a batch of output from :meth:`process`, produce a `Tensor`
-        containing pre-processed data including tensors, masks and features.
+        Given a batch of output from :meth:`process`, produce pre-processed
+        data as well as masks and features.
 
         Args:
             examples: A `List` of result from :meth:`process`.
@@ -228,35 +228,35 @@ class DataPackDataset(DatasetBase):
 
                 {
                     "tag_a": {
-                        "tensor": <tensor>,
+                        "data": <tensor>,
                         "masks": [<tensor1>, <tensor2>, ...],
                         "features": [<feature1>, <feature2>, ...]
                     },
                     "tag_b": {
-                        "tensor": Tensor,
+                        "data": Tensor,
                         "masks": [<tensor1>, <tensor2>, ...],
                         "features": [<feature1>, <feature2>, ...]
                     }
                 }
 
-            `"tensor"`: Tensor
-                The tensor representing the Feature. This should be sent to
-                model for training.
+            `"data"`: List or np.ndarray or torch.tensor
+                The pre-processed data.
 
-                If the option `need_pad` in input`request` is False, this is
-                not given.
+                Please refer to :class:`forte.data.converter.Converter` for
+                details.
 
-            `"masks"`: List[Tensor]
-                The `mask` is actually a list of tensors where each tensor
-                representing the mask for that dimension. For example, mask[i]
-                is a tensor representing the mask for dimension i.
+            `"masks"`: np.ndarray or torch.tensor
+                All the masks for pre-processed data.
 
-                If the option `need_pad` in input`request` is False, this is
-                not given.
+                Please refer to :class:`forte.data.converter.Converter` for
+                details.
 
             `"features"`: List[Feature]
                 A List of :class:`forte.data.converter.feature.Feature`. This is
                 useful when users want to do customized pre-processing.
+
+                Please refer to :class:`forte.data.converter.Feature` for
+                details.
 
             .. note::
                 The first level key in returned `batch` is the user-specified
@@ -275,18 +275,14 @@ class DataPackDataset(DatasetBase):
 
         tensor_collection: Dict[str, Dict[str, Any]] = {}
         for tag, features in example_collection.items():
-            need_pad: bool = self._feature_scheme[tag]["need_pad"]
-
             if tag not in tensor_collection:
                 tensor_collection[tag] = {}
 
-            if need_pad:
-                converter: Converter = \
-                    self._feature_scheme[tag]["converter"]
-                tensor, mask = converter.convert(features)
-                tensor_collection[tag]["tensor"] = tensor
-                tensor_collection[tag]["masks"] = mask
-
+            converter: Converter = \
+                self._feature_scheme[tag]["converter"]
+            data, masks = converter.convert(features)
+            tensor_collection[tag]["data"] = data
+            tensor_collection[tag]["masks"] = masks
             tensor_collection[tag]["features"] = features
 
         return Batch(batch_size, **tensor_collection)
