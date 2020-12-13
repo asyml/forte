@@ -170,7 +170,7 @@ tp_config = {
     }
 }
 
-srl_train_reader = OntonotesReader()
+srl_train_reader = OntonotesReader(cache_in_memory=True)
 
 train_preprocessor = TrainPreprocessor(train_reader=srl_train_reader,
                                        request=tp_request,
