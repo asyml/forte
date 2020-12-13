@@ -79,25 +79,22 @@ class DataPackIterator:
         return self
 
     def __next__(self) -> RawExample:
+        if self._curr_data_pack is None:
+            self._curr_data_pack = next(self._data_pack_iter)
+            self._instance_iter = \
+                self._curr_data_pack.get_data(**self._get_data_args)
+
+        assert self._instance_iter is not None
+
         try:
-            if self._curr_data_pack is None:
-                self._curr_data_pack = next(self._data_pack_iter)
-                self._instance_iter = \
-                    self._curr_data_pack.get_data(**self._get_data_args)
-
-            assert self._instance_iter is not None
-
-            try:
-                return next(self._instance_iter), self._curr_data_pack
-            except StopIteration:
-                # Current data pack has no more instance. Go to next data pack.
-                self._curr_data_pack = next(self._data_pack_iter)
-                self._instance_iter = \
-                    self._curr_data_pack.get_data(**self._get_data_args)
-
             return next(self._instance_iter), self._curr_data_pack
         except StopIteration:
-            raise StopIteration()
+            # Current data pack has no more instance. Go to next data pack.
+            self._curr_data_pack = next(self._data_pack_iter)
+            self._instance_iter = \
+                self._curr_data_pack.get_data(**self._get_data_args)
+
+        return next(self._instance_iter), self._curr_data_pack
 
 
 class DataPackDataSource(IterDataSource):
