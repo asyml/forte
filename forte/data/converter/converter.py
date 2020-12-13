@@ -103,7 +103,7 @@ class Converter:
                            "setting to_numpy to False will be ignored.")
 
     def convert(self, features: List[Feature]) -> \
-            Tuple[Union[List, Any], List[Union[List, Any]]]:
+            Tuple[Any, List[Any]]:
         """
         Convert a list of Features to actual data, where
 
@@ -115,7 +115,7 @@ class Converter:
             2.1 A `List` of primitive `int` or another `List`
 
             2.2 A `numpy.ndarray`
-            
+
             2.3 A `torch.Tensor`
 
         If `need_pad` is True, it will pad all features with given `pad_value`
@@ -313,7 +313,7 @@ class Converter:
             size: int = len(queue)
             next_max_len = -1
             while size > 0:
-                feature: Feature = queue.pop(0)
+                feature = queue.pop(0)
                 feature.pad(curr_max_len)
 
                 if not feature.leaf_feature:

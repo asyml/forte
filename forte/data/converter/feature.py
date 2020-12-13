@@ -68,7 +68,7 @@ class Feature:
         # when the method `pad` is called.
         self._mask: List = []
 
-        self._vocab: Vocabulary = vocab
+        self._vocab: Optional[Vocabulary] = vocab
 
         self._parse_sub_features(data)
         self._validate_input()
@@ -160,7 +160,7 @@ class Feature:
         return self._meta_data
 
     @property
-    def vocab(self) -> Vocabulary:
+    def vocab(self) -> Optional[Vocabulary]:
         """
         Returns:
             The :class:`forte.data.Vocabulary` used to build this feature.
@@ -192,8 +192,10 @@ class Feature:
             raise ValidationError(
                 "Feature length should not exceed given max_len")
 
-        for i in range(max_len - len(self)):
+        for _ in range(max_len - len(self)):
             if self.leaf_feature:
+                assert self._data is not None, "Invalid internal state: " \
+                                   "leaf_feature does not have actual data"
                 self._data.append(self._pad_value)
             else:
                 sub_metadata = deepcopy(self._meta_data)
@@ -318,6 +320,8 @@ class Feature:
             # ]
         """
         if self.leaf_feature:
+            assert self._data is not None, "Invalid internal state: " \
+                               "leaf_feature does not have actual data"
             return self._data, [self._mask]
         else:
             unroll_features: List = []
