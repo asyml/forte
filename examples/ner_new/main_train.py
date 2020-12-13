@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Iterator, Dict, List
+from typing import Iterator, Dict
 
-import numpy as np
 import torch
-from forte.models.ner.utils import load_glove_embedding
 from torch import nn
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
