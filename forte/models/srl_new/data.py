@@ -31,7 +31,7 @@ class SRLSpan(NamedTuple):
 class Span(NamedTuple):
     start: int
     end: int
-    label: str
+    label: int
 
 
 class RawExample(TypedDict):

@@ -26,7 +26,7 @@
 
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 import torch
 from torch import nn
@@ -55,11 +55,14 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
     def __init__(self,
                  word_vocab: Dict,
                  char_vocab_size: int,
+                 label_vocab_size: int,
+                 core_args_ids: Dict[str, int],
                  hparams=None):
         super().__init__(hparams)
 
         # Word vocabulary & representation
         self.word_vocab = word_vocab
+        self._core_args_ids = core_args_ids
         self.word_embed: tx.modules.WordEmbedder = tx.modules.WordEmbedder(
             init_value=tx.data.Embedding(
                 vocab=self.word_vocab, hparams={
@@ -114,11 +117,6 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             })
         hidden_dim = single_hidden_dim * 2
 
-        self.label_vocab = {
-            label: idx + 1  # reserve index 0 for null label
-            for idx, label in enumerate(self._hparams.srl_labels)
-        }
-        self.label_inverse_vocab = {v: k for k, v in self.label_vocab.items()}
         self.head_attention = nn.Linear(hidden_dim, 1)
 
         word_input_dim = self.word_embed.dim + self.char_cnn.output_size
@@ -151,7 +149,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             hparams={
                 **mlp_hparams,
                 "input_sizes": mlp_hparams["input_sizes"] + [hidden_dim],
-                "output_size": len(self.label_vocab),
+                "output_size": label_vocab_size,
                 "activation": "ReLU",
             })
 
@@ -267,7 +265,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
 
     def _filter_labels(self, start_ids: torch.LongTensor,
                        end_ids: torch.LongTensor, predicates: torch.Tensor,
-                       srl_features: List[Feature]) -> torch.Tensor:
+                       srl_features: Optional[List[Feature]]) -> torch.Tensor:
         batch_size, num_spans = start_ids.size()
         num_predicates = predicates.size(1)
         device = start_ids.device
@@ -283,9 +281,10 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
 
         gold_labels = torch.zeros(
             batch_size, num_predicates * num_spans, dtype=torch.long)
-        for b_idx in range(batch_size):
-            srl_feature: Feature = srl_features[b_idx]
-            if srl_feature:
+
+        if srl_features:
+            for b_idx in range(batch_size):
+                srl_feature: Feature = srl_features[b_idx]
                 srl_data: List = srl_feature.data[0]
                 srl_meta_data: Dict = srl_feature.meta_data
                 for e_idx, srl in enumerate(srl_data):
@@ -379,7 +378,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
                 char_masks: List[torch.Tensor],
                 text_batch: torch.Tensor,
                 text_mask: torch.Tensor,
-                srl_features: List[Feature]) -> 'ReturnType':
+                srl_features: Optional[List[Feature]]) -> 'ReturnType':
         # char_batch: (batch_size, max_sentence_length, max_word_length)
         # char_masks[0]: (batch_size, max_sentence_length)
         # char_masks[1]: (batch_size, max_sentence_length, max_word_length)
@@ -527,7 +526,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             return []  # no spans at all, just return
         if enforce_constraint:
             label_states = [
-                self._CORE_ARGS.get(self.label_inverse_vocab[label], -1)
+                self._core_args_ids.get(label, -1)
                 if label != 0 else -1
                 for label in argmax_labels]
         else:
@@ -572,7 +571,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
                 assert end_ids[best_span_idx] == pos - 1
                 srl.append(Span(
                     start_ids[best_span_idx], end_ids[best_span_idx],
-                    self.label_inverse_vocab[argmax_labels[best_span_idx]]))
+                    argmax_labels[best_span_idx]))
                 pos = start_ids[best_span_idx]
                 if label_states[best_span_idx] != -1:
                     state &= ~label_states[best_span_idx]
@@ -587,7 +586,6 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
                char_masks: List[torch.Tensor],
                text_batch: torch.Tensor,
                text_mask: torch.Tensor,
-               srl_features: List[Feature],
                enforce_constraint: bool = False) \
             -> List[Dict[int, List[Span]]]:
         r"""Performs optimal decoding with dynamic programming.
@@ -599,7 +597,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         result_dict = self.forward(text,
                                    char_batch, char_masks,
                                    text_batch, text_mask,
-                                   srl_features)
+                                   None)
         sent_lengths = torch.sum(text_mask, dim=-1)
         start_ids = result_dict['start_ids'].cpu().numpy()
         end_ids = result_dict['end_ids'].cpu().numpy()
