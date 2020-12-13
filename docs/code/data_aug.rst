@@ -45,3 +45,14 @@ Data Augmentation Ops
 ----------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.dictionary.WordnetDictionary
     :members:
+
+Data Augmentation Models
+========================================
+
+:hidden:`Reinforcement Learning`
+----------------------------------
+.. autoclass:: forte.models.da_rl.MetaAugmentationWrapper
+    :members:
+
+.. autoclass:: forte.models.da_rl.MetaModule
+    :members:

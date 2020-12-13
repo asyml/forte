@@ -15,17 +15,18 @@
 Unit tests for MetaModel.
 """
 import unittest
-
 import torch
 import texar.torch as tx
-from forte.models.da_rl import MetaModule
 from texar.torch.modules.networks.networks import FeedForwardNetwork
+
+from forte.models.da_rl import MetaModule
 
 
 class TestMetaModule(unittest.TestCase):
 
     def setUp(self):
-        hparams = {
+        # nn config
+        self.hparams = {
             "layers": [
                 {
                     "type": "torch.nn.Linear",
@@ -43,60 +44,67 @@ class TestMetaModule(unittest.TestCase):
                 }
             ]
         }
+        # bert config
+        self.pretrained_model_name = 'bert-base-uncased'
+        self.batch_size = 2
+        self.seq_length = 16
+        self.num_class = 3
 
-        self.nn_module = FeedForwardNetwork(hparams=hparams)
+    # helper function
+    def recursive_module_param(self, model, buffer_param, module_param):
+        len_buffer = len(model._buffers)
+        buffer_param.append(len_buffer)
+        len_sub_model = len(model._modules)
+        module_param.append(len_sub_model)
 
-        print("hparam[layer] *2 = ", len(hparams["layers"]) * 2)
-        print("nn trainable_variables = ", self.nn_module.trainable_variables)
-
-        self.nn_magic_model = MetaModule(self.nn_module)
+        for _, sub_model in model._modules.items():
+            self.recursive_module_param(sub_model, buffer_param, module_param)
+        return buffer_param, module_param
 
     def test_update_params(self):
-        old_num_param = len(self.nn_magic_model._buffers)
-        old_num_module_param = len(self.nn_magic_model._modules)
-        print("old_num_param, old_num_param_module = ", old_num_param, old_num_module_param)
+        nn_module = FeedForwardNetwork(hparams=self.hparams)
+        nn_magic_model = MetaModule(nn_module)
+
+        old_num_buffer_param, old_num_module_param = \
+            self.recursive_module_param(nn_magic_model, [], [])
 
         grads = {name: torch.zeros_like(param)
-                 for name, param in self.nn_module.named_parameters()}
-        self.nn_magic_model.update_params(grads)
+                 for name, param in nn_module.named_parameters()}
+        nn_magic_model.update_params(grads)
 
-        new_num_param = len(self.nn_magic_model._buffers)
-        new_num_module_param = len(self.nn_magic_model._modules)
-
-        print("new_num_param, new_num_param_module = ", new_num_param, new_num_module_param)
+        new_num_buffer_param, new_num_module_param = \
+            self.recursive_module_param(nn_magic_model, [], [])
 
         self.assertEqual(old_num_module_param, new_num_module_param)
-        self.assertEqual(old_num_param, new_num_param)
+        self.assertEqual(old_num_buffer_param, new_num_buffer_param)
 
     def test_forward_with_nn_module(self):
-        outputs = self.nn_magic_model(torch.ones(64, 16, 32))
-        print("output size = ", outputs)
-        print("expected nn output_size = ", self.nn_module.output_size)
-        self.assertEqual(outputs.size(-1), self.nn_module.output_size)
+        nn_module = FeedForwardNetwork(hparams=self.hparams)
+        nn_magic_model = MetaModule(nn_module)
+
+        outputs = nn_magic_model(torch.ones(64, 16, 32))
+        self.assertEqual(outputs.size(-1), nn_module.output_size)
 
     def test_forward_with_texar_bert(self):
-        pretrained_model_name = 'bert-base-uncased'
         config_classifier = {
             "name": "bert_classifier",
             "hidden_size": 768,
             "clas_strategy": "cls_time",
             "dropout": 0.1,
-            "num_classes": 2
+            "num_classes": self.num_class
         }
         bert_model = tx.modules.BERTClassifier(
-            pretrained_model_name=pretrained_model_name,
+            pretrained_model_name=self.pretrained_model_name,
             hparams=config_classifier)
         bert_magic_model = MetaModule(bert_model)
 
-        input_ids = torch.ones(2, 16, 1)
-        segment_ids = torch.ones(2, 16, 1)
+        input_ids = torch.ones(
+            (self.batch_size, self.seq_length), dtype=torch.long)
+        segment_ids = torch.zeros(
+            (self.batch_size, self.seq_length), dtype=torch.long)
         input_length = (1 - (input_ids == 0).int()).sum(dim=1)
-        print("input_length: ", input_length)
-        print("input_length shape: ", input_length.size())
+
         logits, _ = bert_magic_model(input_ids, input_length, segment_ids)
-        print("logits shape: ", logits.size())
-        # todo: assert?
 
-
-    def test_forward_with_transformer_bert(self):
-        pass
+        self.assertEqual(
+            logits.size(), torch.Size([self.batch_size, self.num_class]))
