@@ -59,16 +59,12 @@ def train(model: LabeledSpanGraphNetwork,
           optim: Optimizer,
           batch: Batch) -> \
         LabeledSpanGraphNetwork.ReturnType:
-    char_tensor: Tensor = batch["char_tag"]["tensor"]
+    char_tensor: Tensor = batch["char_tag"]["data"]
     char_masks: List[Tensor] = batch["char_tag"]["masks"]
-    text_tensor: Tensor = batch["text_tag"]["tensor"]
+    text_tensor: Tensor = batch["text_tag"]["data"]
     text_mask: Tensor = batch["text_tag"]["masks"][0]
-    raw_text_features: List[Feature] = batch["raw_text_tag"]["features"]
+    text: List[List[str]] = batch["raw_text_tag"]["data"]
     pred_link_features: List[Feature] = batch["pred_link_tag"]["features"]
-
-    text: List[List[str]] = []
-    for feature in raw_text_features:
-        text.append(feature.data[0])
 
     optim.zero_grad()
 
@@ -87,15 +83,11 @@ def train(model: LabeledSpanGraphNetwork,
 
 
 def predict_forward_fn(model: LabeledSpanGraphNetwork, batch: Dict) -> Dict:
-    char_tensor: Tensor = batch["char_tag"]["tensor"]
+    char_tensor: Tensor = batch["char_tag"]["data"]
     char_masks: List[Tensor] = batch["char_tag"]["masks"]
-    text_tensor: Tensor = batch["text_tag"]["tensor"]
+    text_tensor: Tensor = batch["text_tag"]["data"]
     text_mask: Tensor = batch["text_tag"]["masks"][0]
-    raw_text_features: List[Feature] = batch["raw_text_tag"]["features"]
-
-    text: List[List[str]] = []
-    for feature in raw_text_features:
-        text.append(feature.data[0])
+    text: List[List[str]] = batch["raw_text_tag"]["data"]
 
     # TODO: test enable enforce_constriant
     model_output: List[Dict[int, List[data.Span]]] = \
