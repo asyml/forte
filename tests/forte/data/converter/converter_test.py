@@ -11,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import torch
+import numpy as np
 from typing import List
 import unittest
+import torch
 
 from forte.data.converter import Converter
 from forte.data.converter import Feature
@@ -21,19 +22,19 @@ from forte.data.converter import Feature
 
 class ConverterTest(unittest.TestCase):
     def setUp(self):
-        self.converter: Converter = Converter()
+        self.converter: Converter = Converter({})
 
     def test_convert1(self):
         features1: List[Feature] = self.create_features1()
 
-        tensor, mask_list = self.converter.convert(features1)
+        data, masks_list = self.converter.convert(features1)
         self.assertTrue(
-            torch.allclose(tensor,
+            torch.allclose(data,
                            torch.tensor(
                                [[7, 8, 9, 0], [1, 2, 5, 6], [4, 0, 0, 0]])))
-        self.assertEqual(len(mask_list), 1)
+        self.assertEqual(len(masks_list), 1)
         self.assertTrue(
-            torch.equal(mask_list[0],
+            torch.equal(masks_list[0],
                         torch.tensor(
                             [[1, 1, 1, 0], [1, 1, 1, 1], [1, 0, 0, 0]],
                             dtype=torch.bool)))
@@ -41,9 +42,9 @@ class ConverterTest(unittest.TestCase):
     def test_convert2(self):
         features2: List[Feature] = self.create_features2()
 
-        tensor, mask_list = self.converter.convert(features2)
+        data, masks_list = self.converter.convert(features2)
         self.assertTrue(
-            torch.allclose(tensor,
+            torch.allclose(data,
                            torch.tensor(
                                [[[6, 11, 2, 0],
                                  [7, 8, 0, 0],
@@ -56,18 +57,17 @@ class ConverterTest(unittest.TestCase):
                                 [[6, 3, 0, 0],
                                  [5, 0, 0, 0],
                                  [7, 12, 0, 0],
-                                 [7, 11, 0, 0]]])))
-        self.assertEqual(len(mask_list), 2)
+                                 [7, 11, 0, 0]]], dtype=torch.long)))
+        self.assertEqual(len(masks_list), 2)
         self.assertTrue(
-            torch.equal(mask_list[0],
+            torch.equal(masks_list[0],
                         torch.tensor(
                             [[1, 1, 1, 0],
                              [1, 1, 0, 0],
                              [1, 1, 1, 1]],
-                            dtype=torch.bool
-                        )))
+                            dtype=torch.bool)))
         self.assertTrue(
-            torch.equal(mask_list[1],
+            torch.equal(masks_list[1],
                         torch.tensor(
                             [[[1, 1, 1, 0],
                               [1, 1, 0, 0],
@@ -86,9 +86,9 @@ class ConverterTest(unittest.TestCase):
     def test_convert3(self):
         features3: List[Feature] = self.create_features3()
 
-        tensor, mask_list = self.converter.convert(features3)
+        data, masks_list = self.converter.convert(features3)
         self.assertTrue(
-            torch.allclose(tensor,
+            torch.allclose(data,
                            torch.tensor(
                                [[[[0, 1, 0], [1, 0, 0]],
                                  [[1, 0, 0], [0, 1, 0]],
@@ -98,19 +98,17 @@ class ConverterTest(unittest.TestCase):
                                  [[0, 0, 1], [0, 0, 1]]],
                                 [[[0, 1, 0], [0, 0, 1]],
                                  [[1, 0, 0], [1, 0, 0]],
-                                 [[0, 1, 0], [1, 0, 0]]]
-                                ])))
-        self.assertEqual(len(mask_list), 2)
+                                 [[0, 1, 0], [1, 0, 0]]]], dtype=torch.long)))
+        self.assertEqual(len(masks_list), 2)
         self.assertTrue(
-            torch.equal(mask_list[0],
+            torch.equal(masks_list[0],
                         torch.tensor(
                             [[1, 1, 0],
                              [1, 0, 0],
                              [1, 1, 1]],
-                            dtype=torch.bool
-                        )))
+                            dtype=torch.bool)))
         self.assertTrue(
-            torch.equal(mask_list[1],
+            torch.equal(masks_list[1],
                         torch.tensor(
                             [[[1, 1],
                               [1, 1],
@@ -123,19 +121,19 @@ class ConverterTest(unittest.TestCase):
                               [1, 1]]],
                             dtype=torch.bool)))
 
-    def test_convert_dtype(self):
+    def test_convert_float(self):
         features1: List[Feature] = self.create_features1(dtype=torch.float)
-        tensor, mask_list = self.converter.convert(features1)
+        data, masks_list = self.converter.convert(features1)
         self.assertTrue(
-            torch.allclose(tensor,
+            torch.allclose(data,
                            torch.tensor(
                                [[7, 8, 9, 0], [1, 2, 5, 6], [4, 0, 0, 0]],
                                dtype=torch.float)))
 
         features2: List[Feature] = self.create_features2(dtype=torch.float)
-        tensor, mask_list = self.converter.convert(features2)
+        data, masks_list = self.converter.convert(features2)
         self.assertTrue(
-            torch.allclose(tensor,
+            torch.allclose(data,
                            torch.tensor(
                                [[[6, 11, 2, 0],
                                  [7, 8, 0, 0],
@@ -151,11 +149,33 @@ class ConverterTest(unittest.TestCase):
                                  [7, 11, 0, 0]]],
                                dtype=torch.float)))
 
+    def test_convert_no_pad(self):
+        features1: List[Feature] = self.create_features1()
+
+        converter: Converter = Converter({"need_pad": False,
+                                          "to_numpy": False})
+        data, _ = converter.convert(features1)
+        self.assertTrue(
+            np.array_equal(data,
+                           [[7, 8, 9], [1, 2, 5, 6], [4]]))
+
+    def test_convert_no_to_torch(self):
+        features1: List[Feature] = self.create_features1()
+
+        converter: Converter = Converter({"need_pad": True,
+                                          "to_torch": False})
+        data, _ = converter.convert(features1)
+        self.assertNotEqual(type(data), torch.Tensor)
+        self.assertTrue(
+            np.array_equal(data,
+                           np.array([[7, 8, 9, 0], [1, 2, 5, 6], [4, 0, 0, 0]],
+                                    dtype=np.long)))
+
     def create_features1(self,
                          data_list=None,
-                         pad_id=None,
-                         dim=None,
-                         dtype=torch.long):
+                         pad_id=0,
+                         dim=1,
+                         dtype=np.long):
         if not data_list:
             data_list = [[7, 8, 9], [1, 2, 5, 6], [4]]
             pad_id: int = 0 if pad_id is None else pad_id
@@ -175,7 +195,7 @@ class ConverterTest(unittest.TestCase):
                          data_list=None,
                          pad_id=None,
                          dim=None,
-                         dtype=torch.long):
+                         dtype=np.long):
         if not data_list:
             data_list = [[[6, 11, 2], [7, 8], [6, 7, 5, 4]],
                          [[4, 3], [7, 6]],
@@ -197,7 +217,7 @@ class ConverterTest(unittest.TestCase):
                          data_list=None,
                          pad_id=None,
                          dim=None,
-                         dtype=torch.long):
+                         dtype=np.long):
         if not data_list:
             data_list: List = \
                 [  # Instance 1:

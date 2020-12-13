@@ -167,6 +167,14 @@ class Feature:
         """
         return self._vocab
 
+    @property
+    def dim(self) -> int:
+        """
+        Returns:
+            The dimension of this feature.
+        """
+        return self._dim
+
     def __len__(self):
         return len(self._data) if self.leaf_feature else \
             len(self._sub_features)
