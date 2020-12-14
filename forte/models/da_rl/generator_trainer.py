@@ -44,13 +44,15 @@ class MetaAugmentationWrapper:
     This code is adapted from:
     https://github.com/tanyuqian/learning-data-manipulation/blob/master/augmentation/generator.py
 
-    Let theta be the parameters of the downstream (classifier) model.
-    Let phi be the parameters of the augmentation model.
-    Equations to update phi:
+    Let :math:`\theta` be the parameters of the downstream (classifier) model.
+    Let :math:`\phi` be the parameters of the augmentation model.
+    Equations to update :math:`\phi`:
 
-    theta'(phi) = theta - \nabla_{theta} L_{train}(theta, phi)
+    .. math::
 
-    phi = phi - \nabla_{phi} L_{val}(theta'(phi))
+        \theta'(\phi) = \theta - \nabla_{\theta} L_{train}(\theta, \phi)
+
+        \phi = \phi - \nabla_{\phi} L_{val}(\theta'(\phi))
 
     Args:
         augmentation_model:
@@ -252,8 +254,9 @@ class MetaAugmentationWrapper:
         `MetaModel`, and update the parameters inside the `MetaModel`
         according to the downstream model loss.
 
-        `MetaModel` is used to calculate \nabla_{phi} L_{val}(theta'(phi)),
-        where it needs gradients applied to phi.
+        `MetaModel` is used to calculate
+        :math:`\nabla_{\phi} L_{val}(\theta'(\phi))`,
+        where it needs gradients applied to :math:`\phi`.
 
         Perform parameter updates in this function, and later applies
         gradient change to theta and phi using validation data.
@@ -261,7 +264,7 @@ class MetaAugmentationWrapper:
         Args:
             loss: The loss of the downstream model that have taken
                 the augmented training instances as input.
-            model: The downstream model.
+            model: The downstream Bert model.
             optimizer: The optimizer that is associated with the `model`.
 
         Returns:

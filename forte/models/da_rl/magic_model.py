@@ -37,7 +37,7 @@ class MetaModule(nn.Module):
     https://github.com/tanyuqian/learning-data-manipulation/blob/master/magic_module.py
 
     It implements the calculation:
-    L(theta - \nabla_{theta} L_{train}(theta, phi)).
+    :math:`L(\theta - \nabla_{\theta} L_{train}(\theta, \phi))`.
 
     Args:
         module: A pytorch nn module.
