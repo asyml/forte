@@ -48,7 +48,7 @@ setuptools.setup(
         'wikipedia': ['rdflib==4.2.2'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch==7.5.1'],
         'spacy': ['spacy==2.3.0'],
-        'allennlp': ['allennlp==1.1.0', 'allennlp-models==1.1.0',
+        'allennlp': ['allennlp==1.2.0', 'allennlp-models==1.2.0',
                      'torch>=1.5.0'],
         'cliner': ['marisa-trie==0.7.4', 'scipy==1.5.0',
                    'scikit-learn==0.23.1', 'repoze.lru==0.7',
