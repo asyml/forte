@@ -64,7 +64,7 @@ class MetaAugmentationWrapper:
             An optimizer that is associated with `augmentation_model`.
             Eg. Adam optim
         input_mask_ids:
-            Bert token id of '[MASK]'. This is used to randomly mask out
+            Bert token id of `'[MASK]'`. This is used to randomly mask out
             tokens from the input sentence during training.
         device:
             The CUDA device to run the model on.
@@ -95,17 +95,20 @@ class MetaAugmentationWrapper:
         Args:
             features: A tuple of Bert features of one training instance.
                 (input_ids, input_mask, segment_ids, label_ids).
+
                 `input_ids` is a tensor of Bert token ids.
                 It has shape `[seq_len]`.
+
                 `input_mask` is a tensor of shape `[seq_len]` with 1 indicating
                 without mask and 0 with mask.
+
                 `segment_ids` is a tensor of shape `[seq_len]`.
                 `label_ids` is a tensor of shape `[seq_len]`.
             num_aug: The number of samples from the augmentation model.
 
         Returns:
             aug_probs: A tensor of shape `[num_aug, seq_len, token_size]`.
-            It is the augmented bert token soft embedding.
+                It is the augmented bert token soft embedding.
         """
 
         init_ids, input_mask, segment_ids, _ = \
@@ -152,21 +155,27 @@ class MetaAugmentationWrapper:
         Args:
             features: A tuple of Bert features of one training instance.
                 (input_ids, input_mask, segment_ids, label_ids).
+
                 `input_ids` is a tensor of Bert token ids.
                 It has shape `[seq_len]`.
+
                 `input_mask` is a tensor of shape `[seq_len]` with 1 indicating
                 without mask and 0 with mask.
+
                 `segment_ids` is a tensor of shape `[seq_len]`.
                 `label_ids` is a tensor of shape `[seq_len]`.
 
         Returns:
             A tuple of Bert features of augmented training instances.
             (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
+
             `input_probs_aug` is a tensor of soft Bert embeddings,
             distributions over vocabulary.
             It has shape `[num_aug, seq_len, token_size]`.
-            It keeps phi as variable so that after passing it as an input
-            to the classifier, the gradients of theta will also apply to phi.
+            It keeps :math:`\phi` as variable so that after passing it as an
+            input to the classifier, the gradients of :math:`\theta` will
+            also apply to :math:`\phi`.
+
             `input_mask_aug`, `segment_ids_aug`, `label_ids_aug` are all
             tensors of shape `[num_aug, seq_len, token_size]`.
         """
@@ -192,8 +201,10 @@ class MetaAugmentationWrapper:
         Args:
             batch_features: A tuple of Bert features of a batch training
                 instances. (input_ids, input_mask, segment_ids, label_ids).
+
                 `input_ids` is a tensor of Bert token ids.
                 It has shape `[batch_size, seq_len]`.
+
                 `input_mask`, `segment_ids`, `label_ids` are all tensors of
                 shape `[batch_size, seq_len]`.
 
@@ -258,8 +269,8 @@ class MetaAugmentationWrapper:
         :math:`\nabla_{\phi} L_{val}(\theta'(\phi))`,
         where it needs gradients applied to :math:`\phi`.
 
-        Perform parameter updates in this function, and later applies
-        gradient change to theta and phi using validation data.
+        Perform parameter updates in this function, and later applies gradient
+        change to :math:`\theta` and :math:`\phi` using validation data.
 
         Args:
             loss: The loss of the downstream model that have taken
