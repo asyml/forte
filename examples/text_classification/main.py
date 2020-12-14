@@ -15,9 +15,10 @@
 
 import os
 
-from forte.models.imdb_text_classifier.model import IMDBClassifier
 import config_data
 import config_classifier
+
+from forte.models.imdb_text_classifier.model import IMDBClassifier
 
 
 def main():

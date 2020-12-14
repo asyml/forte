@@ -17,10 +17,13 @@ This is the Data Loading Pipeline for Sentence Classifier Task from:
     `https://github.com/google-research/bert/blob/master/run_classifier.py`
 """
 
+import copy
 import os
-import csv
 import logging
+import math
+import random
 
+import numpy as np
 import texar.torch as tx
 
 
@@ -74,13 +77,13 @@ class DataProcessor():
         raise NotImplementedError()
 
     @classmethod
-    def _read_tsv(cls, input_file, quotechar=None):
+    def _read_tsv(cls, input_file, quotechar=None):  # pylint: disable=unused-argument
         """Reads a tab separated value file."""
-        with open(input_file, "r", encoding='utf-8') as f:
-            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+        with open(input_file, "r", encoding="utf-8") as f:
+            # reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
             lines = []
-            for line in reader:
-                lines.append(line)
+            for line in f.readlines():
+                lines.append(line.split('\t'))
         return lines
 
 
@@ -122,7 +125,7 @@ class IMDbProcessor(DataProcessor):
                            quotechar='"'), "train")
 
     def get_dev_examples(self, raw_data_dir):
-        """See base class."""
+        """The IMDB dataset does not have a dev set so we just use test set"""
         return self._create_examples(
             self._read_tsv(os.path.join(raw_data_dir, "test.csv"),
                            quotechar='"'), "test")
@@ -141,7 +144,19 @@ class IMDbProcessor(DataProcessor):
                                quotechar='"'), "unsup_ext", skip_unsup=False)
         elif unsup_set == "unsup_in":
             return self._create_examples(
-                self._read_tsv(os.path.join(raw_data_dir, "train.csv"),
+                self._read_tsv(
+                    os.path.join(raw_data_dir, "unsup.csv"), quotechar='"'),
+                    "unsup_in", skip_unsup=False)
+
+    def get_unsup_aug_examples(self, raw_data_dir, unsup_set):
+        """See base class."""
+        if unsup_set == "unsup_ext":
+            return self._create_examples(
+                self._read_tsv(os.path.join(raw_data_dir, "unsup_ext.csv"),
+                               quotechar='"'), "unsup_ext", skip_unsup=False)
+        elif unsup_set == "unsup_in":
+            return self._create_examples(
+                self._read_tsv(os.path.join(raw_data_dir, "train_aug.csv"),
                                quotechar='"'), "unsup_in", skip_unsup=False)
 
     def get_labels(self):
@@ -151,17 +166,21 @@ class IMDbProcessor(DataProcessor):
     def _create_examples(self, lines, set_type, skip_unsup=True):
         """Creates examples for the training and dev sets."""
         examples = []
+        print(len(lines))
         for (i, line) in enumerate(lines):
-            if i == 0 or len(line) == 0:
+            if i == 0 or len(line) == 1:  # newline
                 continue
-            if skip_unsup and line[1] == "unsup":
+            if skip_unsup and line[-2] == "unsup":
                 continue
-            if line[1] == "unsup" and len(line[0]) < 500:
-                # logging.info("skipping short samples:{:s}".format(line[0]))
-                continue
-            guid = "%s-%s" % (set_type, line[2])
-            text_a = line[0]
-            label = line[1]
+            # Original UDA implementation
+            # if line[-2] == "unsup" and len(line[0]) < 500:
+                # tf.logging.info("skipping short samples:{:s}".format(line[0]))
+                # continue
+            guid = "%s-%s" % (set_type, line[-1])
+            text_a = " ".join(line[:-2])
+            label = line[-2]
+            if label not in ["pos", "neg", "unsup"]:
+                print(line)
             text_a = clean_web_text(text_a)
             examples.append(InputExample(guid=guid, text_a=text_a,
                              text_b=None, label=label))
@@ -456,9 +475,116 @@ def convert_examples_to_features_and_output_to_files(
             writer.write(features)
 
 
+def convert_unsup_examples_to_features_and_output_to_files(
+        examples, aug_examples, label_list, max_seq_length, tokenizer,
+        output_file, feature_types):
+    r"""Convert a set of `InputExample`s to a pickled file."""
+
+    with tx.data.RecordData.writer(output_file, feature_types) as writer:
+        print(len(examples), "unsup examples")
+        print(len(aug_examples), "augmented unsup examples")
+        assert len(examples) == len(aug_examples)
+        for (ex_index, (example, aug_example)) in \
+            enumerate(zip(examples, aug_examples)):
+            feature = convert_single_example(ex_index, example, label_list,
+                                             max_seq_length, tokenizer)
+            aug_feature = convert_single_example(ex_index, aug_example,
+                label_list, max_seq_length, tokenizer)
+
+            features = {
+                "input_ids": feature.input_ids,
+                "input_mask": feature.input_mask,
+                "segment_ids": feature.segment_ids,
+                "label_ids": feature.label_id,
+                "aug_input_ids": aug_feature.input_ids,
+                "aug_input_mask": aug_feature.input_mask,
+                "aug_segment_ids": aug_feature.segment_ids,
+                "aug_label_ids": aug_feature.label_id,
+            }
+            writer.write(features)
+
+
+def replace_with_length_check(
+        ori_text, new_text,
+        use_min_length,
+        use_max_length_diff_ratio):
+    """Use new_text if the text length satisfies several constraints."""
+    if len(ori_text) < use_min_length or len(new_text) < use_min_length:
+        if random.random() < 0.001:
+            print("not replacing due to short text: \n\t"
+                "ori: {:s}\n\tnew: {:s}\n".format(ori_text, new_text))
+        return ori_text
+    length_diff_ratio = 1.0 * (len(new_text) - len(ori_text)) / len(ori_text)
+    if math.fabs(length_diff_ratio) > use_max_length_diff_ratio:
+        if random.random() < 0.001:
+            print("not replacing due to too different text length:\n"
+                     "\tori: {:s}\n\tnew: {:s}\n".format(
+                             ori_text,
+                             new_text))
+        return ori_text
+    return new_text
+
+
+def back_translation(examples, back_translation_file, data_total_size):
+    """Run back translation."""
+    use_min_length = 10
+    use_max_length_diff_ratio = 0.5
+    logging.info("running bt augmentation")
+
+    text_per_example = 1
+
+    with open(back_translation_file, encoding='utf-8') as inf:
+        paraphrases = inf.readlines()
+    for i in range(len(paraphrases)):  # pylint: disable=consider-using-enumerate
+        paraphrases[i] = paraphrases[i].strip()
+    assert len(paraphrases) == data_total_size
+
+    aug_examples = []
+    aug_cnt = 0
+    for i in range(len(examples)):  # pylint: disable=consider-using-enumerate
+        ori_example = examples[i]
+        text_a = replace_with_length_check(
+                ori_example.text_a,
+                paraphrases[i * text_per_example],
+                use_min_length,
+                use_max_length_diff_ratio,
+                )
+        if text_a == paraphrases[i * text_per_example]:
+            aug_cnt += 1
+        if ori_example.text_b is not None:
+            text_b = replace_with_length_check(
+                    ori_example.text_b,
+                    paraphrases[i * text_per_example + 1],
+                    use_min_length,
+                    use_max_length_diff_ratio,
+                    )
+        else:
+            text_b = None
+
+        example = InputExample(
+                guid=ori_example.guid,
+                text_a=text_a,
+                text_b=text_b,
+                label=ori_example.label)
+        aug_examples += [example]
+        if np.random.random() < 0.0001:
+            pass
+            # tf.logging.info("\tori:\n\t\t{:s}\n\t\t{:s}\n\t\t{:s}\n".format(
+            #     ori_example.text_a, ori_example.text_b, ori_example.label))
+            # tf.logging.info("\tnew:\n\t\t{:s}\n\t\t{:s}\n\t\t{:s}\n".format(
+            #     example.text_a, example.text_b, example.label))
+        if i % 10000 == 0:
+            print("processing example # {:d}".format(i))
+    logging.info("applied back translation for {:.1f} percent of data".format(
+            aug_cnt * 1. / len(examples) * 100))
+    logging.info("finishing running back translation augmentation")
+    return aug_examples
+
+
 def prepare_record_data(processor, tokenizer,
                         data_dir, max_seq_length, output_dir,
-                        feature_types):
+                        feature_types, unsup_feature_types=None,
+                        sup_size_limit=None, unsup_bt_file=None):
     r"""Prepare record data.
     Args:
         processor: Data Preprocessor, which must have get_labels,
@@ -472,20 +598,65 @@ def prepare_record_data(processor, tokenizer,
     """
     label_list = processor.get_labels()
 
-    train_examples = processor.get_train_examples(data_dir)
     train_file = os.path.join(output_dir, "train.pkl")
-    convert_examples_to_features_and_output_to_files(
-        train_examples, label_list, max_seq_length,
-        tokenizer, train_file, feature_types)
+    if not os.path.isfile(train_file):
+        train_examples = processor.get_train_examples(data_dir)
+        if sup_size_limit is not None:
+            train_examples = get_data_by_size_lim(
+                train_examples, processor, sup_size_limit)
+        convert_examples_to_features_and_output_to_files(
+            train_examples, label_list, max_seq_length,
+            tokenizer, train_file, feature_types)
 
-    eval_examples = processor.get_dev_examples(data_dir)
     eval_file = os.path.join(output_dir, "eval.pkl")
-    convert_examples_to_features_and_output_to_files(
-        eval_examples, label_list,
-        max_seq_length, tokenizer, eval_file, feature_types)
+    if not os.path.isfile(eval_file):
+        eval_examples = processor.get_dev_examples(data_dir)
+        convert_examples_to_features_and_output_to_files(
+            eval_examples, label_list,
+            max_seq_length, tokenizer, eval_file, feature_types)
 
-    test_examples = processor.get_test_examples(data_dir)
     test_file = os.path.join(output_dir, "predict.pkl")
-    convert_examples_to_features_and_output_to_files(
-        test_examples, label_list,
-        max_seq_length, tokenizer, test_file, feature_types)
+    if not os.path.isfile(test_file):
+        test_examples = processor.get_test_examples(data_dir)
+        convert_examples_to_features_and_output_to_files(
+            test_examples, label_list,
+            max_seq_length, tokenizer, test_file, feature_types)
+
+    if unsup_feature_types is not None:
+        unsup_file = os.path.join(output_dir, "unsup.pkl")
+        if not os.path.isfile(unsup_file):
+            unsup_label_list = label_list + ["unsup"]
+            unsup_examples = processor.get_unsup_examples(data_dir, "unsup_in")
+            unsup_aug_examples = copy.deepcopy(unsup_examples)
+            unsup_aug_examples = back_translation(unsup_aug_examples,
+                unsup_bt_file, len(unsup_aug_examples))
+            convert_unsup_examples_to_features_and_output_to_files(
+                unsup_examples, unsup_aug_examples, unsup_label_list,
+                max_seq_length, tokenizer, unsup_file, unsup_feature_types)
+
+
+def get_data_by_size_lim(train_examples, processor, sup_size):
+    """Deterministicly get a dataset with only sup_size examples."""
+    # Assuming sup_size < number of labeled data and
+    # that there are same number of examples for each category
+    assert sup_size % len(processor.get_labels()) == 0
+    per_label_size = sup_size // len(processor.get_labels())
+    per_label_examples = {}
+    for i in range(len(train_examples)):  # pylint: disable=consider-using-enumerate
+        label = train_examples[i].label
+        if label not in per_label_examples:
+            per_label_examples[label] = []
+        per_label_examples[label] += [train_examples[i]]
+
+    for label in processor.get_labels():
+        assert len(per_label_examples[label]) >= per_label_size, (
+            "label {} only has {} examples while the limit"
+            "is {}".format(
+                label, len(per_label_examples[label]), per_label_size))
+
+    new_train_examples = []
+    for i in range(per_label_size):
+        for label in processor.get_labels():
+            new_train_examples += [per_label_examples[label][i]]
+    train_examples = new_train_examples
+    return train_examples

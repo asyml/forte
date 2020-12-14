@@ -6,7 +6,7 @@ num_train_data = 25000
 # used for bert executor example
 max_batch_tokens = 128
 
-train_batch_size = 32
+train_batch_size = 24
 max_train_epoch = 5
 display_steps = 50  # Print training loss every display_steps; -1 to disable
 
