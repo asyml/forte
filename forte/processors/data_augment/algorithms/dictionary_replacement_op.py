@@ -13,7 +13,7 @@
 # limitations under the License.
 import random
 from typing import Tuple
-from ft.onto.base_ontology import Entry
+from ft.onto.base_ontology import Annotation
 from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op \
@@ -29,34 +29,38 @@ class DictionaryReplacementOp(TextReplacementOp):
     This class is a replacement op utilizing the dictionaries,
     such as WORDNET, to replace the input word with an synonym.
     Part-of-Speech(optional) can be provided to the wordnet for
-    retrieving synonyms with the same POS.
+    retrieving synonyms with the same POS. It will sample from a
+    Bernoulli distribution to decide whether to replace the input,
+    with `prob` as the probability of replacement.
 
     The config should contain the following fields:
-        - dictionary: The full path to the dictionary class.
-        - prob: The probability of replacement, should fall in [0, 1].
-        - lang: The language of the text.
+        - `dictionary`: The full qualified name of the dictionary class.
+        - `prob`: The probability of replacement, should fall in [0, 1].
+        - `lang`: The language of the text.
     """
     def __init__(self, configs: Config):
         super().__init__(configs)
         self.dictionary = create_class_with_kwargs(
-            configs["dictionary"],
+            configs["dictionary_class"],
             class_args={}
         )
 
-    def replace(self, token: Entry) -> Tuple[bool, str]:
+    def replace(self, input: Annotation) -> Tuple[bool, str]:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
+
         Args:
-            - token: The input entry.
+            input (Annotation): The input annotation.
         Returns:
-            - A boolean value, True if the replacement happens.
-            - A synonym of the word.
+            A tuple of two values, where the first element is a boolean value
+            indicating whether the replacement happens, and the second
+            element is the replaced string.
         """
         # If the replacement does not happen, return False.
         if random.random() > self.configs["prob"]:
-            return False, token.text
-        word = token.text
-        pos_tag = token.pos
+            return False, input.text
+        word = input.text
+        pos_tag = input.pos
         lang = self.configs["lang"]
         synonyms = self.dictionary.get_synonyms(word, pos_tag, lang)
         if len(synonyms) == 0:

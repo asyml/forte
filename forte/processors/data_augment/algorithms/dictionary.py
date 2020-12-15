@@ -29,18 +29,19 @@ class Dictionary:
     Given an input word and its pos_tag(optional), the dictionary
     will outputs its synonyms, antonyms, hypernyns and hyponyms.
     """
+
+    # pylint: disable=unused-argument
     def get_synonyms(
             self,
             word: str,
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
-        # pylint: disable=unused-argument
         r"""
         Args:
-            - word: The input string.
-            - pos_tag: The Part-of-Speech tag for substitution.
-            - lang: The language of the input string.
+            word (str): The input string.
+            pos_tag (str): The Part-of-Speech tag for substitution.
+            lang (str): The language of the input string.
         Returns:
             synonyms of the word.
         """
@@ -52,12 +53,11 @@ class Dictionary:
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
-        # pylint: disable=unused-argument
         r"""
         Args:
-            - word: The input string.
-            - pos_tag: The Part-of-Speech tag for substitution.
-            - lang: The language of the input string.
+            word (str): The input string.
+            pos_tag (str): The Part-of-Speech tag for substitution.
+            lang (str): The language of the input string.
         Returns:
             Antonyms of the word.
         """
@@ -69,12 +69,11 @@ class Dictionary:
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
-        # pylint: disable=unused-argument
         r"""
         Args:
-            - word: The input string.
-            - pos_tag: The Part-of-Speech tag for substitution.
-            - lang: The language of the input string.
+            word (str): The input string.
+            pos_tag (str): The Part-of-Speech tag for substitution.
+            lang (str): The language of the input string.
         Returns:
             Hypernyms of the word.
         """
@@ -86,12 +85,11 @@ class Dictionary:
             pos_tag: str = "",
             lang: str = "eng"
     ) -> List[str]:
-        # pylint: disable=unused-argument
         r"""
         Args:
-            - word: The input string.
-            - pos_tag: The Part-of-Speech tag for substitution.
-            - lang: The language of the input string.
+            word (str): The input string.
+            pos_tag (str): The Part-of-Speech tag for substitution.
+            lang (str): The language of the input string.
         Returns:
             Hyponyms of the word.
         """
@@ -140,12 +138,18 @@ class WordnetDictionary(Dictionary):
         r"""
         This function gets synonyms/antonyms/hypernyms/hyponyms
         from a WORDNET dictionary.
+
         Args:
-            - word: The input token.
-            - pos_tag: The NLTK POS tag.
-            - lang: The input language.
-            - lemma_type: The type of words to replace, must be one of the
-                ["SYNONYM", "ANTONYM", "HYPERNYM", "HYPONYM"]
+            word (str): The input token.
+            pos_tag (str): The NLTK POS tag.
+            lang (str): The input language.
+            lemma_type (str): The type of words to replace, must be
+                one of the following:
+
+                - ``'SYNONYM'``
+                - ``'ANTONYM'``
+                - ``'HYPERNYM'``
+                - ``'HYPONYM'``
         """
         res: List[str] = []
         pos_wordnet = None

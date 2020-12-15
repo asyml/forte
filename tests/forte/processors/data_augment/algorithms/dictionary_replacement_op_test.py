@@ -25,13 +25,13 @@ from forte.data.data_pack import DataPack
 
 class TestDictionaryReplacementOp(unittest.TestCase):
     def setUp(self):
-        dict_path = (
+        dict_name = (
             "forte.processors.data_augment."
             "algorithms.dictionary.WordnetDictionary"
         )
         self.dra = DictionaryReplacementOp(
             configs={
-                "dictionary": dict_path,
+                "dictionary_class": dict_name,
                 "prob": 1.0,
                 "lang": "eng",
             }
