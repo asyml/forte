@@ -17,7 +17,6 @@ Data Augmentation Processors
 Data Augmentation Ops
 ========================
 
-
 :hidden:`TextReplacementOp`
 -----------------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.text_replacement_op.TextReplacementOp
@@ -34,6 +33,21 @@ Data Augmentation Ops
     :members:
 
 .. autoclass:: forte.processors.data_augment.algorithms.sampler.UnigramSampler
+    :members:
+    
+:hidden:`MachineTranslator`
+---------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MachineTranslator
+    :members:
+
+:hidden:`MarianMachineTranslator`
+-----------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MarianMachineTranslator
+    :members:
+
+:hidden:`BackTranslationOp`
+------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.back_translation_op.BackTranslationOp
     :members:
 
 :hidden:`DictionaryReplacementOp`
