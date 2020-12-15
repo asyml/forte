@@ -15,7 +15,7 @@ install:
   - pip install git+https://github.com/pypa/pip.git
   - pip install --progress-bar off torch==$TORCH_VER
   - pip install --progress-bar off tensorflow==$TENSORFLOW_VER
-  - pip install --progress-bar off .[nltk,ner,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp]
+  - pip install --progress-bar off .[nltk,ner,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp,augment]
   - git clone https://github.com/asyml/texar-pytorch.git
   - cd texar-pytorch
   - pip install --progress-bar off .
