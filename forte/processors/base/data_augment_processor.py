@@ -74,17 +74,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         r"""
         Function to replace some annotations with new strings.
         It will update the text and auto-align the annotation spans.
-
         Args:
             data_pack: Datapack holding the annotations to be replaced.
             replaced_annotations: A list of tuples(annotation, new string).
             The text for annotation will be updated with the new string.
-
         Returns:
             A new data_pack holds the text after replacement. The annotations
             in the original data pack will be copied and auto-aligned as
             instructed by the "other_entry_policy".
-
         """
         pass
 
@@ -98,14 +95,11 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             will augment. It should be a full path to the entry class.
             - other_entry_policy: a dict specifying the policies for
             other entries.
-
             If "auto_align", the span of the entry will be automatically
             modified according to its original location. However, some
             spans might become invalid after the augmentation, for
             example, the tokens within a replaced sentence may disappear.
-
             Entries not in the dict will not be copied to the new data pack.
-
             Example: {
                 "ft.onto.base_ontology.Document": "auto_align",
                 "ft.onto.base_ontology.Sentence": "auto_align"
