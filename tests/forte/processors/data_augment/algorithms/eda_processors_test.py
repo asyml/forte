@@ -74,6 +74,12 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 }
             },
             'alpha': 0.1,
+            'augment_pack_names': {
+                'type': '',
+                'kwargs': {
+                    'input_src': 'augmented_input_src'
+                }
+            }
         }
 
         swap_processor = RandomSwapDataAugmentProcessor()
@@ -130,7 +136,7 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
             'data_aug_op_config': {
                 "kwargs": {
-                    "dictionary": (
+                    "dictionary_class": (
                         "forte.processors.data_augment."
                         "algorithms.dictionary.WordnetDictionary"
                     ),
@@ -139,6 +145,12 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 },
             },
             'alpha': 0.1,
+            'augment_pack_names': {
+                'type': '',
+                'kwargs': {
+                    'input_src': 'augmented_input_src'
+                }
+            }
         }
 
         insert_processor = RandomInsertionDataAugmentProcessor()
@@ -194,6 +206,12 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 'kwargs': {}
             },
             "alpha": 0.5,
+            'augment_pack_names': {
+                'type': '',
+                'kwargs': {
+                    'input_src': 'augmented_input_src'
+                }
+            }
         }
 
         delete_processor = RandomDeletionDataAugmentProcessor()

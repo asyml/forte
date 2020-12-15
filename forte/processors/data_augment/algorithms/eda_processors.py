@@ -19,10 +19,11 @@ Random Swap, Random Insertion and Random Deletion. All three processors are
 implemented based on the ReplacementDataAugmentProcessor.
 """
 
-import random
-from typing import List, Tuple, Dict
-from nltk.corpus import stopwords
 from math import ceil
+import random
+from typing import List, Dict
+
+from nltk.corpus import stopwords
 
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -43,9 +44,10 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
     Do this n times, where n = alpha * input length.
     """
 
-    def _augment(self, input_pack: MultiPack):
+    def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         augment_entry = get_class(self.configs["augment_entry"])
-        for pack_name, data_pack in input_pack.iter_packs():
+        for pack_name in aug_pack_names:
+            data_pack: DataPack = input_pack.get_pack(pack_name)
             annotations = list(data_pack.get(augment_entry))
             if len(annotations) > 0:
                 replace_map: Dict = {}
@@ -69,9 +71,9 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
             Additional keys for Random Swap:
-            - alpha: indicates the percent of the words in a sentence are changed.
-                The processor will perform the Random Swap operation 
-                (input length * alpha) times.
+            - alpha: indicates the percent of the words in a sentence
+                are changed. The processor will perform the Random Swap
+                operation (input length * alpha) times.
         """
         config = super().default_configs()
         config.update({
@@ -83,6 +85,12 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 }
             },
             'alpha': 0.1,
+            'augment_pack_names': {
+                'type': '',
+                'kwargs': {
+                    'input_src': 'augmented_input_src'
+                }
+            }
         })
         return config
 
@@ -95,7 +103,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     the sentence. Do this n times, where n = alpha * input length.
     """
 
-    def _augment(self, input_pack: MultiPack):
+    def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         replacement_op = create_class_with_kwargs(
             self.configs["data_aug_op"],
             class_args={
@@ -103,9 +111,9 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             }
         )
         augment_entry = get_class(self.configs["augment_entry"])
-        new_packs: List[Tuple[str, DataPack]] = []
 
-        for pack_name, data_pack in input_pack.iter_packs():
+        for pack_name in aug_pack_names:
+            data_pack: DataPack = input_pack.get_pack(pack_name)
             annotations = []
             pos = [0]
             for anno in data_pack.get(augment_entry):
@@ -131,9 +139,9 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             By default, we use Dictionary Replacement with Wordnet to get
             synonyms to insert.
             Additional keys for Random Swap:
-            - alpha: indicates the percent of the words in a sentence are changed.
-                The processor will perform the Random Insertion operation 
-                (input length * alpha) times.
+            - alpha: indicates the percent of the words in a sentence are
+                changed. The processor will perform the Random Insertion
+                operation (input length * alpha) times.
         """
         config = super().default_configs()
         config.update({
@@ -145,10 +153,11 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 }
             },
             'data_aug_op':
-                "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
+                "forte.processors.data_augment.algorithms."
+                "dictionary_replacement_op.DictionaryReplacementOp",
             'data_aug_op_config': {
                 "kwargs": {
-                    "dictionary": (
+                    "dictionary_class": (
                         "forte.processors.data_augment."
                         "algorithms.dictionary.WordnetDictionary"
                     ),
@@ -157,6 +166,12 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 },
             },
             'alpha': 0.1,
+            'augment_pack_names': {
+                'type': '',
+                'kwargs': {
+                    'input_src': 'augmented_input_src'
+                }
+            }
         })
         return config
 
@@ -167,10 +182,11 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     Randomly remove each word in the sentence with probability alpha.
     """
 
-    def _augment(self, input_pack: MultiPack):
+    def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         augment_entry = get_class(self.configs["augment_entry"])
 
-        for pack_name, data_pack in input_pack.iter_packs():
+        for pack_name in aug_pack_names:
+            data_pack: DataPack = input_pack.get_pack(pack_name)
             for anno in data_pack.get(augment_entry):
                 if random.random() < self.configs['alpha']:
                     self._delete(anno)
@@ -196,5 +212,11 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 'kwargs': {}
             },
             "alpha": 0.1,
+            'augment_pack_names': {
+                'type': '',
+                'kwargs': {
+                    'input_src': 'augmented_input_src'
+                }
+            }
         })
         return config
