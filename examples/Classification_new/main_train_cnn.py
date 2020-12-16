@@ -110,7 +110,7 @@ def pad_each_bach(word, max_sen_len):
 
 def train(model: nn.Module, optim: Optimizer, batch: Batch):
     print(type(model))
-    labels = batch["label_tag"]["tensor"]
+    labels = batch["label_tag"]["data"]
     optim.zero_grad()
 
     logits, pred = model(batch)
@@ -196,7 +196,7 @@ train_batch_iter: Iterator[Batch] = \
 
 # Fing the max sentence length in the whole dataset
 for batch in tqdm(train_batch_iter):
-    max_sen_length = max(batch["text_tag"]["tensor"].size()[1],
+    max_sen_length = max(batch["text_tag"]["data"].size()[1],
                          max_sen_length)
 
 model, word_embedding_table = \
