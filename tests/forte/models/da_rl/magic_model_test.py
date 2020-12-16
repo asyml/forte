@@ -19,7 +19,7 @@ import torch
 import texar.torch as tx
 from texar.torch.modules.networks.networks import FeedForwardNetwork
 
-from forte.models.da_rl import MetaModule
+from forte.models.da_rl import MetaModule, TexarBertMetaModule
 
 
 class TestMetaModule(unittest.TestCase):
@@ -96,7 +96,7 @@ class TestMetaModule(unittest.TestCase):
         bert_model = tx.modules.BERTClassifier(
             pretrained_model_name=self.pretrained_model_name,
             hparams=config_classifier)
-        bert_magic_model = MetaModule(bert_model)
+        bert_magic_model = TexarBertMetaModule(bert_model)
 
         input_ids = torch.ones(
             (self.batch_size, self.seq_length), dtype=torch.long)

@@ -22,7 +22,7 @@ from torch import optim
 from transformers import BertForMaskedLM
 
 from forte.models.da_rl import MetaAugmentationWrapper
-from forte.models.da_rl.generator_trainer import \
+from forte.models.da_rl.aug_wrapper import \
     _texar_bert_adam_delta, _torch_adam_delta
 
 
@@ -115,6 +115,17 @@ class TestMetaAugmentationWrapper(unittest.TestCase):
                 label_ids_aug[i * self.batch_size: (i + 1) * self.batch_size]
             self.assertTrue(
                 torch.equal(original_or_aug_label_ids, batch_label_id))
+
+    def test_eval_batch(self):
+        batch_input_id = torch.randint(10, 90,
+                                       (self.batch_size, self.seq_length))
+        batch_label_id = batch_input_id
+        input_mask = torch.ones_like(batch_input_id)
+        segment_ids = torch.zeros_like(batch_input_id)
+        features = (batch_input_id, input_mask, segment_ids, batch_label_id)
+
+        batch_loss = self.wrapper.eval_batch(features)
+        print(batch_loss)
 
     def test_bert_adam_delta(self):
         grads = {param: torch.ones_like(param)

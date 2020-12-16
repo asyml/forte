@@ -111,8 +111,9 @@ class MetaAugmentationWrapper:
                 It is the augmented bert token soft embedding.
         """
 
-        init_ids, input_mask, segment_ids, _ = \
+        feature: Tuple[torch.Tensor, ...] = \
             (t.view(1, -1).to(self._device) for t in features)
+        init_ids, input_mask, segment_ids, _ = feature
 
         len = int(torch.sum(input_mask).item())
 
@@ -176,8 +177,17 @@ class MetaAugmentationWrapper:
             input to the classifier, the gradients of :math:`\theta` will
             also apply to :math:`\phi`.
 
-            `input_mask_aug`, `segment_ids_aug`, `label_ids_aug` are all
-            tensors of shape `[num_aug, seq_len, token_size]`.
+            `input_mask_aug` is a tensor of shape `[num_aug, seq_len]`, it
+            concatenates `num_aug` the input `input_mask` so that it
+            corresponds to the mask of each token in `input_probs_aug`.
+
+            `segment_ids_aug` is a tensor of shape `[num_aug, seq_len]`, it
+            concatenates `num_aug` the input `segment_ids` so that it
+            corresponds to the token type of each token in `input_probs_aug`.
+
+            `label_ids_aug` is a tensor of shape `[num_aug, seq_len]`, it
+            concatenates `num_aug` the input `label_ids` so that it corresponds
+            to the label of each token in `input_probs_aug`.
         """
 
         aug_probs = self._augment_instance(features, self._num_aug)
@@ -211,10 +221,25 @@ class MetaAugmentationWrapper:
         Returns:
             A tuple of Bert features of augmented training instances.
             (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
+
             `input_probs_aug` is a tensor of soft Bert embeddings,
             It has shape `[batch_size * 2, seq_len, token_size]`.
-            `input_mask_aug`, `segment_ids_aug`, `label_ids_aug` are all
-            tensors of shape `[batch_size * 2, seq_len, token_size]`.
+
+            `input_mask_aug` is a tensor of shape `[batch_size * 2, seq_len]`,
+            it concatenates two input `input_mask`, the first one corresponds to the
+            mask of the tokens in the original bert instance, the second one
+            corresponds to the mask of the augmented bert instance.
+
+            `segment_ids_aug` is a tensor of shape `[batch_size * 2, seq_len]`,
+            it concatenates two input `segment_ids`, the first one corresponds
+            to the segment id of the tokens in the original bert instance, the
+            second one corresponds to the segment id of the
+            augmented bert instance.
+
+            `label_ids_aug` is a tensor of shape `[batch_size * 2, seq_len]`,
+            it concatenates two input `label_ids`, the first one corresponds
+            to the labels of the original bert instance, the second one
+            corresponds to the labels of the augmented bert instance.
         """
         input_ids, input_mask, segment_ids, labels = batch_features
         self._aug_model.eval()
@@ -246,23 +271,48 @@ class MetaAugmentationWrapper:
         inputs_onehot = torch.zeros_like(
             input_ids_or_probs_aug[:len(input_ids_or_probs)]).scatter_(
             2, input_ids_or_probs.unsqueeze(2), 1.)
-        input_ids_or_probs = tx.utils.pad_and_concat(
+        input_probs_aug = tx.utils.pad_and_concat(
             [inputs_onehot, input_ids_or_probs_aug], axis=0).to(self._device)
 
-        segment_ids = tx.utils.pad_and_concat(
-            [segment_ids] * (num_aug + 1), axis=0).to(self._device)
-        input_masks = tx.utils.pad_and_concat(
+        input_mask_aug = tx.utils.pad_and_concat(
             [input_masks] * (num_aug + 1), axis=0).to(self._device)
-        label_ids = tx.utils.pad_and_concat(
+        segment_ids_aug = tx.utils.pad_and_concat(
+            [segment_ids] * (num_aug + 1), axis=0).to(self._device)
+        label_ids_aug = tx.utils.pad_and_concat(
             [label_ids] * (num_aug + 1), axis=0).to(self._device)
 
-        return input_ids_or_probs, input_masks, segment_ids, label_ids
+        return input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug
+
+    def eval_batch(self, batch_features: Tuple[torch.Tensor, ...]) \
+            -> torch.FloatTensor:
+        r"""Evaluate a batch of training instances.
+
+        Args:
+            batch_features: A tuple of Bert features of a batch training
+                instances. (input_ids, input_mask, segment_ids, label_ids).
+
+                `input_ids` is a tensor of Bert token ids.
+                It has shape `[batch_size, seq_len]`.
+
+                `input_mask`, `segment_ids`, `label_ids` are all tensors of
+                shape `[batch_size, seq_len]`.
+
+        Returns:
+            loss: torch.FloatTensor of shape (1,). The masked language
+                modeling loss of one evaluation batch.
+        """
+        self._aug_model.eval()
+        batch = tuple(t.to(self._device) for t in batch_features)
+        input_ids, input_mask, segment_ids, labels = batch
+        loss = self._aug_model(input_ids, token_type_ids=segment_ids,
+                               attention_mask=input_mask, labels=labels)
+        return loss.item()
 
     def update_meta_model(self, loss: torch.Tensor,
                                model: nn.Module,
                                optimizer: Optimizer) -> MetaModule:
         r"""Copy the parameters of the downstream (classifier) model into
-        `MetaModel`, and update the parameters inside the `MetaModel`
+        `MetaModel`, and update the parameters within the `MetaModel`
         according to the downstream model loss.
 
         `MetaModel` is used to calculate

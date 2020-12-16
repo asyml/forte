@@ -15,5 +15,5 @@
 # This package contains Information Retrieval Processors, to use processor in
 # this package, run the 'ir' option in setup.py
 
-from forte.models.da_rl.generator_trainer import *
+from forte.models.da_rl.aug_wrapper import *
 from forte.models.da_rl.magic_model import *
