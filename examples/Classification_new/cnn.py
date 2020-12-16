@@ -44,7 +44,7 @@ class CNN_Classifier(nn.Module):
         self.max_sen_len = in_channels
 
     def forward(self, batch: Batch):
-        word = batch["text_tag"]["tensor"]
+        word = batch["text_tag"]["data"]
 
         word_pad = pad_each_bach(word, self.max_sen_len)
 
