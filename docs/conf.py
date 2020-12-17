@@ -345,7 +345,7 @@ extlinks = {'torch_docs': (
         'torch.'),
     'gym': (
         'https://gym.openai.com/docs/%s',
-        None),
+        None)
 }
 
 ##### Customize ######
