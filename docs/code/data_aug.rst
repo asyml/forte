@@ -56,3 +56,6 @@ Data Augmentation Models
 
 .. autoclass:: forte.models.da_rl.MetaModule
     :members:
+
+.. autoclass:: forte.models.da_rl.TexarBertMetaModule
+    :members:

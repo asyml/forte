@@ -17,7 +17,7 @@ and performs parameter updates locally.
 """
 
 import copy
-from typing import Optional, Tuple, Dict
+from typing import Dict
 import torch
 import torch.nn as nn
 import texar.torch as tx
@@ -31,8 +31,9 @@ __all__ = [
 
 class MetaModule(nn.ModuleList):
     # pylint: disable=line-too-long
-    r"""A memory-efficient model that registers the parameters of a
-    :class:`torch.nn.Module` and performs parameter updates locally.
+    r"""A class extending :class:`torch.nn.Module`
+    that registers the parameters of a :class:`torch.nn.Module`
+    and performs memory-efficient parameter updates locally.
 
     This code is adapted from:
     https://github.com/tanyuqian/learning-data-manipulation/blob/master/magic_module.py
@@ -43,15 +44,22 @@ class MetaModule(nn.ModuleList):
     Args:
         module: A :class:`torch.nn.Module`.
 
-    In order to perform :meth:`forward` the same way as the input module,
-    we need to copy into this class the helper functions that are called by the
-    nested :meth:`forward` of the input module.
+    This class can be used for simple input module, whose sub-modules don't
+    contain other helper functions or attributes that do not belong to this
+    class to perform their :meth:`forward`.
 
-    For example, if the input module is tx.modules.BERTClassifier,
+    Otherwise, since :meth:`forward` calls the input module's :meth:`forward`,
+    in order to perform :meth:`forward` of the sub-modules of the input module
+    correctly, this class needs to extend those sub-modules that define
+    the methods needed for their :meth:`forward`, so that it inherits their
+    methods to perform the sub-module's :meth:`forward`.
+
+    For example, if the input module is :class:`tx.modules.BERTClassifier`,
     :meth:`_get_noise_shape`, :meth:`_split_heads`, :meth:`_combine_heads`
-    are needed to be exposed in this class, so that this :meth:`forward` can
-    recognize these functions that are used by the nested :meth:`forward` in
-    tx.modules.embedders and tx.modules.encoders.
+    from its sub-modules (Eg. :class:`tx.modules.BERTEncoder`) are needed to be
+    exposed in this class to perform their :meth:`forward`. Please refer to
+    :class:`TexarBertMetaModule` for instructions on creating a subclass from
+    this one for a specific input module.
     """
 
     def __init__(self, module: nn.Module):
@@ -68,8 +76,12 @@ class MetaModule(nn.ModuleList):
         for key, value in module._buffers.items():
             self.register_buffer(key, copy.deepcopy(value))
 
+        # Recursively create MetaModule.
         for key, value in module._modules.items():
-            self.add_module(key, MetaModule(value))
+            # type(self) is the real class object
+            # it can be MetaModule(value), or it can be its subclass,
+            # eg. TexarBertMetaModule(value)
+            self.add_module(key, type(self)(value))
 
         for key, value in module.__dict__.items():
             if key not in self.__dict__ and\
@@ -97,56 +109,36 @@ class MetaModule(nn.ModuleList):
 class TexarBertMetaModule(MetaModule,
                           tx.modules.EmbedderBase,
                           tx.modules.MultiheadAttentionEncoder):
+    r"""A subclass that extends :class:`MetaModule` to do parameter updates
+    locally for texar-pytorch Bert related modules.
+    Eg. :class:`tx.modules.BERTClassifier`
 
+    Please refer to its base class :class:`MetaModule` for more details.
+
+    Args:
+        module: A :class:`torch.nn.Module`.
+
+    This class extends :class:`tx.modules.EmbedderBase` and
+    :class:`tx.modules.MultiheadAttentionEncoder`, such that it inherits
+    their methods that are needed to perform :meth:`forward` of the modules
+    that utilizes these methods, Eg. :class:`tx.modules.BERTEncoder`,
+    :class:`tx.modules.WordEmbedder`.
+
+    Some notes of the order of the base classes that this class extends:
+
+    `MetaModule` should be the first one, so that its :meth:`forward` will
+    call :meth:`MetaModule.forward` instead of the :meth:`forward` of the other
+    base classes, such as :meth:`MultiheadAttentionEncoder.forward`.
+    If `MetaModule` is not the first one, then a :meth:`forward` should be
+    defined in this class, such that it is called correctly.
+
+    Example:
+
+        .. code-block:: python
+
+            def forward(self, *args, **kwargs):
+                return MetaModule.forward(self, *args, **kwargs)
+
+    """
     def __init__(self, module: nn.Module):
-        MetaModule.__init__(module)
-
-    def forward(self, *args, **kwargs):
-        return MetaModule.forward(*args, **kwargs)
-
-    # # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/embedders/embedder_base.py#L63
-    # def _get_noise_shape(self, dropout_strategy: str,
-    #                      ids_rank: Optional[int] = None,
-    #                      dropout_input: Optional[torch.Tensor] = None) \
-    #         -> Optional[Tuple[int, ...]]:
-    #     # pylint: disable=line-too-long
-    #
-    #     if dropout_strategy == 'element':
-    #         noise_shape = None
-    #     elif dropout_strategy == 'item':
-    #         assert dropout_input is not None
-    #         assert ids_rank is not None
-    #         shape_a = dropout_input.size()[:ids_rank]
-    #         shape_b = (1,) * self._dim_rank     # type: ignore
-    #         noise_shape = shape_a + shape_b
-    #     elif dropout_strategy == 'item_type':
-    #         noise_shape = (self._num_embeds,) + (1,) * self._dim_rank   # type: ignore
-    #     else:
-    #         raise ValueError(f"Unknown dropout strategy: {dropout_strategy}")
-    #     return noise_shape
-    #
-    # # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/encoders/multihead_attention.py#L232
-    # def _split_heads(self, x: torch.Tensor) -> torch.Tensor:
-    #     r"""Split channels (dimension 2) into multiple heads,
-    #     becomes dimension 1). Must ensure ``x.shape[-1]`` can be
-    #     divided by num_heads.
-    #     """
-    #     depth = x.size(-1)
-    #     split_x = torch.reshape(x, (
-    #         x.size(0), x.size(1),
-    #         self._hparams.num_heads, depth // self._hparams.num_heads))
-    #     return split_x.permute((0, 2, 1, 3))
-    #
-    # # https://github.com/asyml/texar-pytorch/blob/master/texar/torch/modules/encoders/multihead_attention.py#L243
-    # def _combine_heads(self, x: torch.Tensor) -> torch.Tensor:
-    #     r"""
-    #
-    #     Args:
-    #         x: A Tensor of shape ``[batch, num_heads, seq_len, dim]``
-    #     Returns:
-    #         A Tensor of shape ``[batch, seq_len, num_heads * dim]``
-    #     """
-    #     t = x.permute((0, 2, 1, 3))  # [batch, seq_len, num_heads, dim]
-    #     num_heads, dim = t.size()[-2:]
-    #     assert num_heads == self._hparams.num_heads
-    #     return torch.reshape(t, (t.size(0), t.size(1), num_heads * dim))
+        MetaModule.__init__(self, module)

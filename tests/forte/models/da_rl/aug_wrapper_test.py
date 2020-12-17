@@ -125,7 +125,7 @@ class TestMetaAugmentationWrapper(unittest.TestCase):
         features = (batch_input_id, input_mask, segment_ids, batch_label_id)
 
         batch_loss = self.wrapper.eval_batch(features)
-        print(batch_loss)
+        self.assertFalse(torch.equal(batch_loss, torch.Tensor([0., ])))
 
     def test_bert_adam_delta(self):
         grads = {param: torch.ones_like(param)

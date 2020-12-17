@@ -17,7 +17,7 @@ A wrapper adding data augmentation to a Bert model with arbitrary tasks.
 
 import random
 import math
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Generator
 import texar.torch as tx
 import torch
 import torch.nn as nn
@@ -71,6 +71,43 @@ class MetaAugmentationWrapper:
         num_aug:
             The number of samples from the augmentation model
             for every augmented training instance.
+
+    Example usage:
+
+        .. code-block:: python
+
+            aug_wrapper = MetaAugmentationWrapper(
+                aug_model, aug_optim, mask_id, device, num_aug)
+            for batch in training_data:
+                # Train augmentation model params.
+                aug_wrapper.reset_model()
+                for instance in batch:
+                    # Augmented example with params phi exposed
+                    aug_instance_features = \
+                        aug_wrapper.augment_example(instance_features)
+                    # Model is the downstream Bert model.
+                    model.zero_grad()
+                    loss = model(aug_instance_features)
+                    meta_model = MetaModule(model)
+                    meta_model = aug_wrapper.update_meta_classifier(
+                        meta_model, loss, model, optim)
+
+                    # Compute grads of aug model on eval data
+                    for val_batch in validation_data:
+                        val_loss = meta_model(val_batch_features)
+                        val_loss = val_loss / num_training_instance / num_aug \
+                            / num_val_batch
+                        val_loss.backward()
+                # update augmentation model params.
+                aug_wrapper.update_phi()
+
+                # train classifier with augmented batch
+                aug_batch_features = aug_wrapper.augment_batch(batch_features)
+                optim.zero_grad()
+                loss = model(aug_batch_features)
+                loss.backward()
+                optim.step()
+
     """
 
     def __init__(self, augmentation_model: nn.Module,
@@ -111,7 +148,7 @@ class MetaAugmentationWrapper:
                 It is the augmented bert token soft embedding.
         """
 
-        feature: Tuple[torch.Tensor, ...] = \
+        feature: Generator[torch.Tensor, torch.Tensor, torch.Tensor] = \
             (t.view(1, -1).to(self._device) for t in features)
         init_ids, input_mask, segment_ids, _ = feature
 
@@ -298,21 +335,20 @@ class MetaAugmentationWrapper:
                 shape `[batch_size, seq_len]`.
 
         Returns:
-            loss: torch.FloatTensor of shape (1,). The masked language
-                modeling loss of one evaluation batch.
+            The masked language modeling loss of one evaluation batch.
+            It is a `torch.FloatTensor` of shape `[1,]`.
         """
         self._aug_model.eval()
         batch = tuple(t.to(self._device) for t in batch_features)
         input_ids, input_mask, segment_ids, labels = batch
         loss = self._aug_model(input_ids, token_type_ids=segment_ids,
-                               attention_mask=input_mask, labels=labels)
-        return loss.item()
+                               attention_mask=input_mask, labels=labels)[0]
+        return loss
 
-    def update_meta_model(self, loss: torch.Tensor,
-                               model: nn.Module,
-                               optimizer: Optimizer) -> MetaModule:
-        r"""Copy the parameters of the downstream (classifier) model into
-        `MetaModel`, and update the parameters within the `MetaModel`
+    def update_meta_model(self, meta_model: MetaModule, loss: torch.Tensor,
+                          model: nn.Module, optimizer: Optimizer) \
+            -> MetaModule:
+        r"""Update the parameters within the `MetaModel`
         according to the downstream model loss.
 
         `MetaModel` is used to calculate
@@ -323,15 +359,16 @@ class MetaAugmentationWrapper:
         change to :math:`\theta` and :math:`\phi` using validation data.
 
         Args:
+            meta_model: A meta model whose parameters will be updated in-place
+                by the deltas calculated from the input `loss`.
             loss: The loss of the downstream model that have taken
                 the augmented training instances as input.
             model: The downstream Bert model.
             optimizer: The optimizer that is associated with the `model`.
 
         Returns:
-            An instance of :class:`~forte.forte.models.da_rl.MetaModule`.
+            The same input `meta_model` with the updated parameters.
         """
-        meta_model = MetaModule(model)
 
         # grads_theta(phi) = \nabla_{theta} L_{train}(theta, phi)
         grads_theta = self._calculate_grads(loss, model, optimizer)
@@ -358,6 +395,9 @@ class MetaAugmentationWrapper:
         return deltas
 
     def update_phi(self):
+        # L_{val}(theta'(phi))
+        # apply gradients to phi
+
         # phi = phi - \nabla_{phi} L_{val}(theta'(phi))
         self._aug_optimizer.step()
 
