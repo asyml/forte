@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=W0233
+# pylint: disable=super-init-not-called
 """
 A model that copies the parameter states of a pytorch nn module
 and performs parameter updates locally.
@@ -110,7 +111,6 @@ class MetaModule(nn.ModuleList):
 class TexarBertMetaModule(MetaModule,
                           tx.modules.EmbedderBase,
                           tx.modules.MultiheadAttentionEncoder):
-    # pylint: disable=super-init-not-called
     r"""A subclass that extends :class:`MetaModule` to do parameter updates
     locally for texar-pytorch Bert related modules.
     Eg. :class:`tx.modules.BERTClassifier`
