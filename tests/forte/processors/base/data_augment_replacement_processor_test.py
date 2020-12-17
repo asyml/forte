@@ -18,18 +18,18 @@ Unit tests for data augment processors
 import unittest
 import tempfile
 import os
-
+from ddt import ddt, data, unpack
+from ft.onto.base_ontology import Token, Sentence, Document, Annotation
 from forte.processors.data_augment.algorithms.text_replacement_op import TextReplacementOp
 from forte.data.selector import AllPackSelector
+from forte.data.span import Span
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import MultiPackLink, MultiPackGroup, Link, Group
 from forte.data.readers import MultiPackSentenceReader, StringReader
 from forte.data.caster import MultiPackBoxer
-from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
+from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor, modify_index
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
-from ft.onto.base_ontology import Token, Sentence, Document, Annotation
-from ddt import ddt, data, unpack
 
 
 class TmpReplacer(TextReplacementOp):
@@ -51,17 +51,32 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
 
-    @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
+    @data(
+        (1, [[0, 1], [1, 1], [1, 3]], [[0, 2], [2, 5], [5, 8]], True, True, 2),
+        (1, [[0, 1], [1, 1], [2, 3]], [[0, 2], [2, 5], [6, 8]], True, True, 2),
+        (1, [[0, 1], [1, 1], [1, 3]], [[0, 2], [2, 5], [5, 8]], True, False, 5),
+        (1, [[0, 1], [1, 1], [2, 3]], [[0, 2], [2, 5], [6, 8]], True, False, 5),
+        (1, [[0, 1], [1, 1], [1, 3]], [[0, 2], [2, 5], [5, 8]], False, True, 5),
+        (1, [[0, 1], [1, 1], [2, 3]], [[0, 2], [2, 5], [6, 8]], False, True, 5),
+        (1, [[0, 1], [1, 1], [1, 3]], [[0, 2], [2, 5], [5, 8]], False, False, 2),
+        (1, [[0, 1], [1, 1], [2, 3]], [[0, 2], [2, 5], [6, 8]], False, False, 2),
+        (0, [[1, 2], [2, 3]], [[1, 4], [4, 5]], True, True, 0),
+    )
     @unpack
-    def test_pipeline(self, texts):
-        expected_outputs = [
-            "Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus."
-        ]
+    def test_modify_index(self, index, old_spans, new_spans, is_begin, is_inclusive, aligned_index):
+        old_spans = [Span(span[0], span[1]) for span in old_spans]
+        new_spans = [Span(span[0], span[1]) for span in new_spans]
+        output = modify_index(index, old_spans, new_spans, is_begin, is_inclusive)
+        self.assertEqual(aligned_index, output)
 
-        expected_tokens = [
-            ["Virgin", "and", "Samantha", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", "."],
-        ]
-
+    @data(
+        (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+         ["Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus."],
+         [["Virgin", "and", "Samantha", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", "."]]
+         )
+    )
+    @unpack
+    def test_pipeline(self, texts, expected_outputs, expected_tokens):
         nlp = Pipeline[MultiPack]()
 
         boxer_config = {
@@ -105,9 +120,15 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             for j, token in enumerate(aug_pack.get(Token)):
                 self.assertEqual(token.text, expected_tokens[idx][j])
 
-    @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
+    @data(
+        (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+         [" NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus NLP ."],
+         [[" NLP ", "Virgin", "Samantha", " NLP ", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", " NLP ", "."], ],
+         [["til", "12", "for", "the", "bus", "."]]
+         )
+    )
     @unpack
-    def test_replace_token(self, texts):
+    def test_replace_token(self, texts, expected_outputs, expected_tokens, expected_links):
         for idx, text in enumerate(texts):
             file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
             with open(file_path, 'w') as f:
@@ -124,18 +145,6 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
 
         nlp.initialize()
-
-        expected_outputs = [
-            " NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus NLP ."
-        ]
-
-        expected_tokens = [
-            [" NLP ", "Virgin", "Samantha", " NLP ", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", " NLP ", "."],
-        ]
-
-        expected_links = [
-            "til", "12", "for", "the", "bus", "."
-        ]
 
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
@@ -259,7 +268,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             for i, link in enumerate(new_src_pack.get(Link)):
                 if prev_link:
                     self.assertEqual(link.get_parent().tid, prev_link.tid)
-                    self.assertEqual(link.get_child().text, expected_links[i])
+                    self.assertEqual(link.get_child().text, expected_links[idx][i])
                 prev_link = link
 
             # Test the copied Groups.
@@ -277,7 +286,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                     self.assertEqual(isinstance(member_token, Token), True)
                     self.assertEqual(isinstance(member_group, Group), True)
                     self.assertEqual(member_group.tid, prev_group.tid)
-                    self.assertEqual(member_token.text, expected_links[i])
+                    self.assertEqual(member_token.text, expected_links[idx][i])
 
                 prev_group = group
 
