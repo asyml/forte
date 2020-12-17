@@ -42,6 +42,8 @@ class TextReplacementOp(ABC):
         r"""
         Most data augmentation algorithms can be considered
         as replacement-based methods on different levels.
+        This function takes in an annotation as input and
+        returns the augmented string.
 
         Args:
             input: the input annotation to be replaced.
