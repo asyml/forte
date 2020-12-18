@@ -92,7 +92,7 @@ class MetaAugmentationWrapper:
                     meta_model = aug_wrapper.update_meta_classifier(
                         meta_model, loss, model, optim)
 
-                    # Compute grads of aug model on eval data
+                    # Compute grads of aug model on validation data
                     for val_batch in validation_data:
                         val_loss = meta_model(val_batch_features)
                         val_loss = val_loss / num_training_instance / num_aug \
