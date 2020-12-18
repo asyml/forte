@@ -83,7 +83,10 @@ class BioSeqTaggingExtractor(BaseExtractor):
            we will consider this "I" as a "B" and start a new tag here.
         2. We will truncate the prediction it according to the number of entry.
            If the prediction contains <PAD> element, this should remove them.
+        3. We will remove the entry before we add new entry from the prediction.
         """
+        for entry in pack.get(self.config.entry_type, instance):
+            pack.delete_entry(entry)
         instance_based_on = list(pack.get(self.config.based_on, instance))
         prediction = prediction[:len(instance_based_on)]
         tags = [self.id2element(x) for x in prediction]
