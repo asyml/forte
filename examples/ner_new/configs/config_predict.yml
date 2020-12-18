@@ -1,4 +1,0 @@
-test_path: "ner_data/conll03_english/test"
-model_path: "best_ner_crf_model.ckpt"
-train_state_path: "train_state.pkl"
-batch_size: 10
