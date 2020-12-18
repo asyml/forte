@@ -12,23 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Iterator, Dict
+import sys
+from typing import Iterator, Dict, List
 import torch
-from torch import nn
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 from texar.torch.data import Batch
 from tqdm import tqdm
 import yaml
 
-from examples.ner_new.ner_evaluator import CoNLLNEREvaluator
+from examples.tagging.evaluator import CoNLLNEREvaluator
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.pipeline import Pipeline
 from forte.predictor import Predictor
 from forte.common.configuration import Config
 from forte.data.extractor import AttributeExtractor
-from forte.data.extractor import \
-    BaseExtractor, BioSeqTaggingExtractor, CharExtractor
+from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.extractor.char_extractor import CharExtractor
+from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from ft.onto.base_ontology import Sentence, Token, EntityMention
@@ -39,16 +40,16 @@ logging.basicConfig(level=logging.INFO)
 
 
 def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
-                 config: Config):
+                 _config: Config):
     text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
     char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
-    ner_extractor: BaseExtractor = schemes["ner_tag"]["extractor"]
+    output_extractor: BaseExtractor = schemes["output_tag"]["extractor"]
 
-    _model: nn.Module = \
+    _model: BiRecurrentConvCRF = \
         BiRecurrentConvCRF(word_vocab=text_extractor.get_dict(),
                            char_vocab_size=char_extractor.size(),
-                           tag_vocab_size=ner_extractor.size(),
-                           config_model=config)
+                           tag_vocab_size=output_extractor.size(),
+                           config_model=_config)
 
     return _model
 
@@ -56,12 +57,12 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
 def train(_model: BiRecurrentConvCRF, _optim: Optimizer, _batch: Batch):
     word = _batch["text_tag"]["data"]
     char = _batch["char_tag"]["data"]
-    ner = _batch["ner_tag"]["data"]
+    output = _batch["output_tag"]["data"]
     word_masks = _batch["text_tag"]["masks"][0]
 
     _optim.zero_grad()
 
-    loss = _model(word, char, ner, mask=word_masks)
+    loss = _model(word, char, output, mask=word_masks)
 
     loss.backward()
     _optim.step()
@@ -80,10 +81,14 @@ def predict_forward_fn(_model: BiRecurrentConvCRF, _batch: Dict) -> Dict:
                            input_char=char,
                            mask=word_masks)
     output = output.numpy()
-    return {'ner_tag': output}
+    return {'output_tag': output}
 
 
 if __name__ == "__main__":
+    task = sys.argv[1]
+    assert task in ["ner", "pos"], \
+        "Not supported nlp task type: {}".format(task)
+
     # All the configs
     config_data = Config({}, default_hparams=yaml.safe_load(
         open("configs/config_data.yml", "r")))
@@ -93,6 +98,7 @@ if __name__ == "__main__":
     device = torch.device("cuda") if torch.cuda.is_available() \
         else torch.device("cpu")
 
+    # Generate request
     tp_request: Dict = {
         "scope": Sentence,
         "schemes": {
@@ -109,17 +115,28 @@ if __name__ == "__main__":
                 "max_char_length": config_data.max_char_length,
                 "type": TrainPreprocessor.DATA_INPUT,
                 "extractor": CharExtractor
-            },
-            "ner_tag": {
-                "entry_type": EntityMention,
-                "attribute": "ner_type",
-                "based_on": Token,
-                "vocab_method": "indexing",
-                "type": TrainPreprocessor.DATA_OUTPUT,
-                "extractor": BioSeqTaggingExtractor
             }
         }
     }
+
+    # Add output part in request based on different task type
+    if task == "ner":
+        tp_request["schemes"]["output_tag"] = {
+            "entry_type": EntityMention,
+            "attribute": "ner_type",
+            "based_on": Token,
+            "vocab_method": "indexing",
+            "type": TrainPreprocessor.DATA_OUTPUT,
+            "extractor": BioSeqTaggingExtractor
+        }
+    else:
+        tp_request["schemes"]["output_tag"] = {
+            "entry_type": Token,
+            "attribute_get": "pos",
+            "vocab_method": "indexing",
+            "type": TrainPreprocessor.DATA_OUTPUT,
+            "extractor": AttributeExtractor
+        }
 
     # All not specified dataset parameters are set by default in Texar.
     # Default settings can be found here:
@@ -134,16 +151,16 @@ if __name__ == "__main__":
         }
     }
 
-    ner_train_reader = CoNLL03Reader(cache_in_memory=True)
-    ner_val_reader = CoNLL03Reader(cache_in_memory=True)
+    train_reader = CoNLL03Reader(cache_in_memory=True)
+    val_reader = CoNLL03Reader(cache_in_memory=True)
 
-    train_preprocessor = TrainPreprocessor(train_reader=ner_train_reader,
+    train_preprocessor = TrainPreprocessor(train_reader=train_reader,
                                            request=tp_request,
                                            config=tp_config)
 
     model: BiRecurrentConvCRF = \
         create_model(schemes=train_preprocessor.feature_resource["schemes"],
-                     config=config_model)
+                     _config=config_model)
     model.to(device)
 
     optim: Optimizer = SGD(model.parameters(),
@@ -160,7 +177,7 @@ if __name__ == "__main__":
     evaluator = CoNLLNEREvaluator()
 
     val_pl: Pipeline = Pipeline()
-    val_pl.set_reader(ner_val_reader)
+    val_pl.set_reader(val_reader)
     val_pl.add(predictor)
     val_pl.add(evaluator)
 
@@ -168,6 +185,7 @@ if __name__ == "__main__":
     train_err: int = 0
     train_total: float = 0.0
     train_sentence_len_sum: float = 0.0
+    val_scores: List = []
     output_file = "tmp_eval.txt"
     score_file = "tmp_eval.score"
     scores: Dict[str, float] = {}
@@ -206,6 +224,6 @@ if __name__ == "__main__":
                     "val result: %s",
                     epoch, evaluator.get_result())
 
-    # Save training state to disk
-    # train_preprocessor.save_state(config_data.train_state_path)
-    # torch.save(model, config_model.model_path)
+        # Save training state to disk
+        train_preprocessor.save_state(config_data.train_state_path)
+        torch.save(model, config_model.model_path)
