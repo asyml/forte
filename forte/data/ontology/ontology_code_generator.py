@@ -107,7 +107,6 @@ def validate_entry(entry_name: str, sorted_packages: List[str],
     if not lenient_prefix:
         for package_name in sorted_packages:
             if entry_name.startswith(package_name):
-                matched_package = package_name
                 break
         else:
             # None of the package name matches.
@@ -512,7 +511,7 @@ class OntologyCodeGenerator:
             self, ontology_path: str,
             destination_dir: str,
             merged_schema: List[Dict],
-            merged_prefixes: List[Dict],
+            merged_prefixes: List[str],
             visited_paths: Optional[Dict[str, bool]] = None,
             rec_visited_paths: Optional[Dict[str, bool]] = None,
             lenient_prefix=False,
@@ -554,8 +553,10 @@ class OntologyCodeGenerator:
             full_pkg_path: str = self.find_import_path(rel_import)
             logging.info('Imported ontology at: %s', full_pkg_path)
             self.parse_ontology_spec(
-                full_pkg_path, destination_dir, merged_schema, visited_paths,
-                rec_visited_paths)
+                full_pkg_path, destination_dir, merged_schema, merged_prefixes,
+                visited_paths=visited_paths,
+                rec_visited_paths=rec_visited_paths,
+                lenient_prefix=lenient_prefix)
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
