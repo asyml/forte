@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Optional, Dict, Type, Any, Union, Iterator
+from typing import Optional, Dict, Type, Any, Union, Iterator, List
 from texar.torch.data import DataIterator, Batch
 import torch
 from torch import device
 
-from forte.common.resources import Resources
 from forte.common.configuration import Config
+from forte.data.base_pack import PackType
 from forte.data.converter import Converter
 from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
-from forte.data.readers.base_reader import PackReader
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ class TrainPreprocessor:
     padding (optional). The main functionality is provided by its method
     :meth:`get_train_batch_iterator` which will return an `iterator` over the
     batch of preprocessed data. Please refer to the documentation of
-    that method for how the preprocessing is done.
+    that method for how the pre-processing is done.
 
     `TrainPreprocessor` will maintain a Config that stores all the configurable
     parameters for various components.
@@ -47,17 +46,13 @@ class TrainPreprocessor:
     into `feature_resource`.
 
     Args:
-        train_reader (PackReader): An object of class
-            :class:`forte.data.readers.PackReader` that parses given
-            dataset files.
+        pack_generator (Iterator[PackType]): A generator of
+            :class:`forte.data.base_pack.PackType`.
         request (Dict): A request that specifies how to do train pre-processing.
             See below for details. An example is given below.
         config: A `Dict` or :class:`forte.common.configuration.Config` that
             configs this preprocessor. See :meth:`default_configs` for
             the defaults.
-        reader_config: A `Dict` or :class:`forte.common.configuration.Config`
-            that configs the given `train_reader`. See `default_configs` for
-            the specific reader for defaults.
 
     Here is the detailed explanation for `request`:
 
@@ -125,25 +120,20 @@ class TrainPreprocessor:
     DATA_OUTPUT = 1
 
     def __init__(self,
-                 train_reader: PackReader,
+                 pack_generator: Iterator[PackType],
                  request: Dict,
-                 config: Optional[Union[Config, Dict]] = None,
-                 reader_config: Optional[Union[Config, Dict]] = None):
+                 config: Optional[Union[Config, Dict]] = None):
         self._config: Config = \
             Config(config, default_hparams=self.default_configs())
         self._validate_config()
 
-        self._train_reader: PackReader = train_reader
+        self._pack_generator: Iterator[PackType] = pack_generator
+        self._cached_packs: List[PackType] = []
 
         self._user_request: Dict = request
         self._feature_resource: Dict = {}
         self._feature_resource_ready: bool = False
         self._vocab_ready: bool = False
-
-        # Initialize reader
-        self._train_reader.initialize(Resources(),
-                                      self._train_reader.make_configs(
-                                          configs=reader_config))
 
         if not self._config.preprocess.lazy_parse_request:
             self._parse_request(self._user_request)
@@ -160,7 +150,6 @@ class TrainPreprocessor:
 
             {
                 "preprocess": {
-                            "pack_dir": "",
                             "lazy_parse_request": False,
                             "lazy_build_vocab": False,
                             "device": "cpu",
@@ -169,13 +158,6 @@ class TrainPreprocessor:
             }
 
         Here:
-
-        `"preprocess.pack_dir"`: str
-            The directory containing all the training dataset files
-
-            .. note::
-                Different reader will require different file extensions. Please
-                refer to the specific reader for the file extension.
 
         `"preprocessor.lazy_parse_request"`: bool
             If False (default), preprocessor will parse input user request when
@@ -201,7 +183,6 @@ class TrainPreprocessor:
         # Configs should be serializable
         return {
             "preprocess": {
-                "pack_dir": "",
                 "lazy_parse_request": False,
                 "lazy_build_vocab": False,
                 "device": "cpu",
@@ -295,13 +276,13 @@ class TrainPreprocessor:
         schemes: Dict = self._feature_resource["schemes"]
 
         # TODO: clear vocab?
-        for data_pack in \
-                self._train_reader.iter(self._config.preprocess.pack_dir):
+        for data_pack in self._pack_generator:
             for instance in data_pack.get(scope):
                 for _, scheme in schemes.items():
                     extractor: BaseExtractor = scheme["extractor"]
                     if extractor.vocab_method != "raw":
                         extractor.update_vocab(data_pack, instance)
+            self._cached_packs.append(data_pack)
 
         self._vocab_ready = True
 
@@ -311,8 +292,7 @@ class TrainPreprocessor:
         schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
 
         data_source = \
-            DataPackDataSource(reader=self._train_reader,
-                               pack_dir=self._config.preprocess.pack_dir,
+            DataPackDataSource(pack_generator=iter(self._cached_packs),
                                context_type=scope,
                                request={scope: []})
 
@@ -426,8 +406,8 @@ class TrainPreprocessor:
         r"""
         This method mainly has four steps:
 
-        1. Parse dataset file into :class:`forte.data.data_pack.DataPack`
-           via train reader
+        1. Iterate over :class:`forte.data.data_pack.DataPack`
+           via pack generator
         2. Extract :class:`forte.data.converter.feature.Feature` from
            :class:`forte.data.data_pack.DataPack`
         3. Batch :class:`forte.data.converter.feature.Feature`

@@ -17,13 +17,13 @@ import torch
 from texar.torch import HParams
 from texar.torch.data import IterDataSource, DatasetBase, Batch
 
+from forte.data.base_pack import PackType
 from forte.data.converter import Converter
 from forte.data.converter import Feature
 from forte.data.data_pack import DataPack
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
-from forte.data.readers.base_reader import PackReader
 from forte.data.types import DataRequest
 
 # An instance is a single data point from data pack
@@ -37,11 +37,8 @@ class DataPackIterator:
     An iterator over single data example from multiple data packs.
 
     Args:
-        reader (PackReader): A reader of
-            :class:`forte.data.readers.base_reader.PackReader` that will
-            parse dataset files into data packs.
-        pack_dir (str): A string of the directory path that includes all the
-            dataset files to be parsed.
+        pack_generator (Iterator[PackType]): A generator of
+            :class:`forte.data.base_pack.PackType`.
         context_type: The granularity of a single example which
             could be any ``Annotation`` type. For example, it can be
             :class:`ft.onto.base_ontology.Sentence`, then each training example
@@ -57,21 +54,17 @@ class DataPackIterator:
         :meth:`get_data()` in :class:`forte.data.data_pack.DataPack`.
     """
     def __init__(self,
-                 reader: PackReader,
-                 pack_dir: str,
+                 pack_generator: Iterator[PackType],
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
                  skip_k: int = 0):
-        self._reader: PackReader = reader
-        self._pack_dir: str = pack_dir
         self._get_data_args: Dict = {
             "context_type": context_type,
             "request": request,
             "skip_k": skip_k
         }
 
-        self._data_pack_iter: Iterator[DataPack] = \
-            self._reader.iter(self._pack_dir)
+        self._data_pack_iter: Iterator[DataPack] = pack_generator
         self._instance_iter: Optional[Iterator[Instance]] = None
         self._curr_data_pack: Optional[DataPack] = None
 
@@ -103,11 +96,8 @@ class DataPackDataSource(IterDataSource):
     :class:`forte.data.data_pack_dataset.DataPackIterator`.
 
     Args:
-        reader (PackReader): A reader of
-            :class:`forte.data.readers.base_reader.PackReader` that will
-            parse dataset files into data packs.
-        pack_dir (str): A string of the directory path that includes all the
-            dataset files to be parsed.
+        pack_generator (Iterator[PackType]): A generator of
+            :class:`forte.data.base_pack.PackType`.
         context_type: The granularity of a single example which
             could be any ``Annotation`` type. For example, it can be
             :class:`ft.onto.base_ontology.Sentence`, then each training example
@@ -123,13 +113,11 @@ class DataPackDataSource(IterDataSource):
         :meth:`get_data()` in :class:`forte.data.data_pack.DataPack`.
     """
     def __init__(self,
-                 reader: PackReader,
-                 pack_dir: str,
+                 pack_generator: Iterator[PackType],
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
                  skip_k: int = 0):
-        self._iterator: Iterator = DataPackIterator(reader,
-                                                    pack_dir,
+        self._iterator: Iterator = DataPackIterator(pack_generator,
                                                     context_type,
                                                     request,
                                                     skip_k)
