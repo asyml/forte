@@ -31,10 +31,12 @@ class TestBackTranslationAugmenter(unittest.TestCase):
         )
         self.bta = BackTranslationOp(
             configs={
+                "prob": 1.0,
                 "model_to": model_class_name,
                 "model_back": model_class_name,
                 "src_language": "en",
                 "tgt_language": "fr",
+                "device": "cpu"
             }
         )
 

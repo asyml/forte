@@ -22,7 +22,7 @@ from forte.processors.data_augment.algorithms.UDA import UDAIterator
 from texar.torch.utils.shapes import get_rank
 
 
-class UDAPipelineTest(unittest.TestCase):
+class UDATest(unittest.TestCase):
     def setUp(self):
         self.pickle_data_dir = tempfile.TemporaryDirectory()
         max_seq_length = 128

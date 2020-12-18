@@ -12,5 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.processors.data_augment.algorithms.distribution_replacement_op \
-    import *
+# This package contains Information Retrieval Processors, to use processor in
+# this package, run the 'ir' option in setup.py
+
+from forte.models.da_rl.aug_wrapper import *
+from forte.models.da_rl.magic_model import *
