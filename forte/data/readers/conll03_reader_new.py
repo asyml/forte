@@ -15,10 +15,10 @@
 import logging
 import os
 from typing import Iterator, Any
+from ft.onto.base_ontology import Token, Sentence, Document, EntityMention
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Token, Sentence, Document, EntityMention
 
 __all__ = [
     "CoNLL03Reader"
@@ -44,9 +44,10 @@ class CoNLL03Reader(PackReader):
         return os.path.basename(collection)
 
     def _parse_pack(self, collection: str) -> Iterator[DataPack]:
-        pack: DataPack = DataPack()
         doc = open(collection, "r", encoding="utf8")
+        pack_id: int = 0
 
+        pack: DataPack = DataPack()
         text: str = ""
         offset: int = 0
         has_rows: bool = False
@@ -60,10 +61,44 @@ class CoNLL03Reader(PackReader):
         prev_y = None
         prev_x = None
         start_index = -1
+
         for line in doc:
             line = line.strip()
 
+<<<<<<< HEAD
             if line != "" and not line.startswith("#"):
+=======
+            if line.find("DOCSTART") != -1:
+                # Skip the first DOCSTART.
+                if offset == 0:
+                    continue
+                # Add remaining sentence.
+                if has_rows:
+                    # Add the last sentence if exists.
+                    Sentence(pack, sentence_begin, offset - 1)
+                    sentence_cnt += 1
+
+                pack.set_text(text, replace_func=self.text_replace_operation)
+                Document(pack, 0, len(text))
+                pack.pack_name = collection + "_%d" % pack_id
+                pack_id += 1
+                yield pack
+
+                # Create a new datapack.
+                pack: DataPack = DataPack()
+                text: str = ""
+                offset: int = 0
+                has_rows: bool = False
+
+                sentence_begin: int = 0
+                sentence_cnt: int = 0
+
+                prev_y = None
+                prev_x = None
+                start_index = -1
+
+            elif line != "" and not line.startswith("#"):
+>>>>>>> 67552f2... RJQ: [reader] create a new pack for each DOC
                 conll_components = line.split()
 
                 word = conll_components[0]
@@ -136,10 +171,8 @@ class CoNLL03Reader(PackReader):
             sentence_cnt += 1
 
         pack.set_text(text, replace_func=self.text_replace_operation)
-
         Document(pack, 0, len(text))
-
         pack.pack_name = collection
-        doc.close()
 
         yield pack
+        doc.close()

@@ -53,6 +53,7 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
+            print("--one pack--")
             for sentence in pack.get(Sentence):
                 doc_exists = True
                 # sent_text sentence.text
