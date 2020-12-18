@@ -20,7 +20,7 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
-from typing import List, Optional, overload
+from typing import List, Optional, overload, Union
 
 import jsonpickle
 
@@ -47,7 +47,9 @@ def maybe_download(urls: str, path: PathLike, filenames: Optional[str] = None,
                    extract: bool = False) -> str: ...
 
 
-def maybe_download(urls, path, filenames=None, extract=False):
+def maybe_download(urls: Union[List[PathLike], PathLike],
+                   path: PathLike, filenames: Union[List, str] = None,
+                   extract=False):
     r"""Downloads a set of files.
 
     Args:
