@@ -77,13 +77,13 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
 
         self.conn = sqlite3.connect(configs.stave_db_path)
         self.data_packs: Dict[int, DataPack] = load_all_datapacks(
-            self.conn, configs.data_pack_table_name, configs.pack_content_col)
+            self.conn, configs.datapack_table, configs.pack_content_col)
 
     def _get_multipack_content(self) -> Iterator[str]:
         c = self.conn.cursor()
         for value in c.execute(
-                f'SELECT * FROM {self.configs.multi_pack_table_name}'):
-            yield value[self.configs.multipack_content_col]
+                f'SELECT textPack FROM {self.configs.multipack_table}'):
+            yield value[0]
 
     def _get_pack_content(self, pack_id: int) -> DataPack:
         return self.data_packs[pack_id]
@@ -91,17 +91,15 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
-        # TODO:
-        #   1 make this project aware.
-        #   2 generate the classes using the ontology.
         config.update({
             "stave_db_path": None,
-            "multi_pack_table_name": 'nlpviewer_backend_crossdoc',
-            "data_pack_table_name": 'nlpviewer_backend_document',
-            "ontology_table": 'nlpviewer_backend_project',
-            "pack_suffix": '.json',
-            "pack_content_col": 2,
+            "multipack_table": 'nlpviewer_backend_crossdoc',
             "multipack_content_col": 2,
+            "multipack_project_key_col": 3,
+            "datapack_table": 'nlpviewer_backend_document',
+            "pack_content_col": 2,
+            "project_table": None,
+            "project_to_read": None,
         })
         return config
 
@@ -114,7 +112,7 @@ class StaveDataPackSqlReader(PackReader):
             raise ProcessorConfigError(
                 'The database path to stave is not specified.')
 
-        if not configs.data_pack_table_name:
+        if not configs.datapack_table:
             raise ProcessorConfigError(
                 'The table name that stores the data pack is not stored.')
 
@@ -122,12 +120,22 @@ class StaveDataPackSqlReader(PackReader):
         self.conn = sqlite3.connect(self.configs.stave_db_path)
         c = self.conn.cursor()
 
-        for value in c.execute(
-                f'SELECT * FROM {self.configs.data_pack_table_name}'):
-            yield value[self.configs.pack_content_col]
+        pack: str = self.configs.datapack_table
+        project: str = self.configs.project_table
+
+        if self.configs.target_project_name is None:
+            # Read all documents in the database.
+            query = f'SELECT * FROM {pack}'
+        else:
+            # Read the specific project.
+            query = f'SELECT textPack FROM {pack}, {project} ' \
+                    f'WHERE {pack}.project_id = {project}.id ' \
+                    f'AND {project}.name = "{self.configs.target_project_name}"'
+
+        for value in c.execute(query):
+            yield value[0]
 
     def _parse_pack(self, pack_str: str) -> Iterator[DataPack]:
-        print(pack_str[0:30])
         yield deserialize(pack_str)
 
     @classmethod
@@ -135,8 +143,9 @@ class StaveDataPackSqlReader(PackReader):
         config = super().default_configs()
         config.update({
             "stave_db_path": None,
-            "data_pack_table_name": 'nlpviewer_backend_document',
-            "pack_suffix": '.json',
+            "datapack_table": 'nlpviewer_backend_document',
             "pack_content_col": 2,
+            "project_table": "nlpviewer_backend_project",
+            "target_project_name": None,
         })
         return config

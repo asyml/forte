@@ -3,22 +3,29 @@ import tempfile
 import unittest
 import sqlite3
 
+from ddt import ddt, data
+
 from forte.data.data_pack import DataPack
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.readers.stave_readers import StaveMultiDocSqlReader, \
     StaveDataPackSqlReader
 from forte.pipeline import Pipeline
 from forte.data.data_utils import maybe_download
 
 
+@ddt
 class StaveReaderTest(unittest.TestCase):
     def setUp(self):
         sql_url = "https://raw.githubusercontent.com/asyml/stave/master" \
                   "/simple-backend/example_db.sql"
 
-        self.datapack_table_name = StaveMultiDocSqlReader.default_configs()[
-            'data_pack_table_name']
-        self.multipack_table_name = StaveMultiDocSqlReader.default_configs()[
-            'multi_pack_table_name']
+        self.datapack_table = StaveMultiDocSqlReader.default_configs()[
+            'datapack_table']
+        self.multipack_table = StaveMultiDocSqlReader.default_configs()[
+            'multipack_table']
+        self.project_table = StaveDataPackSqlReader.default_configs()[
+            'project_table'
+        ]
 
         self.temp_dir = tempfile.TemporaryDirectory()
         maybe_download(sql_url, self.temp_dir.name, 'example_db.sql')
@@ -41,18 +48,32 @@ class StaveReaderTest(unittest.TestCase):
         c = conn.cursor()
         return c.execute(q)
 
-    # TODO: currently only created the pack reader test. Will add multi pack
-    #  tests when the database format is determined.
-    def test_stave_reader(self):
-        # Read number of lines in both tables. These are the number of
-        #  packs in each format.
-        pack_count = self._query(
-            f"SELECT Count(*) FROM {self.datapack_table_name}")
+    @data('project-1-example', 'project-2-example')
+    def test_stave_reader_project(self, project_name: str):
+        def build_ontology():
+            res = self._query(f'SELECT ontology FROM nlpviewer_backend_project '
+                              f'WHERE nlpviewer_backend_project.name = '
+                              f'"{project_name}"').fetchone()[0]
+            with tempfile.NamedTemporaryFile('w') as onto_file:
+                onto_file.write(res)
+                print(onto_file)
+                print(onto_file.name)
+                OntologyCodeGenerator().generate(onto_file.name, ".")
+                print(os.listdir("."))
+
+        build_ontology()
+
+        # Query packs in this project directly.
+        pack_count: int = self._query(
+            f"SELECT Count(*) FROM {self.datapack_table}, {self.project_table} "
+            f"WHERE {self.datapack_table}.project_id = {self.project_table}.id "
+            f"AND {self.project_table}.name = '{project_name}'").fetchone()[0]
 
         # Read the data packs using the reader.
         nlp: Pipeline[DataPack] = Pipeline[DataPack]()
         nlp.set_reader(StaveDataPackSqlReader(), config={
-            "stave_db_path": self.sql_db
+            "stave_db_path": self.sql_db,
+            "target_project_name": project_name
         })
         nlp.initialize()
 
