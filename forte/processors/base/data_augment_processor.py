@@ -19,7 +19,7 @@ and create a new pack with them.
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast
-from bisect import bisect_right
+from bisect import bisect_right, bisect_left
 from sortedcontainers import SortedList, SortedDict
 from forte.data.ontology.core import Entry, BaseLink
 from forte.common.configuration import Config
@@ -46,8 +46,8 @@ def modify_index(
         index: int,
         # Both of the following spans should be SortedList.
         # Use List to avoid typing errors.
-        old_spans: List[Tuple[int, int]],
-        new_spans: List[Tuple[int, int]],
+        old_spans: List[Span],
+        new_spans: List[Span],
         is_begin: bool,
         is_inclusive: bool
 ) -> int:
@@ -57,28 +57,51 @@ def modify_index(
 
     An index is the character offset in the data pack.
     The old_spans are the inputs of replacement, and the new_spans
-    are the outputs. Each of the span is a tuple with start and end
-    index. The old_spans and new_spans are anchors for the mapping,
+    are the outputs. Each of the span has start and end index.
+    The old_spans and new_spans are anchors for the mapping,
     because we depend on them to determine the position change of the
     index.
 
-    Given an index, the function will find its nearest old span, and
-    calculate the difference between the position of the old
-    span and its corresponding new span. The position change is then
-    applied to the input index.
+    Given an index, the function will find its the nearest
+    among the old spans before the index, and calculate the difference
+    between the position of the old span and its corresponding new span.
+    The position change is then applied to the input index. An updated
+    index is then calculated and returned.
+
+    An inserted span might be included as a part of another span.
+    For example, given a sentence "I love NLP.", if we insert a
+    token "Yeah" at the beginning of the sentence(index=0), the Sentence
+    should include the new Token, i.e., the Sentence will have a
+    start index equals to 0. In this case, the parameter is_inclusive
+    should be True. However, for another Token "I", it should not include
+    the new token, so its start index will be larger than 0.
+    The parameter in_inclusive should be False.
+
+    The input index could be the start or end index of a span, i.e., the
+    left or right boundary of the span. If there is an insertion in the span,
+    we should treat the two boundaries in different ways. For example,
+    we have a paragraph with two sentences "I love NLP! You love NLP too."
+    If we append another "!" to the end of the first sentence, when modifying
+    the end index of the first Sentence, it should be pushed right to include
+    the extra exclamation. In this case, the is_begin is False. However, if
+    we prepend an "And" to the second sentence, when modifying the start index
+    of the second Sentence, it should be pushed left to include the new Token.
+    In this case, the is_begin is True.
 
     Args:
         index (int): The index to map.
-        old_spans (List): The spans before replacement.
-        new_spans (List): The spans after replacement.
-        is_begin (bool): True if the index is a span begin index.
+        old_spans (SortedList): The spans before replacement. It should be
+            a sorted list in ascending order.
+        new_spans (SortedList): The spans after replacement. It should be
+            a sorted list in ascending order.
+        is_begin (bool): True if the input index is the start index of a span.
         is_inclusive (bool): True if the span constructed by the aligned
             index should include inserted spans.
     Returns:
         The aligned index.
 
     If the old spans are [0, 1], [2, 3], [4, 6],
-    the new spans are [0, 4], [5, 7], [8, 9],
+    the new spans are [0, 4], [5, 7], [8, 11],
     the input index is 3, and there are no insertions,
     the algorithm will first locate the last span with
     a begin index less or equal than the target index,
@@ -86,11 +109,22 @@ def modify_index(
     Then we calculate the delta index(7-3=4) and update our
     input index(3+4=7). The output then is 7.
 
+    Note that when the input index locates inside the old spans,
+    instead of on the boundary of the spans, we compute the return
+    index so that it maintains the same offset to the begin of the
+    span it belongs to. In the above example, if we change the input
+    index from 3 to 5, the output will become 9, because we locates
+    the input index in the third span [4, 6] and use the same offset
+    5-4=1 to calculate the output 8+1=9.
+
     When insertion is considered, there will be spans
     with the same begin index, for example,
-    [0, 1], [1, 1], [1, 2]. The output will depend on
-    whether to include the inserted span, and whether the
-    input index is a begin or an end index.
+    [0, 1], [1, 1], [1, 2]. The span [1, 1] indicates an insertion
+    at index 1, because the insertion can be considered as a
+    replacement of an empty input span, with a length of 0.
+    The output will be affected by whether to include the inserted
+    span(is_inclusive), and whether the input index is a begin or
+    end index of its span(is_begin).
 
     If the old spans are [0, 1], [1, 1], [1, 2],
     the new spans are [0, 2], [2, 4], [4, 5],
@@ -102,25 +136,27 @@ def modify_index(
     """
 
     # Get the max index for binary search.
-    max_index: int = old_spans[-1][1] + 1
+    max_index: int = old_spans[-1].end + 1
+    max_index = max(max_index, index)
 
     # This is the last span that has a start index less than
     # the input index. The position change of this span determines
     # the modification we will apply to the input index.
     last_span_ind: int = bisect_right(
-        old_spans, (index, max_index)
+        old_spans, Span(index, max_index)
     ) - 1
 
-    # If there is an inserted span, it will
-    # always be the first of those spans with
-    # the same begin index.
+    # If there is an inserted span, it will always be the first of
+    # those spans with the same begin index. For example, given spans
+    # [1, 1], [1, 2], The inserted span [1, 1] will be in the front of
+    # replaced span [1, 2], because it has the smallest end index.
     if last_span_ind >= 0:
         if is_inclusive:
             if is_begin:
                 # When inclusive, move the begin index
                 # to the left to include the inserted span.
                 if last_span_ind > 0 and \
-                        old_spans[last_span_ind - 1][0] == index:
+                        old_spans[last_span_ind - 1].begin == index:
                     # Old spans: [0, 1], [1, 1], [1, 3]
                     # Target index: 1
                     # Change last_span_index from 2 to 1
@@ -138,14 +174,14 @@ def modify_index(
                 # When exclusive, move the end index
                 # to the left to exclude the inserted span.
                 if last_span_ind > 0 and \
-                        old_spans[last_span_ind - 1][0] == index:
+                        old_spans[last_span_ind - 1].begin == index:
                     # Old spans: [0, 1], [1, 1], [1, 3]
                     # Target index: 1
                     # Change last_span_index from 2 to 0
                     # to exclude the [1, 1] span.
                     last_span_ind -= 2
-                elif old_spans[last_span_ind][0] == index and \
-                        old_spans[last_span_ind][1] == index:
+                elif old_spans[last_span_ind].begin == index and \
+                        old_spans[last_span_ind].end == index:
                     # Old spans: [0, 1], [1, 1], [2, 3]
                     # Target index: 1
                     # Change last_span_index from 1 to 0
@@ -157,19 +193,19 @@ def modify_index(
         return index
     # Find the nearest anchor point on the left of current index.
     # Start from the span's begin index.
-    delta_index: int = new_spans[last_span_ind][0] - \
-                       old_spans[last_span_ind][0]
+    delta_index: int = new_spans[last_span_ind].begin - \
+                       old_spans[last_span_ind].begin
 
-    if old_spans[last_span_ind][0] == old_spans[last_span_ind][1] \
-            and old_spans[last_span_ind][0] == index \
+    if old_spans[last_span_ind].begin == old_spans[last_span_ind].end \
+            and old_spans[last_span_ind].begin == index \
             and is_begin \
             and is_inclusive:
         return index + delta_index
 
-    if old_spans[last_span_ind][1] <= index:
+    if old_spans[last_span_ind].end <= index:
         # Use the span's end index as anchor, if possible.
-        delta_index = new_spans[last_span_ind][1] - \
-                      old_spans[last_span_ind][1]
+        delta_index = new_spans[last_span_ind].end - \
+                      old_spans[last_span_ind].end
     return index + delta_index
 
 
@@ -197,7 +233,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         # The new text will be used for building new data pack.
         self._replaced_annos: DefaultDict[int, SortedList[Tuple[Span, str]]] = \
             defaultdict(
-                lambda: SortedList([], key=lambda x: (x[0].begin, x[0].end))
+                lambda: SortedList([], key=lambda x: x[0])
             )
 
         # :attr:`_inserted_annos_pos_len`: {datapack id: Dict{position: length}}
@@ -246,9 +282,24 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             True if the input span overlaps with
             any existing spans, False otherwise.
         """
-        for span, _ in self._replaced_annos[pid]:
+        if len(self._replaced_annos[pid]) == 0:
+            return False
+        ind: int = bisect_left(
+            self._replaced_annos[pid],
+            (Span(begin, begin), "")
+        ) - 1
+
+        if ind < 0:
+            ind += 1
+
+        while ind < len(self._replaced_annos[pid]):
+            span: Span = self._replaced_annos[pid][ind][0]
             if not(span.begin >= end or span.end <= begin):
                 return True
+            if span.begin > end:
+                break
+            ind += 1
+
         return False
 
     def _replace(
@@ -361,8 +412,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         if len(replaced_annotations) == 0:
             return deepcopy(data_pack)
 
-        spans: List[Tuple[int, int]] = [
-            (span.begin, span.end) for span, _ in replaced_annotations]
+        spans: List[Span] = [
+            span for span, _ in replaced_annotations]
         replacement_strs: List[str] = [
             replacement_str for _, replacement_str in replaced_annotations]
 
@@ -371,26 +422,26 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         for i, span in enumerate(spans):
             new_span_str = replacement_strs[i]
             # First, get the gap text between last and this span.
-            last_span_end: int = spans[i - 1][1] if i > 0 else 0
-            gap_text: str = data_pack.text[last_span_end: span[0]]
+            last_span_end: int = spans[i - 1].end if i > 0 else 0
+            gap_text: str = data_pack.text[last_span_end: span.begin]
             new_text += gap_text
             # Then, append the replaced new text.
             new_text += new_span_str
         # Finally, append to new_text the text after the last span.
-        new_text += data_pack.text[spans[-1][1]:]
+        new_text += data_pack.text[spans[-1].end:]
 
         # Get the span (begin, end) before and after replacement.
-        new_spans: List[Tuple[int, int]] = []
+        new_spans: List[Span] = []
 
         # Bias is the delta between the beginning
         # indices before & after replacement.
         bias: int = 0
         for i, span in enumerate(spans):
-            old_begin: int = spans[i][0]
-            old_end: int = spans[i][1]
+            old_begin: int = spans[i].begin
+            old_end: int = spans[i].end
             new_begin: int = old_begin + bias
             new_end = new_begin + len(replacement_strs[i])
-            new_spans.append((new_begin, new_end))
+            new_spans.append(Span(new_begin, new_end))
             bias = new_end - old_end
 
         new_pack: DataPack = DataPack()
@@ -412,8 +463,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 insert_ind: int,
                 inserted_annos: List[Tuple[int, int]],
                 new_pack: DataPack,
-                spans: List[Tuple[int, int]],
-                new_spans: List[Tuple[int, int]]
+                spans: List[Span],
+                new_spans: List[Span]
         ):
             r"""
             An internal helper function for insertion.
@@ -560,17 +611,15 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         # Copy the children entries.
         new_children: List[Entry] = []
         for child_entry in children:
-            if isinstance(child_entry, Annotation):
-                # Children Annotation must have been copied.
-                if child_entry.tid not in entry_map:
-                    return False
-            elif isinstance(child_entry, (Link, Group)):
+            if isinstance(child_entry, (Link, Group)):
                 # Recursively copy the children Links/Groups.
                 if not self._copy_link_or_group(
                         child_entry, entry_map, new_pack):
                     return False
             else:
-                return False
+                # Children Annotation must have been copied.
+                if child_entry.tid not in entry_map:
+                    return False
             new_child: Entry = new_pack.get_entry(
                 entry_map[child_entry.tid]
             )
