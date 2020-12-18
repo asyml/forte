@@ -15,8 +15,9 @@
 Class for data augmentation algorithm. The text replacement op will
 replace a piece of text with data augmentation algorithms.
 """
+from typing import Tuple
 from abc import abstractmethod, ABC
-from forte.data.ontology.core import Entry
+from forte.data.ontology.top import Annotation
 from forte.common.configuration import Config
 
 __all__ = [
@@ -27,7 +28,7 @@ __all__ = [
 class TextReplacementOp(ABC):
     r"""
     The base class holds the data augmentation algorithm.
-    We leave the :func: replace method to be implemented
+    We leave the :func:`replace` method to be implemented
     by subclasses.
     """
     def __init__(self, configs: Config):
@@ -37,11 +38,19 @@ class TextReplacementOp(ABC):
         self.configs = configs
 
     @abstractmethod
-    def replace(self, input: Entry) -> str:
+    def replace(self, input: Annotation) -> Tuple[bool, str]:
         r"""
         Most data augmentation algorithms can be considered
         as replacement-based methods on different levels.
-        This function takes in an entry as input and
+        This function takes in an annotation as input and
         returns the augmented string.
+
+        Args:
+            input: the input annotation to be replaced.
+
+        Returns:
+            A tuple, where the first element is a boolean value indicating
+            whether the replacement happens, and the second element is the
+            replaced string.
         """
         raise NotImplementedError
