@@ -143,7 +143,6 @@ if __name__ == "__main__":
     # https://texar-pytorch.readthedocs.io/en/latest/code/data.html#texar.torch.data.DatasetBase.default_hparams
     tp_config: Dict = {
         "preprocess": {
-            "pack_dir": config_data.train_path,
             "device": device.type
         },
         "dataset": {
@@ -151,10 +150,15 @@ if __name__ == "__main__":
         }
     }
 
+    # Create data pack generator from reader
     train_reader = CoNLL03Reader(cache_in_memory=True)
-    val_reader = CoNLL03Reader(cache_in_memory=True)
+    train_pl: Pipeline = Pipeline()
+    train_pl.set_reader(train_reader)
+    train_pl.initialize()
+    train_pack_generator = train_pl.process_dataset(config_data.train_path)
 
-    train_preprocessor = TrainPreprocessor(train_reader=train_reader,
+    # Create train preprocessor
+    train_preprocessor = TrainPreprocessor(pack_generator=train_pack_generator,
                                            request=tp_request,
                                            config=tp_config)
 
@@ -176,6 +180,7 @@ if __name__ == "__main__":
         cross_pack=False)
     evaluator = CoNLLNEREvaluator()
 
+    val_reader = CoNLL03Reader(cache_in_memory=True)
     val_pl: Pipeline = Pipeline()
     val_pl.set_reader(val_reader)
     val_pl.add(predictor)
@@ -225,5 +230,5 @@ if __name__ == "__main__":
                     epoch, evaluator.get_result())
 
         # Save training state to disk
-        train_preprocessor.save_state(config_data.train_state_path)
-        torch.save(model, config_model.model_path)
+        # train_preprocessor.save_state(config_data.train_state_path)
+        # torch.save(model, config_model.model_path)
