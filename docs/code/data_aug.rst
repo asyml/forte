@@ -8,6 +8,14 @@ Data Augmentation
 Data Augmentation Processors
 ================================
 
+:hidden:`ReplacementDataAugmentProcessor`
+---------------------------------------------
+.. autoclass:: forte.processors.base.data_augment_processor.ReplacementDataAugmentProcessor
+
+:hidden:`UDAIterator`
+----------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.UDA.UDAIterator
+    :members:
 
 
 Data Augmentation Ops
@@ -29,6 +37,21 @@ Data Augmentation Ops
     :members:
 
 .. autoclass:: forte.processors.data_augment.algorithms.sampler.UnigramSampler
+    :members:
+    
+:hidden:`MachineTranslator`
+---------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MachineTranslator
+    :members:
+
+:hidden:`MarianMachineTranslator`
+-----------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.machine_translator.MarianMachineTranslator
+    :members:
+
+:hidden:`BackTranslationOp`
+------------------------------
+.. autoclass:: forte.processors.data_augment.algorithms.back_translation_op.BackTranslationOp
     :members:
 
 :hidden:`DictionaryReplacementOp`
