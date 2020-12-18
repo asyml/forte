@@ -29,8 +29,8 @@ def create(args_):
     dest_path = normalize_path(args_.dest_path)
     spec_paths = [normalize_path(config) for config in args_.spec_paths] \
         if args_.spec_paths is not None else None
-
     merged_path = normalize_path(args_.merged_path)
+    leient_prefix = args_.lenient_prefix
 
     generator = OntologyCodeGenerator(spec_paths, args_.gen_all)
     if args_.no_dry_run is None:
@@ -38,10 +38,14 @@ def create(args_):
                  "--no_dry_run is not specified by the user.")
         args_.no_dry_run = False
 
+    if leient_prefix:
+        log.info("Will not enforce prefix check.")
+
     is_dry_run = not args_.no_dry_run
     include_init = not args_.exclude_init
     generated_folder = generator.generate(spec_path, dest_path, is_dry_run,
-                                          include_init, merged_path)
+                                          include_init, merged_path,
+                                          leient_prefix)
     log.info("Ontology generated in the directory %s.", generated_folder)
 
 
@@ -143,6 +147,12 @@ def main():
                                help='If True, will generate all the ontology,'
                                     'including the existing ones shipped with '
                                     'Forte.')
+
+    create_parser.add_argument('-l', '--lenient_prefix',
+                               required=False,
+                               default=False,
+                               action='store_true',
+                               help='If True, will not enforce prefix check.')
 
     create_parser.set_defaults(func=create)
 
