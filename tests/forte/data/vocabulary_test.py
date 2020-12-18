@@ -23,35 +23,35 @@ class VocabularyTest(unittest.TestCase):
             if flag:
                 self.assertTrue(idx == -1)
                 idx = i
-        self.assertTrue(idx != -1)
         return idx
 
     def test_indexing_vocab(self):
         methods = ["indexing", "one-hot"]
         flags = [True, False]
-        for method, use_unk in product(methods, flags):
-            vocab = Vocabulary(method=method, use_unk=use_unk)
+        for method, need_pad, use_unk in product(methods, flags, flags):
+            vocab = Vocabulary(method=method, need_pad=need_pad, use_unk=use_unk)
 
-            # Check vocabulary add, element2repr and id2element
+            # Check vocabulary add_element, element2repr and id2element
             elements = ["EU", "rejects", "German", "call",
                         "to", "boycott", "British", "lamb", "."]
             for ele in elements:
-                vocab.add(ele)
+                vocab.add_element(ele)
             save_len = len(vocab)
             for ele in elements:
-                vocab.add(ele)
+                vocab.add_element(ele)
             self.assertEqual(save_len, len(vocab))
 
-            reprs = [vocab.element2repr(ele) for ele in elements]
+            representation = [vocab.element2repr(ele) for ele in elements]
 
-            self.assertTrue(len(reprs) > 0)
+            self.assertTrue(len(representation) > 0)
+
             if method == "indexing":
-                self.assertTrue(isinstance(reprs[0], int))
+                self.assertTrue(isinstance(representation[0], int))
             else:
-                self.assertTrue(isinstance(reprs[0], list))
+                self.assertTrue(isinstance(representation[0], list))
 
             recovered_elements = []
-            for rep in reprs:
+            for rep in representation:
                 if method == "indexing":
                     idx = rep
                 else:
@@ -61,14 +61,9 @@ class VocabularyTest(unittest.TestCase):
             self.assertListEqual(elements, recovered_elements)
 
             # Check __len__, items.
-            # For "indexing", PAD_ELEMENT is automatically
-            # added and counted. For "one-hot", PAD_ELEMENT is
-            # automatically added and note counted.
             self.assertEqual(len(set(elements)) + int(use_unk) +
-                        int(method == "indexing"),
+                        int(need_pad),
                         len(vocab))
-            self.assertEqual(len(vocab),
-                len(list(vocab.items())) - int(method == "one-hot"))
             saved_len = len(vocab)
 
             # Check has_element
@@ -77,33 +72,26 @@ class VocabularyTest(unittest.TestCase):
             for ele in range(10):
                 self.assertFalse(vocab.has_element(ele))
 
-            # Check PAD_ELEMENT, get_dict
-            if method == "indexing":
-                expected_pad_idx = 0
-                expected_pad_repr = 0
-            else:
-                expected_pad_idx = -1
-                expected_pad_repr = [0] * len(vocab)
-            self.assertEqual(expected_pad_repr,
-                        vocab.element2repr(Vocabulary.PAD_ELEMENT))
-            self.assertEqual(expected_pad_idx,
-                        vocab.get_dict()[Vocabulary.PAD_ELEMENT])
+            # check PAD_ELEMENT
+            if need_pad:
+                if method == "indexing":
+                    expected_pad_repr = 0
+                else:
+                    expected_pad_repr = [0] * (len(vocab) - 1)
+                self.assertEqual(expected_pad_repr,
+                            vocab.element2repr(Vocabulary.PAD_ELEMENT))
 
-            # Check UNK_ELEMENT, get_dict
+            # Check UNK_ELEMENT
             if use_unk:
                 if method == "indexing":
-                    expected_unk_idx = 1
-                    expected_unk_repr = 1
+                    expected_unk_repr = 0 + int(need_pad)
                 else:
-                    expected_unk_idx = 0
-                    expected_unk_repr = [0] * len(vocab)
+                    expected_unk_repr = [0] * (len(vocab) - int(need_pad))
                     expected_unk_repr[0] = 1
                 self.assertEqual(expected_unk_repr,
                             vocab.element2repr(Vocabulary.UNK_ELEMENT))
-                self.assertEqual(expected_unk_idx,
-                            vocab.get_dict()[Vocabulary.UNK_ELEMENT])
                 self.assertEqual(expected_unk_repr,
-                            vocab.element2repr("THIS_IS_UNKNOWN"))
+                            vocab.element2repr("random_element"))
                 self.assertEqual(saved_len, len(vocab))
 
 
