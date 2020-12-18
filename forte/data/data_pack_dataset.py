@@ -17,7 +17,6 @@ import torch
 from texar.torch import HParams
 from texar.torch.data import IterDataSource, DatasetBase, Batch
 
-from forte.data.base_pack import PackType
 from forte.data.converter import Converter
 from forte.data.converter import Feature
 from forte.data.data_pack import DataPack
@@ -37,8 +36,8 @@ class DataPackIterator:
     An iterator over single data example from multiple data packs.
 
     Args:
-        pack_generator (Iterator[PackType]): A generator of
-            :class:`forte.data.base_pack.PackType`.
+        pack_generator (Iterator[DataPack]): A generator of
+            :class:`forte.data.data_pack.DataPack`.
         context_type: The granularity of a single example which
             could be any ``Annotation`` type. For example, it can be
             :class:`ft.onto.base_ontology.Sentence`, then each training example
@@ -54,7 +53,7 @@ class DataPackIterator:
         :meth:`get_data()` in :class:`forte.data.data_pack.DataPack`.
     """
     def __init__(self,
-                 pack_generator: Iterator[PackType],
+                 pack_generator: Iterator[DataPack],
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
                  skip_k: int = 0):
@@ -96,8 +95,8 @@ class DataPackDataSource(IterDataSource):
     :class:`forte.data.data_pack_dataset.DataPackIterator`.
 
     Args:
-        pack_generator (Iterator[PackType]): A generator of
-            :class:`forte.data.base_pack.PackType`.
+        pack_generator (Iterator[DataPack]): A generator of
+            :class:`forte.data.data_pack.DataPack`.
         context_type: The granularity of a single example which
             could be any ``Annotation`` type. For example, it can be
             :class:`ft.onto.base_ontology.Sentence`, then each training example
@@ -113,7 +112,7 @@ class DataPackDataSource(IterDataSource):
         :meth:`get_data()` in :class:`forte.data.data_pack.DataPack`.
     """
     def __init__(self,
-                 pack_generator: Iterator[PackType],
+                 pack_generator: Iterator[DataPack],
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
                  skip_k: int = 0):

@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
+from typing import List, Iterator
 
-from typing import List
-
+from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
-
-from ft.onto.base_ontology import Sentence
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
-
-from forte.data.data_pack_dataset import \
-    DataPackDataSource, RawExample
+from forte.data.data_pack_dataset import DataPackDataSource, RawExample
+from forte.pipeline import Pipeline
+from ft.onto.base_ontology import Sentence
 
 
 class DataPackDatasetTest(unittest.TestCase):
@@ -38,11 +36,17 @@ class DataPackDatasetTest(unittest.TestCase):
         ]
         self.feature_schemes = {}
 
-        self.data_source: DataPackDataSource = DataPackDataSource(reader,
-                                                                  file_path,
-                                                                  context_type,
-                                                                  request,
-                                                                  skip_k)
+        train_pl: Pipeline = Pipeline()
+        train_pl.set_reader(reader)
+        train_pl.initialize()
+        pack_generator: Iterator[PackType] = \
+            train_pl.process_dataset(file_path)
+
+        self.data_source: DataPackDataSource = \
+            DataPackDataSource(pack_generator,
+                               context_type,
+                               request,
+                               skip_k)
 
     def test_data_pack_iterator(self):
         data_pack_iter = iter(self.data_source)

@@ -18,8 +18,8 @@ import torch
 from torch import device
 
 from forte.common.configuration import Config
-from forte.data.base_pack import PackType
 from forte.data.converter import Converter
+from forte.data.data_pack import DataPack
 from forte.data.data_pack_dataset import DataPackDataSource, \
     DataPackDataset
 from forte.data.extractor.base_extractor import BaseExtractor
@@ -46,8 +46,8 @@ class TrainPreprocessor:
     into `feature_resource`.
 
     Args:
-        pack_generator (Iterator[PackType]): A generator of
-            :class:`forte.data.base_pack.PackType`.
+        pack_generator (Iterator[DataPack]): A generator of
+            :class:`forte.data.data_pack.DataPack`.
         request (Dict): A request that specifies how to do train pre-processing.
             See below for details. An example is given below.
         config: A `Dict` or :class:`forte.common.configuration.Config` that
@@ -120,15 +120,15 @@ class TrainPreprocessor:
     DATA_OUTPUT = 1
 
     def __init__(self,
-                 pack_generator: Iterator[PackType],
+                 pack_generator: Iterator[DataPack],
                  request: Dict,
                  config: Optional[Union[Config, Dict]] = None):
         self._config: Config = \
             Config(config, default_hparams=self.default_configs())
         self._validate_config()
 
-        self._pack_generator: Iterator[PackType] = pack_generator
-        self._cached_packs: List[PackType] = []
+        self._pack_generator: Iterator[DataPack] = pack_generator
+        self._cached_packs: List[DataPack] = []
 
         self._user_request: Dict = request
         self._feature_resource: Dict = {}

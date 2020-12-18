@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
-
 import torch
-from typing import Dict, Any
+from typing import Dict, Any, Iterator
 
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
+from forte.data.base_pack import PackType
 from forte.data.vocabulary import Vocabulary
 from forte.data.converter import Converter
 from forte.train_preprocessor import TrainPreprocessor
@@ -25,6 +25,7 @@ from forte.data.extractor.attribute_extractor import AttributeExtractor
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.extractor.char_extractor import CharExtractor
 from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
+from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence, Token, EntityMention
 
 
@@ -74,16 +75,19 @@ class TrainPreprocessorTest(unittest.TestCase):
         self.evaluator = CoNLLNEREvaluator()
 
         self.tp_config = {
-            "preprocess": {
-                "pack_dir": self.config["train_path"]
-            },
             "dataset": {
                 "batch_size": self.config["batch_size_tokens"]
             }
         }
 
+        train_pl: Pipeline = Pipeline()
+        train_pl.set_reader(self.reader)
+        train_pl.initialize()
+        pack_generator: Iterator[PackType] = \
+            train_pl.process_dataset(self.config["train_path"])
+
         self.train_preprocessor = \
-            TrainPreprocessor(train_reader=self.reader,
+            TrainPreprocessor(pack_generator=pack_generator,
                               request=self.tp_request,
                               config=self.tp_config)
 
