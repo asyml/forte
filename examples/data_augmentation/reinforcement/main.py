@@ -14,7 +14,7 @@
 """
 Example of building a reinforcement learning based,
 data augmentation enhanced sentence classifier
-based on pre-trained BERT model, with IMDB Dataset.
+based on pre-trained BERT model.
 """
 import argparse
 import functools
@@ -40,9 +40,6 @@ parser.add_argument(
 parser.add_argument(
     "--output-dir", default="output/",
     help="The output directory where the model checkpoints will be written.")
-parser.add_argument(
-    "--checkpoint", type=str, default=None,
-    help="Path to a model checkpoint (including bert modules) to restore from.")
 parser.add_argument(
     "--do-train", action="store_true", help="Whether to run training.")
 parser.add_argument(
@@ -79,28 +76,30 @@ class RLAugmentClassifierTrainer:
 
         # Loads data
         num_train_data = config_data.num_train_data
-        self.num_train_steps = int(num_train_data / config_data.train_batch_size
-                              * config_data.max_train_epoch)
+        self.num_train_steps = \
+            int(num_train_data / config_data.train_batch_size *
+                config_data.max_train_epoch)
 
         train_dataset = tx.data.RecordData(
             hparams=config_data.train_hparam, device=device)
-        eval_dataset = tx.data.RecordData(
+        val_dataset = tx.data.RecordData(
             hparams=config_data.eval_hparam, device=device)
         test_dataset = tx.data.RecordData(
             hparams=config_data.test_hparam, device=device)
         self.iterator = tx.data.DataIterator(
             {"train": train_dataset,
-             "eval": eval_dataset,
+             "eval": val_dataset,
              "test": test_dataset}
         )
 
-        self.eval_data_iterator = tx.data.DataIterator({"eval": eval_dataset})
-        self.eval_data_iterator.switch_to_dataset("eval")
+        self.val_data_iterator = tx.data.DataIterator({"eval": val_dataset})
+        self.val_data_iterator.switch_to_dataset("eval")
 
     def _init_aug_model(self):
         # pylint: disable=protected-access
         # Builds data augmentation BERT
-        aug_model = BertForMaskedLM.from_pretrained(args.augmentation_model_name)
+        aug_model = BertForMaskedLM.from_pretrained(
+            args.augmentation_model_name)
         aug_model.to(device)
         aug_tokenizer = tx.data.BERTTokenizer(
             pretrained_model_name=args.augmentation_model_name)
@@ -117,10 +116,11 @@ class RLAugmentClassifierTrainer:
                         any(nd in n for nd in no_decay)],
              'weight_decay': 0.0}]
         aug_optim = tx.core.BertAdam(
-            optimizer_grouped_parameters, betas=(0.9, 0.999), eps=1e-6, lr=aug_lr)
+            optimizer_grouped_parameters, betas=(0.9, 0.999),
+            eps=1e-6, lr=aug_lr)
         # Builds data augmentation wrapper
-        self.aug_wrapper = MetaAugmentationWrapper(aug_model, aug_optim, input_mask_ids,
-                                              device, args.num_aug)
+        self.aug_wrapper = MetaAugmentationWrapper(
+            aug_model, aug_optim, input_mask_ids, device, args.num_aug)
 
     def _init_classifier(self):
         # Builds downstream BERT classifier
@@ -171,20 +171,16 @@ class RLAugmentClassifierTrainer:
                 labels = batch["label_ids"]
                 input_length = (1 - (input_ids == 0).int()).sum(dim=1)
 
-                logits, _ = self.classifier(input_ids, input_length, segment_ids)
+                logits, _ = self.classifier(
+                    input_ids, input_length, segment_ids)
                 loss = self._compute_loss(logits, labels)
 
                 loss.backward()
                 self.optim.step()
                 self.scheduler.step()
-                step = self.scheduler.last_epoch
-                # Todo: delete
-                dis_steps = config_data.display_steps
-                if dis_steps > 0 and step % dis_steps == 0:
-                    logging.info("step: %d; loss: %f", step, loss)
 
     def train_epoch(self):
-        r"""Trains on the training set, and evaluates on the dev set
+        r"""Trains on the training set, and evaluates on the validation set
         periodically.
         """
         self.iterator.switch_to_dataset("train")
@@ -200,27 +196,28 @@ class RLAugmentClassifierTrainer:
             # Train augmentation model params phi.
             self.aug_wrapper.reset_model()
             # Iterate over training instances.
-            num_examples = len(input_ids)
-            for i in range(num_examples):
+            num_instances = len(input_ids)
+            for i in range(num_instances):
                 features = (input_ids[i], input_mask[i],
                             segment_ids[i], labels[i])
 
                 # Augmented instance with params phi exposed
                 aug_probs, input_mask_aug, segment_ids_aug, label_ids_aug = \
-                    self.aug_wrapper.augment_example(features)
+                    self.aug_wrapper.augment_instance(features)
 
                 # Compute classifier loss.
                 self.classifier.zero_grad()
                 input_length_aug = ((input_mask_aug == 1).int()).sum(dim=1)
-                logits, _ = self.classifier(aug_probs, input_length_aug, segment_ids_aug)
+                logits, _ = self.classifier(
+                    aug_probs, input_length_aug, segment_ids_aug)
                 loss = self._compute_loss(logits, label_ids_aug)
                 # Update classifier params on meta_model.
                 meta_model = TexarBertMetaModule(self.classifier)
-                meta_model = self.aug_wrapper.update_meta_classifier(
+                meta_model = self.aug_wrapper.update_meta_model(
                     meta_model, loss, self.classifier, self.optim)
 
                 # Compute grads of aug_model on validation data.
-                for val_batch in self.eval_data_iterator:   # one batch
+                for val_batch in self.val_data_iterator:   # one batch
                     val_input_ids = val_batch["input_ids"]
                     val_segment_ids = val_batch["segment_ids"]
                     val_labels = val_batch["label_ids"]
@@ -230,8 +227,8 @@ class RLAugmentClassifierTrainer:
                                                val_input_length,
                                                val_segment_ids)
                     val_loss = self._compute_loss(val_logits, val_labels)
-                    val_loss = val_loss / num_examples / args.num_aug \
-                               / len(self.eval_data_iterator)
+                    val_loss = val_loss / num_instances / args.num_aug \
+                               / len(self.val_data_iterator)
                     val_loss.backward()
 
             # Update aug_model param phi.
@@ -239,8 +236,8 @@ class RLAugmentClassifierTrainer:
 
             # Train classifier with augmented batch
             input_probs, input_masks, segment_ids, label_ids = \
-                self.aug_wrapper.augment_batch(input_ids, input_mask,
-                                          segment_ids, labels)
+                self.aug_wrapper.augment_batch((input_ids, input_mask,
+                                          segment_ids, labels))
 
             input_length = ((input_masks == 1).int()).sum(dim=1)
             self.optim.zero_grad()
@@ -266,7 +263,8 @@ class RLAugmentClassifierTrainer:
             labels = batch["label_ids"]
             input_length = (1 - (input_ids == 0).int()).sum(dim=1)
 
-            logits, preds = self.classifier(input_ids, input_length, segment_ids)
+            logits, preds = \
+                self.classifier(input_ids, input_length, segment_ids)
             loss = self._compute_loss(logits, labels)
             accu = tx.evals.accuracy(labels, preds)
 
@@ -292,7 +290,8 @@ class RLAugmentClassifierTrainer:
             labels = batch["label_ids"]
             input_length = (1 - (input_ids == 0).int()).sum(dim=1)
 
-            logits, preds = self.classifier(input_ids, input_length, segment_ids)
+            logits, preds = \
+                self.classifier(input_ids, input_length, segment_ids)
             loss = self._compute_loss(logits, labels)
             accu = tx.evals.accuracy(labels, preds)
 

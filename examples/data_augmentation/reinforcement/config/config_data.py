@@ -39,7 +39,7 @@ train_hparam = {
     "dataset": {
         "data_name": "data",
         "feature_types": feature_types,
-        "files": "{}/train.pkl".format(pickle_data_dir)
+        "files": "{}/train_rl.pkl".format(pickle_data_dir)
     },
     "shuffle": True,
     "shuffle_buffer_size": None
@@ -51,7 +51,7 @@ eval_hparam = {
     "dataset": {
         "data_name": "data",
         "feature_types": feature_types,
-        "files": "{}/eval.pkl".format(pickle_data_dir)
+        "files": "{}/eval_rl.pkl".format(pickle_data_dir)
     },
     "shuffle": False
 }
