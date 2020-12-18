@@ -23,8 +23,8 @@ from math import ceil
 import random
 from typing import List, Dict
 
-from nltk.corpus import stopwords
-
+from forte.common.configuration import Config
+from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base import ReplacementDataAugmentProcessor
@@ -36,6 +36,29 @@ __all__ = [
     "RandomDeletionDataAugmentProcessor",
 ]
 
+
+english_stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours',
+    'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your',
+    'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself',
+    'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its',
+    'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what',
+    'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those',
+    'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have',
+    'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+    'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while',
+    'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into',
+    'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from',
+    'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again',
+    'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why',
+    'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other',
+    'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
+    'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should',
+    "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren',
+    "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't",
+    'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't",
+    'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't",
+    'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren',
+    "weren't", 'won', "won't", 'wouldn', "wouldn't"]
 
 class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
     r"""
@@ -102,6 +125,10 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     not a stop word. Insert that synonym into a random position in
     the sentence. Do this n times, where n = alpha * input length.
     """
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+        self.stopwords = set(configs['stopwords'])
+
 
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         replacement_op = create_class_with_kwargs(
@@ -117,7 +144,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             annotations = []
             pos = [0]
             for anno in data_pack.get(augment_entry):
-                if anno.text not in stopwords.words('english'):
+                if anno.text not in self.stopwords:
                     annotations.append(anno)
                     pos.append(anno.end)
             if len(annotations) > 0:
@@ -142,6 +169,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             - alpha: indicates the percent of the words in a sentence are
                 changed. The processor will perform the Random Insertion
                 operation (input length * alpha) times.
+            - stopwords: a list of stopword for the language.
         """
         config = super().default_configs()
         config.update({
@@ -171,7 +199,8 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 'kwargs': {
                     'input_src': 'augmented_input_src'
                 }
-            }
+            },
+            'stopwords': english_stopwords,
         })
         return config
 

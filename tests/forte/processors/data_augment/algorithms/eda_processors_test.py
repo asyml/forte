@@ -65,25 +65,8 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
         expected_tokens = ['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'and', 'but',
                            'waited', 'until', 'for', 'noon', 'the', 'bus', '.']
 
-        processor_config = {
-            'augment_entry': "ft.onto.base_ontology.Token",
-            'other_entry_policy': {
-                "kwargs": {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align"
-                }
-            },
-            'alpha': 0.1,
-            'augment_pack_names': {
-                'type': '',
-                'kwargs': {
-                    'input_src': 'augmented_input_src'
-                }
-            }
-        }
-
         swap_processor = RandomSwapDataAugmentProcessor()
-        swap_processor.initialize(resources=None, configs=processor_config)
+        swap_processor.initialize(resources=None, configs=swap_processor.default_configs())
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(self.test_dir)):
             src_pack = m_pack.get_pack('input_src')
@@ -96,12 +79,6 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                     tgt_pack, anno.begin, anno.end
                 )
                 tgt_pack.add_entry(new_anno)
-
-                m_pack.add_entry(
-                    MultiPackLink(
-                        m_pack, anno, new_anno
-                    )
-                )
 
             swap_processor._process(m_pack)
 
@@ -124,37 +101,8 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
         expected_tokens = ['await ', 'Mary', 'and', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'early',
                            'but', 'waited', 'until', 'noon', 'for', 'the', 'bus', '.']
 
-        processor_config = {
-            'augment_entry': "ft.onto.base_ontology.Token",
-            'other_entry_policy': {
-                'kwargs': {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align"
-                }
-            },
-            'data_aug_op':
-                "forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp",
-            'data_aug_op_config': {
-                "kwargs": {
-                    "dictionary_class": (
-                        "forte.processors.data_augment."
-                        "algorithms.dictionary.WordnetDictionary"
-                    ),
-                    "prob": 1.0,
-                    "lang": "eng",
-                },
-            },
-            'alpha': 0.1,
-            'augment_pack_names': {
-                'type': '',
-                'kwargs': {
-                    'input_src': 'augmented_input_src'
-                }
-            }
-        }
-
         insert_processor = RandomInsertionDataAugmentProcessor()
-        insert_processor.initialize(resources=None, configs=processor_config)
+        insert_processor.initialize(resources=None, configs=insert_processor.default_configs())
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(self.test_dir)):
             src_pack = m_pack.get_pack('input_src')
@@ -167,12 +115,6 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                     tgt_pack, anno.begin, anno.end
                 )
                 tgt_pack.add_entry(new_anno)
-
-                m_pack.add_entry(
-                    MultiPackLink(
-                        m_pack, anno, new_anno
-                    )
-                )
 
             insert_processor._process(m_pack)
 
@@ -194,27 +136,9 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
             "Mary and   at  bus   but waited until  for the .\n"
         expected_tokens = ['Mary', 'and', 'at', 'bus', 'but', 'waited', 'until', 'for', 'the', '.']
 
-        processor_config = {
-            'augment_entry': "ft.onto.base_ontology.Token",
-            'other_entry_policy': {
-                "kwargs": {
-                    "ft.onto.base_ontology.Document": "auto_align",
-                    "ft.onto.base_ontology.Sentence": "auto_align"
-                }
-            },
-            "data_aug_op_config": {
-                'kwargs': {}
-            },
-            "alpha": 0.5,
-            'augment_pack_names': {
-                'type': '',
-                'kwargs': {
-                    'input_src': 'augmented_input_src'
-                }
-            }
-        }
-
         delete_processor = RandomDeletionDataAugmentProcessor()
+        processor_config = delete_processor.default_configs()
+        processor_config.update({"alpha": 0.5})
         delete_processor.initialize(resources=None, configs=processor_config)
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(self.test_dir)):
@@ -228,12 +152,6 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                     tgt_pack, anno.begin, anno.end
                 )
                 tgt_pack.add_entry(new_anno)
-
-                m_pack.add_entry(
-                    MultiPackLink(
-                        m_pack, anno, new_anno
-                    )
-                )
 
             delete_processor._process(m_pack)
 
