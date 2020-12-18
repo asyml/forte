@@ -8,6 +8,10 @@ Data Augmentation
 Data Augmentation Processors
 ================================
 
+:hidden:`ReplacementDataAugmentProcessor`
+---------------------------------------------
+.. autoclass:: forte.processors.base.data_augment_processor.ReplacementDataAugmentProcessor
+
 :hidden:`UDAIterator`
 ----------------------------
 .. autoclass:: forte.processors.data_augment.algorithms.UDA.UDAIterator
