@@ -27,6 +27,7 @@ from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.models.srl_new.model import LabeledSpanGraphNetwork
 from forte.models.srl_new import data
+from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence, Token, PredicateLink
 
 logger = logging.getLogger(__name__)
@@ -115,7 +116,7 @@ if __name__ == "__main__":
     nesterov = True
     batch_size = 64
 
-    train_path = "data/train_tiny/"
+    train_path = "data/train/"
 
     tp_request: Dict = {
         "scope": Sentence,
@@ -156,17 +157,19 @@ if __name__ == "__main__":
     }
 
     tp_config: Dict = {
-        "preprocess": {
-            "pack_dir": train_path
-        },
         "dataset": {
             "batch_size": batch_size
         }
     }
 
+    # Create data pack generator from reader
     srl_train_reader = OntonotesReader(cache_in_memory=True)
+    train_pl: Pipeline = Pipeline()
+    train_pl.set_reader(srl_train_reader)
+    train_pl.initialize()
+    train_pack_generator = train_pl.process_dataset(train_path)
 
-    train_preprocessor = TrainPreprocessor(train_reader=srl_train_reader,
+    train_preprocessor = TrainPreprocessor(pack_generator=train_pack_generator,
                                            request=tp_request,
                                            config=tp_config)
 
