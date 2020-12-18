@@ -1,7 +1,9 @@
 import os
+import sys
 import tempfile
 import unittest
 import sqlite3
+import importlib
 
 from ddt import ddt, data
 
@@ -51,15 +53,23 @@ class StaveReaderTest(unittest.TestCase):
     @data('project-1-example', 'project-2-example')
     def test_stave_reader_project(self, project_name: str):
         def build_ontology():
+            onto_path = "new_onto"
             res = self._query(f'SELECT ontology FROM nlpviewer_backend_project '
                               f'WHERE nlpviewer_backend_project.name = '
                               f'"{project_name}"').fetchone()[0]
             with tempfile.NamedTemporaryFile('w') as onto_file:
                 onto_file.write(res)
-                print(onto_file)
-                print(onto_file.name)
-                OntologyCodeGenerator().generate(onto_file.name, ".")
-                print(os.listdir("."))
+                OntologyCodeGenerator().generate(
+                    onto_file.name, onto_path, lenient_prefix=True
+                )
+
+            onto_dir = os.path.dirname(os.path.abspath(onto_path))
+            print("onto dir", onto_dir)
+
+            modules = [os.path.splitext(_file)[0] for _file in
+                       os.listdir(onto_dir) if not _file.startswith('__')]
+            # for mod in modules:
+            #     print(mod)
 
         build_ontology()
 
@@ -85,3 +95,7 @@ class StaveReaderTest(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
+
+
+if __name__ == '__main__':
+    unittest.main()
