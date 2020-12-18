@@ -13,11 +13,27 @@
 # limitations under the License.
 
 
-from typing import List
+from typing import List, Tuple
 from ft.onto.base_ontology import Annotation
 
+
 def bio_tagging(instance_based_on: List[Annotation],
-                instance_entry: List[Annotation]):
+                instance_entry: List[Annotation]) \
+                -> List[Tuple[Annotation, str]]:
+    """This utility function use BIO tagging method to convert labels
+    of "instance_entry" into the same length as "instance_based_on". Both
+    element from "instance_entry" and "instance_based_on" will have begin
+    and end field. This function uses these position information to
+    determine B, I, O tagging for the entry on each based_on element.
+
+    For example:
+    Args:
+        instance_base_on: A [B C] D E [F] G
+        instance_entry:     entry1   entry2
+    Return:
+        [[None, "O"], [entry1, "B"], [entry1, "I"], [None, "O"],
+         [None, "O"], [entry2, "B"], [None, "O"]]
+    """
     tagged = []
     cur_entry_id = 0
     prev_entry_id = None

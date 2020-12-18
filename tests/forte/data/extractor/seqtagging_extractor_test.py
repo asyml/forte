@@ -35,13 +35,21 @@ class SeqTaggingExtractorTest(unittest.TestCase):
         config = {
             "scope": Sentence,
             "entry_type": EntityMention,
+            "need_pad": True,
             "attribute": "ner_type",
             "based_on": Token,
         }
 
-        expected = [('ORG', 'B'), (None, 'O'), ('MISC', 'B'),
+        expected = [(None, 'O'), ('ORG', 'B'), ('ORG', 'I'),
                     (None, 'O'), (None, 'O'), (None, 'O'),
-                    ('MISC', 'B'), (None, 'O'), (None, 'O')]
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    ('MISC', 'B'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    ('MISC', 'B'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O')]
 
         extractor = BioSeqTaggingExtractor(config)
 
@@ -53,6 +61,7 @@ class SeqTaggingExtractorTest(unittest.TestCase):
             for instance in pack.get(Sentence):
                 feature = extractor.extract(pack, instance)
                 recovered = [extractor.id2element(idx) for idx in feature._data]
+                print(recovered)
                 self.assertListEqual(expected, recovered)
                 extractor.add_to_pack(pack, instance, feature._data)
             pack.add_all_remaining_entries()

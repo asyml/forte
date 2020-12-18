@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Dict, Any, Union
+from typing import List, Dict, Union
 from ft.onto.base_ontology import Annotation, EntityMention
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -23,24 +23,22 @@ from forte.data.extractor.base_extractor import BaseExtractor
 
 
 class BioSeqTaggingExtractor(BaseExtractor):
-    '''This class will create a BIO tagging sequence for the attribute of
-    the entry_type. E.g. the ner_type of EntityMention in a Sentence. The
-    extracted sequence length will be the same as the based_on Annotation.
-    E.g. the Token text of a Sentence.
-    '''
+    """BioSeqTaggingExtractor will the feature by performing BIO encoding
+    for the attribute of entry, aligining to the based_on entry.
+    Args:
+        config:
+            Required keys:
+            "attribute": str. The attribute of entry needed to be encoded.
+            "based_on": Type[Annotation]. The entry that the attribute should
+                align to.
+    """
     def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
-        defaults = {
-            "attribute": None,
-            "based_on": None
-        }
-        self.config = Config(self.config,
-                                default_hparams=defaults,
-                                allow_new_hparam=True)
-        assert self.config.attribute is not None, \
-            "Attribute should not be None."
-        assert self.config.based_on is not None, \
-            "Based_on should not be None."
+
+        assert hasattr(self.config, "attribute"), \
+            "attribute is required in BioSeqTaggingExtractor."
+        assert hasattr(self.config, "based_on"), \
+            "based_on is required in BioSeqTaggingExtractor."
 
     def bio_variance(self, tag):
         return [(tag, "B"), (tag, "I"), (None, "O")]
@@ -71,18 +69,21 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 data.append(self.element2repr(new_pair))
             else:
                 data.append(new_pair)
-        meta_data = {"pad_value": self.get_pad_id(),
-                    "dim": 1,
-                    "dtype": int if self.vocab else tuple}
-        return Feature(data=data, metadata=meta_data,
-                        vocab=self.vocab)
+        meta_data = {"pad_value": self.get_pad_value(),
+                     "dim": 1,
+                     "dtype": int if self.vocab else tuple}
+        return Feature(data=data,
+                       metadata=meta_data,
+                       vocab=self.vocab)
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
-                    prediction: Any):
-        '''This function add the output tag back to the pack. If we
-        encounter "I" while its tag is different from the previous tag,
-        we will consider this "I" as a "B" and start a new tag here.
-        '''
+                    prediction: List[int]):
+        """We make following assumptions for prediction.
+        1. If we encounter "I" while its tag is different from the previous tag,
+           we will consider this "I" as a "B" and start a new tag here.
+        2. We will truncate the prediction it according to the number of entry.
+           If the prediction contains <PAD> element, this should remove them.
+        """
         instance_based_on = list(pack.get(self.config.based_on, instance))
         prediction = prediction[:len(instance_based_on)]
         tags = [self.id2element(x) for x in prediction]

@@ -35,18 +35,23 @@ class CharExtractorTest(unittest.TestCase):
         config1 = {
             "scope": Sentence,
             "entry_type": Token,
+            "need_pad": True,
         }
 
         config2 = {
             "scope": Sentence,
             "entry_type": Token,
+            "need_pad": True,
             "max_char_length": 4
         }
 
         for config in [config1, config2]:
             extractor = CharExtractor(config)
 
-            sentence = "EU rejects German call to boycott British lamb ."
+            sentence = "The European Commission said on Thursday it disagreed "\
+                        "with German advice to consumers to shun British lamb "\
+                        "until scientists determine whether mad cow disease "\
+                        "can be transmitted to sheep ."
 
             for pack in pipeline.process_dataset(self.dataset_path):
                 for instance in pack.get(Sentence):

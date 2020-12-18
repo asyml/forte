@@ -14,7 +14,7 @@
 
 
 from abc import ABC
-from typing import Dict, Any, Union, Type
+from typing import Tuple, List, Dict, Any, Union, Type, Hashable, Iterable
 from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -22,35 +22,26 @@ from forte.data.vocabulary import Vocabulary
 from forte.data.converter.feature import Feature
 
 
-class WrapperClass:
-    def __init__(self):
-        self.obj = None
-        self.func_name = None
-
-    def __call__(self, obj, func_name):
-        self.obj = obj
-        self.func_name = func_name
-        return self.wrapper
-
-    def wrapper(self, *args, **kwargs):
-        assert self.obj, """When vocab_mehtod is raw,
-        vocabulary is not built and operation on vocabulary should not
-        be called."""
-        return getattr(self.obj, self.func_name)(*args, **kwargs)
-
-
 class BaseExtractor(ABC):
-    '''This class is used to get Feature from Datapack and
-    add prediction back to Datapack.
-    '''
+    """The functionalities of this class are
+        1. Build up vocabulary.
+        2. Extract feature from datapack.
+        3. Add prediction back to datapack.
+    Args:
+        config: an instance of Dict or forte.common.configuration.Config
+            Required keys:
+            "entry_type": Type[Entry], The ontology type where the feature from.
+            "need_pad": bool, pass-in argument for building the vocabulary, this
+                argument will also affect the behavior of "Converter".
+
+            Optional keys:
+            "vocab_method": str, pass-in argument for building the vocabulary,
+                "raw", "indexing", "one-hot" are supported,
+                default is "indexing".
+            "vocab_use_unk": bool, pass-in argument for building the vocabulary,
+                default is True.
+    """
     def __init__(self, config: Union[Dict, Config]):
-        '''Config: {"entry_type" : required, Type[Annotation],
-                    "vocab_method": optional, str,
-                        "raw", "indexing", "one-hot" are supported,
-                        default is "indexing",
-                    "vocab_use_unk": optional, bool,
-                        default is True}
-        '''
         defaults = {
             "vocab_method": "indexing",
             "vocab_use_unk": True,
@@ -59,26 +50,16 @@ class BaseExtractor(ABC):
         self.config = Config(config, defaults, allow_new_hparam=True)
 
         assert hasattr(self.config, "entry_type"), \
-            "Entry_type should not be None."
+            "entry_type is required."
+        assert hasattr(self.config, "need_pad"), \
+            "need_pad is required."
 
         if self.config.vocab_method != "raw":
             self.vocab = Vocabulary(method=self.config.vocab_method,
+                                    need_pad=self.config.need_pad,
                                     use_unk=self.config.vocab_use_unk)
         else:
             self.vocab = None
-
-        wrap_vocab_fns = {
-            "items": "items",
-            "size": "__len__",
-            "add": "add",
-            "has_key": "has_key",
-            "id2element": "id2element",
-            "element2repr": "element2repr",
-            "get_dict": "get_dict",
-        }
-
-        for k, v in wrap_vocab_fns.items():
-            setattr(self, k, WrapperClass()(self.vocab, v))
 
     @property
     def entry_type(self) -> Type[Annotation]:
@@ -88,35 +69,71 @@ class BaseExtractor(ABC):
     def vocab_method(self) -> str:
         return self.config.vocab_method
 
-    def get_pad_id(self) -> int:
-        '''PAD ID is always 0.'''
-        return 0
+    def get_pad_value(self) -> Union[None, int, List[int]]:
+        if self.vocab_method == "raw":
+            return None
+        else:
+            return self.vocab.get_pad_value()
+
+    def check_vocab(self):
+        assert self.vocab, """When vocab_mehtod is raw,
+        vocabulary is not built and operation on vocabulary should not
+        be called."""
+
+    def items(self) -> Iterable[Tuple[Hashable, int]]:
+        self.check_vocab()
+        return self.vocab.items()
+
+    def size(self) -> int:
+        self.check_vocab()
+        return len(self.vocab)
+
+    def add(self, element: Hashable):
+        self.check_vocab()
+        return self.vocab.add_element(element)
+
+    def has_element(self, element: Hashable) -> bool:
+        self.check_vocab()
+        return self.vocab.has_element(element)
+
+    def element2repr(self, element: Hashable) -> Union[int, List[int]]:
+        self.check_vocab()
+        return self.vocab.element2repr(element)
+
+    def id2element(self, idx: int) -> Any:
+        self.check_vocab()
+        return self.vocab.id2element(idx)
+
+    def get_dict(self) -> Dict[Hashable, int]:
+        self.check_vocab()
+        return self.vocab.get_dict()
 
     def predefined_vocab(self, predefined: set):
-        '''This function will add elements from the
+        """This function will add elements from the
         passed-in predefined set to the vocab. Different
         extractors might have different strategies to add
         these elements. Override this function if necessary.
-        '''
+        """
         for element in predefined:
             self.add(element)
 
     def update_vocab(self, pack: DataPack,
                     instance: Annotation):
-        '''This function will extract the feature from
+        """This function will extract the feature from
         instance and add element in the feature to vocabulary.
-        '''
+        """
         raise NotImplementedError()
 
     def extract(self, pack: DataPack,
                 instance: Annotation) -> Feature:
-        '''This function will extract feature from
+        """This function will extract feature from
         one instance in the pack.
-        '''
+        """
         raise NotImplementedError()
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Any):
-        '''This function will add prediction to the pack.
-        '''
+        """This function will remove the original entry and
+        add prediction to the pack.
+        """
         raise NotImplementedError()

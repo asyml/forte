@@ -1,11 +1,11 @@
 #  Copyright 2020 The Forte Authors. All Rights Reserved.
-#  #
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  #
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  #
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,7 +13,7 @@
 #  limitations under the License.
 import unittest
 
-from ft.onto.base_ontology import Sentence, Token, EntityMention
+from ft.onto.base_ontology import Sentence, Token
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader_new import CoNLL03Reader
 from forte.data.data_pack import DataPack
@@ -34,12 +34,14 @@ class AttributeExtractorTest(unittest.TestCase):
 
         config1 = {
             "scope": Sentence,
+            "need_pad": True,
             "entry_type": Token,
             "attribute_get": "text",
         }
 
         config2 = {
             "scope": Sentence,
+            "need_pad": True,
             "entry_type": Token,
             "attribute_get": "text",
             # This must be a field that could be set.
@@ -48,6 +50,7 @@ class AttributeExtractorTest(unittest.TestCase):
 
         config3 = {
             "scope": Sentence,
+            "need_pad": True,
             "entry_type": Token,
             "attribute_get": lambda x: x.text,
             "attribute_set": "chunk"
@@ -55,6 +58,7 @@ class AttributeExtractorTest(unittest.TestCase):
 
         config4 = {
             "scope": Sentence,
+            "need_pad": True,
             "entry_type": Token,
             "attribute_get": lambda x: x.text,
             "attribute_set": lambda x, value:
@@ -64,7 +68,10 @@ class AttributeExtractorTest(unittest.TestCase):
         for config in [config1, config2, config3, config4]:
             extractor = AttributeExtractor(config)
 
-            sentence = "EU rejects German call to boycott British lamb ."
+            sentence = "The European Commission said on Thursday it disagreed "\
+                        "with German advice to consumers to shun British lamb "\
+                        "until scientists determine whether mad cow disease "\
+                        "can be transmitted to sheep ."
 
             for pack in pipeline.process_dataset(self.dataset_path):
                 for instance in pack.get(Sentence):
@@ -79,7 +86,7 @@ class AttributeExtractorTest(unittest.TestCase):
                     recovered = [extractor.id2element(idx) for idx in feat._data]
                     self.assertEqual(" ".join(recovered), sentence)
                     if extractor.attribute_set != "text":
-                        extractor.add_to_pack(pack, instance, recovered)
+                        extractor.add_to_pack(pack, instance, feat._data)
 
 
 if __name__ == '__main__':

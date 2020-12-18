@@ -29,8 +29,8 @@ class LinkExtractor(BaseExtractor):
             "based_on": None
         }
         self.config = Config(self.config,
-                                default_hparams = defaults,
-                                allow_new_hparam = True)
+                             default_hparams=defaults,
+                             allow_new_hparam=True)
         assert self.config.attribute is not None, \
             "Attribute should not be None."
         assert self.config.based_on is not None, \
@@ -63,14 +63,14 @@ class LinkExtractor(BaseExtractor):
         meta_data = {
             "parent_unit_span": parent_unit_span,
             "child_unit_span": child_unit_span,
-            "pad_value": self.get_pad_id(),
+            "pad_value": self.get_pad_value(),
             "dim": 1,
             "dtype": int if self.vocab else str
         }
 
-        return Feature(data = data,
-                        metadata = meta_data,
-                        vocab = self.vocab)
+        return Feature(data=data,
+                       metadata=meta_data,
+                       vocab=self.vocab)
 
     def get_index(self, inner_entries, span):
         index = DataIndex()
@@ -78,7 +78,7 @@ class LinkExtractor(BaseExtractor):
         for i, entry in enumerate(inner_entries):
             if index.in_span(entry, span):
                 founds.append(i)
-        return [founds[0], founds[-1]+1]
+        return [founds[0], founds[-1] + 1]
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Any):

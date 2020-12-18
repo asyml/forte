@@ -13,23 +13,22 @@
 # limitations under the License.
 
 
-from typing import Dict, Union
-from ft.onto.base_ontology import Token, Annotation
-from forte.common.configuration import Config
+from ft.onto.base_ontology import Annotation
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.extractor.base_extractor import BaseExtractor
 
 
 class CharExtractor(BaseExtractor):
-    '''CharExtractor will get each char for each token in the instance.'''
-    def __init__(self, config: Union[Dict, Config]):
-        super().__init__(config)
-        assert hasattr(self.config, "entry_type") and \
-            getattr(self.config, "entry_type") == Token, \
-            """CharExtractor is only used to extract characters of Token.
-            The entry_type can only be Token."""
-
+    """CharExtractor will get specific feature on the text field of entry.
+    And the text will further be splitted into characters.
+    Args:
+        config:
+            Optional keys:
+            max_char_length: int, the maximum number of characters for one
+                text filed of an entry. If not provided, all characters will
+                be used.
+    """
     def update_vocab(self, pack: DataPack, instance: Annotation):
         for word in pack.get(self.config.entry_type, instance):
             for char in word.text:
@@ -53,8 +52,9 @@ class CharExtractor(BaseExtractor):
                     token in data]
 
         # Data has two dimensions, therefore dim is 2.
-        meta_data = {"pad_value": self.get_pad_id(),
-                    "dim": 2,
-                    "dtype": int if self.vocab else str}
-        return Feature(data=data, metadata=meta_data,
-                        vocab=self.vocab)
+        meta_data = {"pad_value": self.get_pad_value(),
+                     "dim": 2,
+                     "dtype": int if self.vocab else str}
+        return Feature(data=data,
+                       metadata=meta_data,
+                       vocab=self.vocab)
