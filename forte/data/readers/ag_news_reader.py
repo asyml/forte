@@ -38,11 +38,6 @@ class AGNewsReader(PackReader):
 
     The input to this reader is the path to the CSV file.
     """
-
-    def __init__(self):
-        super().__init__()
-        self.configs = None
-
     def _collect(self,  # type: ignore
                  csv_file: str) -> Iterator[Tuple[int, str]]:
         r"""Collects from a CSV file path and returns an iterator of AG News
