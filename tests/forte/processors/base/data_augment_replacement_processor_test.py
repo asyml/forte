@@ -28,7 +28,12 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import MultiPackLink, MultiPackGroup, Link, Group
 from forte.data.readers import MultiPackSentenceReader, StringReader
 from forte.data.caster import MultiPackBoxer
-from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor, modify_index
+from forte.data.data_pack import DataPack
+from forte.data.ontology.core import Entry
+from forte.processors.base.data_augment_processor import (
+    ReplacementDataAugmentProcessor,
+    modify_index
+)
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
 
 
@@ -43,7 +48,9 @@ class TmpReplacer(TextReplacementOp):
         }
 
     def replace(self, input):
-        return True, self.token_replacement.get(input.text, input.text)
+        if input.text in self.token_replacement:
+            return True, self.token_replacement[input.text]
+        return False, input.text
 
 
 @ddt
@@ -122,8 +129,8 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
     @data(
         (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
-         [" NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus NLP ."],
-         [[" NLP ", "Virgin", "Samantha", " NLP ", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", " NLP ", "."], ],
+         [" NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus NLP .NLP"],
+         [[" NLP ", "Virgin", "Samantha", " NLP ", "arrived", "at", "the", "bus", "stop", "early", "but", "waited", "til", "12", "for", "the", "bus", " NLP ", ".", "NLP"], ],
          [["til", "12", "for", "the", "bus", "."]]
          )
     )
@@ -150,7 +157,6 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
                 "kwargs": {
-                    "ft.onto.base_ontology.Document": "auto_align",
                     "ft.onto.base_ontology.Sentence": "auto_align"
                 }
             },
@@ -174,6 +180,8 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             num_mpl_orig, num_mpg_orig = 0, 0
             # Copy the source pack to target pack.
             tgt_pack.set_text(src_pack.text)
+
+            src_pack.add_entry(Document(src_pack, 0, len(src_pack.text)))
             for anno in src_pack.get(Annotation):
                 new_anno = type(anno)(
                     tgt_pack, anno.begin, anno.end
@@ -241,14 +249,41 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 else:
                     prev_entry = token
 
+            doc_src = list(src_pack.get(Document))[0]
+            doc_tgt = list(tgt_pack.get(Document))[0]
+
+            sent_src = list(src_pack.get(Sentence))[0]
+            sent_tgt = list(tgt_pack.get(Sentence))[0]
+
+            # Insert two extra Links in the src_pack.
+            # They should not be copied to new_src_pack, because the Document is not copied.
+            link_src_low = src_pack.add_entry(Link(src_pack, doc_src, sent_src))
+            src_pack.add_entry(Link(src_pack, link_src_low, sent_src))
+
+            # Insert two extra Groups in the tgt_pack.
+            # They should not be copied to new_tgt_pack, because the Document is not copied.
+            group_tgt_low = tgt_pack.add_entry(Group(tgt_pack, [doc_tgt, sent_tgt]))
+            tgt_pack.add_entry(Group(tgt_pack, [group_tgt_low, sent_tgt]))
+
+            # Call the augment function explicitly for duplicate replacement
+            # to test the False case of _replace function.
+            processor._augment(m_pack, ["input_src", "output_tgt"])
+
             # Test the insertion and deletion
             for pack in (src_pack, tgt_pack):
                 # Insert an "NLP" at the beginning
                 processor._insert(" NLP ", pack, 0)
                 processor._insert(" NLP ", pack, 18)
                 processor._insert(" NLP ", pack, len(pack.text) - 2)
+                processor._insert("NLP", pack, len(pack.text) - 1)
                 # Delete the second token "and"
                 processor._delete(list(pack.get(Token))[1])
+
+                # This duplicate insertion should be invalid.
+                processor._insert(" NLP ", pack, 0)
+                # This insertion overlaps with a replacement.
+                # It should be invalid.
+                processor._insert(" NLP ", pack, 2)
 
             processor._process(m_pack)
 
@@ -290,6 +325,11 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
                 prev_group = group
 
+            # The two extra Links should not be copied, because of missing Document.
+            self.assertEqual(len(list(src_pack.get(Link))) - 2, len(list(new_src_pack.get(Link))))
+            # The two extra Groups should not be copied, because of missing Document.
+            self.assertEqual(len(list(tgt_pack.get(Group))) - 2, len(list(new_tgt_pack.get(Group))))
+
             # Test the MultiPackLink/MultiPackGroup
             num_mpl_aug, num_mpg_aug = 0, 0
             for mpl in m_pack.get(MultiPackLink):
@@ -306,9 +346,28 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 self.assertNotEqual(members[0].pack.meta.pack_id, members[1].pack.meta.pack_id)
 
             # Test the number of MultiPackLink/MultiPackGroup.
+            # Minus the aug and orig counters by 1, because the Document is not copied.
+            # So we ignore the MPL and MPG between Document.
             # The number should be doubled, except for one deletion.
-            self.assertEqual(num_mpl_aug, num_mpl_orig * 2 - 1)
-            self.assertEqual(num_mpg_aug, num_mpg_orig * 2 - 1)
+            self.assertEqual(num_mpl_aug - 1, (num_mpl_orig - 1) * 2 - 1)
+            self.assertEqual(num_mpg_aug - 1, (num_mpg_orig - 1) * 2 - 1)
+
+    def test_multi_pack_copy_link_or_group(self):
+        processor = ReplacementDataAugmentProcessor()
+        m_pack = MultiPack()
+        src_pack = m_pack.add_pack("src")
+        tgt_pack = m_pack.add_pack("tgt")
+
+        src_pack.set_text("input")
+        tgt_pack.set_text("output")
+        src_token = src_pack.add_entry(Token(src_pack, 0, len(src_pack.text)))
+        tgt_token = tgt_pack.add_entry(Token(tgt_pack, 0, len(tgt_pack.text)))
+
+        mpl = m_pack.add_entry(MultiPackLink(m_pack, src_token, tgt_token))
+        # The MultiPackLink should not be copied, because its children are not copied.
+        self.assertEqual(processor._copy_multi_pack_link_or_group(mpl, m_pack), False)
+        new_src_pack = processor._auto_align_annotations(src_pack, [])
+        self.assertEqual(len(list(new_src_pack.get(Token))), 1)
 
 
 if __name__ == "__main__":

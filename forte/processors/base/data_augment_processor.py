@@ -110,20 +110,21 @@ def modify_index(
     input index(3+4=7). The output then is 7.
 
     Note that when the input index locates inside the old spans,
-    instead of on the boundary of the spans, we just keep the offset
-    of the input index to the old span it was in unchanged. In the
-    above example, if we change the input index from 3 to 5, the
-    output will become 9, because we locates the input index in the
-    third span [4, 6] and use the same offset 5-4=1 to calculate the
-    output 8+1=9.
+    instead of on the boundary of the spans, we compute the return
+    index so that it maintains the same offset to the begin of the
+    span it belongs to. In the above example, if we change the input
+    index from 3 to 5, the output will become 9, because we locates
+    the input index in the third span [4, 6] and use the same offset
+    5-4=1 to calculate the output 8+1=9.
 
     When insertion is considered, there will be spans
     with the same begin index, for example,
     [0, 1], [1, 1], [1, 2]. The span [1, 1] indicates an insertion
     at index 1, because the insertion can be considered as a
     replacement of an empty input span, with a length of 0.
-    The output will depend on whether to include the inserted span,
-    and whether the input index is a begin or an end index.
+    The output will be affected by whether to include the inserted
+    span(is_inclusive), and whether the input index is a begin or
+    end index of its span(is_begin).
 
     If the old spans are [0, 1], [1, 1], [1, 2],
     the new spans are [0, 2], [2, 4], [4, 5],
@@ -136,6 +137,7 @@ def modify_index(
 
     # Get the max index for binary search.
     max_index: int = old_spans[-1].end + 1
+    max_index = max(max_index, index)
 
     # This is the last span that has a start index less than
     # the input index. The position change of this span determines
@@ -144,9 +146,10 @@ def modify_index(
         old_spans, Span(index, max_index)
     ) - 1
 
-    # If there is an inserted span, it will
-    # always be the first of those spans with
-    # the same begin index.
+    # If there is an inserted span, it will always be the first of
+    # those spans with the same begin index. For example, given spans
+    # [1, 1], [1, 2], The inserted span [1, 1] will be in the front of
+    # replaced span [1, 2], because it has the smallest end index.
     if last_span_ind >= 0:
         if is_inclusive:
             if is_begin:
@@ -608,17 +611,15 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         # Copy the children entries.
         new_children: List[Entry] = []
         for child_entry in children:
-            if isinstance(child_entry, Annotation):
-                # Children Annotation must have been copied.
-                if child_entry.tid not in entry_map:
-                    return False
-            elif isinstance(child_entry, (Link, Group)):
+            if isinstance(child_entry, (Link, Group)):
                 # Recursively copy the children Links/Groups.
                 if not self._copy_link_or_group(
                         child_entry, entry_map, new_pack):
                     return False
             else:
-                return False
+                # Children Annotation must have been copied.
+                if child_entry.tid not in entry_map:
+                    return False
             new_child: Entry = new_pack.get_entry(
                 entry_map[child_entry.tid]
             )
