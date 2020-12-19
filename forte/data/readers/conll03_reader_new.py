@@ -65,9 +65,6 @@ class CoNLL03Reader(PackReader):
         for line in doc:
             line = line.strip()
 
-<<<<<<< HEAD
-            if line != "" and not line.startswith("#"):
-=======
             if line.find("DOCSTART") != -1:
                 # Skip the first DOCSTART.
                 if offset == 0:
@@ -85,20 +82,19 @@ class CoNLL03Reader(PackReader):
                 yield pack
 
                 # Create a new datapack.
-                pack: DataPack = DataPack()
-                text: str = ""
-                offset: int = 0
-                has_rows: bool = False
+                pack = DataPack()
+                text = ""
+                offset = 0
+                has_rows = False
 
-                sentence_begin: int = 0
-                sentence_cnt: int = 0
+                sentence_begin = 0
+                sentence_cnt = 0
 
                 prev_y = None
                 prev_x = None
                 start_index = -1
 
             elif line != "" and not line.startswith("#"):
->>>>>>> 67552f2... RJQ: [reader] create a new pack for each DOC
                 conll_components = line.split()
 
                 word = conll_components[0]
