@@ -26,7 +26,7 @@ You can use the following script to process the data into CSV format.
 python utils/imdb_format.py --raw_data_dir=data/IMDB_raw/aclImdb --train_id_path=data/IMDB_raw/train_id_list.txt --output_dir=data/IMDB
 ```
 
-The next step is to generate augment training data (using your favorite back translation model) and output to a TXT file. Each example in the file should correspond to the same line in `train.csv`.
+The next step is to generate augment training data (using your favorite back translation model) and output to a TXT file. Each example in the file should correspond to the same line in `train.csv` (without headers).
 
 For demonstration purpose, we provide the processed and augmented [data files](https://drive.google.com/file/d/1OKrbS76mbGCIz3FcFQ8-qPpMTQkQy8bP/view?usp=sharing). Place the CSV and txt files in directory `data/IMDB`.
 
@@ -55,4 +55,4 @@ With the provided data, you should be able to achieve performance similar to the
 
 When training with 24 examples, we use the Training Signal Annealing technique which can be turned on by setting `tsa=True`.
 
-You can further improve the performance by tuning hyperparameters, generate better back-translation data, using a larger BERT model, etc.
+You can further improve the performance by tuning hyperparameters, generate better back-translation data, using a larger BERT model, using a larger `max_seq_length` etc.

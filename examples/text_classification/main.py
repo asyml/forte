@@ -15,8 +15,7 @@
 import config_data, config_classifier
 from utils import data_utils, model_utils
 
-import os
-
+import argparse
 import functools
 import logging
 import os
@@ -30,6 +29,35 @@ import texar.torch as tx
 from forte.processors.data_augment.algorithms.UDA import UDAIterator
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--use-uda", action="store_true",
+    help="Whenther to train with UDA")
+parser.add_argument(
+    '--pretrained-model-name', type=str, default='bert-base-uncased',
+    choices=tx.modules.BERTEncoder.available_checkpoints(),
+    help="Name of the pre-trained BERT model to load.")
+parser.add_argument(
+    '--checkpoint', type=str, default=None,
+    help="Path to the checkpoint to load.")
+parser.add_argument(
+    "--output-dir", default="output/",
+    help="The output directory where the model checkpoints will be written.")
+parser.add_argument(
+    "--do-train", action="store_true", help="Whether to run training.")
+parser.add_argument(
+    "--do-eval", action="store_true",
+    help="Whether to run eval on the dev set.")
+parser.add_argument(
+    "--do-test", action="store_true",
+    help="Whether to run test on the test set.")
+args = parser.parse_args()
+
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logging.root.setLevel(logging.INFO)
+
+
 class IMDBClassifierTrainer:
     """
     A baseline text classifier trainer for the IMDB dataset.
@@ -37,8 +65,8 @@ class IMDBClassifierTrainer:
     An example usage can be found at examples/text_classification.
     """
 
-    def __init__(self, config_data, config_classifier, checkpoint=None,
-        pretrained_model_name="bert-base-uncased"):
+    def __init__(self, config_data, config_classifier, checkpoint=args.checkpoint,
+        pretrained_model_name=args.pretrained_model_name):
         """Constructs the text classifier.
         Args:
             config_data: string, data config file.
@@ -53,7 +81,6 @@ class IMDBClassifierTrainer:
         Builds the model and runs.
         """
         tx.utils.maybe_create_dir(output_dir)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         logging.root.setLevel(logging.INFO)
 
@@ -105,11 +132,9 @@ class IMDBClassifierTrainer:
             hparams=self.config_data.train_hparam, device=device)
         eval_dataset = tx.data.RecordData(
             hparams=self.config_data.eval_hparam, device=device)
-        test_dataset = tx.data.RecordData(
-            hparams=self.config_data.test_hparam, device=device)
 
         iterator = tx.data.DataIterator(
-            {"train": train_dataset, "eval": eval_dataset, "test": test_dataset}
+            {"train": train_dataset, "eval": eval_dataset}
         )
 
         def _compute_loss(logits, labels):
@@ -186,7 +211,7 @@ class IMDBClassifierTrainer:
         def _test_epoch():
             """Does predictions on the test set.
             """
-            iterator.switch_to_dataset("test")
+            iterator.switch_to_dataset("eval")
             model.eval()
 
             _all_preds = []
@@ -233,7 +258,6 @@ class IMDBClassifierTrainer:
         Builds the model and runs.
         """
         tx.utils.maybe_create_dir(output_dir)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         logging.root.setLevel(logging.INFO)
 
@@ -285,13 +309,11 @@ class IMDBClassifierTrainer:
             hparams=self.config_data.train_hparam, device=device)
         eval_dataset = tx.data.RecordData(
             hparams=self.config_data.eval_hparam, device=device)
-        test_dataset = tx.data.RecordData(
-            hparams=self.config_data.test_hparam, device=device)
         unsup_dataset = tx.data.RecordData(
             hparams=self.config_data.unsup_hparam, device=device)
 
         iterator = tx.data.DataIterator(
-            {"train": train_dataset, "eval": eval_dataset, "test": test_dataset}
+            {"train": train_dataset, "eval": eval_dataset}
         )
 
         unsup_iterator = tx.data.DataIterator(
@@ -440,7 +462,7 @@ class IMDBClassifierTrainer:
         def _test_epoch():
             """Does predictions on the test set.
             """
-            uda_iterator.switch_to_dataset("test", use_unsup=False)
+            uda_iterator.switch_to_dataset("eval", use_unsup=False)
             model.eval()
 
             _all_preds = []
@@ -490,8 +512,10 @@ def main():
             or not os.path.isfile("data/IMDB/predict.pkl")\
             or not os.path.isfile("data/IMDB/unsup.pkl"):
         data_utils.prepare_data(trainer.pretrained_model_name, config_data, "data/IMDB")
-    # model.run(do_train=True, do_eval=True, do_test=False)
-    trainer.run_uda(do_train=True, do_eval=True, do_test=False)
+    if args.use_uda:
+        trainer.run_uda(args.do_train, args.do_eval, args.do_test, args.output_dir)
+    else:
+        trainer.run(args.do_train, args.do_eval, args.do_test, args.output_dir)
 
 
 if __name__ == "__main__":
