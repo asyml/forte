@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import config_data, config_classifier
-from utils import data_utils, model_utils
-
-import os
-
 import functools
 import logging
 import os
@@ -26,13 +21,13 @@ import torch.nn.functional as F
 import texar.torch as tx
 
 # pylint: disable=no-name-in-module
-
+from forte.models.imdb_text_classifier.utils import data_utils, model_utils
 from forte.processors.data_augment.algorithms.UDA import UDAIterator
 
 
-class IMDBClassifierTrainer:
+class IMDBClassifier:
     """
-    A baseline text classifier trainer for the IMDB dataset.
+    A baseline text classifier for the IMDB dataset.
     The input data should be CSV format with columns (content label id).
     An example usage can be found at examples/text_classification.
     """
@@ -47,6 +42,39 @@ class IMDBClassifierTrainer:
         self.config_classifier = config_classifier
         self.checkpoint = checkpoint
         self.pretrained_model_name = pretrained_model_name
+
+    def prepare_data(self, csv_data_dir):
+        """Prepares data.
+        """
+        logging.info("Loading data")
+
+        if self.config_data.pickle_data_dir is None:
+            output_dir = csv_data_dir
+        else:
+            output_dir = self.config_data.pickle_data_dir
+        tx.utils.maybe_create_dir(output_dir)
+
+        processor = data_utils.IMDbProcessor()
+
+        # num_classes = len(processor.get_labels())
+        # num_train_data = len(processor.get_train_examples(csv_data_dir))
+        # logging.info(
+        #     'num_classes:%d; num_train_data:%d', num_classes, num_train_data)
+
+        tokenizer = tx.data.BERTTokenizer(
+            pretrained_model_name=self.pretrained_model_name)
+
+        data_utils.prepare_record_data(
+            processor=processor,
+            tokenizer=tokenizer,
+            data_dir=csv_data_dir,
+            max_seq_length=self.config_data.max_seq_length,
+            output_dir=output_dir,
+            feature_types=self.config_data.feature_types,
+            unsup_feature_types=self.config_data.unsup_feature_types,
+            sup_size_limit=self.config_data.num_train_data,
+            unsup_bt_file=self.config_data.unsup_bt_file,
+        )
 
     def run(self, do_train, do_eval, do_test, output_dir="output/"):
         """
@@ -482,17 +510,3 @@ class IMDBClassifierTrainer:
 
         if do_test:
             _test_epoch()
-
-def main():
-    trainer = IMDBClassifierTrainer(config_data, config_classifier)
-    if not os.path.isfile("data/IMDB/train.pkl")\
-            or not os.path.isfile("data/IMDB/eval.pkl")\
-            or not os.path.isfile("data/IMDB/predict.pkl")\
-            or not os.path.isfile("data/IMDB/unsup.pkl"):
-        data_utils.prepare_data(trainer.pretrained_model_name, config_data, "data/IMDB")
-    # model.run(do_train=True, do_eval=True, do_test=False)
-    trainer.run_uda(do_train=True, do_eval=True, do_test=False)
-
-
-if __name__ == "__main__":
-    main()

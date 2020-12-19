@@ -4,7 +4,7 @@ max_seq_length = 128
 num_classes = 2
 num_train_data = 24  # supervised data limit. max 25000
 
-train_batch_size = 24
+train_batch_size = 8
 max_train_epoch = 3000
 display_steps = 50  # Print training loss every display_steps; -1 to disable
 
