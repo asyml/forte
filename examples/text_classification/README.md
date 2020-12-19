@@ -32,11 +32,17 @@ For demonstration purpose, we provide the processed and augmented [data files](h
 
 ### Train
 
+To train the baseline model without UDA:
+
  ```bash
-python main.py
+python main.py --do-train --do-eval --do-test
 ```
 
-To train the baseline model without UDA, use `model.run()` instead of `model.run_uda()`.
+To train with UDA:
+
+ ```bash
+python main.py --do-train --do-eval --do-test --use-uda
+```
 
 To change the hyperparameters, please see `config_data.py`. You can also change the number of labeled examples used for training (`num_train_data`).
 
