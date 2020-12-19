@@ -60,6 +60,7 @@ english_stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours',
     'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren',
     "weren't", 'won', "won't", 'wouldn', "wouldn't"]
 
+
 class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
     r"""
     Data augmentation processor for the Random Swap operation.
@@ -128,7 +129,6 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self.stopwords = set(configs['stopwords'])
-
 
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         replacement_op = create_class_with_kwargs(
