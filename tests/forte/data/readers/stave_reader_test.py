@@ -63,14 +63,13 @@ class StaveReaderTest(unittest.TestCase):
                     onto_file.name, onto_path, lenient_prefix=True
                 )
 
-            onto_dir = os.path.dirname(os.path.abspath(onto_path))
-            print("onto dir", onto_dir)
+            try:
+                importlib.import_module('edu.cmu')
+            except Exception:
+                pass
 
-            modules = [os.path.splitext(_file)[0] for _file in
-                       os.listdir(onto_dir) if not _file.startswith('__')]
-            # for mod in modules:
-            #     print(mod)
-
+        # TODO, the data from Stave may have a wrong Span annotation type
+        #   maybe adding PYTHONPATH of fixing this is OK.
         build_ontology()
 
         # Query packs in this project directly.
