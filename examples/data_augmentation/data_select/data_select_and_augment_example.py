@@ -44,11 +44,13 @@ def main():
             }
         },
         'type': 'data_augmentation_op',
-        'data_aug_op': 'forte.processors.data_augment.algorithms.dictionary_replacement_op.DictionaryReplacementOp',
+        'data_aug_op': 'forte.processors.data_augment.algorithms.'
+                       'dictionary_replacement_op.DictionaryReplacementOp',
         'data_aug_op_config': {
             'type': '',
             'kwargs': {
-                "dictionary_class": "forte.processors.data_augment.algorithms.dictionary.WordnetDictionary",
+                "dictionary_class": "forte.processors.data_augment.algorithms."
+                                    "dictionary.WordnetDictionary",
                 "prob": 1.0,
                 "lang": "eng",
             }
