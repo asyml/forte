@@ -22,11 +22,12 @@ from ddt import ddt, data, unpack
 
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-from forte.processors.data_augment.selectors import DataSelectorIndexProcessor
+from forte.processors.data_augment.selector_index_processor \
+    import DataSelectorIndexProcessor
 from forte.data.readers import MSMarcoPassageReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
-from forte.processors.base.data_selector import QueryDataSelector, \
-    RandomDataSelector
+from forte.processors.base.data_selector_for_da import \
+    QueryDataSelectorForDA, RandomDataSelectorForDA
 
 
 @ddt
@@ -85,7 +86,7 @@ class TestDataSelector(unittest.TestCase):
                   "size": 3,
                   "field": "content"}
         nlp: Pipeline[DataPack] = Pipeline()
-        nlp.set_reader(QueryDataSelector(), config=config)
+        nlp.set_reader(QueryDataSelectorForDA(), config=config)
         nlp.initialize()
 
         text = []
@@ -102,7 +103,7 @@ class TestDataSelector(unittest.TestCase):
                       {"index_name": self.index_name},
                   "size": size}
         nlp: Pipeline[DataPack] = Pipeline()
-        nlp.set_reader(RandomDataSelector(), config=config)
+        nlp.set_reader(RandomDataSelectorForDA(), config=config)
         nlp.initialize()
 
         text = []

@@ -30,7 +30,8 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.pipeline import Pipeline
-from forte.processors.data_augment.selectors import DataSelectorIndexProcessor
+from forte.processors.data_augment.selector_index_processor import \
+    DataSelectorIndexProcessor
 
 __all__ = [
     "CreateIndexerPipeline",
@@ -47,8 +48,8 @@ class CreateIndexerPipeline:
         self.config = Config(self.config, default_hparams=None)
         self.create_pipeline()
 
-    # pylint: disable=attribute-defined-outside-init
     def create_pipeline(self):
+        # pylint: disable=attribute-defined-outside-init
         self.nlp: Pipeline[DataPack] = Pipeline()
         self.nlp.set_reader(reader=self.reader, config=self.reader_config)
         self.nlp.add(DataSelectorIndexProcessor(), config=self.config)

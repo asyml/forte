@@ -31,19 +31,19 @@ from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 
 __all__ = [
-    "BaseElasticSearchDataSelector",
-    "RandomDataSelector",
-    "QueryDataSelector",
+    "BaseElasticSearchDataSelectorForDA",
+    "RandomDataSelectorForDA",
+    "QueryDataSelectorForDA",
 ]
 
 
-class BaseDataSelector(PackReader):
+class BaseDataSelectorForDA(PackReader):
     r"""A base data selector for data augmentation.
     It is a reader that searches documents from an indexer and yields datapacks.
     """
 
 
-class BaseElasticSearchDataSelector(BaseDataSelector):
+class BaseElasticSearchDataSelectorForDA(BaseDataSelectorForDA):
     r"""The base elastic search indexer for data selector.
     This class creates an ElasticSearchIndexer and searches for documents
     according to the user-provided search keys. It then yields the corresponding
@@ -73,7 +73,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         return config
 
 
-class QueryDataSelector(BaseElasticSearchDataSelector):
+class QueryDataSelectorForDA(BaseElasticSearchDataSelectorForDA):
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
@@ -123,7 +123,7 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
         return config
 
 
-class RandomDataSelector(BaseElasticSearchDataSelector):
+class RandomDataSelectorForDA(BaseElasticSearchDataSelectorForDA):
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
