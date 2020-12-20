@@ -54,4 +54,3 @@ class CNN_Classifier(nn.Module):
         logits, pred = self.classifier(word_pad_embed)
 
         return logits, pred
-
