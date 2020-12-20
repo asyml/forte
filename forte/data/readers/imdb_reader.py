@@ -31,6 +31,8 @@ __all__ = [
     "IMDBReader"
 ]
 
+logger = logging.getLogger(__name__)
+
 
 class IMDBReader(PackReader):
     r""":class:`IMDBReader` is designed to read
@@ -55,7 +57,8 @@ class IMDBReader(PackReader):
 
         imdb_file_extension = "imdb"
 
-        kwargsdict = kwargs
+        logger.info(type(kwargs))
+
 
         logging.info("Reading dataset from %s with extension %s",
                      imdb_directory, imdb_file_extension)
