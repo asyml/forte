@@ -41,7 +41,7 @@ class IMDBReader(PackReader):
         "movie comment, negative"
     """
 
-    def _collect(self, *args, **kwargs) -> Iterator[str]:
+    def _collect(self, *args) -> Iterator[str]:
         r"""Iterator over text files in the data_source
 
         Args:
@@ -86,7 +86,7 @@ class IMDBReader(PackReader):
                     for word in words:
                         lastch = word[len(word) - 1]
                         new_word = word
-                        if lastch == "," or lastch == '.':
+                        if lastch in (',', '.'):
                             new_word = word[:len(word) - 1]
                         Token(pack, wordoffset, wordoffset + len(new_word))
                         wordoffset += len(word)
