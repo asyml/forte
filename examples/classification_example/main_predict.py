@@ -21,6 +21,7 @@ from ft.onto.base_ontology import Sentence
 from forte.data.readers.imdb_reader import IMDBReader
 from examples.classification_example.util import pad_each_bach
 
+
 def predict_forward_fn(model, batch):
     '''Use model and batch data to predict label.'''
     word = batch["text_tag"]["data"]
@@ -32,6 +33,7 @@ def predict_forward_fn(model, batch):
         logits, pred = model(pad_each_bach(word, 500))
     pred = pred.numpy()
     return {"label_tag": pred}
+
 
 config_model = yaml.safe_load(open("config_model.yml", "r"))
 config_predict = yaml.safe_load(open("config_predict.yml", "r"))
