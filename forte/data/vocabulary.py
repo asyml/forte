@@ -99,19 +99,19 @@ class Vocabulary:
             self.add_element(Vocabulary.UNK_ELEMENT)
 
     def add_element(self, element: Hashable):
-        """This function will add element to the vocabulary."""
+        r"""This function will add element to the vocabulary."""
         if element not in self.element2id_dict:
             self.element2id_dict[element] = self.next_id
             self.id2element_dict[self.next_id] = element
             self.next_id += 1
 
     def id2element(self, idx: int) -> Hashable:
-        """This function will map id to element."""
+        r"""This function will map id to element."""
         return self.id2element_dict[idx]
 
     def element2repr(self, element: Hashable) \
                     -> Union[int, List[int]]:
-        """This function will map element to representation."""
+        r"""This function will map element to representation."""
         if self.use_unk:
             idx = self.element2id_dict.get(element,
                     self.element2id_dict[Vocabulary.UNK_ELEMENT])
@@ -130,23 +130,23 @@ class Vocabulary:
             return vec
 
     def __len__(self) -> int:
-        """This function return the size of vocabulary."""
+        r"""This function return the size of vocabulary."""
         return len(self.element2id_dict)
 
     def has_element(self, element: Hashable) -> bool:
-        """This function checks whether an element is added to vocabulary."""
+        r"""This function checks whether an element is added to vocabulary."""
         return element in self.element2id_dict
 
     def items(self) -> Iterable[Tuple[Hashable, int]]:
-        """This function will loop over the (element, id) pair."""
+        r"""This function will loop over the (element, id) pair."""
         return self.element2id_dict.items()
 
     def get_dict(self) -> Dict[Hashable, int]:
-        """This function will get the inner mapping from element to id."""
+        r"""This function will get the inner mapping from element to id."""
         return self.element2id_dict
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
-        """This function will get the PAD element for the vocabulary."""
+        r"""This function will get the PAD element for the vocabulary."""
         if self.need_pad:
             return self.element2repr(self.PAD_ELEMENT)
         return None
