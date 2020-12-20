@@ -20,10 +20,10 @@ class Vocabulary:
     return "Representations" if queried. These three are the main concepts in this class.
 
     1. Element: Any hashable instance that the user want to store.
-    2. Id: Each element will have an unique Id, which is an interger.
+    2. Id: Each element will have an unique Id, which is an integer.
     3. Representation: according to the configuration, the representation for an element
-        could be an interger (in this case, would be "Id"), or an one-hot vector (in this
-        case, would be a list of interger).
+        could be an integer (in this case, would be "Id"), or an one-hot vector (in this
+        case, would be a list of integer).
 
     There are two special elements.
 
@@ -32,10 +32,10 @@ class Vocabulary:
     2. The other one is <UNK> element, which, if added into the vocabulary, will be the
         default element if the queried element is not found.
 
-    Here is a table on how our Vocabulary class behavior under different settings. Ele0 means
-    the first element that is added to the vocabulary. Elements added later will be ele1, ele2
-    and so on. They will follow the same behavior as ele0. For readability, they are not listed
-    in the table.
+    Here is a table on how our Vocabulary class behavior under different settings. Element0 means
+    the first element that is added to the vocabulary. Elements added later will be element1,
+    element2 and so on. They will follow the same behavior as element0. For readability, they are not
+    listed in the table.
 
     .. list-table:: Vocabulary Behavior under different settings.
 
@@ -59,22 +59,22 @@ class Vocabulary:
           - None
         * - inner_mapping
           - None
-          - 0:pad 1:ele0
-          - 0:ele0
-          - -1:<PAD> 0:ele0
-          - 0:ele0
+          - 0:pad 1:element0
+          - 0:element0
+          - -1:<PAD> 0:element0
+          - 0:element0
         * - element2repr
           - raise Error
-          - pad->0 ele0->1
-          - ele0->0
-          - <PAD>->[0,0,0] ele0->[1,0,0]
-          - ele0->[1,0,0]
+          - pad->0 element0->1
+          - element0->0
+          - <PAD>->[0,0,0] element0->[1,0,0]
+          - element0->[1,0,0]
         * - id2element
           - raise Error
-          - 0->pad 1->ele0
-          - 0->ele0
-          - -1 -> <PAD> 0->ele0 (be careful)
-          - 0->ele0
+          - 0->pad 1->element0
+          - 0->element0
+          - -1 -> <PAD> 0->element0 (be careful)
+          - 0->element0
 
     Args:
         method (str): The method to represent element in vocabulary.

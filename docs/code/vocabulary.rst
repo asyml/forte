@@ -2,10 +2,10 @@
     :class: hidden-section
 
 Vocabulary
-*********
+************
 
 Vocabulary
 ============
 
-.. autoclass:: forte.data.Vocabulary
+.. autoclass:: forte.data.vocabulary.Vocabulary
     :members:
