@@ -1,0 +1,4 @@
+test_path: "classification_data/test/"
+model_path: "best_classification_model.ckpt"
+train_state_path: "train_state.pkl"
+batch_size: 2
