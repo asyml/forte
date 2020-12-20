@@ -1,0 +1,20 @@
+word_emb:
+    dim: 100
+
+learning_rate: 0.01
+momentum: 0.9
+decay_interval: 1
+decay_rate: 0.05
+
+random_seed: 1234
+
+initializer:
+    "type": "xavier_uniform_"
+
+# path to save model
+model_path: "best_classification_model.ckpt"
+
+# path to save resources
+resource_dir: "resources/"
+
+model: "cnn"
