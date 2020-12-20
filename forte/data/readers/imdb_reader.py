@@ -76,19 +76,19 @@ class IMDBReader(PackReader):
                     sentiment = line_list[1]
 
                     # Add sentence.
-                    senobj = Sentence(pack, offset+1,
-                                      offset + len(sentence)+1)
+                    senobj = Sentence(pack, offset + 1,
+                                      offset + len(sentence) + 1)
                     senobj.speaker = sentiment
 
                     # Add token
-                    wordoffset = offset+1
+                    wordoffset = offset + 1
                     words = sentence.split(" ")
                     for word in words:
-                        lastch = word[len(word)-1]
+                        lastch = word[len(word) - 1]
                         new_word = word
-                        if lastch == "," or lastch=='.':
-                            new_word = word[:len(word)-1]
-                        Token(pack, wordoffset, wordoffset+len(new_word))
+                        if lastch == "," or lastch == '.':
+                            new_word = word[:len(word) - 1]
+                        Token(pack, wordoffset, wordoffset + len(new_word))
                         wordoffset += len(word)
                         # For space between words
                         wordoffset += 1
