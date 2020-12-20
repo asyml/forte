@@ -49,7 +49,6 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
             # get sentence from pack
             for sentence in pack.get(Sentence):
                 doc_exists = True
-                # sent_text sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in pack.get(Token, sentence)]
                 self.assertEqual(expected_sentence, tokens)
