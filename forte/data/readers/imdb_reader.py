@@ -41,7 +41,7 @@ class IMDBReader(PackReader):
         "movie comment, negative"
     """
 
-    def _collect(self, *args) -> Iterator[str]:
+    def _collect(self, *args, **kwargs) -> Iterator[str]:
         r"""Iterator over text files in the data_source
 
         Args:
@@ -54,6 +54,8 @@ class IMDBReader(PackReader):
         imdb_directory: str = args[0]
 
         imdb_file_extension = "imdb"
+
+        kwargsdict = kwargs
 
         logging.info("Reading dataset from %s with extension %s",
                      imdb_directory, imdb_file_extension)
