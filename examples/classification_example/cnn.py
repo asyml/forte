@@ -19,6 +19,7 @@ from texar.torch.modules.classifiers.conv_classifiers import Conv1DClassifier
 from torch import nn
 from texar.torch.data import Batch
 
+
 def pad_each_bach(word, max_sen_len):
     batch_size = word.shape[0]
     curr_len = word.shape[1]
