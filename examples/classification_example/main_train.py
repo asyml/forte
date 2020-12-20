@@ -66,6 +66,7 @@ def construct_word_embedding_table(embed_dict, extractor: BaseExtractor):
         table[index, :] = embedding
     return torch.from_numpy(table)
 
+
 def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
                  config: Config, in_channels: int):
     text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
@@ -85,6 +86,7 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
         model: nn.Module = BERTClassifier()
 
     return model, word_embedding_table
+
 
 def train(model: nn.Module, optim: Optimizer, batch: Batch, max_sen_length: int):
     word = batch["text_tag"]["data"]
@@ -110,6 +112,7 @@ def train(model: nn.Module, optim: Optimizer, batch: Batch, max_sen_length: int)
     batch_train_err = loss.item() * batch.batch_size
 
     return batch_train_err
+
 
 # All the configs
 config_data = yaml.safe_load(open("config_data.yml", "r"))
@@ -172,13 +175,13 @@ imdb_train_reader = IMDBReader(cache_in_memory=True)
 
 pl = Pipeline()
 pl.set_reader(imdb_train_reader)
-#pl.add(ReplacementDataAugmentProcessor(), processor_config)
+pl.add(ReplacementDataAugmentProcessor(), processor_config)
 pl.initialize()
 
 datapack_generator = pl.process_dataset(config.config_data.train_path)
 
 
-train_preprocessor = TrainPreprocessor(pack_generator = datapack_generator,
+train_preprocessor = TrainPreprocessor(pack_generator=datapack_generator,
                                        request=tp_request,
                                        config=tp_config)
 
@@ -194,7 +197,7 @@ for batch in tqdm(train_batch_iter):
 
 model, word_embedding_table = \
     create_model(schemes=train_preprocessor.feature_resource["schemes"],
-                 config=config, in_channels = max_sen_length)
+                 config=config, in_channels=max_sen_length)
 
 word_embedder = WordEmbedder(init_value=word_embedding_table)
 
