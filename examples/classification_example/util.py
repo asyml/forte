@@ -15,6 +15,7 @@
 
 import torch
 
+
 def pad_each_bach(word, max_sen_len):
     batch_size = word.shape[0]
     curr_len = word.shape[1]
@@ -22,7 +23,7 @@ def pad_each_bach(word, max_sen_len):
 
     # Line 0 in word_embedding_table is padding vec
     for i in range(batch_size):
-        for j in range(max_sen_len-curr_len):
+        for j in range(max_sen_len - curr_len):
             word_list[i].append(0)
 
     return torch.LongTensor(word_list)
