@@ -64,8 +64,7 @@ class IMDBReaderTest(unittest.TestCase):
             sentiment_labels = []
             wordlist = []
             for line in lines:
-                tempwordlist = []
-                #for empty or invalid line
+                # For empty or invalid line
                 if len(line) < 5:
                     continue
                 comment = line.split("\",")[0].strip("\"")
@@ -87,15 +86,13 @@ class IMDBReaderTest(unittest.TestCase):
                 label = label
                 comment = actual_sentence.text
                 # Test comment.
-                self.assertEqual(comment,line)
+                self.assertEqual(comment, line)
                 self.assertEqual(actual_sentence.speaker, label)
-                #self.assertEqual(actual_sentence.__getattribute__("sentim"), label)
 
-
-            for word_read, word_in_pack in zip(wordlist,actual_word):
+            for word_read, word_in_pack in zip(wordlist, actual_word):
                 new_word_read = word_read
                 lastch = word_read[len(word_read) - 1]
-                if lastch == "," or lastch=='.':
+                if lastch == "," or lastch == '.':
                     new_word_read = word_read[:len(word_read) - 1]
                 self.assertEqual(new_word_read, word_in_pack.text)
 
