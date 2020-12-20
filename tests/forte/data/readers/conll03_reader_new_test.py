@@ -24,12 +24,6 @@ from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Token, Sentence, EntityMention
 
 
-class DummyPackProcessor(PackProcessor):
-
-    def _process(self, input_pack: DataPack):
-        pass
-
-
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
 
     def setUp(self):
@@ -53,19 +47,15 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
-            print("--one pack--")
             for sentence in pack.get(Sentence):
                 doc_exists = True
                 # sent_text sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in pack.get(Token, sentence)]
-                print(tokens)
                 self.assertEqual(expected_sentence, tokens)
 
                 i = 0
                 for ner in pack.get(EntityMention, sentence):
-                    print(ner.text)
-                    print(ner.ner_type)
                     self.assertEqual(expected_token[i], ner.text)
                     self.assertEqual(expected_ner_type[i], ner.ner_type)
                     i += 1

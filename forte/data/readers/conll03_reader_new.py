@@ -26,7 +26,33 @@ __all__ = [
 
 
 class CoNLL03Reader(PackReader):
-    r""":class:`CoNLL03Reader` is designed to read in the CoNLL03-ner dataset.
+    r""":class:`CoNLL03Reader` is designed to read in the CoNLL03 dataset.
+
+    The datatset is from the following paper,
+    Sang, Erik F., and Fien De Meulder. "Introduction to the CoNLL-2003
+    shared task: Language-independent named entity recognition."
+    arXiv preprint cs/0306050 (2003).
+
+    Data could be downloaded from
+    https://deepai.org/dataset/conll-2003-english
+
+    Data format:
+    Data files contains one line "-DOCSTART- -X- -X- O" to represent the
+    start of a document. After that, each line will contain one word and
+    an empty line represent the start of a new sentence. Each line contains
+    four fields, the word, its part-of-speech tag, its chunk tag and its
+    named entity tag.
+
+    Example:
+        EU NNP B-NP B-ORG
+        rejects VBZ B-VP O
+        German JJ B-NP B-MISC
+        call NN I-NP O
+        to TO B-VP O
+        boycott VB I-VP O
+        British JJ B-NP B-MISC
+        lamb NN I-NP O
+        . . O O
     """
 
     def _collect(self, conll_directory) -> Iterator[Any]:  # type: ignore
