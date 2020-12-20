@@ -21,13 +21,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.processors.base.pack_processor import PackProcessor
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Token, Sentence
-
-
-class DummyPackProcessor(PackProcessor):
-
-    def _process(self, input_pack: DataPack):
-        pass
+from ft.onto.base_ontology import Token, Sentence, EntityMention
 
 
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
@@ -35,26 +29,37 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
     def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "data_samples/conll03"
-
         self.nlp = Pipeline[DataPack]()
-
         self.nlp.set_reader(CoNLL03Reader())
-        self.nlp.add(DummyPackProcessor())
-        self.nlp.add(DummyPackProcessor())
-
         self.nlp.initialize()
 
     def test_process_next(self):
         doc_exists = False
+
+        expected_sentence = ['The', 'European', 'Commission', 'said', 'on',
+            'Thursday', 'it', 'disagreed', 'with', 'German', 'advice', 'to',
+            'consumers', 'to', 'shun', 'British', 'lamb', 'until', 'scientists',
+            'determine', 'whether', 'mad', 'cow', 'disease', 'can', 'be',
+            'transmitted', 'to', 'sheep', '.']
+        expected_ner_type = ["ORG", "MISC", "MISC"]
+        expected_token = ["European Commission", "German", "British"]
+
         # get processed pack from dataset
         for pack in self.nlp.process_dataset(self.dataset_path):
             # get sentence from pack
             for sentence in pack.get(Sentence):
                 doc_exists = True
-                sent_text = sentence.text
+                # sent_text sentence.text
                 # second method to get entry in a sentence
                 tokens = [token.text for token in pack.get(Token, sentence)]
-                self.assertEqual(sent_text, " ".join(tokens))
+                self.assertEqual(expected_sentence, tokens)
+
+                i = 0
+                for ner in pack.get(EntityMention, sentence):
+                    self.assertEqual(expected_token[i], ner.text)
+                    self.assertEqual(expected_ner_type[i], ner.ner_type)
+                    i += 1
+
         self.assertTrue(doc_exists)
 
 
