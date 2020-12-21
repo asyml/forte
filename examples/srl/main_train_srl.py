@@ -28,6 +28,7 @@ from forte.data.readers.ontonotes_reader import OntonotesReader
 from forte.models.srl_new.model import LabeledSpanGraphNetwork
 from forte.models.srl_new import data
 from forte.pipeline import Pipeline
+from forte.predictor import Predictor
 from ft.onto.base_ontology import Sentence, Token, PredicateLink
 
 logger = logging.getLogger(__name__)
@@ -82,7 +83,6 @@ def predict_forward_fn(_model: LabeledSpanGraphNetwork, _batch: Dict) -> Dict:
     text_mask: Tensor = _batch["text_tag"]["masks"][0]
     text: List[List[str]] = _batch["raw_text_tag"]["data"]
 
-    # TODO: test enable enforce_constriant
     model_output: List[Dict[int, List[data.Span]]] = \
         _model.decode(text=text,
                       char_batch=char_tensor,
@@ -92,7 +92,6 @@ def predict_forward_fn(_model: LabeledSpanGraphNetwork, _batch: Dict) -> Dict:
 
     output: List[Dict] = []
     for model_output_i in model_output:
-        # TODO: use extractor specified name
         output_i: Dict = {
             "data": [],
             "parent_unit_span": [],
@@ -105,6 +104,7 @@ def predict_forward_fn(_model: LabeledSpanGraphNetwork, _batch: Dict) -> Dict:
                 output_i["parent_unit_span"].append(
                     (predicate_id, predicate_id + 1))
                 output_i['child_unit_span'].append((span.start, span.end))
+        output.append(output_i)
 
     return {'pred_link_tag': output}
 
@@ -117,6 +117,7 @@ if __name__ == "__main__":
     batch_size = 64
 
     train_path = "data/train/"
+    val_path = "data/dev/"
 
     tp_request: Dict = {
         "scope": Sentence,
@@ -181,6 +182,18 @@ if __name__ == "__main__":
                            momentum=momentum,
                            nesterov=nesterov)
 
+    srl_val_reader = OntonotesReader(cache_in_memory=True)
+    predictor = Predictor(
+        batch_size=batch_size,
+        model=model,
+        predict_forward_fn=predict_forward_fn,
+        feature_resource=train_preprocessor.feature_resource,
+        cross_pack=False)
+    val_pl: Pipeline = Pipeline()
+    val_pl.set_reader(srl_val_reader)
+    val_pl.add(predictor)
+    # TODO: We need an evaluator here for SRL task
+
     logger.info("Start training.")
     epoch = 0
     train_loss: float = 0.0
@@ -204,6 +217,10 @@ if __name__ == "__main__":
 
         train_loss = 0.0
         train_total = 0
+
+        val_pl.run(val_path)
+
+        logger.info("%dth Epoch evaluating", epoch)
 
     # Save training state to disk
     # train_preprocessor.save_state("train_state.pkl")
