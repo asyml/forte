@@ -11,41 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import argparse
 import os
+import yaml
 
 from examples.data_augmentation.data_select import CreateIndexerPipeline
 from forte.data.readers import MSMarcoPassageReader
 
 
 def main():
-    indexer_name = "da_selector"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config_file", default="./config.yml",
+                        help="Config YAML filepath")
+    args = parser.parse_args()
+
+    # loading config
+    config = yaml.safe_load(open(args.config_file, "r"))
 
     file_dir_path = os.path.dirname(__file__)
     data_dir = 'data_samples/ms_marco_passage_retrieval'
     abs_data_dir = os.path.abspath(
         os.path.join(file_dir_path, *([os.pardir] * 3), data_dir))
 
-    indexer_config = {
-        "batch_size": 5,
-        "fields":
-            ["doc_id", "content", "pack_info"],
-        "indexer": {
-            "name": "ElasticSearchIndexer",
-            "hparams":
-                {"index_name": indexer_name,
-                 "hosts": "localhost:9200",
-                 "algorithm": "bm25"},
-            "other_kwargs": {
-                "request_timeout": 10,
-                "refresh": False
-            }
-        }
-    }
-
     reader = MSMarcoPassageReader()
     nlp = CreateIndexerPipeline(reader=reader, reader_config=None,
-                                indexer_config=indexer_config)
+                                indexer_config=config["indexer_config"])
     nlp.create_index(abs_data_dir)
 
 
