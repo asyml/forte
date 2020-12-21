@@ -104,7 +104,7 @@ class AllenNLPProcessor(PackProcessor):
         self._process_existing_entries(input_pack)
 
         for sentence in input_pack.get(Sentence):
-            result = self.predictor.predict(
+            result = self.predictor.predict(  # ignore: type
                 sentence=sentence.text)
 
             if "tokenize" in self.configs.processors:
