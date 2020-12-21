@@ -143,7 +143,9 @@ if __name__ == "__main__":
                 "vocab_method": "raw",
                 "type": TrainPreprocessor.DATA_INPUT,
                 "extractor": AttributeExtractor,
-                "need_pad": False
+                "need_pad": False,
+                "to_numpy": False,
+                "to_torch": False
             },
             "pred_link_tag": {  # predicate link
                 "entry_type": PredicateLink,
@@ -152,7 +154,9 @@ if __name__ == "__main__":
                 "vocab_method": "indexing",
                 "type": TrainPreprocessor.DATA_OUTPUT,
                 "extractor": LinkExtractor,
-                "need_pad": False
+                "need_pad": False,
+                "to_numpy": False,
+                "to_torch": False
             }
         }
     }
