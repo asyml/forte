@@ -153,11 +153,24 @@ class ConverterTest(unittest.TestCase):
         features1: List[Feature] = self.create_features1()
 
         converter: Converter = Converter({"need_pad": False,
-                                          "to_numpy": False})
+                                          "to_numpy": False,
+                                          "to_torch": False})
         data, _ = converter.convert(features1)
         self.assertTrue(
             np.array_equal(data,
                            [[7, 8, 9], [1, 2, 5, 6], [4]]))
+
+    def test_convert_no_pad_but_to_torch(self):
+        features1: List[Feature] = \
+            self.create_features1(
+                data_list=[[7], [1], [4]])
+
+        converter: Converter = Converter({"need_pad": False})
+        data, _ = converter.convert(features1)
+        self.assertTrue(
+            torch.allclose(data,
+                           torch.tensor(
+                               [[7], [1], [4]], dtype=torch.long)))
 
     def test_convert_no_to_torch(self):
         features1: List[Feature] = self.create_features1()
@@ -186,7 +199,7 @@ class ConverterTest(unittest.TestCase):
             feature: Feature = Feature(data, {"pad_value": pad_id,
                                               "dim": dim,
                                               "dtype": dtype
-                                             })
+                                              })
             features.append(feature)
 
         return features
@@ -208,7 +221,7 @@ class ConverterTest(unittest.TestCase):
             feature: Feature = Feature(data, {"pad_value": pad_id,
                                               "dim": dim,
                                               "dtype": dtype
-                                             })
+                                              })
             features.append(feature)
 
         return features
@@ -238,7 +251,7 @@ class ConverterTest(unittest.TestCase):
             feature: Feature = Feature(data, {"pad_value": pad_id,
                                               "dim": dim,
                                               "dtype": dtype
-                                             })
+                                              })
             features.append(feature)
 
         return features

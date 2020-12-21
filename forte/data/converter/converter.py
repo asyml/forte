@@ -68,8 +68,9 @@ class Converter:
              Whether convert to `torch.tensor`. Default is True.
 
         .. note::
-            If `need_pad` is False, `to_numpy` and `to_torch` will always
-            set to False.
+            If `need_pad` is False and `to_numpy` and `to_torch` is True,
+            it will raise an exception if the target data cannot be converted
+            to `numpy.ndarray` or `torch.tensor`.
 
         .. note::
             If `need_pad` is True and `to_torch` is True, `to_torch`
@@ -94,10 +95,6 @@ class Converter:
         return self._config.to_torch
 
     def _validate_input(self):
-        if not self.need_pad and \
-                (self.to_numpy or self.to_torch):
-            self._config.to_numpy = False
-            self._config.to_torch = False
         if self.need_pad and self.to_torch and not self.to_numpy:
             logger.warning("need_pad is True and to_torch is True, "
                            "setting to_numpy to False will be ignored.")
@@ -199,7 +196,7 @@ class Converter:
 
         .. code-block:: python
 
-            data = [[1,2,3], [4,5], [6,7,8,9]]
+            data = [[1,2,3,0], [4,5,0,0], [6,7,8,9]]
             meta_data = {
                 "pad_value": 0
                 "dim": 1
@@ -211,7 +208,7 @@ class Converter:
             output_data, _ = converter.convert(features)
 
             # output_data is:
-            # [[1,2,3], [4,5], [6,7,8,9]]
+            # torch.tensor([[1,2,3,0], [4,5,0,0], [6,7,8,9]], dtype=torch.long)
 
         Example 4:
 
