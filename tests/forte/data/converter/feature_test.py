@@ -169,6 +169,7 @@ class FeatureTest(unittest.TestCase):
                         data=None,
                         pad_id=None,
                         dim=None,
+                        need_pad=True,
                         dtype=None):
         data: List = [7, 8, 9] if data is None else data
         pad_id: int = 0 if pad_id is None else pad_id
@@ -176,7 +177,8 @@ class FeatureTest(unittest.TestCase):
         dtype = torch.long if dtype is None else dtype
         feature: Feature = Feature(data, {"pad_value": pad_id,
                                           "dim": dim,
-                                          "dtype": dtype
+                                          "dtype": dtype,
+                                          "need_pad": need_pad
                                           })
 
         return feature
@@ -185,6 +187,7 @@ class FeatureTest(unittest.TestCase):
                         data=None,
                         pad_id=None,
                         dim=None,
+                        need_pad=True,
                         dtype=None):
         data: List = [[6, 11, 2], [7, 8], [6, 7, 5, 4]] \
             if data is None else data
@@ -193,7 +196,8 @@ class FeatureTest(unittest.TestCase):
         dtype = torch.long if dtype is None else dtype
         feature: Feature = Feature(data, {"pad_value": pad_id,
                                           "dim": dim,
-                                          "dtype": dtype
+                                          "dtype": dtype,
+                                          "need_pad": need_pad
                                           })
 
         return feature
@@ -202,6 +206,7 @@ class FeatureTest(unittest.TestCase):
                         data=None,
                         pad_id=None,
                         dim=None,
+                        need_pad=True,
                         dtype=torch.long):
         data: List = [[[0, 1, 0], [1, 0, 0], [1, 0, 0]],
                       [[1, 0, 0], [0, 1, 0]]] if data is None else data
@@ -209,7 +214,8 @@ class FeatureTest(unittest.TestCase):
         dim: int = 2 if dim is None else dim
         feature: Feature = Feature(data, {"pad_value": pad_id,
                                           "dim": dim,
-                                          "dtype": dtype
+                                          "dtype": dtype,
+                                          "need_pad": need_pad
                                           })
 
         return feature

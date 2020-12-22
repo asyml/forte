@@ -150,10 +150,9 @@ class ConverterTest(unittest.TestCase):
                                dtype=torch.float)))
 
     def test_convert_no_pad(self):
-        features1: List[Feature] = self.create_features1()
+        features1: List[Feature] = self.create_features1(need_pad=False)
 
-        converter: Converter = Converter({"need_pad": False,
-                                          "to_numpy": False,
+        converter: Converter = Converter({"to_numpy": False,
                                           "to_torch": False})
         data, _ = converter.convert(features1)
         self.assertTrue(
@@ -163,9 +162,10 @@ class ConverterTest(unittest.TestCase):
     def test_convert_no_pad_but_to_torch(self):
         features1: List[Feature] = \
             self.create_features1(
-                data_list=[[7], [1], [4]])
+                data_list=[[7], [1], [4]],
+                need_pad=False)
 
-        converter: Converter = Converter({"need_pad": False})
+        converter: Converter = Converter({})
         data, _ = converter.convert(features1)
         self.assertTrue(
             torch.allclose(data,
@@ -188,6 +188,7 @@ class ConverterTest(unittest.TestCase):
                          data_list=None,
                          pad_id=0,
                          dim=1,
+                         need_pad=True,
                          dtype=np.long):
         if not data_list:
             data_list = [[7, 8, 9], [1, 2, 5, 6], [4]]
@@ -198,7 +199,8 @@ class ConverterTest(unittest.TestCase):
         for data in data_list:
             feature: Feature = Feature(data, {"pad_value": pad_id,
                                               "dim": dim,
-                                              "dtype": dtype
+                                              "dtype": dtype,
+                                              "need_pad": need_pad
                                               })
             features.append(feature)
 
@@ -208,6 +210,7 @@ class ConverterTest(unittest.TestCase):
                          data_list=None,
                          pad_id=None,
                          dim=None,
+                         need_pad=True,
                          dtype=np.long):
         if not data_list:
             data_list = [[[6, 11, 2], [7, 8], [6, 7, 5, 4]],
@@ -220,7 +223,8 @@ class ConverterTest(unittest.TestCase):
         for data in data_list:
             feature: Feature = Feature(data, {"pad_value": pad_id,
                                               "dim": dim,
-                                              "dtype": dtype
+                                              "dtype": dtype,
+                                              "need_pad": need_pad
                                               })
             features.append(feature)
 
@@ -230,6 +234,7 @@ class ConverterTest(unittest.TestCase):
                          data_list=None,
                          pad_id=None,
                          dim=None,
+                         need_pad=True,
                          dtype=np.long):
         if not data_list:
             data_list: List = \
@@ -250,7 +255,8 @@ class ConverterTest(unittest.TestCase):
         for data in data_list:
             feature: Feature = Feature(data, {"pad_value": pad_id,
                                               "dim": dim,
-                                              "dtype": dtype
+                                              "dtype": dtype,
+                                              "need_pad": need_pad
                                               })
             features.append(feature)
 

@@ -40,7 +40,6 @@ class Converter:
         self._config = Config(config,
                               default_hparams=self.default_configs(),
                               allow_new_hparam=True)
-        self._validate_input()
 
     @staticmethod
     def default_configs():
@@ -50,41 +49,34 @@ class Converter:
         .. code-block:: python
 
             {
-                "need_pad": True,
                 "to_numpy": True,
                 "to_torch": True
             }
 
         Here:
 
-        `"need_pad"`: bool
-            Whether pad a batch of features. Default is True.
+            `"to_numpy"`: bool
+                Whether convert to `numpy.ndarray`.
+                Default is True.
 
-        `"to_numpy"`: bool
-            Whether convert to `numpy.ndarray`.
-            Default is True.
+            `"to_torch"`: bool
+                 Whether convert to `torch.tensor`. Default is True.
 
-        `"to_torch"`: bool
-             Whether convert to `torch.tensor`. Default is True.
-
-        .. note::
-            If `need_pad` is False and `to_numpy` and `to_torch` is True,
-            it will raise an exception if the target data cannot be converted
-            to `numpy.ndarray` or `torch.tensor`.
+            .. note::
+                If `need_pad` in :class:`forte.data.converter.Feature`
+                is False and `to_numpy` and `to_torch` is True,
+                it will raise an exception if the target data cannot be
+                converted to `numpy.ndarray` or `torch.tensor`.
 
         .. note::
-            If `need_pad` is True and `to_torch` is True, `to_torch`
-            will overwrite the effect of `to_numpy`.
+            If `need_pad` in :class:`forte.data.converter.Feature`
+            is True and `to_torch` is True, `to_torch` will overwrite the
+            effect of `to_numpy`.
         """
         return {
-            "need_pad": True,
             "to_numpy": True,
             "to_torch": True
         }
-
-    @property
-    def need_pad(self) -> bool:
-        return self._config.need_pad
 
     @property
     def to_numpy(self) -> bool:
@@ -93,11 +85,6 @@ class Converter:
     @property
     def to_torch(self) -> bool:
         return self._config.to_torch
-
-    def _validate_input(self):
-        if self.need_pad and self.to_torch and not self.to_numpy:
-            logger.warning("need_pad is True and to_torch is True, "
-                           "setting to_numpy to False will be ignored.")
 
     def convert(self, features: List[Feature]) -> \
             Tuple[Any, List[Any]]:
@@ -115,8 +102,9 @@ class Converter:
 
             2.3 A `torch.Tensor`
 
-        If `need_pad` is True, it will pad all features with given `pad_value`
-        stored inside :class:`forte.data.converter.Feature`.
+        If `need_pad` in :class:`forte.data.converter.Feature` is True, it
+        will pad all features with given `pad_value` stored inside
+        :class:`forte.data.converter.Feature`.
 
         If `to_numpy` is True, it will try to convert data into
         `numpy.ndarray`.
@@ -143,13 +131,13 @@ class Converter:
 
             data = [[1,2,3], [4,5], [6,7,8,9]]
             meta_data = {
-                "pad_value": 0
+                "pad_value": 0,
+                "need_pad": True,
                 "dim": 1
                 "dtype": np.long
             }
             features = [Feature(i, meta_data=meta_data) for i in data]
-            converter = Converter(need_pad=True,
-                                  to_numpy=True,
+            converter = Converter(to_numpy=True,
                                   to_torch=False)
 
             output_data, masks = converter.convert(features)
@@ -169,13 +157,13 @@ class Converter:
 
             data = [[[1,2,3], [4,5]], [[3]]]
             meta_data = {
-                "pad_value": 0
+                "pad_value": 0,
+                "need_pad": True,
                 "dim": 2
                 "dtype": np.long
             }
             features = [Feature(i, meta_data=meta_data) for i in data]
-            converter = Converter(need_pad=True,
-                                  to_numpy=True,
+            converter = Converter(to_numpy=True,
                                   to_torch=False)
 
             output_data, masks = converter.convert(features)
@@ -199,6 +187,7 @@ class Converter:
             data = [[1,2,3,0], [4,5,0,0], [6,7,8,9]]
             meta_data = {
                 "pad_value": 0
+                "need_pad": False,
                 "dim": 1
                 "dtype": np.long
             }
@@ -216,13 +205,13 @@ class Converter:
 
             data = [[1,2,3], [4,5], [6,7,8,9]]
             meta_data = {
-                "pad_value": 0
+                "pad_value": 0,
+                "need_pad": True,
                 "dim": 1
                 "dtype": np.long
             }
             features = [Feature(i, meta_data=meta_data) for i in data]
-            converter = Converter(need_pad=True,
-                                  to_torch=True)
+            converter = Converter(to_torch=True)
 
             output_data, masks = converter.convert(features)
 
@@ -237,8 +226,14 @@ class Converter:
         """
         dtype: Optional[np.dtype] = None
 
+        need_pad: bool = features[0].need_pad
+
+        if need_pad and self.to_torch and not self.to_numpy:
+            logger.warning("need_pad is True and to_torch is True, "
+                           "setting to_numpy to False will be ignored.")
+
         # Do padding if needed
-        if self.need_pad:
+        if need_pad:
             dtype = self._padding(features)
 
         # Collect a batch of data & masks from Features
@@ -303,6 +298,9 @@ class Converter:
                 if dtype != feature.dtype:
                     raise ValidationError(
                         "The dtype should be same within a batch of Features")
+            if not feature.need_pad:
+                raise ValidationError(
+                    "Inconsistent need pad flag for a batch of Features")
             queue.append(feature)
             curr_max_len = max(curr_max_len, len(feature))
 

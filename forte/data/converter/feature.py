@@ -30,9 +30,7 @@ class Feature:
             another list of features. Typically this should be the output from
             :meth:`extract` in :class:`forte.data.extractor.BaseExtractor`.
         metadata (dict): A dictionary of metadata for this feature. Mandatory
-            metadata fields includes: `pad_value`, `dim`, `dtype`.
-
-            `pad_value` is the pad that will be used to do padding.
+            metadata fields includes: `dim`, `dtype`.
 
             `dim` indicates the total number of dimension for this
             feature.
@@ -50,6 +48,7 @@ class Feature:
         self._meta_data: Dict = metadata
         self._validate_metadata()
 
+        # Pad that will be used to do padding.
         self._pad_value: Union[int, List] = self._meta_data["pad_value"]
         self._dim: int = self._meta_data["dim"]
         self._dtype = self._meta_data["dtype"]
@@ -74,11 +73,15 @@ class Feature:
         self._validate_input()
 
     def _validate_metadata(self):
-        necessary_fields = ["pad_value", "dim", "dtype"]
+        necessary_fields = ["dim", "dtype"]
         for field in necessary_fields:
             if field not in self._meta_data:
                 raise ValidationError(
                     "Field not found in metadata: {}".format(field))
+
+        if self.need_pad and "pad_value" not in self._meta_data:
+            raise ValidationError(
+                "need_pad is True but no pad_value is given")
 
     def _validate_input(self):
         """
@@ -174,6 +177,15 @@ class Feature:
             The dimension of this feature.
         """
         return self._dim
+
+    @property
+    def need_pad(self) -> bool:
+        """
+        Returns:
+            Whether the Feature need to be padded.
+        """
+        return self._meta_data["need_pad"] if "need_pad" in self._meta_data \
+            else True
 
     def __len__(self):
         return len(self._data) if self.leaf_feature else \
