@@ -18,9 +18,8 @@ from torch import Tensor
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 
-from forte.data.converter.feature import Feature
+from forte.data.converter import Converter, Feature
 from forte.data.extractor.attribute_extractor import AttributeExtractor
-from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.extractor.char_extractor import CharExtractor
 from forte.data.extractor.link_extractor import LinkExtractor
 from forte.train_preprocessor import TrainPreprocessor
@@ -36,61 +35,15 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-def create_model(schemes: Dict[str, Dict[str, BaseExtractor]]) -> \
-        LabeledSpanGraphNetwork:
-    text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
-    char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
-    link_extractor: BaseExtractor = schemes["pred_link_tag"]["extractor"]
-
-    _model = LabeledSpanGraphNetwork(word_vocab=text_extractor.get_dict(),
-                                     char_vocab_size=char_extractor.size(),
-                                     label_vocab=link_extractor.get_dict())
-
-    return _model
-
-
-def train(_model: LabeledSpanGraphNetwork,
-          _optim: Optimizer,
-          _batch: Batch) -> \
-        LabeledSpanGraphNetwork.ReturnType:
-    char_tensor: Tensor = _batch["char_tag"]["data"]
-    char_masks: List[Tensor] = _batch["char_tag"]["masks"]
-    text_tensor: Tensor = _batch["text_tag"]["data"]
-    text_mask: Tensor = _batch["text_tag"]["masks"][0]
-    text: List[List[str]] = _batch["raw_text_tag"]["data"]
-    pred_link_features: List[Feature] = _batch["pred_link_tag"]["features"]
-
-    _optim.zero_grad()
-
-    output: LabeledSpanGraphNetwork.ReturnType = \
-        model(text=text,
-              char_batch=char_tensor,
-              char_masks=char_masks,
-              text_batch=text_tensor,
-              text_mask=text_mask,
-              srl_features=pred_link_features)
-
-    output["loss"].backward()
-    optim.step()
-
-    return output
-
-
 def predict_forward_fn(_model: LabeledSpanGraphNetwork, _batch: Dict) -> Dict:
-    char_tensor: Tensor = _batch["char_tag"]["data"]
-    char_masks: List[Tensor] = _batch["char_tag"]["masks"]
-    text_tensor: Tensor = _batch["text_tag"]["data"]
-    text_mask: Tensor = _batch["text_tag"]["masks"][0]
-    text: List[List[str]] = _batch["raw_text_tag"]["data"]
-
     model_output: List[Dict[int, List[data.Span]]] = \
-        _model.decode(text=text,
-                      char_batch=char_tensor,
-                      char_masks=char_masks,
-                      text_batch=text_tensor,
-                      text_mask=text_mask)
+        _model.decode(text=_batch["raw_text_tag"]["data"],
+                      char_batch=_batch["char_tag"]["data"],
+                      char_masks=_batch["char_tag"]["masks"],
+                      text_batch=_batch["text_tag"]["data"],
+                      text_mask=_batch["text_tag"]["masks"][0])
 
-    output: List[Dict] = []
+    link_output: List[Dict] = []
     for model_output_i in model_output:
         output_i: Dict = {
             "data": [],
@@ -104,9 +57,9 @@ def predict_forward_fn(_model: LabeledSpanGraphNetwork, _batch: Dict) -> Dict:
                 output_i["parent_unit_span"].append(
                     (predicate_id, predicate_id + 1))
                 output_i['child_unit_span'].append((span.start, span.end))
-        output.append(output_i)
+        link_output.append(output_i)
 
-    return {'pred_link_tag': output}
+    return {'pred_link_tag': link_output}
 
 
 if __name__ == "__main__":
@@ -119,44 +72,56 @@ if __name__ == "__main__":
     train_path = "data/train/"
     val_path = "data/dev/"
 
+    text_extractor: AttributeExtractor = \
+        AttributeExtractor(config={"entry_type": Token,
+                                   "attribute_get": "text",
+                                   "vocab_method": "indexing"})
+
+    char_extractor: CharExtractor = \
+        CharExtractor(config={"entry_type": Token,
+                              "vocab_method": "indexing"})
+
+    raw_extractor: AttributeExtractor = \
+        AttributeExtractor(config={"entry_type": Token,
+                                   "attribute_get": "text",
+                                   "vocab_method": "raw",
+                                   "need_pad": False})
+
+    link_extractor: LinkExtractor = \
+        LinkExtractor(config={
+            "entry_type": PredicateLink,
+            "attribute": "arg_type",
+            "based_on": Token,
+            "vocab_method": "indexing",
+            "need_pad": False
+        })
+
+    raw_converter: Converter = Converter({"to_numpy": False,
+                                          "to_torch": False})
+
+    link_converter: Converter = Converter({"to_numpy": False,
+                                           "to_torch": False})
+
     tp_request: Dict = {
         "scope": Sentence,
         "schemes": {
             "text_tag": {
-                "entry_type": Token,
-                "attribute_get": "text",
-                "vocab_method": "indexing",
                 "type": TrainPreprocessor.DATA_INPUT,
-                "extractor": AttributeExtractor,
-                "need_pad": True
+                "extractor": text_extractor
             },
             "char_tag": {
-                "entry_type": Token,
-                "vocab_method": "indexing",
                 "type": TrainPreprocessor.DATA_INPUT,
-                "extractor": CharExtractor,
-                "need_pad": True
+                "extractor": char_extractor
             },
             "raw_text_tag": {
-                "entry_type": Token,
-                "attribute_get": "text",
-                "vocab_method": "raw",
                 "type": TrainPreprocessor.DATA_INPUT,
-                "extractor": AttributeExtractor,
-                "need_pad": False,
-                "to_numpy": False,
-                "to_torch": False
+                "extractor": raw_extractor,
+                "converter": raw_converter
             },
             "pred_link_tag": {  # predicate link
-                "entry_type": PredicateLink,
-                "attribute": "arg_type",
-                "based_on": Token,
-                "vocab_method": "indexing",
                 "type": TrainPreprocessor.DATA_OUTPUT,
-                "extractor": LinkExtractor,
-                "need_pad": False,
-                "to_numpy": False,
-                "to_torch": False
+                "extractor": link_extractor,
+                "converter": link_converter
             }
         }
     }
@@ -179,7 +144,9 @@ if __name__ == "__main__":
                                            config=tp_config)
 
     model: LabeledSpanGraphNetwork = \
-        create_model(schemes=train_preprocessor.feature_resource["schemes"])
+        LabeledSpanGraphNetwork(word_vocab=text_extractor.get_dict(),
+                                char_vocab_size=char_extractor.size(),
+                                label_vocab=link_extractor.get_dict())
 
     optim: Optimizer = SGD(model.parameters(),
                            lr=lr,
@@ -191,7 +158,7 @@ if __name__ == "__main__":
         batch_size=batch_size,
         model=model,
         predict_forward_fn=predict_forward_fn,
-        feature_resource=train_preprocessor.feature_resource,
+        feature_resource=train_preprocessor.request,
         cross_pack=False)
     val_pl: Pipeline = Pipeline()
     val_pl.set_reader(srl_val_reader)
@@ -211,9 +178,28 @@ if __name__ == "__main__":
             train_preprocessor.get_train_batch_iterator()
 
         for batch in train_batch_iter:
-            train_output: LabeledSpanGraphNetwork.ReturnType = \
-                train(model, optim, batch)
-            train_loss += train_output["loss"].item()
+            char_tensor: Tensor = batch["char_tag"]["data"]
+            char_masks: List[Tensor] = batch["char_tag"]["masks"]
+            text_tensor: Tensor = batch["text_tag"]["data"]
+            text_mask: Tensor = batch["text_tag"]["masks"][0]
+            text: List[List[str]] = batch["raw_text_tag"]["data"]
+            pred_link_features: List[Feature] = batch["pred_link_tag"][
+                "features"]
+
+            optim.zero_grad()
+
+            output: LabeledSpanGraphNetwork.ReturnType = \
+                model(text=text,
+                      char_batch=char_tensor,
+                      char_masks=char_masks,
+                      text_batch=text_tensor,
+                      text_mask=text_mask,
+                      srl_features=pred_link_features)
+
+            output["loss"].backward()
+            optim.step()
+
+            train_loss += output["loss"].item()
             train_total += 1
 
         logger.info("%dth Epoch training, "
