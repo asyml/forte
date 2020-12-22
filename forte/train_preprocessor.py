@@ -313,26 +313,6 @@ class TrainPreprocessor:
         """
         return self._config
 
-    @property
-    def state(self) -> Dict:
-        r"""A `Dict` maintaining all the serializable states for this
-        `TrainPreprocessor`. This is typically used to save the training state.
-        """
-        return {
-            "request": self._request,
-            "user_request": self.user_request,
-            "configs": self._config
-        }
-
-    def save_state(self, filename: str):
-        r"""It will serialize `TrainPreprocessor` state into a disk file given
-        by `filename`.
-
-        Args:
-            filename (str): the file to save the state.
-        """
-        torch.save(self.state, filename)
-
     def get_train_batch_iterator(self) -> Iterator[Batch]:
         r"""
         This method mainly has four steps:
