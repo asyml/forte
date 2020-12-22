@@ -94,8 +94,8 @@ class Converter:
         }
 
     def load_state(self, state: Dict):
-        self._to_numpy = state["to_numpy"]
-        self._to_torch = state["to_torch"]
+        self._config.to_numpy = state["to_numpy"]
+        self._config.to_torch = state["to_torch"]
 
     def convert(self, features: List[Feature]) -> \
             Tuple[Any, List[Any]]:
