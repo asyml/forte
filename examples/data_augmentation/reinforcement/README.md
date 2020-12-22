@@ -8,7 +8,28 @@ This example demonstrates the usage of `forte/models/da_rl/MetaAugmentationWrapp
 
 ### Examplge Usage
 
-See `RLAugmentClassifierTrainer.train_epoch()` in `main.py` for details.
+This is an algorithm that jointly learns target model and data augmentation reward function.
+
+Assume theta is the parameters of the downstream model, and phi is the parameters of DA model.
+
+Optimize theta on augmented training set, with equation `theta'(phi) = theta - grad_{theta} L_{train}(theta, phi)`.
+
+Optimize phi by maximizing data log-likelihood on validation set, with equation `phi = phi - grad_{phi} L_{val}(theta'(phi))`.
+
+`MetaAugmentationWrapper` is used to calculate the above equations to update DA parameters phi.
+
+`MetaAugmentationWrapper: augment_instance` outputs augmented instance with phi. 
+
+Passing the output to the target model generates a model loss and hence theta(phi). 
+
+The use of `MetaModel` and `MetaAugmentationWrapper: update_meta_model` computes theta'(phi) on `MetaModel`. 
+
+With validation set as input, `MetaModel` computes validation loss.
+
+Since theta′ is a function of phi, the gradient is backpropagated to phi through theta′(phi). Thus `val_loss.backward` creates grad_phi.
+
+Finally, `MetaAugmentationWrapper: update_phi` optimizes phi with the gradient computed above.
+
 
 ```python
 
@@ -53,6 +74,8 @@ for batch in training_data:
     loss.backward()
     optim.step()
 ```
+
+See class `MetaAugmentationWrapper` and `RLAugmentClassifierTrainer.train_epoch()` in `main.py` for details.
 
 
 ### Train

@@ -88,12 +88,12 @@ class RLAugmentClassifierTrainer:
             hparams=config_data.test_hparam, device=device)
         self.iterator = tx.data.DataIterator(
             {"train": train_dataset,
-             "eval": val_dataset,
+             "dev": val_dataset,
              "test": test_dataset}
         )
 
-        self.val_data_iterator = tx.data.DataIterator({"eval": val_dataset})
-        self.val_data_iterator.switch_to_dataset("eval")
+        self.val_data_iterator = tx.data.DataIterator({"dev": val_dataset})
+        self.val_data_iterator.switch_to_dataset("dev")
 
     def _init_aug_model(self):
         # pylint: disable=protected-access
@@ -123,7 +123,7 @@ class RLAugmentClassifierTrainer:
             aug_model, aug_optim, input_mask_ids, device, args.num_aug)
 
     def _init_classifier(self):
-        # Builds downstream BERT classifier
+        # Builds BERT for classification task.
         config_downstream = {
             k: v for k, v in config_classifier.__dict__.items()
             if not k.startswith('__') and k != "hyperparams"}
@@ -159,6 +159,9 @@ class RLAugmentClassifierTrainer:
                                      warmup_steps=num_warmup_steps))
 
     def pre_train_classifier_epoch(self):
+        r"""Pre-trains model on the training set
+        for better weight initialization.
+        """
         self.iterator.switch_to_dataset("train")
         self.classifier.train()
 
@@ -252,7 +255,7 @@ class RLAugmentClassifierTrainer:
     def eval_epoch(self):
         """Evaluates on the dev set.
         """
-        self.iterator.switch_to_dataset("eval")
+        self.iterator.switch_to_dataset("dev")
         self.classifier.eval()
 
         nsamples = 0
