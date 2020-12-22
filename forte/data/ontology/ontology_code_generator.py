@@ -87,19 +87,35 @@ def analyze_packages(packages: Set[str]):
     return [p for (l, p) in sorted(package_len, reverse=True)]
 
 
-def validate_entry(entry_name: str, sorted_packages: List[str]) -> str:
-    for package_name in sorted_packages:
-        if entry_name.startswith(package_name):
-            matched_package = package_name
-            break
-    else:
-        # None of the package name matches.
-        raise InvalidIdentifierException(
-            f"Entry name [{entry_name}] does not start with any predefined "
-            f"packages, please define the packages by using "
-            f"`additional_prefixes` in the ontology. Or you can use the "
-            f"default prefix 'ft.onto'."
-        )
+def validate_entry(entry_name: str, sorted_packages: List[str],
+                   lenient_prefix=False):
+    """
+    Validate if this entry name can be used. It currently checks for:
+      1) If the package name is defined. (This can be turn off by setting
+        `lenient_prefix` to True.
+      2) If the entry name have at least 3 segments.
+
+    Args:
+        entry_name: The name to be validated.
+        sorted_packages: The package names that are allowed.
+        lenient_prefix: Whether we enforce that the entry must follow the
+          pre-defined package name.
+
+    Returns:
+
+    """
+    if not lenient_prefix:
+        for package_name in sorted_packages:
+            if entry_name.startswith(package_name):
+                break
+        else:
+            # None of the package name matches.
+            raise InvalidIdentifierException(
+                f"Entry name [{entry_name}] does not start with any predefined "
+                f"packages, please define the packages by using "
+                f"`additional_prefixes` in the ontology. Or you can use the "
+                f"default prefix 'ft.onto'."
+            )
 
     entry_splits = entry_name.split('.')
 
@@ -109,7 +125,6 @@ def validate_entry(entry_name: str, sorted_packages: List[str]) -> str:
             f"which corresponds to the directory name, the file (module) name,"
             f"the entry class name. There are only {len(entry_splits)}"
             f"levels in [{entry_name}].")
-    return matched_package
 
 
 def as_init_str(init_args):
@@ -356,7 +371,8 @@ class OntologyCodeGenerator:
 
     def generate(self, spec_path: str, destination_dir: str = os.getcwd(),
                  is_dry_run: bool = False, include_init: bool = True,
-                 merged_path: Optional[str] = None) -> Optional[str]:
+                 merged_path: Optional[str] = None, lenient_prefix=False,
+                 ) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to
             the class.
@@ -375,6 +391,8 @@ class OntologyCodeGenerator:
                     in the generated directories.
                 merged_path: if a path is provided, a merged ontology file will
                     be written at this path.
+                lenient_prefix: if `True`, will not enforce the entry name to
+                    match a known prefix.
 
             Returns:
                 Directory path in which the modules are created: either one of
@@ -384,12 +402,16 @@ class OntologyCodeGenerator:
         self.import_dirs.append(os.path.dirname(os.path.realpath(spec_path)))
 
         merged_schemas: List[Dict] = []
+        merged_prefixes: List[str] = []
 
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
         try:
             self.parse_ontology_spec(spec_path, destination_dir,
-                                     merged_schema=merged_schemas)
+                                     merged_schema=merged_schemas,
+                                     merged_prefixes=merged_prefixes,
+                                     lenient_prefix=lenient_prefix
+                                     )
         except OntologySpecError:
             logging.error("Error at parsing [%s]", spec_path)
             raise
@@ -413,7 +435,8 @@ class OntologyCodeGenerator:
             logging.info("Writing merged schema at %s", merged_path)
             merged_config = {
                 "name": "all_ontology",
-                "definitions": merged_schemas
+                "definitions": merged_schemas,
+                "additional_prefixes": list(set(merged_prefixes)),
             }
             with open(merged_path, 'w') as out:
                 json.dump(merged_config, out, indent=2)
@@ -488,8 +511,10 @@ class OntologyCodeGenerator:
             self, ontology_path: str,
             destination_dir: str,
             merged_schema: List[Dict],
+            merged_prefixes: List[str],
             visited_paths: Optional[Dict[str, bool]] = None,
             rec_visited_paths: Optional[Dict[str, bool]] = None,
+            lenient_prefix=False,
     ):
         r"""Performs a topological traversal on the directed graph formed by the
         imported json configs. While processing each config, it first generates
@@ -500,10 +525,12 @@ class OntologyCodeGenerator:
             ontology_path: Path to the ontology.
             destination_dir: Directory in which the generated module will
                 be located.
-            merged_schema: A list to read all the merged schema.
+            merged_schema: A list that store all the schema definitions.
+            merged_prefixes: A list of prefixes from all schemas.
             visited_paths: Keeps track of the json configs already processed.
             rec_visited_paths: Keeps track of the current recursion stack, to
                 detect, and throw error if any cycles are present.
+            lenient_prefix: Whether to relax the requirement on the prefix.
         Returns:
         """
         import_info = self.visit_ontology_imports(
@@ -526,8 +553,10 @@ class OntologyCodeGenerator:
             full_pkg_path: str = self.find_import_path(rel_import)
             logging.info('Imported ontology at: %s', full_pkg_path)
             self.parse_ontology_spec(
-                full_pkg_path, destination_dir, merged_schema, visited_paths,
-                rec_visited_paths)
+                full_pkg_path, destination_dir, merged_schema, merged_prefixes,
+                visited_paths=visited_paths,
+                rec_visited_paths=rec_visited_paths,
+                lenient_prefix=lenient_prefix)
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
@@ -540,12 +569,15 @@ class OntologyCodeGenerator:
                 curr_forte_dir, self.installed_forte_dir):
             print_json_file = os.path.relpath(json_file_path, curr_forte_dir)
 
-        self.parse_schema(spec_dict, print_json_file, merged_schema)
+        self.parse_schema(spec_dict, print_json_file, merged_schema,
+                          merged_prefixes, lenient_prefix)
 
         rec_visited_paths[json_file_path] = False
 
     def parse_schema(self, schema: Dict, source_json_file: str,
-                     merged_schema: List[Dict]):
+                     merged_schema: List[Dict], merged_prefixes: List[str],
+                     lenient_prefix=False,
+                     ):
         r""" Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
         new module file if module is generated for the first time.
@@ -555,11 +587,17 @@ class OntologyCodeGenerator:
             source_json_file: Path of the source json file.
             merged_schema: The merged schema is used to remember all
                 definitions during parsing.
+            merged_prefixes: To remember all prefixes encountered during
+                parsing.
+            lenient_prefix: Whether to remove the constraint on the prefix set.
         Returns:
             Modules to be imported by dependencies of the current ontology.
         """
         entry_definitions: List[Dict] = schema[SchemaKeywords.definitions]
         merged_schema.extend(entry_definitions)
+
+        if SchemaKeywords.prefixes in schema:
+            merged_prefixes.extend(schema[SchemaKeywords.prefixes])
 
         allowed_packages = set(
             schema.get(SchemaKeywords.prefixes, []) + [DEFAULT_PREFIX])
@@ -572,7 +610,7 @@ class OntologyCodeGenerator:
 
         for definition in entry_definitions:
             raw_entry_name = definition[SchemaKeywords.entry_name]
-            validate_entry(raw_entry_name, sorted_prefixes)
+            validate_entry(raw_entry_name, sorted_prefixes, lenient_prefix)
 
             if raw_entry_name in self.allowed_types_tree:
                 warnings.warn(
