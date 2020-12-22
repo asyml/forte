@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# pylint: disable=W0201
+# pylint: disable=attribute-defined-outside-init
 english_stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours',
     'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your',
     'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself',
