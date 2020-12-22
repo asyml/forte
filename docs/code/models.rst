@@ -15,5 +15,3 @@ Semantic Role Labeling
 
 .. autoclass:: forte.models.srl.model.LabeledSpanGraphNetwork
     :members:
-
-

@@ -25,3 +25,5 @@ API
    code/models.rst
    code/trainers.rst
    code/evaluation.rst
+   code/data_aug.rst
+   code/vocabulary.rst

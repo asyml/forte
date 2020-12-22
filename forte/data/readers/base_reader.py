@@ -18,8 +18,9 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Any, Iterator, Optional, Union
+from typing import Any, Iterator, Optional, Union, List
 
+from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
 from forte.data import data_utils
@@ -63,12 +64,23 @@ class BaseReader(PipelineComponent[PackType], ABC):
     def __init__(self,
                  from_cache: bool = False,
                  cache_directory: Optional[str] = None,
-                 append_to_cache: bool = False):
+                 append_to_cache: bool = False,
+                 cache_in_memory: bool = False):
         super().__init__()
         self.from_cache = from_cache
         self._cache_directory = cache_directory
         self.component_name = get_full_module_name(self)
         self.append_to_cache = append_to_cache
+        self._cache_in_memory = cache_in_memory
+        self._cache_ready: bool = False
+        self._data_packs: List[PackType] = []
+
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+
+        # Clear memory cache
+        self._cache_ready = False
+        del self._data_packs[:]
 
     @classmethod
     def default_configs(cls):
@@ -208,7 +220,18 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 DataPack readers accept `data_source` as file/folder path.
             kwargs: Iterator of DataPacks.
         """
-        yield from self._lazy_iter(*args, **kwargs)
+        if self._cache_in_memory and self._cache_ready:
+            # Read from memory
+            for pack in self._data_packs:
+                yield pack
+        else:
+            # Read via parsing dataset
+            for pack in self._lazy_iter(*args, **kwargs):
+                if self._cache_in_memory:
+                    self._data_packs.append(pack)
+                yield pack
+
+        self._cache_ready = True
 
     def cache_data(self, collection: Any, pack: PackType, append: bool):
         r"""Specify the path to the cache directory.
