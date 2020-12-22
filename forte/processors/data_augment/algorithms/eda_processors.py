@@ -37,6 +37,7 @@ __all__ = [
 ]
 
 
+# pylint: disable=W0201
 english_stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours',
     'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your',
     'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself',
@@ -95,14 +96,15 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
             Additional keys for Random Swap:
-            - alpha: indicates the percent of the words in a sentence
-                are changed. The processor will perform the Random Swap
-                operation (input length * alpha) times.
+            - alpha: 0 <= alpha <= 1. indicates the percent of the words
+                in a sentence that are changed. The processor will perform
+                the Random Swap operation (input length * alpha) times.
         """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
+                'type': '',
                 "kwargs": {
                     "ft.onto.base_ontology.Document": "auto_align",
                     "ft.onto.base_ontology.Sentence": "auto_align"
@@ -166,15 +168,16 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             By default, we use Dictionary Replacement with Wordnet to get
             synonyms to insert.
             Additional keys for Random Swap:
-            - alpha: indicates the percent of the words in a sentence are
-                changed. The processor will perform the Random Insertion
-                operation (input length * alpha) times.
+            - alpha: 0 <= alpha <= 1. indicates the percent of the words
+                in a sentence that are changed. The processor will perform
+                the Random Insertion operation (input length * alpha) times.
             - stopwords: a list of stopword for the language.
         """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
+                'type': '',
                 'kwargs': {
                     "ft.onto.base_ontology.Document": "auto_align",
                     "ft.onto.base_ontology.Sentence": "auto_align"
@@ -184,6 +187,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 "forte.processors.data_augment.algorithms."
                 "dictionary_replacement_op.DictionaryReplacementOp",
             'data_aug_op_config': {
+                'type': '',
                 "kwargs": {
                     "dictionary_class": (
                         "forte.processors.data_augment."
@@ -226,18 +230,20 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
         Returns:
             A dictionary with the default config for this processor.
             Additional keys for Random Deletion:
-            - alpha: the probability to delete each word
+            - alpha: 0 <= alpha <= 1. The probability to delete each word.
         """
         config = super().default_configs()
         config.update({
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
+                'type': '',
                 "kwargs": {
                     "ft.onto.base_ontology.Document": "auto_align",
                     "ft.onto.base_ontology.Sentence": "auto_align"
                 }
             },
             "data_aug_op_config": {
+                'type': '',
                 'kwargs': {}
             },
             "alpha": 0.1,

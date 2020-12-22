@@ -25,7 +25,8 @@ from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import MultiPackLink
-from forte.data.readers import MultiPackSentenceReader
+from forte.data.readers import StringReader
+from forte.data.caster import MultiPackBoxer
 from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
 from forte.processors.data_augment.algorithms.eda_processors \
     import RandomDeletionDataAugmentProcessor, RandomInsertionDataAugmentProcessor, \
@@ -42,124 +43,72 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
         self.test_dir = tempfile.mkdtemp()
         random.seed(0)
         self.nlp = Pipeline[MultiPack]()
-        reader_config = {
-            "input_pack_name": "input_src",
-            "output_pack_name": "output_tgt"
-        }
-        self.nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
 
+        boxer_config = {
+            'pack_name': 'input_src'
+        }
+
+        self.nlp.set_reader(reader=StringReader())
+        self.nlp.add(component=MultiPackBoxer(), config=boxer_config)
         self.nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
         self.nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
 
+    @data(
+        (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+         ["Mary early Samantha arrived at the bus station and but waited until for noon the bus."],
+         [['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'and', 'but', 'waited', 'until', 'for', 'noon', 'the', 'bus', '.']],
+        )
+    )
+    @unpack
+    def test_random_swap(self, texts, expected_outputs, expected_tokens):
+        self.nlp.add(component=RandomSwapDataAugmentProcessor())
         self.nlp.initialize()
 
-    @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
+        for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
+            aug_pack = m_pack.get_pack('augmented_input_src')
+
+            self.assertEqual(aug_pack.text, expected_outputs[idx])
+
+            for j, token in enumerate(aug_pack.get(Token)):
+                self.assertEqual(token.text, expected_tokens[idx][j])
+
+    @data(
+        (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+         ["await Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+         [['await ', 'Mary', 'and', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'early', 'but', 'waited', 'until', 'noon', 'for', 'the', 'bus', '.']],
+        )
+    )
     @unpack
-    def test_random_swap(self, texts):
-        for idx, text in enumerate(texts):
-            file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
-            with open(file_path, 'w') as f:
-                f.write(text)
+    def test_random_insert(self, texts, expected_outputs, expected_tokens):
+        self.nlp.add(component=RandomInsertionDataAugmentProcessor())
+        self.nlp.initialize()
 
-        expected_text = "Mary early Samantha arrived at the bus station and but waited until for noon the bus.\n"
-        expected_tokens = ['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'and', 'but',
-                           'waited', 'until', 'for', 'noon', 'the', 'bus', '.']
+        for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
+            aug_pack = m_pack.get_pack('augmented_input_src')
 
-        swap_processor = RandomSwapDataAugmentProcessor()
-        swap_processor.initialize(resources=None, configs=swap_processor.default_configs())
+            self.assertEqual(aug_pack.text, expected_outputs[idx])
 
-        for idx, m_pack in enumerate(self.nlp.process_dataset(self.test_dir)):
-            src_pack = m_pack.get_pack('input_src')
-            tgt_pack = m_pack.get_pack('output_tgt')
+            for j, token in enumerate(aug_pack.get(Token)):
+                self.assertEqual(token.text, expected_tokens[idx][j])
 
-            # Copy the source pack to target pack.
-            tgt_pack.set_text(src_pack.text)
-            for anno in src_pack.get(Annotation):
-                new_anno = type(anno)(
-                    tgt_pack, anno.begin, anno.end
-                )
-                tgt_pack.add_entry(new_anno)
-
-            swap_processor._process(m_pack)
-
-            new_src_pack = m_pack.get_pack('augmented_input_src')
-
-            self.assertEqual(new_src_pack.text, expected_text)
-            for j, token in enumerate(new_src_pack.get(Token)):
-                self.assertEqual(token.text, expected_tokens[j])
-
-    @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
+    @data(
+        (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+         ["Mary and   at  bus   but waited until  for the ."],
+         [['Mary', 'and', 'at', 'bus', 'but', 'waited', 'until', 'for', 'the', '.']],
+        )
+    )
     @unpack
-    def test_random_insert(self, texts):
-        for idx, text in enumerate(texts):
-            file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
-            with open(file_path, 'w') as f:
-                f.write(text)
+    def test_random_delete(self, texts, expected_outputs, expected_tokens):
+        self.nlp.add(component=RandomDeletionDataAugmentProcessor(), config={"alpha": 0.5})
+        self.nlp.initialize()
 
-        expected_text = \
-            "await Mary and Samantha arrived at the bus station early but waited until noon for the bus.\n"
-        expected_tokens = ['await ', 'Mary', 'and', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'early',
-                           'but', 'waited', 'until', 'noon', 'for', 'the', 'bus', '.']
+        for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):
+            aug_pack = m_pack.get_pack('augmented_input_src')
 
-        insert_processor = RandomInsertionDataAugmentProcessor()
-        insert_processor.initialize(resources=None, configs=insert_processor.default_configs())
+            self.assertEqual(aug_pack.text, expected_outputs[idx])
 
-        for idx, m_pack in enumerate(self.nlp.process_dataset(self.test_dir)):
-            src_pack = m_pack.get_pack('input_src')
-            tgt_pack = m_pack.get_pack('output_tgt')
-
-            # Copy the source pack to target pack.
-            tgt_pack.set_text(src_pack.text)
-            for anno in src_pack.get(Annotation):
-                new_anno = type(anno)(
-                    tgt_pack, anno.begin, anno.end
-                )
-                tgt_pack.add_entry(new_anno)
-
-            insert_processor._process(m_pack)
-
-            new_src_pack = m_pack.get_pack('augmented_input_src')
-
-            self.assertEqual(new_src_pack.text, expected_text)
-            for j, token in enumerate(new_src_pack.get(Token)):
-                self.assertEqual(token.text, expected_tokens[j])
-
-    @data((["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],))
-    @unpack
-    def test_random_delete(self, texts):
-        for idx, text in enumerate(texts):
-            file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
-            with open(file_path, 'w') as f:
-                f.write(text)
-
-        expected_text = \
-            "Mary and   at  bus   but waited until  for the .\n"
-        expected_tokens = ['Mary', 'and', 'at', 'bus', 'but', 'waited', 'until', 'for', 'the', '.']
-
-        delete_processor = RandomDeletionDataAugmentProcessor()
-        processor_config = delete_processor.default_configs()
-        processor_config.update({"alpha": 0.5})
-        delete_processor.initialize(resources=None, configs=processor_config)
-
-        for idx, m_pack in enumerate(self.nlp.process_dataset(self.test_dir)):
-            src_pack = m_pack.get_pack('input_src')
-            tgt_pack = m_pack.get_pack('output_tgt')
-
-            # Copy the source pack to target pack.
-            tgt_pack.set_text(src_pack.text)
-            for anno in src_pack.get(Annotation):
-                new_anno = type(anno)(
-                    tgt_pack, anno.begin, anno.end
-                )
-                tgt_pack.add_entry(new_anno)
-
-            delete_processor._process(m_pack)
-
-            new_src_pack = m_pack.get_pack('augmented_input_src')
-
-            self.assertEqual(new_src_pack.text, expected_text)
-            for j, token in enumerate(new_src_pack.get(Token)):
-                self.assertEqual(token.text, expected_tokens[j])
+            for j, token in enumerate(aug_pack.get(Token)):
+                self.assertEqual(token.text, expected_tokens[idx][j])
 
 
 if __name__ == "__main__":
