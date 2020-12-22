@@ -28,6 +28,9 @@ from forte.data.ontology.core import EntryType
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "TrainPreprocessor"
+]
 
 class TrainPreprocessor:
     r"""

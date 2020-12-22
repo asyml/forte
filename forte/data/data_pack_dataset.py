@@ -25,6 +25,12 @@ from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
 from forte.data.types import DataRequest
 
+__all__ = [
+    "DataPackIterator",
+    "DataPackDataSource",
+    "DataPackDataset"
+]
+
 # An instance is a single data point from data pack
 Instance = Dict
 RawExample = Tuple[Instance, DataPack]
