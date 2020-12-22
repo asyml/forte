@@ -19,6 +19,11 @@ from forte.common import ValidationError
 from forte.data.vocabulary import Vocabulary
 
 
+__all__ = [
+    "Feature"
+]
+
+
 class Feature:
     """
     This class represents a type of feature for a single data instance. The

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import numpy as np
 from typing import List
 import unittest
@@ -175,14 +176,33 @@ class ConverterTest(unittest.TestCase):
     def test_convert_no_to_torch(self):
         features1: List[Feature] = self.create_features1()
 
-        converter: Converter = Converter({"need_pad": True,
-                                          "to_torch": False})
+        converter: Converter = Converter({"to_torch": False})
         data, _ = converter.convert(features1)
         self.assertNotEqual(type(data), torch.Tensor)
         self.assertTrue(
             np.array_equal(data,
                            np.array([[7, 8, 9, 0], [1, 2, 5, 6], [4, 0, 0, 0]],
                                     dtype=np.long)))
+
+    def test_state(self):
+        converter_states = {"to_numpy": True, "to_torch": False}
+        converter: Converter = Converter(converter_states)
+
+        # Test state.
+        self.assertEqual(converter.state, converter_states)
+
+        # Test save & load state.
+        tmp_state_file = ".tmp_converter_state"
+        torch.save(converter.state, tmp_state_file)
+        self.assertTrue(os.path.exists(tmp_state_file))
+
+        recover_converter: Converter = Converter({})
+        recover_converter.load_state(torch.load(tmp_state_file))
+
+        self.assertEqual(recover_converter.state, converter_states)
+
+        os.remove(tmp_state_file)
+        self.assertFalse(os.path.exists(tmp_state_file))
 
     def create_features1(self,
                          data_list=None,

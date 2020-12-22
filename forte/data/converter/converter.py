@@ -22,12 +22,18 @@ from forte.data.converter.feature import Feature
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "Converter"
+]
+
 
 class Converter:
     """
     This class has the functionality of converting a batch of
-    :class:`forte.data.converter.Feature` to a PyTorch `Tensor`. It will also
-    do the padding for the given batch of :class:`forte.data.converter.Feature`.
+    :class:`forte.data.converter.Feature` to a PyTorch `Tensor`. It can also
+    do the padding for the given batch of :class:`forte.data.converter.Feature`
+    if user requested it. Please refer to the `request` parameter in
+    :class:`forte.train_preprocessor.TrainPreprocessor` for details.
 
     Args:
         config: An instance of `Dict` or
@@ -284,11 +290,11 @@ class Converter:
 
         if self.to_numpy:
             data_np: np.ndarray = \
-                self.to_numpy_type(data_list, dtype)
+                self._to_numpy_type(data_list, dtype)
             masks_np_list: List[np.ndarray] = []
             for batch_masks_dim_i in masks_list:
                 masks_np_list.append(
-                    self.to_numpy_type(batch_masks_dim_i, np.bool))
+                    self._to_numpy_type(batch_masks_dim_i, np.bool))
 
             return data_np, masks_np_list
 
@@ -296,7 +302,7 @@ class Converter:
         raise RuntimeError("Invalid converter internal state")
 
     @staticmethod
-    def _padding(features: List[Feature]):
+    def _padding(features: List[Feature]) -> Optional[torch.dtype]:
         # BFS to pad each dimension
         queue: List[Feature] = []
         curr_max_len: int = -1
@@ -335,7 +341,7 @@ class Converter:
         return dtype
 
     @staticmethod
-    def to_numpy_type(data: List[Any], dtype) -> np.ndarray:
+    def _to_numpy_type(data: List[Any], dtype) -> np.ndarray:
         return np.array(data, dtype=dtype)
 
     @staticmethod
