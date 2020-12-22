@@ -39,15 +39,16 @@ __all__ = [
 
 class BaseDataSelector(PackReader):
     r"""A base data selector for data augmentation.
-    It is a reader that searches documents from an indexer and yields datapacks.
+    It is a reader that selects a subset from the dataset and yields datapacks.
     """
 
 
 class BaseElasticSearchDataSelector(BaseDataSelector):
     r"""The base elastic search indexer for data selector.
     This class creates an ElasticSearchIndexer and searches for documents
-    according to the user-provided search keys. It then yields the corresponding
-    datapacks from the selected documents.
+    according to the user-provided search keys. Currently supported search
+    criteria: random-based and query-based. It then yields the corresponding
+    datapacks of the selected documents.
     """
 
     def initialize(self, resources: Resources, configs: Config):
