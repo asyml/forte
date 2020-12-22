@@ -40,7 +40,6 @@ from ddt import ddt, data, unpack
 @ddt
 class TestEDADataAugmentProcessor(unittest.TestCase):
     def setUp(self):
-        self.test_dir = tempfile.mkdtemp()
         random.seed(0)
         self.nlp = Pipeline[MultiPack]()
 
