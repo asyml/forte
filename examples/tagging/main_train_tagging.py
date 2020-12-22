@@ -39,49 +39,12 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
-                 _config: Config):
-    text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
-    char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
-    output_extractor: BaseExtractor = schemes["output_tag"]["extractor"]
-
-    _model: BiRecurrentConvCRF = \
-        BiRecurrentConvCRF(word_vocab=text_extractor.get_dict(),
-                           char_vocab_size=char_extractor.size(),
-                           tag_vocab_size=output_extractor.size(),
-                           config_model=_config)
-
-    return _model
-
-
-def train(_model: BiRecurrentConvCRF, _optim: Optimizer, _batch: Batch):
-    word = _batch["text_tag"]["data"]
-    char = _batch["char_tag"]["data"]
-    output = _batch["output_tag"]["data"]
-    word_masks = _batch["text_tag"]["masks"][0]
-
-    _optim.zero_grad()
-
-    loss = _model(word, char, output, mask=word_masks)
-
-    loss.backward()
-    _optim.step()
-
-    _batch_train_err = loss.item() * _batch.batch_size
-
-    return _batch_train_err
-
-
 def predict_forward_fn(_model: BiRecurrentConvCRF, _batch: Dict) -> Dict:
-    word = _batch["text_tag"]["data"]
-    char = _batch["char_tag"]["data"]
-    word_masks = _batch["text_tag"]["masks"][0]
-
-    output = _model.decode(input_word=word,
-                           input_char=char,
-                           mask=word_masks)
-    output = output.numpy()
-    return {'output_tag': output}
+    val_output = _model.decode(input_word=_batch["text_tag"]["data"],
+                               input_char=_batch["char_tag"]["data"],
+                               mask=_batch["text_tag"]["masks"][0])
+    val_output = val_output.numpy()
+    return {'output_tag': val_output}
 
 
 if __name__ == "__main__":
@@ -99,44 +62,48 @@ if __name__ == "__main__":
         else torch.device("cpu")
 
     # Generate request
+    text_extractor: AttributeExtractor = \
+        AttributeExtractor(config={"entry_type": Token,
+                                   "vocab_method": "indexing",
+                                   "attribute_get": "text"})
+
+    char_extractor: CharExtractor = \
+        CharExtractor(config={"entry_type": Token,
+                              "vocab_method": "indexing",
+                              "max_char_length": config_data.max_char_length})
+
+    # Add output part in request based on different task type
+    output_extractor: BaseExtractor
+    if task == "ner":
+        output_extractor = \
+            BioSeqTaggingExtractor(config={"entry_type": EntityMention,
+                                           "attribute": "ner_type",
+                                           "based_on": Token,
+                                           "vocab_method": "indexing"})
+
+    else:
+        output_extractor = \
+            AttributeExtractor(config={"entry_type": Token,
+                                       "attribute_get": "pos",
+                                       "vocab_method": "indexing"})
+
     tp_request: Dict = {
         "scope": Sentence,
         "schemes": {
             "text_tag": {
-                "entry_type": Token,
-                "vocab_method": "indexing",
-                "attribute_get": "text",
                 "type": TrainPreprocessor.DATA_INPUT,
-                "extractor": AttributeExtractor
+                "extractor": text_extractor
             },
             "char_tag": {
-                "entry_type": Token,
-                "vocab_method": "indexing",
-                "max_char_length": config_data.max_char_length,
                 "type": TrainPreprocessor.DATA_INPUT,
-                "extractor": CharExtractor
+                "extractor": char_extractor
+            },
+            "output_tag": {
+                "type": TrainPreprocessor.DATA_OUTPUT,
+                "extractor": output_extractor
             }
         }
     }
-
-    # Add output part in request based on different task type
-    if task == "ner":
-        tp_request["schemes"]["output_tag"] = {
-            "entry_type": EntityMention,
-            "attribute": "ner_type",
-            "based_on": Token,
-            "vocab_method": "indexing",
-            "type": TrainPreprocessor.DATA_OUTPUT,
-            "extractor": BioSeqTaggingExtractor
-        }
-    else:
-        tp_request["schemes"]["output_tag"] = {
-            "entry_type": Token,
-            "attribute_get": "pos",
-            "vocab_method": "indexing",
-            "type": TrainPreprocessor.DATA_OUTPUT,
-            "extractor": AttributeExtractor
-        }
 
     # All not specified dataset parameters are set by default in Texar.
     # Default settings can be found here:
@@ -163,8 +130,10 @@ if __name__ == "__main__":
                                            config=tp_config)
 
     model: BiRecurrentConvCRF = \
-        create_model(schemes=train_preprocessor.feature_resource["schemes"],
-                     _config=config_model)
+        BiRecurrentConvCRF(word_vocab=text_extractor.get_dict(),
+                           char_vocab_size=char_extractor.size(),
+                           tag_vocab_size=output_extractor.size(),
+                           config_model=config_model)
     model.to(device)
 
     optim: Optimizer = SGD(model.parameters(),
@@ -176,7 +145,7 @@ if __name__ == "__main__":
         batch_size=train_preprocessor.config.dataset.batch_size,
         model=model,
         predict_forward_fn=predict_forward_fn,
-        feature_resource=train_preprocessor.feature_resource,
+        feature_resource=train_preprocessor.request,
         cross_pack=False)
     evaluator = CoNLLNEREvaluator()
 
@@ -204,7 +173,19 @@ if __name__ == "__main__":
             train_preprocessor.get_train_batch_iterator()
 
         for batch in tqdm(train_batch_iter):
-            batch_train_err = train(model, optim, batch)
+            word = batch["text_tag"]["data"]
+            char = batch["char_tag"]["data"]
+            output = batch["output_tag"]["data"]
+            word_masks = batch["text_tag"]["masks"][0]
+
+            optim.zero_grad()
+
+            loss = model(word, char, output, mask=word_masks)
+
+            loss.backward()
+            optim.step()
+
+            batch_train_err = loss.item() * batch.batch_size
 
             train_err += batch_train_err
             train_total += batch.batch_size
