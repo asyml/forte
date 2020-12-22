@@ -86,6 +86,17 @@ class Converter:
     def to_torch(self) -> bool:
         return self._config.to_torch
 
+    @property
+    def state(self) -> Dict:
+        return {
+            "to_numpy": self.to_numpy,
+            "to_torch": self.to_torch
+        }
+
+    def load_state(self, state: Dict):
+        self._to_numpy = state["to_numpy"]
+        self._to_torch = state["to_torch"]
+
     def convert(self, features: List[Feature]) -> \
             Tuple[Any, List[Any]]:
         """
