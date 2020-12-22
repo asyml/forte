@@ -42,30 +42,38 @@ class TrainPreprocessorTest(unittest.TestCase):
             "nesterov": True
         }
 
+        text_extractor: AttributeExtractor = \
+            AttributeExtractor(config={"entry_type": Token,
+                                       "vocab_method": "indexing",
+                                       "attribute_get": "text"})
+
+        char_extractor: CharExtractor = \
+            CharExtractor(
+                config={"entry_type": Token,
+                        "vocab_method": "indexing",
+                        "max_char_length": self.config["max_char_length"]})
+
+        # Add output part in request based on different task type
+        ner_extractor: BioSeqTaggingExtractor = \
+            BioSeqTaggingExtractor(config={"entry_type": EntityMention,
+                                           "attribute": "ner_type",
+                                           "based_on": Token,
+                                           "vocab_method": "indexing"})
+
         self.tp_request = {
             "scope": Sentence,
             "schemes": {
                 "text_tag": {
-                    "entry_type": Token,
-                    "attribute_get": "text",
-                    "conversion_method": "indexing",
                     "type": TrainPreprocessor.DATA_INPUT,
-                    "extractor": AttributeExtractor
+                    "extractor": text_extractor
                 },
                 "char_tag": {
-                    "entry_type": Token,
-                    "conversion_method": "indexing",
-                    "max_char_length": self.config['max_char_length'],
                     "type": TrainPreprocessor.DATA_INPUT,
-                    "extractor": CharExtractor
+                    "extractor": char_extractor
                 },
                 "ner_tag": {
-                    "entry_type": EntityMention,
-                    "attribute": "ner_type",
-                    "based_on": Token,
-                    "vocab_method": "indexing",
                     "type": TrainPreprocessor.DATA_OUTPUT,
-                    "extractor": BioSeqTaggingExtractor
+                    "extractor": ner_extractor
                 }
             }
         }
@@ -92,21 +100,21 @@ class TrainPreprocessorTest(unittest.TestCase):
                               config=self.tp_config)
 
     def test_parse_request(self):
-        self.assertTrue(self.train_preprocessor.feature_resource is not None)
-        self.assertTrue("scope" in self.train_preprocessor.feature_resource)
-        self.assertTrue("schemes" in self.train_preprocessor.feature_resource)
+        self.assertTrue(self.train_preprocessor.request is not None)
+        self.assertTrue("scope" in self.train_preprocessor.request)
+        self.assertTrue("schemes" in self.train_preprocessor.request)
 
         self.assertTrue(
-            len(self.train_preprocessor.feature_resource["schemes"]), 3)
+            len(self.train_preprocessor.request["schemes"]), 3)
         self.assertTrue(
-            "text_tag" in self.train_preprocessor.feature_resource["schemes"])
+            "text_tag" in self.train_preprocessor.request["schemes"])
         self.assertTrue(
-            "char_tag" in self.train_preprocessor.feature_resource["schemes"])
+            "char_tag" in self.train_preprocessor.request["schemes"])
         self.assertTrue(
-            "ner_tag" in self.train_preprocessor.feature_resource["schemes"])
+            "ner_tag" in self.train_preprocessor.request["schemes"])
 
         for tag, scheme in \
-                self.train_preprocessor.feature_resource["schemes"].items():
+                self.train_preprocessor.request["schemes"].items():
             self.assertTrue("extractor" in scheme)
             self.assertTrue("converter" in scheme)
             self.assertTrue(issubclass(type(scheme["extractor"]),
@@ -117,7 +125,7 @@ class TrainPreprocessorTest(unittest.TestCase):
 
     def test_build_vocab(self):
         schemes: Dict[str, Any] = \
-            self.train_preprocessor.feature_resource["schemes"]
+            self.train_preprocessor.request["schemes"]
 
         text_extractor: AttributeExtractor = schemes["text_tag"]["extractor"]
         vocab: Vocabulary = text_extractor.vocab

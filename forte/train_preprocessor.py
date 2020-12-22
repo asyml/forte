@@ -42,78 +42,22 @@ class TrainPreprocessor:
     parameters for various components.
 
     `TrainPreprocessor` will also accept a user request. Internally it will
-    parse this user request and store the parsed result as a dictionary
-    into `feature_resource`.
+    parse this user request and store the parsed result.
 
     Args:
         pack_generator (Iterator[DataPack]): A generator of
             :class:`forte.data.data_pack.DataPack`.
         request (Dict): A request that specifies how to do train pre-processing.
-            See below for details. An example is given below.
+            Please refer to :meth:`request` for details.
         config: A `Dict` or :class:`forte.common.configuration.Config` that
             configs this preprocessor. See :meth:`default_configs` for
             the defaults.
 
-    Here is the detailed explanation for `request`:
 
-    `"scope"`: Entry
-        A class of type :class:`forte.data.ontology.core.Entry` The granularity
-        to separate data into different examples. For example, if `scope` is
-        :class:`ft.onto.base_ontology.Sentence`, then each training example
-        will represent the information of a sentence.
-
-    `"schemes"`: Dict
-        The directory containing pre-processing information. It will guide the
-        `TrainPreprocessor` how to do pre-processing. The key will be
-        user-defined tags that denotes a type of Feature. The value will be
-        various options for how to pre-processing that Feature. Lots of the
-        options are for extracting process and those are all the options
-        supported by various :mod:`forte.data.extractor`. Please refer to
-        those documentations for detailed configuration.
-
-    `"schemes.tag.need_pad"`: bool
-        Please refer to :class:`forte.data.converter.Converter` for details.
-
-    `"schemes.tag.to_numpy"`: bool
-        Please refer to :class:`forte.data.converter.Converter` for details.
-
-    `"schemes.tag.to_torch"`: bool
-        Please refer to :class:`forte.data.converter.Converter` for details.
-
-    Example request
-
-        .. code-block:: python
-
-            data_request = {
-                "scope": Sentence,
-                "schemes": {
-                    "text_tag": {
-                        "entry_type": ft.onto.base_ontology.Token,
-                        "vocab_method": "indexing",
-                        "attribute_get": "text",
-                        "type": TrainPreprocessor.DATA_OUTPUT,
-                        "extractor": forte.data.extractor.AttributeExtractor,
-                        "need_pad": True,
-                        "to_numpy": True,
-                        "to_torch": True
-                    },
-                    "char_tag": {
-                        "entry_type": ft.onto.base_ontology.Token,
-                        "vocab_method": "indexing",
-                        "max_char_length": config.config_data.max_char_length,
-                        "type": TrainPreprocessor.DATA_OUTPUT,
-                        "extractor": forte.data.extractor.CharExtractor
-                    },
-                    "ner_tag": {
-                        "entry_type": ft.onto.base_ontology.EntityMention,
-                        "attribute": "ner_type",
-                        "based_on": Token,
-                        "vocab_method": "indexing",
-                        "type": TrainPreprocessor.DATA_OUTPUT,
-                        "extractor": forte.data.extractor.BioSeqTaggingExtractor
-                    }
-                }
-            }
+    .. note::
+        For parameters `request`, user does not necessarily need to provide
+        `converter`. If no `converter` is specified, a default converter of
+        type :class:`forte.data.converter.Converter` will be picked.
     """
 
     DATA_INPUT = 0
@@ -131,8 +75,8 @@ class TrainPreprocessor:
         self._cached_packs: List[DataPack] = []
 
         self._user_request: Dict = request
-        self._feature_resource: Dict = {}
-        self._feature_resource_ready: bool = False
+        self._request: Dict = {}
+        self._request_ready: bool = False
         self._vocab_ready: bool = False
 
         if not self._config.preprocess.lazy_parse_request:
@@ -194,21 +138,17 @@ class TrainPreprocessor:
         # Placeholder
         pass
 
-    def _parse_request(self, data_request: Dict):
+    def _parse_request(self, request: Dict):
         """
         This method has two responsibilities:
-        1. parse the given data request and stored internally into resource
+        1. parse the given data request and stored it internally
         2. validate if the given data request is valid
         """
 
-        assert "scope" in data_request, \
+        assert "scope" in request, \
             "Field not found for data request: `scope`"
-        assert "schemes" in data_request, \
+        assert "schemes" in request, \
             "Field not found for data request: `schemes`"
-
-        self._user_request = data_request
-        self._feature_resource.clear()
-        self._feature_resource["scope"] = data_request["scope"]
 
         resource_schemes: Dict[str, Dict] = {}
         # Used for check dependency between different extractors
@@ -216,46 +156,34 @@ class TrainPreprocessor:
             "dependent": {}, "dependee": {}
         }
 
-        for tag, scheme in data_request["schemes"].items():
+        for tag, scheme in request["schemes"].items():
             assert "extractor" in scheme, \
                 "Field not found for data request scheme: `extractor`"
             assert "type" in scheme, \
                 "Field not found for data request scheme: `type`"
             resource_schemes[tag] = {}
 
-            # Build config and extractor
-            config = {}
-            for field, value in scheme.items():
-                if field != "extractor":
-                    config[field] = value
+            if not isinstance(scheme["extractor"], BaseExtractor):
+                raise RuntimeError("Invalid extractor: ", scheme["extractor"])
 
-            if not issubclass(scheme["extractor"], BaseExtractor):
-                raise RuntimeError("Invalid extractor class: ",
-                                   scheme["extractor"])
+            extractor: BaseExtractor = scheme["extractor"]
 
-            try:
-                extractor: BaseExtractor = scheme["extractor"](config)
-                resource_schemes[tag]["extractor"] = extractor
+            # Track dependency
+            if hasattr(extractor, "based_on"):
+                if extractor.entry_type not in scheme_group["dependent"]:
+                    scheme_group["dependent"][extractor.entry_type] = set()
+                scheme_group["dependent"][extractor.entry_type].add(
+                    extractor)
+            else:
+                if extractor.entry_type not in scheme_group["dependee"]:
+                    scheme_group["dependee"][extractor.entry_type] = set()
+                scheme_group["dependee"][extractor.entry_type].add(
+                    extractor)
 
-                # Track dependency
-                if hasattr(extractor, "based_on"):
-                    if extractor.entry_type not in scheme_group["dependent"]:
-                        scheme_group["dependent"][extractor.entry_type] = set()
-                    scheme_group["dependent"][extractor.entry_type].add(
-                        extractor)
-                else:
-                    if extractor.entry_type not in scheme_group["dependee"]:
-                        scheme_group["dependee"][extractor.entry_type] = set()
-                    scheme_group["dependee"][extractor.entry_type].add(
-                        extractor)
-
-                converter: Converter = Converter(config)
-                resource_schemes[tag]["converter"] = converter
-                resource_schemes[tag]["type"] = scheme["type"]
-
-            except Exception as e:
-                logger.error("Error instantiate extractor: %s", str(e))
-                raise
+            # Create default converter if there is no given converter
+            if "converter" not in scheme:
+                converter: Converter = Converter({})
+                scheme["converter"] = converter
 
         # Check dependency
         for _, dependent_extractors in scheme_group["dependent"].items():
@@ -268,12 +196,12 @@ class TrainPreprocessor:
                         "extractors given in request".
                         format(based_on, dependent_extractor.tag))
 
-        self._feature_resource["schemes"] = resource_schemes
-        self._feature_resource_ready = True
+        self._request = request
+        self._request_ready = True
 
     def _build_vocab(self):
-        scope: EntryType = self._feature_resource["scope"]
-        schemes: Dict = self._feature_resource["schemes"]
+        scope: EntryType = self._request["scope"]
+        schemes: Dict = self._request["schemes"]
 
         # TODO: clear vocab?
         for data_pack in self._pack_generator:
@@ -288,8 +216,8 @@ class TrainPreprocessor:
 
     def _build_dataset_iterator(self) \
             -> DataIterator:
-        scope: Type[EntryType] = self._feature_resource["scope"]  # type: ignore
-        schemes: Dict[str, Dict[str, Any]] = self._feature_resource["schemes"]
+        scope: Type[EntryType] = self._request["scope"]  # type: ignore
+        schemes: Dict[str, Dict[str, Any]] = self._request["schemes"]
 
         data_source = \
             DataPackDataSource(pack_generator=iter(self._cached_packs),
@@ -305,12 +233,12 @@ class TrainPreprocessor:
         return iterator
 
     @property
-    def feature_resource(self) -> Dict:
+    def request(self) -> Dict:
         # pylint: disable=line-too-long
         r"""A `Dict` containing all the information needed for doing the
         pre-processing. This is obtained via parsing the input `request`
 
-        An example `feature_resource` is:
+        An example `request` is:
 
         .. code-block:: python
 
@@ -336,10 +264,13 @@ class TrainPreprocessor:
                 }
             }
 
-        Here:
+    Here:
 
         `"scope"`: Entry
-            Same as the `scope` provided by input `request`.
+            A class of type :class:`forte.data.ontology.core.Entry` The
+            granularity to separate data into different examples. For example,
+            if `scope` is :class:`ft.onto.base_ontology.Sentence`, then each
+            training example will represent the information of a sentence.
 
         `"schemes"`: Dict
             A `Dict` containing the information about doing the pre-processing.
@@ -356,9 +287,9 @@ class TrainPreprocessor:
         `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
             Denoting whether this feature is the input or output feature.
         """
-        if not self._feature_resource_ready:
-            self._parse_request(self._user_request)
-        return self._feature_resource
+        if not self._request:
+            self._parse_request(self._request)
+        return self._request
 
     @property
     def user_request(self) -> Dict:
@@ -388,7 +319,7 @@ class TrainPreprocessor:
         `TrainPreprocessor`. This is typically used to save the training state.
         """
         return {
-            "feature_resource": self._feature_resource,
+            "request": self._request,
             "user_request": self.user_request,
             "configs": self._config
         }
@@ -427,7 +358,7 @@ class TrainPreprocessor:
         if self._config.preprocess.lazy_parse_request:
             self._parse_request(self._user_request)
         else:
-            assert self._feature_resource_ready, \
+            assert self._request, \
                 "Feature recourse is not parsed"
 
         if self._config.preprocess.lazy_build_vocab:
