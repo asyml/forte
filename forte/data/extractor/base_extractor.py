@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+from __future__ import annotations
 from abc import ABC
 import logging
 from typing import Tuple, Set, List, Dict, Any
@@ -87,9 +87,10 @@ class BaseExtractor(ABC):
                                 "the configuration of an extractor.")
 
         if self.config.vocab_method != "raw":
-            self.vocab = Vocabulary(method=self.config.vocab_method,
-                                    need_pad=self.config.need_pad,
-                                    use_unk=self.config.vocab_use_unk)
+            self.vocab: Optional[Vocabulary] = \
+                Vocabulary(method=self.config.vocab_method,
+                           need_pad=self.config.need_pad,
+                           use_unk=self.config.vocab_use_unk)
         else:
             self.vocab = None
 
@@ -129,7 +130,7 @@ class BaseExtractor(ABC):
         }
 
     @classmethod
-    def from_state(cls, state: Dict) -> object:
+    def from_state(cls, state: Dict) -> BaseExtractor:
         config = {
             "vocab_method": state["vocab_method"],
             "need_pad": state["need_pad"],
