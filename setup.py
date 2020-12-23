@@ -33,7 +33,7 @@ setuptools.setup(
         'typed_ast==1.4.0',
         'jsonschema==3.0.2',
         'texar-pytorch',
-        'typing>=3.7.4',
+        'typing>=3.7.4;python_version<"3.5"',
         'typing-inspect>=0.6.0',
         'dataclasses~=0.7;python_version<"3.7"'
     ],

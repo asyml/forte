@@ -16,8 +16,6 @@ The reader that reads AG News data into Datapacks.
 """
 from typing import Iterator, Tuple
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from ft.onto.ag_news import Description
@@ -40,17 +38,8 @@ class AGNewsReader(PackReader):
 
     The input to this reader is the path to the CSV file.
     """
-
-    def __init__(self):
-        super().__init__()
-        self.configs = None
-
-    def initialize(self, resources: Resources, configs: Config):
-        # pylint: disable = unused-argument
-        self.configs = configs
-
     def _collect(self,  # type: ignore
-                csv_file: str) -> Iterator[Tuple[int, str]]:
+                 csv_file: str) -> Iterator[Tuple[int, str]]:
         r"""Collects from a CSV file path and returns an iterator of AG News
         data. The elements in the iterator correspond to each line
         in the csv file. One line is expected to be parsed as one
@@ -63,7 +52,7 @@ class AGNewsReader(PackReader):
         """
         with open(csv_file, "r") as f:
             for line_id, line in enumerate(f):
-                yield (line_id, line)
+                yield line_id, line
 
     def _cache_key_function(self, line_info: Tuple[int, str]) -> str:
         return str(line_info[0])
