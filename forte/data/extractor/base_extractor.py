@@ -32,10 +32,37 @@ __all__ = [
 
 class BaseExtractor(ABC):
     r"""The functionality of Extractor is as followed,
-        1. Build vocabulary.
-        2. Extract feature from datapack.
-        3. Add prediction back to datapack.
+            1. Build vocabulary.
+            2. Extract feature from datapack.
+            3. Remove feature in datapack.
+            3. Add prediction to datapack.
 
+        Explanation:
+            Vocabulary: Vocabulary is maintained as an inner class
+                in extractor. It will store the mapping from element
+                to index, which is an integer, and representation,
+                which could be an index integer or one-hot vector
+                depending on the configuration of the vocabulary.
+                Check :class:`forte.data.vocabulary.Vocabulary` for
+                more details.
+            Feature: A feature basically wraps the data we want from
+                one instance in a datapack. For example, the instance
+                can be one sentence in a datapack. Then the data wrapped
+                by the feature could be the token text of this sentence.
+                The data is already converted as list of indexes using
+                vocabulary. Besides the data, other information like the
+                raw data before indexing and some meta_data will also be
+                stored in the feature. Check
+                :class:`forte.data.converter.feature.Feature` for more
+                details.
+            Remove feature / Add prediction: Removing feature means remove
+                the exsiting data in the datapack. If we remove the feature
+                in the pack, then extracting feature will return empty list.
+                Adding prediction means we add the prediction from model
+                back to the datapack. If a datapack has some old data (for
+                example, the golden data in the test set), we can first
+                remove those data and then add our model prediction to
+                the pack.
     Args:
         config: An instance of `Dict` or
             :class:`forte.common.configuration.Config` that provides all
@@ -46,12 +73,16 @@ class BaseExtractor(ABC):
             entry_type: Type[Entry]. Required. The ontology type that the
                 extractor will get feature from.
     """
+    VOCAB_ERROR_MSG = "When vocab_method is raw, vocabulary " \
+                    "will not be built. Functions operating " \
+                    "on vocabulary should not be called."
+
     def __init__(self, config: Union[Dict, Config]):
 
         self.config = Config(config, self.default_configs(),
                                 allow_new_hparam=True)
 
-        if "entry_type" not in self.config:
+        if not hasattr(self.config, "entry_type"):
             raise AttributeError("entry_type needs to be specified in "
                                 "the configuration of an extractor.")
 
@@ -128,31 +159,38 @@ class BaseExtractor(ABC):
             return None
 
     def items(self) -> Iterable[Tuple[Hashable, int]]:
-        assert self.vocab
+        if not self.vocab:
+            raise AttributeError(self.VOCAB_ERROR_MSG)
         return self.vocab.items()
 
     def size(self) -> int:
-        assert self.vocab
+        if not self.vocab:
+            raise AttributeError(self.VOCAB_ERROR_MSG)
         return len(self.vocab)
 
     def add(self, element: Hashable):
-        assert self.vocab
+        if not self.vocab:
+            raise AttributeError(self.VOCAB_ERROR_MSG)
         return self.vocab.add_element(element)
 
     def has_element(self, element: Hashable) -> bool:
-        assert self.vocab
+        if not self.vocab:
+            raise AttributeError(self.VOCAB_ERROR_MSG)
         return self.vocab.has_element(element)
 
     def element2repr(self, element: Hashable) -> Union[int, List[int]]:
-        assert self.vocab
+        if not self.vocab:
+            raise AttributeError(self.VOCAB_ERROR_MSG)
         return self.vocab.element2repr(element)
 
     def id2element(self, idx: int) -> Any:
-        assert self.vocab
+        if not self.vocab:
+            raise AttributeError(self.VOCAB_ERROR_MSG)
         return self.vocab.id2element(idx)
 
     def get_dict(self) -> Dict[Hashable, int]:
-        assert self.vocab
+        if not self.vocab:
+            raise AttributeError(self.VOCAB_ERROR_MSG)
         return self.vocab.get_dict()
 
     def predefined_vocab(self, predefined: Union[Set, List]):
@@ -218,10 +256,23 @@ class BaseExtractor(ABC):
         """
         raise NotImplementedError()
 
+    def remove_from_pack(self, pack: DataPack,
+                instance: Annotation):
+        r"""Functionality: Remove the existing feature of the instance
+        in a pack. We might remove an attribute under an entry or remove
+        the entry itself directly, which will depend on the different
+        type of extractors.
+
+        Overwrite instruction:
+            1. Get all entries from one isntance in the pack.
+            2. Remove entries or remove some attributes of the entry. You
+                might use pack.delete_entry function or setattr to do this.
+        """
+        raise NotImplementedError()
+
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Any):
-        r"""This function will remove the original entry and
-        add prediction to the pack.
+        r"""Functionality: Add prediction to the pack.
 
         Overwrite instruction:
             1. Get all entries from one instance in the pack.
