@@ -31,7 +31,7 @@ __all__ = [
 
 
 class BaseExtractor(ABC):
-    """The functionality of this class is as followed,
+    r"""The functionality of Extractor is as followed,
         1. Build vocabulary.
         2. Extract feature from datapack.
         3. Add prediction back to datapack.
@@ -40,23 +40,23 @@ class BaseExtractor(ABC):
         config: An instance of `Dict` or
             :class:`forte.common.configuration.Config` that provides all
             configurable options. See :meth:`default_configs` for available
-            options and default values.
-            Required keys:
-                entry_type: Type[Entry]. The ontology type that the extractor
-                    get feature from.
+            options and default values. Entry_type is the key that need to
+            be passed in and there will not be default value for this key.
+
+            entry_type: Type[Entry]. Required. The ontology type that the
+                extractor will get feature from.
     """
     def __init__(self, config: Union[Dict, Config]):
 
         self.config = Config(config, self.default_configs(),
                                 allow_new_hparam=True)
 
-        if not hasattr(self.config, "entry_type"):
-            logger.error("entry_type is required.")
-            raise AttributeError("entry_type is required.")
+        if "entry_type" not in self.config:
+            raise AttributeError("entry_type needs to be specified in "
+                                "the configuration of an extractor.")
 
         if self.config.vocab_method != "raw":
-            self.vocab: Optional[Vocabulary] = Vocabulary(
-                                    method=self.config.vocab_method,
+            self.vocab = Vocabulary(method=self.config.vocab_method,
                                     need_pad=self.config.need_pad,
                                     use_unk=self.config.vocab_use_unk)
         else:
@@ -64,7 +64,7 @@ class BaseExtractor(ABC):
 
     @staticmethod
     def default_configs():
-        """
+        r"""
         Returns a dictionary of default hyper-parameters.
 
         "vocab_method": str
@@ -98,7 +98,7 @@ class BaseExtractor(ABC):
         }
 
     @classmethod
-    def from_state(cls, state: Dict):
+    def from_state(cls, state: Dict) -> object:
         config = {
             "vocab_method": state["vocab_method"],
             "need_pad": state["need_pad"],
@@ -107,7 +107,7 @@ class BaseExtractor(ABC):
         }
         obj = cls(config)
         if "vocab" in state and state["vocab"] is not None and \
-            state["vocab"] != "None":
+            isinstance(state["vocab"], dict):
             obj.vocab = Vocabulary.from_state(state["vocab"])
         else:
             obj.vocab = None
@@ -156,10 +156,13 @@ class BaseExtractor(ABC):
         return self.vocab.get_dict()
 
     def predefined_vocab(self, predefined: Union[Set, List]):
-        """This function will add elements from the
-        passed-in predefined set to the vocab. Different
-        extractors might have different strategies to add
-        these elements. Override this function if necessary.
+        r"""Functionality: Add elements from prediction into the vocabulary.
+
+        Overwrite instruction:
+            1. Take out elements from predifined.
+            2. Make modification on elements, according to different
+                Extractors.
+            3. Use self.add fucntion to add the element into vocabulary.
 
         Args:
             predefined (Union[Set, List]): A set or list contain
@@ -170,21 +173,39 @@ class BaseExtractor(ABC):
 
     def update_vocab(self, pack: DataPack,
                     instance: Annotation):
-        """This function will extract the feature from
-        instance and add element in the feature to vocabulary.
+        r"""Functionality: Add all elements from one instance into the
+        vocabulary. For example, when the instance is Sentence and we want
+        to add all Token from one sentence into the vocabulary, we might
+        call this function.
+
+        Overwrite instrcution:
+            1. Get all entries from one instance in the pack.
+                You probably would use pack.get fucntion to acquire
+                Entry that you need.
+            2. Get elements that are needed from entries. This process will
+                be very different for different extractors. For example,
+                you might want to get the token text from one sentence.
+                Or you mgiht want to get the tags for a squence for
+                one sentence.
+            3. Use self.add to add those element into the vocabulary.
 
         Args:
             pack (Datapack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance from which the
-                extractor will extractor feature.
+                extractor will get elements from.
         """
         raise NotImplementedError()
 
     def extract(self, pack: DataPack,
                 instance: Annotation) -> Feature:
-        """This function will extract feature from
-        one instance in the pack.
+        r"""Functionality: Extract the feature for one instance in a pack.
+
+        Overwrite instruction:
+            1. Get all entries from one isntance in the pack.
+            2. Get elements that are needed form entries. For exmple,
+                the token text or seqence tags.
+            3. Contruct a feature and return it.
 
         Args:
             pack (Datapack): The datapack that contains the current
@@ -199,7 +220,25 @@ class BaseExtractor(ABC):
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Any):
-        """This function will remove the original entry and
+        r"""This function will remove the original entry and
         add prediction to the pack.
+
+        Overwrite instruction:
+            1. Get all entries from one instance in the pack.
+            2. Convert prediction into elements that need to be
+                assigned to entries. You might need to use
+                self.id2element to convert index in the prediction
+                into element via the vocabulary maintained by the
+                extractor.
+            3. Use setattr to add the element to corresponding entry.
+
+        Args:
+            pack (Datapack): The datapack that contains the current
+                instance.
+            instance (Annotation): The instance to which the
+                extractor add prediction.
+            prediction (Any): This is the output of the model, whose
+                format will be determind by the predict function
+                user define and pass in to our framework.
         """
         raise NotImplementedError()
