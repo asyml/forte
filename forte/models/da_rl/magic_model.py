@@ -14,8 +14,8 @@
 # pylint: disable=W0233
 # pylint: disable=super-init-not-called
 """
-A model that copies the parameter states of a pytorch nn module
-and performs parameter updates locally.
+A magic model that registers the parameter of a pytorch nn module
+and performs memory-efficient parameter updates locally.
 """
 
 import copy
