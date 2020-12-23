@@ -181,6 +181,19 @@ Readers
 .. autoclass:: forte.data.readers.openie_reader.OpenIEReader
     :members:
 
+Converter
+==========
+
+:hidden:`Converter`
+------------------------------
+.. autoclass:: forte.data.converter.Converter
+    :members:
+
+:hidden:`Feature`
+------------------------------
+.. autoclass:: forte.data.converter.Feature
+    :members:
+
 Batchers
 ==========
 
