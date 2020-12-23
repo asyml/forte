@@ -84,12 +84,12 @@ class MetaAugmentationWrapper:
                 for instance in batch:
                     # Augmented example with params phi exposed
                     aug_instance_features = \
-                        aug_wrapper.augment_example(instance_features)
+                        aug_wrapper.augment_instance(instance_features)
                     # Model is the downstream Bert model.
                     model.zero_grad()
                     loss = model(aug_instance_features)
                     meta_model = MetaModule(model)
-                    meta_model = aug_wrapper.update_meta_classifier(
+                    meta_model = aug_wrapper.update_meta_model(
                         meta_model, loss, model, optim)
 
                     # Compute grads of aug model on validation data
