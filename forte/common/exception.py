@@ -23,6 +23,7 @@ __all__ = [
     "PackDataException",
     "ProcessFlowException",
     "ProcessExecutionException",
+    "ValidationError",
 ]
 
 
@@ -64,4 +65,9 @@ class ProcessFlowException(Exception):
 
 class ProcessExecutionException(Exception):
     r"""Raise this when process execution fail"""
+    pass
+
+
+class ValidationError(Exception):
+    r"""Raise this error when input validate fail"""
     pass
