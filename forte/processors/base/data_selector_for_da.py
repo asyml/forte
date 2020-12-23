@@ -75,8 +75,6 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
 
 
 class QueryDataSelector(BaseElasticSearchDataSelector):
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
 
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
@@ -125,9 +123,6 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
 
 
 class RandomDataSelector(BaseElasticSearchDataSelector):
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
         r"""random select `size` documents from the indexer.
