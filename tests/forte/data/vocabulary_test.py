@@ -95,5 +95,6 @@ class VocabularyTest(unittest.TestCase):
                 self.assertEqual(saved_len, len(vocab))
 
 
+
 if __name__ == '__main__':
     unittest.main()
