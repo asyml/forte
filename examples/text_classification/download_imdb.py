@@ -13,25 +13,19 @@
 # limitations under the License.
 
 
-import os
-import sys
-import subprocess
+"""
+Download IMDB dataset.
+"""
+from forte.data.data_utils import maybe_download
 
 
 def main():
-    if not os.path.exists("data/IMDB_raw"):
-        subprocess.run("mkdir data/IMDB_raw", shell=True, check=True)
-    # pylint: disable=line-too-long
-    subprocess.run(
-        'wget -P data/IMDB_raw/ https://github.com/google-research/uda/blob/master/text/data/IMDB_raw/train_id_list.txt',
-        shell=True, check=True)
-    subprocess.run(
-        'wget -P data/IMDB_raw/ https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz',
-        shell=True, check=True)
-    subprocess.run(
-        'tar xzvf data/IMDB_raw/aclImdb_v1.tar.gz -C data/IMDB_raw/ && rm data/IMDB_raw/aclImdb_v1.tar.gz',
-        shell=True, check=True)
+    download_path = "data/IMDB_raw"
+    maybe_download(urls=[
+        "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"],
+        path=download_path,
+        extract=True)
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

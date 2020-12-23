@@ -81,39 +81,12 @@ class DataProcessor():
     def _read_tsv(cls, input_file, quotechar=None):
         """Reads a tab separated value file."""
         with open(input_file, "r", encoding="utf-8") as f:
-            # reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
             lines = []
-            for line in f.readlines():
-                lines.append(line.split('\t'))
+            for line in reader:
+                if len(line) > 0:
+                    lines.append(line)
         return lines
-
-
-def clean_web_text(st):
-    """clean text."""
-    st = st.replace("<br />", " ")
-    st = st.replace("&quot;", "\"")
-    st = st.replace("<p>", " ")
-    if "<a href=" in st:
-        # print("before:\n", st)
-        while "<a href=" in st:
-            start_pos = st.find("<a href=")
-            end_pos = st.find(">", start_pos)
-            if end_pos != -1:
-                st = st[:start_pos] + st[end_pos + 1:]
-            else:
-                print("incomplete href")
-                print("before", st)
-                st = st[:start_pos] + st[start_pos + len("<a href=")]
-                print("after", st)
-
-        st = st.replace("</a>", "")
-        # print("after\n", st)
-        # print("")
-    st = st.replace("\\n", " ")
-    st = st.replace("\\", " ")
-    # while "  " in st:
-    #   st = st.replace("  ", " ")
-    return st
 
 
 class IMDbProcessor(DataProcessor):
@@ -174,7 +147,7 @@ class IMDbProcessor(DataProcessor):
             label = line[-2]
             if label not in ["pos", "neg", "unsup"]:
                 print(line)
-            text_a = clean_web_text(text_a)
+            # text_a = clean_web_text(text_a)
             examples.append(InputExample(guid=guid, text_a=text_a,
                              text_b=None, label=label))
         return examples
@@ -603,13 +576,6 @@ def prepare_record_data(processor, tokenizer,
         convert_examples_to_features_and_output_to_files(
             eval_examples, label_list,
             max_seq_length, tokenizer, eval_file, feature_types)
-
-    test_file = os.path.join(output_dir, "predict.pkl")
-    if not os.path.isfile(test_file):
-        test_examples = processor.get_test_examples(data_dir)
-        convert_examples_to_features_and_output_to_files(
-            test_examples, label_list,
-            max_seq_length, tokenizer, test_file, feature_types)
 
     unsup_file = os.path.join(output_dir, "unsup.pkl")
     if not os.path.isfile(unsup_file):

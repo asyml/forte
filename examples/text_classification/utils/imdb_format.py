@@ -1,11 +1,10 @@
-# coding=utf-8
-# Copyright 2019 The Google UDA Team Authors.
+# Copyright 2020 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,23 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Read all data in IMDB and merge them to a csv file."""
-
-import csv
 import os
-import argparse
+import csv
 
-parser = argparse.ArgumentParser(description="Process input and output")
-parser.add_argument('--raw_data_dir', help='raw data directory')
-parser.add_argument('--output_dir', help='output directory')
-parser.add_argument('--train_id_path', help='path of id list')
-args = parser.parse_args()
-
-
-def dump_raw_data(contents, file_path):
-    with open(file_path, "w", encoding="utf-8") as ouf:
-        writer = csv.writer(ouf, delimiter="\t", quotechar="\"")
-        for line in contents:
-            writer.writerow(line)
+from forte.data.caster import MultiPackBoxer
+from forte.data.multi_pack import MultiPack
+from forte.data.readers import LargeMovieReader
+from forte.pipeline import Pipeline
+from forte.utils.utils_io import maybe_create_dir
+from ft.onto.base_ontology import Document
 
 
 def clean_web_text(st):
@@ -57,55 +48,46 @@ def clean_web_text(st):
     return st
 
 
-def load_data_by_id(sub_set, id_path):
-    with open(id_path, encoding="utf-8") as inf:
-        id_list = inf.readlines()
-    contents = []
-    for example_id in id_list:
-        example_id = example_id.strip()
-        label = example_id.split("_")[0]
-        file_path = os.path.join(args.raw_data_dir, sub_set, label, example_id[len(label) + 1:])
-        with open(file_path, encoding="utf-8") as inf:
-            st_list = inf.readlines()
-            assert len(st_list) == 1
-            st = clean_web_text(st_list[0].strip())
-            contents += [(st, label, example_id)]
-    return contents
-
-
-def load_all_data(sub_set):
-    contents = []
-    for label in ["pos", "neg", "unsup"]:
-        data_path = os.path.join(args.raw_data_dir, sub_set, label)
-        if not os.path.exists(data_path):
-            continue
-        for filename in os.listdir(data_path):
-            file_path = os.path.join(data_path, filename)
-            with open(file_path, encoding="utf-8") as inf:
-                st_list = inf.readlines()
-                assert len(st_list) == 1
-                st = clean_web_text(st_list[0].strip())
-                example_id = "{}_{}".format(label, filename)
-                contents += [(st, label, example_id)]
-    return contents
-
-
 def main():
-    # load train
-    header = ["content", "label", "id"]
-    contents = load_data_by_id("train", args.train_id_path)
-    if not os.path.exists(args.output_dir):
-        os.mkdir(args.output_dir)
-    dump_raw_data(
-        [header] + contents,
-        os.path.join(args.output_dir, "train.csv"),
-        )
-    # load test
-    contents = load_all_data("test")
-    dump_raw_data(
-        [header] + contents,
-        os.path.join(args.output_dir, "test.csv"),
-        )
+    pipeline = Pipeline[MultiPack]()
+    reader = LargeMovieReader()
+    pipeline.set_reader(reader)
+    pipeline.add(MultiPackBoxer())
+
+    pipeline.initialize()
+
+    dataset_path = "data/IMDB_raw/aclImdb/"
+    input_file_path = {
+        "train": os.path.join(dataset_path, "train"),
+        "test": os.path.join(dataset_path, "test")
+    }
+    output_path = "data/IMDB/"
+    maybe_create_dir(output_path)
+    output_file_path = {
+        "train": os.path.join(output_path, "train.csv"),
+        "test": os.path.join(output_path, "test.csv")
+    }
+    set_labels = {
+        "train": ["pos", "neg", "unsup"],
+        "test": ["pos", "neg"],
+    }
+
+    for split in ["train", "test"]:
+        with open(output_file_path[split], "w", encoding="utf-8")\
+            as output_file:
+            writer = csv.writer(output_file, delimiter="\t", quotechar="\"")
+            writer.writerow(["content", "label", "id"])
+            for label in set_labels[split]:
+                data_packs = \
+                    pipeline.process_dataset(
+                        os.path.join(input_file_path[split], label))
+                for pack in data_packs:
+                    example_id = pack.get_pack('default').pack_name
+                    for pack_name in pack.pack_names:
+                        p = pack.get_pack(pack_name)
+                        for doc in p.get(Document):
+                            writer.writerow(
+                                [clean_web_text(doc.text.strip()), label, example_id])
 
 
 if __name__ == "__main__":
