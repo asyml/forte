@@ -94,6 +94,16 @@ class VocabularyTest(unittest.TestCase):
                             vocab.element2repr("random_element"))
                 self.assertEqual(saved_len, len(vocab))
 
+            # Check state
+            new_vocab = Vocabulary.from_state(vocab.state)
+            self.assertEqual(dir(vocab), dir(new_vocab))
+            self.assertEqual(vocab.method, new_vocab.method)
+            self.assertEqual(vocab.need_pad, new_vocab.need_pad)
+            self.assertEqual(vocab.use_unk, new_vocab.use_unk)
+            self.assertEqual(vocab.element2id_dict, new_vocab.element2id_dict)
+            self.assertEqual(vocab.id2element_dict, new_vocab.id2element_dict)
+            self.assertEqual(vocab.next_id, new_vocab.next_id)
+
 
 if __name__ == '__main__':
     unittest.main()
