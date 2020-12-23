@@ -17,8 +17,6 @@ The reader for reading sentences from text files into MultiPack
 import os
 from typing import Any, Iterator, Dict, Tuple
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.data_utils_io import dataset_path_iterator_with_base
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
@@ -37,15 +35,6 @@ class MultiPackSentenceReader(MultiPackReader):
     multipack.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.config = Config(None, self.default_configs())
-
-    # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, configs: Config) -> None:
-        self.resource = resources
-        self.config = configs
-
     def _collect(self, text_directory: str) -> Iterator[Any]:  # type: ignore
         return dataset_path_iterator_with_base(text_directory, '')
 
@@ -58,8 +47,8 @@ class MultiPackSentenceReader(MultiPackReader):
 
         m_pack: MultiPack = MultiPack()
 
-        input_pack_name = self.config.input_pack_name
-        output_pack_name = self.config.output_pack_name
+        input_pack_name = self.configs.input_pack_name
+        output_pack_name = self.configs.output_pack_name
 
         text = ""
         offset = 0

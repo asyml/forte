@@ -123,6 +123,8 @@ class DBpediaWikiReader(PackReader):
         self.redirects: Dict[str, str] = {}
 
     def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+
         self.redirects = resources.get('redirects')
 
         # These NIF readers organize the statements in the specific RDF context,
