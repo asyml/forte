@@ -76,6 +76,8 @@ class DBpediaInfoBoxReader(PackReader):
         self.logger = logging.getLogger(__name__)
 
     def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
+
         # pylint: disable=attribute-defined-outside-init
         self.pack_index = read_index(configs.pack_index)
         self.pack_dir = configs.pack_dir
