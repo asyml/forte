@@ -194,6 +194,14 @@ Converter
 .. autoclass:: forte.data.converter.Feature
     :members:
 
+Extractor
+==========
+
+:hidden:`BaseExtractor`
+--------------------------
+.. autoclass:: forte.data.extractor.base_extractor.BaseExtractor
+    :members:
+
 Batchers
 ==========
 
