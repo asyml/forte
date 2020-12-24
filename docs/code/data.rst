@@ -197,7 +197,7 @@ Converter
 Extractor
 ==========
 
-:hidden: `BaseExtractor`
+:hidden:`BaseExtractor`
 --------------------------
 .. autoclass:: forte.data.extractor.base_extractor.BaseExtractor
     :members:

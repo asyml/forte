@@ -30,11 +30,11 @@ __all__ = [
 
 
 class BaseExtractor(ABC):
-    r"""The functionality of Extractor is as followed,
+    r"""The functionality of Extractor is as followed:
             1. Build vocabulary.
             2. Extract feature from datapack.
             3. Remove feature in datapack.
-            3. Add prediction to datapack.
+            4. Add prediction to datapack.
 
         Explanation:
             Vocabulary: Vocabulary is maintained as an inner class
@@ -62,6 +62,7 @@ class BaseExtractor(ABC):
                 example, the golden data in the test set), we can first
                 remove those data and then add our model prediction to
                 the pack.
+
     Args:
         config: An instance of `Dict` or
             :class:`forte.common.configuration.Config` that provides all
