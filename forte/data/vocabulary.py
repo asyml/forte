@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=line-too-long
-from __future__ import annotations
 from typing import List, Tuple, Dict, Union, Hashable, Iterable
 
 
@@ -126,7 +125,7 @@ class Vocabulary:
         }
 
     @classmethod
-    def from_state(cls, state: Dict) -> Vocabulary:
+    def from_state(cls, state: Dict) -> "Vocabulary":
         obj = cls(state["method"], state["need_pad"], state["use_unk"])
         obj.element2id_dict = state["element2id_dict"]
         obj.id2element_dict = state["id2element_dict"]
