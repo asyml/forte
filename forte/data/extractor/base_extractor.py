@@ -72,7 +72,7 @@ class BaseExtractor(ABC):
             entry_type: Type[Entry]. Required. The ontology type that the
                 extractor will get feature from.
     """
-    VOCAB_ERROR_MSG = "When vocab_method is raw, vocabulary " \
+    _VOCAB_ERROR_MSG = "When vocab_method is raw, vocabulary " \
                     "will not be built. Functions operating " \
                     "on vocabulary should not be called."
 
@@ -160,37 +160,37 @@ class BaseExtractor(ABC):
 
     def items(self) -> Iterable[Tuple[Hashable, int]]:
         if not self.vocab:
-            raise AttributeError(self.VOCAB_ERROR_MSG)
+            raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.items()
 
     def size(self) -> int:
         if not self.vocab:
-            raise AttributeError(self.VOCAB_ERROR_MSG)
+            raise AttributeError(self._VOCAB_ERROR_MSG)
         return len(self.vocab)
 
     def add(self, element: Hashable):
         if not self.vocab:
-            raise AttributeError(self.VOCAB_ERROR_MSG)
+            raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.add_element(element)
 
     def has_element(self, element: Hashable) -> bool:
         if not self.vocab:
-            raise AttributeError(self.VOCAB_ERROR_MSG)
+            raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.has_element(element)
 
     def element2repr(self, element: Hashable) -> Union[int, List[int]]:
         if not self.vocab:
-            raise AttributeError(self.VOCAB_ERROR_MSG)
+            raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.element2repr(element)
 
     def id2element(self, idx: int) -> Any:
         if not self.vocab:
-            raise AttributeError(self.VOCAB_ERROR_MSG)
+            raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.id2element(idx)
 
     def get_dict(self) -> Dict[Hashable, int]:
         if not self.vocab:
-            raise AttributeError(self.VOCAB_ERROR_MSG)
+            raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.get_dict()
 
     def predefined_vocab(self, predefined: Union[Set, List]):

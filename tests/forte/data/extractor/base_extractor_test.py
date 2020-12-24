@@ -19,7 +19,7 @@ from forte.data.extractor.base_extractor import BaseExtractor
 
 class BaseExtractorTest(unittest.TestCase):
 
-    def test_BaseExtractor(self):
+    def test_base_extractor(self):
         config = {
             "entry_type": Token
         }
