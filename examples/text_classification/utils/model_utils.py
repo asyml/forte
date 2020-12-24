@@ -24,7 +24,7 @@ def get_lr_multiplier(step: int, total_steps: int, warmup_steps: int) -> float:
 def get_tsa_threshold(schedule, global_step, num_train_steps, start, end):
     r"""Get threshold for Training Signal Annealing
     From the UDA paper:
-    If the model’s predicted probability for the correct category pθ(y*|x) is higher than 
+    If the model’s predicted probability for the correct category pθ(y*|x) is higher than
     a threshold ηt, we remove that example from the loss function.
     Please see the paper for more details.
     """
@@ -33,7 +33,7 @@ def get_tsa_threshold(schedule, global_step, num_train_steps, start, end):
         threshold = training_progress
     elif schedule == "exp_schedule":
         scale = 5
-        threshold = math.exp((training_progress - 1) * scale) 
+        threshold = math.exp((training_progress - 1) * scale)
         # [exp(-5), exp(0)] = [1e-2, 1]
     elif schedule == "log_schedule":
         scale = 5

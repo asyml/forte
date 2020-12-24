@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import config_data, config_classifier
-from utils import data_utils, model_utils
 
 import argparse
 import functools
@@ -23,6 +21,10 @@ import os
 import torch
 import torch.nn.functional as F
 import texar.torch as tx
+
+import config_data
+import config_classifier
+from utils import data_utils, model_utils
 
 # pylint: disable=no-name-in-module
 
@@ -65,14 +67,15 @@ class IMDBClassifierTrainer:
     An example usage can be found at examples/text_classification.
     """
 
-    def __init__(self, config_data, config_classifier, checkpoint=args.checkpoint,
+    def __init__(self, trainer_config_data, trainer_config_classifier,
+        checkpoint=args.checkpoint,
         pretrained_model_name=args.pretrained_model_name):
         """Constructs the text classifier.
         Args:
             config_data: string, data config file.
         """
-        self.config_data = config_data
-        self.config_classifier = config_classifier
+        self.config_data = trainer_config_data
+        self.config_classifier = trainer_config_classifier
         self.checkpoint = checkpoint
         self.pretrained_model_name = pretrained_model_name
 
@@ -330,8 +333,10 @@ class IMDBClassifierTrainer:
             aug_input_length = (1 - (aug_input_ids == 0).int()).sum(dim=1)
 
             logits, _ = model(input_ids, input_length, segment_ids)
-            logits = logits.detach()  # gradient does not propagate back to original input
-            aug_logits, _ = model(aug_input_ids, aug_input_length, aug_segment_ids)
+            # gradient does not propagate back to original input
+            logits = logits.detach()
+            aug_logits, _ = model(
+                aug_input_ids, aug_input_length, aug_segment_ids)
             return logits, aug_logits
 
         uda_iterator = UDAIterator(
@@ -343,7 +348,8 @@ class IMDBClassifierTrainer:
 
         uda_iterator.switch_to_dataset_unsup("unsup")
         uda_iterator.switch_to_dataset("train", use_unsup=True)
-        uda_iterator = iter(uda_iterator) # call iter() to initialize the internal iterators
+        # call iter() to initialize the internal iterators
+        uda_iterator = iter(uda_iterator)
 
         def _compute_loss(logits, labels):
             r"""Compute loss.
@@ -362,24 +368,27 @@ class IMDBClassifierTrainer:
             """
             loss = 0
             log_probs = F.log_softmax(logits)
-            one_hot_labels = torch.zeros_like(log_probs, dtype=torch.float).to(device)
+            one_hot_labels = torch.zeros_like(
+                log_probs, dtype=torch.float).to(device)
             one_hot_labels.scatter_(1, labels.view(-1, 1), 1)
-            tgt_label_prob = one_hot_labels.clone()
 
             per_example_loss = -(one_hot_labels * log_probs).sum(dim=-1)
-            loss_mask = torch.ones_like(per_example_loss, dtype=per_example_loss.dtype).to(device)
-            correct_label_probs = (one_hot_labels * torch.exp(log_probs)).sum(dim=-1)
+            loss_mask = torch.ones_like(
+                per_example_loss, dtype=per_example_loss.dtype).to(device)
+            correct_label_probs = \
+                (one_hot_labels * torch.exp(log_probs)).sum(dim=-1)
 
             if self.config_data.tsa:
                 tsa_start = 1. / model.num_classes
                 tsa_threshold = model_utils.get_tsa_threshold(
                     self.config_data.tsa_schedule, global_step,
                     num_train_steps, start=tsa_start, end=1)
-                larger_than_threshold = torch.gt(correct_label_probs, tsa_threshold)
+                larger_than_threshold = torch.gt(
+                    correct_label_probs, tsa_threshold)
                 loss_mask = loss_mask * (1 - larger_than_threshold.float())
             else:
                 tsa_threshold = 1
-            
+
             loss_mask = loss_mask.detach()
             per_example_loss = per_example_loss * loss_mask
             loss_mask_sum = loss_mask.sum()
@@ -406,16 +415,17 @@ class IMDBClassifierTrainer:
                 nsamples += batch_size
 
                 input_length = (1 - (input_ids == 0).int()).sum(dim=1)
-                
+
                 # sup loss
                 logits, _ = model(input_ids, input_length, segment_ids)
-                loss = _compute_loss_tsa(logits, labels, scheduler.last_epoch,\
+                loss = _compute_loss_tsa(logits, labels, scheduler.last_epoch,
                     num_train_steps)
                 # unsup loss
                 unsup_logits, unsup_aug_logits = unsup_forward_fn(unsup_batch)
-                unsup_loss = uda_iterator.calculate_uda_loss(unsup_logits, unsup_aug_logits)
+                unsup_loss = uda_iterator.calculate_uda_loss(
+                    unsup_logits, unsup_aug_logits)
 
-                loss = loss + unsup_loss # unsup coefficient = 1
+                loss = loss + unsup_loss  # unsup coefficient = 1
                 loss.backward()
                 optim.step()
                 scheduler.step()
@@ -423,7 +433,9 @@ class IMDBClassifierTrainer:
 
                 dis_steps = self.config_data.display_steps
                 if dis_steps > 0 and step % dis_steps == 0:
-                    logging.info("step: %d; loss: %f, unsup_loss %f", step, loss, unsup_loss)
+                    logging.info(
+                        "step: %d; loss: %f, unsup_loss %f",
+                        step, loss, unsup_loss)
 
                 eval_steps = self.config_data.eval_steps
                 if eval_steps > 0 and step % eval_steps == 0:
@@ -491,7 +503,9 @@ class IMDBClassifierTrainer:
                 print("Epoch", i)
                 _train_epoch()
                 if self.config_data.eval_steps == -1:
-                    _eval_epoch() # eval after epoch because switch_dataset just resets the iterator
+                    # eval after epoch because switch_dataset
+                    # just resets the iterator
+                    _eval_epoch()
             states = {
                 'model': model.state_dict(),
                 'optimizer': optim.state_dict(),
@@ -505,15 +519,18 @@ class IMDBClassifierTrainer:
         if do_test:
             _test_epoch()
 
+
 def main():
     trainer = IMDBClassifierTrainer(config_data, config_classifier)
     if not os.path.isfile("data/IMDB/train.pkl")\
             or not os.path.isfile("data/IMDB/eval.pkl")\
             or not os.path.isfile("data/IMDB/predict.pkl")\
             or not os.path.isfile("data/IMDB/unsup.pkl"):
-        data_utils.prepare_data(trainer.pretrained_model_name, config_data, "data/IMDB")
+        data_utils.prepare_data(
+            trainer.pretrained_model_name, config_data, "data/IMDB")
     if args.use_uda:
-        trainer.run_uda(args.do_train, args.do_eval, args.do_test, args.output_dir)
+        trainer.run_uda(
+            args.do_train, args.do_eval, args.do_test, args.output_dir)
     else:
         trainer.run(args.do_train, args.do_eval, args.do_test, args.output_dir)
 

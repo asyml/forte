@@ -112,7 +112,7 @@ class IMDbProcessor(DataProcessor):
                                quotechar='"'), "unsup_ext", skip_unsup=False)
         elif unsup_set == "unsup_in":
             return self._create_examples(
-                self._read_tsv(os.path.join(raw_data_dir, "unsup.csv"),quotechar='"'), "unsup_in", skip_unsup=False)
+                self._read_tsv(os.path.join(raw_data_dir, "unsup.csv"), quotechar='"'), "unsup_in", skip_unsup=False)
 
     def get_unsup_aug_examples(self, raw_data_dir, unsup_set):
         """See base class."""
@@ -134,7 +134,7 @@ class IMDbProcessor(DataProcessor):
         examples = []
         print(len(lines))
         for (i, line) in enumerate(lines):
-            if i == 0 or len(line) == 1: # newline
+            if i == 0 or len(line) == 1:  # newline
                 continue
             if skip_unsup and line[-2] == "unsup":
                 continue
@@ -468,6 +468,7 @@ def convert_unsup_examples_to_features_and_output_to_files(
             }
             writer.write(features)
 
+
 def replace_with_length_check(
         ori_text, new_text,
         use_min_length,
@@ -488,6 +489,7 @@ def replace_with_length_check(
                              new_text))
         return ori_text
     return new_text
+
 
 def back_translation(examples, back_translation_file, data_total_size):
     """Run back translation."""

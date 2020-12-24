@@ -8,7 +8,7 @@ train_batch_size = 24
 max_train_epoch = 3000
 display_steps = 50  # Print training loss every display_steps; -1 to disable
 
-eval_steps = 100  # Eval on the dev set every eval_steps; if -1 will eval every epoch
+eval_steps = 100  # Eval every eval_steps; if -1 will eval every epoch
 # Proportion of training to perform linear learning rate warmup for.
 # E.g., 0.1 = 10% of training.
 warmup_proportion = 0.1
@@ -51,7 +51,7 @@ eval_hparam = {
 
 # UDA config
 tsa = True
-tsa_schedule = "linear_schedule" # linear_schedule, exp_schedule, log_schedule
+tsa_schedule = "linear_schedule"  # linear_schedule, exp_schedule, log_schedule
 
 unsup_feature_types = {
     "input_ids": ["int64", "stacked_tensor", max_seq_length],
