@@ -55,14 +55,15 @@ class AttributeExtractor(BaseExtractor):
         return state
 
     @classmethod
-    def from_state(cls, state: Dict) -> "AttributeExtractor":
-        obj = super().from_state(state)
+    def from_state(cls, state: Dict) \
+        -> Union["BaseExtractor", "AttributeExtractor"]:
+        obj = BaseExtractor.from_state(state)
         additional = {
             "attribute": state["attribute"]
         }
         obj.config = Config(obj.config, additional,
                             allow_new_hparam=True)
-        obj = cls(obj)
+        obj.__class__ = cls
         return obj
 
     @staticmethod

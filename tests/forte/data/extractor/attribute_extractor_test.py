@@ -87,6 +87,11 @@ class AttributeExtractorTest(unittest.TestCase):
                 feat = extractor.extract(pack, instance)
                 self.assertEqual(feat.data[0], unk_pos_ids)
 
+        # Check state and from_state.
+        new_extractor = AttributeExtractor.from_state(extractor.state)
+        self.assertEqual(new_extractor.config.attribute,
+                        extractor.config.attribute)
+
 
 if __name__ == '__main__':
     unittest.main()
