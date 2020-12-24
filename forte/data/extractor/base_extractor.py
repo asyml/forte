@@ -233,7 +233,7 @@ class BaseExtractor(ABC):
             instance (Annotation): The instance from which the
                 extractor will get elements from.
         """
-        raise NotImplementedError()
+        pass
 
     def extract(self, pack: DataPack,
                 instance: Annotation) -> Feature:
@@ -254,7 +254,7 @@ class BaseExtractor(ABC):
         Returns:
             Feature: a feature that contains the extracted data.
         """
-        raise NotImplementedError()
+        pass
 
     def remove_from_pack(self, pack: DataPack,
                 instance: Annotation):
@@ -268,7 +268,7 @@ class BaseExtractor(ABC):
             2. Remove entries or remove some attributes of the entry. You
                 might use pack.delete_entry function or setattr to do this.
         """
-        raise NotImplementedError()
+        pass
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Any):
@@ -292,4 +292,4 @@ class BaseExtractor(ABC):
                 format will be determind by the predict function
                 user define and pass in to our framework.
         """
-        raise NotImplementedError()
+        pass

@@ -21,16 +21,28 @@ class BaseExtractorTest(unittest.TestCase):
 
     def test_base_extractor(self):
         config = {
-            "entry_type": Token
+            "entry_type": Token,
+            "vocab_method": "indexing",
+            "need_pad": True,
         }
 
         extractor = BaseExtractor(config)
 
         new_extractor = BaseExtractor.from_state(extractor.state)
 
+        # Check state and from state
         self.assertEqual(extractor.config.entry_type, new_extractor.config.entry_type)
         self.assertEqual(extractor.config.entry_type, Token)
         self.assertEqual(extractor.vocab.state, new_extractor.vocab.state)
+
+        # Check entry_type
+        self.assertEqual(extractor.entry_type, Token)
+
+        # Check vocab_method
+        self.assertEqual(extractor.vocab_method, "indexing")
+
+        # Check wrapped functions for vocabulary
+        self.assertEqual(extractor.get_pad_value(), 0)
 
 
 if __name__ == '__main__':
