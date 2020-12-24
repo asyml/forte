@@ -113,6 +113,25 @@ class Vocabulary:
         if use_unk:
             self.add_element(Vocabulary.UNK_ELEMENT)
 
+    @property
+    def state(self) -> Dict:
+        return {
+            "method": self.method,
+            "need_pad": self.need_pad,
+            "use_unk": self.use_unk,
+            "element2id_dict": self.element2id_dict,
+            "id2element_dict": self.id2element_dict,
+            "next_id": self.next_id
+        }
+
+    @classmethod
+    def from_state(cls, state: Dict) -> object:
+        obj = cls(state["method"], state["need_pad"], state["use_unk"])
+        obj.element2id_dict = state["element2id_dict"]
+        obj.id2element_dict = state["id2element_dict"]
+        obj.next_id = state["next_id"]
+        return obj
+
     def add_element(self, element: Hashable):
         r"""This function will add element to the vocabulary.
 
