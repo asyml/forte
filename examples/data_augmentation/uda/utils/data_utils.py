@@ -147,7 +147,6 @@ class IMDbProcessor(DataProcessor):
             label = line[-2]
             if label not in ["pos", "neg", "unsup"]:
                 print(line)
-            # text_a = clean_web_text(text_a)
             examples.append(InputExample(guid=guid, text_a=text_a,
                              text_b=None, label=label))
         return examples
@@ -263,7 +262,6 @@ def back_translation(examples, back_translation_file, data_total_size):
     """Run back translation."""
     use_min_length = 10
     use_max_length_diff_ratio = 0.5
-    logging.info("running bt augmentation")
 
     text_per_example = 1
 
@@ -301,12 +299,6 @@ def back_translation(examples, back_translation_file, data_total_size):
                 text_b=text_b,
                 label=ori_example.label)
         aug_examples += [example]
-        if np.random.random() < 0.0001:
-            pass
-            # tf.logging.info("\tori:\n\t\t{:s}\n\t\t{:s}\n\t\t{:s}\n".format(
-            #     ori_example.text_a, ori_example.text_b, ori_example.label))
-            # tf.logging.info("\tnew:\n\t\t{:s}\n\t\t{:s}\n\t\t{:s}\n".format(
-            #     example.text_a, example.text_b, example.label))
         if i % 10000 == 0:
             print("processing example # {:d}".format(i))
     logging.info("applied back translation for {:.1f} percent of data".format(
@@ -353,7 +345,6 @@ def prepare_record_data(processor, tokenizer,
         unsup_examples = processor.get_unsup_examples(data_dir, "unsup_in")
         unsup_aug_examples = copy.deepcopy(unsup_examples)
         unsup_aug_examples = back_translation(unsup_aug_examples, unsup_bt_file, len(unsup_aug_examples))
-        # unsup_aug_examples = processor.get_unsup_aug_examples(data_dir, "unsup_in")
         convert_unsup_examples_to_features_and_output_to_files(
             unsup_examples, unsup_aug_examples, unsup_label_list,
             max_seq_length, tokenizer, unsup_file, unsup_feature_types)
@@ -391,11 +382,6 @@ def prepare_data(pretrained_model_name, config_data, data_dir):
     logging.info("Loading data")
 
     processor = IMDbProcessor()
-
-    # num_classes = len(processor.get_labels())
-    # num_train_data = len(processor.get_train_examples(csv_data_dir))
-    # logging.info(
-    #     'num_classes:%d; num_train_data:%d', num_classes, num_train_data)
 
     tokenizer = tx.data.BERTTokenizer(
         pretrained_model_name=pretrained_model_name)

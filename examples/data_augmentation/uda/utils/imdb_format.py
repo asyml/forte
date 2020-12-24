@@ -23,31 +23,6 @@ from forte.utils.utils_io import maybe_create_dir
 from ft.onto.base_ontology import Document
 
 
-def clean_web_text(st):
-    """clean text."""
-    st = st.replace("<br />", " ")
-    st = st.replace("&quot;", "\"")
-    st = st.replace("<p>", " ")
-    if "<a href=" in st:
-        while "<a href=" in st:
-            start_pos = st.find("<a href=")
-            end_pos = st.find(">", start_pos)
-            if end_pos != -1:
-                st = st[:start_pos] + st[end_pos + 1:]
-            else:
-                print("incomplete href")
-                print("before", st)
-                st = st[:start_pos] + st[start_pos + len("<a href=")]
-                print("after", st)
-
-        st = st.replace("</a>", "")
-    st = st.replace("\\n", " ")
-    # st = st.replace("\\", " ")
-    # while "  " in st:
-    #   st = st.replace("  ", " ")
-    return st
-
-
 def main():
     pipeline = Pipeline[MultiPack]()
     reader = LargeMovieReader()
@@ -87,7 +62,7 @@ def main():
                         p = pack.get_pack(pack_name)
                         for doc in p.get(Document):
                             writer.writerow(
-                                [clean_web_text(doc.text.strip()), label, example_id])
+                                [doc.text.strip(), label, example_id])
 
 
 if __name__ == "__main__":
