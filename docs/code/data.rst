@@ -204,7 +204,7 @@ Extractor
 
 :hidden:`AttributeExtractor`
 ------------------------------
-.. autoclass:: forte.data.extract.attribute_extractor.AttributeExtractor
+.. autoclass:: forte.data.extractor.attribute_extractor.AttributeExtractor
     :members:
 
 Batchers
