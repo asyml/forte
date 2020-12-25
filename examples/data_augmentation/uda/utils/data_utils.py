@@ -90,7 +90,7 @@ class DataProcessor():
 
 
 class IMDbProcessor(DataProcessor):
-    """Processor for the CoLA data set (GLUE version)."""
+    """Processor for the IMDb data set."""
 
     def get_train_examples(self, raw_data_dir):
         """See base class."""
@@ -211,7 +211,9 @@ def convert_examples_to_features_and_output_to_files(
 def convert_unsup_examples_to_features_and_output_to_files(
         examples, aug_examples, label_list, max_seq_length, tokenizer, output_file,
         feature_types):
-    r"""Convert a set of `InputExample`s to a pickled file."""
+    r"""Convert a set of `InputExample`s and the augmented examples
+        to a pickled file.
+    """
 
     with tx.data.RecordData.writer(output_file, feature_types) as writer:
         print(len(examples), "unsup examples")

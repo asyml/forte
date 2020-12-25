@@ -14,20 +14,21 @@
 """Read all data in IMDB and merge them to a csv file."""
 import os
 import csv
+import json
 
-from forte.data.caster import MultiPackBoxer
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import LargeMovieReader
 from forte.pipeline import Pipeline
+from forte.processors.nltk_processors import NLTKSentenceSegmenter
 from forte.utils.utils_io import maybe_create_dir
-from ft.onto.base_ontology import Document
+from ft.onto.base_ontology import Document, Sentence
 
 
 def main():
     pipeline = Pipeline[MultiPack]()
     reader = LargeMovieReader()
     pipeline.set_reader(reader)
-    pipeline.add(MultiPackBoxer())
+    pipeline.add(NLTKSentenceSegmenter())
 
     pipeline.initialize()
 
@@ -47,6 +48,13 @@ def main():
         "test": ["pos", "neg"],
     }
 
+    back_trans_data_path = "back_trans_data/"
+    maybe_create_dir(back_trans_data_path)
+    split_sent_output_path = os.path.join(back_trans_data_path, "train_split_sent.txt")
+    doc_len_path = os.path.join(back_trans_data_path, "train_doc_len.json")
+
+    sents = []
+    doc_lens = []
     for split in ["train", "test"]:
         with open(output_file_path[split], "w", encoding="utf-8")\
             as output_file:
@@ -57,12 +65,22 @@ def main():
                     pipeline.process_dataset(
                         os.path.join(input_file_path[split], label))
                 for pack in data_packs:
-                    example_id = pack.get_pack('default').pack_name
-                    for pack_name in pack.pack_names:
-                        p = pack.get_pack(pack_name)
-                        for doc in p.get(Document):
-                            writer.writerow(
-                                [doc.text.strip(), label, example_id])
+                    example_id = pack.pack_name
+                    for doc in pack.get(Document):
+                        writer.writerow(
+                            [doc.text.strip(), label, example_id])
+                    if split == "train":
+                        doc_len = 0
+                        for sent in pack.get(Sentence):
+                            sents.append(sent.text)
+                            doc_len += 1
+                        doc_lens.append(doc_len)
+    
+    with open(split_sent_output_path, "w", encoding="utf-8") as output_file:
+        for sent in sents:
+            output_file.write(sent + "\n")
+    with open(doc_len_path, "w", encoding="utf-8") as output_file:
+        json.dump(doc_lens, output_file)
 
 
 if __name__ == "__main__":

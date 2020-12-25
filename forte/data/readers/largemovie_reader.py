@@ -105,17 +105,10 @@ class LargeMovieReader(PackReader):
         doc_text: str = ""
 
         with open(file_path, encoding="utf8") as doc:
-            for para in doc:
-                para = self.preprocess_reviews(para)
-                sents = para.split("\n")
-                for sent in sents:
-                    if len(sent) > 0:
-                        sent = sent.strip()
-                        doc_text += sent + " "
-                        doc_offset = sent_begin + len(sent) + 1
-                        # Add sentences.
-                        Sentence(data_pack, sent_begin, doc_offset - 1)
-                        sent_begin = doc_offset
+            st_list = doc.readlines()
+            assert len(st_list) == 1
+            doc_text: str = st_list[0]
+            doc_text = self.preprocess_reviews(doc_text)
 
         pos_dir: str = os.path.basename(os.path.dirname(file_path))
         movie_file: str = os.path.basename(file_path)

@@ -85,8 +85,6 @@ class IMDBClassifierTrainer:
         """
         tx.utils.maybe_create_dir(output_dir)
 
-        logging.root.setLevel(logging.INFO)
-
         # Loads data
         num_train_data = self.config_data.num_train_data
 

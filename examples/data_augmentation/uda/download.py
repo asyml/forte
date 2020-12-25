@@ -25,6 +25,10 @@ def main():
         "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"],
         path=download_path,
         extract=True)
+    maybe_download(urls=[
+        "https://storage.googleapis.com/uda_model/text/back_trans_checkpoints.zip"],
+        path=download_path,
+        extract=True)
 
 
 if __name__ == '__main__':
