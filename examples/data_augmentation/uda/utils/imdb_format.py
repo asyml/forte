@@ -48,7 +48,7 @@ def main():
         "test": ["pos", "neg"],
     }
 
-    back_trans_data_path = "back_trans_data/"
+    back_trans_data_path = "back_trans/"
     maybe_create_dir(back_trans_data_path)
     split_sent_output_path = os.path.join(back_trans_data_path, "train_split_sent.txt")
     doc_len_path = os.path.join(back_trans_data_path, "train_doc_len.json")

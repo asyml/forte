@@ -20,14 +20,15 @@ from forte.data.data_utils import maybe_download
 
 
 def main():
-    download_path = "data/IMDB_raw"
+    imdb_path = "data/IMDB_raw"
     maybe_download(urls=[
         "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"],
-        path=download_path,
+        path=imdb_path,
         extract=True)
+    bt_path = "back_trans"
     maybe_download(urls=[
         "https://storage.googleapis.com/uda_model/text/back_trans_checkpoints.zip"],
-        path=download_path,
+        path=bt_path,
         extract=True)
 
 
