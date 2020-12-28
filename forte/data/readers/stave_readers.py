@@ -69,6 +69,7 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
     """
 
     def initialize(self, resources: Resources, configs: Config):
+        # pylint: disable=attribute-defined-outside-init
         super().initialize(resources, configs)
 
         if not configs.stave_db_path:
@@ -79,7 +80,7 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
         self.data_packs: Dict[int, DataPack] = load_all_datapacks(
             self.conn, configs.datapack_table, configs.pack_content_col)
 
-    def _get_multipack_content(self) -> Iterator[str]:
+    def _get_multipack_content(self) -> Iterator[str]:  # type: ignore
         c = self.conn.cursor()
         for value in c.execute(
                 f'SELECT textPack FROM {self.configs.multipack_table}'):
@@ -116,7 +117,7 @@ class StaveDataPackSqlReader(PackReader):
             raise ProcessorConfigError(
                 'The table name that stores the data pack is not stored.')
 
-    def _collect(self) -> Iterator[str]:
+    def _collect(self) -> Iterator[str]:  # type: ignore
         self.conn = sqlite3.connect(self.configs.stave_db_path)
         c = self.conn.cursor()
 
