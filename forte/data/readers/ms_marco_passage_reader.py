@@ -28,8 +28,6 @@ COmprehension Dataset." (2016).
 import os
 from typing import Iterator, Tuple
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from ft.onto.base_ontology import Document
@@ -40,14 +38,6 @@ __all__ = [
 
 
 class MSMarcoPassageReader(PackReader):
-    def __init__(self):
-        super().__init__()
-        self.configs = None
-
-    def initialize(self, resources: Resources, configs: Config):
-        # pylint: disable = unused-argument
-        self.configs = configs
-
     def _collect(self, *args, **kwargs) -> Iterator[Tuple[str, str]]:
         # pylint: disable = unused-argument, undefined-variable
         dir_path: str = args[0]

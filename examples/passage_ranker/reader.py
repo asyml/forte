@@ -14,8 +14,6 @@
 
 from typing import Iterator
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
 from ft.onto.base_ontology import Document
@@ -26,11 +24,6 @@ class EvalReader(MultiPackReader):
     # pylint: disable=no-self-use,unused-argument
     def _cache_key_function(self, collection) -> str:
         return "cached_string_file"
-
-    # pylint: disable=attribute-defined-outside-init
-    def initialize(self, resources: Resources, configs: Config):
-        self.resource = resources
-        self.config = configs
 
     # pylint: disable=no-self-use
     def _collect(self, *args, **kwargs) -> Iterator[str]:
@@ -43,7 +36,7 @@ class EvalReader(MultiPackReader):
         fields = data_source.split("\t")
         multi_pack = MultiPack()
 
-        data_pack = multi_pack.add_pack(self.config.pack_name)
+        data_pack = multi_pack.add_pack(self.configs.pack_name)
 
         data_pack.pack_name = fields[0]
         data_pack.set_text(fields[1])
