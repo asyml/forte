@@ -33,7 +33,7 @@ setuptools.setup(
         'typed_ast==1.4.0',
         'jsonschema==3.0.2',
         'texar-pytorch',
-        'typing>=3.7.4',
+        'typing>=3.7.4;python_version<"3.5"',
         'typing-inspect>=0.6.0',
         'dataclasses~=0.7;python_version<"3.7"'
     ],
@@ -53,8 +53,7 @@ setuptools.setup(
         'cliner': ['marisa-trie==0.7.4', 'scipy==1.5.0',
                    'scikit-learn==0.23.1', 'repoze.lru==0.7',
                    'tensorflow-gpu==1.12.0', 'python-crfsuite==0.9.7'],
-
-        'augment': ['elasticsearch==7.5.1', 'transformers>=3.1'],
+        'augment': ['elasticsearch==7.5.1', 'transformers>=3.1']
     },
     entry_points={
         'console_scripts': [

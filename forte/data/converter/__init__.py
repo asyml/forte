@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2020 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.processors.base.base_processor import *
-from forte.processors.base.batch_processor import *
-from forte.processors.base.index_processor import *
-from forte.processors.base.pack_processor import *
-from forte.processors.base.query_processor import *
-from forte.processors.base.writers import *
-from forte.processors.base.data_augment_processor import *
-from forte.processors.base.data_selector_for_da import *
+from forte.data.converter.converter import *
+from forte.data.converter.feature import *
