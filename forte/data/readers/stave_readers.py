@@ -118,6 +118,7 @@ class StaveDataPackSqlReader(PackReader):
                 'The table name that stores the data pack is not stored.')
 
     def _collect(self) -> Iterator[str]:  # type: ignore
+        # pylint: disable=attribute-defined-outside-init
         self.conn = sqlite3.connect(self.configs.stave_db_path)
         c = self.conn.cursor()
 

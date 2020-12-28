@@ -24,6 +24,7 @@ from typing import List, Optional, overload, Union
 
 import jsonpickle
 
+from forte.data.base_pack import BasePack
 from forte.utils.types import PathLike
 from forte.utils.utils_io import maybe_create_dir
 
@@ -37,28 +38,29 @@ __all__ = [
 # pylint: disable=unused-argument,function-redefined,missing-docstring
 
 @overload
-def maybe_download(urls: List[str], path: PathLike,
+def maybe_download(urls: List[str], path: str,
                    filenames: Optional[List[str]] = None,
                    extract: bool = False) -> List[str]: ...
 
 
 @overload
-def maybe_download(urls: str, path: PathLike, filenames: Optional[str] = None,
+def maybe_download(urls: str, path: str,
+                   filenames: Optional[str] = None,
                    extract: bool = False) -> str: ...
 
 
-def maybe_download(urls: Union[List[PathLike], PathLike],
-                   path: PathLike, filenames: Union[List, str] = None,
-                   extract=False):
+def maybe_download(urls: Union[List[str], str], path: str,
+                   filenames: Union[List[str], str, None] = None,
+                   extract: bool = False):
     r"""Downloads a set of files.
 
     Args:
         urls: A (list of) URLs to download files.
-        path (str): The destination path to save the files.
+        path: The destination path to save the files.
         filenames: A (list of) strings of the file names. If given,
             must have the same length with :attr:`urls`. If `None`,
             filenames are extracted from :attr:`urls`.
-        extract (bool): Whether to extract compressed files.
+        extract: Whether to extract compressed files.
 
     Returns:
         A list of paths to the downloaded files.
@@ -184,13 +186,15 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     return filepath
 
 
-def deserialize(string: str):
-    r"""Deserialize a pack from a string.
+def deserialize(string: str) -> BasePack:
+    """
+    Deserialize a pack from a string.
+
+    Args:
+        string: The raw string to deserialize from.
+
+    Returns:
+
     """
     pack = jsonpickle.decode(string)
-    # Need to assign the pack manager to the pack to control it after reading
-    #  the raw data.
-    # pylint: disable=protected-access
-    # pack._pack_manager = pack_manager
-    # pack_manager.set_remapped_pack_id(pack)
     return pack

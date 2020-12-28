@@ -128,10 +128,11 @@ class MultiPackDeserializerBase(MultiPackReader):
 
         for pid in m_pack.pack_ids():
             p_content = self._get_pack_content(pid)
+            pack: DataPack
             if isinstance(p_content, DataPack):
-                pack: DataPack = p_content
+                pack = p_content
             else:
-                pack: DataPack = deserialize(self._get_pack_content(pid))
+                pack = deserialize(self._get_pack_content(pid))
             # Only in deserialization we can do this.
             m_pack.packs.append(pack)
         yield m_pack
@@ -175,7 +176,7 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
     a directory too (they can be the same directory).
     """
 
-    def _get_multipack_content(self) -> Iterator[str]:
+    def _get_multipack_content(self) -> Iterator[str]:  # type: ignore
         # pylint: disable=protected-access
         for f in os.listdir(self.configs.multi_pack_dir):
             if f.endswith(self.configs.pack_suffix):
