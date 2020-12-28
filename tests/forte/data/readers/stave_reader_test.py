@@ -53,7 +53,7 @@ class StaveReaderTest(unittest.TestCase):
     @data('project-1-example', 'project-2-example')
     def test_stave_reader_project(self, project_name: str):
         def build_ontology():
-            onto_path = "new_onto"
+            onto_path = "."
             res = self._query(f'SELECT ontology FROM nlpviewer_backend_project '
                               f'WHERE nlpviewer_backend_project.name = '
                               f'"{project_name}"').fetchone()[0]
@@ -68,8 +68,6 @@ class StaveReaderTest(unittest.TestCase):
             except Exception:
                 pass
 
-        # TODO, the data from Stave may have a wrong Span annotation type
-        #   maybe adding PYTHONPATH of fixing this is OK.
         build_ontology()
 
         # Query packs in this project directly.
