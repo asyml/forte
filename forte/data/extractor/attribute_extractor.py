@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import logging
+from collections import Hashable, abc
 from typing import Dict, Any, Union, Iterable
-from collections import abc
 from ft.onto.base_ontology import Entry, Annotation
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -35,7 +35,7 @@ class AttributeExtractor(BaseExtractor):
         config: An instance of `Dict` or
             :class:`forte.common.configuration.Config`
 
-            attribute: str. Required. The attribute name of the
+            attribute (str): Required. The attribute name of the
                 entry from which features will be extracted. For
                 example, "text" attribute of Token.
     """
@@ -71,6 +71,14 @@ class AttributeExtractor(BaseExtractor):
         r"""Functionality: Get the attribute from entry. You can
         overwrite this function if you have sepcial way to get the
         attribute from entry.
+
+        Args:
+            entry (Entry): An instance of Entry type, where the
+                attribute will be extracted from.
+            attr (str): The name of the attribute.
+
+        Returns:
+            Any. The attribute extracted from entry.
         """
         return getattr(entry, attr)
 
@@ -79,6 +87,12 @@ class AttributeExtractor(BaseExtractor):
         r"""Functionality: Set the attribute of an entry to value.
         You can overwrite this function if you have sepcial way to
         set the attribute.
+
+        Args:
+            entry (Entry): An instance of Entry type, where the
+                attribute will be set.
+            attr (str): The name of the attribute.
+            value (Any): The value to be set for the attribute.
         """
         if attr == "text":
             raise AttributeError("text attribute of entry cannot "
@@ -88,13 +102,35 @@ class AttributeExtractor(BaseExtractor):
     def update_vocab(self, pack: DataPack, instance: Annotation):
         r"""Functionality: Get all attributes of one instance and
         add them into the vocabulary.
+
+        Args:
+            pack (DataPack): The datapack that contains the current
+                instance.
+            instance (Annotation): The instance from which the
+                extractor will extractor feature.
         """
         for entry in pack.get(self.config.entry_type, instance):
-            self.add(self.get_attribute(entry, self.config.attribute))
+            element = self.get_attribute(entry, self.config.attribute)
+            if not isinstance(element, Hashable):
+                raise AttributeError("Only hashable element can be"
+                    "added into the vocabulary. Consider setting"
+                    "vocab_method to be raw and do not call update_vocab"
+                    "if you only need the raw attribute value without"
+                    "coverting them into index.")
+            self.add(element)
 
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
-        r"""Functionality: Extractor the attributes of one instance.
+        r"""Functionality: Extract attributes of one instance.
         For example, the text of tokens in one sentence.
+
+        Args:
+            pack (Datapack): The datapack that contains the current
+                instance.
+            instance (Annotation): The instance from which the
+                extractor will extractor feature.
+
+        Returns:
+            Feature: a feature that contains the extracted data.
         """
         data = []
         for entry in pack.get(self.config.entry_type, instance):
@@ -110,10 +146,18 @@ class AttributeExtractor(BaseExtractor):
                        metadata=meta_data,
                        vocab=self.vocab)
 
-    def remove_from_pack(self, pack: DataPack, instance: Annotation):
+    def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
         r"""Funcationality: Remove attributes of one instance. For
         example remove all pos tags of tokens in one sentence, if the
-        entry_type is Token and the attribute is pos.
+        entry_type is Token and the attribute is pos.  This function is
+        called before the evaluation on a pack. After features are removed,
+        new features predicted from the model will be added to the pack.
+
+        Args:
+            pack (Datapack): The datapack that contains the current
+                instance.
+            instance (Annotation): The instance from which the
+                extractor will extractor feature.
         """
         for entry in pack.get(self.config.entry_type, instance):
             self.set_attribute(entry, self.config.attribute, None)
@@ -124,7 +168,17 @@ class AttributeExtractor(BaseExtractor):
         instance. If the prediction is an iterable object, we assume
         each of the element in prediction will correspond to one entry.
         If the prediction is only one element, then we assume there will
-        only be one entry in the instance."""
+        only be one entry in the instance.
+
+        Args:
+            pack (Datapack): The datapack that contains the current
+                instance.
+            instance (Annotation): The instance to which the
+                extractor add prediction.
+            prediction (Iterable[Union[int, Any]]): This is the output
+                of the model, which contains the index for attributes
+                of one instance.
+        """
         instance_entry = list(pack.get(self.config.entry_type, instance))
 
         if not isinstance(prediction, abc.Iterable):
