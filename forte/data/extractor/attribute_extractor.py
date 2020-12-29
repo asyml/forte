@@ -138,7 +138,8 @@ class AttributeExtractor(BaseExtractor):
             rep = self.element2repr(value) if self.vocab else value
             data.append(rep)
 
-        meta_data = {"pad_value": self.get_pad_value(),
+        meta_data = {"need_pad": self.config.need_pad,
+                     "pad_value": self.get_pad_value(),
                      "dim": 1,
                      "dtype": int if self.vocab else Any}
 
