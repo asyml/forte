@@ -61,9 +61,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
 
-        # Store the global ids.
+        # Store the pack ids of the subpacks. Note that these are UUIDs so
+        # they should be globally non-conflicting.
         self._pack_ref: List[int] = []
-        # Store the reverse mapping from global id to the pack index.
+        # Store the reverse mapping from pack id to the pack index.
         self._inverse_pack_ref: Dict[int, int] = {}
 
         # Store the pack names.
@@ -258,10 +259,15 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         return self._packs[self._name_index[name]]
 
+    def pack_ids(self) -> List[int]:
+        return self._pack_ref
+
     @property
     def packs(self) -> List[DataPack]:
         """
         Get the list of Data packs that in the order of added.
+
+        Note that please do not use this
 
         Returns: List of data packs contained in this multi-pack.
 
