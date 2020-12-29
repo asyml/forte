@@ -27,3 +27,4 @@ API
    code/evaluation.rst
    code/data_aug.rst
    code/train_preprocessor.rst
+   code/vocabulary.rst
