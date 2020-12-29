@@ -129,10 +129,10 @@ class MultiPackDeserializerBase(MultiPackReader):
         for pid in m_pack.pack_ids():
             p_content = self._get_pack_content(pid)
             pack: DataPack
-            if isinstance(p_content, DataPack):
-                pack = p_content
+            if isinstance(p_content, str):
+                pack = deserialize(p_content)
             else:
-                pack = deserialize(self._get_pack_content(pid))
+                pack = p_content
             # Only in deserialization we can do this.
             m_pack.packs.append(pack)
         yield m_pack

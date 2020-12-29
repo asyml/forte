@@ -20,11 +20,11 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
+from os import PathLike
 from typing import List, Optional, overload, Union
 
 import jsonpickle
 
-from forte.data.base_pack import BasePack
 from forte.utils.utils_io import maybe_create_dir
 
 __all__ = [
@@ -37,18 +37,18 @@ __all__ = [
 # pylint: disable=unused-argument,function-redefined,missing-docstring
 
 @overload
-def maybe_download(urls: List[str], path: str,
+def maybe_download(urls: List[str], path: Union[str, PathLike],
                    filenames: Optional[List[str]] = None,
                    extract: bool = False) -> List[str]: ...
 
 
 @overload
-def maybe_download(urls: str, path: str,
+def maybe_download(urls: str, path: Union[str, PathLike],
                    filenames: Optional[str] = None,
                    extract: bool = False) -> str: ...
 
 
-def maybe_download(urls: Union[List[str], str], path: str,
+def maybe_download(urls: Union[List[str], str], path: Union[str, PathLike],
                    filenames: Union[List[str], str, None] = None,
                    extract: bool = False):
     r"""Downloads a set of files.
@@ -119,7 +119,7 @@ def maybe_download(urls: Union[List[str], str], path: str,
 # pylint: enable=unused-argument,function-redefined,missing-docstring
 
 
-def _download(url: str, filename: str, path: str) -> str:
+def _download(url: str, filename: str, path: Union[PathLike, str]) -> str:
     def _progress_hook(count, block_size, total_size):
         percent = float(count * block_size) / float(total_size) * 100.
         sys.stdout.write(f'\r>> Downloading {filename} {percent:.1f}%')
@@ -144,7 +144,8 @@ def _extract_google_drive_file_id(url: str) -> str:
     return file_id
 
 
-def _download_from_google_drive(url: str, filename: str, path: str) -> str:
+def _download_from_google_drive(url: str, filename: str,
+                                path: Union[str, PathLike]) -> str:
     r"""Adapted from `https://github.com/saurabhshri/gdrive-downloader`
     """
 
@@ -185,7 +186,7 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     return filepath
 
 
-def deserialize(string: str) -> BasePack:
+def deserialize(string: str):
     """
     Deserialize a pack from a string.
 
