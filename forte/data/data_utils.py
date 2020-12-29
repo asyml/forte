@@ -25,7 +25,6 @@ from typing import List, Optional, overload, Union
 import jsonpickle
 
 from forte.data.base_pack import BasePack
-from forte.utils.types import PathLike
 from forte.utils.utils_io import maybe_create_dir
 
 __all__ = [
