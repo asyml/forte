@@ -121,8 +121,6 @@ class TrainPreprocessorTest(unittest.TestCase):
                                        BaseExtractor))
             self.assertTrue(isinstance(scheme["converter"], Converter))
 
-        # TODO: test invalid request
-
     def test_build_vocab(self):
         schemes: Dict[str, Any] = \
             self.train_preprocessor.request["schemes"]
