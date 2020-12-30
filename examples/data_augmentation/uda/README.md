@@ -10,25 +10,93 @@ In this example, we demonstrate Forte's implementation of UDA using a simple BER
 
 You need to install [texar-pytorch](https://github.com/asyml/texar-pytorch) first.
 
-### Get the IMDB data
+You will also need to install `tensor2tensor` if you want to perform back translation on your own data. We will cover this later.
 
-We use the IMDB Text Classification dataset for this example. Use the following script to download the supervised and unsupervised training data.
+### Get the IMDB data and back-translation models
 
- ```bash
-python download_imdb.py
-```
-
-### Preproces and generate augmented data
-
-You can use the following script to process the data into CSV format.
+We use the IMDB Text Classification dataset for this example. Use the following script to download the supervised and unsupervised training data to `data/IMDB_raw`. It will also download the pre-trained translation models for back-translation to the directory `back_trans`.
 
  ```bash
-python imdb_format.py
+python download.py
 ```
 
-The next step is to generate augment training data (using your favorite back translation model) and output to a TXT file. Each example in the file should correspond to the same line in `train.csv` (without headers).
+### Preprocess
 
-For demonstration purpose, we provide the processed and augmented [data files](https://drive.google.com/file/d/1OKrbS76mbGCIz3FcFQ8-qPpMTQkQy8bP/view?usp=sharing). Place the CSV and txt files in directory `data/IMDB`.
+You can use the following script to preprocess the data.
+
+ ```bash
+python utils/imdb_format.py
+```
+
+This script does two things. It reads the raw data in TXT format and output two files `train.csv` and `test.csv`. It also splits the training set into sentences for back-translation. This is because the back-translation models are trained on sentences instead of long paragraphs.
+
+### Generate back-translation data
+
+**Notice:** back-translation is the most time-consuming step. If you just want to see the results, you can skip to the next section. Translating the whole dataset to French takes ~2 days on a GTX 1080 Ti. It takes another 2 days to translate back to English.
+
+If you would like to play with the back-translation parameters or work with your own data, you need to generate back-translation data yourself. Here we provide an example of back-translation on the IMDB dataset.
+
+First, you need to install `tensor2tensor` with Tensorflow 1.13. We provide a `requirements.txt` with the correct versions of dependencies. To install:
+
+```
+cd back_trans/
+pip install -r requirements.txt
+pip install --no-deps tensor2tensor==1.13
+```
+
+Then run the following command to run the back-translation (adapted from the original [UDA repo](https://github.com/google-research/uda/blob/master/back_translate/run.sh)):
+
+```
+cd back_trans/
+
+# forward translation
+t2t-decoder \
+  --problem=translate_enfr_wmt32k \
+  --model=transformer \
+  --hparams_set=transformer_big \
+  --hparams="sampling_method=random,sampling_temp=0.8" \
+  --decode_hparams="beam_size=1,batch_size=16" \
+  --checkpoint_path=checkpoints/enfr/model.ckpt-500000 \
+  --output_dir=/tmp/t2t \
+  --decode_from_file=train_split_sent.txt \
+  --decode_to_file=forward_gen.txt \
+  --data_dir=checkpoints
+
+# backward translation
+t2t-decoder \
+  --problem=translate_enfr_wmt32k_rev \
+  --model=transformer \
+  --hparams_set=transformer_big \
+  --hparams="sampling_method=random,sampling_temp=0.8" \
+  --decode_hparams="beam_size=1,batch_size=16,alpha=0" \
+  --checkpoint_path=checkpoints/fren/model.ckpt-500000 \
+  --output_dir=/tmp/t2t \
+  --decode_from_file=forward_gen.txt \
+  --decode_to_file=backward_gen.txt \
+  --data_dir=checkpoints
+
+# merge sentences back to paragraphs
+python merge_back_trans_sentences.py \
+--input_file=backward_gen.txt \
+--output_file=back_translate.txt \
+--doc_len_file=train_doc_len.json
+```
+
+You can tune the `sampling_temp` parameter. See [here](https://github.com/google-research/uda#guidelines-for-hyperparameters) for more details.
+
+The final result of the above commands is `back_translate.txt`. Each line in the file is a back translated example corresponding to the same line in `train.csv` (without the header).
+
+Next, copy `back_translate.txt` to `data/IMDB/`.
+
+```
+cp back_translate.txt ../data/IMDB/
+```
+
+Of course, you can use a different name for the back translation file. Look at `config_data.py` to configure.
+
+### Download preprocessed and augmented data
+
+For demonstration purpose, we provide the processed and augmented data files: [download link](https://drive.google.com/file/d/1OKrbS76mbGCIz3FcFQ8-qPpMTQkQy8bP/view?usp=sharing). Place the CSV and txt files in directory `data/IMDB`.
 
 ### Train
 
