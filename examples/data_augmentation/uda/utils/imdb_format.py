@@ -75,7 +75,7 @@ def main():
                             sents.append(sent.text)
                             doc_len += 1
                         doc_lens.append(doc_len)
-    
+
     with open(split_sent_output_path, "w", encoding="utf-8") as output_file:
         for sent in sents:
             output_file.write(sent + "\n")

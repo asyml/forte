@@ -106,8 +106,10 @@ class LargeMovieReader(PackReader):
 
         with open(file_path, encoding="utf8") as doc:
             st_list = doc.readlines()
-            assert len(st_list) == 1
-            doc_text: str = st_list[0]
+            if len(st_list) != 1:
+                raise AssertionError("Raw data file contains more than"
+                    "one example.")
+            doc_text = st_list[0]
             doc_text = self.preprocess_reviews(doc_text)
 
         pos_dir: str = os.path.basename(os.path.dirname(file_path))

@@ -261,7 +261,7 @@ def replace_with_length_check(
 
 
 def back_translation(examples, back_translation_file, data_total_size):
-    """Run back translation."""
+    """Load back translation."""
     use_min_length = 10
     use_max_length_diff_ratio = 0.5
 
@@ -322,6 +322,10 @@ def prepare_record_data(processor, tokenizer,
         max_seq_length: Max sequence length.
         output_dir: The directory to save the pickled file in.
         feature_types: The original type of the feature.
+        unsup_feature_types: Feature types for the unsupervised data.
+        sup_size_limit: the number of supervised data to use
+        unsup_bt_file: the path to the back-translation of the
+            unsupervised dataset.
     """
     label_list = processor.get_labels()
 
@@ -379,7 +383,11 @@ def get_data_by_size_lim(train_examples, processor, sup_size):
 
 
 def prepare_data(pretrained_model_name, config_data, data_dir):
-    """Prepares data.
+    r"""Prepares data.
+    Args:
+        pretrained_model_name: the pretrained BERT model name to use
+        config_data: the config_data module
+        data_dir: path to the output record data
     """
     logging.info("Loading data")
 

@@ -27,7 +27,8 @@ def main():
         extract=True)
     bt_path = "back_trans"
     maybe_download(urls=[
-        "https://storage.googleapis.com/uda_model/text/back_trans_checkpoints.zip"],
+        "https://storage.googleapis.com/uda_model/text/"
+            "back_trans_checkpoints.zip"],
         path=bt_path,
         extract=True)
 

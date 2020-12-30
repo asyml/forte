@@ -72,7 +72,10 @@ class IMDBClassifierTrainer:
         pretrained_model_name=args.pretrained_model_name):
         """Constructs the text classifier.
         Args:
-            config_data: string, data config file.
+            trainer_config_data: data config file.
+            trainer_config_classifier: classifier config file
+            checkpoint: the saved checkpoint to use
+            pretrained_model_name: name of the pretrained model to use
         """
         self.config_data = trainer_config_data
         self.config_classifier = trainer_config_classifier
