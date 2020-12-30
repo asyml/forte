@@ -1,5 +1,5 @@
 # pylint: disable=logging-fstring-interpolation
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional, Type, Tuple, Any
 
 import numpy as np
 import torch
@@ -105,61 +105,87 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
 
         return pred
 
-    def _fill_sub_entities(self, entity_groups_disagg, data_pack, tids):
-        first_idx = entity_groups_disagg[0]['idx']
-        first_tid = entity_groups_disagg[0]['tid']
-        while first_idx > 0 and data_pack.get_entry(first_tid).is_subword:
-            first_idx -= 1
-            first_tid -= 1
+    def _complete_entity(self,
+                         subword_entities: List[Dict[str, Any]],
+                         data_pack: DataPack,
+                         tids: List[int]) -> Tuple[int, int]:
+        """ Complete entity span from predicted subword entities
 
-        last_idx = entity_groups_disagg[-1]['idx']
-        last_tid = entity_groups_disagg[-1]['tid']
-
-        # TODO: this piece of code guesses the internal id assignment, this
-        #  could be unstable. Temporary work around.
-        try:
-            while last_idx < len(tids) and data_pack.get_entry(last_tid + 1) \
-                    .is_subword:
-                last_idx += 1
-                last_tid += 1
-        except KeyError:
-            print('Encounter get entry error.')
-
-        return first_tid, last_tid
-
-    def _group_entities(self, entities, data_pack, tids):
-        """Find and group adjacent tokens considered to have the same entity
-
-        Logic: An entity starts with a "B" and extends to the end of the
-        word that contains last "I"
+        Start from the first subword with predicted entity. If this entity
+        is a subword (e.g. "##on"), then move on to the previous subword until
+        it's no longer a subword (e.g. "br")
 
         """
-        entity_groups = []
-        entity_groups_disagg = []
+
+        first_idx: int = subword_entities[0]['idx']
+        first_tid = subword_entities[0]['tid']
+        while first_idx > 0 and not data_pack.get_entry(
+            first_tid).is_first_segment:
+            first_idx -= 1
+            first_tid = tids[first_idx]
+
+        last_idx: int = subword_entities[-1]['idx']
+        while last_idx < len(tids) - 1 and not data_pack.get_entry(
+            tids[last_idx + 1]).is_first_segment:
+            last_idx += 1
+
+        return first_idx, last_idx
+
+    def _compose_entities(self,
+                          entities: List[Dict[str, Any]],
+                          data_pack: DataPack,
+                          tids: List[int]) -> List[Tuple[int, int]]:
+        """ Composes entity spans from subword entity predictions
+
+        Label Syntax:
+        A "B" label indicates the beginning of an entity, an "I" label
+        indicates the continuation of an entity, and an "O" label indicates
+        the absence of an entity.
+        Example: with - br - ##on - ##chi - ##oli - ##tis - .
+                 O    - B  - I    - I     - I     - I     - O
+
+        Due to possible instabilities of the model on out-of-distribution data,
+        sometimes the prediction may not follow the label format.
+        Example 1: with - br - ##on - ##chi - ##oli - ##tis - .
+                   O    - B  - I    - O     - I     - O     - O
+
+        Example 2: with - br - ##on - ##chi - ##oli - ##tis - .
+                   O    - O  - O    - I     - I     - I     - O
+
+        This method takes entity predictions of subwords and recovers the
+        set of complete entities, defined by the indices of their beginning
+        and ending subwords. (begin_idx, end_idx)
+        """
+
+        complete_entities: List[Tuple[int, int]] = []
+        subword_entities: List[Dict[str, Any]] = []
 
         for entity in entities:
             subword = data_pack.get_entry(entity['tid'])
-            if entity['label'] == 'B' and not subword.is_subword:
-                if entity_groups_disagg:
-                    entity_groups_disagg = \
-                        self._fill_sub_entities(entity_groups_disagg,
-                                                data_pack,
-                                                tids)
-                    entity_groups.append(entity_groups_disagg)
-                entity_groups_disagg = [entity]
+
+            if entity['label'] == 'B' and subword.is_first_segment:
+                # Flush the existing entity and start a new entity
+                if subword_entities:
+                    complete_entity = \
+                        self._complete_entity(subword_entities,
+                                              data_pack,
+                                              tids)
+                    complete_entities.append(complete_entity)
+                subword_entities = [entity]
             else:
-                entity_groups_disagg.append(entity)
+                # Continue accumuulating subword entities
+                subword_entities.append(entity)
 
-        if entity_groups_disagg:
-            entity_groups_disagg = self._fill_sub_entities(entity_groups_disagg,
-                                                           data_pack,
-                                                           tids)
-            entity_groups.append(entity_groups_disagg)
+        if subword_entities:
+            complete_entity = self._complete_entity(subword_entities,
+                                                    data_pack,
+                                                    tids)
+            complete_entities.append(complete_entity)
 
-        return entity_groups
+        return complete_entities
 
     def pack(self, data_pack: DataPack,
-             output_dict: Optional[Dict[str, Dict[str, List[str]]]] = None):
+             output_dict: Optional[Dict[str, Dict[str, List[Any]]]] = None):
         """
         Write the prediction results back to datapack. by writing the predicted
         ner to the original subwords and convert predictions to something that
@@ -173,24 +199,22 @@ class BioBERTNERPredictor(FixedSizeBatchProcessor):
             tids = output_dict["Subword"]["tid"][i]
             labels = output_dict["Subword"]["ner"][i]
 
-            # Filter to labels not in `self.ignore_labels`
+            # Filter to labels not in `self.ft_configs.ignore_labels`
             entities = [dict(idx=idx, label=label, tid=tid)
                         for idx, (label, tid) in enumerate(zip(labels, tids))
                         if label not in self.ft_configs.ignore_labels]
 
-            entity_groups = self._group_entities(entities, data_pack, tids)
+            entity_groups = self._compose_entities(entities, data_pack, tids)
             # Add NER tags and create EntityMention ontologies.
-            for first_tid, last_tid in entity_groups:
+            for first_idx, last_idx in entity_groups:
                 first_token: Subword = data_pack.get_entry(  # type: ignore
-                    first_tid)
-                first_token.ner = 'B-' + self.ft_configs.ner_type
-
-                for tid in range(first_tid + 1, last_tid + 1):
-                    token: Subword = data_pack.get_entry(tid)  # type: ignore
-                    token.ner = 'I-' + self.ft_configs.ner_type
-
+                    tids[first_idx])
                 begin = first_token.span.begin
-                end = data_pack.get_entry(last_tid).span.end
+
+                last_token: Subword = data_pack.get_entry(  # type: ignore
+                    tids[last_idx])
+                end = last_token.span.end
+
                 entity = EntityMention(data_pack, begin, end)
                 entity.ner_type = self.ft_configs.ner_type
 
