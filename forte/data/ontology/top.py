@@ -249,7 +249,7 @@ class Group(BaseGroup[Entry]):
 
 class MultiPackGeneric(MultiEntry, Entry):
     def __init__(self, pack: PackType):
-        super(MultiPackGeneric, self).__init__(pack=pack)
+        super().__init__(pack=pack)
 
 
 class MultiPackLink(MultiEntry, BaseLink):
