@@ -40,13 +40,12 @@ Dataset Paper Citation -
 
 import os
 import logging
-import re
 from typing import Iterator, List
 
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Document, Sentence
+from ft.onto.base_ontology import Document
 
 __all__ = [
     "LargeMovieReader"
@@ -101,7 +100,6 @@ class LargeMovieReader(PackReader):
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         data_pack: DataPack = DataPack()
 
-        sent_begin: int = 0
         doc_text: str = ""
 
         with open(file_path, encoding="utf8") as doc:
