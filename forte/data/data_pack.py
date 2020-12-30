@@ -73,8 +73,8 @@ class DataPack(BasePack[Entry, Link, Group]):
         self._text = ""
 
         self.annotations: SortedList[Annotation] = SortedList()
-        self.links: SortedList[Link] = SortedList()
-        self.groups: SortedList[Group] = SortedList()
+        self._links: SortedList[Link] = SortedList()
+        self._groups: SortedList[Group] = SortedList()
         self.generics: SortedList[Generics] = SortedList()
 
         self.replace_back_operations: ReplaceOperationsType = []
@@ -106,23 +106,23 @@ class DataPack(BasePack[Entry, Link, Group]):
         super().__setstate__(state)
 
         self.annotations = SortedList(self.annotations)
-        self.links = SortedList(self.links)
-        self.groups = SortedList(self.groups)
+        self._links = SortedList(self._links)
+        self._groups = SortedList(self._groups)
         self.generics = SortedList(self.generics)
 
         self.index = DataIndex()
         self.index.update_basic_index(list(self.annotations))
-        self.index.update_basic_index(list(self.links))
-        self.index.update_basic_index(list(self.groups))
+        self.index.update_basic_index(list(self._links))
+        self.index.update_basic_index(list(self._groups))
         self.index.update_basic_index(list(self.generics))
 
         for a in self.annotations:
             a.set_pack(self)
 
-        for a in self.links:
+        for a in self._links:
             a.set_pack(self)
 
-        for a in self.groups:
+        for a in self._groups:
             a.set_pack(self)
 
         for a in self.generics:
@@ -130,8 +130,8 @@ class DataPack(BasePack[Entry, Link, Group]):
 
     def __iter__(self):
         yield from self.annotations
-        yield from self.links
-        yield from self.groups
+        yield from self._links
+        yield from self._groups
         yield from self.generics
 
     def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
@@ -359,9 +359,9 @@ class DataPack(BasePack[Entry, Link, Group]):
                     )
 
         elif isinstance(entry, Link):
-            target = self.links
+            target = self._links
         elif isinstance(entry, Group):
-            target = self.groups
+            target = self._groups
         elif isinstance(entry, Generics):
             target = self.generics
         else:
@@ -407,9 +407,9 @@ class DataPack(BasePack[Entry, Link, Group]):
         if isinstance(entry, Annotation):
             target = self.annotations
         elif isinstance(entry, Link):
-            target = self.links
+            target = self._links
         elif isinstance(entry, Group):
-            target = self.groups
+            target = self._groups
         elif isinstance(entry, Generics):
             target = self.generics
         else:

@@ -79,8 +79,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     # pylint: disable=too-many-public-methods
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__()
-        self.links: List[LinkType] = []
-        self.groups: List[GroupType] = []
+        self._links: List[LinkType] = []
+        self._groups: List[GroupType] = []
 
         self.meta: BaseMeta = self._init_meta(pack_name)
         self.index: BaseIndex = BaseIndex()
@@ -421,7 +421,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                             "group object itself (Entry).")
 
         if not self.index.link_index_on:
-            self.index.build_link_index(self.links)
+            self.index.build_link_index(self._links)
 
         for tid in self.index.link_index(tid, as_parent=as_parent):
             entry: EntryType = self.get_entry(tid)
@@ -452,7 +452,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                             "group object itself (Entry).")
 
         if not self.index.group_index_on:
-            self.index.build_group_index(self.groups)
+            self.index.build_group_index(self._groups)
 
         for tid in self.index.group_index(tid):
             entry: EntryType = self.get_entry(tid)

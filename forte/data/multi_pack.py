@@ -75,8 +75,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Reference to the real packs.
         self._packs: List[DataPack] = []
 
-        self.links: SortedList[MultiPackLink] = SortedList()
-        self.groups: SortedList[MultiPackGroup] = SortedList()
+        self._links: SortedList[MultiPackLink] = SortedList()
+        self._groups: SortedList[MultiPackGroup] = SortedList()
         self.generics: SortedList[MultiPackGeneric] = SortedList()
 
         # Used to automatically give name to sub packs.
@@ -90,20 +90,20 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         super().__setstate__(state)
 
-        self.links = SortedList(self.links)
-        self.groups = SortedList(self.groups)
+        self._links = SortedList(self._links)
+        self._groups = SortedList(self._groups)
         self.generics = SortedList(self.generics)
 
         self.index = MultiIndex()
         # TODO: index those pointers?
-        self.index.update_basic_index(list(self.links))
-        self.index.update_basic_index(list(self.groups))
+        self.index.update_basic_index(list(self._links))
+        self.index.update_basic_index(list(self._groups))
         self.index.update_basic_index(list(self.generics))
 
-        for a in self.links:
+        for a in self._links:
             a.set_pack(self)
 
-        for a in self.groups:
+        for a in self._groups:
             a.set_pack(self)
 
         for a in self.generics:
@@ -133,8 +133,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return state
 
     def __iter__(self):
-        yield from self.links
-        yield from self.groups
+        yield from self._links
+        yield from self._groups
         yield from self.generics
 
     def _init_meta(self, pack_name: Optional[str] = None) -> MultiPackMeta:
@@ -305,7 +305,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._pack_names[pack_index] = new_name
 
     def iter_groups(self):
-        yield from self.groups
+        yield from self._groups
 
     def add_all_remaining_entries(self, component: Optional[str] = None):
         """
@@ -425,9 +425,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             The input entry itself
         """
         if isinstance(entry, MultiPackLink):
-            target = self.links
+            target = self._links
         elif isinstance(entry, MultiPackGroup):
-            target = self.groups
+            target = self._groups
         elif isinstance(entry, MultiPackGeneric):
             target = self.generics
         else:
@@ -518,9 +518,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         """
         if isinstance(entry, MultiPackLink):
-            target = self.links
+            target = self._links
         elif isinstance(entry, MultiPackGroup):
-            target = self.groups
+            target = self._groups
         elif isinstance(entry, MultiPackGeneric):
             target = self.generics
         else:
