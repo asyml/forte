@@ -112,7 +112,7 @@ class IMDbProcessor(DataProcessor):
                                quotechar='"'), "unsup_ext", skip_unsup=False)
         elif unsup_set == "unsup_in":
             return self._create_examples(
-                self._read_tsv(os.path.join(raw_data_dir, "unsup.csv"), quotechar='"'), "unsup_in", skip_unsup=False)
+                self._read_tsv(os.path.join(raw_data_dir, "train.csv"), quotechar='"'), "unsup_in", skip_unsup=False)
 
     def get_unsup_aug_examples(self, raw_data_dir, unsup_set):
         """See base class."""
