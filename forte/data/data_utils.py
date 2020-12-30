@@ -20,7 +20,6 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
-from os import PathLike
 from typing import List, Optional, overload, Union
 
 from forte.utils.types import PathLike
@@ -28,7 +27,6 @@ from forte.utils.utils_io import maybe_create_dir
 
 __all__ = [
     "maybe_download",
-    "deserialize"
 ]
 
 
