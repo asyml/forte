@@ -22,14 +22,11 @@ import urllib.request
 import zipfile
 from typing import List, Optional, overload
 
-import jsonpickle
-
 from forte.utils.types import PathLike
 from forte.utils.utils_io import maybe_create_dir
 
 __all__ = [
     "maybe_download",
-    "deserialize"
 ]
 
 
@@ -126,7 +123,8 @@ def _download(url: str, filename: str, path: str) -> str:
     filepath, _ = urllib.request.urlretrieve(url, filepath, _progress_hook)
     print()
     statinfo = os.stat(filepath)
-    print(f'Successfully downloaded {filename} {statinfo.st_size} bytes')
+    logging.info('Successfully downloaded %s %d bytes', filename,
+                 statinfo.st_size)
 
     return filepath
 
@@ -149,8 +147,9 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     try:
         import requests
     except ImportError:
-        print("The requests library must be installed to download files from "
-              "Google drive. Please see: https://github.com/psf/requests")
+        logging.info(
+            "The requests library must be installed to download files from "
+            "Google drive. Please see: https://github.com/psf/requests")
         raise
 
     def _get_confirm_token(response):
@@ -177,18 +176,6 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
             if chunk:
                 f.write(chunk)
 
-    print(f'Successfully downloaded {filename}')
+    logging.info('Successfully downloaded %s', filename)
 
     return filepath
-
-
-def deserialize(string: str):
-    r"""Deserialize a pack from a string.
-    """
-    pack = jsonpickle.decode(string)
-    # Need to assign the pack manager to the pack to control it after reading
-    #  the raw data.
-    # pylint: disable=protected-access
-    # pack._pack_manager = pack_manager
-    # pack_manager.set_remapped_pack_id(pack)
-    return pack

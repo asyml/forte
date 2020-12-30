@@ -141,6 +141,21 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         """
         self.meta.pack_name = pack_name
 
+    @classmethod
+    def _deserialize(cls, string: str) -> "PackType":
+        """
+        This function should deserialize a Pack from a string. The
+         implementation should decide the specific pack type.
+
+        Args:
+            string: The serialized string to be deserialized.
+
+        Returns:
+            An pack object deserialized from the string.
+        """
+        pack = jsonpickle.decode(string)
+        return pack
+
     @abstractmethod
     def delete_entry(self, entry: EntryType):
         r""" Remove the entry from the pack.

@@ -307,6 +307,21 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         return Span(orig_begin, orig_end)
 
+    @classmethod
+    def deserialize(cls, string: str) -> "DataPack":
+        """
+        Deserialize a Data Pack from a string. This internally calls the
+          internal :meth:`~forte.data.BasePack._deserialize` function from the
+          :class:`~forte.data.BasePack`.
+
+        Args:
+            string: The serialized string of a data pack to be deserialized.
+
+        Returns:
+            An data pack object deserialized from the string.
+        """
+        return cls._deserialize(string)
+
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
