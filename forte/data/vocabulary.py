@@ -125,7 +125,7 @@ class Vocabulary:
         }
 
     @classmethod
-    def from_state(cls, state: Dict) -> object:
+    def from_state(cls, state: Dict) -> "Vocabulary":
         obj = cls(state["method"], state["need_pad"], state["use_unk"])
         obj.element2id_dict = state["element2id_dict"]
         obj.id2element_dict = state["id2element_dict"]
