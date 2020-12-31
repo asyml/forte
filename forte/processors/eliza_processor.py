@@ -24,8 +24,7 @@ the paper at: https://dl.acm.org/doi/10.1145/365153.365168
 import logging
 import random
 import re
-
-from typing import List, Dict
+from typing import List, Dict, Union
 
 from forte.common import Resources
 from forte.common.configuration import Config
@@ -68,9 +67,9 @@ class ElizaProcessor(PackProcessor):
         self.initials: List[str] = []
         self.finals: List[str] = []
         self.quits: List[str] = []
-        self.pres: Dict[str, str] = {}
-        self.posts: Dict[str, str] = {}
-        self.synons: Dict[str, str] = {}
+        self.pres: Dict[str, List[str]] = {}
+        self.posts: Dict[str, List[str]] = {}
+        self.synons: Dict[str, List[str]] = {}
         self.keys: Dict[str, Key] = {}
         self.memory: List[str] = []
 
@@ -78,7 +77,7 @@ class ElizaProcessor(PackProcessor):
         self.__user: str = 'user'
 
     def initialize(self, resources: Resources, configs: Config):
-        parse_nodes = []
+        parse_nodes: List[Union[Key, Decomp]] = []
 
         for line in __doctor__.splitlines():
             if not line.strip():
@@ -125,13 +124,13 @@ class ElizaProcessor(PackProcessor):
                         parent_node.decomps.append(decomp)
                         parse_nodes.append(decomp)
                     else:
-                        raise ValueError("Unexpected parent node %s", tag)
+                        raise ValueError(f"Unexpected parent node {tag}")
                 if isinstance(parent_node, Decomp):
                     if tag == 'reasmb':
                         parts = content.split(' ')
                         parent_node.reasmbs.append(parts)
                     else:
-                        raise ValueError("Unexpected parent node %s", tag)
+                        raise ValueError(f"Unexpected parent node {tag}")
 
     def _match_decomp_r(self, parts, words, results):
         if not parts and not words:
@@ -651,6 +650,5 @@ if __name__ == '__main__':
     p: Pipeline[DataPack] = Pipeline()
     p.set_reader(StringReader())
     p.add(ElizaProcessor())
-    result = p.process('')
-
-    print(result.text)
+    p.initialize()
+    print(p.process('').text)
