@@ -337,13 +337,13 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 child = mpl.get_child()
                 num_mpl_aug += 1
                 self.assertEqual(parent.text, child.text)
-                self.assertNotEqual(parent.pack.meta.pack_id, child.pack.meta.pack_id)
+                self.assertNotEqual(parent.pack.pack_id, child.pack.pack_id)
 
             for mpg in m_pack.get(MultiPackGroup):
                 members = mpg.get_members()
                 num_mpg_aug += 1
                 self.assertEqual(members[0].text, members[1].text)
-                self.assertNotEqual(members[0].pack.meta.pack_id, members[1].pack.meta.pack_id)
+                self.assertNotEqual(members[0].pack.pack_id, members[1].pack.pack_id)
 
             # Test the number of MultiPackLink/MultiPackGroup.
             # Minus the aug and orig counters by 1, because the Document is not copied.

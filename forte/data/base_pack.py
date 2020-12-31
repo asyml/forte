@@ -82,15 +82,15 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self.links: List[LinkType] = []
         self.groups: List[GroupType] = []
 
-        self.meta: BaseMeta = self._init_meta(pack_name)
-        self.index: BaseIndex = BaseIndex()
+        self._meta: BaseMeta = self._init_meta(pack_name)
+        self._index: BaseIndex = BaseIndex()
 
         self.__control_component: Optional[str] = None
         self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
 
     def __getstate__(self):
         state = super().__getstate__()
-        state.pop('index')
+        state.pop('_index')
         state.pop('_pending_entries')
         state.pop('_BasePack__control_component')
         return state
@@ -106,13 +106,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
-            if not hasattr(self.meta, k):
+            if not hasattr(self._meta, k):
                 raise AttributeError(f"Meta has no attribute named {k}")
-            setattr(self.meta, k, v)
+            setattr(self._meta, k, v)
 
     @property
     def pack_id(self):
-        return self.meta.pack_id
+        return self._meta.pack_id
 
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:
@@ -126,7 +126,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     @property
     def pack_name(self):
-        return self.meta.pack_name
+        return self._meta.pack_name
 
     @pack_name.setter
     def pack_name(self, pack_name: str):
@@ -139,7 +139,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        self.meta.pack_name = pack_name
+        self._meta.pack_name = pack_name
 
     @classmethod
     def _deserialize(cls, string: str) -> "PackType":
@@ -312,7 +312,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def get_entry(self, tid: int) -> EntryType:
         r"""Look up the entry_index with key ``ptr``. Specific implementation
         depends on the actual class."""
-        entry: EntryType = self.index.get_entry(tid)
+        entry: EntryType = self._index.get_entry(tid)
         if entry is None:
             raise KeyError(
                 f"There is no entry with tid '{tid}'' in this datapack")
@@ -383,7 +383,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
              and also includes instances of the subclasses of entry_type).
         """
         subclass_index: Set[int] = set()
-        for index_key, index_val in self.index.iter_type_index():
+        for index_key, index_val in self._index.iter_type_index():
             if issubclass(index_key, entry_type):
                 subclass_index.update(index_val)
         return subclass_index
@@ -435,10 +435,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             raise TypeError("Can only get group via entry id (int) or the "
                             "group object itself (Entry).")
 
-        if not self.index.link_index_on:
-            self.index.build_link_index(self.links)
+        if not self._index.link_index_on:
+            self._index.build_link_index(self.links)
 
-        for tid in self.index.link_index(tid, as_parent=as_parent):
+        for tid in self._index.link_index(tid, as_parent=as_parent):
             entry: EntryType = self.get_entry(tid)
             if self.validate_link(entry):
                 links.append(entry)  # type: ignore
@@ -466,10 +466,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             raise TypeError("Can only get group via entry id (int) or the "
                             "group object itself (Entry).")
 
-        if not self.index.group_index_on:
-            self.index.build_group_index(self.groups)
+        if not self._index.group_index_on:
+            self._index.build_group_index(self.groups)
 
-        for tid in self.index.group_index(tid):
+        for tid in self._index.group_index(tid):
             entry: EntryType = self.get_entry(tid)
             if self.validate_group(entry):
                 groups.add(entry)  # type: ignore
