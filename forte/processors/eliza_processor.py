@@ -73,10 +73,12 @@ class ElizaProcessor(PackProcessor):
         self.keys: Dict[str, Key] = {}
         self.memory: List[str] = []
 
+        self.parse_doctor()
+
         self.__ai: str = 'ai'
         self.__user: str = 'user'
 
-    def initialize(self, *_):
+    def parse_doctor(self):
         parse_nodes: List[Union[Key, Decomp]] = []
 
         for line in __doctor__.splitlines():
