@@ -24,7 +24,7 @@ the paper at: https://dl.acm.org/doi/10.1145/365153.365168
 import logging
 import random
 import re
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 
 from forte.common import Resources
 from forte.common.configuration import Config
@@ -76,7 +76,7 @@ class ElizaProcessor(PackProcessor):
         self.__ai: str = 'ai'
         self.__user: str = 'user'
 
-    def initialize(self, resources: Resources, configs: Config):
+    def initialize(self, *_):
         parse_nodes: List[Union[Key, Decomp]] = []
 
         for line in __doctor__.splitlines():
@@ -270,8 +270,8 @@ class ElizaProcessor(PackProcessor):
         return " ".join(output)
 
     def _process(self, input_pack: DataPack):
-        utterance: Utterance = get_last_utterance(input_pack, 'user')
-        if not utterance:
+        utterance: Optional[Utterance] = get_last_utterance(input_pack, 'user')
+        if utterance is None:
             logging.info("Cannot get new user utterance. Showing initials.")
             create_utterance(input_pack, random.choice(self.initials), 'ai')
         else:
