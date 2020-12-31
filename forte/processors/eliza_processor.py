@@ -146,7 +146,7 @@ class ElizaProcessor(PackProcessor):
             return False
         elif parts[0].startswith('@'):
             root = parts[0][1:]
-            if not root in self.synons:
+            if root not in self.synons:
                 raise ValueError("Unknown synonym root {}".format(root))
             if not words[0].lower() in self.synons[root]:
                 return False
@@ -211,7 +211,7 @@ class ElizaProcessor(PackProcessor):
             logging.debug('Using reassembly: %s', reasmb)
             if reasmb[0] == 'goto':
                 goto_key = reasmb[1]
-                if not goto_key in self.keys:
+                if goto_key not in self.keys:
                     raise ValueError("Invalid goto key {}".format(goto_key))
                 logging.debug('Goto key: %s', goto_key)
                 return self._match_key(words, self.keys[goto_key])
@@ -643,7 +643,7 @@ key: alike 10
     reasmb: How ?
 key: like 10
   decomp: * @be * like *
-    reasmb: goto alike   
+    reasmb: goto alike
 """
 
 if __name__ == '__main__':
