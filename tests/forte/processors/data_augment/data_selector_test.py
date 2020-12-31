@@ -26,7 +26,7 @@ from forte.processors.data_augment.selector_index_processor \
     import DataSelectorIndexProcessor
 from forte.data.readers import MSMarcoPassageReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
-from forte.processors.base.data_selector_for_da import \
+from forte.processors.data_augment.data_selector_for_da import \
     QueryDataSelector, RandomDataSelector
 
 

@@ -19,7 +19,7 @@ in order to perform data selection.
 Refer to examples/data_augmentation/data_select_index_pipeline.py
 for indexer creation.
 """
-
+from abc import ABC
 from typing import Iterator, Any, Dict, Optional
 
 from forte.common.resources import Resources
@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-class BaseDataSelector(PackReader):
+class BaseDataSelector(PackReader, ABC):
     r"""A base data selector for data augmentation.
     It is a reader that selects a subset from the dataset and yields datapacks.
     """

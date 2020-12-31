@@ -44,10 +44,11 @@ Please refer to `data_select_index_pipeline.py` and `create_indexer_example.py` 
 
 ```python
 # Random data select.
-from forte.processors.base.data_selector_for_da import RandomDataSelector
+from forte.processors.data_augment.data_selector_for_da import
+    RandomDataSelector
 
-data_selector_config = {"index_config": 
-                            {"index_name": indexer_name}, 
+data_selector_config = {"index_config":
+                            {"index_name": indexer_name},
                         "size": size}
 
 nlp: Pipeline[DataPack] = Pipeline()
@@ -55,15 +56,15 @@ nlp.set_reader(RandomDataSelector(), config=data_selector_config)
 nlp.initialize()
 
 for idx, pack in nlp.process_dataset():
-	# Do something.
+# Do something.
 
 # Query-based data selector.
-from forte.processors.base.data_selector_for_da import QueryDataSelector
+from forte.processors.data_augment.data_selector_for_da import QueryDataSelector
 
 data_selector_config = {"index_config":
                             {"index_name": index_name},
                         "size": size,
-                        "field": "content"}	# field: the field to index from
+                        "field": "content"}  # field: the field to index from
 
 nlp: Pipeline[DataPack] = Pipeline()
 nlp.set_reader(QueryDataSelector(), config=data_selector_config)
@@ -75,7 +76,7 @@ nlp.initialize()
 # 	query 2
 # 	...
 for pack in nlp.process_dataset(file_path):
-	# Do something.
+# Do something.
 ```
 Please refer to `forte.processors.base.data_selector_for_da.py` for details of the data selector processor. Refer to `data_select_and_augment_example.py` for details of how to insert the data selector processor into a pipeline.
 
