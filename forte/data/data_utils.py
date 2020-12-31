@@ -20,16 +20,13 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
-from os import PathLike
 from typing import List, Optional, overload, Union
 
-import jsonpickle
-
+from forte.utils.types import PathLike
 from forte.utils.utils_io import maybe_create_dir
 
 __all__ = [
     "maybe_download",
-    "deserialize"
 ]
 
 
@@ -129,7 +126,8 @@ def _download(url: str, filename: str, path: Union[PathLike, str]) -> str:
     filepath, _ = urllib.request.urlretrieve(url, filepath, _progress_hook)
     print()
     statinfo = os.stat(filepath)
-    print(f'Successfully downloaded {filename} {statinfo.st_size} bytes')
+    logging.info('Successfully downloaded %s %d bytes', filename,
+                 statinfo.st_size)
 
     return filepath
 
@@ -153,8 +151,9 @@ def _download_from_google_drive(url: str, filename: str,
     try:
         import requests
     except ImportError:
-        print("The requests library must be installed to download files from "
-              "Google drive. Please see: https://github.com/psf/requests")
+        logging.info(
+            "The requests library must be installed to download files from "
+            "Google drive. Please see: https://github.com/psf/requests")
         raise
 
     def _get_confirm_token(response):
@@ -181,20 +180,6 @@ def _download_from_google_drive(url: str, filename: str,
             if chunk:
                 f.write(chunk)
 
-    print(f'Successfully downloaded {filename}')
+    logging.info('Successfully downloaded %s', filename)
 
     return filepath
-
-
-def deserialize(string: str):
-    """
-    Deserialize a pack from a string.
-
-    Args:
-        string: The raw string to deserialize from.
-
-    Returns:
-
-    """
-    pack = jsonpickle.decode(string)
-    return pack

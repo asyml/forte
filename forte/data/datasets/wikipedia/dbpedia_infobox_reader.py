@@ -29,7 +29,6 @@ import rdflib
 
 from forte.common import Resources
 from forte.common.configuration import Config
-from forte.data import data_utils
 from forte.data.data_pack import DataPack
 from forte.data.datasets.wikipedia.db_utils import (
     get_resource_name, NIFBufferedContextReader, ContextGroupedNIFReader,
@@ -123,7 +122,7 @@ class DBpediaInfoBoxReader(PackReader):
 
             if os.path.exists(pack_path):
                 with open(pack_path) as pack_file:
-                    pack = data_utils.deserialize(pack_file.read())
+                    pack: DataPack = DataPack.deserialize(pack_file.read())
 
                     add_info_boxes(pack, info_box_data['literals'])
                     add_info_boxes(pack, info_box_data['objects'])
