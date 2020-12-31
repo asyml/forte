@@ -957,11 +957,11 @@ class DataIndex(BaseIndex):
        the key is a tuple of the outer entry type and the inner entry type.
        The outer entry type should be an annotation type. The value is a dict,
        where the key is the tid of the outer entry, and the value is a set of
-       `tid`s that are covered by the outer entry. We say an Annotation A covers
+       `tid` that are covered by the outer entry. We say an Annotation A covers
        an entry E if one of the following condition is met:
-         1. E is of Annotation type, and that E.begin >= A.begin, E.end <= E.end
-         2. E is of Link type, and both E's parent and child node are Annotation
-           that are covered by A.
+       1. E is of Annotation type, and that E.begin >= A.begin, E.end <= E.end
+       2. E is of Link type, and both E's parent and child node are Annotation
+       that are covered by A.
 
     """
 
