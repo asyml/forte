@@ -18,7 +18,6 @@ from typing import Iterator, List, Any, Union
 
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
-from forte.data.data_utils import deserialize
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
 
@@ -41,8 +40,7 @@ class BaseDeserializeReader(PackReader, ABC):
             raise ProcessExecutionException(
                 "Data source is None, cannot deserialize.")
 
-        # pack: DataPack = DataPack.deserialize(data_source)
-        pack: DataPack = deserialize(data_source)
+        pack: DataPack = DataPack.deserialize(data_source)
 
         if pack is None:
             raise ProcessExecutionException(
@@ -124,13 +122,13 @@ class MultiPackDeserializerBase(MultiPackReader):
             yield s
 
     def _parse_pack(self, multi_pack_str: str) -> Iterator[MultiPack]:
-        m_pack: MultiPack = deserialize(multi_pack_str)
+        m_pack: MultiPack = MultiPack.deserialize(multi_pack_str)
 
         for pid in m_pack.pack_ids():
             p_content = self._get_pack_content(pid)
             pack: DataPack
             if isinstance(p_content, str):
-                pack = deserialize(p_content)
+                pack = DataPack.deserialize(p_content)
             else:
                 pack = p_content
             # Only in deserialization we can do this.

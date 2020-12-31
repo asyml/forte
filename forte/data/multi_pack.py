@@ -495,6 +495,27 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for entry_id in valid_id:
             yield self.get_entry(entry_id)
 
+    @classmethod
+    def deserialize(cls, string: str) -> "MultiPack":
+        """
+        Deserialize a Multi Pack from a string. Note that this will only
+          deserialize the native multipack content, which means the associated
+          DataPacks contained in the Multipack will not be recovered. A
+          followed-up step need to be performed to add the data packs back
+          to the multi pack.
+
+          This internally calls the
+          internal :meth:`~forte.data.BasePack._deserialize` function from the
+          :class:`~forte.data.BasePack`.
+
+        Args:
+            string: The serialized string of a Multi pack to be deserialized.
+
+        Returns:
+            An data pack object deserialized from the string.
+        """
+        return cls._deserialize(string)
+
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
 

@@ -26,7 +26,6 @@ from forte.common.resources import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from forte.data.data_utils import deserialize
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 
@@ -62,7 +61,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         raise NotImplementedError
 
     def _parse_pack(self, pack_info: str) -> Iterator[DataPack]:
-        pack: DataPack = deserialize(pack_info)
+        pack: DataPack = DataPack.deserialize(pack_info)
         yield pack
 
     @classmethod
