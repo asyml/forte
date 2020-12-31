@@ -36,9 +36,9 @@ class ConllUDReader(PackReader):
     """
 
     def _cache_key_function(self, data_pack: Any) -> str:
-        if data_pack.meta.pack_name is None:
+        if data_pack.pack_name is None:
             raise ValueError("data_pack does not have a document id")
-        return data_pack.meta.pack_name
+        return data_pack.pack_name
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument

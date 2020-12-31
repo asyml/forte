@@ -62,7 +62,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     # pylint: disable=too-many-public-methods
     r"""A :class:`DataPack` contains a piece of natural language text and a
     collection of NLP entries (annotations, links, and groups). The natural
-    language text could be a document617, paragraph or in any other granularity.
+    language text could be a document, paragraph or in any other granularity.
 
     Args:
         pack_name (str, optional): A name for this data pack.
@@ -72,16 +72,16 @@ class DataPack(BasePack[Entry, Link, Group]):
         super().__init__(pack_name)
         self._text = ""
 
-        self.annotations: SortedList[Annotation] = SortedList()
+        self._annotations: SortedList[Annotation] = SortedList()
         self._links: SortedList[Link] = SortedList()
         self._groups: SortedList[Group] = SortedList()
-        self.generics: SortedList[Generics] = SortedList()
+        self._generics: SortedList[Generics] = SortedList()
 
-        self.replace_back_operations: ReplaceOperationsType = []
-        self.processed_original_spans: List[Tuple[Span, Span]] = []
-        self.orig_text_len: int = 0
+        self.__replace_back_operations: ReplaceOperationsType = []
+        self.__processed_original_spans: List[Tuple[Span, Span]] = []
+        self.__orig_text_len: int = 0
 
-        self.index: DataIndex = DataIndex()
+        self.__index: DataIndex = DataIndex()
 
     def __getstate__(self):
         r"""
@@ -105,18 +105,18 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         super().__setstate__(state)
 
-        self.annotations = SortedList(self.annotations)
+        self._annotations = SortedList(self._annotations)
         self._links = SortedList(self._links)
         self._groups = SortedList(self._groups)
-        self.generics = SortedList(self.generics)
+        self._generics = SortedList(self._generics)
 
-        self.index = DataIndex()
-        self.index.update_basic_index(list(self.annotations))
-        self.index.update_basic_index(list(self._links))
-        self.index.update_basic_index(list(self._groups))
-        self.index.update_basic_index(list(self.generics))
+        self.__index = DataIndex()
+        self.__index.update_basic_index(list(self._annotations))
+        self.__index.update_basic_index(list(self._links))
+        self.__index.update_basic_index(list(self._groups))
+        self.__index.update_basic_index(list(self._generics))
 
-        for a in self.annotations:
+        for a in self._annotations:
             a.set_pack(self)
 
         for a in self._links:
@@ -125,14 +125,14 @@ class DataPack(BasePack[Entry, Link, Group]):
         for a in self._groups:
             a.set_pack(self)
 
-        for a in self.generics:
+        for a in self._generics:
             a.set_pack(self)
 
     def __iter__(self):
-        yield from self.annotations
+        yield from self._annotations
         yield from self._links
         yield from self._groups
-        yield from self.generics
+        yield from self._generics
 
     def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
         return Meta(pack_name)
@@ -144,6 +144,89 @@ class DataPack(BasePack[Entry, Link, Group]):
     def text(self) -> str:
         r"""Return the text of the data pack"""
         return self._text
+
+    @property
+    def annotations(self) -> Iterator[Annotation]:
+        """
+        An iterator of all annotations in this data pack.
+
+        Returns: Iterator of all annotations, of
+          type :class:"~forte.data.ontology.top.Annotation".
+
+        """
+        yield from self._annotations
+
+    @property
+    def num_annotations(self) -> int:
+        """
+        Number of annotations in this data pack.
+
+        Returns: (int) Number of the links.
+
+        """
+        return len(self._annotations)
+
+    @property
+    def links(self) -> Iterator[Link]:
+        """
+        An iterator of all links in this data pack.
+
+        Returns: Iterator of all links, of
+          type :class:"~forte.data.ontology.top.Link".
+
+        """
+        yield from self._links
+
+    @property
+    def num_links(self) -> int:
+        """
+        Number of links in this data pack.
+
+        Returns: Number of the links.
+
+        """
+        return len(self._links)
+
+    @property
+    def groups(self) -> Iterator[Group]:
+        """
+        An iterator of all groups in this data pack.
+
+        Returns: Iterator of all groups, of
+          type :class:"~forte.data.ontology.top.Group".
+
+        """
+        yield from self._groups
+
+    @property
+    def num_groups(self):
+        """
+        Number of groups in this data pack.
+
+        Returns: Number of groups.
+
+        """
+        return len(self._groups)
+
+    @property
+    def generic_entries(self) -> Iterator[Generics]:
+        """
+        An iterator of all generic entries in this data pack.
+
+        Returns: Iterator of generic
+
+        """
+        yield from self._generics
+
+    @property
+    def num_generics_entries(self):
+        """
+        Number of generics entries in this data pack.
+
+        Returns: Number of generics entries.
+
+        """
+        return len(self._generics)
 
     def get_span_text(self, span: Span) -> str:
         r"""Get the text in the data pack contained in the span
@@ -173,8 +256,8 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         # The spans should be mutually exclusive
         (
-            self._text, self.replace_back_operations,
-            self.processed_original_spans, self.orig_text_len
+            self._text, self.__replace_back_operations,
+            self.__processed_original_spans, self.__orig_text_len
         ) = data_utils_io.modify_text_and_track_ops(text, span_ops)
 
     def get_original_text(self):
@@ -185,7 +268,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             :class:`DataPack` object to the modified text
         """
         original_text, _, _, _ = data_utils_io.modify_text_and_track_ops(
-            self._text, self.replace_back_operations)
+            self._text, self.__replace_back_operations)
         return original_text
 
     def get_original_span(self, input_processed_span: Span,
@@ -255,13 +338,15 @@ class DataPack(BasePack[Entry, Link, Group]):
             Returns:
                 Original index that aligns with input_index
             """
-            if len(self.processed_original_spans) == 0:
+            if len(self.__processed_original_spans) == 0:
                 return input_index
 
             len_processed_text = len(self._text)
             orig_index = None
             prev_end = 0
-            for (inverse_span, original_span) in self.processed_original_spans:
+            for (
+                    inverse_span,
+                    original_span) in self.__processed_original_spans:
                 # check if the input_index lies between one of the unprocessed
                 # spans
                 if prev_end <= input_index < inverse_span.begin:
@@ -290,7 +375,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             if orig_index is None:
                 # check if the input_index lies between the last unprocessed
                 # span
-                inverse_span, original_span = self.processed_original_spans[-1]
+                inverse_span, original_span = self.__processed_original_spans[
+                    -1]
                 if inverse_span.end <= input_index < len_processed_text:
                     increment = original_span.end - inverse_span.end
                     orig_index = input_index + increment
@@ -333,7 +419,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             The input entry itself
         """
         if isinstance(entry, Annotation):
-            target = self.annotations
+            target = self._annotations
 
             begin, end = entry.span.begin, entry.span.end
 
@@ -363,7 +449,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         elif isinstance(entry, Group):
             target = self._groups
         elif isinstance(entry, Generics):
-            target = self.generics
+            target = self._generics
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
@@ -377,12 +463,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             target.add(entry)
 
             # update the data pack index if needed
-            self.index.update_basic_index([entry])
-            if self.index.link_index_on and isinstance(entry, Link):
-                self.index.update_link_index([entry])
-            if self.index.group_index_on and isinstance(entry, Group):
-                self.index.update_group_index([entry])
-            self.index.deactivate_coverage_index()
+            self.__index.update_basic_index([entry])
+            if self.__index.link_index_on and isinstance(entry, Link):
+                self.__index.update_link_index([entry])
+            if self.__index.group_index_on and isinstance(entry, Group):
+                self.__index.update_group_index([entry])
+            self.__index.deactivate_coverage_index()
 
             self._pending_entries.pop(entry.tid)
 
@@ -405,13 +491,13 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         if isinstance(entry, Annotation):
-            target = self.annotations
+            target = self._annotations
         elif isinstance(entry, Link):
             target = self._links
         elif isinstance(entry, Group):
             target = self._groups
         elif isinstance(entry, Generics):
-            target = self.generics
+            target = self._generics
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
@@ -435,12 +521,12 @@ class DataPack(BasePack[Entry, Link, Group]):
             target.pop(index_to_remove)
 
         # update basic index
-        self.index.remove_entry(entry)
+        self.__index.remove_entry(entry)
 
         # set other index invalid
-        self.index.turn_link_index_switch(on=False)
-        self.index.turn_group_index_switch(on=False)
-        self.index.deactivate_coverage_index()
+        self.__index.turn_link_index_switch(on=False)
+        self.__index.turn_group_index_switch(on=False)
+        self.__index.deactivate_coverage_index()
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
@@ -454,6 +540,8 @@ class DataPack(BasePack[Entry, Link, Group]):
                  request: Optional[DataRequest] = None,
                  skip_k: int = 0) -> Iterator[Dict[str, Any]]:
         r"""Fetch entries from the data_pack of type `context_type`.
+
+        Currently, we do not support Groups and Generics in the request.
 
         Example:
 
@@ -534,7 +622,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         skipped = 0
         # must iterate through a copy here because self.annotations is changing
-        for context in list(self.annotations):
+        for context in list(self._annotations):
             if (context.tid not in valid_context_ids or
                     not isinstance(context, context_type)):
                 continue
@@ -572,11 +660,16 @@ class DataPack(BasePack[Entry, Link, Group]):
                     data[l_type.__name__] = self._generate_link_entry_data(
                         l_type, l_args, data, context)
 
-            # TODO: Group and Generics not finished.
+            # TODO: Getting Group based on range is not done yet.
             if group_types:
-                # pylint: disable=unused-variable
-                for g_type, g_args in group_types.items():
-                    pass
+                raise NotImplementedError(
+                    "Querying groups based on ranges is "
+                    "currently not supported.")
+
+            if generics_types:
+                raise NotImplementedError(
+                    "Querying generic types based on ranges is "
+                    "currently not supported.")
 
             yield data
 
@@ -658,15 +751,15 @@ class DataPack(BasePack[Entry, Link, Group]):
                 a_dict[field].append(getattr(annotation, field))
 
             if unit is not None:
-                while not self.index.in_span(data[unit]["tid"][unit_begin],
-                                             annotation.span):
+                while not self.__index.in_span(data[unit]["tid"][unit_begin],
+                                               annotation.span):
                     unit_begin += 1
 
                 unit_span_begin = unit_begin
                 unit_span_end = unit_span_begin + 1
 
-                while self.index.in_span(data[unit]["tid"][unit_span_end],
-                                         annotation.span):
+                while self.__index.in_span(data[unit]["tid"][unit_span_end],
+                                           annotation.span):
                     unit_span_end += 1
 
                 a_dict["unit_span"].append((unit_span_begin, unit_span_end))
@@ -723,6 +816,26 @@ class DataPack(BasePack[Entry, Link, Group]):
             a_dict[key] = np.array(value)
         return a_dict
 
+    def build_coverage_for(
+            self, context_type: Type[Annotation], covered_type: Type[EntryType]
+    ):
+        """
+        User can call this function to build coverage index for specific types.
+          The index provide a in-memory mapping from entries of `context_type`
+          to the entries "covered" by it.
+          See :class:`forte.data.data_pack.DataIndex` for more details.
+
+        Args:
+            context_type: The context/covering type.
+            covered_type: The entry to find under the context type.
+
+        """
+        if self.__index.coverage_index(
+                context_type, covered_type) is None:
+            self.__index.build_coverage_index(
+                self, context_type, covered_type
+            )
+
     def get(self, entry_type: Type[EntryType],  # type: ignore
             range_annotation: Optional[Annotation] = None,
             components: Optional[Union[str, List[str]]] = None
@@ -753,7 +866,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         # If we don't have any annotations, then we yield an empty list.
         # Note that generics do not work with annotations.
-        if len(self.annotations) == 0 and not issubclass(entry_type, Generics):
+        if len(self._annotations) == 0 and not issubclass(entry_type, Generics):
             yield from []
             return
 
@@ -774,44 +887,46 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         # valid span
         if range_annotation is not None:
-            coverage_index = self.index.coverage_index(type(range_annotation),
-                                                       entry_type)
+            coverage_index = self.__index.coverage_index(type(range_annotation),
+                                                         entry_type)
             if coverage_index is not None:
                 valid_id &= coverage_index[range_annotation.tid]
 
         range_begin = range_annotation.span.begin if range_annotation else 0
         range_end = (range_annotation.span.end if range_annotation else
-                     self.annotations[-1].span.end)
+                     self._annotations[-1].span.end)
 
         if issubclass(entry_type, Annotation):
             temp_begin = Annotation(self, range_begin, range_begin)
-            begin_index = self.annotations.bisect(temp_begin)
+            begin_index = self._annotations.bisect(temp_begin)
 
             temp_end = Annotation(self, range_end, range_end)
-            end_index = self.annotations.bisect(temp_end)
+            end_index = self._annotations.bisect(temp_end)
 
             # Make sure these temporary annotations are not part of the
             # actual data.
             temp_begin.regret_creation()
             temp_end.regret_creation()
 
-            for annotation in self.annotations[begin_index: end_index]:
+            for annotation in self._annotations[begin_index: end_index]:
                 if annotation.tid not in valid_id:
                     continue
                 if (range_annotation is None or
-                        self.index.in_span(annotation, range_annotation.span)):
+                        self.__index.in_span(annotation,
+                                             range_annotation.span)):
                     yield annotation
 
         elif issubclass(entry_type, (Link, Group)):
             for entry_id in valid_id:
                 entry: EntryType = self.get_entry(entry_id)  # type: ignore
                 if (range_annotation is None or
-                        self.index.in_span(entry, range_annotation.span)):
+                        self.__index.in_span(entry, range_annotation.span)):
                     yield entry
 
 
 class DataIndex(BaseIndex):
-    r"""A set of indexes used in :class:`DataPack`:
+    r"""A set of indexes used in :class:`DataPack`, note that this class is
+    used by the `DataPack` internally.
 
     #. :attr:`entry_index`, the index from each tid to the corresponding entry
     #. :attr:`type_index`, the index from each type to the entries of
@@ -827,14 +942,18 @@ class DataIndex(BaseIndex):
        the key is a tuple of the outer entry type and the inner entry type.
        The outer entry type should be an annotation type. The value is a dict,
        where the key is the tid of the outer entry, and the value is a set of
-       tids that are covered by the outer entry.
+       `tid`s that are covered by the outer entry. We say an Annotation A covers
+       an entry E if one of the following condition is met:
+         1. E is of Annotation type, and that E.begin >= A.begin, E.end <= E.end
+         2. E is of Link type, and both E's parent and child node are Annotation
+           that are covered by A.
 
     """
 
     def __init__(self):
         super().__init__()
-        self._coverage_index: Dict[Tuple[Type[Annotation], Type[EntryType]],
-                                   Dict[int, Set[int]]] = dict()
+        self.coverage_index: Dict[Tuple[Type[Annotation], Type[EntryType]],
+                                  Dict[int, Set[int]]] = dict()
         self._coverage_index_valid = True
 
     @property
@@ -863,7 +982,7 @@ class DataIndex(BaseIndex):
         """
         if not self.coverage_index_is_valid:
             return None
-        return self._coverage_index.get((outer_type, inner_type))
+        return self.coverage_index.get((outer_type, inner_type))
 
     def build_coverage_index(
             self,
@@ -881,17 +1000,21 @@ class DataIndex(BaseIndex):
             raise ValueError(f"Do not support coverage index for {inner_type}.")
 
         if not self.coverage_index_is_valid:
-            self._coverage_index = dict()
+            self.coverage_index = dict()
 
         # prevent the index from being used during construction
         self.deactivate_coverage_index()
 
-        self._coverage_index[(outer_type, inner_type)] = dict()
+        # TODO: tests and documentations for the edge cases are missing. i.e. we
+        #  are not clear about what would happen if the covered annotation
+        #  is the same as the covering annotation, or if their spans are the
+        #  same.
+        self.coverage_index[(outer_type, inner_type)] = dict()
         for range_annotation in data_pack.get_entries_by_type(outer_type):
             if isinstance(range_annotation, Annotation):
                 entries = data_pack.get(inner_type, range_annotation)
                 entry_ids = {e.tid for e in entries}
-                self._coverage_index[
+                self.coverage_index[
                     (outer_type, inner_type)][range_annotation.tid] = entry_ids
 
         self.activate_coverage_index()

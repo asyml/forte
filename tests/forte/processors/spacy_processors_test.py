@@ -58,7 +58,7 @@ class TestSpacyProcessor(unittest.TestCase):
         self.assertEqual(pack.text, document)
 
         # Check tokens
-        tokens = [x.text for x in pack.annotations if isinstance(x, Token)]
+        tokens = [x.text for x in pack._annotations if isinstance(x, Token)]
         document = document.replace('.', ' .')
         self.assertEqual(tokens, document.split())
 

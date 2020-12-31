@@ -77,12 +77,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         self._links: SortedList[MultiPackLink] = SortedList()
         self._groups: SortedList[MultiPackGroup] = SortedList()
-        self.generics: SortedList[MultiPackGeneric] = SortedList()
+        self._generics: SortedList[MultiPackGeneric] = SortedList()
 
         # Used to automatically give name to sub packs.
         self.__default_pack_prefix = '_pack'
 
-        self.index: MultiIndex = MultiIndex()
+        self.__index: MultiIndex = MultiIndex()
 
     def __setstate__(self, state):
         r"""In deserialization, we set up the index and the references to the
@@ -92,13 +92,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         self._links = SortedList(self._links)
         self._groups = SortedList(self._groups)
-        self.generics = SortedList(self.generics)
+        self._generics = SortedList(self._generics)
 
-        self.index = MultiIndex()
+        self.__index = MultiIndex()
         # TODO: index those pointers?
-        self.index.update_basic_index(list(self._links))
-        self.index.update_basic_index(list(self._groups))
-        self.index.update_basic_index(list(self.generics))
+        self.__index.update_basic_index(list(self._links))
+        self.__index.update_basic_index(list(self._groups))
+        self.__index.update_basic_index(list(self._generics))
 
         for a in self._links:
             a.set_pack(self)
@@ -106,7 +106,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for a in self._groups:
             a.set_pack(self)
 
-        for a in self.generics:
+        for a in self._generics:
             a.set_pack(self)
 
         # Rebuild the name to index lookup.
@@ -135,7 +135,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def __iter__(self):
         yield from self._links
         yield from self._groups
-        yield from self.generics
+        yield from self._generics
 
     def _init_meta(self, pack_name: Optional[str] = None) -> MultiPackMeta:
         return MultiPackMeta(pack_name)
@@ -204,7 +204,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"got {type(pack)}"
             )
 
-        pid = pack.meta.pack_id
+        pid = pack.__meta.pack_id
 
         if ref_name is None:
             # Create a default name based on the pack id.
@@ -304,8 +304,51 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._name_index[new_name] = pack_index
         self._pack_names[pack_index] = new_name
 
-    def iter_groups(self):
+    @property
+    def links(self) -> Iterator[MultiPackLink]:
+        """
+        An iterator of all links in this multi pack.
+
+        Returns: Iterator of all links, of
+          type :class:"~forte.data.ontology.top.MultiPackLink".
+
+        """
+        yield from self._links
+
+    @property
+    def num_links(self):
+        """
+        Number of groups in this multi pack.
+
+        Returns: Number of links.
+
+        """
+        return len(self._groups)
+
+    @property
+    def groups(self) -> Iterator[MultiPackGroup]:
+        """
+         An iterator of all groups in this multi pack.
+
+         Returns: Iterator of all links, of
+           type :class:"~forte.data.ontology.top.MultiPackGroup".
+
+         """
         yield from self._groups
+
+    @property
+    def num_groups(self):
+        """
+        Number of groups in this multi pack.
+
+        Returns: Number of groups.
+
+        """
+        return len(self._groups)
+
+    @property
+    def generic_entries(self) -> Iterator[MultiPackGeneric]:
+        yield from self._generics
 
     def add_all_remaining_entries(self, component: Optional[str] = None):
         """
@@ -429,7 +472,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         elif isinstance(entry, MultiPackGroup):
             target = self._groups
         elif isinstance(entry, MultiPackGeneric):
-            target = self.generics
+            target = self._generics
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)} for Multipack. A valid "
@@ -445,11 +488,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             # TODO: add the pointers?
 
             # update the data pack index if needed
-            self.index.update_basic_index([entry])
-            if self.index.link_index_on and isinstance(entry, MultiPackLink):
-                self.index.update_link_index([entry])
-            if self.index.group_index_on and isinstance(entry, MultiPackGroup):
-                self.index.update_group_index([entry])
+            self.__index.update_basic_index([entry])
+            if self.__index.link_index_on and isinstance(entry, MultiPackLink):
+                self.__index.update_link_index([entry])
+            if self.__index.group_index_on and isinstance(entry,
+                                                          MultiPackGroup):
+                self.__index.update_group_index([entry])
 
             self._pending_entries.pop(entry.tid)
             return entry
@@ -522,7 +566,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         elif isinstance(entry, MultiPackGroup):
             target = self._groups
         elif isinstance(entry, MultiPackGeneric):
-            target = self.generics
+            target = self._generics
         else:
             raise ValueError(
                 f"Invalid entry type {type(entry)}. A valid entry "
@@ -536,11 +580,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 break
 
         # update basic index
-        self.index.remove_entry(entry)
+        self.__index.remove_entry(entry)
 
         # set other index invalid
-        self.index.turn_link_index_switch(on=False)
-        self.index.turn_group_index_switch(on=False)
+        self.__index.turn_link_index_switch(on=False)
+        self.__index.turn_group_index_switch(on=False)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
