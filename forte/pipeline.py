@@ -234,6 +234,7 @@ class Pipeline(Generic[PackType]):
             args: The positional arguments used to get the initial data.
             kwargs: The keyword arguments used to get the initial data.
         """
+        self.initialize()
         return self.process_one(*args, **kwargs)
 
     def run(self, *args, **kwargs):

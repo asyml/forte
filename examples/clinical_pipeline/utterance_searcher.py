@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, List
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
-from forte.data.common_entry_operations import create_utterance, \
+from forte.data.common_entry_utils import create_utterance, \
     get_last_utterance
 from forte.data.data_pack import DataPack
 from forte.indexers import ElasticSearchIndexer

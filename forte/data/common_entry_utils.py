@@ -22,6 +22,7 @@ from ft.onto.base_ontology import Utterance
 
 __all__ = [
     'create_utterance',
+    'get_last_utterance',
 ]
 
 
