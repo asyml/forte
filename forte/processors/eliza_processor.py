@@ -26,8 +26,6 @@ import random
 import re
 from typing import List, Dict, Union, Optional
 
-from forte.common import Resources
-from forte.common.configuration import Config
 from forte.data.common_entry_utils import get_last_utterance, create_utterance
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
