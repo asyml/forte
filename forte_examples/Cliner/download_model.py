@@ -3,8 +3,8 @@ from pathlib import Path
 from forte.data.data_utils import maybe_download
 
 if __name__ == "__main__":
-    model_path = Path("examples/Cliner/CliNER/models")
-    pkg_path = Path("examples/Cliner/CliNER/tools")
+    model_path = Path("forte_examples/Cliner/CliNER/models")
+    pkg_path = Path("forte_examples/Cliner/CliNER/tools")
 
     # create the model path if it doesn't exist
     model_path.mkdir(parents=True, exist_ok=True)

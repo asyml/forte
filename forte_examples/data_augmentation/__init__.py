@@ -12,4 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte_examples.data_augmentation.data_select.data_select_index_pipeline import *
+from forte_examples.data_augmentation.data_select. \
+    data_select_index_pipeline import *
