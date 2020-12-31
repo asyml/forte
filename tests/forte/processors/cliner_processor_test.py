@@ -18,7 +18,7 @@ Unit tests for Clinical NER processors.
 import unittest
 import os
 
-from examples.Cliner.Cliner import ClinicalNER
+from forte_examples.Cliner.Cliner import ClinicalNER
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline

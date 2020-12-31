@@ -26,7 +26,7 @@ analyze, extract information and generate language all in one place. This allows
 to fully utilize the strength of individual module, combine the results from each step, and enables 
 the system to make fully informed decision at the end of the pipeline.  
 
-Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](./examples)!),
+Forte not only makes it easy to integrate with arbitrary 3rd party tools (Check out these [examples](forte_examples)!),
 but also brings technology to you by offering a miscellaneous collection of deep learning modules via Texar, and 
 a convenient model-data interface for casting tasks to models.
 
@@ -130,7 +130,7 @@ for pack in pl.process_dataset(config.config_data.test_path):
 
 ```
 
-Find more examples [here](./examples).
+Find more examples [here](forte_examples).
 
 ### Download and Installation
 
@@ -148,7 +148,7 @@ pip install .
 
 ### Getting Started
 
-* [Examples](./examples)
+* [Examples](forte_examples)
 * [Documentation](https://asyml-forte.readthedocs.io/)
 * Currently we are working on some interesting [tutorials](https://github.com/asyml/forte/wiki)
 
