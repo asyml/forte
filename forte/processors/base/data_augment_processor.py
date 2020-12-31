@@ -322,7 +322,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             A bool value. True if the replacement happened, False otherwise.
         """
         # Ignore the new annotation if overlap.
-        pid: int = input.pack.meta.pack_id
+        pid: int = input.pack.pack_id
         if self._overlap_with_existing(pid, input.begin, input.end):
             return False
         replaced_text: str
@@ -376,7 +376,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Returns:
             A bool value. True if the deletion happened, False otherwise.
         """
-        pid: int = input.pack.meta.pack_id
+        pid: int = input.pack.pack_id
         self._replaced_annos[pid].add((input.span, ""))
         self._deleted_annos_id[pid].add(input.tid)
         return True
