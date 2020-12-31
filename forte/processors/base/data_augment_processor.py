@@ -322,7 +322,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             A bool value. True if the replacement happened, False otherwise.
         """
         # Ignore the new annotation if overlap.
-        pid: int = input.pack.meta.pack_id
+        pid: int = input.pack.pack_id
         if self._overlap_with_existing(pid, input.begin, input.end):
             return False
         replaced_text: str
@@ -354,7 +354,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Returns:
             A bool value. True if the insertion happened, False otherwise.
         """
-        pid: int = data_pack.meta.pack_id
+        pid: int = data_pack.pack_id
         if self._overlap_with_existing(pid, pos, pos):
             return False
 
@@ -376,7 +376,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         Returns:
             A bool value. True if the deletion happened, False otherwise.
         """
-        pid: int = input.pack.meta.pack_id
+        pid: int = input.pack.pack_id
         self._replaced_annos[pid].add((input.span, ""))
         self._deleted_annos_id[pid].add(input.tid)
         return True
@@ -453,7 +453,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         entry_map: Dict[int, int] = {}
         insert_ind: int = 0
-        pid: int = data_pack.meta.pack_id
+        pid: int = data_pack.pack_id
 
         inserted_annos: List[Tuple[int, int]] = list(
             self._inserted_annos_pos_len[pid].items()
@@ -559,7 +559,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         for group in data_pack.get(Group):
             self._copy_link_or_group(group, entry_map, new_pack)
 
-        self._data_pack_map[pid] = new_pack.meta.pack_id
+        self._data_pack_map[pid] = new_pack.pack_id
         self._entry_maps[pid] = entry_map
         return new_pack
 
@@ -669,7 +669,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         new_children: List[Entry] = []
         for child_entry in children:
             child_pack: DataPack = child_entry.pack
-            child_pack_pid: int = child_pack.meta.pack_id
+            child_pack_pid: int = child_pack.pack_id
             # The new pack should be present.
             if child_pack_pid not in self._data_pack_map \
                     or child_pack_pid not in self._entry_maps:
@@ -749,7 +749,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_pack = self._auto_align_annotations(
                 data_pack=data_pack,
                 replaced_annotations=self._replaced_annos[
-                    data_pack.meta.pack_id
+                    data_pack.pack_id
                 ]
             )
             new_packs.append((new_pack_name, new_pack))

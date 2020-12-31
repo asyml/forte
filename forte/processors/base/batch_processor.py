@@ -42,10 +42,23 @@ __all__ = [
 class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     r"""The base class of processors that process data in batch. This processor
     enables easy data batching via analyze the context and data objects. The
-    context defines the scope of analysis of a particular task. For example, in
+    context defines the scope of analysis of a particular task.
+
+    For example, in
     dependency parsing, the context is normally a sentence, in entity
     coreference, the context is normally a document. The processor will create
     data batches relative to the context.
+
+    Key fields in this processor:
+        - context_type (Annotation): define the context (scope) to process.
+        - input_info: A data request. Based on this input_info. If
+           `use_coverage_index` is set to true, the processor will build the
+            index based on the input infol to speed up the entry searching time.
+        - batcher: The processing batcher used for this processor.The batcher
+           will also keep track of the relation between the pack and the batch
+           data.
+        - use_coverage_index: If true, the index will be built based on the
+            input_info.
     """
 
     def __init__(self):
@@ -116,7 +129,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             input_pack: The next input pack to be fed in.
         """
         if self.use_coverage_index:
-            self.prepare_coverage_index(input_pack)
+            self._prepare_coverage_index(input_pack)
 
         for batch in self.batcher.get_batch(
                 input_pack, self.context_type, self.input_info):
@@ -220,9 +233,18 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self.batcher.current_batch_sources[end:]
 
     @abstractmethod
-    def prepare_coverage_index(self, input_pack: PackType):
-        r"""Build the coverage index for ``input_pack`` according to
-        :attr:`input_info`.
+    def _prepare_coverage_index(self, input_pack: PackType):
+        """
+        Build the coverage index for ``input_pack``. After building, querying
+          data in this pack will become more efficient.
+
+        The index will be built based on the `input_info` field.
+
+        Args:
+            input_pack: The pack to be built.
+
+        Returns:
+
         """
         pass
 
@@ -231,15 +253,9 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
     r"""The batch processors that process :class:`DataPack`.
     """
 
-    def prepare_coverage_index(self, input_pack: DataPack):
+    def _prepare_coverage_index(self, input_pack: DataPack):
         for entry_type in self.input_info.keys():
-            if input_pack.index.coverage_index(self.context_type,
-                                               entry_type) is None:
-                input_pack.index.build_coverage_index(
-                    input_pack,
-                    self.context_type,
-                    entry_type
-                )
+            input_pack.build_coverage_for(self.context_type, entry_type)
 
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):
@@ -250,7 +266,7 @@ class FixedSizeBatchProcessor(BatchProcessor, ABC):
 
 class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
     r"""This just defines the generic type to :class:`MultiPack`.
-    The implemented batch processors will process :class:`MultiPacks`.
+    The implemented batch processors will process :class:`MultiPack`.
     """
 
     def __init__(self):
@@ -258,13 +274,10 @@ class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
         self.input_pack_name = None
 
     # TODO multi pack batcher need to be further studied.
-    def prepare_coverage_index(self, input_pack: MultiPack):
+    def _prepare_coverage_index(self, input_pack: MultiPack):
         for entry_type in self.input_info.keys():
-            if input_pack.packs[self.input_pack_name].index.coverage_index(
-                    self.context_type, entry_type) is None:
-                p = input_pack.packs[self.input_pack_name]
-                p.index.build_coverage_index(
-                    p, self.context_type, entry_type)
+            input_pack.packs[self.input_pack_name].build_coverage_for(
+                self.context_type, entry_type)
 
 
 class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):

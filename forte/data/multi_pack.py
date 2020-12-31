@@ -82,7 +82,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Used to automatically give name to sub packs.
         self.__default_pack_prefix = '_pack'
 
-        self.index: MultiIndex = MultiIndex()
+        self._index: MultiIndex = MultiIndex()
 
     def __setstate__(self, state):
         r"""In deserialization, we set up the index and the references to the
@@ -94,11 +94,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.groups = SortedList(self.groups)
         self.generics = SortedList(self.generics)
 
-        self.index = MultiIndex()
+        self._index = MultiIndex()
         # TODO: index those pointers?
-        self.index.update_basic_index(list(self.links))
-        self.index.update_basic_index(list(self.groups))
-        self.index.update_basic_index(list(self.generics))
+        self._index.update_basic_index(list(self.links))
+        self._index.update_basic_index(list(self.groups))
+        self._index.update_basic_index(list(self.generics))
 
         for a in self.links:
             a.set_pack(self)
@@ -204,7 +204,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"got {type(pack)}"
             )
 
-        pid = pack.meta.pack_id
+        pid = pack.pack_id
 
         if ref_name is None:
             # Create a default name based on the pack id.
@@ -304,8 +304,51 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._name_index[new_name] = pack_index
         self._pack_names[pack_index] = new_name
 
-    def iter_groups(self):
+    @property
+    def all_links(self) -> Iterator[MultiPackLink]:
+        """
+        An iterator of all links in this multi pack.
+
+        Returns: Iterator of all links, of
+          type :class:"~forte.data.ontology.top.MultiPackLink".
+
+        """
+        yield from self.links
+
+    @property
+    def num_links(self):
+        """
+        Number of groups in this multi pack.
+
+        Returns: Number of links.
+
+        """
+        return len(self.groups)
+
+    @property
+    def all_groups(self) -> Iterator[MultiPackGroup]:
+        """
+         An iterator of all groups in this multi pack.
+
+         Returns: Iterator of all links, of
+           type :class:"~forte.data.ontology.top.MultiPackGroup".
+
+         """
         yield from self.groups
+
+    @property
+    def num_groups(self):
+        """
+        Number of groups in this multi pack.
+
+        Returns: Number of groups.
+
+        """
+        return len(self.groups)
+
+    @property
+    def generic_entries(self) -> Iterator[MultiPackGeneric]:
+        yield from self.generics
 
     def add_all_remaining_entries(self, component: Optional[str] = None):
         """
@@ -445,11 +488,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             # TODO: add the pointers?
 
             # update the data pack index if needed
-            self.index.update_basic_index([entry])
-            if self.index.link_index_on and isinstance(entry, MultiPackLink):
-                self.index.update_link_index([entry])
-            if self.index.group_index_on and isinstance(entry, MultiPackGroup):
-                self.index.update_group_index([entry])
+            self._index.update_basic_index([entry])
+            if self._index.link_index_on and isinstance(entry, MultiPackLink):
+                self._index.update_link_index([entry])
+            if self._index.group_index_on and isinstance(entry,
+                                                         MultiPackGroup):
+                self._index.update_group_index([entry])
 
             self._pending_entries.pop(entry.tid)
             return entry
@@ -557,11 +601,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 break
 
         # update basic index
-        self.index.remove_entry(entry)
+        self._index.remove_entry(entry)
 
         # set other index invalid
-        self.index.turn_link_index_switch(on=False)
-        self.index.turn_group_index_switch(on=False)
+        self._index.turn_link_index_switch(on=False)
+        self._index.turn_group_index_switch(on=False)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:
