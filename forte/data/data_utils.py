@@ -20,16 +20,13 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
-from typing import List, Optional, overload
-
-import jsonpickle
+from typing import List, Optional, overload, Union
 
 from forte.utils.types import PathLike
 from forte.utils.utils_io import maybe_create_dir
 
 __all__ = [
     "maybe_download",
-    "deserialize"
 ]
 
 
@@ -37,26 +34,29 @@ __all__ = [
 # pylint: disable=unused-argument,function-redefined,missing-docstring
 
 @overload
-def maybe_download(urls: List[str], path: PathLike,
+def maybe_download(urls: List[str], path: Union[str, PathLike],
                    filenames: Optional[List[str]] = None,
                    extract: bool = False) -> List[str]: ...
 
 
 @overload
-def maybe_download(urls: str, path: PathLike, filenames: Optional[str] = None,
+def maybe_download(urls: str, path: Union[str, PathLike],
+                   filenames: Optional[str] = None,
                    extract: bool = False) -> str: ...
 
 
-def maybe_download(urls, path, filenames=None, extract=False):
+def maybe_download(urls: Union[List[str], str], path: Union[str, PathLike],
+                   filenames: Union[List[str], str, None] = None,
+                   extract: bool = False):
     r"""Downloads a set of files.
 
     Args:
         urls: A (list of) URLs to download files.
-        path (str): The destination path to save the files.
+        path: The destination path to save the files.
         filenames: A (list of) strings of the file names. If given,
             must have the same length with :attr:`urls`. If `None`,
             filenames are extracted from :attr:`urls`.
-        extract (bool): Whether to extract compressed files.
+        extract: Whether to extract compressed files.
 
     Returns:
         A list of paths to the downloaded files.
@@ -116,7 +116,7 @@ def maybe_download(urls, path, filenames=None, extract=False):
 # pylint: enable=unused-argument,function-redefined,missing-docstring
 
 
-def _download(url: str, filename: str, path: str) -> str:
+def _download(url: str, filename: str, path: Union[PathLike, str]) -> str:
     def _progress_hook(count, block_size, total_size):
         percent = float(count * block_size) / float(total_size) * 100.
         sys.stdout.write(f'\r>> Downloading {filename} {percent:.1f}%')
@@ -126,7 +126,8 @@ def _download(url: str, filename: str, path: str) -> str:
     filepath, _ = urllib.request.urlretrieve(url, filepath, _progress_hook)
     print()
     statinfo = os.stat(filepath)
-    print(f'Successfully downloaded {filename} {statinfo.st_size} bytes')
+    logging.info('Successfully downloaded %s %d bytes', filename,
+                 statinfo.st_size)
 
     return filepath
 
@@ -141,7 +142,8 @@ def _extract_google_drive_file_id(url: str) -> str:
     return file_id
 
 
-def _download_from_google_drive(url: str, filename: str, path: str) -> str:
+def _download_from_google_drive(url: str, filename: str,
+                                path: Union[str, PathLike]) -> str:
     r"""Adapted from `https://github.com/saurabhshri/gdrive-downloader`
     """
 
@@ -149,8 +151,9 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
     try:
         import requests
     except ImportError:
-        print("The requests library must be installed to download files from "
-              "Google drive. Please see: https://github.com/psf/requests")
+        logging.info(
+            "The requests library must be installed to download files from "
+            "Google drive. Please see: https://github.com/psf/requests")
         raise
 
     def _get_confirm_token(response):
@@ -177,18 +180,6 @@ def _download_from_google_drive(url: str, filename: str, path: str) -> str:
             if chunk:
                 f.write(chunk)
 
-    print(f'Successfully downloaded {filename}')
+    logging.info('Successfully downloaded %s', filename)
 
     return filepath
-
-
-def deserialize(string: str):
-    r"""Deserialize a pack from a string.
-    """
-    pack = jsonpickle.decode(string)
-    # Need to assign the pack manager to the pack to control it after reading
-    #  the raw data.
-    # pylint: disable=protected-access
-    # pack._pack_manager = pack_manager
-    # pack_manager.set_remapped_pack_id(pack)
-    return pack

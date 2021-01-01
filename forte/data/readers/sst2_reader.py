@@ -52,9 +52,9 @@ class SST2Reader(PackReader):
         self.id_to_senti: Dict = {}
 
     def _cache_key_function(self, data_pack: DataPack) -> str:
-        if data_pack.meta.pack_name is None:
+        if data_pack.pack_name is None:
             raise ValueError("data_pack does not have a sentence id")
-        return data_pack.meta.pack_name
+        return data_pack.pack_name
 
     def _check_file_exist(self, filename: str):
         if not os.path.exists(filename):

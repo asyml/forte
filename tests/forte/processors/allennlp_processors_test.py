@@ -1,4 +1,4 @@
-"""This module tests LowerCaser processor."""
+"""This module tests AllenNLP processor."""
 import unittest
 from typing import List
 

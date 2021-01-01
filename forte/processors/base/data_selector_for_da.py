@@ -26,7 +26,6 @@ from forte.common.resources import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
-from forte.data.data_utils import deserialize
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 
@@ -39,15 +38,16 @@ __all__ = [
 
 class BaseDataSelector(PackReader):
     r"""A base data selector for data augmentation.
-    It is a reader that searches documents from an indexer and yields datapacks.
+    It is a reader that selects a subset from the dataset and yields datapacks.
     """
 
 
 class BaseElasticSearchDataSelector(BaseDataSelector):
     r"""The base elastic search indexer for data selector.
     This class creates an ElasticSearchIndexer and searches for documents
-    according to the user-provided search keys. It then yields the corresponding
-    datapacks from the selected documents.
+    according to the user-provided search keys. Currently supported search
+    criteria: random-based and query-based. It then yields the corresponding
+    datapacks of the selected documents.
     """
 
     def initialize(self, resources: Resources, configs: Config):
@@ -61,7 +61,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         raise NotImplementedError
 
     def _parse_pack(self, pack_info: str) -> Iterator[DataPack]:
-        pack: DataPack = deserialize(pack_info)
+        pack: DataPack = DataPack.deserialize(pack_info)
         yield pack
 
     @classmethod
@@ -74,8 +74,6 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
 
 
 class QueryDataSelector(BaseElasticSearchDataSelector):
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
 
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
@@ -124,9 +122,6 @@ class QueryDataSelector(BaseElasticSearchDataSelector):
 
 
 class RandomDataSelector(BaseElasticSearchDataSelector):
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
         r"""random select `size` documents from the indexer.

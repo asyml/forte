@@ -18,8 +18,6 @@ The reader that reads text data from a terminal and packs into a Multipack.
 import logging
 from typing import Iterator, Dict, Any
 
-from forte.common.configuration import Config
-from forte.common.resources import Resources
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import MultiPackReader
 from ft.onto.base_ontology import Utterance
@@ -33,15 +31,6 @@ __all__ = [
 
 class MultiPackTerminalReader(MultiPackReader):
     r"""A reader designed to read text from the terminal."""
-
-    # pylint: disable=useless-super-delegation
-    def __init__(self):
-        super().__init__()
-
-    # pylint: disable=unused-argument
-    def initialize(self, resources: Resources, configs: Config):
-        self.resource = resources
-        self.config = configs
 
     # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
@@ -71,15 +60,15 @@ class MultiPackTerminalReader(MultiPackReader):
         multi_pack = MultiPack()
 
         # use context to build the query
-        if self.resource.get("user_utterance"):
+        if self.resources is not None and self.resources.get("user_utterance"):
             multi_pack.add_pack_(
-                self.resource.get("user_utterance")[-1], "user_utterance")
+                self.resources.get("user_utterance")[-1], "user_utterance")
 
-        if self.resource.get("bot_utterance"):
+        if self.resources is not None and self.resources.get("bot_utterance"):
             multi_pack.add_pack_(
-                self.resource.get("bot_utterance")[-1], "bot_utterance")
+                self.resources.get("bot_utterance")[-1], "bot_utterance")
 
-        pack = multi_pack.add_pack(self.config.pack_name)
+        pack = multi_pack.add_pack(self.configs.pack_name)
         pack.set_text(data_source, replace_func=self.text_replace_operation)
 
         Utterance(pack, 0, len(data_source))

@@ -12,21 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for dictionary word replacement data augmenter.
+Unit tests for dictionary word replacement op.
 """
 
 import unittest
-
-from forte.processors.data_augment.algorithms.dictionary_replacement_augmenter \
-    import DictionaryReplacementAugmenter
+from forte.processors.data_augment.algorithms.dictionary_replacement_op \
+    import DictionaryReplacementOp
 
 from ft.onto.base_ontology import Token
 from forte.data.data_pack import DataPack
 
 
-class TestDictionaryReplacementAugmenter(unittest.TestCase):
+class TestDictionaryReplacementOp(unittest.TestCase):
     def setUp(self):
-        self.dra = DictionaryReplacementAugmenter(configs={"lang": "eng"})
+        dict_name = (
+            "forte.processors.data_augment."
+            "algorithms.dictionary.WordnetDictionary"
+        )
+        self.dra = DictionaryReplacementOp(
+            configs={
+                "dictionary_class": dict_name,
+                "prob": 1.0,
+                "lang": "eng",
+            }
+        )
 
     def test_segmenter(self):
         data_pack = DataPack()
@@ -39,7 +48,7 @@ class TestDictionaryReplacementAugmenter(unittest.TestCase):
         data_pack.add_entry(token_2)
 
         self.assertIn(
-            self.dra.augment(token_1),
+            self.dra.replace(token_1)[1],
             [
                 'eat', 'feed', 'eat on', 'consume',
                 'eat up', 'use up', 'deplete', 'exhaust',
@@ -47,7 +56,7 @@ class TestDictionaryReplacementAugmenter(unittest.TestCase):
             ]
         )
         self.assertIn(
-            self.dra.augment(token_2),
+            self.dra.replace(token_2)[1],
             [
                 'telephone', 'phone', 'telephone set',
                 'speech sound', 'sound', 'earphone', 'earpiece',
