@@ -17,20 +17,33 @@ Unit tests for dictionary word replacement data augmenter.
 
 import unittest
 
-from forte.processors.data_augment.algorithms.embedding_similarity_augmenter \
-    import EmbeddingSimilarityAugmenter
+from forte.processors.data_augment.algorithms.embedding_similarity_replacement_op \
+    import EmbeddingSimilarityReplacementOp
 from forte.processors.data_augment.utils.utils import load_glove_vocab, load_glove_embedding
 
+from ft.onto.base_ontology import Token
+from forte.data.data_pack import DataPack
 
-class TestEmbeddingSimilarityAugmenter(unittest.TestCase):
+
+class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
     def setUp(self):
         self.vocab = load_glove_vocab("sample_embedding.txt")
         self.embedding = load_glove_embedding("sample_embedding.txt", 50, self.vocab)
-        self.esa = EmbeddingSimilarityAugmenter(self.embedding, self.vocab, top_k=5)
+        self.esa = EmbeddingSimilarityReplacementOp(
+            self.embedding,
+            self.vocab,
+            configs={
+                "top_k": 5
+            }
+        )
 
-    def test_augmenter(self):
+    def test_replace(self):
+        data_pack = DataPack()
+        data_pack.set_text("google")
+        token_1 = Token(data_pack, 0, 6)
+        data_pack.add_entry(token_1)
         self.assertIn(
-            self.esa.augment("google"),
+            self.esa.replace(token_1),
             ['yahoo', 'aol', 'microsoft', 'web', 'internet']
         )
 

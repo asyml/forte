@@ -18,14 +18,15 @@ Utility functions
 from os import path
 
 import numpy as np
-from texar.tf.data import Embedding, load_glove
 
+from texar.torch.data import Embedding, load_glove
 from texar.torch.data import Vocab
 
 __all__ = [
     "l2_norm",
     "load_glove_vocab"
 ]
+
 
 def l2_norm(word_vecs):
     r"""Calculate the L2 norm
@@ -38,6 +39,7 @@ def l2_norm(word_vecs):
     """
     norm = np.sqrt((word_vecs * word_vecs).sum(axis=1))
     return word_vecs / norm[:, np.newaxis]
+
 
 def load_glove_vocab(glove_filename: str) -> Vocab:
     r"""Load pre-trained glove vocabulary from file
@@ -63,7 +65,9 @@ def load_glove_vocab(glove_filename: str) -> Vocab:
             output_file.write('\n'.join(vocab_list))
     return Vocab(vocab_filename)
 
-def load_glove_embedding(glove_filename: str, emb_dim: int, vocab: Vocab) -> Embedding:
+
+def load_glove_embedding(glove_filename: str, emb_dim: int, vocab: Vocab)\
+     -> Embedding:
     r"""Load pre-trained glove embeddings from file
 
     Args:
@@ -78,6 +82,5 @@ def load_glove_embedding(glove_filename: str, emb_dim: int, vocab: Vocab) -> Emb
     hparams["file"] = glove_filename
     hparams["dim"] = emb_dim
     hparams["read_fn"] = load_glove
-    tokan_to_id_map = vocab.token_to_id_map_py
     embedding = Embedding(vocab.token_to_id_map_py, hparams)
     return embedding

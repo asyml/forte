@@ -14,17 +14,19 @@
 
 import random
 
-from typing import Dict, List
+from typing import Tuple
 import numpy as np
-from tensorflow import gfile
-from texar.tf.data import Embedding
+from texar.torch.data import Embedding
 from texar.torch.data import Vocab
 
-from forte.processors.data_augment.algorithms.base_augmenter import ReplacementDataAugmenter
+from ft.onto.base_ontology import Annotation
+from forte.common.configuration import Config
+from forte.processors.data_augment.algorithms.text_replacement_op \
+    import TextReplacementOp
 from forte.processors.data_augment.utils.utils import l2_norm
 
 __all__ = [
-    "EmbeddingSimilarityAugmenter",
+    "EmbeddingSimilarityReplacementOp",
 ]
 
 random.seed(0)
@@ -32,9 +34,9 @@ random.seed(0)
 emb_types = ['glove']
 
 
-class EmbeddingSimilarityAugmenter(ReplacementDataAugmenter):
+class EmbeddingSimilarityReplacementOp(TextReplacementOp):
     r"""
-    This class is a data augmenter leveraging pre-trained word
+    This class is a replacement op leveraging pre-trained word
     embeddings, such as word2vec and glove, to replace the input
     word with another word with similar word embedding.
     By default, the replacement word is randomly chosen from the
@@ -42,40 +44,41 @@ class EmbeddingSimilarityAugmenter(ReplacementDataAugmenter):
 
     Args:
         embedding: A texar.tf.data.Embedding object. Can be initialized
-            from pre-trained embedding file using helper functions 
+            from pre-trained embedding file using helper functions
             E.g. forte.processors.data_augment.utils.utils.load_glove_embedding
         vocab: A texar.torch.data.Vocab object. Can be initialized from
             pre-trained embedding file using helper functions
             E.g. forte.processor.data_augment.utils.utils.load_glove_vocab
-        top_k: the number of k most similar words to choose from
+        configs: The config should contain `top_k`,
+            the number of k most similar words to choose from
     """
-    def __init__(self, embedding: Embedding, vocab: Vocab, top_k: int = 100):
-        super().__init__({})
-        self.vocab = vocab
-        self.top_k = top_k
+    def __init__(self, embedding: Embedding, vocab: Vocab, configs: Config):
+        super().__init__(configs)
         self.normalized_vectors = l2_norm(embedding.word_vecs)
+        self.vocab = vocab
 
-    @property
-    def replacement_level(self) -> List[str]:
-        return ["word"]
-
-    def augment(self, word: str) -> str:
+    def replace(self, input: Annotation) -> Tuple[bool, str]:
         r"""
-        This function replaces a word with words with similar
+        This function replaces a word words with similar
         pretrained embeddings.
+
         Args:
-            word: input
-            additional_info: unused
+            input (Annotation): The input annotation.
         Returns:
-            a replacement word with similar word embedding
+            A tuple of two values, where the first element is a boolean value
+            indicating whether the replacement happens, and the second
+            element is the replaced word.
         """
+        word = input.text
         if word not in self.vocab.token_to_id_map_py:
-            return word
+            return False, word
 
         source_id = self.vocab.token_to_id_map_py[word]
         source_vector = self.normalized_vectors[source_id]
         scores = np.dot(self.normalized_vectors, source_vector)
-        target_ids = np.argpartition(-scores, self.top_k+1)[:self.top_k+1]
-        target_words = [self.vocab.id_to_token_map_py[idx] for idx in target_ids \
-            if idx != source_id and self.vocab.id_to_token_map_py[idx].lower() != word.lower()]
+        target_ids = np.argpartition(
+            -scores, self.configs["top_k"] + 1)[:self.configs["top_k"] + 1]
+        target_words = [self.vocab.id_to_token_map_py[idx]
+            for idx in target_ids if idx != source_id and
+            self.vocab.id_to_token_map_py[idx].lower() != word.lower()]
         return random.choice(target_words)
