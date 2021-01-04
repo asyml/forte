@@ -124,6 +124,7 @@ class ElasticSearchIndexer:
 
     def search(self, query: Dict[str, Any], index_name: Optional[str] = None,
                **kwargs: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        # pylint: disable=line-too-long
         r"""Search the index specified by ``index_name`` that matches the
         ``query``.
 
