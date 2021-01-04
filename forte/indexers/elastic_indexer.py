@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import logging
 from copy import deepcopy
 from typing import Optional, Dict, Union, Any, Iterable
@@ -42,18 +43,19 @@ class ElasticSearchIndexer:
               refresh: Optional[Union[bool, str]] = False) -> None:
         r"""Index a document ``document`` in the index specified by
         ``index_name``. If ``index_name`` is None, it will be picked from
-        hparams.
+        the processor configs.
 
         Args:
-            document (Dict): Document to be indexed into Elasticsearch indexer
+            document (Dict): Document to be indexed into an `Elasticsearch`
+                indexer
             index_name (str): Name of the index where this document will be
-                saved. If None, value will be picked from hparams.
+                saved. If None, value will be picked from the configs.
             refresh (bool, str): refresh settings to control when changes
                 made by this request are made visible to search. Available
                 value are "True","wait_for", "False"
 
             .. note::
-                "refresh" setting will greatly affect the Elasticsearch
+                "refresh" setting will greatly affect the `Elasticsearch`
                 performance. Please refer to
                 https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
                 for more information on "refresh"
@@ -64,18 +66,18 @@ class ElasticSearchIndexer:
             refresh: Optional[Union[bool, str]] = False) -> None:
         r"""Add a document ``document`` to the index specified by
         ``index_name``. If ``index_name`` is None, it will be picked from
-        hparams.
+        processor configs.
 
         Args:
-            document (Dict): Document to be indexed into Elasticsearch indexer
+            document (Dict): Document to be indexed into `Elasticsearch` indexer
             index_name (str): Name of the index where this document will be
-                saved. If None, value will be picked from hparams.
+                saved. If None, value will be picked from processor configs.
             refresh (bool, str): refresh settings to control when changes
                 made by this request are made visible to search. Available
                 value are "True","wait_for", "False"
 
             .. note::
-                "refresh" setting will greatly affect the Elasticsearch
+                "refresh" setting will greatly affect the `Elasticsearch`
                 performance. Please refer to
                 https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
                 for more information on "refresh"
@@ -88,15 +90,17 @@ class ElasticSearchIndexer:
                  index_name: Optional[str] = None,
                  **kwargs: Optional[Dict[str, Any]]) -> None:
         r"""Add a bulk of documents to the index specified by ``index_name``.
-        If ``index_name`` is None, it will be picked from hparams.
+        If ``index_name`` is None, it will be picked from the processor
+        configs.
 
         Args:
             documents (Iterable): An iterable of documents to be indexed.
             index_name (optional, str): Name of the index where this document
-                will be saved. If None, value will be picked from hparams.
+                will be saved. If None, value will be picked from the
+                processor configs.
             kwargs (optional, dict) : Optional keyword arguments like
                 "refresh", "request_timeout" etc. that are passed to
-                Elasticsearch's bulk API. Please refer to
+                `Elasticsearch`'s bulk API. Please refer to
                 https://elasticsearch-py.readthedocs.io/en/master/helpers.html#bulk-helpers
                 for the complete list of arguments.
 
@@ -126,10 +130,10 @@ class ElasticSearchIndexer:
         Args:
              query (dict): An elasticsearch query which is issued to the indexer
              index_name (str): Name of the index where documents are looked up.
-                If None, value will be picked from hparams.
+                If None, value will be picked from the processor configs.
              kwargs (optional, dict) : Optional keyword arguments like
                 "size", "request_timeout" etc. that are passed to
-                Elasticsearch's bulk API. Please refer to
+                `Elasticsearch`'s bulk API. Please refer to
                 https://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.Elasticsearch.search
                 for the complete list of arguments.
 
@@ -168,7 +172,7 @@ class ElasticSearchIndexer:
             added.
 
         `"hosts"`: list, str
-            A list of hosts or a host which the Elasticsearch client will be
+            A list of hosts or a host which the `Elasticsearch` client will be
             connected to.
 
         """

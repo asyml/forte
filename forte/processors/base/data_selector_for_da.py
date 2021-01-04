@@ -42,11 +42,11 @@ class BaseDataSelector(PackReader, ABC):
 
 
 class BaseElasticSearchDataSelector(BaseDataSelector):
-    r"""The base elastic search indexer for data selector.
-    This class creates an ElasticSearchIndexer and searches for documents
-    according to the user-provided search keys. Currently supported search
-    criteria: random-based and query-based. It then yields the corresponding
-    datapacks of the selected documents.
+    r"""The base elastic search indexer for data selector. This class creates
+    an :class:`~forte.indexers.elastic_indexer.ElasticSearchIndexer`
+    and searches for documents according to the user-provided search keys.
+    Currently supported search criteria: random-based and query-based. It
+    then yields the corresponding datapacks of the selected documents.
     """
 
     def initialize(self, resources: Resources, configs: Config):

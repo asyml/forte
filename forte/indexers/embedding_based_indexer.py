@@ -36,7 +36,7 @@ class EmbeddingBasedIndexer:
     Args:
         config (Config): optional
             Hyperparameters. Missing hyperparameter will be set to default
-            values. See :meth:`default_hparams` for the hyperparameter structure
+            values. See :meth:`default_configs` for the hyperparameter structure
             and default values.
     """
 
@@ -143,7 +143,7 @@ class EmbeddingBasedIndexer:
 
         Args:
             query (numpy array): A 2-dimensional numpy array of shape
-                ``[batch_size, dim]``where each row corresponds to a query.
+                ``[batch_size, dim]`` where each row corresponds to a query.
             k (int): An integer representing the number of nearest vectors to
                 return from the index
 
