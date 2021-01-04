@@ -1,4 +1,4 @@
-sphinx-rtd-theme >= 0.2.4
+sphinx-rtd-theme >= 0.5.0
 Pygments >= 2.1.1
 funcsigs~=1.0.2
 recommonmark
@@ -9,7 +9,7 @@ pyyaml==5.1.2
 jsonpickle==1.4
 sortedcontainers==2.1.0
 texar-pytorch>=0.1.1
-typing>=3.7.4
+typing>=3.7.4; python_version < '3.5'
 typing-inspect>=0.6.0
 
 # PyTorch installation for ReadTheDocs

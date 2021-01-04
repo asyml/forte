@@ -19,7 +19,7 @@ in order to perform data selection.
 Refer to examples/data_augmentation/data_select_index_pipeline.py
 for indexer creation.
 """
-
+from abc import ABC
 from typing import Iterator, Any, Dict, Optional
 
 from forte.common.resources import Resources
@@ -28,7 +28,6 @@ from forte.data.data_pack import DataPack
 from forte.data.readers.base_reader import PackReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
-
 __all__ = [
     "BaseElasticSearchDataSelector",
     "RandomDataSelector",
@@ -36,7 +35,7 @@ __all__ = [
 ]
 
 
-class BaseDataSelector(PackReader):
+class BaseDataSelector(PackReader, ABC):
     r"""A base data selector for data augmentation.
     It is a reader that selects a subset from the dataset and yields datapacks.
     """
@@ -137,19 +136,19 @@ class RandomDataSelector(BaseElasticSearchDataSelector):
 
     def _create_search_key(self) -> Dict[str, Any]:  # type: ignore
         return {
-           "size": self.configs["size"],
-           "query": {
-              "function_score": {
-                 "functions": [
-                    {
-                       "random_score": {
-                          "seed": "1477072619038",
-                           "field": "_seq_no"
-                       }
-                    }
-                 ]
-              }
-           }
+            "size": self.configs["size"],
+            "query": {
+                "function_score": {
+                    "functions": [
+                        {
+                            "random_score": {
+                                "seed": "1477072619038",
+                                "field": "_seq_no"
+                            }
+                        }
+                    ]
+                }
+            }
         }
 
     @classmethod

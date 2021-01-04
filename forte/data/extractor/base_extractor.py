@@ -16,9 +16,9 @@ from abc import ABC
 import logging
 from typing import Tuple, Set, List, Dict, Any
 from typing import Union, Type, Hashable, Iterable, Optional
-from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
+from forte.data.ontology import Annotation
 from forte.data.vocabulary import Vocabulary
 from forte.data.converter.feature import Feature
 
@@ -55,7 +55,7 @@ class BaseExtractor(ABC):
                 :class:`forte.data.converter.feature.Feature` for more
                 details.
             Remove feature / Add prediction: Removing feature means remove
-                the exsiting data in the datapack. If we remove the feature
+                the existing data in the datapack. If we remove the feature
                 in the pack, then extracting feature will return empty list.
                 Adding prediction means we add the prediction from model
                 back to the datapack. If a datapack has some old data (for
@@ -74,17 +74,17 @@ class BaseExtractor(ABC):
                 extractor will get feature from.
     """
     _VOCAB_ERROR_MSG = "When vocab_method is raw, vocabulary " \
-                    "will not be built. Functions operating " \
-                    "on vocabulary should not be called."
+                       "will not be built. Functions operating " \
+                       "on vocabulary should not be called."
 
     def __init__(self, config: Union[Dict, Config]):
 
         self.config = Config(config, self.default_configs(),
-                                allow_new_hparam=True)
+                             allow_new_hparam=True)
 
         if not hasattr(self.config, "entry_type"):
             raise AttributeError("entry_type needs to be specified in "
-                                "the configuration of an extractor.")
+                                 "the configuration of an extractor.")
 
         if self.config.vocab_method != "raw":
             self.vocab: Optional[Vocabulary] = \
@@ -106,8 +106,8 @@ class BaseExtractor(ABC):
             in :class`forte.data.vocabulary.Vocabulary`
 
         "need_pad": bool
-            Wether the <PAD> element should be added to vocabulary. And
-            wether the feature need to be batched and paded. Default is True.
+            Whether the <PAD> element should be added to vocabulary. And
+            whether the feature need to be batched and padded. Default is True.
 
         "vocab_use_unk": bool
             Whether the <UNK> element should be added to vocabulary.
@@ -139,7 +139,7 @@ class BaseExtractor(ABC):
         }
         obj = cls(config)
         if "vocab" in state and state["vocab"] is not None and \
-            isinstance(state["vocab"], dict):
+                isinstance(state["vocab"], dict):
             obj.vocab = Vocabulary.from_state(state["vocab"])
         else:
             obj.vocab = None
@@ -198,10 +198,10 @@ class BaseExtractor(ABC):
         r"""Functionality: Add elements from prediction into the vocabulary.
 
         Overwrite instruction:
-            1. Take out elements from predifined.
+            1. Take out elements from predefined.
             2. Make modification on elements, according to different
                 Extractors.
-            3. Use self.add fucntion to add the element into vocabulary.
+            3. Use `self.add` function to add the element into vocabulary.
 
         Args:
             predefined (Union[Set, List]): A set or list contain
@@ -211,20 +211,20 @@ class BaseExtractor(ABC):
             self.add(element)
 
     def update_vocab(self, pack: DataPack,
-                    instance: Annotation):
+                     instance: Annotation):
         r"""Functionality: Add all elements from one instance into the
         vocabulary. For example, when the instance is Sentence and we want
         to add all Token from one sentence into the vocabulary, we might
         call this function.
 
-        Overwrite instrcution:
+        Overwrite instructions:
             1. Get all entries from one instance in the pack.
-                You probably would use pack.get fucntion to acquire
+                You probably would use pack.get function to acquire
                 Entry that you need.
             2. Get elements that are needed from entries. This process will
                 be very different for different extractors. For example,
                 you might want to get the token text from one sentence.
-                Or you mgiht want to get the tags for a squence for
+                Or you might want to get the tags for a sequence for
                 one sentence.
             3. Use self.add to add those element into the vocabulary.
 
@@ -241,10 +241,10 @@ class BaseExtractor(ABC):
         r"""Functionality: Extract the feature for one instance in a pack.
 
         Overwrite instruction:
-            1. Get all entries from one isntance in the pack.
-            2. Get elements that are needed form entries. For exmple,
-                the token text or seqence tags.
-            3. Contruct a feature and return it.
+            1. Get all entries from one instance in the pack.
+            2. Get elements that are needed form entries. For example,
+                the token text or sequence tags.
+            3. Construct a feature and return it.
 
         Args:
             pack (Datapack): The datapack that contains the current
@@ -257,15 +257,14 @@ class BaseExtractor(ABC):
         """
         pass
 
-    def remove_from_pack(self, pack: DataPack,
-                instance: Annotation):
+    def remove_from_pack(self, pack: DataPack, instance: Annotation):
         r"""Functionality: Remove the existing feature of the instance
         in a pack. We might remove an attribute under an entry or remove
         the entry itself directly, which will depend on the different
         type of extractors.
 
         Overwrite instruction:
-            1. Get all entries from one isntance in the pack.
+            1. Get all entries from one instance in the pack.
             2. Remove entries or remove some attributes of the entry. You
                 might use pack.delete_entry function or setattr to do this.
         """
@@ -290,7 +289,7 @@ class BaseExtractor(ABC):
             instance (Annotation): The instance to which the
                 extractor add prediction.
             prediction (Any): This is the output of the model, whose
-                format will be determind by the predict function
+                format will be determined by the predict function
                 user define and pass in to our framework.
         """
         pass

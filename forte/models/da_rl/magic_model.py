@@ -58,7 +58,7 @@ class MetaModule(nn.ModuleList):
 
     For example, if the input module is :class:`tx.modules.BERTClassifier`,
     :meth:`_get_noise_shape`, :meth:`_split_heads`, :meth:`_combine_heads`
-    from its sub-modules (Eg. :class:`tx.modules.BERTEncoder`) are needed to be
+    from its sub-modules (E.g. :class:`tx.modules.BERTEncoder`) are needed to be
     exposed in this class to perform their :meth:`forward`. Please refer to
     :class:`TexarBertMetaModule` for instructions on creating a subclass from
     this one for a specific input module.
@@ -82,7 +82,7 @@ class MetaModule(nn.ModuleList):
         for key, value in module._modules.items():
             # type(self) is the real class object
             # it can be MetaModule(value), or it can be its subclass,
-            # eg. TexarBertMetaModule(value)
+            # e.g. TexarBertMetaModule(value)
             self.add_module(key, type(self)(value))
 
         for key, value in module.__dict__.items():
@@ -113,7 +113,7 @@ class TexarBertMetaModule(MetaModule,
                           tx.modules.MultiheadAttentionEncoder):
     r"""A subclass that extends :class:`MetaModule` to do parameter updates
     locally for texar-pytorch Bert related modules.
-    Eg. :class:`tx.modules.BERTClassifier`
+    E.g. :class:`tx.modules.BERTClassifier`
 
     Please refer to its base class :class:`MetaModule` for more details.
 
@@ -123,7 +123,7 @@ class TexarBertMetaModule(MetaModule,
     This class extends :class:`tx.modules.EmbedderBase` and
     :class:`tx.modules.MultiheadAttentionEncoder`, such that it inherits
     their methods that are needed to perform :meth:`forward` of the modules
-    that utilizes these methods, Eg. :class:`tx.modules.BERTEncoder`,
+    that utilizes these methods, E.g. :class:`tx.modules.BERTEncoder`,
     :class:`tx.modules.WordEmbedder`.
 
     Some notes of the order of the base classes that this class extends:
