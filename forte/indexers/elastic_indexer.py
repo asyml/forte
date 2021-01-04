@@ -32,7 +32,7 @@ es_logger.setLevel(logging.INFO)
 
 
 class ElasticSearchIndexer:
-    r"""Indexer class for Elastic Search."""
+    r"""Indexer class for `Elasticsearch`."""
 
     def __init__(self, config: Optional[Union[Dict, Config]] = None):
         super().__init__()
@@ -105,7 +105,7 @@ class ElasticSearchIndexer:
                 for the complete list of arguments.
 
             .. note::
-                "refresh" setting will greatly affect the Elasticsearch
+                "refresh" setting will greatly affect the `Elasticsearch`
                 performance. Please refer to
                 https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
                 for more information on "refresh"
@@ -128,7 +128,7 @@ class ElasticSearchIndexer:
         ``query``.
 
         Args:
-             query (dict): An elasticsearch query which is issued to the indexer
+             query (dict): An `Elasticsearch` query which is issued to the indexer
              index_name (str): Name of the index where documents are looked up.
                 If None, value will be picked from the processor configs.
              kwargs (optional, dict) : Optional keyword arguments like
