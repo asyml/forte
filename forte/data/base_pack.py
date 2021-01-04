@@ -99,8 +99,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         super().__setstate__(state)
         self.__dict__['_pending_entries'] = {}
         if 'meta' in self.__dict__:
-            self._meta = self.__dict__['meta']
-            self.__dict__.pop('meta')
+            self._meta = self.__dict__.pop('meta')
         self.__control_component: Optional[str] = None
 
     @abstractmethod

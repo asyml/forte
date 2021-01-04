@@ -105,6 +105,16 @@ class DataPack(BasePack[Entry, Link, Group]):
         """
         super().__setstate__(state)
 
+        # For backward compatibility.
+        if 'replace_back_operations' in self.__dict__:
+            self.__replace_back_operations = self.__dict__.pop(
+                'replace_back_operations')
+        if 'processed_original_spans' in self.__dict__:
+            self.__processed_original_spans = self.__dict__.pop(
+                'processed_original_spans')
+        if 'orig_text_len' in self.__dict__:
+            self.__orig_text_len = self.__dict__.pop('orig_text_len')
+
         self.annotations = SortedList(self.annotations)
         self.links = SortedList(self.links)
         self.groups = SortedList(self.groups)
@@ -968,7 +978,7 @@ class DataIndex(BaseIndex):
     def __init__(self):
         super().__init__()
         self._coverage_index: Dict[Tuple[Type[Annotation], Type[EntryType]],
-                                  Dict[int, Set[int]]] = dict()
+                                   Dict[int, Set[int]]] = dict()
         self._coverage_index_valid = True
 
     @property
