@@ -29,14 +29,13 @@ __all__ = [
 
 class SemEvalTask8Reader(PackReader):
     r""":class:`SemEvalTask8Reader` is designed to read in
-        Sem Eval Task8 dataset.
+        SemEval Task-8 dataset. The data can be obtained
+        here: http://www.kozareva.com/downloads.html
 
-        Hendrickx, Iris, et al. "Semeval-2010 task 8: Multi-way
-        classification of semantic relations between pairs of nominals."
-        arXiv preprint arXiv:1911.10422 (2019).
 
-        https://www.aclweb.org/anthology/S10-1006.pdf
-        http://www.kozareva.com/downloads.html
+        `Hendrickx, Iris, et al. SemEval-2010 task 8: Multi-way
+        classification of semantic relations between pairs of
+        nominals.` https://www.aclweb.org/anthology/S10-1006.pdf
 
         An example of the dataset is
         '''
@@ -46,7 +45,7 @@ class SemEvalTask8Reader(PackReader):
         Comment:
         '''.
 
-        This example will be converted to one Sencetence,
+        This example will be converted to one `Sentence`,
         "People have been moving back into downtown."
         and one RelationLink,
         link = RelationLink(parent=People, child=downtown)

@@ -52,13 +52,14 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     Key fields in this processor:
         - context_type (Annotation): define the context (scope) to process.
         - input_info: A data request. Based on this input_info. If
-           `use_coverage_index` is set to true, the processor will build the
-            index based on the input infol to speed up the entry searching time.
+          `use_coverage_index` is set to true, the processor will build the
+          index based on the input information to speed up the entry
+          searching time.
         - batcher: The processing batcher used for this processor.The batcher
-           will also keep track of the relation between the pack and the batch
-           data.
+          will also keep track of the relation between the pack and the batch
+          data.
         - use_coverage_index: If true, the index will be built based on the
-            input_info.
+          input_info.
     """
 
     def __init__(self):

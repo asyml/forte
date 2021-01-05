@@ -31,7 +31,7 @@ __all__ = [
 
 class ElasticSearchIndexerBase(IndexProcessor, ABC):
     r"""This processor implements the basic functions to add the data packs
-    into an Elasticsearch index."""
+    into an `Elasticsearch` index."""
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -59,7 +59,7 @@ class ElasticSearchIndexerBase(IndexProcessor, ABC):
         Here:
 
         `"batch_size"`: int
-            Number of examples that will be bulk added to Elasticsearch index
+            Number of examples that will be bulk added to `Elasticsearch` index
 
         `"fields"`: str, list
             Field name that will be used as a key while indexing the document
@@ -99,7 +99,7 @@ class ElasticSearchIndexerBase(IndexProcessor, ABC):
 
 class ElasticSearchTextIndexProcessor(ElasticSearchIndexerBase):
     r"""This processor indexes the text of data packs into an
-      Elasticsearch index."""
+      `Elasticsearch` index."""
 
     def _content_for_index(self, input_pack: DataPack) -> List[str]:
         """
@@ -118,7 +118,7 @@ class ElasticSearchTextIndexProcessor(ElasticSearchIndexerBase):
 
 
 class ElasticSearchPackIndexProcessor(ElasticSearchIndexerBase):
-    r"""This processor indexes the data packs into an Elasticsearch index."""
+    r"""This processor indexes the data packs into an `Elasticsearch` index."""
 
     def _content_for_index(self, input_pack: DataPack) -> List[str]:
         """

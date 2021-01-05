@@ -10,6 +10,7 @@ prefetch
 prefetching
 prefetches
 prefetched
+pretrained
 uniquify
 uniquifies
 uniquifying
@@ -70,6 +71,7 @@ conll
 ontonotes
 Ontonotes
 datapack
+datapacks
 PackType
 Hparams
 configs
@@ -84,6 +86,7 @@ Batcher
 Batchers
 Deserialize
 deserialize
+deserialized
 OntonotesReader
 nlp
 io
@@ -105,4 +108,20 @@ composable
 chatbot
 reranker
 viterbi
-
+bert
+Bert
+hypernym
+hypernyms
+hyponym
+hyponyms
+wordnet
+Hendrickx
+Fien
+Meulder
+SemEval
+UDA
+unk
+cuda
+gpu
+cpu
+unigram

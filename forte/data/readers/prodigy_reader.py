@@ -28,7 +28,7 @@ __all__ = [
 
 
 class ProdigyReader(PackReader):
-    r""":class:`ProdigyTextReader` is designed to read in Prodigy output text.
+    r""":class:`ProdigyReader` is designed to read in Prodigy output text.
     """
 
     def _cache_key_function(self, data: dict) -> str:

@@ -18,7 +18,6 @@ import torch
 from forte.common import ValidationError
 from forte.data.vocabulary import Vocabulary
 
-
 __all__ = [
     "Feature"
 ]
@@ -33,19 +32,22 @@ class Feature:
     Args:
         data (list): A list of features, where each feature can be the value or
             another list of features. Typically this should be the output from
-            :meth:`extract` in :class:`forte.data.extractor.BaseExtractor`.
-        metadata (dict): A dictionary of metadata for this feature. Mandatory
-            metadata fields includes: `dim`, `dtype`.
+            :meth:`extract` in
+            :class:`~forte.data.extractor.base_extractor.BaseExtractor`.
+        metadata (dict): A dictionary storing meta-data for this feature.
+            Mandatory fields includes: `dim`, `dtype`.
 
             `dim` indicates the total number of dimension for this
             feature.
 
             `dtype` is the value type. For example, it can be `torch.long`.
         vocab (Vocabulary): An optional fields about the
-            :class:`forte.data.Vocabulary` used to build this feature.
+            :class:`~forte.data.vocabulary.Vocabulary` used to build this
+            feature.
 
     Please refer to :meth:`data` for the typical usage of this class.
     """
+
     def __init__(self,
                  data: List,
                  metadata: Dict,
@@ -171,7 +173,8 @@ class Feature:
     def vocab(self) -> Optional[Vocabulary]:
         """
         Returns:
-            The :class:`forte.data.Vocabulary` used to build this feature.
+            The :class:`~forte.data.vocabulary.Vocabulary` used to build this
+            feature.
         """
         return self._vocab
 
@@ -211,8 +214,10 @@ class Feature:
 
         for _ in range(max_len - len(self)):
             if self.leaf_feature:
-                assert self._data is not None, "Invalid internal state: " \
-                                   "leaf_feature does not have actual data"
+                if self._data is None:
+                    raise ValueError(
+                        "Invalid internal state: leaf_feature "
+                        "does not have actual data")
                 self._data.append(self._pad_value)
             else:
                 sub_metadata = deepcopy(self._meta_data)
@@ -235,7 +240,7 @@ class Feature:
             The first element is the actual data representing this feature.
 
             The second element is a list of masks. masks[i] in this list
-            represents the mask along ith dimension.
+            represents the mask along i-th dimension.
 
         Here are some examples for how the padding works:
 
@@ -337,8 +342,10 @@ class Feature:
             # ]
         """
         if self.leaf_feature:
-            assert self._data is not None, "Invalid internal state: " \
-                               "leaf_feature does not have actual data"
+            if self._data is None:
+                raise ValueError(
+                    "Invalid internal state: leaf_feature "
+                    "does not have actual data")
             return self._data, [self._mask]
         else:
             unroll_features: List = []
