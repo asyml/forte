@@ -26,7 +26,6 @@ from torch.optim import Optimizer
 
 from forte.models.da_rl.magic_model import MetaModule
 
-
 __all__ = [
     "MetaAugmentationWrapper"
 ]
@@ -57,12 +56,12 @@ class MetaAugmentationWrapper:
     Args:
         augmentation_model:
             A Bert-based model for data augmentation.
-            Eg. BertForMaskedLM.
+            E.g. BertForMaskedLM.
             Model requirement: masked language modeling, the output logits
             of this model is of shape `[batch_size, seq_length, token_size]`.
         augmentation_optimizer:
             An optimizer that is associated with `augmentation_model`.
-            Eg. Adam optim
+            E.g. Adam optimizer.
         input_mask_ids:
             Bert token id of `'[MASK]'`. This is used to randomly mask out
             tokens from the input sentence during training.
@@ -92,8 +91,8 @@ class MetaAugmentationWrapper:
                     meta_model = aug_wrapper.update_meta_model(
                         meta_model, loss, model, optim)
 
-                    # Compute grads of aug model on validation data
-                    for val_batch in validation_data:
+                    # Compute gradient of the augmentation model on validation
+                    data for val_batch in validation_data:
                         val_loss = meta_model(val_batch_features)
                         val_loss = val_loss / num_training_instance / num_aug \
                             / num_val_batch
@@ -131,7 +130,7 @@ class MetaAugmentationWrapper:
 
         Args:
             features: A tuple of Bert features of one training instance.
-                (input_ids, input_mask, segment_ids, label_ids).
+                `(input_ids, input_mask, segment_ids, label_ids)`.
 
                 `input_ids` is a tensor of Bert token ids.
                 It has shape `[seq_len]`.
@@ -192,7 +191,7 @@ class MetaAugmentationWrapper:
 
         Args:
             features: A tuple of Bert features of one training instance.
-                (input_ids, input_mask, segment_ids, label_ids).
+                `(input_ids, input_mask, segment_ids, label_ids)`.
 
                 `input_ids` is a tensor of Bert token ids.
                 It has shape `[seq_len]`.
@@ -205,7 +204,7 @@ class MetaAugmentationWrapper:
 
         Returns:
             A tuple of Bert features of augmented training instances.
-            (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
+            `(input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug)`.
 
             `input_probs_aug` is a tensor of soft Bert embeddings,
             distributions over vocabulary.
@@ -257,7 +256,7 @@ class MetaAugmentationWrapper:
 
         Returns:
             A tuple of Bert features of augmented training instances.
-            (input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug).
+            `(input_probs_aug, input_mask_aug, segment_ids_aug, label_ids_aug)`.
 
             `input_probs_aug` is a tensor of soft Bert embeddings,
             It has shape `[batch_size * 2, seq_len, token_size]`.

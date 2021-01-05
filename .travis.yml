@@ -63,6 +63,6 @@ jobs:
       script:
         - cd docs
         - sphinx-build -W -b html -d _build/doctrees . _build/html
-        - sphinx-build -b spelling -d _build/doctrees . _build/spelling
+        - sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
 notifications:
   email: false

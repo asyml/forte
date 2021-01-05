@@ -27,7 +27,7 @@ class Dictionary:
     r"""
     This class defines a dictionary for word replacement.
     Given an input word and its pos_tag(optional), the dictionary
-    will outputs its synonyms, antonyms, hypernyns and hyponyms.
+    will outputs its synonyms, antonyms, hypernyms and hypernyms.
     """
 
     # pylint: disable=unused-argument

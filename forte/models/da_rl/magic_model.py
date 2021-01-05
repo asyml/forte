@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=W0233
+
+# pylint: disable=non-parent-init-called
 # pylint: disable=super-init-not-called
 """
 A magic model that registers the parameter of a pytorch nn module
@@ -24,7 +25,6 @@ import torch
 import torch.nn as nn
 import texar.torch as tx
 
-
 __all__ = [
     "MetaModule",
     "TexarBertMetaModule"
@@ -33,7 +33,7 @@ __all__ = [
 
 class MetaModule(nn.ModuleList):
     # pylint: disable=line-too-long
-    r"""A class extending :class:`torch.nn.Module`
+    r"""A class extending :class:`torch.nn.ModuleList`
     that registers the parameters of a :class:`torch.nn.Module`
     and performs memory-efficient parameter updates locally.
 
@@ -56,9 +56,11 @@ class MetaModule(nn.ModuleList):
     the methods needed for their :meth:`forward`, so that it inherits their
     methods to perform the sub-module's :meth:`forward`.
 
-    For example, if the input module is :class:`tx.modules.BERTClassifier`,
+    For example, if the input module is
+    :class:`~texar.torch.modules.BERTClassifier`,
     :meth:`_get_noise_shape`, :meth:`_split_heads`, :meth:`_combine_heads`
-    from its sub-modules (Eg. :class:`tx.modules.BERTEncoder`) are needed to be
+    from its sub-modules (E.g. :class:`~texar.torch.modules.BERTEncoder`)
+    are needed to be
     exposed in this class to perform their :meth:`forward`. Please refer to
     :class:`TexarBertMetaModule` for instructions on creating a subclass from
     this one for a specific input module.
@@ -82,12 +84,12 @@ class MetaModule(nn.ModuleList):
         for key, value in module._modules.items():
             # type(self) is the real class object
             # it can be MetaModule(value), or it can be its subclass,
-            # eg. TexarBertMetaModule(value)
+            # e.g. TexarBertMetaModule(value)
             self.add_module(key, type(self)(value))
 
         for key, value in module.__dict__.items():
-            if key not in self.__dict__ and\
-                    key not in self._buffers and\
+            if key not in self.__dict__ and \
+                    key not in self._buffers and \
                     key not in self._modules:
                 self.__setattr__(key, value)
 
@@ -113,24 +115,25 @@ class TexarBertMetaModule(MetaModule,
                           tx.modules.MultiheadAttentionEncoder):
     r"""A subclass that extends :class:`MetaModule` to do parameter updates
     locally for texar-pytorch Bert related modules.
-    Eg. :class:`tx.modules.BERTClassifier`
+    E.g. :class:`texar.torch.modules.BERTClassifier`
 
     Please refer to its base class :class:`MetaModule` for more details.
 
     Args:
         module: A :class:`torch.nn.Module`.
 
-    This class extends :class:`tx.modules.EmbedderBase` and
-    :class:`tx.modules.MultiheadAttentionEncoder`, such that it inherits
-    their methods that are needed to perform :meth:`forward` of the modules
-    that utilizes these methods, Eg. :class:`tx.modules.BERTEncoder`,
-    :class:`tx.modules.WordEmbedder`.
+    This class extends :class:`~texar.torch.modules.EmbedderBase` and
+    :class:`~texar.torch.modules.MultiheadAttentionEncoder`, such that it
+    inherits their methods that are needed to perform :meth:`forward` of
+    the modules that utilizes these methods,
+    E.g. :class:`~texar.torch.modules.BERTEncoder`,
 
     Some notes of the order of the base classes that this class extends:
 
     `MetaModule` should be the first one, so that its :meth:`forward` will
     call :meth:`MetaModule.forward` instead of the :meth:`forward` of the other
-    base classes, such as :meth:`MultiheadAttentionEncoder.forward`.
+    base classes, such as
+    :func:`texar.torch.modules.MultiheadAttentionEncoder.forward`.
     If `MetaModule` is not the first one, then a :meth:`forward` should be
     defined in this class, such that it is called correctly.
 
@@ -142,5 +145,6 @@ class TexarBertMetaModule(MetaModule,
                 return MetaModule.forward(self, *args, **kwargs)
 
     """
+
     def __init__(self, module: nn.Module):
         MetaModule.__init__(self, module)

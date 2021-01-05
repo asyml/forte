@@ -28,8 +28,6 @@ from typing import List, Dict, Union, Optional
 
 from forte.data.common_entry_utils import get_last_utterance, create_utterance
 from forte.data.data_pack import DataPack
-from forte.data.readers import StringReader
-from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance
 
@@ -645,10 +643,3 @@ key: like 10
   decomp: * @be * like *
     reasmb: goto alike
 """
-
-if __name__ == '__main__':
-    p: Pipeline[DataPack] = Pipeline()
-    p.set_reader(StringReader())
-    p.add(ElizaProcessor())
-    p.initialize()
-    print(p.process('').text)
