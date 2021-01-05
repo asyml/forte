@@ -104,6 +104,8 @@ def train(model: nn.Module, optim: Optimizer, batch: Batch, max_sen_length: int)
     labels_1D = torch.squeeze(labels)
     torch.add(labels_1D, -2, out=labels_1D)
 
+    true_one_batch = (labels_1D == pred).sum().item()
+
     loss = criterion(logits, labels_1D)
 
     loss.backward()
@@ -111,7 +113,7 @@ def train(model: nn.Module, optim: Optimizer, batch: Batch, max_sen_length: int)
 
     batch_train_err = loss.item() * batch.batch_size
 
-    return batch_train_err
+    return batch_train_err, true_one_batch
 
 
 # All the configs
@@ -175,7 +177,7 @@ imdb_train_reader = IMDBReader(cache_in_memory=True)
 
 pl = Pipeline()
 pl.set_reader(imdb_train_reader)
-pl.add(ReplacementDataAugmentProcessor(), processor_config)
+#pl.add(ReplacementDataAugmentProcessor(), processor_config)
 pl.initialize()
 
 datapack_generator = pl.process_dataset(config.config_data.train_path)
@@ -223,16 +225,22 @@ while epoch < config.config_data.num_epochs:
     train_batch_iter: Iterator[Batch] = \
         train_preprocessor.get_train_batch_iterator()
 
+    true_total = 0
+    train_total_One_Epoch = 0
+
     for batch in tqdm(train_batch_iter):
-        batch_train_err = train(model, optim, batch, max_sen_length)
+        batch_train_err, true_one_batch = train(model, optim, batch, max_sen_length)
 
         train_err += batch_train_err
         train_total += batch.batch_size
+        true_total += true_one_batch
+        train_total_One_Epoch += batch.batch_size
 
     logger.info(f"{epoch}th Epoch training, "
                 f"total number of examples: {train_total}, "
+                f"Train Accuracy: {(true_total / train_total_One_Epoch):0.3f}, "
                 f"loss: {(train_err / train_total):0.3f}")
 
 # Save training result to disk
-# train_preprocessor.save_state(config.config_data.train_state_path)
-# torch.save(model, config.config_model.model_path)
+train_preprocessor.save_state(config.config_data.train_state_path)
+torch.save(model, config.config_model.model_path)
