@@ -291,6 +291,38 @@ class MultiPackLink(MultiEntry, BaseLink):
             raise IncompleteEntryError("Child is not set for this link.")
         return self._child
 
+    def parent_id(self) -> int:
+        """
+        Return the `tid` of the parent entry.
+
+        Returns: The `tid` of the parent entry.
+        """
+        return self.parent[1]
+
+    def child_id(self) -> int:
+        """
+        Return the `tid` of the child entry.
+
+        Returns: The `tid` of the child entry.
+        """
+        return self.child[1]
+
+    def parent_pack_id(self) -> int:
+        """
+        Return the `pack_id` of the parent pack.
+
+        Returns: The `pack_id` of the parent pack..
+        """
+        return self.pack.packs[self._parent[0]].pack_id
+
+    def child_pack_id(self) -> int:
+        """
+        Return the `pack_id` of the child pack.
+
+        Returns: The `pack_id` of the child pack.
+        """
+        return self.pack.packs[self._child[0]].pack_id
+
     def set_parent(self, parent: Entry):
         r"""This will set the `parent` of the current instance with given Entry.
         The parent is saved internally as a tuple: ``pack index`` and
