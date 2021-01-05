@@ -128,8 +128,9 @@ class MultiPackDeserializerBase(MultiPackReader):
         for pid in m_pack.pack_ids():
             p_content = self._get_pack_content(pid)
             if p_content is None:
-                logging.warning(f"Cannot locate the data pack with pid {pid} "
-                                f"for multi pack {m_pack.pack_id}")
+                logging.warning(
+                    f"Cannot locate the data pack with pid %d "
+                    f"for multi pack %d", pid, m_pack.pack_id)
                 break
             pack: DataPack
             if isinstance(p_content, str):

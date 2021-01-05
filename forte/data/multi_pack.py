@@ -534,7 +534,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if components is not None:
             if isinstance(components, str):
                 components = [components]
-            valid_id &= self.get_ids_by_components(components)
+            valid_id &= self.get_ids_by_creators(components)
 
         for entry_id in valid_id:
             yield self.get_entry(entry_id)
