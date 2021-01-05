@@ -17,7 +17,6 @@ from typing import Optional, Set, Tuple, Type, Any, Dict, Union, Iterable, List
 
 import numpy as np
 
-from forte.common.exception import IncompleteEntryError
 from forte.data.base_pack import PackType
 from forte.data.ontology.core import Entry, BaseLink, BaseGroup, MultiEntry
 from forte.data.span import Span
@@ -282,14 +281,50 @@ class MultiPackLink(MultiEntry, BaseLink):
     @property
     def parent(self) -> Tuple[int, int]:
         if self._parent is None:
-            raise IncompleteEntryError("Parent is not set for this link.")
+            raise ValueError("Parent is not set for this link.")
         return self._parent
 
     @property
     def child(self) -> Tuple[int, int]:
         if self._child is None:
-            raise IncompleteEntryError("Child is not set for this link.")
+            raise ValueError("Child is not set for this link.")
         return self._child
+
+    def parent_id(self) -> int:
+        """
+        Return the `tid` of the parent entry.
+
+        Returns: The `tid` of the parent entry.
+        """
+        return self.parent[1]
+
+    def child_id(self) -> int:
+        """
+        Return the `tid` of the child entry.
+
+        Returns: The `tid` of the child entry.
+        """
+        return self.child[1]
+
+    def parent_pack_id(self) -> int:
+        """
+        Return the `pack_id` of the parent pack.
+
+        Returns: The `pack_id` of the parent pack..
+        """
+        if self._parent is None:
+            raise ValueError("Parent is not set for this link.")
+        return self.pack.packs[self._parent[0]].pack_id
+
+    def child_pack_id(self) -> int:
+        """
+        Return the `pack_id` of the child pack.
+
+        Returns: The `pack_id` of the child pack.
+        """
+        if self._child is None:
+            raise ValueError("Child is not set for this link.")
+        return self.pack.packs[self._child[0]].pack_id
 
     def set_parent(self, parent: Entry):
         r"""This will set the `parent` of the current instance with given Entry.
@@ -331,7 +366,7 @@ class MultiPackLink(MultiEntry, BaseLink):
              An instance of :class:`Entry` that is the parent of the link.
         """
         if self._parent is None:
-            raise IncompleteEntryError("The parent of this link is not set.")
+            raise ValueError("The parent of this link is not set.")
 
         pack_idx, parent_tid = self._parent
         return self.pack.get_subentry(pack_idx, parent_tid)
@@ -343,7 +378,7 @@ class MultiPackLink(MultiEntry, BaseLink):
              An instance of :class:`Entry` that is the child of the link.
         """
         if self._child is None:
-            raise IncompleteEntryError("The parent of this link is not set.")
+            raise ValueError("The parent of this link is not set.")
 
         pack_idx, child_tid = self._child
         return self.pack.get_subentry(pack_idx, child_tid)

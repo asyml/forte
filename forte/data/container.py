@@ -19,7 +19,7 @@ Forte Container module.
 # pylint: disable=function-redefined,multiple-statements
 
 from abc import abstractmethod
-from typing import Dict, Generic, Set, Tuple, TypeVar
+from typing import Dict, Generic, Set, Tuple, TypeVar, Iterator
 
 from forte.data.span import Span
 
@@ -66,11 +66,11 @@ class EntryIdManager:
 class EntryContainer(Generic[E, L, G]):
     def __init__(self):
         # Record the set of entries created by some components.
-        self.creation_records: Dict[str, Set[int]] = {}
+        self._creation_records: Dict[str, Set[int]] = {}
 
         # Record the set of fields modified by this component. The 2-tuple
         # identify the entry field, such as (2, lemma).
-        self.field_records: Dict[str, Set[Tuple[int, str]]] = {}
+        self._field_records: Dict[str, Set[Tuple[int, str]]] = {}
 
         # The Id manager controls the ID management in this container
         self._id_manager = EntryIdManager()
@@ -93,8 +93,16 @@ class EntryContainer(Generic[E, L, G]):
             - The :class:`IdManager` is recreated from the id count.
         """
         self.__dict__.update(state)
-        self.__dict__.pop('serialization')
-        self._id_manager = EntryIdManager(state['serialization']['next_id'])
+
+        if 'creation_records' in self.__dict__:
+            self._creation_records = self.__dict__.pop('creation_records')
+
+        if 'field_records' in self.__dict__:
+            self._field_records = self.__dict__.pop('field_records')
+
+        if 'serialization' in self.__dict__:
+            self._id_manager = EntryIdManager(
+                self.__dict__.pop('serialization')['next_id'])
 
     @abstractmethod
     def on_entry_creation(self, entry: E):
@@ -129,6 +137,9 @@ class EntryContainer(Generic[E, L, G]):
 
     def get_next_id(self):
         return self._id_manager.get_id()
+
+    def get_all_creator(self) -> Iterator[str]:
+        yield from self._creation_records.keys()
 
 
 ContainerType = TypeVar("ContainerType", bound=EntryContainer)

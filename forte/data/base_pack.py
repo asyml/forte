@@ -97,8 +97,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def __setstate__(self, state):
         super().__setstate__(state)
-        self.__dict__['_pending_entries'] = {}
-        self.__control_component: Optional[str] = None
+        if 'meta' in self.__dict__:
+            self._meta = self.__dict__.pop('meta')
+        self.__control_component = None
+        self._pending_entries = {}
 
     @abstractmethod
     def _init_meta(self, pack_name: Optional[str] = None) -> BaseMeta:
@@ -220,8 +222,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def serialize(self, drop_record: Optional[bool] = False) -> str:
         r"""Serializes a pack to a string."""
         if drop_record:
-            self.creation_records.clear()
-            self.field_records.clear()
+            self._creation_records.clear()
+            self._field_records.clear()
 
         return jsonpickle.encode(self, unpicklable=True)
 
@@ -249,9 +251,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         if c is not None:
             try:
-                self.creation_records[c].add(entry.tid)
+                self._creation_records[c].add(entry.tid)
             except KeyError:
-                self.creation_records[c] = {entry.tid}
+                self._creation_records[c] = {entry.tid}
 
     def record_field(self, entry_id: int, field_name: str):
         """
@@ -269,9 +271,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         if c is not None:
             try:
-                self.field_records[c].add((entry_id, field_name))
+                self._field_records[c].add((entry_id, field_name))
             except KeyError:
-                self.field_records[c] = {(entry_id, field_name)}
+                self._field_records[c] = {(entry_id, field_name)}
 
     def on_entry_creation(self, entry: Entry,
                           component_name: Optional[str] = None):
@@ -346,12 +348,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise EntryNotFoundError(
             f"The entry {entry_type} is not found in the provided pack.")
 
-    def get_ids_by_component(self, component: str) -> Set[int]:
+    def get_ids_by_creator(self, component: str) -> Set[int]:
         r"""Look up the component_index with key ``component``."""
-        entry_set: Set[int] = self.creation_records[component]
+        entry_set: Set[int] = self._creation_records[component]
         return entry_set
 
-    def get_entries_by_component(self, component: str) -> Set[EntryType]:
+    def get_entries_by_creator(self, component: str) -> Set[EntryType]:
         """
         Return all entries created by the particular component, an unordered
         set.
@@ -363,13 +365,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         """
         return {self.get_entry(tid)
-                for tid in self.get_ids_by_component(component)}
+                for tid in self.get_ids_by_creator(component)}
 
-    def get_ids_by_components(self, components: List[str]) -> Set[int]:
+    def get_ids_by_creators(self, components: List[str]) -> Set[int]:
         """Look up component_index using a list of components."""
         valid_component_id: Set[int] = set()
         for component in components:
-            valid_component_id |= self.get_ids_by_component(component)
+            valid_component_id |= self.get_ids_by_creator(component)
         return valid_component_id
 
     def get_ids_by_type(self, entry_type: Type[EntryType]) -> Set[int]:
