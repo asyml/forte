@@ -66,7 +66,7 @@ for pack in pl.process_dataset(config_predict['test_path']):
 
 # evaluate on the test set
 gold_sentiment_list = []
-with open(config_predict['test_path']+"sample.imdb", "r", encoding="utf8") as f:
+with open(config_predict['test_path'] + "sample.imdb", "r", encoding="utf8") as f:
     for line in f:
         line = line.strip()
         if line != "":
