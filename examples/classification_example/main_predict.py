@@ -51,6 +51,7 @@ pl.set_reader(reader)
 pl.add(predictor)
 pl.initialize()
 
+predict_sentiment_list = []
 for pack in pl.process_dataset(config_predict['test_path']):
     print("---- pack ----")
     for instance in pack.get(Sentence):
@@ -58,6 +59,26 @@ for pack in pl.process_dataset(config_predict['test_path']):
         predicts = []
         for entry in pack.get(Sentence, instance):
             predicts.append(entry.speaker)
+            predict_sentiment_list.append(entry.speaker)
         print('---- example -----')
         print("sentence: ", sentence)
         print("predict sentiment: ", predicts)
+
+# evaluate on the test set
+gold_sentiment_list = []
+with open(config_predict['test_path']+"sample.imdb", "r", encoding="utf8") as f:
+    for line in f:
+        line = line.strip()
+        if line != "":
+            line_list = line.split("\",")
+            gold_sentiment = line_list[1]
+            gold_sentiment_list.append(gold_sentiment)
+
+print("gold_sentiment_list: ", gold_sentiment_list)
+print("predict_sentiment_list: ", predict_sentiment_list)
+right_predict = 0
+for i in range(len(gold_sentiment_list)):
+    if gold_sentiment_list[i] == predict_sentiment_list[i]:
+        right_predict += 1
+
+print("Testing Accuracy: ", right_predict / len(predict_sentiment_list))
