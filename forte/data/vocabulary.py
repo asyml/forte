@@ -116,13 +116,14 @@ class Vocabulary:
 
     def __getstate__(self):
         r"""For serialization."""
-        state = {}
-        state["method"] = self.method
-        state["need_pad"] = self.need_pad
-        state["use_unk"] = self.use_unk
-        state["element2id_dict"] = self.element2id_dict
-        state["id2element_dict"] = self.id2element_dict
-        state["next_id"] = self.next_id
+        state = {
+            "method": self.method,
+            "need_pad": self.need_pad,
+            "use_unk": self.use_unk,
+            "element2id_dict": self.element2id_dict,
+            "id2element_dict": self.id2element_dict,
+            "next_id": self.next_id
+        }
         return state
 
     def __setstate__(self, state):
