@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import unittest
-
+import pickle as pkl
 from ft.onto.base_ontology import Sentence, Token
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader import CoNLL03Reader
@@ -83,12 +83,12 @@ class AttributeExtractorTest(unittest.TestCase):
                 self.assertEqual(feat.data[0], fake_pos_ids)
 
             for instance in pack.get(Sentence):
-                extractor.remove_from_pack(pack, instance)
+                extractor.pre_evaluation_action(pack, instance)
                 feat = extractor.extract(pack, instance)
                 self.assertEqual(feat.data[0], unk_pos_ids)
 
         # Check state and from_state.
-        new_extractor = AttributeExtractor.from_state(extractor.state)
+        new_extractor = pkl.loads(pkl.dumps(extractor))
         self.assertEqual(new_extractor.config.attribute,
                         extractor.config.attribute)
 

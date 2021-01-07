@@ -46,29 +46,9 @@ class AttributeExtractor(BaseExtractor):
             raise AttributeError("attribute needs to be specified in "
                                 "the configuration of an AttributeExtractor.")
 
-    @property
-    def state(self) -> Dict:
-        state = super().state
-        state.update({
-            "attribute": self.config.attribute
-        })
-        return state
-
-    @classmethod
-    def from_state(cls, state: Dict) \
-        -> Union["BaseExtractor", "AttributeExtractor"]:
-        obj = BaseExtractor.from_state(state)
-        additional = {
-            "attribute": state["attribute"]
-        }
-        obj.config = Config(obj.config, additional,
-                            allow_new_hparam=True)
-        obj.__class__ = cls
-        return obj
-
     @staticmethod
     def get_attribute(entry: Entry, attr: str) -> Any:
-        r"""Functionality: Get the attribute from entry. You can
+        r"""Get the attribute from entry. You can
         overwrite this function if you have sepcial way to get the
         attribute from entry.
 
@@ -84,7 +64,7 @@ class AttributeExtractor(BaseExtractor):
 
     @staticmethod
     def set_attribute(entry: Entry, attr: str, value: Any):
-        r"""Functionality: Set the attribute of an entry to value.
+        r"""Set the attribute of an entry to value.
         You can overwrite this function if you have sepcial way to
         set the attribute.
 
@@ -100,7 +80,7 @@ class AttributeExtractor(BaseExtractor):
         setattr(entry, attr, value)
 
     def update_vocab(self, pack: DataPack, instance: Annotation):
-        r"""Functionality: Get all attributes of one instance and
+        r"""Get all attributes of one instance and
         add them into the vocabulary.
 
         Args:
@@ -120,7 +100,7 @@ class AttributeExtractor(BaseExtractor):
             self.add(element)
 
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
-        r"""Functionality: Extract attributes of one instance.
+        r"""Extract attributes of one instance.
         For example, the text of tokens in one sentence.
 
         Args:
@@ -148,7 +128,7 @@ class AttributeExtractor(BaseExtractor):
                        vocab=self.vocab)
 
     def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
-        r"""Funcationality: Remove attributes of one instance. For
+        r"""Remove attributes of one instance. For
         example remove all pos tags of tokens in one sentence, if the
         entry_type is Token and the attribute is pos.  This function is
         called before the evaluation on a pack. After features are removed,
@@ -165,7 +145,7 @@ class AttributeExtractor(BaseExtractor):
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Iterable[Union[int, Any]]):
-        r"""Functionality: Add the prediction for attribute to the
+        r"""Add the prediction for attribute to the
         instance. If the prediction is an iterable object, we assume
         each of the element in prediction will correspond to one entry.
         If the prediction is only one element, then we assume there will
