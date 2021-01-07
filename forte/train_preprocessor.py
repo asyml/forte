@@ -32,6 +32,7 @@ __all__ = [
     "TrainPreprocessor"
 ]
 
+
 class TrainPreprocessor:
     r"""
     `TrainPreprocessor` provides the functionality of doing pre-processing work
@@ -197,7 +198,7 @@ class TrainPreprocessor:
                         "Extractor {} needs the entry {} to do extraction "
                         "processing but it is not extracted by any other "
                         "extractors given in request".
-                        format(based_on, dependent_extractor.tag))
+                            format(based_on, dependent_extractor.tag))
 
         self._request = request
         self._request_ready = True
@@ -245,7 +246,7 @@ class TrainPreprocessor:
 
         .. code-block:: python
 
-            feature_resource = {
+            request = {
                 "scope": ft.onto.Sentence
                 "schemes": {
                     "text_tag": {
