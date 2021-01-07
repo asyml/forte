@@ -14,7 +14,7 @@
 """
 Unit tests for dictionary word replacement data augmenter.
 """
-
+import os
 import unittest
 
 from forte.processors.data_augment.algorithms.embedding_similarity_replacement_op \
@@ -27,8 +27,14 @@ from forte.data.data_pack import DataPack
 
 class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
     def setUp(self):
-        self.vocab = load_glove_vocab("sample_embedding.txt")
-        self.embedding = load_glove_embedding("sample_embedding.txt", 50, self.vocab)
+        file_dir_path = os.path.dirname(__file__)
+        vocab_path = "tests/forte/processors/data_augment/algorithms/"\
+                     "sample_embedding.txt"
+        abs_vocab_path = os.path.abspath(os.path.join(file_dir_path,
+                                                      *([os.pardir] * 5),
+                                                      vocab_path))
+        self.vocab = load_glove_vocab(abs_vocab_path)
+        self.embedding = load_glove_embedding(abs_vocab_path, 50, self.vocab)
         self.esa = EmbeddingSimilarityReplacementOp(
             self.embedding,
             self.vocab,
