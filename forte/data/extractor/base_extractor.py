@@ -120,32 +120,6 @@ class BaseExtractor(ABC):
         }
 
     @property
-    def state(self) -> Dict:
-        return {
-            "vocab_method": self.config.vocab_method,
-            "need_pad": self.config.need_pad,
-            "vocab_use_unk": self.config.vocab_use_unk,
-            "entry_type": self.config.entry_type,
-            "vocab": self.vocab.state if self.vocab else None,
-        }
-
-    @classmethod
-    def from_state(cls, state: Dict) -> "BaseExtractor":
-        config = {
-            "vocab_method": state["vocab_method"],
-            "need_pad": state["need_pad"],
-            "vocab_use_unk": state["vocab_use_unk"],
-            "entry_type": state["entry_type"]
-        }
-        obj = cls(config)
-        if "vocab" in state and state["vocab"] is not None and \
-                isinstance(state["vocab"], dict):
-            obj.vocab = Vocabulary.from_state(state["vocab"])
-        else:
-            obj.vocab = None
-        return obj
-
-    @property
     def entry_type(self) -> Type[Annotation]:
         return self.config.entry_type
 

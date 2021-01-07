@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
+import pickle as pkl
 from itertools import product
 from forte.data.vocabulary import Vocabulary
 
@@ -25,7 +26,7 @@ class VocabularyTest(unittest.TestCase):
                 idx = i
         return idx
 
-    def test_indexing_vocab(self):
+    def test_vocabulary(self):
         methods = ["indexing", "one-hot"]
         flags = [True, False]
         for method, need_pad, use_unk in product(methods, flags, flags):
@@ -95,8 +96,7 @@ class VocabularyTest(unittest.TestCase):
                 self.assertEqual(saved_len, len(vocab))
 
             # Check state
-            new_vocab = Vocabulary.from_state(vocab.state)
-            self.assertEqual(dir(vocab), dir(new_vocab))
+            new_vocab = pkl.loads(pkl.dumps(vocab))
             self.assertEqual(vocab.method, new_vocab.method)
             self.assertEqual(vocab.need_pad, new_vocab.need_pad)
             self.assertEqual(vocab.use_unk, new_vocab.use_unk)
