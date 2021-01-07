@@ -259,17 +259,17 @@ class BaseExtractor(ABC):
 
     def pre_evaluation_action(self, pack: DataPack,
                 instance: Annotation):
-        r"""Functionality: Remove the existing feature of the instance
+        r"""Remove the existing feature of the instance
         in a pack. We might remove an attribute under an entry or remove
         the entry itself directly, which will depend on the different
         type of extractors. This function is called before the evaluation
-        on a pack. After features are removed, new features predicted
-        from the model will be added to the pack.
+        on a pack to do some pre_evaluation action. For example, you can
+        remove entries or remove some attributes of the entry. So that
+        they are not mixed with predicted entries or predicted attributes.
 
         Overwrite instruction:
             1. Get all entries from one instance in the pack.
-            2. Remove entries or remove some attributes of the entry. You
-                might use pack.delete_entry function or setattr to do this.
+            2. Conduct pre_evaluation_action on entries.
 
         Args:
             pack (Datapack): The datapack that contains the current

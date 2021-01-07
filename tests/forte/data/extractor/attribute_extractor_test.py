@@ -61,16 +61,16 @@ class AttributeExtractorTest(unittest.TestCase):
                 recovered = [extractor.id2element(idx) for idx in feat.data[0]]
                 self.assertEqual(" ".join(recovered), sentence)
 
-        # Check add_to_pack and remove_from_pack.
-        # Vocab_mathod is indexing, therefore the id of element
+        # Check add_to_pack and pre_evaluation_action.
+        # Vocab_method is indexing, therefore the id of element
         # is the same as repr.
         extractor.config.attribute = "pos"
         extractor.add("TMP")
         fake_pos_ids = [extractor.element2repr("TMP") for _ in
                         range(len(sentence.split(" ")))]
-        # After remove_from_pack, the attribute value will become
-        # None. Since vocab_use_unk is true, None will be mapped
-        # to <UNK>.
+        # After pre_evaluation_action, the attribute value will
+        # become None. Since vocab_use_unk is true, None will be
+        # mapped to <UNK>.
         unk_pos_ids = [extractor.element2repr(None) for _ in
                         range(len(sentence.split(" ")))]
 
