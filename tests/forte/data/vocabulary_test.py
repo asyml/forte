@@ -26,7 +26,7 @@ class VocabularyTest(unittest.TestCase):
                 idx = i
         return idx
 
-    def test_indexing_vocab(self):
+    def test_vocabulary(self):
         methods = ["indexing", "one-hot"]
         flags = [True, False]
         for method, need_pad, use_unk in product(methods, flags, flags):

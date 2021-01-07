@@ -114,27 +114,6 @@ class Vocabulary:
         if use_unk:
             self.add_element(Vocabulary.UNK_ELEMENT)
 
-    def __getstate__(self):
-        r"""For serialization."""
-        state = {
-            "method": self.method,
-            "need_pad": self.need_pad,
-            "use_unk": self.use_unk,
-            "element2id_dict": self.element2id_dict,
-            "id2element_dict": self.id2element_dict,
-            "next_id": self.next_id
-        }
-        return state
-
-    def __setstate__(self, state):
-        r"""For deserialization."""
-        self.method = state["method"]
-        self.need_pad = state["need_pad"]
-        self.use_unk = state["use_unk"]
-        self.element2id_dict = state["element2id_dict"]
-        self.id2element_dict = state["id2element_dict"]
-        self.next_id = state["next_id"]
-
     def add_element(self, element: Hashable):
         r"""This function will add element to the vocabulary.
 

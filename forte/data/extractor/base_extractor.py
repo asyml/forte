@@ -119,19 +119,6 @@ class BaseExtractor(ABC):
             "need_pad": True,
         }
 
-    def __getstate__(self):
-        r"""For serializaion."""
-        state = {
-            "config": self.config,
-            "vocab": self.vocab
-        }
-        return state
-
-    def __setstate__(self, state):
-        r"""For deserialization."""
-        self.config = state["config"]
-        self.vocab = state["vocab"]
-
     @property
     def entry_type(self) -> Type[Annotation]:
         return self.config.entry_type
