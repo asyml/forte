@@ -46,8 +46,7 @@ class AttributeExtractor(BaseExtractor):
             raise AttributeError("attribute needs to be specified in "
                                 "the configuration of an AttributeExtractor.")
 
-    @staticmethod
-    def get_attribute(entry: Entry, attr: str) -> Any:
+    def get_attribute(self, entry: Entry, attr: str) -> Any:
         r"""Get the attribute from entry. You can
         overwrite this function if you have sepcial way to get the
         attribute from entry.
@@ -62,8 +61,7 @@ class AttributeExtractor(BaseExtractor):
         """
         return getattr(entry, attr)
 
-    @staticmethod
-    def set_attribute(entry: Entry, attr: str, value: Any):
+    def set_attribute(self, entry: Entry, attr: str, value: Any):
         r"""Set the attribute of an entry to value.
         You can overwrite this function if you have sepcial way to
         set the attribute.
