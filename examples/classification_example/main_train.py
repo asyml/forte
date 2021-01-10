@@ -21,7 +21,7 @@ from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 from texar.torch.data import Batch
 from tqdm import tqdm
-from typing import Iterator, Dict
+from typing import Iterator, Dict, Any
 from forte.common.configuration import Config
 from forte.data.extractor.attribute_extractor \
     import AttributeExtractor
@@ -30,7 +30,7 @@ from forte.data.extractor.base_extractor \
 from forte.train_preprocessor import TrainPreprocessor
 from forte.data.readers.imdb_reader import IMDBReader
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Sentence, Token
+from ft.onto.base_ontology import Sentence, Token, Entry
 from texar.torch.modules.embedders import WordEmbedder
 from examples.classification_example.cnn import CNN_Classifier
 from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
@@ -67,9 +67,8 @@ def construct_word_embedding_table(embed_dict, extractor: BaseExtractor):
     return torch.from_numpy(table)
 
 
-def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
+def create_model(text_extractor : AttributeExtractor,
                  config: Config, in_channels: int):
-    text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
     embedding_dict = {}
     fake_tensor = torch.tensor([0.0 for i in range(100)])
     for word, index in text_extractor.items():
@@ -91,7 +90,6 @@ def create_model(schemes: Dict[str, Dict[str, BaseExtractor]],
 def train(model: nn.Module, optim: Optimizer, batch: Batch, max_sen_length: int):
     word = batch["text_tag"]["data"]
     labels = batch["label_tag"]["data"]
-    labels = torch.tensor(labels)
     optim.zero_grad()
 
     logits, pred = None, None
@@ -124,27 +122,47 @@ config = Config({}, default_hparams=None)
 config.add_hparam('config_data', config_data)
 config.add_hparam('config_model', config_model)
 
-tp_request = {
+# Generate request
+text_extractor: AttributeExtractor = \
+    AttributeExtractor(config={"entry_type": Token,
+                               "vocab_method": "indexing",
+                               "attribute": "text"})
+
+
+class SentimentExtractor(AttributeExtractor):
+    def get_attribute(self, entry: Entry, attr: str):
+        if "positive" in getattr(entry, attr):
+            return "positive"
+        else:
+            return "negative"
+
+    def set_attribute(self, entry: Entry, attr: str, value: Any):
+        if value == "positive":
+            getattr(entry, attr)["positive"] = 1.0
+        else:
+            getattr(entry, attr)["negative"] = 0.0
+
+
+label_extractor: AttributeExtractor = \
+    SentimentExtractor(config={"entry_type": Sentence,
+                               "vocab_method": "indexing",
+                               "need_pad": False,
+                               "vocab_use_unk": False,
+                               "attribute": "sentiment"})
+tp_request: Dict = {
     "scope": Sentence,
     "schemes": {
         "text_tag": {
-            "entry_type": Token,
-            "attribute_get": "text",
-            "vocab_method": "indexing",
             "type": TrainPreprocessor.DATA_INPUT,
-            "extractor": AttributeExtractor
+            "extractor": text_extractor
         },
         "label_tag": {
-            "entry_type": Sentence,
-            "attribute_get": "speaker",
-            "vocab_method": "indexing",
             "type": TrainPreprocessor.DATA_OUTPUT,
-            "extractor": AttributeExtractor,
-            "need_pad": False,
-            "vocab_use_unk": False
+            "extractor": label_extractor
         }
     }
 }
+
 
 # All not specified dataset parameters are set by default in Texar.
 # Default settings can be found here:
@@ -200,7 +218,7 @@ for batch in tqdm(train_batch_iter):
                          max_sen_length)
 
 model, word_embedding_table = \
-    create_model(schemes=train_preprocessor.feature_resource["schemes"],
+    create_model(text_extractor=text_extractor,
                  config=config, in_channels=max_sen_length)
 
 word_embedder = WordEmbedder(init_value=word_embedding_table)
@@ -244,5 +262,6 @@ while epoch < config.config_data.num_epochs:
                 f"loss: {(train_err / train_total):0.3f}")
 
 # Save training result to disk
-train_preprocessor.save_state(config.config_data.train_state_path)
-torch.save(model, config.config_model.model_path)
+# train_preprocessor.save_state(config.config_data.train_state_path)
+# #torch.save(model.state_dict(), config.config_data.train_state_path)
+# torch.save(model, config.config_model.model_path)
