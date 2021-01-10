@@ -67,7 +67,7 @@ def construct_word_embedding_table(embed_dict, extractor: BaseExtractor):
     return torch.from_numpy(table)
 
 
-def create_model(text_extractor : AttributeExtractor,
+def create_model(text_extractor: AttributeExtractor,
                  config: Config, in_channels: int):
     embedding_dict = {}
     fake_tensor = torch.tensor([0.0 for i in range(100)])
