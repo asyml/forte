@@ -16,22 +16,15 @@ import random
 
 from typing import Tuple
 import numpy as np
-from texar.torch.data import Embedding
-from texar.torch.data import Vocab
 
 from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
-from forte.processors.data_augment.utils.utils import l2_norm
 
 __all__ = [
     "EmbeddingSimilarityReplacementOp",
 ]
-
-random.seed(0)
-
-emb_types = ['glove']
 
 
 class EmbeddingSimilarityReplacementOp(TextReplacementOp):
@@ -43,18 +36,21 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
     top k words with the most similar embeddings.
 
     Args:
-        embedding: A texar.tf.data.Embedding object. Can be initialized
-            from pre-trained embedding file using helper functions
-            E.g. forte.processors.data_augment.utils.utils.load_glove_embedding
-        vocab: A texar.torch.data.Vocab object. Can be initialized from
-            pre-trained embedding file using helper functions
-            E.g. forte.processor.data_augment.utils.utils.load_glove_vocab
-        configs: The config should contain `top_k`,
-            the number of k most similar words to choose from
+        configs:
+            The config should contain the following key-value pairs:
+            embedding: A texar.tf.data.Embedding object. Can be initialized
+                from pre-trained embedding file
+            vocab: A texar.torch.data.Vocab object. Can be initialized from
+                a vocabulary file
+            top_k: the number of k most similar words to choose from
     """
-    def __init__(self, embedding: Embedding, vocab: Vocab, configs: Config):
+    def __init__(self, configs: Config):
         super().__init__(configs)
-        self.normalized_vectors = l2_norm(embedding.word_vecs)
+        embedding = self.configs['embedding']
+        vocab = self.configs['vocab']
+        self.normalized_vectors = \
+            embedding.word_vecs / np.sqrt(
+                (embedding.word_vecs ** 2).sum(axis=1))[:, np.newaxis]
         self.vocab = vocab
 
     def replace(self, input: Annotation) -> Tuple[bool, str]:
@@ -81,4 +77,4 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
         target_words = [self.vocab.id_to_token_map_py[idx]
             for idx in target_ids if idx != source_id and
             self.vocab.id_to_token_map_py[idx].lower() != word.lower()]
-        return random.choice(target_words)
+        return True, random.choice(target_words)
