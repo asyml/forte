@@ -80,7 +80,10 @@ class IMDBReader(PackReader):
                     # Add sentence.
                     senobj = Sentence(pack, offset + 1,
                                       offset + len(sentence) + 1)
-                    senobj.speaker = sentiment
+                    if sentiment == "positive":
+                        senobj.sentiment["positive"] = 1.0
+                    else:
+                        senobj.sentiment["negative"] = 0.0
 
                     # Add token
                     wordoffset = offset + 1
