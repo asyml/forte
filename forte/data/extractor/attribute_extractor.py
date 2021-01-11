@@ -48,7 +48,7 @@ class AttributeExtractor(BaseExtractor):
 
     def get_attribute(self, entry: Entry, attr: str) -> Any:
         r"""Get the attribute from entry. You can
-        overwrite this function if you have sepcial way to get the
+        overwrite this function if you have special way to get the
         attribute from entry.
 
         Args:
@@ -63,7 +63,7 @@ class AttributeExtractor(BaseExtractor):
 
     def set_attribute(self, entry: Entry, attr: str, value: Any):
         r"""Set the attribute of an entry to value.
-        You can overwrite this function if you have sepcial way to
+        You can overwrite this function if you have special way to
         set the attribute.
 
         Args:
