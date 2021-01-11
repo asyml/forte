@@ -129,7 +129,7 @@ class AttributeExtractor(BaseExtractor):
         r"""This function is performed on the pack before the evaluation
         stage, allowing one to perform some actions before the evaluation.
         By default, this function will remove the attribute. You can
-        overwrite this function by your own.
+        overwrite this function by yourself.
 
         Args:
             pack (Datapack): The datapack that contains the current
