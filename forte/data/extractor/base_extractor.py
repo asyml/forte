@@ -128,43 +128,43 @@ class BaseExtractor(ABC):
         return self.config.vocab_method
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
-        if self.vocab:
+        if self.vocab is not None:
             return self.vocab.get_pad_value()
         else:
             return None
 
     def items(self) -> Iterable[Tuple[Hashable, int]]:
-        if not self.vocab:
+        if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.items()
 
     def size(self) -> int:
-        if not self.vocab:
+        if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return len(self.vocab)
 
     def add(self, element: Hashable):
-        if not self.vocab:
+        if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.add_element(element)
 
     def has_element(self, element: Hashable) -> bool:
-        if not self.vocab:
+        if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.has_element(element)
 
     def element2repr(self, element: Hashable) -> Union[int, List[int]]:
-        if not self.vocab:
+        if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.element2repr(element)
 
     def id2element(self, idx: int) -> Any:
-        if not self.vocab:
+        if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.id2element(idx)
 
     def get_dict(self) -> Dict[Hashable, int]:
-        if not self.vocab:
+        if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.get_dict()
 
