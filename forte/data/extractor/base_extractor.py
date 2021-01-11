@@ -33,8 +33,11 @@ class BaseExtractor(ABC):
     r"""The functionality of Extractor is as followed:
             1. Build vocabulary.
             2. Extract feature from datapack.
-            3. Remove feature in datapack.
+            3. Perform pre-evaluation action on datapack.
             4. Add prediction to datapack.
+        These functionalities will be used by other components
+        inside our framework, e.g. Trainpreprocessor and Predictor.
+        And outside users do not need to use these by themselves.
 
         Explanation:
             Vocabulary: Vocabulary is maintained as an inner class
@@ -233,17 +236,10 @@ class BaseExtractor(ABC):
 
     def pre_evaluation_action(self, pack: DataPack,
                 instance: Annotation):
-        r"""Remove the existing feature of the instance
-        in a pack. We might remove an attribute under an entry or remove
-        the entry itself directly, which will depend on the different
-        type of extractors. This function is called before the evaluation
-        on a pack to do some pre_evaluation action. For example, you can
-        remove entries or remove some attributes of the entry. So that
-        they are not mixed with predicted entries or predicted attributes.
-
-        Overwrite instruction:
-            1. Get all entries from one instance in the pack.
-            2. Conduct pre_evaluation_action on entries.
+        r"""This function is performed on the pack before the evaluation
+        stage, allowing one to perform some actions before the evaluation.
+        For example, you can remove entries or remove some attributes of
+        the entry. By default, this function will not do anything.
 
         Args:
             pack (Datapack): The datapack that contains the current

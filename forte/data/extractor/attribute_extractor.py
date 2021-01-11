@@ -126,11 +126,10 @@ class AttributeExtractor(BaseExtractor):
                        vocab=self.vocab)
 
     def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
-        r"""Remove attributes of one instance. For
-        example remove all pos tags of tokens in one sentence, if the
-        entry_type is Token and the attribute is pos.  This function is
-        called before the evaluation on a pack. After features are removed,
-        new features predicted from the model will be added to the pack.
+        r"""This function is performed on the pack before the evaluation
+        stage, allowing one to perform some actions before the evaluation.
+        By default, this function will remove the attribute. You can
+        overwrite this function by your own.
 
         Args:
             pack (Datapack): The datapack that contains the current
