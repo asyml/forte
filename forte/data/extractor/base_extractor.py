@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+This file implements BaseExtractor, which the abstract class other
+extractors will inherit from.
+"""
 from abc import ABC
 import logging
 from typing import Tuple, Set, List, Dict, Any
@@ -83,7 +86,7 @@ class BaseExtractor(ABC):
 
     def __init__(self, config: Union[Dict, Config]):
 
-        self.config = Config(config, self.default_configs(),
+        self.config = Config(config, BaseExtractor.default_configs(),
                              allow_new_hparam=True)
 
         if not hasattr(self.config, "entry_type"):
@@ -98,10 +101,9 @@ class BaseExtractor(ABC):
         else:
             self.vocab = None
 
-    @staticmethod
-    def default_configs():
-        r"""
-        Returns a dictionary of default hyper-parameters.
+    @classmethod
+    def default_configs(cls):
+        r"""Returns a dictionary of default hyper-parameters.
 
         "vocab_method": str
             What type of vocabulary is used for this extractor.

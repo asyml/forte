@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+This file implements AttributeExtractor, which is used to extract feature
+from the attribute of entries.
+"""
 import logging
 from collections import Hashable, abc
 from typing import Dict, Any, Union, Iterable
@@ -40,11 +43,22 @@ class AttributeExtractor(BaseExtractor):
                 example, "text" attribute of Token.
     """
     def __init__(self, config: Union[Dict, Config]):
+        config = Config(config, AttributeExtractor.default_configs(),
+                             allow_new_hparam=True)
         super().__init__(config)
 
         if "attribute" not in self.config:
             raise AttributeError("attribute needs to be specified in "
                                 "the configuration of an AttributeExtractor.")
+
+    @classmethod
+    def default_configs(cls):
+        r"""Returns a dictionary of default hyper-parameters.
+
+        "attribute": str
+            The name of attribute we want to extract from the entry.
+        """
+        return {"attribute": "text"}
 
     def get_attribute(self, entry: Entry, attr: str) -> Any:
         r"""Get the attribute from entry. You can

@@ -41,12 +41,12 @@ class CharExtractor(BaseExtractor):
             options and default values.
     """
     def __init__(self, config: Union[Dict, Config]):
-        config = Config(config, self.default_configs(),
+        config = Config(config, CharExtractor.default_configs(),
                              allow_new_hparam=True)
         super().__init__(config)
 
-    @staticmethod
-    def default_configs():
+    @classmethod
+    def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
         "max_char_length": int
