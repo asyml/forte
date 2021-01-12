@@ -30,38 +30,42 @@ __all__ = [
 
 
 class BaseExtractor(ABC):
-    r"""The functionality of Extractor is as followed:
-            1. Build vocabulary.
-            2. Extract feature from datapack.
-            3. Remove feature in datapack.
-            4. Add prediction to datapack.
+    r"""The functionality of Extractor is as followed. These
+    functionalities will be used by other components inside
+    our framework, e.g. Train Pre-processor and Predictor. And
+    outside users do not need to use these by themselves.
 
-        Explanation:
-            Vocabulary: Vocabulary is maintained as an inner class
-                in extractor. It will store the mapping from element
-                to index, which is an integer, and representation,
-                which could be an index integer or one-hot vector
-                depending on the configuration of the vocabulary.
-                Check :class:`forte.data.vocabulary.Vocabulary` for
-                more details.
-            Feature: A feature basically wraps the data we want from
-                one instance in a datapack. For example, the instance
-                can be one sentence in a datapack. Then the data wrapped
-                by the feature could be the token text of this sentence.
-                The data is already converted as list of indexes using
-                vocabulary. Besides the data, other information like the
-                raw data before indexing and some meta_data will also be
-                stored in the feature. Check
-                :class:`forte.data.converter.feature.Feature` for more
-                details.
-            Remove feature / Add prediction: Removing feature means remove
-                the existing data in the datapack. If we remove the feature
-                in the pack, then extracting feature will return empty list.
-                Adding prediction means we add the prediction from model
-                back to the datapack. If a datapack has some old data (for
-                example, the golden data in the test set), we can first
-                remove those data and then add our model prediction to
-                the pack.
+        1. Build vocabulary.
+        2. Extract feature from datapack.
+        3. Perform pre-evaluation action on datapack.
+        4. Add prediction to datapack.
+
+    Explanation:
+        Vocabulary: Vocabulary is maintained as an inner class
+            in extractor. It will store the mapping from element
+            to index, which is an integer, and representation,
+            which could be an index integer or one-hot vector
+            depending on the configuration of the vocabulary.
+            Check :class:`forte.data.vocabulary.Vocabulary` for
+            more details.
+        Feature: A feature basically wraps the data we want from
+            one instance in a datapack. For example, the instance
+            can be one sentence in a datapack. Then the data wrapped
+            by the feature could be the token text of this sentence.
+            The data is already converted as list of indexes using
+            vocabulary. Besides the data, other information like the
+            raw data before indexing and some meta_data will also be
+            stored in the feature. Check
+            :class:`forte.data.converter.feature.Feature` for more
+            details.
+        Remove feature / Add prediction: Removing feature means remove
+            the existing data in the datapack. If we remove the feature
+            in the pack, then extracting feature will return empty list.
+            Adding prediction means we add the prediction from model
+            back to the datapack. If a datapack has some old data (for
+            example, the golden data in the test set), we can first
+            remove those data and then add our model prediction to
+            the pack.
 
     Args:
         config: An instance of `Dict` or
@@ -231,16 +235,18 @@ class BaseExtractor(ABC):
         """
         pass
 
-    def remove_from_pack(self, pack: DataPack, instance: Annotation):
-        r"""Functionality: Remove the existing feature of the instance
-        in a pack. We might remove an attribute under an entry or remove
-        the entry itself directly, which will depend on the different
-        type of extractors.
+    def pre_evaluation_action(self, pack: DataPack,
+                instance: Annotation):
+        r"""This function is performed on the pack before the evaluation
+        stage, allowing one to perform some actions before the evaluation.
+        For example, you can remove entries or remove some attributes of
+        the entry. By default, this function will not do anything.
 
-        Overwrite instruction:
-            1. Get all entries from one instance in the pack.
-            2. Remove entries or remove some attributes of the entry. You
-                might use pack.delete_entry function or setattr to do this.
+        Args:
+            pack (Datapack): The datapack that contains the current
+                instance.
+            instance (Annotation): The instance from which the
+                extractor will extractor feature.
         """
         pass
 
