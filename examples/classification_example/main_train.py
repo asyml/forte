@@ -263,5 +263,4 @@ while epoch < config.config_data.num_epochs:
 
 # Save training result to disk
 # train_preprocessor.save_state(config.config_data.train_state_path)
-# #torch.save(model.state_dict(), config.config_data.train_state_path)
 # torch.save(model, config.config_model.model_path)
