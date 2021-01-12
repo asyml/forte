@@ -201,7 +201,8 @@ imdb_train_reader = IMDBReader()
 
 pl = Pipeline()
 pl.set_reader(imdb_train_reader)
-pl.add(ReplacementDataAugmentProcessor(), processor_config)
+if config.config_data.data_aug:
+    pl.add(ReplacementDataAugmentProcessor(), processor_config)
 pl.initialize()
 
 datapack_generator = pl.process_dataset(config.config_data.train_path)
