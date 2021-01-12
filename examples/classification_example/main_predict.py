@@ -30,7 +30,9 @@ def predict_forward_fn(model, batch):
         logits, pred = model(batch)
 
     if config_model["model"] == "bert":
-        logits, pred = model(pad_each_bach(word, 500))
+        mask = batch["text_tag"]["masks"][0]
+        logits, pred = model(pad_each_bach(word, 500),
+                             torch.sum(mask, dim=1))
     pred = pred.numpy()
     return {"label_tag": pred}
 

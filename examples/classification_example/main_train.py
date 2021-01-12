@@ -70,9 +70,8 @@ def construct_word_embedding_table(embed_dict, extractor: BaseExtractor):
 def create_model(text_extractor: AttributeExtractor,
                  config: Config, in_channels: int):
     embedding_dict = {}
-    fake_tensor = torch.tensor([0.0 for i in range(100)])
     for word, index in text_extractor.items():
-        embedding_dict[word] = fake_tensor
+        embedding_dict[word] = torch.tensor([0.0 for i in range(100)])
 
     word_embedding_table = \
         construct_word_embedding_table(embedding_dict, text_extractor)
@@ -98,7 +97,9 @@ def train(model: nn.Module, optim: Optimizer, batch: Batch, max_sen_length: int)
         logits, pred = model(batch)
 
     if config.config_model.model == "bert":
-        logits, pred = model(pad_each_bach(word, max_sen_length))
+        mask = batch["text_tag"]["masks"][0]
+        logits, pred = model(pad_each_bach(word, max_sen_length),
+                             torch.sum(mask, dim=1))
 
     labels_1D = torch.squeeze(labels)
     true_one_batch = (labels_1D == pred).sum().item()
@@ -129,16 +130,22 @@ text_extractor: AttributeExtractor = \
 
 class SentimentExtractor(AttributeExtractor):
     def get_attribute(self, entry: Entry, attr: str):
-        if "positive" in getattr(entry, attr):
+        if entry.sentiment["positive"] == 1.0:
             return "positive"
         else:
             return "negative"
 
     def set_attribute(self, entry: Entry, attr: str, value: Any):
         if value == "positive":
-            getattr(entry, attr)["positive"] = 1.0
+            entry.sentiment = {
+                "positive": 1.0,
+                "negative": 0.0,
+            }
         else:
-            getattr(entry, attr)["negative"] = 0.0
+            entry.sentiment = {
+                "positive": 0.0,
+                "negative": 1.0,
+            }
 
 
 label_extractor: AttributeExtractor = \
@@ -162,7 +169,6 @@ tp_request: Dict = {
 }
 
 
-# All not specified dataset parameters are set by default in Texar.
 # Default settings can be found here:
 # https://texar-pytorch.readthedocs.io/en/latest/code/data.html#texar.torch.data.DatasetBase.default_hparams
 tp_config = {
@@ -191,7 +197,7 @@ processor_config = {
     }
 }
 
-imdb_train_reader = IMDBReader(cache_in_memory=True)
+imdb_train_reader = IMDBReader()
 
 pl = Pipeline()
 pl.set_reader(imdb_train_reader)
