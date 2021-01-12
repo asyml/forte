@@ -86,8 +86,13 @@ class IMDBReaderTest(unittest.TestCase):
                 label = label
                 comment = actual_sentence.text
                 # Test comment.
+                if actual_sentence.sentiment["positive"] == 1.0:
+                    read_label = "positive"
+                else:
+                    read_label = "negative"
+
                 self.assertEqual(comment, line)
-                self.assertEqual(list(actual_sentence.sentiment.keys())[0], label)
+                self.assertEqual(read_label, label)
 
             for word_read, word_in_pack in zip(wordlist, actual_word):
                 new_word_read = word_read
