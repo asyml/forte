@@ -11,9 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+This file implements CharExtractor, which is used to extract feature
+from characters of a piece of text.
+"""
 import logging
+from typing import Union, Dict
 from ft.onto.base_ontology import Annotation
+from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.extractor.base_extractor import BaseExtractor
@@ -27,8 +32,28 @@ __all__ = [
 
 class CharExtractor(BaseExtractor):
     r"""CharExtractor extracts feature from the text of entry.
-    Text will be splitted into characters.
+    Text will be split into characters.
+
+    Args:
+        config: An instance of `Dict` or
+            :class:`forte.common.configuration.Config` that provides all
+            configurable options. See :meth:`default_configs` for available
+            options and default values.
     """
+    def __init__(self, config: Union[Dict, Config]):
+        config = Config(config, self.default_configs(),
+                             allow_new_hparam=True)
+        super().__init__(config)
+
+    @staticmethod
+    def default_configs():
+        r"""Returns a dictionary of default hyper-parameters.
+
+        "max_char_length": int
+            The maximun number of characters for one token in the text.
+        """
+        return {"max_char_length": None}
+
     def update_vocab(self, pack: DataPack, instance: Annotation):
         r"""Add all character into vocabulary.
 
@@ -66,6 +91,7 @@ class CharExtractor(BaseExtractor):
             max_char_length = max(max_char_length, len(data[-1]))
 
         if hasattr(self.config, "max_char_length") and \
+            self.config.max_char_length is not None and \
             self.config.max_char_length < max_char_length:
             data = [token[:self.config.max_char_length] for
                     token in data]
