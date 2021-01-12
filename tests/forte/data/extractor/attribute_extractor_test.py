@@ -33,7 +33,6 @@ class AttributeExtractorTest(unittest.TestCase):
         pipeline.initialize()
 
         config = {
-            "scope": Sentence,
             "need_pad": True,
             "entry_type": Token,
             "attribute": "text",

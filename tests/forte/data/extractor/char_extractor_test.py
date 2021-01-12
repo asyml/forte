@@ -33,14 +33,12 @@ class CharExtractorTest(unittest.TestCase):
         pipeline.initialize()
 
         config1 = {
-            "scope": Sentence,
             "entry_type": Token,
             "need_pad": True,
             "vocab_use_unk": True,
         }
 
         config2 = {
-            "scope": Sentence,
             "entry_type": Token,
             "need_pad": True,
             "vocab_use_unk": True,

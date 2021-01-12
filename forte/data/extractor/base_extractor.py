@@ -85,11 +85,9 @@ class BaseExtractor(ABC):
                        "on vocabulary should not be called."
 
     def __init__(self, config: Union[Dict, Config]):
+        self.config = Config(config, self.default_configs())
 
-        self.config = Config(config, BaseExtractor.default_configs(),
-                             allow_new_hparam=True)
-
-        if not hasattr(self.config, "entry_type"):
+        if self.config.entry_type is None:
             raise AttributeError("entry_type needs to be specified in "
                                  "the configuration of an extractor.")
 
@@ -120,6 +118,7 @@ class BaseExtractor(ABC):
             Default is true.
         """
         return {
+            "entry_type": None,
             "vocab_method": "indexing",
             "vocab_use_unk": True,
             "need_pad": True,

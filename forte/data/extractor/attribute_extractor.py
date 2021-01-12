@@ -43,13 +43,7 @@ class AttributeExtractor(BaseExtractor):
                 example, "text" attribute of Token.
     """
     def __init__(self, config: Union[Dict, Config]):
-        config = Config(config, AttributeExtractor.default_configs(),
-                             allow_new_hparam=True)
         super().__init__(config)
-
-        if "attribute" not in self.config:
-            raise AttributeError("attribute needs to be specified in "
-                                "the configuration of an AttributeExtractor.")
 
     @classmethod
     def default_configs(cls):
@@ -58,7 +52,9 @@ class AttributeExtractor(BaseExtractor):
         "attribute": str
             The name of attribute we want to extract from the entry.
         """
-        return {"attribute": "text"}
+        config = super().default_configs()
+        config.update({"attribute": "text"})
+        return config
 
     def get_attribute(self, entry: Entry, attr: str) -> Any:
         r"""Get the attribute from entry. You can

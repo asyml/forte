@@ -41,8 +41,6 @@ class CharExtractor(BaseExtractor):
             options and default values.
     """
     def __init__(self, config: Union[Dict, Config]):
-        config = Config(config, CharExtractor.default_configs(),
-                             allow_new_hparam=True)
         super().__init__(config)
 
     @classmethod
@@ -52,7 +50,9 @@ class CharExtractor(BaseExtractor):
         "max_char_length": int
             The maximun number of characters for one token in the text.
         """
-        return {"max_char_length": None}
+        config = super().default_configs()
+        config.update({"max_char_length": None})
+        return config
 
     def update_vocab(self, pack: DataPack, instance: Annotation):
         r"""Add all character into vocabulary.
