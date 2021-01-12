@@ -141,7 +141,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
             })
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "filter_widths": [3, 4, 5],
             "filter_size": 50,
@@ -384,7 +384,7 @@ class LabeledSpanGraphNetwork(tx.ModuleBase):
         cache_inputs = [states, states, head_attn_cache, span_length_embed]
         pred_indices = self._arange(max_len).expand(batch_size, -1)
         with self.argument_mlp.cache_results(cache_inputs), \
-             self.predicate_mlp.cache_results([states]):
+                self.predicate_mlp.cache_results([states]):
             # arg_scores: (batch_size, max_num_spans)
             arg_scores = self.argument_mlp(
                 [start_ids, end_ids, head_attn_index, span_length]).squeeze(-1)
