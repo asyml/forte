@@ -16,9 +16,7 @@ This file implements CharExtractor, which is used to extract feature
 from characters of a piece of text.
 """
 import logging
-from typing import Union, Dict
 from ft.onto.base_ontology import Annotation
-from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.extractor.base_extractor import BaseExtractor
@@ -40,9 +38,6 @@ class CharExtractor(BaseExtractor):
             configurable options. See :meth:`default_configs` for available
             options and default values.
     """
-    def __init__(self, config: Union[Dict, Config]):
-        super().__init__(config)
-
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.

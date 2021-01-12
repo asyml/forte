@@ -17,9 +17,8 @@ from the attribute of entries.
 """
 import logging
 from collections import Hashable, abc
-from typing import Dict, Any, Union, Iterable
+from typing import Any, Union, Iterable
 from ft.onto.base_ontology import Entry, Annotation
-from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.extractor.base_extractor import BaseExtractor
@@ -42,9 +41,6 @@ class AttributeExtractor(BaseExtractor):
                 entry from which features will be extracted. For
                 example, "text" attribute of Token.
     """
-    def __init__(self, config: Union[Dict, Config]):
-        super().__init__(config)
-
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
