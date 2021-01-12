@@ -30,41 +30,41 @@ __all__ = [
 
 
 class BaseExtractor(ABC):
-    r"""The functionality of Extractor is as followed:
-            1. Build vocabulary.
-            2. Extract feature from datapack.
-            3. Perform pre-evaluation action on datapack.
-            4. Add prediction to datapack.
-        These functionalities will be used by other components
-        inside our framework, e.g. Trainpreprocessor and Predictor.
-        And outside users do not need to use these by themselves.
+    r"""The functionality of Extractor is as followed. These
+    functionalities will be used by other components inside
+    our framework, e.g. Trainpreprocessor and Predictor. And
+    outside users do not need to use these by themselves.
+    1. Build vocabulary.
+    2. Extract feature from datapack.
+    3. Perform pre-evaluation action on datapack.
+    4. Add prediction to datapack.
 
-        Explanation:
-            Vocabulary: Vocabulary is maintained as an inner class
-                in extractor. It will store the mapping from element
-                to index, which is an integer, and representation,
-                which could be an index integer or one-hot vector
-                depending on the configuration of the vocabulary.
-                Check :class:`forte.data.vocabulary.Vocabulary` for
-                more details.
-            Feature: A feature basically wraps the data we want from
-                one instance in a datapack. For example, the instance
-                can be one sentence in a datapack. Then the data wrapped
-                by the feature could be the token text of this sentence.
-                The data is already converted as list of indexes using
-                vocabulary. Besides the data, other information like the
-                raw data before indexing and some meta_data will also be
-                stored in the feature. Check
-                :class:`forte.data.converter.feature.Feature` for more
-                details.
-            Remove feature / Add prediction: Removing feature means remove
-                the existing data in the datapack. If we remove the feature
-                in the pack, then extracting feature will return empty list.
-                Adding prediction means we add the prediction from model
-                back to the datapack. If a datapack has some old data (for
-                example, the golden data in the test set), we can first
-                remove those data and then add our model prediction to
-                the pack.
+    Explanation:
+        Vocabulary: Vocabulary is maintained as an inner class
+            in extractor. It will store the mapping from element
+            to index, which is an integer, and representation,
+            which could be an index integer or one-hot vector
+            depending on the configuration of the vocabulary.
+            Check :class:`forte.data.vocabulary.Vocabulary` for
+            more details.
+        Feature: A feature basically wraps the data we want from
+            one instance in a datapack. For example, the instance
+            can be one sentence in a datapack. Then the data wrapped
+            by the feature could be the token text of this sentence.
+            The data is already converted as list of indexes using
+            vocabulary. Besides the data, other information like the
+            raw data before indexing and some meta_data will also be
+            stored in the feature. Check
+            :class:`forte.data.converter.feature.Feature` for more
+            details.
+        Remove feature / Add prediction: Removing feature means remove
+            the existing data in the datapack. If we remove the feature
+            in the pack, then extracting feature will return empty list.
+            Adding prediction means we add the prediction from model
+            back to the datapack. If a datapack has some old data (for
+            example, the golden data in the test set), we can first
+            remove those data and then add our model prediction to
+            the pack.
 
     Args:
         config: An instance of `Dict` or
