@@ -12,24 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
 from texar.torch.modules.embedders import WordEmbedder
 from texar.torch.modules.classifiers.conv_classifiers import Conv1DClassifier
 from torch import nn
 from texar.torch.data import Batch
-
-
-def pad_each_bach(word, max_sen_len):
-    batch_size = word.shape[0]
-    curr_len = word.shape[1]
-    word_list = word.tolist()
-
-    # Line 0 in word_embedding_table is padding vec
-    for i in range(batch_size):
-        for j in range(max_sen_len - curr_len):
-            word_list[i].append(0)
-
-    return torch.LongTensor(word_list)
+from examples.classification_example.util import pad_each_bach
 
 
 class CNN_Classifier(nn.Module):
