@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This file implements BaseExtractor, which the abstract class other
+This file implements BaseExtractor, which is the abstract class other
 extractors will inherit from.
 """
 from abc import ABC
