@@ -101,9 +101,7 @@ def train(model: nn.Module, optim: Optimizer, batch: Batch, max_sen_length: int)
         logits, pred = model(pad_each_bach(word, max_sen_length))
 
     labels_1D = torch.squeeze(labels)
-
     true_one_batch = (labels_1D == pred).sum().item()
-
     loss = criterion(logits, labels_1D)
 
     loss.backward()
