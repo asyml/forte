@@ -43,7 +43,7 @@ class CharExtractor(BaseExtractor):
         r"""Returns a dictionary of default hyper-parameters.
 
         "max_char_length": int
-            The maximun number of characters for one token in the text.
+            The maximum number of characters for one token in the text.
         """
         config = super().default_configs()
         config.update({"max_char_length": None})
