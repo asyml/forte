@@ -161,8 +161,6 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 of the model, which contains the index for attributes
                 of one instance.
         """
-        for entry in pack.get(self.config.entry_type, instance):
-            pack.delete_entry(entry)
         instance_based_on = list(pack.get(self.config.based_on, instance))
         prediction = prediction[:len(instance_based_on)]
         tags = [self.id2element(x) for x in prediction]
