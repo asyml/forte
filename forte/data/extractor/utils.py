@@ -16,16 +16,16 @@ This file contains utility functions for extractors.
 """
 
 from typing import List, Tuple
-from ft.onto.base_ontology import Annotation
+from ft.onto.base_ontology import Annotation, Token
 
 
-def bio_tagging(instance_based_on: List[Annotation],
+def bio_tagging(pack, instance_based_on: List[Annotation],
                 instance_entry: List[Annotation]) \
                 -> List[Tuple[Annotation, str]]:
     """This utility function use BIO tagging method to convert tags
     of "instance_entry" into the same length as "instance_based_on". Both
-    element from "instance_entry" and "instance_based_on" should have begin
-    and end field. This function uses these position information to
+    element from "instance_entry" and "instance_based_on" should Annotation
+    type. This function uses their position information to
     determine B, I, O tagging for the entry on each based_on element.
 
     Args:
@@ -39,43 +39,70 @@ def bio_tagging(instance_based_on: List[Annotation],
         [[None, "O"], [tag1, "B"], [tag1, "I"], [None, "O"],
          [None, "O"], [tag2, "B"], [None, "O"]]
     """
+
+
     tagged = []
-    cur_entry_id = 0
-    prev_entry_id = None
-    cur_based_on_id = 0
-
-    while cur_based_on_id < len(instance_based_on):
-        base_begin = instance_based_on[cur_based_on_id].begin
-        base_end = instance_based_on[cur_based_on_id].end
-
-        if cur_entry_id < len(instance_entry):
-            entry_begin = instance_entry[cur_entry_id].begin
-            entry_end = instance_entry[cur_entry_id].end
+    unit_id = 0
+    entry_id = 0
+    while unit_id < len(instance_based_on) or\
+        entry_id < len(instance_entry):
+        if entry_id == len(instance_entry):
+            tagged.append((None, 'O'))
+            unit_id += 1
         else:
-            lastone = len(instance_based_on) - 1
-            entry_begin = instance_based_on[lastone].end + 1
-            entry_end = instance_based_on[lastone].end + 1
+            is_start = True
+            for unit in pack.get(Token, instance_entry[entry_id]):
+                while instance_based_on[unit_id] != unit:
+                    tagged.append((None, 'O'))
+                    unit_id += 1
+                if is_start:
+                    tagged.append((instance_entry[entry_id], 'B'))
+                    is_start = False
+                    unit_id += 1
+                else:
+                    tagged.append((instance_entry[entry_id], 'I'))
+                    unit_id += 1
 
-        if base_end < entry_begin:
-            # Base: [...]
-            # Entry       [....]
-            tagged.append((None, "O"))
-            prev_entry_id = None
-            cur_based_on_id += 1
-        elif base_begin >= entry_begin and base_end <= entry_end:
-            # Base:    [...]
-            # Entry:  [.......]
-            if prev_entry_id == cur_entry_id:
-                tagged.append((instance_entry[cur_entry_id], "I"))
-            else:
-                tagged.append((instance_entry[cur_entry_id], "B"))
-            prev_entry_id = cur_entry_id
-            cur_based_on_id += 1
-        elif base_begin > entry_end:
-            # Base:         [...]
-            # Entry: [....]
-            cur_entry_id += 1
-        else:
-            raise AssertionError("Unconsidered case. The entry is \
-                        within the span of based-on entry.")
+
+            entry_id += 1
     return tagged
+
+    # tagged = []
+    # cur_entry_id = 0
+    # prev_entry_id = None
+    # cur_based_on_id = 0
+    # while cur_based_on_id < len(instance_based_on):
+    #     base_begin = instance_based_on[cur_based_on_id].begin
+    #     base_end = instance_based_on[cur_based_on_id].end
+
+    #     if cur_entry_id < len(instance_entry):
+    #         entry_begin = instance_entry[cur_entry_id].begin
+    #         entry_end = instance_entry[cur_entry_id].end
+    #     else:
+    #         lastone = len(instance_based_on) - 1
+    #         entry_begin = instance_based_on[lastone].end + 1
+    #         entry_end = instance_based_on[lastone].end + 1
+
+    #     if base_end < entry_begin:
+    #         # Base: [...]
+    #         # Entry       [....]
+    #         tagged.append((None, "O"))
+    #         prev_entry_id = None
+    #         cur_based_on_id += 1
+    #     elif base_begin >= entry_begin and base_end <= entry_end:
+    #         # Base:    [...]
+    #         # Entry:  [.......]
+    #         if prev_entry_id == cur_entry_id:
+    #             tagged.append((instance_entry[cur_entry_id], "I"))
+    #         else:
+    #             tagged.append((instance_entry[cur_entry_id], "B"))
+    #         prev_entry_id = cur_entry_id
+    #         cur_based_on_id += 1
+    #     elif base_begin > entry_end:
+    #         # Base:         [...]
+    #         # Entry: [....]
+    #         cur_entry_id += 1
+    #     else:
+    #         raise AssertionError("Unconsidered case. The entry is \
+    #                     within the span of based-on entry.")
+    # return tagged

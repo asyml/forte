@@ -53,18 +53,32 @@ class BioSeqTaggingExtractor(BaseExtractor):
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
+        entry_type: Type[Entry]. Required. The ontology type that the
+            extractor will get feature from.
+
         attribute (str): Required. The attribute name of the
             entry from which labels are extracted.
 
         based_on (Type[Entry]): Required. The tagging label
             will align to the based_on Entry.
+
+        For example, the config cand be
+        {
+            "entry_type": EntityMention,
+            "attribute": "ner_type",
+            "based_on": Token
+        }
+        The exatractor will extract the bio NER tags for instances.
+        A possible feature can be
+        [[None, "O"], [tag1, "B"], [tag1, "I"], [None, "O"],
+         [None, "O"], [tag2, "B"], [None, "O"]]
         """
         config = super().default_configs()
         config.update({"attribute": None,
                         "based_on": None})
         return config
 
-    def bio_variance(self, tag):
+    def _bio_variance(self, tag):
         r"""Return the B, I, O label with tag.
 
         Args:
@@ -79,7 +93,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
             predefined (set): A set of tags.
         """
         for tag in predefined:
-            for element in self.bio_variance(tag):
+            for element in self._bio_variance(tag):
                 self.add(element)
 
     def update_vocab(self, pack: DataPack, instance: Annotation):
@@ -93,7 +107,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         for entry in pack.get(self.config.entry_type, instance):
             attribute = getattr(entry, self.config.attribute)
-            for tag_variance in self.bio_variance(attribute):
+            for tag_variance in self._bio_variance(attribute):
                 self.add(tag_variance)
 
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
@@ -108,9 +122,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Returns:
             Feature: a feature that contains the extracted data.
         """
-        instance_based_on = list(pack.get(self.config.based_on, instance))
-        instance_entry = list(pack.get(self.config.entry_type, instance))
-        instance_tagged = bio_tagging(instance_based_on, instance_entry)
+        instance_based_on: List[Annotation] = \
+            list(pack.get(self.config.based_on, instance))
+        instance_entry: List[Annotation] = \
+            list(pack.get(self.config.entry_type, instance))
+        instance_tagged = bio_tagging(pack, instance_based_on, instance_entry)
 
         data = []
         for pair in instance_tagged:
