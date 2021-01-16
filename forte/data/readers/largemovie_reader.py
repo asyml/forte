@@ -40,13 +40,12 @@ Dataset Paper Citation -
 
 import os
 import logging
-import re
 from typing import Iterator, List
 
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Document, Sentence
+from ft.onto.base_ontology import Document
 
 __all__ = [
     "LargeMovieReader"
@@ -60,17 +59,29 @@ class LargeMovieReader(PackReader):
         following the convention [[id]_[rating].txt].
     """
 
-    def __init__(self):
-        super().__init__()
-        self.REPLACE_NO_SPACE = re.compile(
-            r"(\:)|(\')|(\,)|(\")|(\()|(\))|(\[)|(\])")
-        self.REPLACE_WITH_NEWLINE = re.compile(
-            r"(<br\s*/><br\s*/>)|(\-)|(\/)|(\.)|(\;)|(\!)|(\?)")
+    def preprocess_reviews(self, st: str):
+        r"""Clean text.
+        Args:
+            st: input text string
+        """
+        st = st.replace("<br />", " ")
+        st = st.replace("&quot;", "\"")
+        st = st.replace("<p>", " ")
+        if "<a href=" in st:
+            while "<a href=" in st:
+                start_pos = st.find("<a href=")
+                end_pos = st.find(">", start_pos)
+                if end_pos != -1:
+                    st = st[:start_pos] + st[end_pos + 1:]
+                else:
+                    print("incomplete href")
+                    print("before", st)
+                    st = st[:start_pos] + st[start_pos + len("<a href=")]
+                    print("after", st)
 
-    def preprocess_reviews(self, para):
-        para = self.REPLACE_NO_SPACE.sub("", para.lower())
-        para = self.REPLACE_WITH_NEWLINE.sub("\n", para)
-        return para
+            st = st.replace("</a>", "")
+        st = st.replace("\\n", " ")
+        return st
 
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
@@ -89,21 +100,15 @@ class LargeMovieReader(PackReader):
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         data_pack: DataPack = DataPack()
 
-        sent_begin: int = 0
         doc_text: str = ""
 
         with open(file_path, encoding="utf8") as doc:
-            for para in doc:
-                para = self.preprocess_reviews(para)
-                sents = para.split("\n")
-                for sent in sents:
-                    if len(sent) > 0:
-                        sent = sent.strip()
-                        doc_text += sent + " "
-                        doc_offset = sent_begin + len(sent) + 1
-                        # Add sentences.
-                        Sentence(data_pack, sent_begin, doc_offset - 1)
-                        sent_begin = doc_offset
+            st_list = doc.readlines()
+            if len(st_list) != 1:
+                raise AssertionError("Raw data file contains more than"
+                    "one example.")
+            doc_text = st_list[0]
+            doc_text = self.preprocess_reviews(doc_text)
 
         pos_dir: str = os.path.basename(os.path.dirname(file_path))
         movie_file: str = os.path.basename(file_path)
