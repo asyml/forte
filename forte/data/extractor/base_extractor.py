@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This file implements BaseExtractor, which is the abstract class other
-extractors will inherit from.
+extractors will inherit from. This class is used internally.
 """
 from abc import ABC
 import logging

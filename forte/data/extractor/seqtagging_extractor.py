@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This file implements BioSeqTaggingExtractor, which is used to extract feature
-from the tagging label.
+from the tagging label. This class is used internally.
 """
 import logging
 from typing import List, Dict, Union
@@ -33,11 +33,13 @@ __all__ = [
 
 class BioSeqTaggingExtractor(BaseExtractor):
     r"""BioSeqTaggingExtractor will the feature by performing BIO encoding
-    for the attribute of entry, aligining to the based_on entry.
+    for the attribute of entry, aligining to the tagging_unit entry.
 
     Args:
         config: An instance of `Dict` or
-            :class:`forte.common.configuration.Config`
+            :class:`forte.common.configuration.Config`.
+            See :meth:`default_configs` for available options and
+            default values.
     """
     def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
@@ -45,8 +47,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
         if self.config.attribute is None:
             raise AttributeError("attribute is required "
                             "in BioSeqTaggingExtractor.")
-        if self.config.based_on is None:
-            raise AttributeError("based_on is required in "
+        if self.config.tagging_unit is None:
+            raise AttributeError("tagging_unit is required in "
                                 "BioSeqTaggingExtractor.")
 
     @classmethod
@@ -59,14 +61,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
         attribute (str): Required. The attribute name of the
             entry from which labels are extracted.
 
-        based_on (Type[Entry]): Required. The tagging label
-            will align to the based_on Entry.
+        tagging_unit (Type[Entry]): Required. The tagging label
+            will align to the tagging_unit Entry.
 
         For example, the config cand be
         {
             "entry_type": EntityMention,
             "attribute": "ner_type",
-            "based_on": Token
+            "tagging_unit": Token
         }
         The exatractor will extract the bio NER tags for instances.
         A possible feature can be
@@ -75,7 +77,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         config = super().default_configs()
         config.update({"attribute": None,
-                        "based_on": None})
+                        "tagging_unit": None})
         return config
 
     def _bio_variance(self, tag):
@@ -122,11 +124,9 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Returns:
             Feature: a feature that contains the extracted data.
         """
-        instance_based_on: List[Annotation] = \
-            list(pack.get(self.config.based_on, instance))
-        instance_entry: List[Annotation] = \
-            list(pack.get(self.config.entry_type, instance))
-        instance_tagged = bio_tagging(pack, instance_based_on, instance_entry)
+        instance_tagged: List[tuple(Annotation, str)] = \
+            bio_tagging(pack, instance,
+            self.config.tagging_unit, self.config.entry_type)
 
         data = []
         for pair in instance_tagged:
@@ -177,13 +177,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 of the model, which contains the index for attributes
                 of one instance.
         """
-        instance_based_on = list(pack.get(self.config.based_on, instance))
-        prediction = prediction[:len(instance_based_on)]
+        instance_tagging_unit: List[Annotation] = \
+            list(pack.get(self.config.tagging_unit, instance))
+        prediction = prediction[:len(instance_tagging_unit)]
         tags = [self.id2element(x) for x in prediction]
         tag_start = None
         tag_end = None
         tag_type = None
-        for entry, tag in zip(instance_based_on, tags):
+        for entry, tag in zip(instance_tagging_unit, tags):
             if tag[1] == "O" or tag[1] == "B" or \
                 (tag[1] == "I" and tag[0] != tag_type):
                 if tag_type:

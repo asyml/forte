@@ -36,7 +36,7 @@ class SeqTaggingExtractorTest(unittest.TestCase):
             "entry_type": EntityMention,
             "need_pad": True,
             "attribute": "ner_type",
-            "based_on": Token,
+            "tagging_unit": Token,
         }
 
         expected = [(None, 'O'), ('ORG', 'B'), ('ORG', 'I'),
@@ -61,9 +61,9 @@ class SeqTaggingExtractorTest(unittest.TestCase):
                 feature = extractor.extract(pack, instance)
                 recovered = [extractor.id2element(idx) for idx in feature._data]
                 self.assertListEqual(expected, recovered)
+                extractor.pre_evaluation_action(pack, instance)
                 extractor.add_to_pack(pack, instance, feature._data)
             pack.add_all_remaining_entries()
-
 
 if __name__ == '__main__':
     unittest.main()

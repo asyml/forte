@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This file implements AttributeExtractor, which is used to extract feature
-from the attribute of entries.
+from the attribute of entries. This class is used internally.
 """
 import logging
 from collections import Hashable, abc

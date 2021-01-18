@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This file implements CharExtractor, which is used to extract feature
-from characters of a piece of text.
+from characters of a piece of text. This class is used internally.
 """
 import logging
 from ft.onto.base_ontology import Annotation
