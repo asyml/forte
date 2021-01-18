@@ -50,11 +50,36 @@ class SeqTaggingExtractorTest(unittest.TestCase):
                     (None, 'O'), (None, 'O'), (None, 'O'),
                     (None, 'O'), (None, 'O'), (None, 'O')]
 
+        invalid = [(None, 'O'), ('MISC', 'B'), ('ORG', 'I'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    ('MISC', 'B'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    ('MISC', 'I'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O')]
+
+        corrected = [(None, 'O'), ('MISC', 'B'), ('ORG', 'B'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    ('MISC', 'B'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    ('MISC', 'B'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O'),
+                    (None, 'O'), (None, 'O'), (None, 'O')]
+
         extractor = BioSeqTaggingExtractor(config)
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
                 extractor.update_vocab(pack, instance)
+
+        extractor.predefined_vocab(set(["MISC", "ORG"]))
+        invalid = [extractor.element2repr(ele) for ele in invalid]
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
@@ -64,6 +89,16 @@ class SeqTaggingExtractorTest(unittest.TestCase):
                 extractor.pre_evaluation_action(pack, instance)
                 extractor.add_to_pack(pack, instance, feature._data)
             pack.add_all_remaining_entries()
+
+            for instance in pack.get(Sentence):
+                extractor.pre_evaluation_action(pack, instance)
+                extractor.add_to_pack(pack, instance, invalid)
+            pack.add_all_remaining_entries()
+
+            for instance in pack.get(Sentence):
+                feature = extractor.extract(pack, instance)
+                recovered = [extractor.id2element(idx) for idx in feature._data]
+                self.assertListEqual(corrected, recovered)
 
 if __name__ == '__main__':
     unittest.main()

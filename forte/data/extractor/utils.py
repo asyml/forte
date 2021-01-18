@@ -67,13 +67,14 @@ def bio_tagging(pack: DataPack, instance: Annotation,
             while instance_tagging_unit[unit_id] != unit:
                 tagged.append((None, 'O'))
                 unit_id += 1
+
             if is_start:
                 location = 'B'
                 is_start = False
-                unit_id += 1
             else:
                 location = 'I'
-                unit_id += 1
+
+            unit_id += 1
             if callable(attribute):
                 tagged.append((attribute(instance_entry[entry_id]), location))
             else:
