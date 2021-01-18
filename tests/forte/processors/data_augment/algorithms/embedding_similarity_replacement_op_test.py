@@ -41,7 +41,7 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
         file_dir_path = os.path.dirname(__file__)
         vocab_path = "tests/forte/processors/data_augment/algorithms/"\
                      "sample_embedding.txt.vocab"
-        abs_vocab_path = os.path.abspath(os.path.join(file_dir_path,
+        self.abs_vocab_path = os.path.abspath(os.path.join(file_dir_path,
                                                       *([os.pardir] * 5),
                                                       vocab_path))
         embed_path = "tests/forte/processors/data_augment/algorithms/"\
@@ -49,17 +49,16 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
         abs_embed_path = os.path.abspath(os.path.join(file_dir_path,
                                                       *([os.pardir] * 5),
                                                       embed_path))
-        self.vocab = Vocab(abs_vocab_path)
         embed_hparams = Embedding.default_hparams()
         embed_hparams["file"] = abs_embed_path
         embed_hparams["dim"] = 50
         embed_hparams["read_fn"] = load_glove
-        self.embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)
+        self.embed_hparams = embed_hparams
         self.esa = EmbeddingSimilarityReplacementOp(
             configs={
-                'embedding': self.embedding,
-                'vocab': self.vocab,
-                "top_k": 5
+                'vocab_path': self.abs_vocab_path,
+                'embed_hparams': self.embed_hparams,
+                "top_k": 5,
             }
         )
 
@@ -108,8 +107,8 @@ class TestEmbeddingSimilarityReplacementOp(unittest.TestCase):
             'data_aug_op_config': {
                 'type': '',
                 'kwargs': {
-                    'embedding': self.embedding,
-                    'vocab': self.vocab,
+                    'vocab_path': self.abs_vocab_path,
+                    'embed_hparams': self.embed_hparams,
                     "top_k": 1
                 },
             },

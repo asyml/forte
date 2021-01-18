@@ -16,6 +16,7 @@ import random
 
 from typing import Tuple
 import numpy as np
+from texar.torch.data import Vocab, Embedding
 
 from ft.onto.base_ontology import Annotation
 from forte.common.configuration import Config
@@ -38,20 +39,20 @@ class EmbeddingSimilarityReplacementOp(TextReplacementOp):
     Args:
         configs:
             The config should contain the following key-value pairs:
-            embedding: A texar.tf.data.Embedding object. Can be initialized
-                from pre-trained embedding file
-            vocab: A texar.torch.data.Vocab object. Can be initialized from
-                a vocabulary file
-            top_k: the number of k most similar words to choose from
+            vocab_path (str): The absolute path to the vocabulary file for the
+                pretrained embeddings
+            embed_hparams (dict): The hparams to initialize the
+                texar.torch.data.Embedding object.
+            top_k (int): the number of k most similar words to choose from
     """
     def __init__(self, configs: Config):
         super().__init__(configs)
-        embedding = self.configs['embedding']
-        vocab = self.configs['vocab']
+        self.vocab = Vocab(self.configs['vocab_path'])
+        embed_hparams = self.configs['embed_hparams']
+        embedding = Embedding(self.vocab.token_to_id_map_py, embed_hparams)
         self.normalized_vectors = \
             embedding.word_vecs / np.sqrt(
                 (embedding.word_vecs ** 2).sum(axis=1))[:, np.newaxis]
-        self.vocab = vocab
 
     def replace(self, input: Annotation) -> Tuple[bool, str]:
         r"""
