@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This file implements CharExtractor, which is used to extract feature
-from characters of a piece of text. This class is used internally.
+from characters of a piece of text.
 """
 import logging
 from ft.onto.base_ontology import Annotation
@@ -30,7 +30,9 @@ __all__ = [
 
 class CharExtractor(BaseExtractor):
     r"""CharExtractor extracts feature from the text of entry.
-    Text will be split into characters.
+    Text will be split into characters. Most of the time, a
+    user will not need to call this class/function explicitly,
+    they will be called by the framework.
 
     Args:
         config: An instance of `Dict` or

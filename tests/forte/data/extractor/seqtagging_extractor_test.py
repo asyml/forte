@@ -100,5 +100,6 @@ class SeqTaggingExtractorTest(unittest.TestCase):
                 recovered = [extractor.id2element(idx) for idx in feature._data]
                 self.assertListEqual(corrected, recovered)
 
+
 if __name__ == '__main__':
     unittest.main()

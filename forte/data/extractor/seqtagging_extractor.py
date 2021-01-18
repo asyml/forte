@@ -13,10 +13,10 @@
 # limitations under the License.
 """
 This file implements BioSeqTaggingExtractor, which is used to extract feature
-from the tagging label. This class is used internally.
+from the tagging label.
 """
 import logging
-from typing import List, Dict, Union
+from typing import Tuple, List, Dict, Union, Optional
 from ft.onto.base_ontology import Annotation, EntityMention
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -33,7 +33,9 @@ __all__ = [
 
 class BioSeqTaggingExtractor(BaseExtractor):
     r"""BioSeqTaggingExtractor will the feature by performing BIO encoding
-    for the attribute of entry, aligining to the tagging_unit entry.
+    for the attribute of entry, aligining to the tagging_unit entry. Most of
+    the time, a user will not need to call this class explicitly, they will
+    be called by the framework.
 
     Args:
         config: An instance of `Dict` or
@@ -124,7 +126,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Returns:
             Feature: a feature that contains the extracted data.
         """
-        instance_tagged: List[tuple(Annotation, str)] = \
+        instance_tagged: List[Tuple[Optional[str], str]] = \
             bio_tagging(pack, instance,
             self.config.tagging_unit, self.config.entry_type,
             self.config.attribute)

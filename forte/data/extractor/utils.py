@@ -15,7 +15,7 @@
 This file contains utility functions for extractors.
 """
 
-from typing import Type, List, Tuple, Union, Callable
+from typing import Type, List, Tuple, Union, Callable, Optional
 from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Annotation
 
@@ -23,7 +23,7 @@ from ft.onto.base_ontology import Annotation
 def bio_tagging(pack: DataPack, instance: Annotation,
     tagging_unit_type: Type[Annotation], entry_type: Type[Annotation],
     attribute: Union[Callable[[Annotation], str], str]) \
-        -> List[Tuple[Annotation, str]]:
+        -> List[Tuple[Optional[str], str]]:
     """This utility function use BIO tagging method to convert tags
     of "instance_entry" into the same length as "instance_tagging_unit". Both
     element from "instance_entry" and "instance_tagging_unit" should Annotation
@@ -33,25 +33,37 @@ def bio_tagging(pack: DataPack, instance: Annotation,
     Args:
         pack (Datapack): The datapack that contains the current
             instance.
+
         instance (Annotation): The instance from which the
-            extractor will extractor feature.
+            extractor will extractor feature. For example, an instance of
+            Sentence type, which mean the tagging sequence comes from
+            one sentence.
+
         tagging_unit_type (Annotation): The type of tagging unit that entry
-            tag should align to.
-        entry_type (Annotation): The type of entry that contains tags.
+            tag should align to. For example, it can be Token, which means
+            returned tags should aligned to tokens in one sentence.
 
-        instance_entry (List[Annotation]): Annotations where tags come from.
+        entry_type (Annotation): The type of entry that contains tags. For
+            example, it can be EntityMethion, which means tags comes from the
+            EntityMention of one sentence. Note that the number of EntityMention
+            can be different from the number of Token. That is why we need to
+            use BIO tagging to aglin them.
 
+        attribute (Union[Callable[[Annotation], str], str]): A function to
+            get the tags via the attribute of an entry. Or a str of the name
+            of the attribute. For example, it can be "ner_type", which means
+            the attribute ner_type of the entry will be treated as tags.
     Returns:
-        A list of the type List[Union[str, None], str]]. For example,
-        [[None, "O"], [tag1, "B"], [tag1, "I"], [None, "O"],
-         [None, "O"], [tag2, "B"], [None, "O"]]
+        A list of the type List[Tuple[Optional[str], str]]. For example,
+        [(None, "O"), (LOC, "B"), (LOC, "I"), (None, "O"),
+         (None, "O"), (PER, "B"), (None, "O")]
     """
     instance_tagging_unit: List[Annotation] = \
         list(pack.get(tagging_unit_type, instance))
     instance_entry: List[Annotation] = \
         list(pack.get(entry_type, instance))
 
-    tagged = []
+    tagged: List[Tuple[Optional[str], str]] = []
     unit_id = 0
     entry_id = 0
     while unit_id < len(instance_tagging_unit) or \
@@ -78,6 +90,7 @@ def bio_tagging(pack: DataPack, instance: Annotation,
             if callable(attribute):
                 tagged.append((attribute(instance_entry[entry_id]), location))
             else:
-                tagged.append((getattr(instance_entry[entry_id], attribute), location))
+                tagged.append((getattr(instance_entry[entry_id], attribute),
+                                location))
         entry_id += 1
     return tagged
