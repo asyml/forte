@@ -20,8 +20,10 @@ from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
+from forte.data.span import Span
 from forte.processors.base import PackProcessor
-from ft.onto.base_ontology import Token, Sentence, Dependency
+from ft.onto.base_ontology import Token, Sentence, Dependency, \
+    PredicateLink, PredicateArgument, PredicateMention
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ __all__ = [
 # pylint: disable=line-too-long
 MODEL2URL = {
     'stanford': "https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ptb-2020.04.06.tar.gz",
+    'srl': "https://storage.googleapis.com/allennlp-public-models/bert-base-srl-2020.11.19.tar.gz"
     # TODO: The UD model seems to be broken at this moment.
     # 'universal': "https://storage.googleapis.com/allennlp-public-models/biaffine-dependency-parser-ud-2020.02.10.tar.gz",
 }
@@ -48,8 +51,13 @@ class AllenNLPProcessor(PackProcessor):
 
         if configs.tag_formalism not in MODEL2URL:
             raise ProcessorConfigError('Incorrect value for tag_formalism')
-        model_url = MODEL2URL[configs.tag_formalism]
-        self.predictor: Predictor = Predictor.from_path(model_url)
+        if configs.tag_formalism == 'stanford':
+            self.predictor = {
+                'stanford': Predictor.from_path(MODEL2URL['stanford'])}
+        if configs.tag_formalism == 'srl':
+            self.predictor = {
+                'stanford': Predictor.from_path(MODEL2URL['stanford']),
+                'srl': Predictor.from_path(MODEL2URL['srl'])}
 
         if configs.overwrite_entries:
             logger.warning("`overwrite_entries` is set to True, this means "
@@ -104,14 +112,18 @@ class AllenNLPProcessor(PackProcessor):
         self._process_existing_entries(input_pack)
 
         for sentence in input_pack.get(Sentence):
-            result = self.predictor.predict(  # type: ignore
-                sentence=sentence.text)
+            result = {}
+            for key in self.predictor:
+                result.update(self.predictor[key].predict(
+                    sentence=sentence.text))
 
             if "tokenize" in self.configs.processors:
                 # creating new tokens and dependencies
                 tokens = self._create_tokens(input_pack, sentence, result)
                 if "depparse" in self.configs.processors:
                     self._create_dependencies(input_pack, tokens, result)
+                if 'srl' in self.configs.processors:
+                    self._create_srl(input_pack, tokens, result)
 
     def _process_existing_entries(self, input_pack):
         tokens_exist = any(True for _ in input_pack.get(Token))
@@ -153,3 +165,39 @@ class AllenNLPProcessor(PackProcessor):
                                   parent=tokens[heads[i] - 1],
                                   child=token)
             relation.rel_type = deps[i]
+
+    @staticmethod
+    def _create_srl(input_pack, tokens, result):
+        def parse_allennlp_srl_tags(tags):
+            pred_span = None
+            arguments = []
+            begin, end, prev_argument = None, None, ''
+            for i, item in enumerate(tags):
+                argument = '-'.join(item.split('-')[1:])
+                if prev_argument not in ('', argument):
+                    if prev_argument == 'V':
+                        pred_span = Span(tokens[begin].begin, tokens[end].end)
+                    else:
+                        arg_span = Span(tokens[begin].begin, tokens[end].end)
+                        arguments.append((arg_span, prev_argument))
+                prev_argument = argument
+                if item.startswith('B-'):
+                    begin = i
+                    end = i
+                if item.startswith('I-'):
+                    end = i
+            return pred_span, arguments
+        verbs = result['verbs']
+
+        for _, verb_item in enumerate(verbs):
+            pred_span, arguments = parse_allennlp_srl_tags(verb_item['tags'])
+            if arguments == []:
+                continue
+            pred = PredicateMention(input_pack, pred_span.begin,
+                                        pred_span.end)
+            for arg_span, label in arguments:
+                arg = PredicateArgument(
+                        input_pack, arg_span.begin, arg_span.end
+                    )
+                link = PredicateLink(input_pack, pred, arg)
+                link.arg_type = label
