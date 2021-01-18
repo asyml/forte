@@ -33,7 +33,7 @@ __all__ = [
 
 class BioSeqTaggingExtractor(BaseExtractor):
     r"""BioSeqTaggingExtractor will the feature by performing BIO encoding
-    for the attribute of entry, aligining to the tagging_unit entry. Most of
+    for the attribute of entry and aligning to the tagging_unit entry. Most of
     the time, a user will not need to call this class explicitly, they will
     be called by the framework.
 
@@ -66,16 +66,12 @@ class BioSeqTaggingExtractor(BaseExtractor):
         tagging_unit (Type[Entry]): Required. The tagging label
             will align to the tagging_unit Entry.
 
-        For example, the config cand be
-        {
-            "entry_type": EntityMention,
-            "attribute": "ner_type",
-            "tagging_unit": Token
-        }
-        The exatractor will extract the bio NER tags for instances.
-        A possible feature can be
-        [[None, "O"], [LOC, "B"], [LOC, "I"], [None, "O"],
-         [None, "O"], [PER, "B"], [None, "O"]]
+        For example, the config can be "entry_type": EntityMention,
+            "attribute": "ner_type", "tagging_unit": Token.
+
+        The extractor will extract the bio NER tags for instances.
+            A possible feature can be [[None, "O"], [LOC, "B"], [LOC, "I"],
+            [None, "O"], [None, "O"], [PER, "B"], [None, "O"]]
         """
         config = super().default_configs()
         config.update({"attribute": None,
@@ -154,7 +150,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
             pack (Datapack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance on which the
-                extractor performs the pre-evalation action.
+                extractor performs the pre-evaluation action.
         """
         for entry in pack.get(self.config.entry_type, instance):
             pack.delete_entry(entry)
@@ -164,9 +160,10 @@ class BioSeqTaggingExtractor(BaseExtractor):
         r"""Add the prediction for attribute to the instance.
         We make following assumptions for prediction.
         1. If we encounter "I" while its tag is different from the previous tag,
-           we will consider this "I" as a "B" and start a new tag here.
+        we will consider this "I" as a "B" and start a new tag here.
         2. We will truncate the prediction it according to the number of entry.
-           If the prediction contains <PAD> element, this should remove them.
+        If the prediction contains <PAD> element, this should remove them.
+
         Args:
             pack (Datapack): The datapack that contains the current
                 instance.

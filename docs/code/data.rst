@@ -213,7 +213,7 @@ Extractor
     :members:
 
 :hidden:`BioSeqTaggingExtractor`
-------------------------------
+-----------------------------------
 .. autoclass:: forte.data.extractor.seqtagging_extractor.BioSeqTaggingExtractor
     :members:
 
