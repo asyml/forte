@@ -126,18 +126,15 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         instance_tagged: List[tuple(Annotation, str)] = \
             bio_tagging(pack, instance,
-            self.config.tagging_unit, self.config.entry_type)
+            self.config.tagging_unit, self.config.entry_type,
+            self.config.attribute)
 
         data = []
         for pair in instance_tagged:
-            if pair[0] is None:
-                new_pair = (None, pair[1])
-            else:
-                new_pair = (getattr(pair[0], self.config.attribute), pair[1])
             if self.vocab:
-                data.append(self.element2repr(new_pair))
+                data.append(self.element2repr(pair))
             else:
-                data.append(new_pair)
+                data.append(pair)
         meta_data = {"pad_value": self.get_pad_value(),
                      "dim": 1,
                      "dtype": int if self.vocab else tuple}

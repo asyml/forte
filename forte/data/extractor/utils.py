@@ -15,13 +15,14 @@
 This file contains utility functions for extractors.
 """
 
-from typing import Type, List, Tuple
+from typing import Type, List, Tuple, Union, Callable
 from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Annotation
 
 
 def bio_tagging(pack: DataPack, instance: Annotation,
-    tagging_unit_type: Type[Annotation], entry_type: Type[Annotation]) \
+    tagging_unit_type: Type[Annotation], entry_type: Type[Annotation],
+    attribute: Union[Callable[[Annotation], str], str]) \
         -> List[Tuple[Annotation, str]]:
     """This utility function use BIO tagging method to convert tags
     of "instance_entry" into the same length as "instance_tagging_unit". Both
@@ -41,7 +42,7 @@ def bio_tagging(pack: DataPack, instance: Annotation,
         instance_entry (List[Annotation]): Annotations where tags come from.
 
     Returns:
-        A list of the type List[Tuple[Annotation, str]]. For example,
+        A list of the type List[Union[str, None], str]]. For example,
         [[None, "O"], [tag1, "B"], [tag1, "I"], [None, "O"],
          [None, "O"], [tag2, "B"], [None, "O"]]
     """
@@ -53,23 +54,29 @@ def bio_tagging(pack: DataPack, instance: Annotation,
     tagged = []
     unit_id = 0
     entry_id = 0
-    while unit_id < len(instance_tagging_unit) or\
+    while unit_id < len(instance_tagging_unit) or \
         entry_id < len(instance_entry):
+
         if entry_id == len(instance_entry):
             tagged.append((None, 'O'))
             unit_id += 1
-        else:
-            is_start = True
-            for unit in pack.get(tagging_unit_type, instance_entry[entry_id]):
-                while instance_tagging_unit[unit_id] != unit:
-                    tagged.append((None, 'O'))
-                    unit_id += 1
-                if is_start:
-                    tagged.append((instance_entry[entry_id], 'B'))
-                    is_start = False
-                    unit_id += 1
-                else:
-                    tagged.append((instance_entry[entry_id], 'I'))
-                    unit_id += 1
-            entry_id += 1
+            continue
+
+        is_start = True
+        for unit in pack.get(tagging_unit_type, instance_entry[entry_id]):
+            while instance_tagging_unit[unit_id] != unit:
+                tagged.append((None, 'O'))
+                unit_id += 1
+            if is_start:
+                location = 'B'
+                is_start = False
+                unit_id += 1
+            else:
+                location = 'I'
+                unit_id += 1
+            if callable(attribute):
+                tagged.append((attribute(instance_entry[entry_id]), location))
+            else:
+                tagged.append((getattr(instance_entry[entry_id], attribute), location))
+        entry_id += 1
     return tagged
