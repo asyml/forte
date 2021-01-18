@@ -74,8 +74,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
         }
         The exatractor will extract the bio NER tags for instances.
         A possible feature can be
-        [[None, "O"], [tag1, "B"], [tag1, "I"], [None, "O"],
-         [None, "O"], [tag2, "B"], [None, "O"]]
+        [[None, "O"], [LOC, "B"], [LOC, "I"], [None, "O"],
+         [None, "O"], [PER, "B"], [None, "O"]]
         """
         config = super().default_configs()
         config.update({"attribute": None,
