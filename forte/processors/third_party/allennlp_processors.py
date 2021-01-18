@@ -19,9 +19,8 @@ from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
+from forte.data.span import Span
 from forte.processors.base import PackProcessor
-from forte.utils.utils_processor import parse_allennlp_srl_tags, \
-    parse_allennlp_srl_results
 from ft.onto.base_ontology import Token, Sentence, Dependency, \
     PredicateLink, PredicateArgument, PredicateMention
 
@@ -54,7 +53,7 @@ class AllenNLPProcessor(PackProcessor):
         if configs.tag_formalism == 'stanford':
             self.predictor = {
                 'stanford': Predictor.from_path(MODEL2URL['stanford'])}
-        if 'srl' in configs.processors:
+        if configs.tag_formalism == 'srl':
             self.predictor = {
                 'stanford': Predictor.from_path(MODEL2URL['stanford']),
                 'srl': Predictor.from_path(MODEL2URL['srl'])}
@@ -112,14 +111,11 @@ class AllenNLPProcessor(PackProcessor):
         self._process_existing_entries(input_pack)
 
         for sentence in input_pack.get(Sentence):
-            result: Dict[str, List[str]] = {}
+            result = {}
             for key in self.predictor:
-                predicted_result = self.predictor[key].predict(  # type: ignore
-                    sentence=sentence.text)
-                if key == 'srl':
-                    predicted_result = parse_allennlp_srl_results(
-                        predicted_result['verbs'])
-                result.update(predicted_result)
+                result.update(self.predictor[key].predict(
+                    sentence=sentence.text))
+
             if "tokenize" in self.configs.processors:
                 # creating new tokens and dependencies
                 tokens = self._create_tokens(input_pack, sentence, result)
@@ -170,16 +166,37 @@ class AllenNLPProcessor(PackProcessor):
             relation.rel_type = deps[i]
 
     @staticmethod
-    def _create_srl(input_pack: DataPack, tokens: List[Token],
-                    result: Dict[str, List[str]]) -> None:
-        for _, tag in enumerate(result['srl_tags']):
-            pred_span, arguments = parse_allennlp_srl_tags(tag)
-            if not pred_span:
+    def _create_srl(input_pack, tokens, result):
+        def parse_allennlp_srl_tags(tags):
+            pred_span = None
+            arguments = []
+            begin, end, prev_argument = None, None, ''
+            for i, item in enumerate(tags):
+                argument = '-'.join(item.split('-')[1:])
+                if prev_argument not in ('', argument):
+                    if prev_argument == 'V':
+                        pred_span = Span(tokens[begin].begin, tokens[end].end)
+                    else:
+                        arg_span = Span(tokens[begin].begin, tokens[end].end)
+                        arguments.append((arg_span, prev_argument))
+                prev_argument = argument
+                if item.startswith('B-'):
+                    begin = i
+                    end = i
+                if item.startswith('I-'):
+                    end = i
+            return pred_span, arguments
+        verbs = result['verbs']
+
+        for _, verb_item in enumerate(verbs):
+            pred_span, arguments = parse_allennlp_srl_tags(verb_item['tags'])
+            if arguments == []:
                 continue
-            pred = PredicateMention(input_pack, tokens[pred_span.begin].begin,
-                                        tokens[pred_span.end].end)
+            pred = PredicateMention(input_pack, pred_span.begin,
+                                        pred_span.end)
             for arg_span, label in arguments:
-                arg = PredicateArgument(input_pack,
-                    tokens[arg_span.begin].begin, tokens[arg_span.end].end)
+                arg = PredicateArgument(
+                        input_pack, arg_span.begin, arg_span.end
+                    )
                 link = PredicateLink(input_pack, pred, arg)
                 link.arg_type = label
