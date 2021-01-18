@@ -19,7 +19,7 @@ The Stave annotation tool can be found here: https://github.com/asyml/stave
 """
 
 import sqlite3
-from typing import Iterator, Dict
+from typing import Iterator, Dict, Optional
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
@@ -85,8 +85,8 @@ class StaveMultiDocSqlReader(MultiPackDeserializerBase):
                 f'SELECT textPack FROM {self.configs.multipack_table}'):
             yield value[0]
 
-    def _get_pack_content(self, pack_id: int) -> DataPack:
-        return self.data_packs[pack_id]
+    def _get_pack_content(self, pack_id: int) -> Optional[DataPack]:
+        return self.data_packs.get(pack_id, None)
 
     @classmethod
     def default_configs(cls):

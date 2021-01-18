@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import unittest
-
+import pickle as pkl
 from ft.onto.base_ontology import Token
 from forte.data.extractor.base_extractor import BaseExtractor
 
@@ -28,12 +28,12 @@ class BaseExtractorTest(unittest.TestCase):
 
         extractor = BaseExtractor(config)
 
-        new_extractor = BaseExtractor.from_state(extractor.state)
+        new_extractor = pkl.loads(pkl.dumps(extractor))
 
         # Check state and from state
         self.assertEqual(extractor.config.entry_type, new_extractor.config.entry_type)
         self.assertEqual(extractor.config.entry_type, Token)
-        self.assertEqual(extractor.vocab.state, new_extractor.vocab.state)
+        self.assertNotEqual(new_extractor.vocab, None)
 
         # Check entry_type
         self.assertEqual(extractor.entry_type, Token)

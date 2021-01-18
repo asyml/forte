@@ -47,7 +47,7 @@ class UDAIterator:
 
     Args:
         sup_iterator: The iterator for supervised data. Each item is a
-            training/eval/test example with key-value pairs as inputs.
+            training/evaluation/test example with key-value pairs as inputs.
         unsup_iterator: The iterator for unsupervised data. Each training
             example in it should contain both the original and augmented data.
         softmax_temperature: The softmax temperature for sharpening the
@@ -65,7 +65,7 @@ class UDAIterator:
 
             - ``'none'``: no reduction will be applied.
             - ``'batchmean'``: the sum of the output will be divided
-              by the batchsize.
+              by the batch size.
             - ``'sum'``: the output will be summed.
             - ``'mean'``: the output will be divided by the number of elements
               in the output.

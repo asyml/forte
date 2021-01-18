@@ -31,9 +31,9 @@ class Converter:
     """
     This class has the functionality of converting a batch of
     :class:`forte.data.converter.Feature` to a PyTorch `Tensor`. It can also
-    do the padding for the given batch of :class:`forte.data.converter.Feature`
+    do the padding for the given batch of :class:`~forte.data.converter.Feature`
     if user requested it. Please refer to the `request` parameter in
-    :class:`forte.train_preprocessor.TrainPreprocessor` for details.
+    :class:`~forte.train_preprocessor.TrainPreprocessor` for details.
 
     Args:
         config: An instance of `Dict` or
