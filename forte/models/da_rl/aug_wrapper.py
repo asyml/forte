@@ -151,11 +151,11 @@ class MetaAugmentationWrapper:
             (t.view(1, -1).to(self._device) for t in features)
         init_ids, input_mask, segment_ids, _ = feature
 
-        len = int(torch.sum(input_mask).item())
+        length = int(torch.sum(input_mask).item())
 
-        if len >= 4:
+        if length >= 4:
             mask_idx = sorted(
-                random.sample(list(range(1, len - 1)), max(len // 7, 2)))
+                random.sample(list(range(1, length - 1)), max(length // 7, 2)))
         else:
             mask_idx = [1]
 

@@ -53,7 +53,7 @@ class StaveReaderTest(unittest.TestCase):
     @data('project-1-example', 'project-2-example')
     def test_stave_reader_project(self, project_name: str):
         def build_ontology():
-            onto_path = "."
+            onto_path = "./stave_test_onto"
             res = self._query(f'SELECT ontology FROM nlpviewer_backend_project '
                               f'WHERE nlpviewer_backend_project.name = '
                               f'"{project_name}"').fetchone()[0]
@@ -62,7 +62,10 @@ class StaveReaderTest(unittest.TestCase):
                 OntologyCodeGenerator().generate(
                     onto_file.name, onto_path, lenient_prefix=True
                 )
+            # Make sure the newly created path is in the python path.
+            sys.path.append(onto_path)
 
+            # Make sure we can import the newly generated modules.
             try:
                 importlib.import_module('edu.cmu')
             except Exception:

@@ -34,8 +34,6 @@ class TestLowerCaserProcessor(unittest.TestCase):
                    "help you build NLP pipelines. NLP has never been made " \
                    "this easy before."
         pack = self.nlp.process(document)
-        print(pack)
-        print(pack.text)
         assert pack.text == "this tool is called forte. the goal of this " \
                             "project to help you build nlp pipelines. nlp " \
                             "has never been made this easy before."

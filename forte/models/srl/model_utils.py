@@ -80,19 +80,20 @@ class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
         return (self._initial_hidden.expand(batch_size, -1),
                 self._initial_cell.expand(batch_size, -1))
 
-    def forward(self, input: torch.Tensor, state: Optional[LSTMState] = None) \
-            -> Tuple[torch.Tensor, LSTMState]:
-        batch_size = input.size(0)
+    def forward(
+            self, input_tensor: torch.Tensor, state: Optional[LSTMState] = None
+    ) -> Tuple[torch.Tensor, LSTMState]:
+        batch_size = input_tensor.size(0)
         if state is None:
             state = self.zero_state(batch_size)
         h, c = state
         if self.training and self._dropout_rate > 0.0:
             if self._dropout_mask is None:
                 keep_prob = 1 - self._dropout_rate
-                self._dropout_mask = input.new_zeros(
+                self._dropout_mask = input_tensor.new_zeros(
                     batch_size, self._hidden_size).bernoulli_(keep_prob)
             h = h * self._dropout_mask
-        concat_proj = self._projection(torch.cat([input, h], dim=1))
+        concat_proj = self._projection(torch.cat([input_tensor, h], dim=1))
         i, g, o = torch.chunk(concat_proj, 3, dim=1)
         i = torch.sigmoid(i)
         new_c = (1 - i) * c + i * torch.tanh(g)
@@ -314,8 +315,8 @@ class MLP(tx.ModuleBase):
             "dropout_rate": 0.0,
         }
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return self.layers(input)
+    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
+        return self.layers(input_tensor)
 
 
 class ConcatInputMLP(tx.ModuleBase):

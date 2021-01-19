@@ -23,7 +23,8 @@ from ddt import ddt, data, unpack
 
 from forte.data.caster import MultiPackBoxer
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology.top import MultiPackLink, MultiPackGroup, Link, Group
+from forte.data.ontology.top import (
+    MultiPackLink, MultiPackGroup, Link, Group, Annotation)
 from forte.data.readers import MultiPackSentenceReader, StringReader
 from forte.data.selector import AllPackSelector
 from forte.data.span import Span
@@ -35,11 +36,11 @@ from forte.processors.base.data_augment_processor import (
 from forte.processors.data_augment.algorithms.text_replacement_op import \
     TextReplacementOp
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
-from ft.onto.base_ontology import Token, Sentence, Document, Annotation
+from ft.onto.base_ontology import Token, Sentence, Document
 
 
 class TmpReplacer(TextReplacementOp):
-    def __init__(self, configs={}):
+    def __init__(self, configs=None):
         super().__init__(configs)
         self.token_replacement = {
             "Mary": "Virgin",
@@ -48,10 +49,10 @@ class TmpReplacer(TextReplacementOp):
             "until": "til",
         }
 
-    def replace(self, input):
-        if input.text in self.token_replacement:
-            return True, self.token_replacement[input.text]
-        return False, input.text
+    def replace(self, input_anno):
+        if input_anno.text in self.token_replacement:
+            return True, self.token_replacement[input_anno.text]
+        return False, input_anno.text
 
 
 @ddt
@@ -67,9 +68,11 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         (1, [[0, 1], [1, 1], [1, 3]], [[0, 2], [2, 5], [5, 8]], False, True, 5),
         (1, [[0, 1], [1, 1], [2, 3]], [[0, 2], [2, 5], [6, 8]], False, True, 5),
         (
-        1, [[0, 1], [1, 1], [1, 3]], [[0, 2], [2, 5], [5, 8]], False, False, 2),
+                1, [[0, 1], [1, 1], [1, 3]], [[0, 2], [2, 5], [5, 8]], False,
+                False, 2),
         (
-        1, [[0, 1], [1, 1], [2, 3]], [[0, 2], [2, 5], [6, 8]], False, False, 2),
+                1, [[0, 1], [1, 1], [2, 3]], [[0, 2], [2, 5], [6, 8]], False,
+                False, 2),
         (0, [[1, 2], [2, 3]], [[1, 4], [4, 5]], True, True, 0),
     )
     @unpack
@@ -88,7 +91,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
              "Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus."],
          [["Virgin", "and", "Samantha", "arrived", "at", "the", "bus", "stop",
            "early", "but", "waited", "til", "12", "for", "the", "bus", "."]]
-         )
+        )
     )
     @unpack
     def test_pipeline(self, texts, expected_outputs, expected_tokens):
@@ -145,7 +148,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
            "bus", "stop", "early", "but", "waited", "til", "12", "for", "the",
            "bus", " NLP ", ".", "NLP"], ],
          [["til", "12", "for", "the", "bus", "."]]
-         )
+        )
     )
     @unpack
     def test_replace_token(self, texts, expected_outputs, expected_tokens,
@@ -255,7 +258,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 if i < 10:
                     continue
                 if prev_entry:
-                    group = Group(tgt_pack, [prev_entry, token])
+                    group = Group(tgt_pack, {prev_entry, token})
                     tgt_pack.add_entry(
                         group
                     )
@@ -270,15 +273,17 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             sent_tgt = list(tgt_pack.get(Sentence))[0]
 
             # Insert two extra Links in the src_pack.
-            # They should not be copied to new_src_pack, because the Document is not copied.
+            # They should not be copied to new_src_pack, because the Document
+            # is not copied.
             link_src_low = src_pack.add_entry(Link(src_pack, doc_src, sent_src))
             src_pack.add_entry(Link(src_pack, link_src_low, sent_src))
 
             # Insert two extra Groups in the tgt_pack.
-            # They should not be copied to new_tgt_pack, because the Document is not copied.
+            # They should not be copied to new_tgt_pack, because the
+            # Document is not copied.
             group_tgt_low = tgt_pack.add_entry(
-                Group(tgt_pack, [doc_tgt, sent_tgt]))
-            tgt_pack.add_entry(Group(tgt_pack, [group_tgt_low, sent_tgt]))
+                Group(tgt_pack, {doc_tgt, sent_tgt}))
+            tgt_pack.add_entry(Group(tgt_pack, {group_tgt_low, sent_tgt}))
 
             # Call the augment function explicitly for duplicate replacement
             # to test the False case of _replace function.
@@ -365,7 +370,8 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                                     members[1].pack.pack_id)
 
             # Test the number of MultiPackLink/MultiPackGroup.
-            # Minus the aug and orig counters by 1, because the Document is not copied.
+            # Minus the aug and orig counters by 1, because the Document is
+            # not copied.
             # So we ignore the MPL and MPG between Document.
             # The number should be doubled, except for one deletion.
             self.assertEqual(num_mpl_aug - 1, (num_mpl_orig - 1) * 2 - 1)
