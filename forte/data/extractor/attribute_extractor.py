@@ -32,6 +32,8 @@ __all__ = [
 
 class AttributeExtractor(BaseExtractor):
     r"""AttributeExtractor extracts feature from the attribute of entry.
+    Most of the time, a user will not need to call this class explicitly,
+    they will be called by the framework.
 
     Args:
         config: An instance of `Dict` or
