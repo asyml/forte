@@ -53,7 +53,7 @@ class AllenNLPProcessor(PackProcessor):
         if configs.tag_formalism == 'stanford':
             self.predictor = {
                 'stanford': Predictor.from_path(MODEL2URL['stanford'])}
-        if configs.tag_formalism == 'srl':
+        if 'srl' in configs.processors:
             self.predictor = {
                 'stanford': Predictor.from_path(MODEL2URL['stanford']),
                 'srl': Predictor.from_path(MODEL2URL['srl'])}
@@ -166,7 +166,7 @@ class AllenNLPProcessor(PackProcessor):
             relation.rel_type = deps[i]
 
     @staticmethod
-    def _create_srl(input_pack, tokens, result):
+    def _create_srl(input_pack: DataPack, tokens: List[Token], result: Dict[str, List[str]]) -> None:
         def parse_allennlp_srl_tags(tags):
             pred_span = None
             arguments = []
@@ -190,8 +190,6 @@ class AllenNLPProcessor(PackProcessor):
 
         for _, verb_item in enumerate(verbs):
             pred_span, arguments = parse_allennlp_srl_tags(verb_item['tags'])
-            if arguments == []:
-                continue
             pred = PredicateMention(input_pack, pred_span.begin,
                                         pred_span.end)
             for arg_span, label in arguments:
