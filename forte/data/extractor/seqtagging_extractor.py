@@ -69,7 +69,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         For example, the config can be "entry_type": EntityMention,
             "attribute": "ner_type", "tagging_unit": Token.
 
-        The extractor will extract the bio NER tags for instances.
+        The extractor will extract the BIO NER tags for instances.
             A possible feature can be [[None, "O"], [LOC, "B"], [LOC, "I"],
             [None, "O"], [None, "O"], [PER, "B"], [None, "O"]]
         """
