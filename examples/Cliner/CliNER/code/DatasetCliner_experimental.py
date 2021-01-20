@@ -166,13 +166,13 @@ class Dataset():
                label_vector_indices
 
     def update_dataset(self, dataset_types, Datasets_tokens, Datasets_labels):
-        '''
+        """
         dataset_filepaths : dictionary with keys 'train', 'valid', 'test', \
         'deploy'
         Overwrites the data of type specified in dataset_types using the \
         existing token_to_index, character_to_index, and label_to_index
         mappings.
-        '''
+        """
 
         # def _parse_dataset(self, dataset_filepath, dataset_type, \
         # sentences_list=[],tags_list=[], Not_here=False):
@@ -204,10 +204,10 @@ class Dataset():
             parameters,
             token_to_vector=None,
             pretrained_dataset=None):
-        '''
+        """
         dataset_filepaths : dictionary with keys 'train', 'valid', 'test',
         'deploy'
-        '''
+        """
         start_time = time.time()
         print('Load dataset... \n')
         if parameters['token_pretrained_embedding_filepath'] != '':

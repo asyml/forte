@@ -112,10 +112,10 @@ class HTMLReaderPipelineTest(unittest.TestCase):
     ''')
     )
     def test_reader_replace_back(self, value):
-        input = value
-        for pack in self.pl1.process_dataset(input):
+        input_data = value
+        for pack in self.pl1.process_dataset(input_data):
             original_text = pack.get_original_text()
-            self.assertEqual(original_text, input)
+            self.assertEqual(original_text, input_data)
 
     @data(
         (Span(0, 3), Span(7, 10), '<title>The Original Title </title>',

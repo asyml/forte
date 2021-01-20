@@ -70,28 +70,28 @@ class LargeMovieReaderTest(unittest.TestCase):
         self.pipeline.initialize()
 
     def test_reader_text(self):
-        for dir in ["pos", "neg"]:
+        for d in ["pos", "neg"]:
             data_packs: Iterable[DataPack] = self.pipeline.process_dataset(
-                self.dataset_path[dir])
+                self.dataset_path[d])
 
             count_packs = 0
             for pack in data_packs:
                 # Test doc_ids.
-                self.assertTrue(pack.pack_name in self.doc_ids[dir])
+                self.assertTrue(pack.pack_name in self.doc_ids[d])
 
                 # Test documents.
-                docid0 = self.doc_ids[dir][0]
-                docid1 = self.doc_ids[dir][1]
+                docid0 = self.doc_ids[d][0]
+                docid1 = self.doc_ids[d][1]
                 if pack.pack_name == docid1:
                     for doc in pack.get(Document):
-                        self.assertIn(self.doc_text[dir], doc.text)
+                        self.assertIn(self.doc_text[d], doc.text)
                         # test sentiments.
                         self.assertEqual(
-                            doc.sentiment[docid1], self.score[dir])
+                            doc.sentiment[docid1], self.score[d])
                 # Test sentences.
                 elif pack.pack_name == docid0:
                     sents = pack.get(Sentence)
-                    self.assertTrue(self.sent_text[dir] in
+                    self.assertTrue(self.sent_text[d] in
                                     [sent.text for sent in sents])
 
                 count_packs += 1

@@ -82,7 +82,8 @@ class Document:
 
             # Ensure 'none' classifications are skipped
             if classification[0] == 'none':
-                raise 'Classification label "none" should never happen'
+                raise Exception(
+                    'Classification label "none" should never happen')
 
             concept = classification[0]
             lineno = classification[1]
@@ -170,7 +171,8 @@ def read_i2b2(txt, con):
 
                 # parse concept line
                 # pylint: disable=anomalous-backslash-in-string
-                concept_regex = '^c="(.*)" (\\d+):(\\d+) (\\d+):(\\d+)\\|\\|t="(.*)"$'
+                concept_regex = '^c="(.*)" (\\d+):(\\d+) (\\d+)' \
+                                ':(\\d+)\\|\\|t="(.*)"$'
                 match = re.search(concept_regex, line.strip())
                 groups = match.groups()
 

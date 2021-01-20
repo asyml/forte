@@ -16,9 +16,9 @@ This file implements AttributeExtractor, which is used to extract feature
 from the attribute of entries.
 """
 import logging
-from collections import Hashable, abc
-from typing import Any, Union, Iterable
-from ft.onto.base_ontology import Entry, Annotation
+from typing import Any, Union, Iterable, Hashable
+from forte.data.ontology.core import Entry
+from forte.data.ontology.top import Annotation
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.extractor.base_extractor import BaseExtractor
@@ -43,6 +43,7 @@ class AttributeExtractor(BaseExtractor):
                 entry from which features will be extracted. For
                 example, "text" attribute of Token.
     """
+
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
@@ -82,7 +83,7 @@ class AttributeExtractor(BaseExtractor):
         """
         if attr == "text":
             raise AttributeError("text attribute of entry cannot "
-                                "be changed.")
+                                 "be changed.")
         setattr(entry, attr, value)
 
     def update_vocab(self, pack: DataPack, instance: Annotation):
@@ -98,7 +99,8 @@ class AttributeExtractor(BaseExtractor):
         for entry in pack.get(self.config.entry_type, instance):
             element = self.get_attribute(entry, self.config.attribute)
             if not isinstance(element, Hashable):
-                raise AttributeError("Only hashable element can be"
+                raise AttributeError(
+                    "Only hashable element can be"
                     "added into the vocabulary. Consider setting"
                     "vocab_method to be raw and do not call update_vocab"
                     "if you only need the raw attribute value without"
@@ -167,7 +169,7 @@ class AttributeExtractor(BaseExtractor):
         """
         instance_entry = list(pack.get(self.config.entry_type, instance))
 
-        if not isinstance(prediction, abc.Iterable):
+        if not isinstance(prediction, Iterable):
             prediction = [prediction]
         values = [self.id2element(int(x)) for x in prediction]
         for entry, value in zip(instance_entry, values):

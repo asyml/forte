@@ -65,77 +65,81 @@ class GenerateOntologyTest(unittest.TestCase):
         input_file_name, file_paths = value
         file_paths = sorted(file_paths + _get_init_paths(file_paths))
 
-        # read json and generate code in a file
-        json_file_path = os.path.join(self.spec_dir, f'{input_file_name}.json')
-        folder_path = self.generator.generate(json_file_path, is_dry_run=True)
-        self.dir_path = folder_path
-        # record code
-        generated_files = sorted(utils.get_generated_files_in_dir(folder_path))
-        expected_files = [f"{os.path.join(folder_path, file)}.py"
-                          for file in file_paths]
+        # Read json and generate code in a file.
+        with tempfile.TemporaryDirectory() as tempdir:
+            json_file_path = os.path.join(self.spec_dir,
+                                          f'{input_file_name}.json')
+            folder_path = self.generator.generate(json_file_path, tempdir,
+                                                  is_dry_run=True)
+            self.dir_path = folder_path
 
-        self.assertEqual(generated_files, expected_files)
+            # Reorder code.
+            generated_files = sorted(
+                utils.get_generated_files_in_dir(folder_path))
+            expected_files = [f"{os.path.join(folder_path, file)}.py"
+                              for file in file_paths]
 
-        for i, generated_file in enumerate(generated_files):
-            with open(generated_file, 'r') as f:
-                generated_code = f.read()
+            self.assertEqual(generated_files, expected_files)
 
-            # assert if generated code matches with the expected code
-            expected_code_path = os.path.join(self.test_output,
-                                              f'{file_paths[i]}.py')
-            with open(expected_code_path, 'r') as f:
-                expected_code = f.read()
+            for i, generated_file in enumerate(generated_files):
+                with open(generated_file, 'r') as f:
+                    generated_code = f.read()
 
-            self.assertEqual(generated_code, expected_code)
+                # assert if generated code matches with the expected code
+                expected_code_path = os.path.join(self.test_output,
+                                                  f'{file_paths[i]}.py')
+                with open(expected_code_path, 'r') as f:
+                    expected_code = f.read()
+
+                self.assertEqual(generated_code, expected_code)
 
     def test_dry_run_false(self):
-        temp_dir = tempfile.mkdtemp()
         json_file_path = os.path.join(
             self.spec_dir, "example_import_ontology.json")
-        temp_filename = _get_temp_filename(json_file_path, temp_dir)
-        self.generator.generate(temp_filename, temp_dir, is_dry_run=False)
-        folder_path = temp_dir
-        for name in ["ft", "onto", "example_import_ontology.py"]:
-            self.assertTrue(name in os.listdir(folder_path))
-            folder_path = os.path.join(folder_path, name)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_filename = _get_temp_filename(json_file_path, temp_dir)
+            self.generator.generate(temp_filename, temp_dir, is_dry_run=False)
+            folder_path = temp_dir
+            for name in ["ft", "onto", "example_import_ontology.py"]:
+                self.assertTrue(name in os.listdir(folder_path))
+                folder_path = os.path.join(folder_path, name)
 
     def test_include_and_exclude_init(self):
-        temp_dir = tempfile.mkdtemp()
         json_file_path = os.path.join(
             self.spec_dir, "example_import_ontology.json")
-        temp_filename = _get_temp_filename(json_file_path, temp_dir)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_filename = _get_temp_filename(json_file_path, temp_dir)
+            # Test with include_init = True
+            folder_path = self.generator.generate(temp_filename, temp_dir,
+                                                  is_dry_run=False,
+                                                  include_init=True)
+            gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
-        # Test with include_init = True
-        folder_path = self.generator.generate(temp_filename, temp_dir,
-                                              is_dry_run=False,
-                                              include_init=True)
-        gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
+            # Assert the generated python files
+            exp_file_path = ['ft/__init__',
+                             'ft/onto/__init__',
+                             'ft/onto/example_import_ontology']
+            exp_files = sorted([f"{os.path.join(folder_path, file)}.py"
+                                for file in exp_file_path])
 
-        # Assert the generated python files
-        exp_file_path = ['ft/__init__',
-                         'ft/onto/__init__',
-                         'ft/onto/example_import_ontology']
-        exp_files = sorted([f"{os.path.join(folder_path, file)}.py"
-                            for file in exp_file_path])
+            self.assertEqual(gen_files, exp_files)
 
-        self.assertEqual(gen_files, exp_files)
+            # Now, corrupt one of the init files
+            corrupted_path = os.path.join(folder_path, 'ft/__init__.py')
+            with open(corrupted_path, 'w') as f:
+                f.write('# ***corrupted file***\n')
 
-        # Now, corrupt one of the init files
-        corrupted_path = os.path.join(folder_path, 'ft/__init__.py')
-        with open(corrupted_path, 'w') as f:
-            f.write('# ***corrupted file***\n')
+            # Re-generate using include_init = False
+            self.generator = OntologyCodeGenerator()
+            folder_path = self.generator.generate(temp_filename, folder_path,
+                                                  is_dry_run=False,
+                                                  include_init=False)
+            gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
 
-        # Re-generate using include_init = False
-        self.generator = OntologyCodeGenerator()
-        folder_path = self.generator.generate(temp_filename, folder_path,
-                                              is_dry_run=False,
-                                              include_init=False)
-        gen_files = sorted(utils.get_generated_files_in_dir(folder_path))
-
-        # Assert the generated python files after removing the corrupted file
-        # which should not have been regenerated
-        exp_files = [file for file in exp_files if file != corrupted_path]
-        self.assertEqual(gen_files, exp_files)
+            # Assert the generated python files after removing the corrupted
+            # file which should not have been regenerated
+            exp_files = [file for file in exp_files if file != corrupted_path]
+            self.assertEqual(gen_files, exp_files)
 
     @data((True, 'test_duplicate_entry.json', DuplicateEntriesWarning),
           (True, 'test_duplicate_attr_name.json', DuplicatedAttributesWarning),
@@ -153,28 +157,30 @@ class GenerateOntologyTest(unittest.TestCase):
         if expected_warning:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                self.generator.generate(temp_filename, is_dry_run=True)
+                self.generator.generate(temp_filename, temp_dir,
+                                        is_dry_run=True)
                 self.assertEqual(len(w), 1)
                 assert w[0].category, msg_type
         else:
             with self.assertRaises(msg_type):
-                self.generator.generate(temp_filename, is_dry_run=True)
+                self.generator.generate(temp_filename, temp_dir,
+                                        is_dry_run=True)
 
     @log_capture()
     def test_directory_already_present(self):
-        temp_dir = tempfile.mkdtemp()
-        os.mkdir(os.path.join(temp_dir, "ft"))
         json_file_path = os.path.join(
             self.spec_dir, "example_import_ontology.json")
-        temp_filename = _get_temp_filename(json_file_path, temp_dir)
 
-        with LogCapture() as l:
-            self.generator.generate(temp_filename, temp_dir, False)
-            l.check_present(
-                ('root', 'WARNING',
-                 f'The directory with the name ft is already present in '
-                 f'{temp_dir}. New files will be merge into the existing '
-                 f'directory.'))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.mkdir(os.path.join(temp_dir, "ft"))
+            temp_filename = _get_temp_filename(json_file_path, temp_dir)
+            with LogCapture() as l:
+                self.generator.generate(temp_filename, temp_dir, False)
+                l.check_present(
+                    ('root', 'WARNING',
+                     f'The directory with the name ft is already present in '
+                     f'{temp_dir}. New files will be merge into the existing '
+                     f'directory.'))
 
     def test_top_ontology_parsing_imports(self):
         temp_dir = tempfile.mkdtemp()

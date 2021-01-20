@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import random
-from typing import Tuple
-from ft.onto.base_ontology import Annotation
+from typing import Tuple, Union, Dict, Any
+
+from forte.data.ontology import Annotation
 from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
 from forte.processors.data_augment.algorithms.text_replacement_op \
@@ -38,30 +39,31 @@ class DictionaryReplacementOp(TextReplacementOp):
         - `prob`: The probability of replacement, should fall in [0, 1].
         - `lang`: The language of the text.
     """
-    def __init__(self, configs: Config):
+
+    def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
         self.dictionary = create_class_with_kwargs(
             configs["dictionary_class"],
             class_args={}
         )
 
-    def replace(self, input: Annotation) -> Tuple[bool, str]:
+    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
         This function replaces a word with synonyms from a WORDNET dictionary.
 
         Args:
-            input (Annotation): The input annotation.
+            input_anno (Annotation): The input annotation.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second
             element is the replaced string.
         """
         # If the replacement does not happen, return False.
-        if random.random() > self.configs["prob"]:
-            return False, input.text
-        word = input.text
-        pos_tag = input.pos
-        lang = self.configs["lang"]
+        if random.random() > self.configs.prob:
+            return False, input_anno.text
+        word = input_anno.text
+        pos_tag = input_anno.pos
+        lang = self.configs.lang
         synonyms = self.dictionary.get_synonyms(word, pos_tag, lang)
         if len(synonyms) == 0:
             return False, word
