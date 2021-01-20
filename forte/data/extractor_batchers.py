@@ -26,6 +26,7 @@ from forte.data.types import DataRequest
 from forte.data.data_utils_io import merge_batches, batch_instances
 from forte.data.ontology.top import Annotation
 from forte.data.ontology.core import Entry
+from forte.data.converter import Feature
 
 # __all__ = [
 #     "ProcessingBatcher",
@@ -47,10 +48,10 @@ class ProcessingBatcher(Generic[PackType]):
     """
 
     def __init__(self, cross_pack: bool = True):
-        self.current_batch: Dict = {}
-        self.data_pack_pool: List[PackType] = []
-        self.data_instance_pool: List[Annotation] = []
-        self.current_batch_sources: List[int] = []
+        self.pack_pool: List[DataPack] = []
+        self.instance_pool: List[Annotation] = []
+        self.feature_pool: List[Dict[str, Feature]] = []
+        self.pool_size = 0
 
         self.cross_pack: bool = cross_pack
 
@@ -64,10 +65,10 @@ class ProcessingBatcher(Generic[PackType]):
         """
         self.scope = config.scope
         self.feature_scheme = config.feature_scheme
-        self.current_batch.clear()
-        self.data_pack_pool.clear()
-        self.data_instance_pool.clear()
-        self.current_batch_sources.clear()
+        self.pack_pool.clear()
+        self.instance_pool.clear()
+        self.feature_pool.clear()
+        self.pool_size = 0
 
     @abstractmethod
     def _should_yield(self) -> bool:
@@ -81,9 +82,16 @@ class ProcessingBatcher(Generic[PackType]):
         """
         raise NotImplementedError
 
-    def convert(self, batch):
+    def convert(self, features_collection):
+        collections = {}
+        for features in features_collection:
+            for tag, feat in features.items():
+                if tag not in collections:
+                    collections[tag] = []
+                collections[tag].append(feat)
+
         converted = {}
-        for tag, features in batch.items():
+        for tag, features in collections.items():
             converter = self.feature_scheme[tag]["converter"]
             data, masks = converter.convert(features)
             converted[tag]["data"] = data
@@ -97,23 +105,25 @@ class ProcessingBatcher(Generic[PackType]):
         Returns:
 
         """
-        if self.current_batch:
-            yield self.convert(self.current_batch)
-            self.current_batch = {}
-            self.current_batch_sources = []
+        if len(self.feature_pool) > 0:
+            yield (self.pack_pool, self.instance_pool,
+                    self.convert(self.feature_pool))
+            self.feature_pool.clear()
+            self.pack_pool.clear()
+            self.instance_pool.clear()
+            self.pool_size = 0
 
     def get_batch(
-            self, input_pack: PackType, context_type: Type[Annotation],
-            requests: DataRequest) -> Iterator[Dict]:
+            self, input_pack: PackType) -> Iterator[Dict]:
         r"""Returns an iterator of data batches."""
         # cache the new pack and generate batches
-        self.data_pack_pool.append(input_pack)
 
-        for (data_batch, instances, instance_num) in self._get_data_batch(input_pack):
-            self.current_batch = merge_batches(
-                [self.current_batch, data_batch])
-            self.data_instance_pool.extend(instances)
-            self.current_batch_sources.append(instance_num)
+        for (batch, num) in self._get_data_batch(input_pack):
+            packs, instance, features = batch
+            self.pack_pool.extend(packs)
+            self.instance_pool.extend(instance)
+            self.feature_pool.extend(features)
+            self.pool_size += num
 
             # Yield a batch on two conditions.
             # 1. If we do not want to have batches from different pack, we
@@ -121,9 +131,7 @@ class ProcessingBatcher(Generic[PackType]):
             # 2. We should also yield when the batcher condition is met:
             # i.e. ``_should_yield()`` is True.
             if not self.cross_pack or self._should_yield():
-                yield self.convert(self.current_batch)
-                self.current_batch = {}
-                self.current_batch_sources = []
+                self.flush()
 
     def _get_data_batch(
             self, data_pack: PackType) -> Iterable[Tuple[Dict, Annotation, int]]:
@@ -166,33 +174,32 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             containing the required annotations and context, and ``cnt`` is
             the number of instances in the batch.
         """
-        instances: List[Dict] = []
-        current_size = sum(self.current_batch_sources)
-
-        # for data in data_pack.get_data(context_type, requests, offset):
-        #     instances.append(data)
-        #     if len(instances) == self.batch_size - current_size:
-        #         batch = batch_instances(instances)
-        #         self.batch_is_full = True
-        #         yield (batch, len(instances))
-        #         instances = []
-        #         self.batch_is_full = False
+        packs: List[DataPack] = []
+        instances: List[Annotation] = []
+        features_collection: List[Dict[str, Feature]] = []
+        current_size = self.pool_size
 
         for instance in data_pack.get(self.scope):
             features = {}
             for tag, scheme in self.feature_scheme.items():
                 features[tag] = scheme['extractor'].extract(data_pack, instance)
-            instances.append(features)
+            packs.append(data_pack)
+            instances.append(instance)
+            features_collection.append(features)
+
             if len(instances) == self.batch_size - current_size:
-                batch = batch_instances(instances)
+                self.batch_is_full = True
+                batch = (packs, instances, features_collection)
                 yield (batch, len(instances))
-                instances = []
                 self.batch_is_full = False
-                current_size = sum(self.current_batch_sources)
+                packs.clear()
+                instances.clear()
+                features_collection.clear()
+                current_size = self.pool_size
 
         # Flush the remaining data.
         if len(instances) > 0:
-            batch = batch_instances(instances)
+            batch = (packs, instances, features_collection)
             yield (batch, len(instances))
 
     @classmethod
@@ -202,70 +209,3 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
             "batch_size": 10
         })
         return config
-
-
-# class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
-#     r"""A Batcher used in ``MultiPackBatchProcessors``.
-
-#     The Batcher calls the ProcessingBatcher inherently on each specified
-#     data pack in the MultiPack.
-
-#     It's flexible to query MultiPack so we delegate the task to the subclasses
-#     such as:
-#         - query all packs with the same ``context`` and ``input_info``.
-#         - query different packs with different ``context``s and ``input_info``s.
-
-#     Since the batcher will save the data_pack_pool on the fly, it's not trivial
-#     to do batching and slicing multiple data packs in the same time
-#     """
-
-#     def __init__(self, cross_pack: bool = True):
-#         super().__init__(cross_pack)
-#         self.batch_is_full = False
-
-#     def initialize(self, config: Config):
-#         super().initialize(config)
-#         self.input_pack_name = config.input_pack_name
-#         self.batch_size = config.batch_size
-#         self.batch_is_full = False
-
-#     def _should_yield(self) -> bool:
-#         return self.batch_is_full
-
-#     # TODO: Principled way of get data from multi pack?
-#     def _get_data_batch(
-#             self, multi_pack: MultiPack, context_type: Type[Annotation],
-#             requests: Optional[Dict[Type[Entry], Union[Dict, List]]] = None,
-#             offset: int = 0) -> Iterable[Tuple[Dict, int]]:
-#         r"""Try to get batches of size ``batch_size``. If the tail instances
-#         cannot make up a full batch, will generate a small batch with the tail
-#         instances.
-
-#         Returns:
-#             An iterator of tuples ``(batch, cnt)``, ``batch`` is a dict
-#             containing the required annotations and context, and ``cnt`` is
-#             the number of instances in the batch.
-#         """
-#         input_pack = multi_pack.get_pack(self.input_pack_name)
-
-#         instances: List[Dict] = []
-#         current_size = sum(self.current_batch_sources)
-#         for data in input_pack.get_data(context_type, requests, offset):
-#             instances.append(data)
-#             if len(instances) == self.batch_size - current_size:
-#                 batch = batch_instances(instances)
-#                 self.batch_is_full = True
-#                 yield (batch, len(instances))
-#                 instances = []
-#                 self.batch_is_full = False
-
-#         if len(instances):
-#             batch = batch_instances(instances)
-#             yield (batch, len(instances))
-
-#     @classmethod
-#     def default_configs(cls) -> Dict:
-#         return {
-#             'batch_size': 10,
-#             'input_pack_name': 'source'
-#         }

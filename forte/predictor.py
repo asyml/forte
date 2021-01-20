@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, Optional
+from forte.common import Resources
+from forte.common.configuration import Config
 import itertools
 from torch.nn import Module
 from forte.data.types import DATA_INPUT
@@ -185,5 +187,27 @@ from forte.processors.base.extractor_batch_processor import FixedSizeBatchProces
 
 
 class Predictor(FixedSizeBatchProcessor):
+    def initialize(self, resources: Resources, configs: Optional[Config]):
+        new_config = {}
+
+        processor_config = {}
+        processor_config["scope"] = configs.scope
+        processor_config["feature_scheme"] = configs.feature_scheme
+
+        batcher_config = {}
+        batcher_config["scope"] = configs.scope
+        batcher_config["feature_scheme"] = {}
+        for tag, scheme in configs.feature_scheme.items():
+            if scheme["type"] == DATA_INPUT:
+                batcher_config["feature_scheme"]["tag"] = scheme
+        if "batch_size" in configs:
+            batcher_config["batch_size"] = self.configs.batch_size
+
+        new_config["processor"] = processor_config
+        new_config["batcher"] = batcher_config
+
+        super().initialize(resources, configs)
+        self.model = configs.model
+
     def predict(self, data_batch):
-        pass
+        raise NotImplementedError()

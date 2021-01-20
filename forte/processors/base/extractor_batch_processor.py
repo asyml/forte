@@ -21,6 +21,7 @@ from typing import Dict, Optional, Type, Any
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data import slice_batch
+from forte.data.types import DATA_INPUT
 from forte.data.base_pack import PackType
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.data_pack import DataPack
@@ -64,48 +65,13 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     def __init__(self):
         super().__init__()
-        # self.context_type: Type[Annotation] = self._define_context()
-        # self.input_info: DataRequest = self._define_input_info()
         self.batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
     def initialize(self, resources: Resources, configs: Optional[Config]):
         super().initialize(resources, configs)
-
-        assert configs is not None
-        try:
-            self.batcher.initialize(configs.batcher)
-        except AttributeError as e:
-            raise ProcessorConfigError(
-                "Error in handling batcher config, please provide the "
-                "check the config to see if you have the key 'batcher'."
-            ) from e
-
-    # @staticmethod
-    # @abstractmethod
-    # def _define_context() -> Type[Annotation]:
-    #     r"""User should define the context type for batch processors here. The
-    #     context must be of type :class:`Annotation`, the processor will create
-    #     data batches with in the span of each annotations. For example, if the
-    #     context type is ``Sentence``, and the task is POS tagging, then each
-    #     batch will contain the POS tags for all words in the sentence.
-
-    #     The "context" parameter here has the same meaning as the
-    #     :meth:`get_data()` function in class :class:`DataPack`.
-    #     """
-    #     raise NotImplementedError
-
-    # @staticmethod
-    # @abstractmethod
-    # def _define_input_info() -> DataRequest:
-    #     r"""User should define the :attr:`input_info` for the batch processors
-    #     here. The input info will be used to get batched data for this
-    #     processor.
-
-    #     The request here has the same meaning as the
-    #     :meth:`get_data()` function in class :class:`DataPack`.
-    #     """
-    #     raise NotImplementedError
+        self.configs = configs.processor
+        self.batcher.initialize(configs.batcher)
 
     @staticmethod
     @abstractmethod
@@ -132,15 +98,14 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         if self.use_coverage_index:
             self._prepare_coverage_index(input_pack)
 
-        # for batch in self.batcher.get_batch(
-        #         input_pack, self.context_type, self.input_info):
         for batch in self.batcher.get_batch(input_pack):
-            pred = self.predict(batch)
-            self.pack_all(pred)
-            self.update_batcher_pool(-1)
-
-        if len(self.batcher.current_batch_sources) == 0:
-            self.update_batcher_pool()
+            packs, instances, features = batch
+            preidctions = self.predict(features)
+            for tag, preds in preidctions.items():
+                for pred, pack, instance in zip(preds, packs, instances):
+                    self.configs.feature_scheme[tag]["extractor"].add_to_pack(
+                        pack, instance, pred)
+                    pack.add_all_remaining_entries()
 
         # update the status of the jobs. The jobs which were removed from
         # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
@@ -158,16 +123,19 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     def flush(self):
         for batch in self.batcher.flush():
-            pred = self.predict(batch)
-            self.pack_all(pred)
-            self.update_batcher_pool(-1)
+            packs, instances, features = batch
+            preidctions = self.predict(features)
+            for tag, preds in preidctions.items():
+                for pred, pack, instance in zip(preds, packs, instances):
+                    self.configs.feature_scheme[tag]["extractor"].add_to_pack(
+                        pack, instance, pred)
+                    pack.add_all_remaining_entries()
 
         current_queue = self._process_manager.current_queue
 
         for job in current_queue:
             job.set_status(ProcessJobStatus.PROCESSED)
 
-    @abstractmethod
     def predict(self, data_batch: Dict) -> Dict:
         r"""The function that task processors should implement. Make
         predictions for the input ``data_batch``.
@@ -180,65 +148,14 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         """
         pass
 
-    def pack_all(self, output_dict: Dict):
-        r"""Pack the prediction results ``output_dict`` back to the
-        corresponding packs.
-        """
-        start = 0
-        for i in range(len(self.batcher.data_pack_pool)):
-            pack_i = self.batcher.data_pack_pool[i]
-            instances_i = self.batcher.data_instance_pool[:self.batcher.current_batch_sources[i]]
-            self.batcher.data_instance_pool = self.batcher.data_instance_pool[self.batcher.current_batch_sources[i]:]
-            output_dict_i = slice_batch(output_dict, start,
-                                        self.batcher.current_batch_sources[i])
-            self.pack(pack_i, instances_i, output_dict_i)
-            start += self.batcher.current_batch_sources[i]
-            pack_i.add_all_remaining_entries()
-
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         super_config = super().default_configs()
-
         super_config['batcher'] = cls.define_batcher().default_configs()
 
         return super_config
 
-    @abstractmethod
-    def pack(self, pack: PackType, instances: Annotation, inputs) -> None:
-        r"""The function that task processors should implement.
-
-        Add corresponding fields to ``pack``. Custom function of how
-        to add the value back.
-
-        Args:
-            pack (PackType): The pack to add entries or fields to.
-            inputs: The prediction results returned by :meth:`predict`. You
-                need to add entries or fields corresponding to this prediction
-                results to ``pack``.
-        """
-        for tag, predictions in inputs:
-            for instance, pred in zip(instances, pred):
-                self.feature_scheme["tag"]["extractor"].add_to_pack(
-                    pack, instance, pred)
-
-    def update_batcher_pool(self, end: Optional[int] = None):
-        r"""Update the batcher pool in :attr:`data_pack_pool` from the
-        beginning to ``end`` (``end`` is not included).
-
-        Args:
-            end (int): Will do finishing work for data packs in
-                :attr:`data_pack_pool` from the beginning to ``end``
-                (``end`` is not included). If `None`, will finish up all the
-                packs in :attr:`data_pack_pool`.
-        """
-        # TODO: the purpose of this function is confusing, especially the -1
-        #  argument value.
-        if end is None:
-            end = len(self.batcher.data_pack_pool)
-        self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]
-        self.batcher.current_batch_sources = \
-            self.batcher.current_batch_sources[end:]
 
     @abstractmethod
     def _prepare_coverage_index(self, input_pack: PackType):
@@ -262,33 +179,11 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
     """
 
     def _prepare_coverage_index(self, input_pack: DataPack):
-        for entry_type in self.input_info.keys():
-            input_pack.build_coverage_for(self.context_type, entry_type)
+        for tag, scheme in self.configs.feature_scheme:
+            input_pack.build_coverage_for(self.configs.scope, scheme["extractor"].entry_type)
 
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):
     @staticmethod
     def define_batcher() -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
-
-
-# class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
-#     r"""This just defines the generic type to :class:`MultiPack`.
-#     The implemented batch processors will process :class:`MultiPack`.
-#     """
-
-#     def __init__(self):
-#         super().__init__()
-#         self.input_pack_name = None
-
-#     # TODO multi pack batcher need to be further studied.
-#     def _prepare_coverage_index(self, input_pack: MultiPack):
-#         for entry_type in self.input_info.keys():
-#             input_pack.packs[self.input_pack_name].build_coverage_for(
-#                 self.context_type, entry_type)
-
-
-# class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):
-#     @staticmethod
-#     def define_batcher() -> ProcessingBatcher:
-#         return FixedSizeDataPackBatcher()
