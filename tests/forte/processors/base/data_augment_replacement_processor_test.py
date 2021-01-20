@@ -258,7 +258,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 if i < 10:
                     continue
                 if prev_entry:
-                    group = Group(tgt_pack, {prev_entry, token})
+                    group = Group(tgt_pack, [prev_entry, token])
                     tgt_pack.add_entry(
                         group
                     )
@@ -283,7 +283,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             # Document is not copied.
             group_tgt_low = tgt_pack.add_entry(
                 Group(tgt_pack, {doc_tgt, sent_tgt}))
-            tgt_pack.add_entry(Group(tgt_pack, {group_tgt_low, sent_tgt}))
+            tgt_pack.add_entry(Group(tgt_pack, [group_tgt_low, sent_tgt]))
 
             # Call the augment function explicitly for duplicate replacement
             # to test the False case of _replace function.
