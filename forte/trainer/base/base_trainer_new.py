@@ -157,7 +157,7 @@ class BaseTrainer:
         self._tp: Optional[TrainPreprocessor] = None
         self._initialized: bool = False
 
-    def _initialize(self):
+    def initialize(self):
         # Check if initialize has already been called before
         if self._initialized:
             return
@@ -184,7 +184,7 @@ class BaseTrainer:
     def run(self):
         r"""The main entry for starting a training process.
         """
-        self._initialize()
+        self.initialize()
         self.train()
 
     @abstractmethod
