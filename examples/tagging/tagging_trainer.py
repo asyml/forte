@@ -68,7 +68,7 @@ class TaggingTrainer(BaseTrainer):
             output_extractor = \
                 BioSeqTaggingExtractor(config={"entry_type": EntityMention,
                                                "attribute": "ner_type",
-                                               "based_on": Token,
+                                               "tagging_unit": Token,
                                                "vocab_method": "indexing"})
 
         else:
