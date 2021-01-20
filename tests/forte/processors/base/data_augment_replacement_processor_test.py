@@ -282,7 +282,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             # They should not be copied to new_tgt_pack, because the
             # Document is not copied.
             group_tgt_low = tgt_pack.add_entry(
-                Group(tgt_pack, {doc_tgt, sent_tgt}))
+                Group(tgt_pack, [doc_tgt, sent_tgt]))
             tgt_pack.add_entry(Group(tgt_pack, [group_tgt_low, sent_tgt]))
 
             # Call the augment function explicitly for duplicate replacement
