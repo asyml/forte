@@ -43,3 +43,4 @@ if __name__ == "__main__":
 
     # Save training state to disk
     trainer.save(config["config_data"].train_state_path)
+    torch.save(trainer.model, "model.pt")

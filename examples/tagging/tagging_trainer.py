@@ -133,14 +133,14 @@ class TaggingTrainer(BaseTrainer):
         char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
         output_extractor: BaseExtractor = schemes["output_tag"]["extractor"]
 
-        model: BiRecurrentConvCRF = \
+        self.model: BiRecurrentConvCRF = \
             BiRecurrentConvCRF(word_vocab=text_extractor.get_dict(),
                                char_vocab_size=char_extractor.size(),
                                tag_vocab_size=output_extractor.size(),
                                config_model=self.config_model)
-        model.to(self.device)
+        self.model.to(self.device)
 
-        optim: Optimizer = SGD(model.parameters(),
+        optim: Optimizer = SGD(self.model.parameters(),
                                lr=self.config_model.learning_rate,
                                momentum=self.config_model.momentum,
                                nesterov=True)
@@ -149,7 +149,7 @@ class TaggingTrainer(BaseTrainer):
 
         predictor = Predictor(
             batch_size=tp.config.dataset.batch_size,
-            model=model,
+            model=self.model,
             predict_forward_fn=predict_forward_fn,
             feature_resource=tp.request,
             cross_pack=False)
@@ -181,7 +181,7 @@ class TaggingTrainer(BaseTrainer):
 
                 optim.zero_grad()
 
-                loss = model(word, char, output, mask=word_masks)
+                loss = self.model(word, char, output, mask=word_masks)
 
                 loss.backward()
                 optim.step()
