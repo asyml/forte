@@ -205,6 +205,23 @@ Extractor
 :hidden:`AttributeExtractor`
 ------------------------------
 .. autoclass:: forte.data.extractor.attribute_extractor.AttributeExtractor
+
+DataPack Dataset
+=================
+
+:hidden:`DataPackIterator`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.DataPackIterator
+    :members:
+
+:hidden:`DataPackDataSource`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.DataPackDataSource
+    :members:
+
+:hidden:`DataPackDataset`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.DataPackDataset
     :members:
 
 :hidden:`CharExtractor`
