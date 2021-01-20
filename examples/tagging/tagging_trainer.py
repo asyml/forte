@@ -23,7 +23,7 @@ from forte.common.configuration import Config
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from forte.predictor import Predictor
 from forte.models.ner.model_factory import BiRecurrentConvCRF
-from forte.data.readers.conll03_reader_new import CoNLL03Reader
+from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.pipeline import Pipeline
 from forte.data.data_pack import DataPack
 from forte.data.extractor import AttributeExtractor, CharExtractor, \
