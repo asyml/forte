@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# pylint: disable=attribute-defined-outside-init
 """
 The processors that process data in batch.
 """
@@ -100,8 +102,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         for batch in self.batcher.get_batch(input_pack):
             packs, instances, features = batch
-            preidctions = self.predict(features)
-            for tag, preds in preidctions.items():
+            predictions = self.predict(features)
+            for tag, preds in predictions.items():
                 for pred, pack, instance in zip(preds, packs, instances):
                     self.configs.feature_scheme[tag]["extractor"].add_to_pack(
                         pack, instance, pred)
@@ -124,8 +126,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     def flush(self):
         for batch in self.batcher.flush():
             packs, instances, features = batch
-            preidctions = self.predict(features)
-            for tag, preds in preidctions.items():
+            predictions = self.predict(features)
+            for tag, preds in predictions.items():
                 for pred, pack, instance in zip(preds, packs, instances):
                     self.configs.feature_scheme[tag]["extractor"].add_to_pack(
                         pack, instance, pred)
@@ -136,6 +138,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         for job in current_queue:
             job.set_status(ProcessJobStatus.PROCESSED)
 
+    @abstractmethod
     def predict(self, data_batch: Dict) -> Dict:
         r"""The function that task processors should implement. Make
         predictions for the input ``data_batch``.
@@ -152,6 +155,10 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         super_config = super().default_configs()
+        super_config['processor'] = {
+            "scope": None,
+            "feature_scheme": {}
+        }
         super_config['batcher'] = cls.define_batcher().default_configs()
 
         return super_config
@@ -179,7 +186,7 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
     """
 
     def _prepare_coverage_index(self, input_pack: DataPack):
-        for tag, scheme in self.configs.feature_scheme:
+        for _, scheme in self.configs.feature_scheme:
             input_pack.build_coverage_for(self.configs.scope, scheme["extractor"].entry_type)
 
 

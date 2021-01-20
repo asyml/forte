@@ -16,23 +16,18 @@
 
 from abc import abstractmethod
 from typing import (
-    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator, Any)
+    Tuple, Dict, List, Iterable, Generic, Iterator, Any)
 
 from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
-from forte.data.types import DataRequest
-from forte.data.data_utils_io import merge_batches, batch_instances
 from forte.data.ontology.top import Annotation
-from forte.data.ontology.core import Entry
 from forte.data.converter import Feature
 
-# __all__ = [
-#     "ProcessingBatcher",
-#     "FixedSizeDataPackBatcher",
-#     "FixedSizeMultiPackProcessingBatcher",
-# ]
+__all__ = [
+    "ProcessingBatcher",
+    "FixedSizeDataPackBatcher"
+]
 
 
 class ProcessingBatcher(Generic[PackType]):
@@ -95,7 +90,7 @@ class ProcessingBatcher(Generic[PackType]):
             converter = self.feature_scheme[tag]["converter"]
             data, masks = converter.convert(features)
             converted[tag]["data"] = data
-            converted[tag]["mask"] = masks
+            converted[tag]["masks"] = masks
             converted[tag]["features"] = features
         return converted
 
