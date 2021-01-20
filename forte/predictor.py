@@ -185,8 +185,5 @@ from forte.processors.base.extractor_batch_processor import FixedSizeBatchProces
 
 
 class Predictor(FixedSizeBatchProcessor):
-    def pack(self, pack: PackType, instances: Annotation, inputs):
-        pass
-
     def predict(self, data_batch):
         pass

@@ -217,7 +217,10 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
                 need to add entries or fields corresponding to this prediction
                 results to ``pack``.
         """
-        raise NotImplementedError
+        for tag, predictions in inputs:
+            for instance, pred in zip(instances, pred):
+                self.feature_scheme["tag"]["extractor"].add_to_pack(
+                    pack, instance, pred)
 
     def update_batcher_pool(self, end: Optional[int] = None):
         r"""Update the batcher pool in :attr:`data_pack_pool` from the
