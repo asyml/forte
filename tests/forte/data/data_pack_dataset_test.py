@@ -16,7 +16,7 @@ from typing import List, Iterator
 
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
-from forte.data.readers.conll03_reader_new import CoNLL03Reader
+from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.data.data_pack_dataset import DataPackDataSource, RawExample
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence

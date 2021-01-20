@@ -28,7 +28,6 @@ from abc import abstractmethod
 from typing import Dict, Iterator, Any, Optional
 import pickle
 
-from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.train_preprocessor import TrainPreprocessor
 
@@ -152,9 +151,9 @@ class BaseTrainer:
     """
 
     def __init__(self):
-        self.tp_request: Optional[Dict] = None
-        self.tp_config: Optional[Dict] = None
-        self.pack_generator: Optional[Iterator[DataPack]] = None
+        self._tp_request: Optional[Dict] = None
+        self._tp_config: Optional[Dict] = None
+        self._pack_generator: Optional[Iterator[DataPack]] = None
         self._tp: Optional[TrainPreprocessor] = None
         self._initialized: bool = False
 
@@ -163,17 +162,16 @@ class BaseTrainer:
         if self._initialized:
             return
 
-        self.tp_request: Dict = self.create_tp_request()
-        self.tp_config: Dict = self.create_tp_config()
-        self.pack_generator: Iterator[DataPack] = self.create_pack_generator()
-        self._tp: TrainPreprocessor = \
-            TrainPreprocessor(pack_generator=self.pack_generator,
-                              request=self.tp_request,
-                              config=self.tp_config)
+        self._tp_request: Dict = self.create_tp_request()
+        self._tp_config: Dict = self.create_tp_config()
+        self._pack_generator: Iterator[DataPack] = self.create_pack_generator()
+        self._tp = TrainPreprocessor(pack_generator=self._pack_generator,
+                                     request=self._tp_request,
+                                     config=self._tp_config)
         self._initialized = True
 
     @property
-    def train_preprocessor(self) -> TrainPreprocessor:
+    def train_preprocessor(self) -> Optional[TrainPreprocessor]:
         r"""The instance of type
         :class:`forte.train_preprocessor.TrainPreprocessor`. The Trainer will
         internally create an instance of this class to do the actual training.
@@ -244,11 +242,16 @@ class BaseTrainer:
 
         # Check arg type. Default behavior only supports str as args[0] which
         # is considered as a disk file path.
-        if type(args[0]) != str:
+        if isinstance(args[0], str):
             raise ValueError("Do not support input args: {} and kwargs: {}"
                              .format(args, kwargs))
 
         file_path = args[0]
+
+        if not isinstance(self.train_preprocessor, TrainPreprocessor):
+            raise ValueError("Invalid TrainPreprocessor type: {}".format(
+                self.train_preprocessor))
+
         request: Dict = self.train_preprocessor.request
 
         with open(file_path, "wb") as f:

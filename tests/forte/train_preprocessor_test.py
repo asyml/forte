@@ -20,7 +20,7 @@ from forte.data.base_pack import PackType
 from forte.data.vocabulary import Vocabulary
 from forte.data.converter import Converter
 from forte.train_preprocessor import TrainPreprocessor
-from forte.data.readers.conll03_reader_new import CoNLL03Reader
+from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.data.extractor.attribute_extractor import AttributeExtractor
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.extractor.char_extractor import CharExtractor
@@ -45,7 +45,7 @@ class TrainPreprocessorTest(unittest.TestCase):
         text_extractor: AttributeExtractor = \
             AttributeExtractor(config={"entry_type": Token,
                                        "vocab_method": "indexing",
-                                       "attribute_get": "text"})
+                                       "attribute": "text"})
 
         char_extractor: CharExtractor = \
             CharExtractor(
@@ -57,7 +57,7 @@ class TrainPreprocessorTest(unittest.TestCase):
         ner_extractor: BioSeqTaggingExtractor = \
             BioSeqTaggingExtractor(config={"entry_type": EntityMention,
                                            "attribute": "ner_type",
-                                           "based_on": Token,
+                                           "tagging_unit": Token,
                                            "vocab_method": "indexing"})
 
         self.tp_request = {
