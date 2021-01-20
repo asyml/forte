@@ -19,8 +19,8 @@ from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
-from forte.data.span import Span
 from forte.processors.base import PackProcessor
+from forte.utils.utils_processor import parse_allennlp_srl_tags
 from ft.onto.base_ontology import Token, Sentence, Dependency, \
     PredicateLink, PredicateArgument, PredicateMention
 
@@ -166,30 +166,12 @@ class AllenNLPProcessor(PackProcessor):
             relation.rel_type = deps[i]
 
     @staticmethod
-    def _create_srl(input_pack: DataPack, tokens: List[Token], result: Dict[str, List[str]]) -> None:
-        def parse_allennlp_srl_tags(tags):
-            pred_span = None
-            arguments = []
-            begin, end, prev_argument = None, None, ''
-            for i, item in enumerate(tags):
-                argument = '-'.join(item.split('-')[1:])
-                if prev_argument not in ('', argument):
-                    if prev_argument == 'V':
-                        pred_span = Span(tokens[begin].begin, tokens[end].end)
-                    else:
-                        arg_span = Span(tokens[begin].begin, tokens[end].end)
-                        arguments.append((arg_span, prev_argument))
-                prev_argument = argument
-                if item.startswith('B-'):
-                    begin = i
-                    end = i
-                if item.startswith('I-'):
-                    end = i
-            return pred_span, arguments
+    def _create_srl(input_pack: DataPack, tokens: List[Token],
+                    result: Dict[str, List[str]]) -> None:
         verbs = result['verbs']
-
         for _, verb_item in enumerate(verbs):
-            pred_span, arguments = parse_allennlp_srl_tags(verb_item['tags'])
+            pred_span, arguments = parse_allennlp_srl_tags(
+                tokens, verb_item['tags'])
             pred = PredicateMention(input_pack, pred_span.begin,
                                         pred_span.end)
             for arg_span, label in arguments:
