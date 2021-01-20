@@ -95,11 +95,7 @@ class ProcessingBatcher(Generic[PackType]):
         return converted
 
     def flush(self) -> Iterator[Dict]:
-        r"""Flush the remaining data.
-
-        Returns:
-
-        """
+        r"""Flush the remaining data."""
         if len(self.feature_pool) > 0:
             yield (self.pack_pool, self.instance_pool,
                     self.convert(self.feature_pool))

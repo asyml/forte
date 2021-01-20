@@ -18,28 +18,22 @@ The processors that process data in batch.
 """
 import itertools
 from abc import abstractmethod, ABC
-from typing import Dict, Optional, Type, Any
+from typing import Dict, Optional, Any
 
-from forte.common import Resources, ProcessorConfigError
+from forte.common import Resources
 from forte.common.configuration import Config
-from forte.data import slice_batch
 from forte.data.types import DATA_INPUT
 from forte.data.base_pack import PackType
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
-from forte.data.ontology.top import Annotation
-from forte.data.types import DataRequest
 from forte.process_manager import ProcessJobStatus
 from forte.processors.base.base_processor import BaseProcessor
 
-# __all__ = [
-#     "BaseBatchProcessor",
-#     "BatchProcessor",
-#     "MultiPackBatchProcessor",
-#     "FixedSizeBatchProcessor",
-#     "FixedSizeMultiPackBatchProcessor"
-# ]
+__all__ = [
+    "BaseBatchProcessor",
+    "BatchProcessor",
+    "FixedSizeBatchProcessor",
+]
 
 
 class BaseBatchProcessor(BaseProcessor[PackType], ABC):
@@ -187,7 +181,8 @@ class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
 
     def _prepare_coverage_index(self, input_pack: DataPack):
         for _, scheme in self.configs.feature_scheme:
-            input_pack.build_coverage_for(self.configs.scope, scheme["extractor"].entry_type)
+            input_pack.build_coverage_for(self.configs.scope,
+                                scheme["extractor"].entry_type)
 
 
 class FixedSizeBatchProcessor(BatchProcessor, ABC):
