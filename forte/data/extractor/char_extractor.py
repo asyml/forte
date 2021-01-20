@@ -30,7 +30,9 @@ __all__ = [
 
 class CharExtractor(BaseExtractor):
     r"""CharExtractor extracts feature from the text of entry.
-    Text will be split into characters.
+    Text will be split into characters. Most of the time, a
+    user will not need to call this class/function explicitly,
+    they will be called by the framework.
 
     Args:
         config: An instance of `Dict` or
