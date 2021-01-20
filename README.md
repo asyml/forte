@@ -12,9 +12,10 @@
 
 
 **Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task 
-interaction, adaptable data-model interfaces and so forth. Forte was originally developed and is 
-actively contributed by [Petuum](https://petuum.com/) in collaboration with other institutes.
-A mirror of this repository is maintained by [Petuum Open Source](https://github.com/petuum).
+interaction, adaptable data-model interfaces and composable pipeline. 
+Forte was originally developed in CMU and is actively contributed by [Petuum](https://petuum.com/) 
+in collaboration with other institutes.
+This project is part of the [CASL Open Source](http://casl-project.ai/) family.
 
 Forte provides a platform to assemble
 state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide 

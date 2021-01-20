@@ -21,6 +21,7 @@ import shutil
 
 from ddt import ddt, data, unpack
 
+from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.processors.ir import BertBasedQueryCreator
@@ -59,8 +60,8 @@ class TestBertBasedQueryCreator(unittest.TestCase):
         nlp.initialize()
 
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
-            query_pack = m_pack.get_pack("query")
-            self.assertEqual(len(query_pack.generics), 1)
+            query_pack: DataPack = m_pack.get_pack("query")
+            self.assertEqual(query_pack.num_generics_entries, 1)
             self.assertIsInstance(query_pack.generics[0], Query)
             query = query_pack.generics[0].value
             self.assertEqual(query.shape, (1, 768))

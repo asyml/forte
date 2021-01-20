@@ -183,7 +183,7 @@ class MultiPackWriter(MultiPackProcessor):
                 self.configs.drop_record)
 
             self.pack_idx_out.write(
-                f'{pack.meta.pack_id}\t'
+                f'{pack.pack_id}\t'
                 f'{posixpath.relpath(pack_out, self.configs.output_dir)}\n')
 
         multi_out = write_pack(
@@ -194,7 +194,7 @@ class MultiPackWriter(MultiPackProcessor):
         )
 
         self.multi_idx_out.write(
-            f'{input_pack.meta.pack_id}\t'
+            f'{input_pack.pack_id}\t'
             f'{posixpath.relpath(multi_out, self.configs.output_dir)}\n')
 
     def finish(self, _):

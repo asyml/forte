@@ -82,23 +82,29 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self.links: List[LinkType] = []
         self.groups: List[GroupType] = []
 
-        self.meta: BaseMeta = self._init_meta(pack_name)
-        self.index: BaseIndex = BaseIndex()
+        self._meta: BaseMeta = self._init_meta(pack_name)
+        self._index: BaseIndex = BaseIndex()
 
         self.__control_component: Optional[str] = None
+
+        # This Dict maintains a mapping from entry's tid to the Entry object
+        # itself and the component name associated with the entry.
+        # The component name is used for tracking the "creator" of this entry.
         self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
 
     def __getstate__(self):
         state = super().__getstate__()
-        state.pop('index')
+        state.pop('_index')
         state.pop('_pending_entries')
         state.pop('_BasePack__control_component')
         return state
 
     def __setstate__(self, state):
         super().__setstate__(state)
-        self.__dict__['_pending_entries'] = {}
-        self.__control_component: Optional[str] = None
+        if 'meta' in self.__dict__:
+            self._meta = self.__dict__.pop('meta')
+        self.__control_component = None
+        self._pending_entries = {}
 
     @abstractmethod
     def _init_meta(self, pack_name: Optional[str] = None) -> BaseMeta:
@@ -106,13 +112,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def set_meta(self, **kwargs):
         for k, v in kwargs.items():
-            if not hasattr(self.meta, k):
+            if not hasattr(self._meta, k):
                 raise AttributeError(f"Meta has no attribute named {k}")
-            setattr(self.meta, k, v)
+            setattr(self._meta, k, v)
 
     @property
     def pack_id(self):
-        return self.meta.pack_id
+        return self._meta.pack_id
 
     @abstractmethod
     def __iter__(self) -> Iterator[EntryType]:
@@ -126,7 +132,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     @property
     def pack_name(self):
-        return self.meta.pack_name
+        return self._meta.pack_name
 
     @pack_name.setter
     def pack_name(self, pack_name: str):
@@ -139,7 +145,22 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         Returns:
 
         """
-        self.meta.pack_name = pack_name
+        self._meta.pack_name = pack_name
+
+    @classmethod
+    def _deserialize(cls, string: str) -> "PackType":
+        """
+        This function should deserialize a Pack from a string. The
+         implementation should decide the specific pack type.
+
+        Args:
+            string: The serialized string to be deserialized.
+
+        Returns:
+            An pack object deserialized from the string.
+        """
+        pack = jsonpickle.decode(string)
+        return pack
 
     @abstractmethod
     def delete_entry(self, entry: EntryType):
@@ -205,8 +226,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def serialize(self, drop_record: Optional[bool] = False) -> str:
         r"""Serializes a pack to a string."""
         if drop_record:
-            self.creation_records.clear()
-            self.field_records.clear()
+            self._creation_records.clear()
+            self._field_records.clear()
 
         return jsonpickle.encode(self, unpicklable=True)
 
@@ -234,9 +255,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         if c is not None:
             try:
-                self.creation_records[c].add(entry.tid)
+                self._creation_records[c].add(entry.tid)
             except KeyError:
-                self.creation_records[c] = {entry.tid}
+                self._creation_records[c] = {entry.tid}
 
     def record_field(self, entry_id: int, field_name: str):
         """
@@ -254,9 +275,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         if c is not None:
             try:
-                self.field_records[c].add((entry_id, field_name))
+                self._field_records[c].add((entry_id, field_name))
             except KeyError:
-                self.field_records[c] = {(entry_id, field_name)}
+                self._field_records[c] = {(entry_id, field_name)}
 
     def on_entry_creation(self, entry: Entry,
                           component_name: Optional[str] = None):
@@ -284,9 +305,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def regret_creation(self, entry: EntryType):
         """
+        Will remove the entry from the pending entries internal state of the
+        pack.
 
         Args:
-            entry:
+            entry: The entry that we would not add the the pack anymore.
 
         Returns:
 
@@ -297,7 +320,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def get_entry(self, tid: int) -> EntryType:
         r"""Look up the entry_index with key ``ptr``. Specific implementation
         depends on the actual class."""
-        entry: EntryType = self.index.get_entry(tid)
+        entry: EntryType = self._index.get_entry(tid)
         if entry is None:
             raise KeyError(
                 f"There is no entry with tid '{tid}'' in this datapack")
@@ -331,12 +354,12 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise EntryNotFoundError(
             f"The entry {entry_type} is not found in the provided pack.")
 
-    def get_ids_by_component(self, component: str) -> Set[int]:
+    def get_ids_by_creator(self, component: str) -> Set[int]:
         r"""Look up the component_index with key ``component``."""
-        entry_set: Set[int] = self.creation_records[component]
+        entry_set: Set[int] = self._creation_records[component]
         return entry_set
 
-    def get_entries_by_component(self, component: str) -> Set[EntryType]:
+    def get_entries_by_creator(self, component: str) -> Set[EntryType]:
         """
         Return all entries created by the particular component, an unordered
         set.
@@ -348,13 +371,13 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         """
         return {self.get_entry(tid)
-                for tid in self.get_ids_by_component(component)}
+                for tid in self.get_ids_by_creator(component)}
 
-    def get_ids_by_components(self, components: List[str]) -> Set[int]:
+    def get_ids_by_creators(self, components: List[str]) -> Set[int]:
         """Look up component_index using a list of components."""
         valid_component_id: Set[int] = set()
         for component in components:
-            valid_component_id |= self.get_ids_by_component(component)
+            valid_component_id |= self.get_ids_by_creator(component)
         return valid_component_id
 
     def get_ids_by_type(self, entry_type: Type[EntryType]) -> Set[int]:
@@ -368,7 +391,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
              and also includes instances of the subclasses of entry_type).
         """
         subclass_index: Set[int] = set()
-        for index_key, index_val in self.index.iter_type_index():
+        for index_key, index_val in self._index.iter_type_index():
             if issubclass(index_key, entry_type):
                 subclass_index.update(index_val)
         return subclass_index
@@ -420,10 +443,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             raise TypeError("Can only get group via entry id (int) or the "
                             "group object itself (Entry).")
 
-        if not self.index.link_index_on:
-            self.index.build_link_index(self.links)
+        if not self._index.link_index_on:
+            self._index.build_link_index(self.links)
 
-        for tid in self.index.link_index(tid, as_parent=as_parent):
+        for tid in self._index.link_index(tid, as_parent=as_parent):
             entry: EntryType = self.get_entry(tid)
             if self.validate_link(entry):
                 links.append(entry)  # type: ignore
@@ -451,10 +474,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             raise TypeError("Can only get group via entry id (int) or the "
                             "group object itself (Entry).")
 
-        if not self.index.group_index_on:
-            self.index.build_group_index(self.groups)
+        if not self._index.group_index_on:
+            self._index.build_group_index(self.groups)
 
-        for tid in self.index.group_index(tid):
+        for tid in self._index.group_index(tid):
             entry: EntryType = self.get_entry(tid)
             if self.validate_group(entry):
                 groups.add(entry)  # type: ignore

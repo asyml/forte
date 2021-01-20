@@ -407,7 +407,7 @@ class OntologyCodeGenerator:
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
         try:
-            self.parse_ontology_spec(spec_path, destination_dir,
+            self.parse_ontology_spec(spec_path,
                                      merged_schema=merged_schemas,
                                      merged_prefixes=merged_prefixes,
                                      lenient_prefix=lenient_prefix
@@ -509,7 +509,6 @@ class OntologyCodeGenerator:
 
     def parse_ontology_spec(
             self, ontology_path: str,
-            destination_dir: str,
             merged_schema: List[Dict],
             merged_prefixes: List[str],
             visited_paths: Optional[Dict[str, bool]] = None,
@@ -523,8 +522,6 @@ class OntologyCodeGenerator:
         corresponding to the entries of `json_file_path`.
         Args:
             ontology_path: Path to the ontology.
-            destination_dir: Directory in which the generated module will
-                be located.
             merged_schema: A list that store all the schema definitions.
             merged_prefixes: A list of prefixes from all schemas.
             visited_paths: Keeps track of the json configs already processed.
@@ -553,7 +550,7 @@ class OntologyCodeGenerator:
             full_pkg_path: str = self.find_import_path(rel_import)
             logging.info('Imported ontology at: %s', full_pkg_path)
             self.parse_ontology_spec(
-                full_pkg_path, destination_dir, merged_schema, merged_prefixes,
+                full_pkg_path, merged_schema, merged_prefixes,
                 visited_paths=visited_paths,
                 rec_visited_paths=rec_visited_paths,
                 lenient_prefix=lenient_prefix)

@@ -29,14 +29,13 @@ __all__ = [
 
 class SemEvalTask8Reader(PackReader):
     r""":class:`SemEvalTask8Reader` is designed to read in
-        Sem Eval Task8 dataset.
+        SemEval Task-8 dataset. The data can be obtained
+        here: http://www.kozareva.com/downloads.html
 
-        Hendrickx, Iris, et al. "Semeval-2010 task 8: Multi-way
-        classification of semantic relations between pairs of nominals."
-        arXiv preprint arXiv:1911.10422 (2019).
 
-        https://www.aclweb.org/anthology/S10-1006.pdf
-        http://www.kozareva.com/downloads.html
+        `Hendrickx, Iris, et al. SemEval-2010 task 8: Multi-way
+        classification of semantic relations between pairs of
+        nominals.` https://www.aclweb.org/anthology/S10-1006.pdf
 
         An example of the dataset is
         '''
@@ -46,19 +45,20 @@ class SemEvalTask8Reader(PackReader):
         Comment:
         '''.
 
-        This example will be converted to one Sencetence,
+        This example will be converted to one `Sentence`,
         "People have been moving back into downtown."
         and one RelationLink,
         link = RelationLink(parent=People, child=downtown)
         link.rel_type = Entity-Destination
         into the DataPack.
     """
+
     def _cache_key_function(self, file_path: str) -> str:
         return os.path.basename(file_path)
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument
-        r'''args[0] should be the folder where
+        r"""args[0] should be the folder where
         the SemEval Task8 dataset is stored.
         Files ended with sem_eval_task8_file_extension (.txt)
         are exptected here.
@@ -67,10 +67,10 @@ class SemEvalTask8Reader(PackReader):
             args: args[0] is the directory to the dataset.
 
         Returns: Iterator over the file name (str).
-        '''
+        """
         sem_file_dir: str = args[0]
         return dataset_path_iterator(sem_file_dir,
-            self.configs.sem_eval_task8_file_extension)
+                                     self.configs.sem_eval_task8_file_extension)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack: DataPack = DataPack()
@@ -92,7 +92,7 @@ class SemEvalTask8Reader(PackReader):
                 _ = fp.readline()
 
                 sent_line = sent_line[sent_line.find('"') + 1:
-                                    sent_line.rfind('"')]
+                                      sent_line.rfind('"')]
                 index1 = sent_line.find("<e1>")
                 index2 = sent_line.find("<e2>")
                 # 5 is the length of "</e1>", include both <e1> and
@@ -123,7 +123,7 @@ class SemEvalTask8Reader(PackReader):
                 txt += sent_line + " "
 
                 pair = relation_line[relation_line.find("(") + 1:
-                            relation_line.find(")")]
+                                     relation_line.find(")")]
 
                 if "," in pair:
                     parent, _ = pair.split(",")

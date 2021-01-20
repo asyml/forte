@@ -52,9 +52,9 @@ class SST2Reader(PackReader):
         self.id_to_senti: Dict = {}
 
     def _cache_key_function(self, data_pack: DataPack) -> str:
-        if data_pack.meta.pack_name is None:
+        if data_pack.pack_name is None:
             raise ValueError("data_pack does not have a sentence id")
-        return data_pack.meta.pack_name
+        return data_pack.pack_name
 
     def _check_file_exist(self, filename: str):
         if not os.path.exists(filename):
@@ -95,16 +95,16 @@ class SST2Reader(PackReader):
         # Read the mapping from phrase to phrase-id.
         with open(phrase_to_id_path, "r", encoding="utf8") as file:
             for line in file:
-                phrase, id = line.split("|")
-                self.phrase_to_id[phrase] = int(id)
+                phrase, id_ = line.split("|")
+                self.phrase_to_id[phrase] = int(id_)
 
         # Read the mapping from phrase-id to sentiment score.
         with open(id_to_senti_path, "r", encoding="utf8") as file:
             for i, line in enumerate(file):
                 if i == 0:
                     continue
-                id, score = line.split("|")
-                self.id_to_senti[int(id)] = float(score)
+                id_, score = line.split("|")
+                self.id_to_senti[int(id_)] = float(score)
 
         sent_lines = []
         # Read the text and tree structure.

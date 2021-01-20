@@ -5,21 +5,12 @@ from typing import Dict, Any, Optional, List
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
+from forte.data.common_entry_utils import create_utterance, \
+    get_last_utterance
 from forte.data.data_pack import DataPack
 from forte.indexers import ElasticSearchIndexer
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance
-
-
-def new_utterance(input_pack: DataPack, text: str, speaker: str):
-    input_pack.set_text(input_pack.text + '\n' + text)
-    logging.info('The response is:')
-    logging.info(text)
-
-    u = Utterance(input_pack,
-                  len(input_pack.text) - len(text),
-                  len(input_pack.text))
-    u.speaker = speaker
 
 
 def sqlite_insert(conn, table, row):
@@ -58,17 +49,13 @@ class LastUtteranceSearcher(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         # Make sure we take the last utterance from the user.
-        utterance: Optional[Utterance] = None
-        u: Utterance
-        for u in input_pack.get(Utterance):
-            if u.speaker == 'user':
-                utterance = u
+        utterance: Optional[Utterance] = get_last_utterance(input_pack, "user")
 
         if utterance:
             logging.info("The last utterance is %s", utterance)
         else:
             logging.info("Cannot get another utterance.")
-            new_utterance(
+            create_utterance(
                 input_pack,
                 "Hey, I didn't get what you say, could you try again?",
                 'ai')
@@ -100,15 +87,16 @@ class LastUtteranceSearcher(PackProcessor):
             print(pack_id, db_id)
 
         if len(answers) == 0:
-            new_utterance(input_pack,
-                          "No results found. Please try another query.", 'ai')
+            create_utterance(input_pack,
+                             "No results found. Please try another query.",
+                             'ai')
         else:
             links: List[str] = create_links(self.configs.url_stub, answers)
             response_text: str = "I found the following results: <br> -- " \
                                  + "<br> -- ".join(links)
             print(response_text)
 
-            new_utterance(input_pack, response_text, 'ai')
+            create_utterance(input_pack, response_text, 'ai')
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:

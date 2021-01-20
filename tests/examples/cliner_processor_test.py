@@ -16,9 +16,9 @@ Unit tests for Clinical NER processors.
 """
 
 import unittest
-import os
 
 from examples.Cliner.Cliner import ClinicalNER
+from examples.Cliner import download_model
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
@@ -27,18 +27,19 @@ from ft.onto.clinical import ClinicalEntityMention
 
 class TestClinicalNER(unittest.TestCase):
     def setUp(self):
+        download_model.main()
         self.cliner = Pipeline[DataPack]()
         self.cliner.set_reader(StringReader())
         self.cliner.add(
             ClinicalNER(),
             config={
                 'config_model':
-                'examples/Cliner/CliNER/models/train_full'
-                '.model',
+                    'examples/Cliner/CliNER/models/train_full'
+                    '.model',
                 'config_data':
-                'examples/Cliner/CliNER/data/examples/test.txt',
+                    'examples/Cliner/CliNER/data/examples/test.txt',
                 'config_output':
-                'examples/Cliner/CliNER/data/examples',
+                    'examples/Cliner/CliNER/data/examples',
             })
         self.cliner.initialize()
 

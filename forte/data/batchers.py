@@ -36,7 +36,7 @@ __all__ = [
 
 class ProcessingBatcher(Generic[PackType]):
     r"""This defines the basis interface of the Batcher used in
-    :class:`~forte.processors.batch_processor.BatchProcessor`. This Batcher
+    :class:`~forte.processors.base.batch_processor.BatchProcessor`. This Batcher
     only batches data sequentially. It receives new packs dynamically and cache
     the current packs so that the processors can pack prediction results into
     the data packs.

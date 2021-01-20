@@ -23,8 +23,9 @@ API
    code/pipeline.rst
    code/processors.rst
    code/models.rst
+   code/data_aug.rst
+   code/indexers.rst
    code/trainers.rst
    code/evaluation.rst
-   code/data_aug.rst
    code/train_preprocessor.rst
    code/vocabulary.rst

@@ -72,7 +72,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
             os.path.join(model_dir, "embeddings/word_vocab.english.txt"))
         self.char_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/char_vocab.english.txt"))
-        model_hparams = LabeledSpanGraphNetwork.default_configs()
+        model_hparams = LabeledSpanGraphNetwork.default_hparams()
         model_hparams["context_embeddings"]["path"] = os.path.join(
             model_dir, model_hparams["context_embeddings"]["path"])
         model_hparams["head_embeddings"]["path"] = os.path.join(
@@ -115,11 +115,12 @@ class SRLPredictor(FixedSizeBatchProcessor):
             for pred_idx, pred_args in srl_spans.items():
                 begin, end = word_spans[pred_idx]
                 # TODO cannot create annotation here.
-                pred_span = Span(begin, end)
+                # Need to convert from Numpy numbers to int.
+                pred_span = Span(begin.item(), end.item())
                 arguments = []
                 for arg in pred_args:
-                    begin = word_spans[arg.start][0]
-                    end = word_spans[arg.end][1]
+                    begin = word_spans[arg.start][0].item()
+                    end = word_spans[arg.end][1].item()
                     arg_annotation = Span(begin, end)
                     arguments.append((arg_annotation, arg.label))
                 predictions.append((pred_span, arguments))

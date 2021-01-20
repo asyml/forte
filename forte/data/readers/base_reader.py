@@ -23,7 +23,6 @@ from typing import Any, Iterator, Optional, Union, List
 from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
 from forte.common.resources import Resources
-from forte.data import data_utils
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
@@ -283,7 +282,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         logger.info("reading from cache file %s", cache_filename)
         with open(cache_filename, "r") as cache_file:
             for line in cache_file:
-                pack = data_utils.deserialize(line.strip())
+                pack = DataPack.deserialize(line.strip())
                 if not isinstance(pack, self.pack_type):
                     raise TypeError(
                         f"Pack deserialized from {cache_filename} "
