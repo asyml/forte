@@ -13,4 +13,3 @@
 # limitations under the License.
 
 from forte.trainer.base.base_trainer import *
-from forte.trainer.base.base_trainer_new import *
