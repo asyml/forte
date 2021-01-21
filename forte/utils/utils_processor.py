@@ -60,7 +60,7 @@ def parse_allennlp_srl_tags(tags: str) -> \
     """
     pred_span = None
     arguments = []
-    begin, end, prev_argument = None, None, ''
+    begin, end, prev_argument = -1, -1, ''
     for i, item in enumerate(tags.split()):
         argument = '-'.join(item.split('-')[1:])
         if prev_argument not in ('', argument):
@@ -75,4 +75,6 @@ def parse_allennlp_srl_tags(tags: str) -> \
             end = i
         if item.startswith('I-'):
             end = i
+    if not pred_span:
+        raise Exception('No verb detected in this sentence')
     return pred_span, arguments
