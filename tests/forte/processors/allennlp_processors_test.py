@@ -9,10 +9,9 @@ from allennlp.predictors import Predictor
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors.third_party import AllenNLPProcessor, MODEL2URL
-from forte.processors.third_party import SpacyProcessor
-from ft.onto.base_ontology import Sentence, Token, Dependency, PredicateLink, \
-    PredicateMention, PredicateArgument
+from forte.processors.allennlp_processors import AllenNLPProcessor, MODEL2URL
+from forte.processors.spacy_processors import SpacyProcessor
+from ft.onto.base_ontology import Sentence, Token, Dependency, PredicateLink
 from forte.common import ProcessorConfigError, ProcessExecutionException
 from forte.utils.utils_processor import parse_allennlp_srl_tags, \
     parse_allennlp_srl_results
