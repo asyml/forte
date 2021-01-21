@@ -115,7 +115,7 @@ class AllenNLPProcessor(PackProcessor):
         for sentence in input_pack.get(Sentence):
             result: Dict[str, List[str]] = {}
             for key in self.predictor:
-                predicted_result = self.predictor[key].predict(
+                predicted_result = self.predictor[key].predict(  # type: ignore
                     sentence=sentence.text)
                 if key == 'srl':
                     predicted_result = parse_allennlp_srl_results(
