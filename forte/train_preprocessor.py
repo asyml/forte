@@ -276,7 +276,7 @@ class TrainPreprocessor:
             if `scope` is :class:`ft.onto.base_ontology.Sentence`, then each
             training example will represent the information of a sentence.
 
-        `"schemes"`: Dict
+        `"schemes"`: `Dict`
             A `Dict` containing the information about doing the pre-processing.
             The `key` is the tags provided by input `request`. The `value` is a
             `Dict` containing the information for doing pre-processing for that
