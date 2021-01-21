@@ -20,14 +20,14 @@ __all__ = [
     "parse_allennlp_srl_tags"
 ]
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 from collections import defaultdict
 from forte.data.span import Span
 # from ft.onto.base_ontology import Token
 
 
 def parse_allennlp_srl_results(
-        results: List[Dict[str, List[str]]]) -> Dict[str, List[str]]:
+        results: List[Dict[str, Any]]) -> Dict[str, List[str]]:
     r"""Convert SRL output into a dictionary
     of verbs and tags.
 
