@@ -26,7 +26,7 @@ from forte.pipeline import Pipeline
 from forte.data.data_pack import DataPack
 from forte.data.extractor import \
     AttributeExtractor, CharExtractor, LinkExtractor, BaseExtractor
-from forte.trainer.base import BaseTrainer
+from forte.trainer.base.base_trainer_new import BaseTrainer
 from forte.train_preprocessor import TrainPreprocessor
 from ft.onto.base_ontology import Token, Sentence, PredicateLink
 from forte.models.srl_new import data
