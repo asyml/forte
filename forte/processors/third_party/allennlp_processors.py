@@ -20,7 +20,8 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
-from forte.utils.utils_processor import parse_allennlp_srl_tags
+from forte.utils.utils_processor import parse_allennlp_srl_tags, \
+    parse_allennlp_srl_results
 from ft.onto.base_ontology import Token, Sentence, Dependency, \
     PredicateLink, PredicateArgument, PredicateMention
 
@@ -112,11 +113,14 @@ class AllenNLPProcessor(PackProcessor):
         self._process_existing_entries(input_pack)
 
         for sentence in input_pack.get(Sentence):
-            result = {}
+            result: Dict[str, List[str]] = {}
             for key in self.predictor:
-                result.update(self.predictor[key].predict(
-                    sentence=sentence.text))
-
+                predicted_result = self.predictor[key].predict(
+                    sentence=sentence.text)
+                if key == 'srl':
+                    predicted_result = parse_allennlp_srl_results(
+                        predicted_result['verbs'])
+                result.update(predicted_result)
             if "tokenize" in self.configs.processors:
                 # creating new tokens and dependencies
                 tokens = self._create_tokens(input_pack, sentence, result)
@@ -169,15 +173,12 @@ class AllenNLPProcessor(PackProcessor):
     @staticmethod
     def _create_srl(input_pack: DataPack, tokens: List[Token],
                     result: Dict[str, List[str]]) -> None:
-        verbs = result['verbs']
-        for _, verb_item in enumerate(verbs):
-            pred_span, arguments = parse_allennlp_srl_tags(
-                tokens, verb_item['tags'])
-            pred = PredicateMention(input_pack, pred_span.begin,
-                                        pred_span.end)
+        for _, tag in enumerate(result['srl_tags']):
+            pred_span, arguments = parse_allennlp_srl_tags(tag)
+            pred = PredicateMention(input_pack, tokens[pred_span.begin].begin,
+                                        tokens[pred_span.end].end)
             for arg_span, label in arguments:
-                arg = PredicateArgument(
-                        input_pack, arg_span.begin, arg_span.end
-                    )
+                arg = PredicateArgument(input_pack,
+                    tokens[arg_span.begin].begin, tokens[arg_span.end].end)
                 link = PredicateLink(input_pack, pred, arg)
                 link.arg_type = label
