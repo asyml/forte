@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2021 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ def parse_allennlp_srl_tags(tags: str) -> \
     AllenNLP SRL processor.
 
     Args:
-        tags (str): a str of semantic role lables.
+        tags (str): a str of semantic role labels.
 
     Returns:
          the span of the verb and
@@ -74,6 +74,8 @@ def parse_allennlp_srl_tags(tags: str) -> \
             begin = i
             end = i
         if item.startswith('I-'):
+            if begin == -1:
+                begin = i
             end = i
     if not pred_span:
         raise Exception('No verb detected in this sentence')
