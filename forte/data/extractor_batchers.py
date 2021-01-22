@@ -15,6 +15,7 @@
 # pylint: disable=attribute-defined-outside-init
 
 from abc import abstractmethod
+from copy import copy
 from typing import (
     Tuple, Dict, List, Iterable, Generic, Iterator, Any)
 
@@ -58,8 +59,8 @@ class ProcessingBatcher(Generic[PackType]):
         Returns:
 
         """
-        self.scope = config.scope
-        self.feature_scheme = config.feature_scheme
+        self.scope = config["scope"]
+        self.feature_scheme = config["feature_scheme"]
         self.pack_pool.clear()
         self.instance_pool.clear()
         self.feature_pool.clear()
@@ -89,15 +90,17 @@ class ProcessingBatcher(Generic[PackType]):
         for tag, features in collections.items():
             converter = self.feature_scheme[tag]["converter"]
             data, masks = converter.convert(features)
-            converted[tag]["data"] = data
-            converted[tag]["masks"] = masks
-            converted[tag]["features"] = features
+            converted[tag] = {
+                "data": data,
+                "masks": masks,
+                "features": features
+            }
         return converted
 
     def flush(self) -> Iterator[Dict]:
         r"""Flush the remaining data."""
-        if len(self.feature_pool) > 0:
-            yield (self.pack_pool, self.instance_pool,
+        if self.pool_size > 0:
+            yield (copy(self.pack_pool), copy(self.instance_pool),
                     self.convert(self.feature_pool))
             self.feature_pool.clear()
             self.pack_pool.clear()
@@ -122,7 +125,7 @@ class ProcessingBatcher(Generic[PackType]):
             # 2. We should also yield when the batcher condition is met:
             # i.e. ``_should_yield()`` is True.
             if not self.cross_pack or self._should_yield():
-                self.flush()
+                yield from self.flush()
 
     def _get_data_batch(
             self, data_pack: PackType) -> Iterable[Tuple[Dict, Annotation, int]]:
@@ -150,7 +153,7 @@ class ProcessingBatcher(Generic[PackType]):
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
     def initialize(self, config: Config):
         super().initialize(config)
-        self.batch_size = config.batch_size
+        self.batch_size = config["batch_size"]
         self.batch_is_full = False
 
     def _should_yield(self) -> bool:
@@ -180,7 +183,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
             if len(instances) == self.batch_size - current_size:
                 self.batch_is_full = True
-                batch = (packs, instances, features_collection)
+                batch = (copy(packs), copy(instances), copy(features_collection))
                 yield (batch, len(instances))
                 self.batch_is_full = False
                 packs.clear()
@@ -190,7 +193,7 @@ class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
 
         # Flush the remaining data.
         if len(instances) > 0:
-            batch = (packs, instances, features_collection)
+            batch = (copy(packs), copy(instances), copy(features_collection))
             yield (batch, len(instances))
 
     @classmethod
