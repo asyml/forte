@@ -91,11 +91,11 @@ class TrainPreprocessorTest(unittest.TestCase):
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(self.reader)
         train_pl.initialize()
-        pack_generator: Iterator[PackType] = \
+        pack_iterator: Iterator[PackType] = \
             train_pl.process_dataset(self.config["train_path"])
 
         self.train_preprocessor = \
-            TrainPreprocessor(pack_generator=pack_generator,
+            TrainPreprocessor(pack_iterator=pack_iterator,
                               request=self.tp_request,
                               config=self.tp_config)
 

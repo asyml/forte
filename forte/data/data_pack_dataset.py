@@ -11,6 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Provide data across multiple data packs during training. A data pack iterator
+iterates over each single data example across multiple data packs. A data pack
+data set represents the dataset of a bunch of data packs. A raw example
+represents a single data point in the dataset. A feature collection represents
+an extracted feature corresponding to an input data point.
+"""
 from typing import Dict, Iterator, Type, Optional, List, Tuple, Union, Any
 
 import torch
@@ -27,50 +34,80 @@ from forte.data.types import DataRequest
 
 __all__ = [
     "DataPackIterator",
-    "DataPackDataSource",
-    "DataPackDataset"
+    "DataPackDataset",
+    "RawExample",
+    "FeatureCollection"
 ]
 
 # An instance is a single data point from data pack
-Instance = Dict
-RawExample = Tuple[Instance, DataPack]
+RawExample = Tuple[int, DataPack]
 FeatureCollection = Dict[str, Feature]
 
 
-class DataPackIterator:
+class DataPackIterator(IterDataSource):
     """
     An iterator over single data example from multiple data packs.
 
     Args:
-        pack_generator (Iterator[DataPack]): A generator of
-            :class:`forte.data.data_pack.DataPack`.
+        pack_iterator (Iterator[DataPack]): An iterator of
+            :class:`~forte.data.data_pack.DataPack`.
         context_type: The granularity of a single example which
             could be any ``Annotation`` type. For example, it can be
-            :class:`ft.onto.base_ontology.Sentence`, then each training example
+            :class:`~ft.onto.base_ontology.Sentence`, then each training example
             will represent the information of a sentence.
         request: The request of type `Dict` sent to
-            :class:`forte.data.readers.base_reader.PackReader` to query
+            :class:`~forte.data.data_pack.DataPack` to query
             specific data.
         skip_k (int): Will skip the first `skip_k` instances and generate
-            data from the (`offset` + 1)th instance.
+            data from the (`skip_k` + 1)th instance.
+
+    Returns:
+        An `Iterator` that each time produces a `Tuple` of an `tid`
+        (of type `int`) and a data pack
+        (of type :class:`~forte.data.data_pack.DataPack`).
+
+    Here is an example usage:
+        .. code-block:: python
+
+            file_path: str = "data_samples/data_pack_dataset_test"
+            reader = CoNLL03Reader()
+            context_type = Sentence
+            request = {Sentence: []}
+            skip_k = 0
+
+            train_pl: Pipeline = Pipeline()
+            train_pl.set_reader(reader)
+            train_pl.initialize()
+            pack_iterator: Iterator[PackType] =
+                train_pl.process_dataset(file_path)
+
+            iterator: DataPackIterator = DataPackIterator(pack_iterator,
+                                                          context_type,
+                                                          request,
+                                                          skip_k)
+
+            for tid, data_pack in iterator:
+                # process tid and data_pack
 
     .. note::
         For parameters `context_type`, `request`, `skip_k`, please refer to
-        :meth:`get_data()` in :class:`forte.data.data_pack.DataPack`.
+        :meth:`get_data()` in :class:`~forte.data.data_pack.DataPack`.
     """
     def __init__(self,
-                 pack_generator: Iterator[DataPack],
+                 pack_iterator: Iterator[DataPack],
                  context_type: Type[Annotation],
                  request: Optional[DataRequest] = None,
                  skip_k: int = 0):
+        super().__init__(self)
+
         self._get_data_args: Dict = {
             "context_type": context_type,
             "request": request,
             "skip_k": skip_k
         }
 
-        self._data_pack_iter: Iterator[DataPack] = pack_generator
-        self._instance_iter: Optional[Iterator[Instance]] = None
+        self._data_pack_iter: Iterator[DataPack] = pack_iterator
+        self._instance_iter: Optional[Iterator[Dict[str, Any]]] = None
         self._curr_data_pack: Optional[DataPack] = None
 
     def __iter__(self):
@@ -82,87 +119,48 @@ class DataPackIterator:
             self._instance_iter = \
                 self._curr_data_pack.get_data(**self._get_data_args)
 
-        assert self._instance_iter is not None
+        if self._instance_iter is None:
+            raise ValueError("Instance iterator is None")
 
         try:
-            return next(self._instance_iter), self._curr_data_pack
+            return next(self._instance_iter)["tid"], self._curr_data_pack
         except StopIteration:
             # Current data pack has no more instance. Go to next data pack.
             self._curr_data_pack = next(self._data_pack_iter)
             self._instance_iter = \
                 self._curr_data_pack.get_data(**self._get_data_args)
 
-        return next(self._instance_iter), self._curr_data_pack
-
-
-class DataPackDataSource(IterDataSource):
-    """
-    A data source consists of data packs. It contains an iterator over
-    :class:`forte.data.data_pack_dataset.DataPackIterator`.
-
-    Args:
-        pack_generator (Iterator[DataPack]): A generator of
-            :class:`forte.data.data_pack.DataPack`.
-        context_type: The granularity of a single example which
-            could be any ``Annotation`` type. For example, it can be
-            :class:`ft.onto.base_ontology.Sentence`, then each training example
-            will represent the information of a sentence.
-        request: The request of type `Dict` sent to
-            :class:`forte.data.readers.base_reader.PackReader` to query
-            specific data.
-        skip_k (int): Will skip the first `skip_k` instances and generate
-            data from the (`offset` + 1)th instance.
-
-    .. note::
-        For parameters `context_type`, `request`, `skip_k`, please refer to
-        :meth:`get_data()` in :class:`forte.data.data_pack.DataPack`.
-    """
-    def __init__(self,
-                 pack_generator: Iterator[DataPack],
-                 context_type: Type[Annotation],
-                 request: Optional[DataRequest] = None,
-                 skip_k: int = 0):
-        self._iterator: Iterator = DataPackIterator(pack_generator,
-                                                    context_type,
-                                                    request,
-                                                    skip_k)
-        super().__init__(self)
-
-    def __iter__(self):
-        return self._iterator
+        return next(self._instance_iter)["tid"], self._curr_data_pack
 
 
 class DataPackDataset(DatasetBase):
     """
     A dataset representing data packs. Calling an
-    `DataIterator
-    <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#dataiterator>`_
+    :class:`~texar.torch.data.DataIterator`
     over this `DataPackDataset` will produce an `Iterate` over batch of examples
     parsed by a reader from given data packs.
 
     Args:
         data_source: A data source of type
-            :class:`forte.data.data_pack_dataset.DataPackDataSource`.
+            :class:`~forte.data.data_pack_dataset.DataPackDataSource`.
         feature_schemes (dict): A `Dict` containing all the information to do
             data pre-processing. This is exactly the same as the `schemes` in
             `feature_resource`. Please refer to :meth:`feature_resource` in
-            :class:`forte.train_preprocessor.TrainPreprocessor` for details.
+            :class:`~forte.train_preprocessor.TrainPreprocessor` for details.
         hparams: A `dict` or instance of :
-            class:`forte.common.configuration.Config` containing
+            class:`~texar.torch.HParams` containing
             hyperparameters. See :meth:`default_hparams` in
-            `DatasetBase
-            <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#datasetbase>`
-            for the defaults.
+            :class:`~texar.torch.data.DatasetBase` for the defaults.
         device: The device of the produced batches. For GPU training,
             set to current CUDA device.
     """
     def __init__(self,
-                 data_source: DataPackDataSource,
+                 data_source: DataPackIterator,
                  feature_schemes: Dict,
                  hparams: Union[Dict, HParams] = None,
                  device: Optional[torch.device] = None):
-        self._data_source = data_source
-        self._feature_scheme = feature_schemes
+        self._data_source: DataPackIterator = data_source
+        self._feature_scheme: Dict = feature_schemes
 
         super().__init__(self._data_source, hparams, device)
 
@@ -174,24 +172,23 @@ class DataPackDataset(DatasetBase):
             raw_example (tuple(dict, DataPack)): A `Tuple` where
 
                 The first element is a `Dict` produced by :meth:`get_data()` in
-                :class:`forte.data.data_pack.DataPack`.
+                :class:`~forte.data.data_pack.DataPack`.
 
                 The second element is an instance of type
-                :class:`forte.data.data_pack.DataPack`.
+                :class:`~forte.data.data_pack.DataPack`.
 
         Returns:
             A `Dict` mapping from user-specified tags to the
-            :class:`forte.data.converter.Feature` extracted.
+            :class:`~forte.data.converter.Feature` extracted.
 
             .. note::
                 Please refer to Please refer to :meth:`feature_resource` in
-                :class:`forte.train_preprocessor.TrainPreprocessor` for details
+                :class:`~forte.train_preprocessor.TrainPreprocessor` for details
                 about user-specified tags.
         """
-        instance: Instance = raw_example[0]
+        tid: int = raw_example[0]
         data_pack: DataPack = raw_example[1]
-        instance_entry: EntryType = data_pack.get_entry(  # type: ignore
-            instance["tid"])
+        instance_entry: EntryType = data_pack.get_entry(tid)  # type:ignore
         feature_collection: FeatureCollection = {}
 
         for tag, scheme in self._feature_scheme.items():
@@ -210,8 +207,7 @@ class DataPackDataset(DatasetBase):
             examples: A `List` of result from :meth:`process`.
 
         Returns:
-            A texar `Batch
-            <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#batch>`_.
+            A texar :class:`~texar.torch.data.Batch`
             It can be treated as a `Dict` with the following structure:
 
             .. code-block:: python
@@ -232,26 +228,26 @@ class DataPackDataset(DatasetBase):
             `"data"`: List or `np.ndarray` or `torch.tensor`
                 The pre-processed data.
 
-                Please refer to :class:`forte.data.converter.Converter` for
+                Please refer to :class:`~forte.data.converter.Converter` for
                 details.
 
             `"masks"`: `np.ndarray` or `torch.tensor`
                 All the masks for pre-processed data.
 
-                Please refer to :class:`forte.data.converter.Converter` for
+                Please refer to :class:`~forte.data.converter.Converter` for
                 details.
 
             `"features"`: List[Feature]
-                A List of :class:`forte.data.converter.feature.Feature`. This is
-                useful when users want to do customized pre-processing.
+                A List of :class:`~forte.data.converter.feature.Feature`. This
+                is useful when users want to do customized pre-processing.
 
-                Please refer to :class:`forte.data.converter.Feature` for
+                Please refer to :class:`~forte.data.converter.Feature` for
                 details.
 
             .. note::
                 The first level key in returned `batch` is the user-specified
                 tags. Please refer to :meth:`feature_resource`
-                in :class:`forte.train_preprocessor.TrainPreprocessor` for
+                in :class:`~forte.train_preprocessor.TrainPreprocessor` for
                 details about user-specified tags.
         """
         batch_size = len(examples)

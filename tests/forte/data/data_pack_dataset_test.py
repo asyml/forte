@@ -17,7 +17,7 @@ from typing import List, Iterator
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
 from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.data.data_pack_dataset import DataPackDataSource, RawExample
+from forte.data.data_pack_dataset import RawExample, DataPackIterator
 from forte.pipeline import Pipeline
 from ft.onto.base_ontology import Sentence
 
@@ -39,19 +39,19 @@ class DataPackDatasetTest(unittest.TestCase):
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(reader)
         train_pl.initialize()
-        pack_generator: Iterator[PackType] = \
+        pack_iterator: Iterator[PackType] = \
             train_pl.process_dataset(file_path)
 
-        self.data_source: DataPackDataSource = \
-            DataPackDataSource(pack_generator,
-                               context_type,
-                               request,
-                               skip_k)
+        self.data_source: DataPackIterator = DataPackIterator(pack_iterator,
+                                                              context_type,
+                                                              request,
+                                                              skip_k)
 
     def test_data_pack_iterator(self):
         data_pack_iter = iter(self.data_source)
         raw_examples_1: List[RawExample] = []
         raw_examples_2: List[RawExample] = []
+        data_packs: List[DataPack] = []
 
         for idx, raw_example in enumerate(data_pack_iter):
             curr_pack: DataPack = raw_example[1]
@@ -59,16 +59,17 @@ class DataPackDatasetTest(unittest.TestCase):
                 raw_examples_1.append(raw_example)
             else:
                 raw_examples_2.append(raw_example)
+            data_packs.append(curr_pack)
 
         self.assertEqual(len(raw_examples_1), 7)
         self.assertEqual(len(raw_examples_2), 3)
-        self.assertEqual(raw_examples_1[0][0]['context'],
+        self.assertEqual(data_packs[0].get_entry(raw_examples_1[0][0]).text,
                          "EU rejects German call to boycott British lamb .")
-        self.assertEqual(raw_examples_1[1][0]['context'],
+        self.assertEqual(data_packs[0].get_entry(raw_examples_1[1][0]).text,
                          "Peter Blackburn")
-        self.assertEqual(raw_examples_2[0][0]['context'],
+        self.assertEqual(data_packs[1].get_entry(raw_examples_2[0][0]).text,
                          "EU rejects German call to boycott British lamb .")
-        self.assertEqual(raw_examples_2[1][0]['context'],
+        self.assertEqual(data_packs[1].get_entry(raw_examples_2[1][0]).text,
                          "Peter Blackburn")
 
 

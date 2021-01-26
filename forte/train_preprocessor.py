@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Train preprocessor helps doing data pre-processing during training.
+"""
 import logging
 from typing import Optional, Dict, Type, Any, Union, Iterator, List
 from texar.torch.data import DataIterator, Batch
@@ -20,8 +23,7 @@ from torch import device
 from forte.common.configuration import Config
 from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
-from forte.data.data_pack_dataset import DataPackDataSource, \
-    DataPackDataset
+from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
 from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
@@ -49,11 +51,11 @@ class TrainPreprocessor:
     parse this user request and store the parsed result.
 
     Args:
-        pack_generator (Iterator[DataPack]): A generator of
-            :class:`forte.data.data_pack.DataPack`.
+        pack_iterator (Iterator[DataPack]): An iterator of
+            :class:`~forte.data.data_pack.DataPack`.
         request (Dict): A request that specifies how to do train pre-processing.
             Please refer to :meth:`request` for details.
-        config: A `Dict` or :class:`forte.common.configuration.Config` that
+        config: A `Dict` or :class:`~forte.common.configuration.Config` that
             configs this preprocessor. See :meth:`default_configs` for
             the defaults.
 
@@ -61,21 +63,21 @@ class TrainPreprocessor:
     .. note::
         For parameters `request`, user does not necessarily need to provide
         `converter`. If no `converter` is specified, a default converter of
-        type :class:`forte.data.converter.Converter` will be picked.
+        type :class:`~forte.data.converter.Converter` will be picked.
     """
 
     DATA_INPUT = 0
     DATA_OUTPUT = 1
 
     def __init__(self,
-                 pack_generator: Iterator[DataPack],
+                 pack_iterator: Iterator[DataPack],
                  request: Dict,
                  config: Optional[Union[Config, Dict]] = None):
         self._config: Config = \
             Config(config, default_hparams=self.default_configs())
         self._validate_config()
 
-        self._pack_generator: Iterator[DataPack] = pack_generator
+        self._pack_iterator: Iterator[DataPack] = pack_iterator
         self._cached_packs: List[DataPack] = []
 
         self._user_request: Dict = request
@@ -83,12 +85,8 @@ class TrainPreprocessor:
         self._request_ready: bool = False
         self._vocab_ready: bool = False
 
-        if not self._config.preprocess.lazy_parse_request:
-            self._parse_request(self._user_request)
-
-        if not self._config.preprocess.lazy_build_vocab:
-            assert not self._config.preprocess.lazy_parse_request
-            self._build_vocab()
+        self._parse_request(self._user_request)
+        self._build_vocab()
 
     @staticmethod
     def default_configs():
@@ -98,8 +96,6 @@ class TrainPreprocessor:
 
             {
                 "preprocess": {
-                            "lazy_parse_request": False,
-                            "lazy_build_vocab": False,
                             "device": "cpu",
                 },
                 "dataset": DataPackDataset.default_hparams()
@@ -107,32 +103,19 @@ class TrainPreprocessor:
 
         Here:
 
-        `"preprocessor.lazy_parse_request"`: bool
-            If False (default), preprocessor will parse input user request when
-            the `TrainPreprocessor` instance is created. If False, it will parse
-            user request when :meth:`get_train_batch_iterator` is called.
-
-        `"preprocessor.lazy_build_vocab"`: bool
-            If False (default), preprocessor will iterate over all dataset files
-            and build the vocabulary when the `TrainPreprocessor` instance is
-            created. If False, it will build the vocabulary when
-            :meth:`get_train_batch_iterator` is called.
-
         `"preprocessor.device"`:
             The device of the produced batches. For GPU training,
             set to current CUDA device.
 
         `"dataset"`:
             This contains all the configurable options same as
-            :class:`forte.data.data_pack_dataset.DataPackDataset`.
+            :class:`~forte.data.data_pack_dataset.DataPackDataset`.
 
         """
 
         # Configs should be serializable
         return {
             "preprocess": {
-                "lazy_parse_request": False,
-                "lazy_build_vocab": False,
                 "device": "cpu",
             },
             "dataset": DataPackDataset.default_hparams()
@@ -208,13 +191,17 @@ class TrainPreprocessor:
         schemes: Dict = self._request["schemes"]
 
         # TODO: clear vocab?
-        for data_pack in self._pack_generator:
-            for instance in data_pack.get(scope):
-                for _, scheme in schemes.items():
-                    extractor: BaseExtractor = scheme["extractor"]
-                    if extractor.vocab_method != "raw":
-                        extractor.update_vocab(data_pack, instance)
+
+        # Cached all data packs
+        for data_pack in self._pack_iterator:
             self._cached_packs.append(data_pack)
+
+        for _, scheme in schemes.items():
+            extractor: BaseExtractor = scheme["extractor"]
+            if extractor.vocab_method != "raw":
+                for data_pack in self._cached_packs:
+                    for instance in data_pack.get(scope):
+                        extractor.update_vocab(data_pack, instance)
 
         self._vocab_ready = True
 
@@ -223,10 +210,9 @@ class TrainPreprocessor:
         scope: Type[EntryType] = self._request["scope"]  # type: ignore
         schemes: Dict[str, Dict[str, Any]] = self._request["schemes"]
 
-        data_source = \
-            DataPackDataSource(pack_generator=iter(self._cached_packs),
-                               context_type=scope,
-                               request={scope: []})
+        data_source = DataPackIterator(pack_iterator=iter(self._cached_packs),
+                                       context_type=scope,
+                                       request={scope: []})
 
         dataset = DataPackDataset(data_source,
                                   schemes,
@@ -271,9 +257,9 @@ class TrainPreprocessor:
     Here:
 
         `"scope"`: Entry
-            A class of type :class:`forte.data.ontology.core.Entry` The
+            A class of type :class:`~forte.data.ontology.core.Entry` The
             granularity to separate data into different examples. For example,
-            if `scope` is :class:`ft.onto.base_ontology.Sentence`, then each
+            if `scope` is :class:`~ft.onto.base_ontology.Sentence`, then each
             training example will represent the information of a sentence.
 
         `"schemes"`: `Dict`
@@ -283,10 +269,10 @@ class TrainPreprocessor:
             feature.
 
         `"schemes.tag.extractor"`: Extractor
-            An instance of type :class:`forte.data.extractor.BaseExtractor`.
+            An instance of type :class:`~forte.data.extractor.BaseExtractor`.
 
         `"schemes.tag.converter"`: Converter
-            An instance of type :class:`forte.data.converter.Converter`.
+            An instance of type :class:`~forte.data.converter.Converter`.
 
         `"schemes.tag.type"`: TrainPreprocessor.DATA_INPUT/DATA_OUTPUT
             Denoting whether this feature is the input or output feature.
@@ -294,14 +280,6 @@ class TrainPreprocessor:
         if not self._request:
             self._parse_request(self._request)
         return self._request
-
-    @property
-    def user_request(self) -> Dict:
-        r"""A `Dict` passed by users when
-        :class:`forte.train_preprocessor.TrainPreprocessor` instance is created.
-        Please refer to class documentation for the detailed format.
-        """
-        return self._user_request
 
     @property
     def device(self) -> device:
@@ -312,7 +290,7 @@ class TrainPreprocessor:
 
     @property
     def config(self) -> Config:
-        r"""A :class:`forte.common.configuration.Config` maintaining all the
+        r"""A :class:`~forte.common.configuration.Config` maintaining all the
         configurable options for this `TrainPreprocessor`.
         """
         return self._config
@@ -321,34 +299,28 @@ class TrainPreprocessor:
         r"""
         This method mainly has four steps:
 
-        1. Iterate over :class:`forte.data.data_pack.DataPack`
-           via pack generator
-        2. Extract :class:`forte.data.converter.feature.Feature` from
-           :class:`forte.data.data_pack.DataPack`
-        3. Batch :class:`forte.data.converter.feature.Feature`
+        1. Iterate over :class:`~forte.data.data_pack.DataPack`
+           via pack iterator
+        2. Extract :class:`~forte.data.converter.feature.Feature` from
+           :class:`~forte.data.data_pack.DataPack`
+        3. Batch :class:`~forte.data.converter.feature.Feature`
         4. (optional) Pad a batch of
-           :class:`forte.data.converter.feature.Feature`
+           :class:`~forte.data.converter.feature.Feature`
 
         It will return an `iterator` of a batch of preprocessed data.
 
         Returns:
-            An `Iterator` of the `Batch
-            <https://texar-pytorch.readthedocs.io/en/latest/code/data.html#batch>`_.
+            An `Iterator` of type :class:`~texar.torch.data.Batch`
 
             Please refer to :meth:`collate` in
-            :class:`forte.data.data_pack_dataset.DataPackDataset` for details
+            :class:`~forte.data.data_pack_dataset.DataPackDataset` for details
             about its structure.
         """
-        if self._config.preprocess.lazy_parse_request:
-            self._parse_request(self._user_request)
-        else:
-            assert self._request, \
-                "Feature recourse is not parsed"
+        if not self._request:
+            raise ValueError("Feature resource is not parsed")
 
-        if self._config.preprocess.lazy_build_vocab:
-            self._build_vocab()
-        else:
-            assert self._vocab_ready, "Vocab is not built"
+        if not self._vocab_ready:
+            raise ValueError("Vocab is not built")
 
         dataset_iter = self._build_dataset_iterator()
 

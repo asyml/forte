@@ -224,11 +224,6 @@ DataPack Dataset
 .. autoclass:: forte.data.data_pack_dataset.DataPackIterator
     :members:
 
-:hidden:`DataPackDataSource`
-------------------------------
-.. autoclass:: forte.data.data_pack_dataset.DataPackDataSource
-    :members:
-
 :hidden:`DataPackDataset`
 ------------------------------
 .. autoclass:: forte.data.data_pack_dataset.DataPackDataset
