@@ -23,6 +23,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Provide a framework inherited by users to do the training.
+"""
 import logging
 from abc import abstractmethod
 from typing import Dict, Iterator, Any, Optional
@@ -43,13 +46,13 @@ class BaseTrainer:
     `BaseTrainer` is the main entry for using Forte training framework. Users
     should inherit this class and overwrite multiple methods defined in this
     class. Internally, it will make use of
-    :class:`forte.train_preprocessor.TrainPreprocessor` to do the the actual
+    :class:`~forte.train_preprocessor.TrainPreprocessor` to do the the actual
     training. Please refer to the documentation of that class for details. A
     concrete example is provided below showing how to use this class.
 
     Below is an example for how to use this class. A fully documented example is
     also provided in
-    :class:`forte.examples.tagging.tagging_trainer.TaggingTrainer`.
+    :class:`~forte.examples.tagging.tagging_trainer.TaggingTrainer`.
 
     .. code-block:: python
 
@@ -101,15 +104,15 @@ class BaseTrainer:
 
                 return tp_config
 
-            def create_pack_generator(self) -> Iterator[DataPack]:
+            def create_pack_iterator(self) -> Iterator[DataPack]:
                 reader = CoNLL03Reader()
                 train_pl: Pipeline = Pipeline()
                 train_pl.set_reader(reader)
                 train_pl.initialize()
-                pack_generator: Iterator[DataPack] = \
+                pack_iterator: Iterator[DataPack] = \
                     train_pl.process_dataset(self.config_data.train_path)
 
-                return pack_generator
+                return pack_iterator
 
             def train(self):
                 schemes: Dict = self.train_preprocessor.request["schemes"]
@@ -151,9 +154,9 @@ class BaseTrainer:
     """
 
     def __init__(self):
-        self._tp_request: Optional[Dict] = None
-        self._tp_config: Optional[Dict] = None
-        self._pack_generator: Optional[Iterator[DataPack]] = None
+        self._tp_request: Dict = {}
+        self._tp_config: Dict = {}
+        self._pack_iterator: Optional[Iterator[DataPack]] = None
         self._tp: Optional[TrainPreprocessor] = None
         self._initialized: bool = False
 
@@ -164,8 +167,8 @@ class BaseTrainer:
 
         self._tp_request: Dict = self.create_tp_request()
         self._tp_config: Dict = self.create_tp_config()
-        self._pack_generator: Iterator[DataPack] = self.create_pack_generator()
-        self._tp = TrainPreprocessor(pack_generator=self._pack_generator,
+        self._pack_iterator: Iterator[DataPack] = self.create_pack_iterator()
+        self._tp = TrainPreprocessor(pack_iterator=self._pack_iterator,
                                      request=self._tp_request,
                                      config=self._tp_config)
         self._initialized = True
@@ -173,7 +176,7 @@ class BaseTrainer:
     @property
     def train_preprocessor(self) -> Optional[TrainPreprocessor]:
         r"""The instance of type
-        :class:`forte.train_preprocessor.TrainPreprocessor`. The Trainer will
+        :class:`~forte.train_preprocessor.TrainPreprocessor`. The Trainer will
         internally create an instance of this class to do the actual training.
         """
         if not self._initialized:
@@ -192,7 +195,7 @@ class BaseTrainer:
         r"""Users should overwrite this method to provide a concrete train
         preprocessor request. An example request is given in the example above.
         Please refer to :meth:`request` in class
-        :class:`forte.train_preprocessor.TrainPreprocessor` for detailed
+        :class:`~forte.train_preprocessor.TrainPreprocessor` for detailed
         specification of each options in the request.
         """
         raise NotImplementedError
@@ -202,18 +205,18 @@ class BaseTrainer:
         r"""Users should overwrite this method to provide a concrete train
         preprocessor config. An example config is given in the example above.
         Please refer to :meth:`default_configs` in class
-        :class:`forte.train_preprocessor.TrainPreprocessor` for detailed
+        :class:`~forte.train_preprocessor.TrainPreprocessor` for detailed
         specification of each options in the config.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def create_pack_generator(self) -> Iterator[DataPack]:
+    def create_pack_iterator(self) -> Iterator[DataPack]:
         r"""Users should overwrite this method to provide an iterator of
-        :class:`forte.data.data_pack.DataPack`. This iterator will be used to
+        :class:`~forte.data.data_pack.DataPack`. This iterator will be used to
         produce each input data pack consumed for training. Typically, users
         can create a reader of type
-        :class:`forte.data.readers.base_reader.BaseReader`. The reader can be
+        :class:`~forte.data.readers.base_reader.BaseReader`. The reader can be
         wrapped as an iterator of data pack via forte pipeline system. Please
         refer to the above example for how to create this.
         """
@@ -224,7 +227,7 @@ class BaseTrainer:
         r"""Users should overwrite this method to provide the detail logic of
         doing the training (forward and backward processing). Users can use the
         :meth:`get_train_batch_iterator` in class
-        :class:`forte.train_preprocessor.TrainPreprocessor` to get an iterator
+        :class:`~forte.train_preprocessor.TrainPreprocessor` to get an iterator
         of pre-processed batch of data. Please refer to that method for details.
         An example is also provided above.
         """
@@ -234,7 +237,7 @@ class BaseTrainer:
         r"""Save the training states to disk for the usage of later
         predicting phase. The default training states is the request inside
         TrainPreprocessor. Please refer to :meth:`request` in class
-        :class:`forte.train_preprocessor.TrainPreprocessor` for details.
+        :class:`~forte.train_preprocessor.TrainPreprocessor` for details.
         Typically users do not need to overwrite this method as default saved
         training state is enough for predicting usage. But users can also
         overwrite this method to achieve special purpose.
@@ -242,7 +245,7 @@ class BaseTrainer:
 
         # Check arg type. Default behavior only supports str as args[0] which
         # is considered as a disk file path.
-        if isinstance(args[0], str):
+        if not isinstance(args[0], str):
             raise ValueError("Do not support input args: {} and kwargs: {}"
                              .format(args, kwargs))
 
