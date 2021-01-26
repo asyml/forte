@@ -28,7 +28,7 @@ from forte.pipeline import Pipeline
 from forte.data.data_pack import DataPack
 from forte.data.extractor import AttributeExtractor, CharExtractor, \
     BaseExtractor, BioSeqTaggingExtractor
-from forte.trainer.base.base_trainer_new import BaseTrainer
+from forte.trainer.base.trainer import BaseTrainer
 from forte.train_preprocessor import TrainPreprocessor
 from ft.onto.base_ontology import Token, EntityMention, Sentence
 
@@ -109,15 +109,15 @@ class TaggingTrainer(BaseTrainer):
 
         return tp_config
 
-    def create_pack_generator(self) -> Iterator[DataPack]:
+    def create_pack_iterator(self) -> Iterator[DataPack]:
         reader = CoNLL03Reader()
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(reader)
         train_pl.initialize()
-        pack_generator: Iterator[DataPack] = \
+        pack_iterator: Iterator[DataPack] = \
             train_pl.process_dataset(self.config_data.train_path)
 
-        return pack_generator
+        return pack_iterator
 
     def train(self):
         def predict_forward_fn(_model: BiRecurrentConvCRF,
