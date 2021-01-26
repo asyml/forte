@@ -26,7 +26,7 @@ from forte.pipeline import Pipeline
 from forte.data.data_pack import DataPack
 from forte.data.extractor import \
     AttributeExtractor, CharExtractor, LinkExtractor, BaseExtractor
-from forte.trainer.base.base_trainer_new import BaseTrainer
+from forte.trainer.base.trainer import BaseTrainer
 from forte.train_preprocessor import TrainPreprocessor
 from ft.onto.base_ontology import Token, Sentence, PredicateLink
 from forte.models.srl_new import data
@@ -66,7 +66,7 @@ class SRLTrainer(BaseTrainer):
             LinkExtractor(config={
                 "entry_type": PredicateLink,
                 "attribute": "arg_type",
-                "based_on": Token,
+                "tagging_unit": Token,
                 "vocab_method": "indexing",
                 "need_pad": False
             })
@@ -112,14 +112,14 @@ class SRLTrainer(BaseTrainer):
 
         return tp_config
 
-    def create_pack_generator(self) -> Iterator[DataPack]:
+    def create_pack_iterator(self) -> Iterator[DataPack]:
         srl_train_reader = OntonotesReader(cache_in_memory=True)
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(srl_train_reader)
         train_pl.initialize()
-        pack_generator = train_pl.process_dataset(self.train_path)
+        pack_iterator = train_pl.process_dataset(self.train_path)
 
-        return pack_generator
+        return pack_iterator
 
     def train(self):
         def predict_forward_fn(_model: LabeledSpanGraphNetwork,
