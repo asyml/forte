@@ -206,6 +206,16 @@ Extractor
 ------------------------------
 .. autoclass:: forte.data.extractor.attribute_extractor.AttributeExtractor
 
+:hidden:`CharExtractor`
+------------------------------
+.. autoclass:: forte.data.extractor.char_extractor.CharExtractor
+    :members:
+
+:hidden:`BioSeqTaggingExtractor`
+-----------------------------------
+.. autoclass:: forte.data.extractor.seqtagging_extractor.BioSeqTaggingExtractor
+    :members:
+
 DataPack Dataset
 =================
 
@@ -222,16 +232,6 @@ DataPack Dataset
 :hidden:`DataPackDataset`
 ------------------------------
 .. autoclass:: forte.data.data_pack_dataset.DataPackDataset
-    :members:
-
-:hidden:`CharExtractor`
-------------------------------
-.. autoclass:: forte.data.extractor.char_extractor.CharExtractor
-    :members:
-
-:hidden:`BioSeqTaggingExtractor`
------------------------------------
-.. autoclass:: forte.data.extractor.seqtagging_extractor.BioSeqTaggingExtractor
     :members:
 
 Batchers
