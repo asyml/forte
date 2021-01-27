@@ -61,6 +61,7 @@ def parse_allennlp_srl_tags(tags: str) -> \
     pred_span = None
     arguments = []
     begin, end, prev_argument = -1, -1, ''
+    tags += ' O'
     for i, tag in enumerate(tags.split()):
         argument = '-'.join(tag.split('-')[1:])
         if tag[0] == 'O' or tag[0] == 'B' or \
