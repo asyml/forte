@@ -61,22 +61,20 @@ def parse_allennlp_srl_tags(tags: str) -> \
     pred_span = None
     arguments = []
     begin, end, prev_argument = -1, -1, ''
-    for i, item in enumerate(tags.split()):
-        argument = '-'.join(item.split('-')[1:])
-        if prev_argument not in ('', argument):
+    for i, tag in enumerate(tags.split()):
+        argument = '-'.join(tag.split('-')[1:])
+        if tag[0] == 'O' or tag[0] == 'B' or \
+            (tag[0] == 'I' and argument != prev_argument):
             if prev_argument == 'V':
                 pred_span = Span(begin, end)
-            else:
+            elif prev_argument != '':
                 arg_span = Span(begin, end)
                 arguments.append((arg_span, prev_argument))
-        if item.startswith('B-'):
             begin = i
             end = i
-        if item.startswith('I-'):
-            if begin == -1 and argument != prev_argument:
-                begin = i
+            prev_argument = argument
+        else:
             end = i
-        prev_argument = argument
     if not pred_span:
         raise Exception('No verb detected in this sentence')
     return pred_span, arguments
