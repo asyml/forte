@@ -39,6 +39,8 @@ def parse_allennlp_srl_results(
          a dictionary of verbs and tags
     """
     parsed_results: Dict[str, List[str]] = defaultdict(list)
+    parsed_results['verbs'] = []
+    parsed_results['srl_tags'] = []
     for verb_item in results:
         parsed_results['verbs'].append(verb_item['verb'])
         parsed_results['srl_tags'].append(
@@ -76,6 +78,5 @@ def parse_allennlp_srl_tags(tags: str) -> \
             prev_argument = argument
         else:
             end = i
-    if not pred_span:
-        raise Exception('No verb detected in this sentence')
+
     return pred_span, arguments
