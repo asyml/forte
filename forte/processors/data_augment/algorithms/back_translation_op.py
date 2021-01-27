@@ -17,12 +17,12 @@ to another language, then translated back to the original language.
 """
 import random
 from typing import Tuple
-from ft.onto.base_ontology import Annotation
+
+from forte.data.ontology import Annotation
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 from forte.common.configuration import Config
 from forte.utils.utils import create_class_with_kwargs
-
 
 __all__ = [
     "BackTranslationOp",
@@ -53,6 +53,7 @@ class BackTranslationOp(TextReplacementOp):
             target language to source language.
         device (str): "cpu" for the CPU or "cuda" for GPU.
     """
+
     def __init__(self, configs: Config):
         super().__init__(configs)
         self._validate_configs(configs)
@@ -98,12 +99,13 @@ class BackTranslationOp(TextReplacementOp):
         if device not in ("cpu", "cuda"):
             raise ValueError("The device must be 'cpu' or 'cuda'!")
 
-    def replace(self, input: Annotation) -> Tuple[bool, str]:
+    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
         This function replaces a piece of text with back translation.
 
         Args:
-            input (Entry): An annotation, could be a word, sentence or document.
+            input_anno (Entry): An annotation, could be a word, sentence
+              or document.
 
         Returns:
             A tuple, where the first element is a boolean value indicating
@@ -111,7 +113,7 @@ class BackTranslationOp(TextReplacementOp):
             replaced string.
         """
         # If the replacement does not happen, return False.
-        if random.random() > self.configs["prob"]:
-            return False, input.text
-        intermediate_text: str = self.model_to.translate(input.text)
+        if random.random() > self.configs.prob:
+            return False, input_anno.text
+        intermediate_text: str = self.model_to.translate(input_anno.text)
         return True, self.model_back.translate(intermediate_text)

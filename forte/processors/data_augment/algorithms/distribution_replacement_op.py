@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import random
-from typing import Tuple
-from ft.onto.base_ontology import Annotation
+from typing import Tuple, Union, Dict, Any
 from forte.common.configuration import Config
+from forte.data.ontology import Annotation
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 from forte.processors.data_augment.algorithms.sampler import Sampler
-
 
 __all__ = [
     "DistributionReplacementOp",
@@ -36,22 +35,24 @@ class DistributionReplacementOp(TextReplacementOp):
             The probability of whether to replace the input,
             it should fall in [0, 1].
     """
-    def __init__(self, sampler: Sampler, configs: Config):
+
+    def __init__(self, sampler: Sampler,
+                 configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
         self.sampler = sampler
 
-    def replace(self, input: Annotation) -> Tuple[bool, str]:
+    def replace(self, input_anno: Annotation) -> Tuple[bool, str]:
         r"""
         This function replaces a word by sampling from a distribution.
 
         Args:
-            input (Annotation): The input annotation.
+            input_anno (Annotation): The input annotation.
         Returns:
             A tuple of two values, where the first element is a boolean value
             indicating whether the replacement happens, and the second
             element is the replaced word.
         """
-        if random.random() > self.configs["prob"]:
-            return False, input.text
+        if random.random() > self.configs.prob:
+            return False, input_anno.text
         word: str = self.sampler.sample()
         return True, word

@@ -33,10 +33,9 @@ __all__ = [
 
 
 class BaseExtractor(ABC):
-    r"""The functionality of Extractor is as followed. These
-    functionalities will be used by other components inside
-    our framework, e.g. Train Pre-processor and Predictor. And
-    outside users do not need to use these by themselves.
+    r"""The functionality of Extractor is as followed. Most of
+    the time, a user will not need to call this class explicitly,
+    they will be called by the framework.
 
         1. Build vocabulary.
         2. Extract feature from datapack.

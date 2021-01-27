@@ -86,6 +86,10 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self._index: BaseIndex = BaseIndex()
 
         self.__control_component: Optional[str] = None
+
+        # This Dict maintains a mapping from entry's tid to the Entry object
+        # itself and the component name associated with the entry.
+        # The component name is used for tracking the "creator" of this entry.
         self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
 
     def __getstate__(self):
@@ -301,9 +305,11 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def regret_creation(self, entry: EntryType):
         """
+        Will remove the entry from the pending entries internal state of the
+        pack.
 
         Args:
-            entry:
+            entry: The entry that we would not add the the pack anymore.
 
         Returns:
 
