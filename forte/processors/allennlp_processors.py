@@ -174,6 +174,8 @@ class AllenNLPProcessor(PackProcessor):
                     result: Dict[str, List[str]]) -> None:
         for _, tag in enumerate(result['srl_tags']):
             pred_span, arguments = parse_allennlp_srl_tags(tag)
+            if not pred_span:
+                continue
             pred = PredicateMention(input_pack, tokens[pred_span.begin].begin,
                                         tokens[pred_span.end].end)
             for arg_span, label in arguments:
