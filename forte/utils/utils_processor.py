@@ -69,14 +69,14 @@ def parse_allennlp_srl_tags(tags: str) -> \
             else:
                 arg_span = Span(begin, end)
                 arguments.append((arg_span, prev_argument))
-        prev_argument = argument
         if item.startswith('B-'):
             begin = i
             end = i
         if item.startswith('I-'):
-            if begin == -1:
+            if begin == -1 and argument != prev_argument:
                 begin = i
             end = i
+        prev_argument = argument
     if not pred_span:
         raise Exception('No verb detected in this sentence')
     return pred_span, arguments
