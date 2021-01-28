@@ -57,7 +57,7 @@ class ElasticSearchIndexer:
             .. note::
                 "refresh" setting will greatly affect the `Elasticsearch`
                 performance. Please refer to
-                https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
+                `https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html`
                 for more information on "refresh"
         """
         self.add(document, index_name, refresh)
@@ -79,7 +79,7 @@ class ElasticSearchIndexer:
             .. note::
                 "refresh" setting will greatly affect the `Elasticsearch`
                 performance. Please refer to
-                https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
+                `https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html`
                 for more information on "refresh"
         """
         index_name = index_name if index_name else self._config.index_name
@@ -101,13 +101,13 @@ class ElasticSearchIndexer:
             kwargs (optional, dict) : Optional keyword arguments like
                 "refresh", "request_timeout" etc. that are passed to
                 `Elasticsearch`'s bulk API. Please refer to
-                https://elasticsearch-py.readthedocs.io/en/master/helpers.html#bulk-helpers
+                `https://elasticsearch-py.readthedocs.io/en/master/helpers.html#bulk-helpers`
                 for the complete list of arguments.
 
             .. note::
                 "refresh" setting will greatly affect the `Elasticsearch`
                 performance. Please refer to
-                https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html
+                `https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-refresh.html`
                 for more information on "refresh"
         """
 

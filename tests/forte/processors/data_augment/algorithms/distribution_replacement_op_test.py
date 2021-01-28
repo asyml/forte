@@ -18,7 +18,7 @@ import unittest
 
 from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Token
-from forte.processors.data_augment.algorithms.distribution_replacement_op\
+from forte.processors.data_augment.algorithms.distribution_replacement_op \
     import DistributionReplacementOp
 from forte.processors.data_augment.algorithms.sampler import UniformSampler
 
@@ -29,6 +29,7 @@ class TestDistributionReplacementOp(unittest.TestCase):
         self.word = "eat"
         data_pack.set_text(self.word)
         self.token = Token(data_pack, 0, 3)
+        data_pack.add_all_remaining_entries()
 
         self.word_list = ["apple", "banana", "orange"]
         self.sampler = UniformSampler(self.word_list)

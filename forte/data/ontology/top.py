@@ -213,7 +213,7 @@ class Group(BaseGroup[Entry]):
     def __init__(
             self,
             pack: PackType,
-            members: Optional[Set[Entry]] = None,
+            members: Optional[Iterable[Entry]] = None,
     ):  # pylint: disable=useless-super-delegation
         self._members: Set[int] = set()
         super().__init__(pack, members)

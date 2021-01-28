@@ -16,10 +16,10 @@ This file implements CharExtractor, which is used to extract feature
 from characters of a piece of text.
 """
 import logging
-from ft.onto.base_ontology import Annotation
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
 from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.ontology import Annotation
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,9 @@ __all__ = [
 
 class CharExtractor(BaseExtractor):
     r"""CharExtractor extracts feature from the text of entry.
-    Text will be split into characters.
+    Text will be split into characters. Most of the time, a
+    user will not need to call this class/function explicitly,
+    they will be called by the framework.
 
     Args:
         config: An instance of `Dict` or
@@ -38,6 +40,7 @@ class CharExtractor(BaseExtractor):
             configurable options. See :meth:`default_configs` for available
             options and default values.
     """
+
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
@@ -80,14 +83,14 @@ class CharExtractor(BaseExtractor):
         for word in pack.get(self.config.entry_type, instance):
             if self.vocab:
                 data.append([self.element2repr(char)
-                    for char in word.text])
+                             for char in word.text])
             else:
                 data.append(list(word.text))
             max_char_length = max(max_char_length, len(data[-1]))
 
         if hasattr(self.config, "max_char_length") and \
-            self.config.max_char_length is not None and \
-            self.config.max_char_length < max_char_length:
+                self.config.max_char_length is not None and \
+                self.config.max_char_length < max_char_length:
             data = [token[:self.config.max_char_length] for
                     token in data]
 

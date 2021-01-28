@@ -2,7 +2,8 @@ from pathlib import Path
 
 from forte.data.data_utils import maybe_download
 
-if __name__ == "__main__":
+
+def main():
     model_path = Path("examples/Cliner/CliNER/models")
     pkg_path = Path("examples/Cliner/CliNER/tools")
 
@@ -32,3 +33,7 @@ if __name__ == "__main__":
         "/view?usp=sharing"],
         path=pkg_path,
         filenames=["py2_maxent_treebank_pos_tagger.pickle"])
+
+
+if __name__ == "__main__":
+    main()

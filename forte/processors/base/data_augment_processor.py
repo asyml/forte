@@ -305,7 +305,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     def _replace(
             self,
             replacement_op: TextReplacementOp,
-            input: Annotation
+            input_anno: Annotation
     ) -> bool:
         r"""
         This is a wrapper function to call the replacement op. After
@@ -317,19 +317,19 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         Args:
             replacement_op: The class for data augmentation algorithm.
-            input: The entry to be replaced.
+            input_anno: The entry to be replaced.
         Returns:
             A bool value. True if the replacement happened, False otherwise.
         """
         # Ignore the new annotation if overlap.
-        pid: int = input.pack.pack_id
-        if self._overlap_with_existing(pid, input.begin, input.end):
+        pid: int = input_anno.pack.pack_id
+        if self._overlap_with_existing(pid, input_anno.begin, input_anno.end):
             return False
         replaced_text: str
         is_replace: bool
-        is_replace, replaced_text = replacement_op.replace(input)
+        is_replace, replaced_text = replacement_op.replace(input_anno)
         if is_replace:
-            self._replaced_annos[pid].add((input.span, replaced_text))
+            self._replaced_annos[pid].add((input_anno.span, replaced_text))
             return True
         return False
 
@@ -366,19 +366,19 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
     def _delete(
             self,
-            input: Annotation
+            input_anno: Annotation
     ) -> bool:
         r"""
         This is a wrapper function to delete an annotation.
 
         Args:
-            input: The annotation to remove.
+            input_anno: The annotation to remove.
         Returns:
             A bool value. True if the deletion happened, False otherwise.
         """
-        pid: int = input.pack.pack_id
-        self._replaced_annos[pid].add((input.span, ""))
-        self._deleted_annos_id[pid].add(input.tid)
+        pid: int = input_anno.pack.pack_id
+        self._replaced_annos[pid].add((input_anno.span, ""))
+        self._deleted_annos_id[pid].add(input_anno.tid)
         return True
 
     def _auto_align_annotations(

@@ -52,12 +52,13 @@ class SemEvalTask8Reader(PackReader):
         link.rel_type = Entity-Destination
         into the DataPack.
     """
+
     def _cache_key_function(self, file_path: str) -> str:
         return os.path.basename(file_path)
 
     def _collect(self, *args, **kwargs) -> Iterator[Any]:
         # pylint: disable = unused-argument
-        r'''args[0] should be the folder where
+        r"""args[0] should be the folder where
         the SemEval Task8 dataset is stored.
         Files ended with sem_eval_task8_file_extension (.txt)
         are exptected here.
@@ -66,10 +67,10 @@ class SemEvalTask8Reader(PackReader):
             args: args[0] is the directory to the dataset.
 
         Returns: Iterator over the file name (str).
-        '''
+        """
         sem_file_dir: str = args[0]
         return dataset_path_iterator(sem_file_dir,
-            self.configs.sem_eval_task8_file_extension)
+                                     self.configs.sem_eval_task8_file_extension)
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack: DataPack = DataPack()
@@ -91,7 +92,7 @@ class SemEvalTask8Reader(PackReader):
                 _ = fp.readline()
 
                 sent_line = sent_line[sent_line.find('"') + 1:
-                                    sent_line.rfind('"')]
+                                      sent_line.rfind('"')]
                 index1 = sent_line.find("<e1>")
                 index2 = sent_line.find("<e2>")
                 # 5 is the length of "</e1>", include both <e1> and
@@ -122,7 +123,7 @@ class SemEvalTask8Reader(PackReader):
                 txt += sent_line + " "
 
                 pair = relation_line[relation_line.find("(") + 1:
-                            relation_line.find(")")]
+                                     relation_line.find(")")]
 
                 if "," in pair:
                     parent, _ = pair.split(",")
