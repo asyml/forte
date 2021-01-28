@@ -19,7 +19,7 @@ from forte.data.ontology.core import Entry
 
 __all__ = [
     "ReplaceOperationsType",
-    "DataRequest",
+    "DataRequest"
 ]
 
 ReplaceOperationsType = List[Tuple[Span, str]]

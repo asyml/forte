@@ -1,0 +1,15 @@
+EU NNP B-NP B-ORG
+rejects VBZ B-VP O
+German JJ B-NP B-MISC
+call NN I-NP O
+to TO B-VP O
+boycott VB I-VP O
+British JJ B-NP B-MISC
+lamb NN I-NP O
+. . O O
+
+Peter NNP B-NP B-PER
+Blackburn NNP I-NP I-PER
+
+BRUSSELS NNP B-NP B-LOC
+1996-08-22 CD I-NP O
