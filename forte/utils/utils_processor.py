@@ -20,7 +20,7 @@ __all__ = [
     "parse_allennlp_srl_tags"
 ]
 
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional
 from collections import defaultdict
 from forte.data.span import Span
 # from ft.onto.base_ontology import Token
@@ -49,7 +49,7 @@ def parse_allennlp_srl_results(
 
 
 def parse_allennlp_srl_tags(tags: str) -> \
-        Tuple[Span, List[Tuple[Span, str]]]:
+        Tuple[Optional[Span], List[Tuple[Span, str]]]:
     r"""Parse the tag list of a specific verb output by
     AllenNLP SRL processor.
 
