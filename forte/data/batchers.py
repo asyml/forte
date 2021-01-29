@@ -77,7 +77,7 @@ class ProcessingBatcher(Generic[PackType]):
         """
         raise NotImplementedError
 
-    def flush(self) -> Iterator[Tuple[List[DataPack],
+    def flush(self) -> Iterator[Tuple[List[PackType],
                     Optional[List[Annotation]], Dict]]:
         r"""Flush the remaining data.
 
@@ -95,7 +95,7 @@ class ProcessingBatcher(Generic[PackType]):
 
     def get_batch(
             self, input_pack: PackType, context_type: Type[Annotation],
-            requests: DataRequest) -> Iterator[Tuple[List[DataPack],
+            requests: DataRequest) -> Iterator[Tuple[List[PackType],
                     Optional[List[Annotation]], Dict]]:
         r"""Returns an iterator of A tuple contains datapack,
         instance and batch data. In the basic ProcessingBatcher,
@@ -108,7 +108,7 @@ class ProcessingBatcher(Generic[PackType]):
             self.current_batch = merge_batches(
                 [self.current_batch, data_batch])
             self.current_batch_sources.append(instance_num)
-            self.data_pack_pool.extend([input_pack]*instance_num)
+            self.data_pack_pool.extend([input_pack] * instance_num)
 
             # Yield a batch on two conditions.
             # 1. If we do not want to have batches from different pack, we
