@@ -77,11 +77,15 @@ class ProcessingBatcher(Generic[PackType]):
         """
         raise NotImplementedError
 
-    def flush(self) -> Iterator[Dict]:
+    def flush(self) -> Iterator[Tuple[List[DataPack],
+                    Optional[List[Annotation]], Dict]]:
         r"""Flush the remaining data.
 
         Returns:
-
+            A tuple contains datapack, instance and batch data.
+            In the basic ProcessingBatcher, to be compatiblable with
+            existinging implemenation, instance is not needed, thus
+            using None.
         """
         if self.current_batch:
             yield self.data_pack_pool, None, self.current_batch
@@ -91,8 +95,12 @@ class ProcessingBatcher(Generic[PackType]):
 
     def get_batch(
             self, input_pack: PackType, context_type: Type[Annotation],
-            requests: DataRequest) -> Iterator[Dict]:
-        r"""Returns an iterator of data batches."""
+            requests: DataRequest) -> Iterator[Tuple[List[DataPack],
+                    Optional[List[Annotation]], Dict]]:
+        r"""Returns an iterator of A tuple contains datapack,
+        instance and batch data. In the basic ProcessingBatcher,
+        to be compatiblable with existinging implemenation,
+        instance is not needed, thus using None."""
         # cache the new pack and generate batches
 
         for (data_batch, instance_num) in self._get_data_batch(
