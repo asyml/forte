@@ -17,15 +17,19 @@ The processors that process data in batch.
 import itertools
 from abc import abstractmethod, ABC
 from typing import List, Dict, Optional, Type, Any
-
+from ft.onto.base_ontology import Sentence
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data import slice_batch
 from forte.data.base_pack import PackType
-from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
+from forte.data.batchers import \
+    (ProcessingBatcher, FixedSizeDataPackBatcher,
+     FixedSizeDataPackBatcherWithExtractor)
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation
+from forte.data.converter import Feature
+from forte.train_preprocessor import TrainPreprocessor
 from forte.data.types import DataRequest
 from forte.process_manager import ProcessJobStatus
 from forte.processors.base.base_processor import BaseProcessor
@@ -33,6 +37,7 @@ from forte.processors.base.base_processor import BaseProcessor
 __all__ = [
     "BaseBatchProcessor",
     "BatchProcessor",
+    "Predictor",
     "MultiPackBatchProcessor",
     "FixedSizeBatchProcessor",
     "FixedSizeMultiPackBatchProcessor"
@@ -256,32 +261,54 @@ class Predictor(BaseBatchProcessor):
     @staticmethod
     def _define_context() -> Type[Annotation]:
         r"""This function is just for the compatibility reason.
-        And it is not used.
+        And it is not actually used in this class.
         """
         return Sentence
+
+    @staticmethod
+    def _define_input_info() -> DataRequest:
+        r"""This function is just for the compatibility reason.
+        And it is not actually used in this class.
+        """
+        return {}
+
+    def _prepare_coverage_index(self, input_pack: DataPack):
+        r"""This function is just for the compatibility reason.
+        And it is not actually used in this class.
+        """
+        pass
+
+    def pack(self, pack: PackType, inputs) -> None:
+        r"""This function is just for the compatibility reason.
+        And it is not actually used in this class.
+        """
+        pass
 
     @staticmethod
     def define_batcher() -> ProcessingBatcher:
         return FixedSizeDataPackBatcherWithExtractor()
 
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        super_config = super().default_configs()
+        super_config.update({
+            "scope": None,
+            "feature_scheme": None,
+            "batch_size": None,
+            "model": None,
+            "batcher": cls.define_batcher().default_configs()
+        })
+        return super_config
+
     def initialize(self, resources: Resources, configs: Optional[Config]):
-        new_config = {}
-
-        processor_config = {}
-        processor_config["scope"] = configs.scope
-        processor_config["feature_scheme"] = configs.feature_scheme
-
         batcher_config = {}
         batcher_config["scope"] = configs.scope
         batcher_config["feature_scheme"] = {}
         for tag, scheme in configs.feature_scheme.items():
-            if scheme["type"] == DATA_INPUT:
+            if scheme["type"] == TrainPreprocessor.DATA_INPUT:
                 batcher_config["feature_scheme"][tag] = scheme
         batcher_config["batch_size"] = configs.batch_size
-
-        new_config["processor"] = processor_config
-        new_config["batcher"] = batcher_config
-
+        configs.batcher = batcher_config
         super().initialize(resources, configs)
 
         assert "model" in configs
@@ -301,11 +328,14 @@ class Predictor(BaseBatchProcessor):
         if self.use_coverage_index:
             self._prepare_coverage_index(input_pack)
 
-        for batch in self.batcher.get_batch(input_pack):
+        for batch in self.batcher.get_batch(input_pack,
+                    self.context_type, self.input_info):
             packs, instances, features = batch
             predictions = self.predict(features)
             for tag, preds in predictions.items():
                 for pred, pack, instance in zip(preds, packs, instances):
+                    self.configs.feature_scheme[tag]["extractor"].pre_evaluation_action(
+                        pack, instance)
                     self.configs.feature_scheme[tag]["extractor"].add_to_pack(
                         pack, instance, pred)
                     pack.add_all_remaining_entries()
@@ -324,7 +354,6 @@ class Predictor(BaseBatchProcessor):
             else:
                 job_i.set_status(ProcessJobStatus.QUEUED)
 
-    @abstractmethod
     def predict(self, data_batch: Dict) -> Dict:
         r"""The function that task processors should implement. Make
         predictions for the input ``data_batch``.
@@ -335,7 +364,7 @@ class Predictor(BaseBatchProcessor):
         Returns:
               The prediction results in dict datasets.
         """
-        pass
+        raise NotImplementedError()
 
 
 class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):

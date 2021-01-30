@@ -165,6 +165,10 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
 
     def convert(self, features_collection):
         collections = {}
+        # print("=========")
+        # print(features_collection)
+        # print("========")
+
         for features in features_collection:
             for tag, feat in features.items():
                 if tag not in collections:
@@ -191,9 +195,9 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
         if self.pool_size > 0:
             yield (self.data_pack_pool, self.instance_pool,
                     self.convert(self.feature_pool))
-            self.feature_pool = []
             self.data_pack_pool = []
             self.instance_pool = []
+            self.feature_pool = []
             self.pool_size = 0
 
     def get_batch(
@@ -248,8 +252,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
 
             if len(instances) == self.batch_size - current_size:
                 self.batch_is_full = True
-                batch = (packs, instances,
-                        self.convert(features_collection))
+                batch = (packs, instances, features_collection)
                 yield (batch, len(instances))
                 self.batch_is_full = False
                 packs = []
@@ -264,12 +267,11 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        config = super().default_configs()
-        config.update({
+        config = {
             "scope": None,
-            "feature_scheme": {},
-            "batch_size": 10
-        })
+            "feature_scheme": None,
+            "batch_size": None
+        }
         return config
 
 
