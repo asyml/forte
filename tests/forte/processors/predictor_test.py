@@ -54,10 +54,13 @@ class ProcessingBatcher(unittest.TestCase):
             for instance in pack.get(Sentence):
                 ner_extractor.update_vocab(pack, instance)
 
+        FAKEOUTPUT = 2
+        expected_ners = [ner_extractor.id2element(FAKEOUTPUT)[0] for _ in range(30)]
+
         class Model:
             def __call__(self, batch):
                 text_feature = batch["text_tag"]["data"]
-                return {"ner_tag": [[2 for j in range(len(text_feature[0]))]
+                return {"ner_tag": [[FAKEOUTPUT for j in range(len(text_feature[0]))]
                         for i in range(len(text_feature))]}
 
         model = Model()
@@ -93,8 +96,8 @@ class ProcessingBatcher(unittest.TestCase):
 
         for pack in predictor_pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
-                print("---one predicted instance---")
-                print(list(pack.get(EntityMention, instance)))
+                ners = [e.ner_type for e in list(pack.get(EntityMention, instance))]
+                self.assertListEqual(ners, expected_ners)
 
 
 if __name__ == '__main__':
