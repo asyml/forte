@@ -83,8 +83,8 @@ class ProcessingBatcher(Generic[PackType]):
 
         Returns:
             A tuple contains datapack, instance and batch data.
-            In the basic ProcessingBatcher, to be compatiblable with
-            existinging implemenation, instance is not needed, thus
+            In the basic ProcessingBatcher, to be compatible with
+            existing implementation, instance is not needed, thus
             using None.
         """
         if self.current_batch:
@@ -99,7 +99,7 @@ class ProcessingBatcher(Generic[PackType]):
                     Optional[List[Annotation]], Dict]]:
         r"""Returns an iterator of A tuple contains datapack,
         instance and batch data. In the basic ProcessingBatcher,
-        to be compatiblable with existinging implemenation,
+        to be compatible with existing implementation,
         instance is not needed, thus using None."""
         # cache the new pack and generate batches
 
