@@ -16,7 +16,7 @@ The processors that process data in batch.
 """
 import itertools
 from abc import abstractmethod, ABC
-from typing import Dict, Optional, Type, Any
+from typing import List, Dict, Optional, Type, Any
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
@@ -132,14 +132,10 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         if self.use_coverage_index:
             self._prepare_coverage_index(input_pack)
 
-        for batch in self.batcher.get_batch(
+        for packs, _, batch in self.batcher.get_batch(
                 input_pack, self.context_type, self.input_info):
             pred = self.predict(batch)
-            self.pack_all(pred)
-            self.update_batcher_pool(-1)
-
-        if len(self.batcher.current_batch_sources) == 0:
-            self.update_batcher_pool()
+            self.pack_all(packs, pred)
 
         # update the status of the jobs. The jobs which were removed from
         # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
@@ -156,10 +152,9 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
                 job_i.set_status(ProcessJobStatus.QUEUED)
 
     def flush(self):
-        for batch in self.batcher.flush():
+        for packs, _, batch in self.batcher.flush():
             pred = self.predict(batch)
-            self.pack_all(pred)
-            self.update_batcher_pool(-1)
+            self.pack_all(packs, pred)
 
         current_queue = self._process_manager.current_queue
 
@@ -179,17 +174,27 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         """
         pass
 
-    def pack_all(self, output_dict: Dict):
+    def pack_all(self, packs: List[PackType], output_dict: Dict):
         r"""Pack the prediction results ``output_dict`` back to the
         corresponding packs.
         """
+        data_pack_pool = []
+        current_batch_sources = []
+        prev_pack = None
+        for pack_i in packs:
+            if pack_i != prev_pack:
+                current_batch_sources.append(1)
+                prev_pack = pack_i
+                data_pack_pool.append(pack_i)
+            else:
+                current_batch_sources[-1] += 1
+
         start = 0
-        for i in range(len(self.batcher.data_pack_pool)):
-            pack_i = self.batcher.data_pack_pool[i]
+        for i, pack_i in enumerate(data_pack_pool):
             output_dict_i = slice_batch(output_dict, start,
-                                        self.batcher.current_batch_sources[i])
+                                current_batch_sources[i])
             self.pack(pack_i, output_dict_i)
-            start += self.batcher.current_batch_sources[i]
+            start += current_batch_sources[i]
             pack_i.add_all_remaining_entries()
 
     @classmethod
@@ -214,24 +219,6 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
                 results to ``pack``.
         """
         raise NotImplementedError
-
-    def update_batcher_pool(self, end: Optional[int] = None):
-        r"""Update the batcher pool in :attr:`data_pack_pool` from the
-        beginning to ``end`` (``end`` is not included).
-
-        Args:
-            end (int): Will do finishing work for data packs in
-                :attr:`data_pack_pool` from the beginning to ``end``
-                (``end`` is not included). If `None`, will finish up all the
-                packs in :attr:`data_pack_pool`.
-        """
-        # TODO: the purpose of this function is confusing, especially the -1
-        #  argument value.
-        if end is None:
-            end = len(self.batcher.data_pack_pool)
-        self.batcher.data_pack_pool = self.batcher.data_pack_pool[end:]
-        self.batcher.current_batch_sources = \
-            self.batcher.current_batch_sources[end:]
 
     @abstractmethod
     def _prepare_coverage_index(self, input_pack: PackType):
