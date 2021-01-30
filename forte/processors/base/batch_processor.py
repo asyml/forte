@@ -181,18 +181,18 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         data_pack_pool = []
         current_batch_sources = []
         prev_pack = None
-        for i in range(len(packs)):
-            if packs[i] != prev_pack:
+        for pack_i in packs:
+            if pack_i != prev_pack:
                 current_batch_sources.append(1)
-                prev_pack = packs[i]
-                data_pack_pool.append(packs[i])
+                prev_pack = pack_i
+                data_pack_pool.append(pack_i)
             else:
                 current_batch_sources[-1] += 1
 
         start = 0
-        for i in range(len(data_pack_pool)):
-            pack_i = data_pack_pool[i]
-            output_dict_i = slice_batch(output_dict, start, current_batch_sources[i])
+        for i, pack_i in enumerate(data_pack_pool):
+            output_dict_i = slice_batch(output_dict, start,
+                                current_batch_sources[i])
             self.pack(pack_i, output_dict_i)
             start += current_batch_sources[i]
             pack_i.add_all_remaining_entries()
