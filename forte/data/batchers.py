@@ -165,10 +165,6 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
 
     def convert(self, features_collection):
         collections = {}
-        # print("=========")
-        # print(features_collection)
-        # print("========")
-
         for features in features_collection:
             for tag, feat in features.items():
                 if tag not in collections:
