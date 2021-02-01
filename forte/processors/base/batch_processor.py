@@ -325,8 +325,7 @@ class Predictor(BaseBatchProcessor):
         function is implemented to convert the input datapacks into batches
         according to the Batcher. Users do not need to implement this function
         but should instead implement ``predict``, which computes results from
-        batches, and ``pack_all``, which convert the batch results back to
-        datapacks.
+        batches.
 
         Args:
             input_pack: The next input pack to be fed in.
