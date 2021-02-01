@@ -24,13 +24,14 @@ from forte.data.batchers import FixedSizeDataPackBatcherWithExtractor
 from forte.processors.base.batch_processor import Predictor
 
 
-class PredictorTest(unittest.TestCase):
+class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
 
     def setUp(self):
         # Define and config the Pipeline
         self.dataset_path = "data_samples/conll03"
 
-    def test_Predictor(self):
+    def test_FixedSizeDataPackBatcherWithExtractor(self):
+        r"""This funciton tests the corectness of cross_pack."""
         pipeline = Pipeline[DataPack]()
         pipeline.set_reader(CoNLL03Reader())
         pipeline.initialize()
@@ -40,64 +41,36 @@ class PredictorTest(unittest.TestCase):
             "entry_type": Token,
             "attribute": "text",
         })
+
+        pack_num = 0
         for pack in pipeline.process_dataset(self.dataset_path):
+            pack_num += 1
             for instance in pack.get(Sentence):
                 text_extractor.update_vocab(pack, instance)
+        self.assertEqual(pack_num, 2)
 
-        ner_extractor = BioSeqTaggingExtractor({
-            "entry_type": EntityMention,
-            "need_pad": True,
-            "attribute": "ner_type",
-            "tagging_unit": Token,
-        })
-        for pack in pipeline.process_dataset(self.dataset_path):
-            for instance in pack.get(Sentence):
-                ner_extractor.update_vocab(pack, instance)
-
-        FAKEOUTPUT = 2
-        expected_ners = [ner_extractor.id2element(FAKEOUTPUT)[0] for _ in range(30)]
-
-        class Model:
-            def __call__(self, batch):
-                text_feature = batch["text_tag"]["data"]
-                return {"ner_tag": [[FAKEOUTPUT for j in range(len(text_feature[0]))]
-                        for i in range(len(text_feature))]}
-
-        model = Model()
-
-        class NERPredictor(Predictor):
-            def predict(self, batch):
-                return self.model(batch)
-
-        predictor = NERPredictor()
-
-        predictor_pipeline = Pipeline[DataPack]()
-        predictor_pipeline.set_reader(CoNLL03Reader())
-
-        predictor_config = {
+        batch_size = 2
+        batcher = FixedSizeDataPackBatcherWithExtractor(cross_pack=True)
+        batcher.initialize({
             "scope": Sentence,
-            "batch_size": 2,
+            "batch_size": batch_size,
             "feature_scheme": {
                 "text_tag": {
                     "extractor": text_extractor,
                     "converter": Converter({}),
                     "type": TrainPreprocessor.DATA_INPUT
-                },
-                "ner_tag": {
-                    "extractor": ner_extractor,
-                    "converter": Converter({}),
-                    "type": TrainPreprocessor.DATA_OUTPUT
-                },
+                }
             },
-            "model": model
-        }
-        predictor_pipeline.add(predictor, predictor_config)
-        predictor_pipeline.initialize()
+        })
 
-        for pack in predictor_pipeline.process_dataset(self.dataset_path):
-            for instance in pack.get(Sentence):
-                ners = [e.ner_type for e in list(pack.get(EntityMention, instance))]
-                self.assertListEqual(ners, expected_ners)
+        batch_num = 0
+        for pack in pipeline.process_dataset(self.dataset_path):
+            for batch in batcher.get_batch(pack, Sentence, None):
+                batch_num += 1
+                self.assertEqual(len(batch[0]), batch_size)
+        for batch in batcher.flush():
+            batch_num += 1
+        self.assertEqual(batch_num, 1)
 
 
 if __name__ == '__main__':

@@ -30,6 +30,7 @@ from forte.data.converter import Feature
 
 __all__ = [
     "ProcessingBatcher",
+    "FixedSizeDataPackBatcherWithExtractor",
     "FixedSizeDataPackBatcher",
     "FixedSizeMultiPackProcessingBatcher",
 ]
@@ -146,6 +147,17 @@ class ProcessingBatcher(Generic[PackType]):
 
 
 class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
+    r"""This class use extractor to extract features from
+    dataset and group them into batch. In this class, more pools
+    are added. One is instance_pool, which is used to record the
+    instance from which feature is extracted. The other one is
+    feature pool, which is used to record features before they
+    can be yeild in batch.
+
+    Args:
+        cross_pack (bool, optional): whether to allow batches go across
+        data packs when there is no enough data at the end.
+    """
     def __init__(self, cross_pack: bool = True):
         super().__init__(cross_pack=cross_pack)
         self.instance_pool: List[Annotation] = []
@@ -155,15 +167,33 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
 
     def initialize(self, config):
         super().initialize(config)
-        self.scope = config["scope"]
-        self.feature_scheme = config["feature_scheme"]
-        self.batch_size = config["batch_size"]
+
+        if config["scope"] is None or \
+            config["feature_scheme"] is None or \
+            config["batch_size"] is None:
+            raise AttributeError("scope, feature_scheme and"
+                                "batch_size cannot be None"
+                                "in the config.")
+        self.scope: Entry = config["scope"]
+        self.feature_scheme: Dict = config["feature_scheme"]
+        self.batch_size: int = config["batch_size"]
         self.instance_pool.clear()
         self.feature_pool.clear()
         self.pool_size = 0
         self.batch_is_full = False
 
     def convert(self, features_collection):
+        r"""This function use converter to turn a
+        list of features into batch.
+
+        Args:
+            features_collectioin (List[Dict[str, Feature]]):
+                A list of features.
+
+        Returns:
+            A instance of Dict[str, Union[Tensor, Dict]], which
+            is a batch of features.
+        """
         collections = {}
         for features in features_collection:
             for tag, feat in features.items():
@@ -227,11 +257,11 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
         Args:
             data_pack: The data pack to retrieve data from.
             context_type: The context type of the data pack.
+                This is not used and is only for compatibility reason.
             requests: The request detail.
+                This is not used and is only for compatiblilty reason.
             offset: The offset for get_data.
-
-        Returns:
-
+                This is not used and is only for compatibility reason.
         """
         packs: List[DataPack] = []
         instances: List[Annotation] = []

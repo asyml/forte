@@ -18,6 +18,7 @@ import itertools
 from abc import abstractmethod, ABC
 from typing import List, Dict, Optional, Type, Any
 from ft.onto.base_ontology import Sentence
+from forte.train_preprocessor import TrainPreprocessor
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data import slice_batch
@@ -29,7 +30,6 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation
 from forte.data.converter import Feature
-from forte.train_preprocessor import TrainPreprocessor
 from forte.data.types import DataRequest
 from forte.process_manager import ProcessJobStatus
 from forte.processors.base.base_processor import BaseProcessor
@@ -258,6 +258,10 @@ class FixedSizeBatchProcessor(BatchProcessor, ABC):
 
 
 class Predictor(BaseBatchProcessor):
+    r"""This class is used to perform prediction on features that
+    extracted from the datapack and add the prediction back to the
+    datapack.
+    """
     @staticmethod
     def _define_context() -> Type[Annotation]:
         r"""This function is just for the compatibility reason.
@@ -311,7 +315,9 @@ class Predictor(BaseBatchProcessor):
         configs.batcher = batcher_config
         super().initialize(resources, configs)
 
-        assert "model" in configs
+        if "model" not in configs:
+            raise AttributeError("Model need to be passed in"
+                                "via configs.")
         self.model = configs.model
 
     def _process(self, input_pack: PackType):
