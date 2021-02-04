@@ -11,8 +11,10 @@ from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
 from forte.processors.allennlp_processors import AllenNLPProcessor, MODEL2URL
 from forte.processors.spacy_processors import SpacyProcessor
-from ft.onto.base_ontology import Sentence, Token, Dependency
+from ft.onto.base_ontology import Sentence, Token, Dependency, PredicateLink
 from forte.common import ProcessorConfigError, ProcessExecutionException
+from forte.utils.utils_processor import parse_allennlp_srl_tags, \
+    parse_allennlp_srl_results
 
 
 @ddt
@@ -27,10 +29,11 @@ class TestAllenNLPProcessor(unittest.TestCase):
         self.results = {}
         for k in self.allens:
             self.results[k] = {}
+        self.results['srl'] = {}
 
         sentences = [
             "This tool is called Forte.",
-            "The goal of this project to help you build NLP pipelines.",
+            "The goal of this project is to help you build NLP pipelines.",
             "NLP has never been made this easy before.",
             "Forte is named Forte because it is designed for text."
         ]
@@ -41,18 +44,24 @@ class TestAllenNLPProcessor(unittest.TestCase):
             self.results[k]['pos'] = []
             self.results[k]['dep_types'] = []
             self.results[k]['dep_heads'] = []
+        self.results['srl']['verbs'] = []
+        self.results['srl']['srl_tags'] = []
 
-        for dep_type in self.allens.keys():
-            for sent in sentences:
+        for sent in sentences:
+            for dep_type in self.allens.keys():
                 results = self.allens[dep_type].predict(  # type: ignore
                     sentence=sent)
-
                 self.results[dep_type]['tokens'].append(results['words'])
                 self.results[dep_type]['pos'].append(results['pos'])
                 self.results[dep_type]['dep_types'].append(
                     results['predicted_dependencies'])
                 self.results[dep_type]['dep_heads'].append(
                     results['predicted_heads'])
+            srl_predictor = Predictor.from_path(MODEL2URL['srl'])
+            srl_results = parse_allennlp_srl_results(
+                srl_predictor.predict(sentence=sent)['verbs'])
+            self.results['srl']['verbs'].append(srl_results['verbs'])
+            self.results['srl']['srl_tags'].append(srl_results['srl_tags'])
 
     @data(
         "tokenize",
@@ -155,6 +164,20 @@ class TestAllenNLPProcessor(unittest.TestCase):
                     # checking the dependencies
                     self._test_dependencies(i, tokens, sorted_deps, tag_format)
 
+                if "srl" in processors:
+                    srl_links: List[PredicateLink] = list(
+                        pack.get(PredicateLink, sentence))
+
+                    indexed_srls = {}
+                    for d in srl_links:
+                        indexed_srls[d.get_child().tid] = d
+
+                    sorted_srls = []
+                    for ind in sorted(indexed_srls):
+                        sorted_srls.append(indexed_srls[ind])
+
+                    self._test_srls(i, tokens, sorted_srls)
+
     @staticmethod
     def _create_pipeline(config):
         nlp = Pipeline[DataPack]()
@@ -189,7 +212,6 @@ class TestAllenNLPProcessor(unittest.TestCase):
         self.assertEqual(token.pos, exp_pos)
 
     def _test_dependencies(self, sent_idx, tokens, deps, tag_format):
-        print(deps)
         for j, dep in enumerate(deps):
             self.assertEqual(
                 dep.get_parent(),
@@ -197,3 +219,19 @@ class TestAllenNLPProcessor(unittest.TestCase):
             self.assertEqual(
                 dep.rel_type,
                 self.results[tag_format]['dep_types'][sent_idx][j])
+
+    def _test_srls(self, sent_idx: int, tokens: List[Token],
+            srl_links: List[PredicateLink]) -> None:
+        index = 0
+        for tag in self.results['srl']['srl_tags'][sent_idx]:
+            pred_span, arguments = parse_allennlp_srl_tags(tag)
+            for arg_span, argument in arguments:
+                parent: PredicateMention = srl_links[index].get_parent()
+                child: PredicateArgument = srl_links[index].get_child()
+                self.assertEqual(srl_links[index].arg_type,
+                    argument)
+                self.assertEqual(parent.text,
+                    ' '.join([token.text for token in tokens[pred_span.begin: pred_span.end + 1]]))
+                self.assertEqual(child.text,
+                    ' '.join([token.text for token in tokens[arg_span.begin: arg_span.end + 1]]))
+                index += 1
