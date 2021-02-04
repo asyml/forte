@@ -139,6 +139,15 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     print_progress("Done reading wikipedia info-boxes objects.", '\n')
 
 
+def get_path(dataset: str):
+    p = os.path.join(base_dir, dataset)
+    if os.path.exists(p):
+        return p
+    else:
+        raise FileNotFoundError(f'The dataset {dataset} is not found in '
+                                f'base directory {base_dir}')
+
+
 if __name__ == '__main__':
     base_dir = sys.argv[1]
     pack_output = os.path.join(base_dir, 'packs')
@@ -150,16 +159,6 @@ if __name__ == '__main__':
         format='%(asctime)s - %(message)s', level=logging.INFO,
         filename=os.path.join(pack_output, 'dump.log')
     )
-
-
-    def get_path(dataset: str):
-        p = os.path.join(base_dir, dataset)
-        if os.path.exists(p):
-            return p
-        else:
-            raise FileNotFoundError(f'The dataset {dataset} is not found in '
-                                    f'base directory {base_dir}')
-
 
     main(
         get_path('nif_context_en.tql.bz2'),
