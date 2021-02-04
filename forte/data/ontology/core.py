@@ -15,7 +15,7 @@
 Defines the basic data structures and interfaces for the Forte data
 representation system.
 """
-
+import uuid
 from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
@@ -81,7 +81,7 @@ class Entry(Generic[ContainerType]):
         # to be checked by the pack.
         super().__init__()
         self.__pack: ContainerType = pack
-        self._tid: int = self.pack.get_next_id()
+        self._tid: int = uuid.uuid4().int
         self._embedding: np.ndarray = np.empty(0)
         self.pack.validate(self)
         self.pack.on_entry_creation(self)

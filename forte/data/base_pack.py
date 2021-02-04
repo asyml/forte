@@ -93,7 +93,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         self._pending_entries: Dict[int, Tuple[Entry, Optional[str]]] = {}
 
     def __getstate__(self):
-        state = super().__getstate__()
+        state = self.__dict__.copy()
         state.pop('_index')
         state.pop('_pending_entries')
         state.pop('_BasePack__control_component')
