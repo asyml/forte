@@ -41,6 +41,8 @@ script:
     words
   - export PYTHONPATH=`pwd`
   - coverage run -m pytest
+  # Run doctest from forte.
+  - converage run -a -m pytest --doctest-modules forte
 after_success:
   - codecov
   - "./scripts/travis_after_success.sh"

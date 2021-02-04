@@ -19,9 +19,7 @@ import logging
 import os
 import re
 import sys
-from collections import OrderedDict
-from random import choice
-from typing import List, Dict, Tuple, Union, Any, Iterator
+from typing import List, Dict, Tuple
 from urllib.parse import urlparse, parse_qs
 
 import rdflib
@@ -31,6 +29,21 @@ state_type = Tuple[rdflib.term.Node, rdflib.term.Node, rdflib.term.Node]
 
 
 def load_redirects(redirect_path: str) -> Dict[str, str]:
+    # pylint: disable=line-too-long
+    """
+    Loads the Wikipedia link redirects as a Dictionary. The key is the page
+    directed from, and the value is the page being directed to.
+
+    Args:
+        redirect_path (str): A path pointing to a file that contains the NIF
+          formatted statements of redirect. A file like this can be obtained
+          here: http://wiki.dbpedia.org/services-resources/documentation/datasets#Redirects
+
+    Returns (dict):
+        The dictionary containing the redirect information, pointing from
+        key to value.
+    """
+
     redirect_to = {}
     redirect_rel = "http://dbpedia.org/ontology/wikiPageRedirects"
 
@@ -48,27 +61,95 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
     return redirect_to
 
 
-def get_resource_attribute(url, param_name) -> str:
+def get_resource_attribute(url: str, param_name: str) -> str:
+    # pylint: disable=line-too-long
+    """
+    A utility function that extract the attribute of the resource from a NIF
+    URL.
+
+    >>> sample_url = 'http://dbpedia.org/resource/Animalia_(book)?dbpv=2016-10&nif=context'
+    >>> get_resource_attribute(sample_url, 'nif')
+    'context'
+
+    Args:
+        url (str): A NIF URL.
+        param_name (str): The attribute name to extract.
+
+    Returns (str):
+        The extracted parameter value.
+    """
     parsed = urlparse(url)
     return parse_qs(parsed.query)[param_name][0]
 
 
 def context_base(c: rdflib.Graph) -> str:
+    """
+    Take the base URL (context) from an URI from an statement.
+
+    Args:
+        c: The statement (which is a parsed rdflib.Graph object)
+
+    Returns:
+        The base URL.
+
+    """
     return strip_url_params(c.identifier)
 
 
-def get_resource_fragment(url) -> str:
+def get_resource_fragment(url: str) -> str:
+    # pylint: disable=line-too-long
+    """
+    Get the resource fragment from an URL.
+
+    >>> sample_url = 'http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#isString'
+    >>> get_resource_fragment(sample_url)
+    'isString'
+
+    Args:
+        url: The URL to find resource.
+
+    Returns:
+        The resource fragment.
+    """
     return urlparse(url).fragment
 
 
-def get_resource_name(url) -> str:
+def get_resource_name(url: str) -> str:
+    # pylint: disable=line-too-long
+    """
+    Get the name of the resource from the URL.
+
+    >>> sample_url = 'http://dbpedia.org/resource/Animalia_(book)?dbpv=2016-10&nif=context'
+    >>> get_resource_name(sample_url)
+    'Animalia_(book)'
+
+    Args:
+        url: The URL to find the resource name.
+
+    Returns:
+        The resource name.
+    """
+
     parsed = urlparse(url)
     return re.sub('^/resource/', '', parsed.path)
 
 
 def strip_url_params(url) -> str:
+    # pylint: disable=line-too-long
+    """
+    Take only the base URL and strip the parameters.
+
+    >>> sample_url = 'http://dbpedia.org/resource/Animalia_(book)?dbpv=2016-10&nif=context'
+    >>> strip_url_params(sample_url)
+    'http://dbpedia.org/resource/Animalia_(book)'
+
+    Args:
+        url: The URL to strip.
+
+    Returns:
+        The base URL without all parameters.
+    """
     parsed = urlparse(url)
-    # scheme + netloc + path
     return parsed.scheme + "://" + parsed.netloc + parsed.path
 
 
@@ -76,12 +157,11 @@ def print_progress(msg: str, end='\r'):
     """
     Print progress message to the same line.
     Args:
-        msg: The message to print
-        end: Line ending in terminal
-
-    Returns:
+        msg: The message to print.
+        end: Line ending in terminal.
 
     """
+    logging.info(msg)
     sys.stdout.write("\033[K")  # Clear to the end of line.
     print(f' -- {msg}', end=end)
 
@@ -89,16 +169,25 @@ def print_progress(msg: str, end='\r'):
 def print_notice(msg: str):
     """
     Print additional notice in a new line.
-    Args:
-        msg: The message to print
 
-    Returns:
+    Args:
+        msg: The message to print.
 
     """
     print(f'\n -- {msg}')
 
 
 class NIFParser:
+    """
+    This is a simple Parser that reads NIF tuples into list of statements. The
+    parser can be used as context manager.
+
+    .. code-block:: python
+        for statements in NIFParser(some_path):
+            # do something with the statements.
+
+    """
+
     def __init__(self, nif_path, tuple_format='nquads'):
         if nif_path.endswith(".bz2"):
             self.__nif = bz2.BZ2File(nif_path)
@@ -148,6 +237,16 @@ class NIFParser:
 
 
 class ContextGroupedNIFReader:
+    """
+    This reader parses the NIF tuples into statements, and group the results
+    by the Subject of the statements. This parser can be used as a context
+    manager.
+
+    .. code-block:: python
+        for subject, statements in ContextGroupedNIFReader(nif_path):
+            # Do something with the results.
+    """
+
     def __init__(self, nif_path: str):
         self.__parser = NIFParser(nif_path)
         self.data_name = os.path.basename(nif_path)
@@ -189,116 +288,3 @@ class ContextGroupedNIFReader:
 
         if len(self.__statements) > 0:
             return self.__last_c, self.__statements
-
-
-class NIFBufferedContextReader:
-    def __init__(self, nif_path: str, window_size: int = 2000):
-        self.data_name = os.path.basename(nif_path)
-        self.buf = AutoPopBuffer(
-            data_iter=ContextGroupedNIFReader(nif_path),
-            default_value=[],
-            window_size=window_size
-        )
-
-    def get(self, context: Union[rdflib.Graph, str]) -> List[state_type]:
-        """
-        We assume the order of querying keys is roughly the same as the order
-        of keys in this data, that means we can find the key (context) within
-        the current reading window. This is asymptotically similar to a full
-        dataset search by increasing the window size.
-
-        Args:
-            context: The context to find in this window.
-
-        Returns:
-            A list of statements if found in the window, otherwise an empty
-            list.
-
-        """
-        context_ = context_base(context) if isinstance(
-            context, rdflib.Graph) else str(context)
-        return self.buf.get_key(context_)
-
-
-class AutoPopBuffer:
-    def __init__(self, data_iter: Iterator, default_value,
-                 window_size: int = 100):
-        self.buf_data: OrderedDict[str, Tuple[Any, int]] = OrderedDict()
-
-        self.__lookup_idx = 0
-        self.__data_idx = 0
-
-        self.__default_value = default_value
-        self.__window_size = window_size
-        self.__date_iter: Iterator = data_iter
-
-    def get_key(self, key):
-        value = self.__default_value
-
-        self.__lookup_idx += 1
-
-        if key in self.buf_data:
-            value = self.buf_data.pop(key)[0]
-        else:
-            for k_, data in self.__date_iter:
-                self.__data_idx += 1
-                if k_ == key:
-                    value = data
-                else:
-                    self.buf_data[k_] = (data, self.__data_idx)
-                    if self.__data_idx - self.__lookup_idx > self.__window_size:
-                        # Give up on this search.
-                        break
-
-        if len(self.buf_data) > 0:
-            # Find the oldest index.
-            _, (_, oldest_idx) = next(iter(self.buf_data.items()))
-            # If the oldest index is out of the window, we will pop it.
-            if 0 < oldest_idx < self.__lookup_idx - self.__window_size:
-                self.buf_data.popitem(False)
-
-        return value
-
-
-def test_buf():
-    # Test out the buffer reader.
-    data_size = 10000
-    buffer_size = 50
-
-    data = range(0, data_size)
-    data_new = [(d, d) for d in data]
-
-    def swap_random(input_list, r):
-        i = choice(range(len(input_list)))
-        swap_range = choice(range(r))
-        j = i + swap_range
-
-        if j > len(input_list) - 1:
-            return
-
-        data_new[i], data_new[j] = data_new[j], data_new[i]
-        print('swapped', i, j)
-
-        if r > buffer_size:
-            swapped[i] = j
-            swapped[j] = i
-
-    # Swap for some times.
-    print('swapping in range')
-    for _ in range(10):
-        swap_random(data_new, buffer_size)
-
-    print('swapping out of range')
-    for _ in range(10):
-        swap_random(data_new, buffer_size * 2)
-
-    buf = AutoPopBuffer(iter(data_new), -1, buffer_size)
-
-    for d in data:
-        got = buf.get_key(d)
-        print(got)
-
-
-if __name__ == '__main__':
-    swapped: Dict = {}
-    test_buf()

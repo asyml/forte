@@ -60,11 +60,9 @@ def write_pack(input_pack: BasePack, output_dir: str, sub_path: str,
         otherwise, will return None.
 
     """
-    output_path = os.path.join(output_dir, sub_path) + '.json'
-    if overwrite or not os.path.exists(output_path):
-        if zip_pack:
-            output_path = output_path + '.gz'
+    output_path = os.path.join(output_dir, sub_path)
 
+    if overwrite or not os.path.exists(output_path):
         ensure_dir(output_path)
 
         out_str: str = input_pack.serialize(drop_record)
