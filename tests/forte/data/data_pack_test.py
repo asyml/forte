@@ -34,8 +34,9 @@ class DataPackTest(unittest.TestCase):
 
     def setUp(self) -> None:
         file_dir_path = os.path.dirname(__file__)
-        data_path = os.path.join(file_dir_path, os.pardir, os.pardir,
-                                 'test_data', 'ontonotes')
+        data_path = os.path.abspath(os.path.join(
+            file_dir_path, '../../../', 'data_samples',
+            'ontonotes/one_file'))
 
         pipeline: Pipeline = Pipeline()
         pipeline.set_reader(OntonotesReader())

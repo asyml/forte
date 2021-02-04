@@ -188,11 +188,17 @@ class NIFParser:
 
     """
 
-    def __init__(self, nif_path, tuple_format='nquads'):
+    def __init__(self, nif_path: str, tuple_format='nquads'):
+        """
+
+        Args:
+            nif_path:
+            tuple_format:
+        """
         if nif_path.endswith(".bz2"):
             self.__nif = bz2.BZ2File(nif_path)
         else:
-            self.__nif = open(nif_path)
+            self.__nif = open(nif_path, 'rb')
 
         self.format = tuple_format
 

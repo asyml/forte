@@ -22,8 +22,9 @@ from examples.serialization import serialize_example
 
 class SerializationTest(unittest.TestCase):
     def test_run_example(self):
-        data_path = os.path.join(os.path.dirname(__file__),
-                                 '..', 'test_data', 'ontonotes')
+        data_path = os.path.abspath(os.path.join(
+            os.path.dirname(__file__),
+            '../../', 'data_samples', 'ontonotes/one_file'))
 
         serialize_example.main(data_path)
 
