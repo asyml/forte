@@ -138,20 +138,20 @@ class WikiPackReader(PackReader):
 
     def __init__(self):
         super().__init__()
-        self.__pack_index: Dict[str, str] = {}
-        self.__pack_dir: str = ''
-        self.__redirects: Dict[str, str] = {}
+        self._pack_index: Dict[str, str] = {}
+        self._pack_dir: str = ''
+        self._redirects: Dict[str, str] = {}
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
 
         # A mapping from the name of the page to the path on th disk.
-        self.__pack_index = read_index(configs.pack_index)
-        self.__pack_dir = configs.pack_dir
+        self._pack_index = read_index(configs.pack_index)
+        self._pack_dir = configs.pack_dir
 
         if self.resources.contains('redirects'):
-            self.__redirects = self.resources.get('redirects')
-            logging.info("%d redirects loaded.", len(self.__redirects))
+            self._redirects = self.resources.get('redirects')
+            logging.info("%d redirects loaded.", len(self._redirects))
         else:
             raise ResourceError("Redirects not provided from resources.")
 
@@ -167,29 +167,36 @@ class WikiPackReader(PackReader):
             self, collection: Tuple[str, List[state_type]]
     ) -> Iterator[DataPack]:
         resource_name, statements = collection
-        if resource_name in self.__redirects:
-            resource_name = self.__redirects[resource_name]
+        if resource_name in self._redirects:
+            resource_name = self._redirects[resource_name]
 
-        if resource_name in self.__pack_index:
+        if resource_name in self._pack_index:
             print_progress(
                 f"Handling resource [{resource_name}] in {self.component_name}")
             pack_path = os.path.join(
-                self.__pack_dir,
-                self.__pack_index[resource_name]
+                self._pack_dir,
+                self._pack_index[resource_name]
             )
 
             # smart_open can handle the `gz` files.
-            with open(pack_path) as pack_file:
-                pack: DataPack = DataPack.deserialize(pack_file.read())
-                self.add_wiki_info(pack, statements)
-                yield pack
+            if os.path.exists(pack_path):
+                with open(pack_path) as pack_file:
+                    pack: DataPack = DataPack.deserialize(pack_file.read())
+                    self.add_wiki_info(pack, statements)
+                    yield pack
         else:
             print_notice(f"Resource {resource_name} pack not found.")
 
     @classmethod
     def default_configs(cls):
         """
-        This defines a basic config structure
+        This defines a basic config structure for the reader.
+
+        Here:
+          - pack_dir: the directory that contains all the serialized packs.
+          - pack_index: the file name under the pack directory that points to
+            the index from the name to the actual pack path.
+
         :return:
         """
         config = super().default_configs()
@@ -346,8 +353,8 @@ class WikiAnchorReader(WikiPackReader):
                                         info_value)
                 if info_key == 'taIdentRef':
                     target_page_name = get_resource_name(info_value)
-                    if target_page_name in self.__redirects:
-                        target_page_name = self.__redirects[
+                    if target_page_name in self._redirects:
+                        target_page_name = self._redirects[
                             target_page_name]
                     anchor.target_page_name = target_page_name
 

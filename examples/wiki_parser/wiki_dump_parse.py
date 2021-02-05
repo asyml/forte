@@ -109,33 +109,33 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
 
     # 1. Read the wiki text.
     raw_pack_dir = os.path.join(base_output_path, 'nif_raw')
-    read_wiki_text(nif_context, raw_pack_dir, resources, False)
+    read_wiki_text(nif_context, raw_pack_dir, resources, True)
     print_progress("Done reading wikipedia text.", '\n')
 
     # 2. Add the rest of wiki page structures:
     struct_dir = raw_pack_dir + '_struct'
     add_wiki_info(WikiStructReader(), resources, nif_page_structure,
-                  raw_pack_dir, struct_dir, 'page_structures')
+                  raw_pack_dir, struct_dir, 'page_structures', True)
     print_progress("Done reading wikipedia structures.", '\n')
 
     link_dir = struct_dir + '_links'
     add_wiki_info(WikiAnchorReader(), resources, nif_text_links,
-                  struct_dir, link_dir, 'anchor_links')
+                  struct_dir, link_dir, 'anchor_links', True)
     print_progress("Done reading wikipedia anchors.", '\n')
 
     property_dir = link_dir + '_property'
     add_wiki_info(WikiPropertyReader(), resources, info_boxs_properties,
-                  link_dir, property_dir, 'info_box_properties')
+                  link_dir, property_dir, 'info_box_properties', True)
     print_progress("Done reading wikipedia info-boxes.", '\n')
 
     literal_dir = property_dir + '_literals'
     add_wiki_info(WikiInfoBoxReader(), resources, mapping_literals,
-                  property_dir, literal_dir, 'literals')
+                  property_dir, literal_dir, 'literals', True)
     print_progress("Done reading wikipedia info-boxes literals.", '\n')
 
     mapping_dir = literal_dir + '_objects'
     add_wiki_info(WikiInfoBoxReader(), resources, mapping_objects,
-                  literal_dir, mapping_dir, 'objects')
+                  literal_dir, mapping_dir, 'objects', True)
     print_progress("Done reading wikipedia info-boxes objects.", '\n')
 
 
