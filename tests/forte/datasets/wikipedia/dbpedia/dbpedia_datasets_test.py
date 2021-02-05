@@ -68,15 +68,15 @@ class TestDBpediaReaders(TestCase):
         self.assertEqual(num_packs_written, 1)
         self.assertEqual(num_article_indices, 1)
 
-    def test_wiki_struct(self):
-        in_dir: str = os.path.join(self.output_dir.name, 'context')
-
-        self.pl.set_reader(
-            WikiStructReader(), config={
-                'pack_index': os.path.join(in_dir, 'article.idx'),
-                'pack_dir': input_pack_path,
-            }
-        )
+    # def test_wiki_struct(self):
+    #     in_dir: str = os.path.join(self.output_dir.name, 'context')
+    #
+    #     self.pl.set_reader(
+    #         WikiStructReader(), config={
+    #             'pack_index': os.path.join(in_dir, 'article.idx'),
+    #             'pack_dir': in_dir,
+    #         }
+    #     )
 
     def tearDown(self):
         self.output_dir.cleanup()

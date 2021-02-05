@@ -198,7 +198,7 @@ class NIFParser:
         if nif_path.endswith(".bz2"):
             self.__nif = bz2.BZ2File(nif_path)
         else:
-            self.__nif = open(nif_path, 'rb')
+            self.__nif = open(nif_path, 'rb')  # type: ignore
 
         self.format = tuple_format
 
