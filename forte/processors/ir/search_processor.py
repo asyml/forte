@@ -19,7 +19,7 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Query
-from forte.indexers import EmbeddingBasedIndexer
+from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
 from forte.processors.base import MultiPackProcessor
 from ft.onto.base_ontology import Document
 
