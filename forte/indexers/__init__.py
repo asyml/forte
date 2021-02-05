@@ -11,5 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from forte.indexers.elastic_indexer import *
-from forte.indexers.embedding_based_indexer import *
