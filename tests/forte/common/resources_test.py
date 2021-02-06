@@ -48,7 +48,7 @@ class ResourcesTest(unittest.TestCase):
         new_resources = Resources()
         new_resources.load(keys=keys, path=self.output_dir)
 
-        self.assertEqual(new_resources.resources, self.resources.resources)
+        self.assertEqual(new_resources._resources, self.resources._resources)
 
     def test_save_without_keys(self):
         self.resources.save(output_dir=self.output_dir)
@@ -57,7 +57,7 @@ class ResourcesTest(unittest.TestCase):
         keys = list(self.kwargs.keys())
         new_resources.load(keys=keys, path=self.output_dir)
 
-        self.assertEqual(new_resources.resources, self.resources.resources)
+        self.assertEqual(new_resources._resources, self.resources._resources)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.output_dir)

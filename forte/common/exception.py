@@ -24,7 +24,7 @@ __all__ = [
     "ProcessFlowException",
     "ProcessExecutionException",
     "ValidationError",
-
+    "ResourceError",
 ]
 
 
@@ -50,6 +50,13 @@ class EntryNotFoundError(ValueError):
 class ProcessorConfigError(ValueError):
     r"""Raise this error when the there is a problem with the processor
     configuration.
+    """
+    pass
+
+
+class ResourceError(ValueError):
+    r"""Raise this error when there are problems accessing Resources of
+    the processor.
     """
     pass
 
