@@ -259,6 +259,7 @@ class ContextGroupedNIFReader:
 
         self.__last_c: str = ''
         self.__statements: List[state_type] = []
+        self.__finished: bool = False
 
     def __enter__(self):
         return self
@@ -275,22 +276,28 @@ class ContextGroupedNIFReader:
 
         while True:
             try:
-                for statements in self.__parser:
-                    for s, v, o, c in statements:
-                        c_ = context_base(c)
+                # Call the NIF parser, but grouped the statements with
+                # the same context.
+                statements = next(self.__parser)
+                for s, v, o, c in statements:
+                    c_ = context_base(c)
 
-                        if c_ != self.__last_c and self.__last_c != '':
-                            res_c = self.__last_c
-                            res_states.extend(self.__statements)
-                            self.__statements.clear()
+                    if c_ != self.__last_c and self.__last_c != '':
+                        res_c = self.__last_c
+                        res_states.extend(self.__statements)
+                        self.__statements.clear()
 
-                        self.__statements.append((s, v, o))
-                        self.__last_c = c_
+                    self.__statements.append((s, v, o))
+                    self.__last_c = c_
 
-                        if not res_c == '':
-                            return res_c, res_states
+                    if not res_c == '':
+                        return res_c, res_states
             except StopIteration:
                 break
 
-        if len(self.__statements) > 0:
+        # Remember to flush out the last bit.
+        if not self.__finished and len(self.__statements) > 0:
+            self.__finished = True
             return self.__last_c, self.__statements
+
+        raise StopIteration
