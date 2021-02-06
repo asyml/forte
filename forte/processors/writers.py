@@ -19,7 +19,8 @@ from forte.processors.base.writers import JsonPackWriter, MultiPackWriter
 
 class PackIdJsonPackWriter(JsonPackWriter):
     def sub_output_path(self, pack: DataPack) -> str:
-        return str(pack.pack_id)
+        suffix = '.json.gz' if self.zip_pack else '.json'
+        return str(pack.pack_id) + suffix
 
 
 class PackNameJsonPackWriter(JsonPackWriter):
@@ -28,7 +29,8 @@ class PackNameJsonPackWriter(JsonPackWriter):
             raise ValueError(
                 "Cannot use DocIdJsonPackWriter when [pack_name] of the pack "
                 "is not set.")
-        return pack.pack_name
+        suffix = '.json.gz' if self.zip_pack else '.json'
+        return pack.pack_name + suffix
 
 
 class PackNameMultiPackWriter(MultiPackWriter):

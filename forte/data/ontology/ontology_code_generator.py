@@ -159,7 +159,7 @@ class OntologyCodeGenerator:
         (2) Dependencies to other json configs through the json `imports`
     Example:
         >>> destination_dir = OntologyCodeGenerator().generate(
-        'test/example_ontology_config.json')
+        ... 'forte/ontology_specs/base_ontology.json')
     """
 
     def __init__(self, import_dirs: Optional[List[str]] = None,

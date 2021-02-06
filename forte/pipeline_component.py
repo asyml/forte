@@ -31,7 +31,7 @@ from forte.utils import get_full_module_name
 class PipelineComponent(Generic[PackType]):
     def __init__(self):
         self._process_manager: ProcessManager = None
-        self.resources: Optional[Resources] = None
+        self.resources: Resources = None
         self.configs: Config = Config({}, {})
 
     def assign_manager(self, process_manager: ProcessManager):

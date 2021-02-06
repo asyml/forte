@@ -15,96 +15,85 @@
 This creates a pipeline to parse the Wikipedia dump and save the results
 as MultiPacks onto disk.
 """
-import csv
 import logging
 import os
 import pickle
 import sys
-from typing import TextIO, Any, Dict
+from typing import Dict
 
-from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
-from forte.data.datasets.wikipedia.db_utils import load_redirects, \
+from forte.datasets.wikipedia.dbpedia.db_utils import load_redirects, \
     print_progress
-from forte.data.datasets.wikipedia.dbpedia_based_reader import DBpediaWikiReader
-from forte.data.datasets.wikipedia.dbpedia_infobox_reader import \
-    DBpediaInfoBoxReader
+from forte.datasets.wikipedia.dbpedia import (
+    DBpediaWikiReader, WikiArticleWriter,
+    WikiStructReader, WikiAnchorReader, WikiPropertyReader, WikiInfoBoxReader
+)
+from forte.data.readers.base_reader import PackReader
 from forte.pipeline import Pipeline
-from forte.processors.base.writers import JsonPackWriter
-from ft.onto.wikipedia import WikiPage
-
-__all__ = [
-    'WikiArticleWriter',
-]
 
 
-class WikiArticleWriter(JsonPackWriter):
-    article_index: TextIO
+def add_wiki_info(
+        reader: PackReader, resources: Resources,
+        input_path: str, input_pack_path: str,
+        output_path: str, prompt_name: str, skip_existing=True):
+    pl = Pipeline[DataPack](resources)
 
-    # It is difficult to get the type of the csv writer
-    # https://stackoverflow.com/questions
-    # /51264355/how-to-type-annotate-object-returned-by-csv-writer
-    csv_writer: Any
+    if skip_existing and os.path.exists(output_path):
+        print_progress(f'\n{output_path} exist, skipping {prompt_name}', '\n')
+        return
 
-    def __init__(self):
-        super().__init__()
-        self.article_count: int = 0
+    pl.set_reader(
+        reader, config={
+            'pack_index': os.path.join(input_pack_path, 'article.idx'),
+            'pack_dir': input_pack_path,
+        }
+    )
 
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
-        self.article_count = 0
-        self.article_index = open(
-            os.path.join(self.configs.output_dir, 'article.idx'), 'w')
-        self.csv_writer = csv.writer(self.article_index, delimiter='\t')
+    pl.add(
+        WikiArticleWriter(), config={
+            'output_dir': output_path,
+            'zip_pack': True,
+            'drop_record': True,
+        },
+    )
 
-    def sub_output_path(self, pack: DataPack) -> str:
-        sub_dir = str(int(self.article_count / 2000)).zfill(5)
-        pid = pack.get_single(WikiPage).page_id
-        doc_name = f'doc_{self.article_count}' if pid is None else pid
+    print_progress(f'Start running the {prompt_name} pipeline.', '\n')
+    pl.run(input_path)
+    print_progress(f'Done collecting {prompt_name}.', '\n')
 
-        return os.path.join(sub_dir, doc_name + '.json')
 
-    def _process(self, input_pack: DataPack):
-        """
-        Write an index from the document id to the relative storage of this
-        DataPack. This can be used as a simple index to retrieve the relevant
-        file, which can enable faster lookup in use cases like following the
-        Wikipedia links.
+def read_wiki_text(
+        nif_context: str,
+        output_dir: str,
+        resources: Resources,
+        skip_existing: bool = False
+):
+    if skip_existing and os.path.exists(output_dir):
+        print_progress(f'\n{output_dir} exist, skipping reading text', '\n')
+        return
 
-        Args:
-            input_pack: The DataPack that contains the Wikipedia information.
-
-        Returns:
-        """
-        super()._process(input_pack)
-
-        out_path = self.sub_output_path(input_pack)
-        if self.zip_pack:
-            out_path = out_path + '.gz'
-
-        # Write the index
-        self.csv_writer.writerow([input_pack.pack_name, out_path])
-        self.article_count += 1
-
-        if self.article_count % 1000 == 0:
-            logging.info(
-                "Written %s to %s",
-                self.article_count, self.configs.output_dir
-            )
-
-    def finish(self, resource: Resources):
-        # pylint: disable=unused-argument
-        self.article_index.close()
+    pl = Pipeline[DataPack](resources)
+    pl.set_reader(DBpediaWikiReader())
+    pl.add(
+        WikiArticleWriter(), config={
+            'output_dir': output_dir,
+            'zip_pack': True,
+            'drop_record': True,
+        },
+    )
+    print_progress('Start running wiki text pipeline.', '\n')
+    pl.run(nif_context)
+    print_progress('Done collecting wiki text.', '\n')
 
 
 def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
          mapping_objects: str, nif_text_links: str, redirects: str,
-         info_boxs: str, output_path: str):
-    # Load redirects.
+         info_boxs_properties: str, base_output_path: str):
+    # The datasets are read in a few steps.
+    # 0. Load redirects between wikipedia pages.
     print_progress('Loading redirects', '\n')
-    logging.info("Loading redirects")
-    redirect_pickle = os.path.join(output_path, 'redirects.pickle')
+    redirect_pickle = os.path.join(base_output_path, 'redirects.pickle')
 
     redirect_map: Dict[str, str]
     if os.path.exists(redirect_pickle):
@@ -113,65 +102,44 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
         redirect_map = load_redirects(redirects)
         with open(redirect_pickle, 'wb') as pickle_f:
             pickle.dump(redirect_map, pickle_f)
-    print_progress('\nLoading redirects', '\n')
-    logging.info("Done loading.")
 
-    # The datasets are read in two steps.
-    raw_pack_dir = os.path.join(output_path, 'nif_raw')
+    resources: Resources = Resources()
+    resources.update(redirects=redirect_map)
+    print_progress("Done loading.", '\n')
 
-    # First, we create the NIF reader that read the NIF in order.
-    nif_pl = Pipeline[DataPack]()
-    nif_pl.resource.update(redirects=redirect_map)
+    # 1. Read the wiki text.
+    raw_pack_dir = os.path.join(base_output_path, 'nif_raw')
+    read_wiki_text(nif_context, raw_pack_dir, resources, True)
+    print_progress("Done reading wikipedia text.", '\n')
 
-    nif_pl.set_reader(DBpediaWikiReader(), config=Config(
-        {
-            'redirect_path': redirects,
-            'nif_page_structure': nif_page_structure,
-            'nif_text_links': nif_text_links,
-        },
-        DBpediaWikiReader.default_configs()
-    ))
+    # 2. Add the rest of wiki page structures:
+    struct_dir = raw_pack_dir + '_struct'
+    add_wiki_info(WikiStructReader(), resources, nif_page_structure,
+                  raw_pack_dir, struct_dir, 'page_structures', True)
+    print_progress("Done reading wikipedia structures.", '\n')
 
-    nif_pl.add(WikiArticleWriter(), config=Config(
-        {
-            'output_dir': raw_pack_dir,
-            'zip_pack': True,
-        },
-        WikiArticleWriter.default_configs()
-    ))
+    link_dir = struct_dir + '_links'
+    add_wiki_info(WikiAnchorReader(), resources, nif_text_links,
+                  struct_dir, link_dir, 'anchor_links', True)
+    print_progress("Done reading wikipedia anchors.", '\n')
 
-    nif_pl.initialize()
-    logging.info('Start running the DBpedia text pipeline.')
-    print_progress('Start running the DBpedia text pipeline.', '\n')
-    nif_pl.run(nif_context)
+    property_dir = link_dir + '_property'
+    add_wiki_info(WikiPropertyReader(), resources, info_boxs_properties,
+                  link_dir, property_dir, 'info_box_properties', True)
+    print_progress("Done reading wikipedia info-boxes.", '\n')
 
-    # Second, we add info boxes to the packs with NIF.
-    ib_pl = Pipeline[DataPack]()
-    ib_pl.resource.update(redirects=redirect_map)
-    ib_pl.set_reader(DBpediaInfoBoxReader(), config=Config(
-        {
-            'pack_index': os.path.join(raw_pack_dir, 'article.idx'),
-            'pack_dir': raw_pack_dir,
-            'mapping_literals': mapping_literals,
-            'mapping_objects': mapping_objects,
-            'reading_log': os.path.join(output_path, 'infobox.log')
-        },
-        DBpediaInfoBoxReader.default_configs()
-    ))
+    literal_dir = property_dir + '_literals'
+    add_wiki_info(WikiInfoBoxReader(), resources, mapping_literals,
+                  property_dir, literal_dir, 'literals', True)
+    print_progress("Done reading wikipedia info-boxes literals.", '\n')
 
-    ib_pl.add(WikiArticleWriter(), config=Config(
-        {
-            'output_dir': os.path.join(output_path, 'nif_info_box'),
-            'zip_pack': True,
-        },
-        WikiArticleWriter.default_configs()
-    ))
-
-    # Now we run the info box pipeline.
-    ib_pl.run(info_boxs)
+    mapping_dir = literal_dir + '_objects'
+    add_wiki_info(WikiInfoBoxReader(), resources, mapping_objects,
+                  literal_dir, mapping_dir, 'objects', True)
+    print_progress("Done reading wikipedia info-boxes objects.", '\n')
 
 
-def get_data(dataset: str):
+def get_path(dataset: str):
     p = os.path.join(base_dir, dataset)
     if os.path.exists(p):
         return p
@@ -182,8 +150,10 @@ def get_data(dataset: str):
 
 if __name__ == '__main__':
     base_dir = sys.argv[1]
-
     pack_output = os.path.join(base_dir, 'packs')
+
+    if not os.path.exists(pack_output):
+        os.makedirs(pack_output)
 
     logging.basicConfig(
         format='%(asctime)s - %(message)s', level=logging.INFO,
@@ -191,12 +161,12 @@ if __name__ == '__main__':
     )
 
     main(
-        get_data('nif_context_en.tql.bz2'),
-        get_data('nif_page_structure_en.tql.bz2'),
-        get_data('mappingbased_literals_en.tql.bz2'),
-        get_data('mappingbased_objects_en.tql.bz2'),
-        get_data('nif_text_links_en.tql.bz2'),
-        get_data('redirects_en.tql.bz2'),
-        get_data('infobox_properties_mapped_en.tql.bz2'),
+        get_path('nif_context_en.tql.bz2'),
+        get_path('nif_page_structure_en.tql.bz2'),
+        get_path('mappingbased_literals_en.tql.bz2'),
+        get_path('mappingbased_objects_en.tql.bz2'),
+        get_path('nif_text_links_en.tql.bz2'),
+        get_path('redirects_en.tql.bz2'),
+        get_path('infobox_properties_mapped_en.tql.bz2'),
         pack_output
     )
