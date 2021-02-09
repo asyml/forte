@@ -304,7 +304,8 @@ class Predictor(BaseBatchProcessor):
         })
         return super_config
 
-    def initialize(self, resources: Resources, configs: Optional[Config]):
+    #TODO: typing for configs is removed. It causes error.
+    def initialize(self, resources: Resources, configs):
         batcher_config = {}
         batcher_config["scope"] = configs.scope
         batcher_config["feature_scheme"] = {}
@@ -312,6 +313,7 @@ class Predictor(BaseBatchProcessor):
             if scheme["type"] == TrainPreprocessor.DATA_INPUT:
                 batcher_config["feature_scheme"][tag] = scheme
         batcher_config["batch_size"] = configs.batch_size
+
         configs.batcher = batcher_config
         super().initialize(resources, configs)
 
@@ -321,7 +323,7 @@ class Predictor(BaseBatchProcessor):
         # pylint: disable=attribute-defined-outside-init
         self.model = configs.model
 
-    def _process(self, input_pack: PackType):
+    def _process(self, input_pack: DataPack):
         r"""In batch processors, all data are processed in batches. So this
         function is implemented to convert the input datapacks into batches
         according to the Batcher. Users do not need to implement this function

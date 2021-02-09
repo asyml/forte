@@ -16,7 +16,7 @@
 
 from abc import abstractmethod
 from typing import (
-    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator, Any, nothing)
+    Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator, Any)
 from pytorch import Tensor
 from forte.common.configuration import Config
 from forte.data.base_pack import PackType
@@ -97,8 +97,7 @@ class ProcessingBatcher(Generic[PackType]):
 
     def get_batch(
             self, input_pack: PackType, context_type: Type[Annotation],
-            requests: DataRequest) -> Iterator[Tuple[List[PackType],
-                    Optional[List[Annotation]], Dict]]:
+            requests: DataRequest):
         r"""Returns an iterator of A tuple contains datapack,
         instance and batch data. In the basic ProcessingBatcher,
         to be compatible with existing implementation,
@@ -216,13 +215,12 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
     def _should_yield(self) -> bool:
         return self.batch_is_full
 
-    def flush(self) -> Iterator[Tuple[List[PackType],
-                    Optional[List[Annotation]], Dict]]:
+    def flush(self):
         r"""Flush the remaining data."""
         if self.pool_size > 0:
             yield (self.data_pack_pool, self.instance_pool,
                     self.convert(self.feature_pool))
-            self.data_pack_pool: List[PackType] = []
+            self.data_pack_pool = []
             self.instance_pool = []
             self.feature_pool = []
             self.pool_size = 0
