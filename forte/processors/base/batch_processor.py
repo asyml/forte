@@ -29,7 +29,6 @@ from forte.data.batchers import \
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation
-from forte.data.converter import Feature
 from forte.data.types import DataRequest
 from forte.process_manager import ProcessJobStatus
 from forte.processors.base.base_processor import BaseProcessor
@@ -85,43 +84,6 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
                 "Error in handling batcher config, please provide the "
                 "check the config to see if you have the key 'batcher'."
             ) from e
-
-    @staticmethod
-    @abstractmethod
-    def _define_context() -> Type[Annotation]:
-        r"""User should define the context type for batch processors here. The
-        context must be of type :class:`Annotation`, the processor will create
-        data batches with in the span of each annotations. For example, if the
-        context type is ``Sentence``, and the task is POS tagging, then each
-        batch will contain the POS tags for all words in the sentence.
-
-        The "context" parameter here has the same meaning as the
-        :meth:`get_data()` function in class :class:`DataPack`.
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def _define_input_info() -> DataRequest:
-        r"""User should define the :attr:`input_info` for the batch processors
-        here. The input info will be used to get batched data for this
-        processor.
-
-        The request here has the same meaning as the
-        :meth:`get_data()` function in class :class:`DataPack`.
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def define_batcher() -> ProcessingBatcher:
-        r"""Define a specific batcher for this processor.
-        Single pack :class:`BatchProcessor` initialize the batcher to be a
-        :class:`~forte.data.batchers.ProcessingBatcher`.
-        And :class:`MultiPackBatchProcessor` initialize the batcher to be a
-        :class:`~forte.data.batchers.MultiPackProcessingBatcher`.
-        """
-        raise NotImplementedError
 
     def _process(self, input_pack: PackType):
         r"""In batch processors, all data are processed in batches. So this
@@ -204,6 +166,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
+        r"""A deafult config contains the field for batcher."""
         super_config = super().default_configs()
 
         super_config['batcher'] = cls.define_batcher().default_configs()
@@ -240,6 +203,43 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         """
         pass
+
+    @staticmethod
+    @abstractmethod
+    def _define_context() -> Type[Annotation]:
+        r"""User should define the context type for batch processors here. The
+        context must be of type :class:`Annotation`, the processor will create
+        data batches with in the span of each annotations. For example, if the
+        context type is ``Sentence``, and the task is POS tagging, then each
+        batch will contain the POS tags for all words in the sentence.
+
+        The "context" parameter here has the same meaning as the
+        :meth:`get_data()` function in class :class:`DataPack`.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def _define_input_info() -> DataRequest:
+        r"""User should define the :attr:`input_info` for the batch processors
+        here. The input info will be used to get batched data for this
+        processor.
+
+        The request here has the same meaning as the
+        :meth:`get_data()` function in class :class:`DataPack`.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def define_batcher() -> ProcessingBatcher:
+        r"""Define a specific batcher for this processor.
+        Single pack :class:`BatchProcessor` initialize the batcher to be a
+        :class:`~forte.data.batchers.ProcessingBatcher`.
+        And :class:`MultiPackBatchProcessor` initialize the batcher to be a
+        :class:`~forte.data.batchers.MultiPackProcessingBatcher`.
+        """
+        raise NotImplementedError
 
 
 class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
@@ -318,6 +318,7 @@ class Predictor(BaseBatchProcessor):
         if "model" not in configs:
             raise AttributeError("Model need to be passed in"
                                 "via configs.")
+        # pylint: disable=attribute-defined-outside-init
         self.model = configs.model
 
     def _process(self, input_pack: PackType):
@@ -339,10 +340,10 @@ class Predictor(BaseBatchProcessor):
             predictions = self.predict(features)
             for tag, preds in predictions.items():
                 for pred, pack, instance in zip(preds, packs, instances):
-                    self.configs.feature_scheme[tag]["extractor"].pre_evaluation_action(
-                        pack, instance)
-                    self.configs.feature_scheme[tag]["extractor"].add_to_pack(
-                        pack, instance, pred)
+                    self.configs.feature_scheme[tag]["extractor"].\
+                        pre_evaluation_action(pack, instance)
+                    self.configs.feature_scheme[tag]["extractor"].\
+                        add_to_pack(pack, instance, pred)
                     pack.add_all_remaining_entries()
 
         # update the status of the jobs. The jobs which were removed from
