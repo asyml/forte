@@ -17,7 +17,7 @@
 from abc import abstractmethod
 from typing import (
     Dict, List, Iterable, Union, Optional, Tuple, Type, Generic, Iterator, Any)
-from pytorch import Tensor
+from torch import Tensor
 from forte.common.configuration import Config
 from forte.data.base_pack import PackType
 from forte.data.data_pack import DataPack
