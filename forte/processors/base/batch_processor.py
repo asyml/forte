@@ -166,7 +166,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
-        r"""A deafult config contains the field for batcher."""
+        r"""A default config contains the field for batcher."""
         super_config = super().default_configs()
 
         super_config['batcher'] = cls.define_batcher().default_configs()
