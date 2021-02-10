@@ -304,7 +304,7 @@ class Predictor(BaseBatchProcessor):
         })
         return super_config
 
-    #TODO: typing for configs is removed. It causes error.
+    # TODO: typing for configs is removed. It causes error.
     def initialize(self, resources: Resources, configs):
         batcher_config = {}
         batcher_config["scope"] = configs.scope
