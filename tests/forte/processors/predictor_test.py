@@ -89,8 +89,8 @@ class PredictorTest(unittest.TestCase):
                     "type": TrainPreprocessor.DATA_OUTPUT
                 },
             },
-            "model": model
         }
+        predictor.load(model)
         predictor_pipeline.add(predictor, predictor_config)
         predictor_pipeline.initialize()
 

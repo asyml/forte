@@ -207,8 +207,8 @@ class PredictorPipelineTest(unittest.TestCase):
                     "type": TrainPreprocessor.DATA_INPUT
                 },
             },
-            "model": model
         }
+        predictor.load(model)
 
         nlp = Pipeline[DataPack]()
         reader = SentenceReader()
