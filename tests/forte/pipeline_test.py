@@ -22,14 +22,18 @@ from typing import Any, Dict, Iterator, Optional, Type
 
 from ddt import ddt, data, unpack
 
+from forte.train_preprocessor import TrainPreprocessor
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
 from forte.data.readers.base_reader import PackReader, MultiPackReader
 from forte.data.selector import FirstPackSelector, NameMatchSelector
+from forte.data.converter import Converter
+from forte.data.extractor.attribute_extractor import AttributeExtractor
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
+from forte.processors.base.batch_processor import Predictor
 from ft.onto.base_ontology import Token, Sentence
 from tests.dummy_batch_processor import DummyRelationExtractor
 
@@ -158,6 +162,66 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
             }
         )
         return config
+
+
+@ddt
+class PredictorPipelineTest(unittest.TestCase):
+    class DummyModel:
+        "Dummy Model."
+        def __call__(self, batch):
+            "Dummy model does nothing."
+            pass
+
+    class DummyPredcictor(Predictor):
+        "Dummy Predicotr."
+        def predict(self, batch):
+            return {}
+
+    @data(2, 4, 8)
+    def test_pipeline1(self, batch_size):
+        """Tests a chain of Batch->Pack->Batch with different batch sizes."""
+
+        data_path = data_samples_root + "/random_texts/0.txt"
+        pipeline = Pipeline[DataPack]()
+        pipeline.set_reader(SentenceReader())
+        pipeline.initialize()
+
+        text_extractor = AttributeExtractor({
+            "need_pad": True,
+            "entry_type": Token,
+            "attribute": "text",
+        })
+        for pack in pipeline.process_dataset(data_path):
+            for instance in pack.get(Sentence):
+                text_extractor.update_vocab(pack, instance)
+
+        model = PredictorPipelineTest.DummyModel()
+        predictor = PredictorPipelineTest.DummyPredcictor()
+        predictor_config = {
+            "scope": Sentence,
+            "batch_size": batch_size,
+            "feature_scheme": {
+                "text_tag": {
+                    "extractor": text_extractor,
+                    "converter": Converter({}),
+                    "type": TrainPreprocessor.DATA_INPUT
+                },
+            },
+        }
+        predictor.load(model)
+
+        nlp = Pipeline[DataPack]()
+        reader = SentenceReader()
+        nlp.set_reader(reader)
+        nlp.add(component=predictor, config=predictor_config)
+        nlp.initialize()
+
+        num_packs = 0
+        for pack in nlp.process_dataset(data_path):
+            num_packs += 1
+
+        # check that all packs are yielded
+        self.assertEqual(num_packs, reader.count)
 
 
 @ddt

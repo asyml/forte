@@ -17,12 +17,15 @@ The processors that process data in batch.
 import itertools
 from abc import abstractmethod, ABC
 from typing import List, Dict, Optional, Type, Any
-
+from ft.onto.base_ontology import Sentence
+from forte.train_preprocessor import TrainPreprocessor
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data import slice_batch
 from forte.data.base_pack import PackType
-from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
+from forte.data.batchers import \
+    (ProcessingBatcher, FixedSizeDataPackBatcher,
+     FixedSizeDataPackBatcherWithExtractor)
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation
@@ -33,6 +36,7 @@ from forte.processors.base.base_processor import BaseProcessor
 __all__ = [
     "BaseBatchProcessor",
     "BatchProcessor",
+    "Predictor",
     "MultiPackBatchProcessor",
     "FixedSizeBatchProcessor",
     "FixedSizeMultiPackBatchProcessor"
@@ -80,43 +84,6 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
                 "Error in handling batcher config, please provide the "
                 "check the config to see if you have the key 'batcher'."
             ) from e
-
-    @staticmethod
-    @abstractmethod
-    def _define_context() -> Type[Annotation]:
-        r"""User should define the context type for batch processors here. The
-        context must be of type :class:`Annotation`, the processor will create
-        data batches with in the span of each annotations. For example, if the
-        context type is ``Sentence``, and the task is POS tagging, then each
-        batch will contain the POS tags for all words in the sentence.
-
-        The "context" parameter here has the same meaning as the
-        :meth:`get_data()` function in class :class:`DataPack`.
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def _define_input_info() -> DataRequest:
-        r"""User should define the :attr:`input_info` for the batch processors
-        here. The input info will be used to get batched data for this
-        processor.
-
-        The request here has the same meaning as the
-        :meth:`get_data()` function in class :class:`DataPack`.
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def define_batcher() -> ProcessingBatcher:
-        r"""Define a specific batcher for this processor.
-        Single pack :class:`BatchProcessor` initialize the batcher to be a
-        :class:`~forte.data.batchers.ProcessingBatcher`.
-        And :class:`MultiPackBatchProcessor` initialize the batcher to be a
-        :class:`~forte.data.batchers.MultiPackProcessingBatcher`.
-        """
-        raise NotImplementedError
 
     def _process(self, input_pack: PackType):
         r"""In batch processors, all data are processed in batches. So this
@@ -199,6 +166,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
+        r"""A default config contains the field for batcher."""
         super_config = super().default_configs()
 
         super_config['batcher'] = cls.define_batcher().default_configs()
@@ -236,6 +204,43 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         """
         pass
 
+    @staticmethod
+    @abstractmethod
+    def _define_context() -> Type[Annotation]:
+        r"""User should define the context type for batch processors here. The
+        context must be of type :class:`Annotation`, the processor will create
+        data batches with in the span of each annotations. For example, if the
+        context type is ``Sentence``, and the task is POS tagging, then each
+        batch will contain the POS tags for all words in the sentence.
+
+        The "context" parameter here has the same meaning as the
+        :meth:`get_data()` function in class :class:`DataPack`.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def _define_input_info() -> DataRequest:
+        r"""User should define the :attr:`input_info` for the batch processors
+        here. The input info will be used to get batched data for this
+        processor.
+
+        The request here has the same meaning as the
+        :meth:`get_data()` function in class :class:`DataPack`.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def define_batcher() -> ProcessingBatcher:
+        r"""Define a specific batcher for this processor.
+        Single pack :class:`BatchProcessor` initialize the batcher to be a
+        :class:`~forte.data.batchers.ProcessingBatcher`.
+        And :class:`MultiPackBatchProcessor` initialize the batcher to be a
+        :class:`~forte.data.batchers.MultiPackProcessingBatcher`.
+        """
+        raise NotImplementedError
+
 
 class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
     r"""The batch processors that process :class:`DataPack`.
@@ -250,6 +255,122 @@ class FixedSizeBatchProcessor(BatchProcessor, ABC):
     @staticmethod
     def define_batcher() -> ProcessingBatcher:
         return FixedSizeDataPackBatcher()
+
+
+class Predictor(BaseBatchProcessor):
+    r"""This class is used to perform prediction on features that
+    extracted from the datapack and add the prediction back to the
+    datapack.
+    """
+    @staticmethod
+    def _define_context() -> Type[Annotation]:
+        r"""This function is just for the compatibility reason.
+        And it is not actually used in this class.
+        """
+        return Sentence
+
+    @staticmethod
+    def _define_input_info() -> DataRequest:
+        r"""This function is just for the compatibility reason.
+        And it is not actually used in this class.
+        """
+        return {}
+
+    def _prepare_coverage_index(self, input_pack: DataPack):
+        r"""This function is just for the compatibility reason.
+        And it is not actually used in this class.
+        """
+        pass
+
+    def pack(self, pack: PackType, inputs) -> None:
+        r"""This function is just for the compatibility reason.
+        And it is not actually used in this class.
+        """
+        pass
+
+    @staticmethod
+    def define_batcher() -> ProcessingBatcher:
+        return FixedSizeDataPackBatcherWithExtractor()
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        super_config = super().default_configs()
+        super_config.update({
+            "scope": None,
+            "feature_scheme": None,
+            "batch_size": None,
+            "model": None,
+            "batcher": cls.define_batcher().default_configs()
+        })
+        return super_config
+
+    # TODO: typing for configs is removed. It causes error.
+    def initialize(self, resources: Resources, configs):
+        batcher_config = {}
+        batcher_config["scope"] = configs.scope
+        batcher_config["feature_scheme"] = {}
+        for tag, scheme in configs.feature_scheme.items():
+            if scheme["type"] == TrainPreprocessor.DATA_INPUT:
+                batcher_config["feature_scheme"][tag] = scheme
+        batcher_config["batch_size"] = configs.batch_size
+
+        configs.batcher = batcher_config
+        super().initialize(resources, configs)
+
+    def load(self, model):
+        # pylint: disable=attribute-defined-outside-init
+        self.model = model
+
+    def _process(self, input_pack: DataPack):
+        r"""In batch processors, all data are processed in batches. So this
+        function is implemented to convert the input datapacks into batches
+        according to the Batcher. Users do not need to implement this function
+        but should instead implement ``predict``, which computes results from
+        batches.
+
+        Args:
+            input_pack: The next input pack to be fed in.
+        """
+        if self.use_coverage_index:
+            self._prepare_coverage_index(input_pack)
+
+        for batch in self.batcher.get_batch(input_pack,
+                    self.context_type, self.input_info):
+            packs, instances, features = batch
+            predictions = self.predict(features)
+            for tag, preds in predictions.items():
+                for pred, pack, instance in zip(preds, packs, instances):
+                    self.configs.feature_scheme[tag]["extractor"].\
+                        pre_evaluation_action(pack, instance)
+                    self.configs.feature_scheme[tag]["extractor"].\
+                        add_to_pack(pack, instance, pred)
+                    pack.add_all_remaining_entries()
+
+        # update the status of the jobs. The jobs which were removed from
+        # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
+        q_index = self._process_manager.current_queue_index
+        u_index = self._process_manager.unprocessed_queue_indices[q_index]
+        data_pool_length = len(self.batcher.data_pack_pool)
+        current_queue = self._process_manager.current_queue
+
+        for i, job_i in enumerate(
+                itertools.islice(current_queue, 0, u_index + 1)):
+            if i <= u_index - data_pool_length:
+                job_i.set_status(ProcessJobStatus.PROCESSED)
+            else:
+                job_i.set_status(ProcessJobStatus.QUEUED)
+
+    def predict(self, data_batch: Dict) -> Dict:
+        r"""The function that task processors should implement. Make
+        predictions for the input ``data_batch``.
+
+        Args:
+              data_batch (dict): A batch of instances in our ``dict`` format.
+
+        Returns:
+              The prediction results in dict datasets.
+        """
+        raise NotImplementedError()
 
 
 class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
