@@ -317,11 +317,9 @@ class Predictor(BaseBatchProcessor):
         configs.batcher = batcher_config
         super().initialize(resources, configs)
 
-        if "model" not in configs:
-            raise AttributeError("Model need to be passed in"
-                                "via configs.")
+    def load(self, model):
         # pylint: disable=attribute-defined-outside-init
-        self.model = configs.model
+        self.model = model
 
     def _process(self, input_pack: DataPack):
         r"""In batch processors, all data are processed in batches. So this
