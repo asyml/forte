@@ -168,6 +168,17 @@ class StaveDataPackSqlReader(PackReader):
     users of this project need to make sure the classes correspond to the
     ontology are in place.
 
+    If you are able to use a shared ontology for all projects, you may also
+    read all data packs without specifying the project name.
+
+    .. code-block:: python
+
+        pl = Pipeline()
+        pl.set_reader(StaveMultiDocSqlReader, config={
+            "stave_db_path": self.sql_db
+        })
+
+
     Note: Stave is a annotation interface built on Forte's format:
      - https://github.com/asyml/stave
     """
