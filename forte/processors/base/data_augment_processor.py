@@ -35,7 +35,6 @@ from forte.utils.utils import get_class, create_class_with_kwargs
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
 
-
 __all__ = [
     "BaseDataAugmentProcessor",
     "ReplacementDataAugmentProcessor"
@@ -224,6 +223,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
     considered as replacement-based methods with different
     levels: character, word, sentence or document.
     """
+
     def __init__(self):
         super().__init__()
         # :attr:`_replaced_annos`: {datapack id: SortedList[span, new text]}
@@ -294,7 +294,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         while ind < len(self._replaced_annos[pid]):
             span: Span = self._replaced_annos[pid][ind][0]
-            if not(span.begin >= end or span.end <= begin):
+            if not (span.begin >= end or span.end <= begin):
                 return True
             if span.begin > end:
                 break
@@ -382,9 +382,9 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         return True
 
     def _auto_align_annotations(
-        self,
-        data_pack: DataPack,
-        replaced_annotations: SortedList,
+            self,
+            data_pack: DataPack,
+            replaced_annotations: SortedList,
     ) -> DataPack:
         r"""
         Function to replace some annotations with new strings.
@@ -460,14 +460,28 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
         )
 
         def _insert_new_span(
+                entry_class: str,
                 insert_ind: int,
                 inserted_annos: List[Tuple[int, int]],
                 new_pack: DataPack,
                 spans: List[Span],
                 new_spans: List[Span]
         ):
-            r"""
+            """
             An internal helper function for insertion.
+
+            Args:
+                entry_class: The new annotation type to be created.
+                insert_ind: The index to be insert.
+                inserted_annos: The annotation span information to be inserted.
+                new_pack: The new data pack to insert the annotation.
+                spans: The original spans before replacement, should be
+                  a sorted ascending list.
+                new_spans: The original spans before replacement, should be
+                  a sorted ascending list.
+
+            Returns:
+
             """
             pos: int
             length: int
@@ -482,7 +496,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             )
             insert_begin: int = insert_end - length
             new_anno = create_class_with_kwargs(
-                entry,
+                entry_class,
                 {
                     "pack": new_pack,
                     "begin": insert_begin,
@@ -492,16 +506,17 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_pack.add_entry(new_anno)
 
         # Iterate over all the original entries and modify their spans.
-        for entry in entries_to_copy:
-            for orig_anno in data_pack.get(get_class(entry)):
+        for entry_to_copy in entries_to_copy:
+            for orig_anno in data_pack.get(get_class(entry_to_copy)):
                 # Dealing with insertion/deletion only for augment_entry.
-                if entry == self.configs['augment_entry']:
+                if entry_to_copy == self.configs['augment_entry']:
                     while insert_ind < len(inserted_annos) and \
                             inserted_annos[insert_ind][0] <= orig_anno.begin:
                         # Preserve the order of the spans with merging sort.
                         # It is a 2-way merging from the inserted spans
                         # and original spans based on the begin index.
                         _insert_new_span(
+                            entry_to_copy,
                             insert_ind,
                             inserted_annos,
                             new_pack,
@@ -518,20 +533,21 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 span_new_begin: int = orig_anno.begin
                 span_new_end: int = orig_anno.end
 
-                if entry == self.configs['augment_entry'] \
-                        or self._other_entry_policy[entry] \
-                        == 'auto_align':
+                if (entry_to_copy == self.configs['augment_entry'] or
+                        self._other_entry_policy[
+                            entry_to_copy] == 'auto_align'):
                     # Only inclusive when the entry is not augmented.
                     # E.g.: A Sentence include the inserted Token on the edge.
                     # E.g.: A Token shouldn't include a nearby inserted Token.
-                    is_inclusive = entry != self.configs['augment_entry']
+                    is_inclusive = entry_to_copy != self.configs[
+                        'augment_entry']
                     span_new_begin = modify_index(
                         orig_anno.begin, spans, new_spans, True, is_inclusive)
                     span_new_end = modify_index(
                         orig_anno.end, spans, new_spans, False, is_inclusive)
 
                 new_anno = create_class_with_kwargs(
-                    entry,
+                    entry_to_copy,
                     {
                         "pack": new_pack,
                         "begin": span_new_begin,
@@ -542,9 +558,10 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                 entry_map[orig_anno.tid] = new_anno.tid
 
             # Deal with spans after the last annotation in the original pack.
-            if entry == self.configs['augment_entry']:
+            if entry_to_copy == self.configs['augment_entry']:
                 while insert_ind < len(inserted_annos):
                     _insert_new_span(
+                        entry_to_copy,
                         insert_ind,
                         inserted_annos,
                         new_pack,

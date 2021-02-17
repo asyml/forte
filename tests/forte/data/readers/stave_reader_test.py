@@ -21,11 +21,25 @@ def query(sql_db, q: str):
     return c.execute(q)
 
 
-def build_ontology(project_name):
+def build_ontology(sql_db, project_name):
+    """
+    Find the ontology specification from the project, and then create the
+    ontologies.
+
+    Args:
+        sql_db: The SQLite Database containing the project
+        project_name: The name of the project.
+
+    Returns:
+
+    """
     onto_path = "./stave_test_onto"
-    res = query(f'SELECT ontology FROM nlpviewer_backend_project '
-                f'WHERE nlpviewer_backend_project.name = '
-                f'"{project_name}"').fetchone()[0]
+    res = query(
+        sql_db,
+        f'SELECT ontology FROM nlpviewer_backend_project '
+        f'WHERE nlpviewer_backend_project.name = '
+        f'"{project_name}"'
+    ).fetchone()[0]
     with tempfile.NamedTemporaryFile('w') as onto_file:
         onto_file.write(res)
         OntologyCodeGenerator().generate(
@@ -47,18 +61,18 @@ class StaveReaderTest(unittest.TestCase):
         sql_url = "https://raw.githubusercontent.com/asyml/stave/master" \
                   "/simple-backend/example_db.sql"
 
-        self.datapack_table = StaveMultiDocSqlReader.default_configs()[
+        self.datapack_table: str = StaveMultiDocSqlReader.default_configs()[
             'datapack_table']
-        self.multipack_table = StaveMultiDocSqlReader.default_configs()[
+        self.multipack_table: str = StaveMultiDocSqlReader.default_configs()[
             'multipack_table']
-        self.project_table = StaveDataPackSqlReader.default_configs()[
+        self.project_table: str = StaveDataPackSqlReader.default_configs()[
             'project_table'
         ]
 
         self.temp_dir = tempfile.TemporaryDirectory()
         maybe_download(sql_url, self.temp_dir.name, 'example_db.sql')
-        sql_script = os.path.join(self.temp_dir.name, 'example_db.sql')
-        self.sql_db = os.path.join(self.temp_dir.name, 'db.sqlite3')
+        sql_script: str = os.path.join(self.temp_dir.name, 'example_db.sql')
+        self.sql_db: str = os.path.join(self.temp_dir.name, 'db.sqlite3')
 
         pack_count: int
         mp_count: int
@@ -73,7 +87,7 @@ class StaveReaderTest(unittest.TestCase):
 
     @data('project-1-example', 'project-2-example')
     def test_stave_reader_project(self, project_name: str):
-        build_ontology(project_name)
+        build_ontology(self.sql_db, project_name)
 
         # Query packs in this project directly.
         pack_count: int = query(
