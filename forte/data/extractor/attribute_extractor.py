@@ -34,22 +34,16 @@ class AttributeExtractor(BaseExtractor):
     r"""AttributeExtractor extracts feature from the attribute of entry.
     Most of the time, a user will not need to call this class explicitly,
     they will be called by the framework.
-
-    Args:
-        config: An instance of `Dict` or
-            :class:`forte.common.configuration.Config`
-
-            attribute (str): Required. The attribute name of the
-                entry from which features will be extracted. For
-                example, "text" attribute of Token.
     """
 
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
-        "attribute": str
-            The name of attribute we want to extract from the entry.
+        Here:
+            "attribute": str
+                The name of attribute we want to extract from the entry. For
+                example, `text` attribute of Token. The default one is `text`.
         """
         config = super().default_configs()
         config.update({"attribute": "text"})
@@ -104,7 +98,7 @@ class AttributeExtractor(BaseExtractor):
                     "added into the vocabulary. Consider setting"
                     "vocab_method to be raw and do not call update_vocab"
                     "if you only need the raw attribute value without"
-                    "coverting them into index.")
+                    "converting them into index.")
             self.add(element)
 
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
@@ -117,8 +111,8 @@ class AttributeExtractor(BaseExtractor):
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
 
-        Returns:
-            Feature: a feature that contains the extracted data.
+        Returns (Feature):
+            a feature that contains the extracted data.
         """
         data = []
         for entry in pack.get(self.config.entry_type, instance):

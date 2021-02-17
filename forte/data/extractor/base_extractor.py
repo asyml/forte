@@ -17,7 +17,7 @@ extractors will inherit from.
 """
 from abc import ABC
 import logging
-from typing import Tuple, Set, List, Dict, Any
+from typing import Tuple, List, Dict, Any
 from typing import Union, Type, Hashable, Iterable, Optional
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -91,12 +91,12 @@ class BaseExtractor(ABC):
                                  "the configuration of an extractor.")
 
         if self.config.vocab_method != "raw":
-            self.vocab: Optional[Vocabulary] = \
+            self._vocab: Optional[Vocabulary] = \
                 Vocabulary(method=self.config.vocab_method,
                            need_pad=self.config.need_pad,
                            use_unk=self.config.vocab_use_unk)
         else:
-            self.vocab = None
+            self._vocab = None
 
     @classmethod
     def default_configs(cls):
@@ -130,6 +130,30 @@ class BaseExtractor(ABC):
     @property
     def vocab_method(self) -> str:
         return self.config.vocab_method
+
+    @property
+    def vocab(self) -> Optional[Vocabulary]:
+        """
+        Getter of the vocabulary class.
+
+        Returns: The vocabulary. None if the vocabulary is not set.
+
+        """
+        return self._vocab
+
+    @vocab.setter
+    def vocab(self, vocab: Vocabulary):
+        """
+        Setter of the vocabulary, used when user build the vocabulary
+        externally.
+
+        Args:
+            vocab (Vocabulary): The vocabulary to be assigned.
+
+        Returns:
+
+        """
+        self._vocab = vocab
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
         if self.vocab is not None:
@@ -230,8 +254,8 @@ class BaseExtractor(ABC):
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
 
-        Returns:
-            Feature: a feature that contains the extracted data.
+        Returns (Feature):
+            a feature that contains the extracted data.
         """
         pass
 

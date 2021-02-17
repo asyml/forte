@@ -80,7 +80,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
         return config
 
     def _bio_variance(self, tag):
-        r"""Return the B, I, O label with tag.
+        r"""Return the BIO-schemed augmented tagging scheme, for example,
+        if the `tag` is "person", the output would be `B-person`, `I-person`,
+        `O-person`.
+
+        Currently only supports B, I, O label.
 
         Args:
             tag (str): Tag name.
@@ -88,7 +92,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
     def predefined_vocab(self, predefined: Set[str]):
-        r"""Add predefined tags into the vocabulary.
+        r"""Add predefined tags into the vocabulary. i.e. One can construct the
+        tag vocabulary without exploring the training data.
 
         Args:
             predefined (Set[str]): A set of pre-defined tags.
@@ -122,8 +127,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
 
-        Returns:
-            Feature: a feature that contains the extracted data.
+        Returns (Feature):
+            a feature that contains the extracted data.
         """
         instance_tagged: List[Tuple[Optional[str], str]] = bio_tagging(
             pack, instance, self.config.tagging_unit, self.config.entry_type,
