@@ -87,11 +87,11 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
-    def predefined_vocab(self, predefined: Set):
+    def predefined_vocab(self, predefined: Set[str]):
         r"""Add predefined tags into the vocabulary.
 
         Args:
-            predefined (set): A set of tags.
+            predefined (Set[str]): A set of pre-defined tags.
         """
         for tag in predefined:
             for element in self._bio_variance(tag):

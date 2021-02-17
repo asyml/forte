@@ -172,7 +172,7 @@ class BaseExtractor(ABC):
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.get_dict()
 
-    def predefined_vocab(self, predefined: Union[Set, List]):
+    def predefined_vocab(self, predefined: Iterable):
         r"""Functionality: Add elements from prediction into the vocabulary.
 
         Overwrite instruction:
@@ -236,7 +236,7 @@ class BaseExtractor(ABC):
         pass
 
     def pre_evaluation_action(self, pack: DataPack,
-                instance: Annotation):
+                              instance: Annotation):
         r"""This function is performed on the pack before the evaluation
         stage, allowing one to perform some actions before the evaluation.
         For example, you can remove entries or remove some attributes of
