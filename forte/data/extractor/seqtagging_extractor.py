@@ -16,7 +16,7 @@ This file implements BioSeqTaggingExtractor, which is used to extract feature
 from the tagging label.
 """
 import logging
-from typing import Tuple, List, Dict, Union, Optional
+from typing import Tuple, List, Dict, Union, Optional, Set
 from ft.onto.base_ontology import Annotation, EntityMention
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -125,28 +125,23 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Returns:
             Feature: a feature that contains the extracted data.
         """
-        instance_tagged: List[Tuple[Optional[str], str]] = \
-            bio_tagging(pack, instance,
-                        self.config.tagging_unit, self.config.entry_type,
-                        self.config.attribute)
+        instance_tagged: List[Tuple[Optional[str], str]] = bio_tagging(
+            pack, instance, self.config.tagging_unit, self.config.entry_type,
+            self.config.attribute)
 
-        data: Union[
-            List[Tuple[Optional[str], str]],
-            List[Union[int, List[int]]]
-        ] = []
+        vocab_mapped: Union[List[Union[int, List[int]]]] = []
 
-        for pair in instance_tagged:
-            if self.vocab:
-                data.append(self.element2repr(pair))
-            else:
-                data.append(pair)
+        if self.vocab:
+            for pair in instance_tagged:
+                vocab_mapped.append(self.element2repr(pair))
 
-        meta_data = {"pad_value": self.get_pad_value(),
-                     "dim": 1,
-                     "dtype": int if self.vocab else tuple}
-        return Feature(data=data,
-                       metadata=meta_data,
-                       vocab=self.vocab)
+        return Feature(
+            data=vocab_mapped if self.vocab else instance_tagged,
+            metadata={
+                "pad_value": self.get_pad_value(),
+                "dim": 1,
+                "dtype": int if self.vocab else tuple},
+            vocab=self.vocab)
 
     def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
         r"""This function is performed on the pack before the evaluation
