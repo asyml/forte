@@ -158,7 +158,7 @@ class Pipeline(Generic[PackType]):
                 # Can be processor, caster, or evaluator
                 self.add(component, component_config.get('configs', {}))
 
-    def initialize(self) -> 'Processor':
+    def initialize(self) -> 'Pipeline':
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))
 
