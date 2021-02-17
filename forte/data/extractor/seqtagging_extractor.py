@@ -43,15 +43,16 @@ class BioSeqTaggingExtractor(BaseExtractor):
             See :meth:`default_configs` for available options and
             default values.
     """
+
     def __init__(self, config: Union[Dict, Config]):
         super().__init__(config)
 
         if self.config.attribute is None:
             raise AttributeError("attribute is required "
-                            "in BioSeqTaggingExtractor.")
+                                 "in BioSeqTaggingExtractor.")
         if self.config.tagging_unit is None:
             raise AttributeError("tagging_unit is required in "
-                                "BioSeqTaggingExtractor.")
+                                 "BioSeqTaggingExtractor.")
 
     @classmethod
     def default_configs(cls):
@@ -75,7 +76,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         config = super().default_configs()
         config.update({"attribute": None,
-                        "tagging_unit": None})
+                       "tagging_unit": None})
         return config
 
     def _bio_variance(self, tag):
@@ -86,7 +87,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
-    def predefined_vocab(self, predefined: set):
+    def predefined_vocab(self, predefined: Set):
         r"""Add predefined tags into the vocabulary.
 
         Args:
@@ -111,7 +112,9 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 self.add(tag_variance)
 
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
-        r"""Extract the sequence tagging feature of one instance.
+        r"""Extract the sequence tagging feature of one instance. If the
+        vocabulary of this extractor is set, then the extracted tag sequences
+        will be converted to the tag ids (int).
 
         Args:
             pack (Datapack): The datapack that contains the current
@@ -124,15 +127,20 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         instance_tagged: List[Tuple[Optional[str], str]] = \
             bio_tagging(pack, instance,
-            self.config.tagging_unit, self.config.entry_type,
-            self.config.attribute)
+                        self.config.tagging_unit, self.config.entry_type,
+                        self.config.attribute)
 
-        data = []
+        data: Union[
+            List[Tuple[Optional[str], str]],
+            List[Union[int, List[int]]]
+        ] = []
+
         for pair in instance_tagged:
             if self.vocab:
                 data.append(self.element2repr(pair))
             else:
                 data.append(pair)
+
         meta_data = {"pad_value": self.get_pad_value(),
                      "dim": 1,
                      "dtype": int if self.vocab else tuple}
@@ -182,7 +190,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         tag_type = None
         for entry, tag in zip(instance_tagging_unit, tags):
             if tag[1] == "O" or tag[1] == "B" or \
-                (tag[1] == "I" and tag[0] != tag_type):
+                    (tag[1] == "I" and tag[0] != tag_type):
                 if tag_type:
                     entity_mention = EntityMention(pack, tag_start, tag_end)
                     entity_mention.ner_type = tag_type
@@ -194,7 +202,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         # Handle the final tag
         if tag_type is not None and \
-            tag_start is not None and \
-            tag_end is not None:
+                tag_start is not None and \
+                tag_end is not None:
             entity_mention = EntityMention(pack, tag_start, tag_end)
             entity_mention.ner_type = tag_type
