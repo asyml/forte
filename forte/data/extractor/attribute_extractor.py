@@ -93,6 +93,10 @@ class AttributeExtractor(BaseExtractor):
                 extractor will extractor feature.
         """
         for entry in pack.get(self.config.entry_type, instance):
+            # The following pylint skip due to a bug:
+            # https://github.com/PyCQA/pylint/issues/3507
+            # Hashable is not recognized the type.
+            # pylint: disable=isinstance-second-argument-not-valid-type
             element = self._get_attribute(entry, self.config.attribute)
             if not isinstance(element, Hashable):
                 raise AttributeError(
