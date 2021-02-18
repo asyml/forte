@@ -30,14 +30,14 @@ __all__ = [
 class Converter:
     """
     This class has the functionality of converting a batch of
-    :class:`forte.data.converter.Feature` to a PyTorch `Tensor`. It can also
+    :class:`~forte.data.converter.Feature` to a PyTorch `Tensor`. It can also
     do the padding for the given batch of :class:`~forte.data.converter.Feature`
     if user requested it. Please refer to the `request` parameter in
     :class:`~forte.train_preprocessor.TrainPreprocessor` for details.
 
     Args:
         config: An instance of `Dict` or
-            :class:`forte.common.configuration.Config` that provides all
+            :class:`~forte.common.configuration.Config` that provides all
             configurable options. See :meth:`default_configs` for available
             options and default values.
     """

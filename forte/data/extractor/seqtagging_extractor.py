@@ -41,7 +41,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
     Args:
         config: An instance of `Dict` or
-            :class:`forte.common.configuration.Config`.
+            :class:`~forte.common.configuration.Config`.
             See :meth:`default_configs` for available options and
             default values.
     """
@@ -60,21 +60,33 @@ class BioSeqTaggingExtractor(BaseExtractor):
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
-        entry_type: Type[Entry]. Required. The ontology type that the
-            extractor will get feature from.
+        Here:
 
-        attribute (str): Required. The attribute name of the
-            entry from which labels are extracted.
+        - entry_type: Type[Entry]. Required.
+          The ontology type that the extractor will get feature from.
+        - attribute (str): Required.
+          The attribute name of the entry from which labels are extracted.
+        - tagging_unit (Type[Entry]): Required.
+          The tagging label will align to the `tagging_unit` Entry.
 
-        tagging_unit (Type[Entry]): Required. The tagging label
-            will align to the tagging_unit Entry.
+        For example, the config can be:
 
-        For example, the config can be "entry_type": EntityMention,
-            "attribute": "ner_type", "tagging_unit": Token.
+        .. code-block:: python
 
-        The extractor will extract the BIO NER tags for instances.
-            A possible feature can be [[None, "O"], [LOC, "B"], [LOC, "I"],
-            [None, "O"], [None, "O"], [PER, "B"], [None, "O"]]
+            {
+                "entry_type": EntityMention,
+                "attribute": "ner_type",
+                "tagging_unit": Token
+            }
+
+        The extractor will extract the `BIO-NER` style tags for instances.
+        A possible feature can be:
+
+        .. code-block:: python
+
+            [[None, "O"], ["LOC", "B"], ["LOC", "I"], [None, "O"],
+            [None, "O"], ["PER", "B"], [None, "O"]]
+
         """
         config = super().default_configs()
         config.update({"attribute": None,
@@ -125,7 +137,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         will be converted to the tag ids (int).
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack (DataPack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
@@ -162,7 +174,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         overwrite this function by yourself.
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack (DataPack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance on which the
                 extractor performs the pre-evaluation action.
@@ -172,21 +184,23 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: List[int]):
-        r"""Add the prediction for attribute to the instance.
-        We make following assumptions for prediction.
-        1. If we encounter "I" while its tag is different from the previous tag,
-        we will consider this "I" as a "B" and start a new tag here.
-        2. We will truncate the prediction it according to the number of entry.
-        If the prediction contains <PAD> element, this should remove them.
+        r"""Add the prediction for attribute to the instance. We make following
+        assumptions for prediction.
+
+            1. If we encounter "I" while its tag is different from the previous
+               tag, we will consider this "I" as a "B" and start a new tag here.
+            2. We will truncate the prediction it according to the number of
+               entry. If the prediction contains `<PAD>` element, this should
+               remove them.
 
         Args:
-            pack (Datapack): The datapack that contains the current
-                instance.
-            instance (Annotation): The instance to which the
-                extractor add prediction.
-            prediction (Iterable[Union[int, Any]]): This is the output
-                of the model, which contains the index for attributes
-                of one instance.
+            pack (DataPack):
+                The datapack that contains the current instance.
+            instance (Annotation):
+                The instance to which the extractor add prediction.
+            prediction (Iterable[Union[int, Any]]):
+                This is the output of the model, which contains the index for
+                attributes of one instance.
         """
         instance_tagging_unit: List[Annotation] = \
             list(pack.get(self.config.tagging_unit, instance))

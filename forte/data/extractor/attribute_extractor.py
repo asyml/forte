@@ -39,9 +39,10 @@ class AttributeExtractor(BaseExtractor):
         r"""Returns a dictionary of default hyper-parameters.
 
         Here:
-            "attribute": str
-                The name of attribute we want to extract from the entry. For
-                example, `text` attribute of Token. The default one is `text`.
+
+        - "attribute": str
+          The name of attribute we want to extract from the entry. For
+          example, `text` attribute of Token. The default one is `text`.
         """
         config = super().default_configs()
         config.update({"attribute": "text"})
@@ -110,7 +111,7 @@ class AttributeExtractor(BaseExtractor):
         For example, the text of tokens in one sentence.
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack (DataPack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
@@ -140,7 +141,7 @@ class AttributeExtractor(BaseExtractor):
         overwrite this function by yourself.
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack (DataPack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
@@ -160,7 +161,7 @@ class AttributeExtractor(BaseExtractor):
         types. The default implementation assume the data type is Integer.
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack (DataPack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance to which the
                 extractor add prediction.
