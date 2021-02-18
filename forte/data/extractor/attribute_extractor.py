@@ -15,15 +15,13 @@
 This file implements AttributeExtractor, which is used to extract feature
 from the attribute of entries.
 """
-import logging
 from typing import Any, Union, Iterable, Hashable
+
+from forte.data.converter.feature import Feature
+from forte.data.data_pack import DataPack
+from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
-from forte.data.data_pack import DataPack
-from forte.data.converter.feature import Feature
-from forte.data.extractor.base_extractor import BaseExtractor
-
-logger = logging.getLogger(__name__)
 
 __all__ = [
     "AttributeExtractor"
@@ -31,7 +29,7 @@ __all__ = [
 
 
 class AttributeExtractor(BaseExtractor):
-    r"""AttributeExtractor extracts feature from the attribute of entry.
+    r"""`AttributeExtractor` extracts feature from the attribute of entry.
     Most of the time, a user will not need to call this class explicitly,
     they will be called by the framework.
     """
@@ -174,7 +172,7 @@ class AttributeExtractor(BaseExtractor):
 
         # The following pylint skip due to a bug:
         # https://github.com/PyCQA/pylint/issues/3507
-        # Hashable is not recognized the type.
+        # Iterable is not recognized the type.
         # pylint: disable=isinstance-second-argument-not-valid-type
         if not isinstance(prediction, Iterable):
             prediction = [prediction]
