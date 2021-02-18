@@ -15,15 +15,16 @@
 This file implements BaseExtractor, which is the abstract class other
 extractors will inherit from.
 """
-from abc import ABC
 import logging
-from typing import Tuple, List, Dict, Any, Set
+from abc import ABC
+from typing import Tuple, List, Dict, Any
 from typing import Union, Type, Hashable, Iterable, Optional
+
 from forte.common.configuration import Config
+from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.data.vocabulary import Vocabulary
-from forte.data.converter.feature import Feature
 
 logger = logging.getLogger(__name__)
 

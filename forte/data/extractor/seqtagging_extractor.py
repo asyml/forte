@@ -16,13 +16,15 @@ This file implements BioSeqTaggingExtractor, which is used to extract feature
 from the tagging label.
 """
 import logging
-from typing import Tuple, List, Dict, Union, Optional, Set, Iterable
-from ft.onto.base_ontology import Annotation, EntityMention
+from typing import Tuple, List, Dict, Union, Optional, Iterable
+
 from forte.common.configuration import Config
-from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
-from forte.data.extractor.utils import bio_tagging
+from forte.data.data_pack import DataPack
 from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.extractor.utils import bio_tagging
+from forte.data.ontology.top import Annotation
+from ft.onto.base_ontology import EntityMention
 
 logger = logging.getLogger(__name__)
 
@@ -135,13 +137,15 @@ class BioSeqTaggingExtractor(BaseExtractor):
             pack, instance, self.config.tagging_unit, self.config.entry_type,
             self.config.attribute)
 
-        vocab_mapped: Union[List[Union[int, List[int]]]] = []
-
         if self.vocab:
+            # Use the vocabulary to map data into representation.
+            vocab_mapped: List[Union[int, List[int]]] = []
             for pair in instance_tagged:
                 vocab_mapped.append(self.element2repr(pair))
-
-        raw_data: List = vocab_mapped if self.vocab else instance_tagged
+            raw_data: List = vocab_mapped
+        else:
+            # When vocabulary is not available, use the original data.
+            raw_data = instance_tagged
 
         return Feature(
             data=raw_data,
