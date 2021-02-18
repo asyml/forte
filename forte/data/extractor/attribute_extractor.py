@@ -158,6 +158,9 @@ class AttributeExtractor(BaseExtractor):
         If the prediction is only one element, then we assume there will
         only be one entry in the instance.
 
+        Extending this class will need to handle the specific prediction data
+        types. The default implementation assume the data type is Integer.
+
         Args:
             pack (Datapack): The datapack that contains the current
                 instance.
@@ -169,6 +172,10 @@ class AttributeExtractor(BaseExtractor):
         """
         instance_entry = list(pack.get(self.config.entry_type, instance))
 
+        # The following pylint skip due to a bug:
+        # https://github.com/PyCQA/pylint/issues/3507
+        # Hashable is not recognized the type.
+        # pylint: disable=isinstance-second-argument-not-valid-type
         if not isinstance(prediction, Iterable):
             prediction = [prediction]
         values = [self.id2element(int(x)) for x in prediction]
