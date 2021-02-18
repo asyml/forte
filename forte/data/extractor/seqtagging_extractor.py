@@ -91,7 +91,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
-    def predefined_vocab(self, predefined: Set[str]):
+    def predefined_vocab(self, predefined: Set):
         r"""Add predefined tags into the vocabulary. i.e. One can construct the
         tag vocabulary without exploring the training data.
 
@@ -140,8 +140,10 @@ class BioSeqTaggingExtractor(BaseExtractor):
             for pair in instance_tagged:
                 vocab_mapped.append(self.element2repr(pair))
 
+        raw_data: List = vocab_mapped if self.vocab else instance_tagged
+
         return Feature(
-            data=vocab_mapped if self.vocab else instance_tagged,
+            data=raw_data,
             metadata={
                 "pad_value": self.get_pad_value(),
                 "dim": 1,
