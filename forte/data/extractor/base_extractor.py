@@ -17,7 +17,7 @@ extractors will inherit from.
 """
 from abc import ABC
 import logging
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Set
 from typing import Union, Type, Hashable, Iterable, Optional
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -76,8 +76,6 @@ class BaseExtractor(ABC):
             options and default values. Entry_type is the key that need to
             be passed in and there will not be default value for this key.
 
-            entry_type: Type[Entry]. Required. The ontology type that the
-                extractor will get feature from.
     """
     _VOCAB_ERROR_MSG = "When vocab_method is raw, vocabulary " \
                        "will not be built. Functions operating " \
@@ -101,6 +99,11 @@ class BaseExtractor(ABC):
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
+
+        Here:
+
+        entry_type: Type[Entry]. Required. The ontology type that the
+                extractor will get feature from.
 
         "vocab_method": str
             What type of vocabulary is used for this extractor.
@@ -197,27 +200,30 @@ class BaseExtractor(ABC):
         return self.vocab.get_dict()
 
     def predefined_vocab(self, predefined: Iterable):
-        r"""Functionality: Add elements from prediction into the vocabulary.
+        r"""Populate the vocabulary with predefined values. You can also extend
+        this method to customize the ways to handle the vocabulary.
 
         Overwrite instruction:
             1. Take out elements from predefined.
-            2. Make modification on elements, according to different
-                Extractors.
+            2. Make modification on the elements based on the need of the
+            extractor.
             3. Use `self.add` function to add the element into vocabulary.
 
         Args:
-            predefined (Union[Set, List]): A set or list contain
-                elements to be added into the vocabulary.
+            predefined (Iterable): A collections that contains the elements to
+              be added into the vocabulary.
         """
         for element in predefined:
             self.add(element)
 
-    def update_vocab(self, pack: DataPack,
-                     instance: Annotation):
-        r"""Functionality: Add all elements from one instance into the
+    def update_vocab(self, pack: DataPack, instance: Annotation):
+        r""" Populate the vocabulary by taking the elements from one instance
         vocabulary. For example, when the instance is Sentence and we want
         to add all Token from one sentence into the vocabulary, we might
         call this function.
+
+        If you use a pre-specified vocabulary, you may not need to use this
+        function.
 
         Overwrite instructions:
             1. Get all entries from one instance in the pack.
@@ -238,9 +244,8 @@ class BaseExtractor(ABC):
         """
         pass
 
-    def extract(self, pack: DataPack,
-                instance: Annotation) -> Feature:
-        r"""Functionality: Extract the feature for one instance in a pack.
+    def extract(self, pack: DataPack, instance: Annotation) -> Feature:
+        r"""Extract the feature for one instance in a pack.
 
         Overwrite instruction:
             1. Get all entries from one instance in the pack.
@@ -276,7 +281,12 @@ class BaseExtractor(ABC):
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Any):
-        r"""Functionality: Add prediction to the pack.
+        r"""Add prediction of a model (normally in the form of a tensor)
+        back to the pack. This function should have knowledge of the structure
+        of the `prediction` to correctly populate the data pack values.
+
+        This function can be roughly considered as the reverse operation of
+        :func:`extract`.
 
         Overwrite instruction:
             1. Get all entries from one instance in the pack.

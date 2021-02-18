@@ -16,7 +16,7 @@ This file implements BioSeqTaggingExtractor, which is used to extract feature
 from the tagging label.
 """
 import logging
-from typing import Tuple, List, Dict, Union, Optional, Set
+from typing import Tuple, List, Dict, Union, Optional, Set, Iterable
 from ft.onto.base_ontology import Annotation, EntityMention
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -79,7 +79,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
                        "tagging_unit": None})
         return config
 
-    def _bio_variance(self, tag):
+    @classmethod
+    def _bio_variance(cls, tag):
         r"""Return the BIO-schemed augmented tagging scheme, for example,
         if the `tag` is "person", the output would be `B-person`, `I-person`,
         `O-person`.
@@ -91,12 +92,12 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         return [(tag, "B"), (tag, "I"), (None, "O")]
 
-    def predefined_vocab(self, predefined: Set):
+    def predefined_vocab(self, predefined: Iterable):
         r"""Add predefined tags into the vocabulary. i.e. One can construct the
         tag vocabulary without exploring the training data.
 
         Args:
-            predefined (Set[str]): A set of pre-defined tags.
+            predefined (Iterable[str]): A set of pre-defined tags.
         """
         for tag in predefined:
             for element in self._bio_variance(tag):

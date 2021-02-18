@@ -49,7 +49,8 @@ class AttributeExtractor(BaseExtractor):
         config.update({"attribute": "text"})
         return config
 
-    def get_attribute(self, entry: Entry, attr: str) -> Any:
+    @classmethod
+    def _get_attribute(cls, entry: Entry, attr: str) -> Any:
         r"""Get the attribute from entry. You can
         overwrite this function if you have special way to get the
         attribute from entry.
@@ -64,7 +65,8 @@ class AttributeExtractor(BaseExtractor):
         """
         return getattr(entry, attr)
 
-    def set_attribute(self, entry: Entry, attr: str, value: Any):
+    @classmethod
+    def _set_attribute(cls, entry: Entry, attr: str, value: Any):
         r"""Set the attribute of an entry to value.
         You can overwrite this function if you have special way to
         set the attribute.
@@ -91,7 +93,7 @@ class AttributeExtractor(BaseExtractor):
                 extractor will extractor feature.
         """
         for entry in pack.get(self.config.entry_type, instance):
-            element = self.get_attribute(entry, self.config.attribute)
+            element = self._get_attribute(entry, self.config.attribute)
             if not isinstance(element, Hashable):
                 raise AttributeError(
                     "Only hashable element can be"
@@ -116,7 +118,7 @@ class AttributeExtractor(BaseExtractor):
         """
         data = []
         for entry in pack.get(self.config.entry_type, instance):
-            value = self.get_attribute(entry, self.config.attribute)
+            value = self._get_attribute(entry, self.config.attribute)
             rep = self.element2repr(value) if self.vocab else value
             data.append(rep)
 
@@ -142,7 +144,7 @@ class AttributeExtractor(BaseExtractor):
                 extractor will extractor feature.
         """
         for entry in pack.get(self.config.entry_type, instance):
-            self.set_attribute(entry, self.config.attribute, None)
+            self._set_attribute(entry, self.config.attribute, None)
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Iterable[Union[int, Any]]):
@@ -167,4 +169,4 @@ class AttributeExtractor(BaseExtractor):
             prediction = [prediction]
         values = [self.id2element(int(x)) for x in prediction]
         for entry, value in zip(instance_entry, values):
-            self.set_attribute(entry, self.config.attribute, value)
+            self._set_attribute(entry, self.config.attribute, value)
