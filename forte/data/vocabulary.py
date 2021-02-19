@@ -95,6 +95,8 @@ class Vocabulary:
     PAD_ELEMENT = "<PAD>"
     UNK_ELEMENT = "<UNK>"
 
+    # TODO: It is better to add a generic type for this class, now every element
+    #   is simply empty.
     def __init__(self, method: str, need_pad: bool, use_unk: bool):
         self.method = method
         self.need_pad = need_pad

@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2021 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.data.data_utils_io import *
-from forte.data.data_pack import *
-from forte.data.multi_pack import *
-from forte.data.span import *
+from forte.data.extractor.base_extractor import *
+from forte.data.extractor.attribute_extractor import *
+from forte.data.extractor.char_extractor import *
+from forte.data.extractor.seqtagging_extractor import *

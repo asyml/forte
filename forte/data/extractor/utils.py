@@ -21,8 +21,9 @@ from ft.onto.base_ontology import Annotation
 
 
 def bio_tagging(pack: DataPack, instance: Annotation,
-    tagging_unit_type: Type[Annotation], entry_type: Type[Annotation],
-    attribute: Union[Callable[[Annotation], str], str]) \
+                tagging_unit_type: Type[Annotation],
+                entry_type: Type[Annotation],
+                attribute: Union[Callable[[Annotation], str], str]) \
         -> List[Tuple[Optional[str], str]]:
     """This utility function use BIO tagging method to convert tags
     of "instance_entry" into the same length as "instance_tagging_unit". Both
@@ -67,7 +68,7 @@ def bio_tagging(pack: DataPack, instance: Annotation,
     unit_id = 0
     entry_id = 0
     while unit_id < len(instance_tagging_unit) or \
-        entry_id < len(instance_entry):
+            entry_id < len(instance_entry):
 
         if entry_id == len(instance_entry):
             tagged.append((None, 'O'))
@@ -91,6 +92,6 @@ def bio_tagging(pack: DataPack, instance: Annotation,
                 tagged.append((attribute(instance_entry[entry_id]), location))
             else:
                 tagged.append((getattr(instance_entry[entry_id], attribute),
-                                location))
+                               location))
         entry_id += 1
     return tagged

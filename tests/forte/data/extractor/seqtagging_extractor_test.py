@@ -78,7 +78,7 @@ class SeqTaggingExtractorTest(unittest.TestCase):
             for instance in pack.get(Sentence):
                 extractor.update_vocab(pack, instance)
 
-        extractor.predefined_vocab(set(["MISC", "ORG"]))
+        extractor.predefined_vocab({"MISC", "ORG"})
         invalid = [extractor.element2repr(ele) for ele in invalid]
 
         for pack in pipeline.process_dataset(self.dataset_path):

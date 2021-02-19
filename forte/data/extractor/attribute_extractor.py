@@ -15,15 +15,13 @@
 This file implements AttributeExtractor, which is used to extract feature
 from the attribute of entries.
 """
-import logging
 from typing import Any, Union, Iterable, Hashable
+
+from forte.data.converter.feature import Feature
+from forte.data.data_pack import DataPack
+from forte.data.extractor.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
-from forte.data.data_pack import DataPack
-from forte.data.converter.feature import Feature
-from forte.data.extractor.base_extractor import BaseExtractor
-
-logger = logging.getLogger(__name__)
 
 __all__ = [
     "AttributeExtractor"
@@ -31,31 +29,27 @@ __all__ = [
 
 
 class AttributeExtractor(BaseExtractor):
-    r"""AttributeExtractor extracts feature from the attribute of entry.
+    r"""`AttributeExtractor` extracts feature from the attribute of entry.
     Most of the time, a user will not need to call this class explicitly,
     they will be called by the framework.
-
-    Args:
-        config: An instance of `Dict` or
-            :class:`forte.common.configuration.Config`
-
-            attribute (str): Required. The attribute name of the
-                entry from which features will be extracted. For
-                example, "text" attribute of Token.
     """
 
     @classmethod
     def default_configs(cls):
         r"""Returns a dictionary of default hyper-parameters.
 
-        "attribute": str
-            The name of attribute we want to extract from the entry.
+        Here:
+
+        - "attribute": str
+          The name of attribute we want to extract from the entry. For
+          example, `text` attribute of Token. The default one is `text`.
         """
         config = super().default_configs()
         config.update({"attribute": "text"})
         return config
 
-    def get_attribute(self, entry: Entry, attr: str) -> Any:
+    @classmethod
+    def _get_attribute(cls, entry: Entry, attr: str) -> Any:
         r"""Get the attribute from entry. You can
         overwrite this function if you have special way to get the
         attribute from entry.
@@ -70,7 +64,8 @@ class AttributeExtractor(BaseExtractor):
         """
         return getattr(entry, attr)
 
-    def set_attribute(self, entry: Entry, attr: str, value: Any):
+    @classmethod
+    def _set_attribute(cls, entry: Entry, attr: str, value: Any):
         r"""Set the attribute of an entry to value.
         You can overwrite this function if you have special way to
         set the attribute.
@@ -97,14 +92,18 @@ class AttributeExtractor(BaseExtractor):
                 extractor will extractor feature.
         """
         for entry in pack.get(self.config.entry_type, instance):
-            element = self.get_attribute(entry, self.config.attribute)
+            # The following pylint skip due to a bug:
+            # https://github.com/PyCQA/pylint/issues/3507
+            # Hashable is not recognized the type.
+            # pylint: disable=isinstance-second-argument-not-valid-type
+            element = self._get_attribute(entry, self.config.attribute)
             if not isinstance(element, Hashable):
                 raise AttributeError(
                     "Only hashable element can be"
                     "added into the vocabulary. Consider setting"
                     "vocab_method to be raw and do not call update_vocab"
                     "if you only need the raw attribute value without"
-                    "coverting them into index.")
+                    "converting them into index.")
             self.add(element)
 
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
@@ -112,17 +111,17 @@ class AttributeExtractor(BaseExtractor):
         For example, the text of tokens in one sentence.
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack (DataPack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
 
-        Returns:
-            Feature: a feature that contains the extracted data.
+        Returns (Feature):
+            a feature that contains the extracted data.
         """
         data = []
         for entry in pack.get(self.config.entry_type, instance):
-            value = self.get_attribute(entry, self.config.attribute)
+            value = self._get_attribute(entry, self.config.attribute)
             rep = self.element2repr(value) if self.vocab else value
             data.append(rep)
 
@@ -142,13 +141,13 @@ class AttributeExtractor(BaseExtractor):
         overwrite this function by yourself.
 
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack (DataPack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
         """
         for entry in pack.get(self.config.entry_type, instance):
-            self.set_attribute(entry, self.config.attribute, None)
+            self._set_attribute(entry, self.config.attribute, None)
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
                     prediction: Iterable[Union[int, Any]]):
@@ -158,8 +157,11 @@ class AttributeExtractor(BaseExtractor):
         If the prediction is only one element, then we assume there will
         only be one entry in the instance.
 
+        Extending this class will need to handle the specific prediction data
+        types. The default implementation assume the data type is Integer.
+
         Args:
-            pack (Datapack): The datapack that contains the current
+            pack (DataPack): The datapack that contains the current
                 instance.
             instance (Annotation): The instance to which the
                 extractor add prediction.
@@ -169,8 +171,12 @@ class AttributeExtractor(BaseExtractor):
         """
         instance_entry = list(pack.get(self.config.entry_type, instance))
 
+        # The following pylint skip due to a bug:
+        # https://github.com/PyCQA/pylint/issues/3507
+        # Iterable is not recognized the type.
+        # pylint: disable=isinstance-second-argument-not-valid-type
         if not isinstance(prediction, Iterable):
             prediction = [prediction]
         values = [self.id2element(int(x)) for x in prediction]
         for entry, value in zip(instance_entry, values):
-            self.set_attribute(entry, self.config.attribute, value)
+            self._set_attribute(entry, self.config.attribute, value)
