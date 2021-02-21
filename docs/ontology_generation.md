@@ -1,68 +1,67 @@
-# Building and Understanding Ontology
+# Understand and Build Ontology
 
 Forte is built on top of an _Ontology_ system, which defines the relations
-between NLP annotations, for example, the relation between words and documents,
-or between two words. This is the core for Forte.
+between NLP annotations, such as the relation between words and documents,
+or between two words. This is the core of Forte.
 
-The ontology can be specified via a JSON format. And
-tools are provided to convert the ontology into production code (Python). 
-Make sure Forte is installed before following this tutorial.
+The ontology can be specified in a JSON format and Forte provides tools 
+to help convert the ontology into production code (Python). 
+Make sure Forte has been installed before starting to build the ontology.
 
-### A simple ontology config
-Imagine you need to develop an NLP system for a pet shop, first thing first, 
-you need to understand what are the needed output from the documents. Let's 
-say you need to develop a system to assets such as `Pet` and `Revenue` ,
-and hopefully automatically find out these from text. We have built an example
-ontology here: [pet shop ontology](https://github.com/asyml/forte/blob/master/examples/ontology/pet_shop.json)
+### A Simple Ontology Config
+Imagine you need to develop an information retrieval system for a pet shop for accounting purposes, 
+first thing first, you need to understand what the expected outputs from the documents are. Let's 
+say you need to sort out key information related to assets such as `Pet` and `Revenue`from text. 
+We built an example ontology here: [pet shop ontology](https://github.com/asyml/forte/blob/master/examples/ontology/pet_shop.json)
 
-Now, before we go to the details, at Forte's root directory, try run the following command:
+Now, before we drill down into the details, under Forte's root directory, try run the following command:
 ```shell
 generate_ontology create -i examples/ontology/pet_shop.json -o examples/ontology -r
 ```
-If run successfully, you will find some python code being generated in `examples/ontology`,
-under the package `awesome.pet.com`. This is what the Forte ontology system does, it generates
+If command succeeds, you will find some python code generated in `examples/ontology`,
+under the package `awesome.pet.com`. This is what the Forte ontology system does - generate
 the python classes needed to handle the NLP data structures.
 
-The JSON ontology spec should be quite self-explanatory, we define types like `Pet` and `Owner`,
-which have some attributes. And the `Owner` have a list of `Pet`. The python code
-exactly represent the structure.
+The JSON ontology spec is self-explanatory, where we defined types like `Pet` and `Owner`. 
+Each type has some attributes, for example `Pet` has attributes like `pet_type` and `color`.
+In addition, the `Owner` has a list of `Pet` given that one owner might have multiple pets. 
+The logic structure was defined in the python script. 
 
-In the rest of the tutorial, we will walk through this example and you will learn:
+In the rest of this tutorial, we will walk through this example to let you learn how to:
   * Define a simple ontology spec for your project.
   * Import other ontology(s) to build yours.
-  * Generate the corresponding Python classes automatically and use them in 
+  * Generate the corresponding python classes automatically and use them in 
     your project.
 
-### Before we start
-There are a few basic concepts to understand Forte's ontology system.
+### Before We Start
+You need to understand a few basic concepts of Forte's ontology system before you start. 
 
-* *Entry* - An entry corresponds to one NLP unit in the document, for instance, 
-an annotated sequence or relationship between annotated sequences. `Token`, 
-`Sentence` and `DependencyLink` are some examples of entries. One entry defined 
-in the config is used to generate one python class.
+* *Entry* - An entry is referred to one NLP unit in the document, such as an annotated sequence or 
+relationship between annotated sequences. `Token`, `Sentence` and `DependencyLink` are some examples of entries. 
+One entry defined in the config is used to generate one python class.
 
-* *Ontology* - A collection of `entries`, where each entry is represented as a class. 
-The entries of an ontology can span one or more Python modules. This way, the entry classes
+* *Ontology* - A collection of `entries`, where each entry represents a class. 
+The entries of an ontology can span one or more Python modules. In this way, the entry classes
 can be imported regardless of the ontology config they were originally generated from.
-The modules that contain these entry classes generally belong to the package `ft.onto`.
+The modules that contain these entry classes belong to the package `ft.onto`.
 
-* *Attribute* - An attribute generally corresponds to a label or property 
-associated with an entry, like, `pos_tag` for the entry `Token`.
+* *Attribute* - An attribute is referred to a label or property that is
+associated with an entry, for example, `pos_tag` for the entry `Token`.
 
-* *Top* - Top entries are a set of entries that are pre-defined in the Forte library, 
-in the module `forte.data.ontology.base.top`. All user-defined entries should extend one of 
+* *Top* - Top entries are a set of entries that are pre-defined in the module 
+`forte.data.ontology.base.top` in the Forte library. All user-defined entries can extend one of 
 the top entries. 
  
 We provide a set of commonly used NLP entry types in the module 
 [``forte.data.ontology.base_ontology.py``](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json). 
 Those entries could be used directly in your project!
  
-### A simple ontology config
-Let us consider a simple ontology for documents of a pet shop.
+### A Simple Ontology Config Example
+Let us consider a simple ontology used for analyze a pet shop's accounting documents.
 ```json
 {
     "name": "pet_shop_ontology",
-    "description": "An Ontology Used to manage the pet shop assets and pets",
+    "description": "An ontology used to manage the pet shop assets and pets",
     "definitions": [
         {
             "entry_name": "ft.onto.pet_shop.Pet",
@@ -86,7 +85,7 @@ Let us consider a simple ontology for documents of a pet shop.
                 },
                 {
                     "name": "pets",
-                    "description": "List of pets the owner have.",
+                    "description": "List of pets the owner has.",
                     "type": "List",
                     "item_type": "ft.onto.pet_shop.Pet"
                 }
@@ -96,100 +95,90 @@ Let us consider a simple ontology for documents of a pet shop.
 }
 ```
 
-#### Breakdown of the simple ontology
+#### Ontology Breakdown
 
-- The top level `name` and `description` are annotation keywords meant for descriptive
+- The top level `name` and `description` are annotation keywords serving for descriptive
 purposes only.
 
-- The `definitions` is used to enlist entry definitions, where each entry is represented
-as a json object. Each entry correspond to one concept in the ontology, and a Python class. 
+- The `definitions` is used to enlist entry definitions, where each entry represents a json object. 
+Each entry refers to one concept in the ontology, as well as a Python class. 
 
 ##### ```definitions```
 Each definition is a dictionary of several keywords:
-* The `entry_name` keyword defines the name of the entry. It is used to 
-define the full name of an entry, and is of the form
+* The `entry_name` defines the full name of an entry in the form
 ```<package_name><module_name>.<entry_name>```.
-    * The package name is generally `ft.onto`. It is used to create the 
+    * The `<package name>` is `ft.onto`, used to create the 
     package directory tree in which the generated module resides.
     * The `<module_name>` is the name of the generated file in which the entry 
     would be placed.
-    > Note: Entries defined in the same config can have module names that are 
-    different from each other.
-    * The `<entry_name>` is used as the generated class name.
+    > Note: Entries in the same config can have different module names.
+    * The `<entry_name>` is the generated class name.
     
- * The `parent_type` keyword defines the base class of the generated entry class. All 
- the user-defined entries should inherit either any of the top entries or one 
- of the other user-defined entries.
+ * The `parent_entry` defines the base class of the generated entry class. All 
+ the user-defined entries can inherit either from any of the top entries or user-defined entries.
  
- * The `description` keyword is optionally used as the comment to describe the generated Python class.
+ * The `description` (optional) provides descriptions of the generated Python class and a user can choose to skip. 
   
- * `attributes`: List of attributes that would be used as instance variables of 
+ * The `attributes` defines a list of attributes that would be used as instance variables of 
  the generated class. 
 
 ##### ```attributes```
-Each entry definition will define a couple (can be empty) attributes, mimicking the class variables:
+Each entry definition can have a couple (can be empty) attributes, mimicking the class variables:
 
-* The `name` keyword defines the name of the property unique to the entry.
-* The `description` keyword is optionally used as the comment to describe the attribute.
-* The `type` keyword is used to define the type of the attribute. Currently supported types are:
+* The `name` defines the name of the property unique to the entry.
+* The `description` (optional) provides description of the attribute.
+* The `type` defines the attribute type. Currently supported types include:
     * Primitive types - `int`, `float`, `str`, `bool`
     * Composite types - `List`, `Dict`
-    * Entries defined in the `top` module - The attributes can be of the type base
-    entries (defined in the `forte.data.ontology.top` module) and can be directly 
-    referred by the class name.
-    * User-defined types - The attributes can be of the type of entries that are
-     user-defined. These user-defined entries could be defined (a) in the same config 
-     (b) any of the imported configs. To avoid ambiguity, only full-names of the user-defined
-     entry types are supported     
-* `item_type: str`: If the `type` of the property is a `List`,
-   then `item_type` defines the type of the items contained in the list. 
-* `key_type` and `value_type`: If the `type` of the property is a `Dict`,
-   then these two represent the types of the key and value of the dictionary,
+    * Pre-defined type in the `top` module - The attribute type can inherit from the base
+    entry type (defined in the `forte.data.ontology.top` module) or use the class name.
+    * User-defined types - The attribute type can inherit from the user-defined entry type
+    (defined in (a) the same config;(b) any imported configs). To avoid ambiguity, only the 
+    ful name of user-defind types are supported. 
+* `item_type: str`: defines the type of the items contained in the set defined by `type`. For example,
+   If the `type` of the property is a `List`, then `item_type` defines the type of the items contained in the list. 
+* `key_type` and `value_type`: defines the types of value and key in the set defined by `type`. For example, 
+   If the `type` of the property is a `Dict`, then `key_type` and `value_type` represent the types of the key and value of the dictionary,
    currently, only primitive types are supported as the `key_type`.
 
-### Major ontology types, Annotations, Links, Groups and Generics
-There are some very frequently used types in NLP: 
+### Major Ontology Types - Annotations, Links, Groups and Generics
+The most commonly used **entry types** include: 
 
-* **Annotation**: an annotation is a type of entry that correspond to a piece of text.
-  For example, a `sentence` can be an annotation. In our example, we use
-  `awesome.pet.com.Color` to annotate the color words in text documents. All
-  annotations need to inherit `forte.data.ontology.top.Annotation`. The annotation 
-  entries will have special `begin` and `end` attributes to indicate their text 
-  position.
+* **Annotation**: an annotation contains two integer attributes, `begin` and `end`
+  to denote the offsets of a piece of text. For example, a `sentence` can be an annotation. 
+  In our example, we use `awesome.pet.com.Color` to annotate the words used to describe colors in the text. 
+  All annotations need to inherit from `forte.data.ontology.top.Annotation`. 
 
-* **Link**: a link is a type of entry that connect two other entries. For example, a dependency
-  link connect two words. All link in Forte need to inherit `forte.data.ontology.top.BaseLink`,
-  and the ontology need to specify ``parent_type`` and ``child_type`` for the linked entries. 
+* **Link**: a link connects two entries. For example, a dependency link can connect two words. 
+  All links need to inherit from `forte.data.ontology.top.BaseLink`. ``parent_type`` and ``child_type`` 
+  need to be defined to specify the linked entries in the ontology. 
     
-* **Group**: a group is a type of entry that groups several entries. For example, a coreference
-  cluster will contain several entity mentions. All link in Forte inherits from
-  `forte.data.ontology.top.BaseGroup`.  The ``member_type`` need to be set to indicate the
-  types of entries in the group.
+* **Group**: a group can assort multiple entries. For example, a coreference cluster can contain several entity 
+  mentions. All links need to inherit from `forte.data.ontology.top.BaseGroup`. The ``member_type`` need to be 
+  defined to specify the type of entries in the group. 
   
 * **Generics**: there are some entries that do not have the above characteristics, such as
-  general meta data storing information. These are `Generics` types. 
+  general meta data storage information. These are `Generics` types. 
 
-To see more examples of these different types of entries, you can read the 
-[pet shop ontology](https://github.com/asyml/forte/blob/master/examples/ontology/pet_shop.json)
-as an example, or refer to the [base ontology](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json),
-which is an ontology provided by Forte to represent general NLP concepts.
+To see more examples of these different entry types, you can refer to the example 
+[pet shop ontology](https://github.com/asyml/forte/blob/master/examples/ontology/pet_shop.json), or the [base ontology](https://github.com/asyml/forte/blob/master/forte/ontology_specs/base_ontology.json),
+an ontology provided by Forte to represent general NLP concepts.
 
-### Importing another ontology
-`imports` is an optional keyword used to help you import existing ontology to help build
-the current one. This is similar to `import` in a normal programming language:
+### Import Another Ontology
+`imports` is an optional keyword used to import an existing ontology to help build
+a new one. This is similar to `import` used in common programming languages:
 
 * The entries of the imported configs can be used in the current config as
 types or parent classes.
 * The imports could either be 
   - absolute paths
-  - relative to the directory of the current config or the
-current working directory
+  - relative to the directory of the current config or the current working directory
   - relative to one of the user-provided ``spec_paths`` (see [generation steps](#ontology-generation-steps).)
     
 For example, ``ft.onto.ft_module.Word`` has the parent entry defined in the
 generated module ``ft.onto.example_import_ontology``. The generation 
-framework makes sure that the imported JSON configs are generated before the
-current config. In case of cycle dependency between the JSON configs, an 
+framework ensures that the imported JSON configs are generated prior to the
+current config. In case of cycle dependency issue between the JSON configs, an 
 error would be thrown.
 
 ### Package Naming Convention
@@ -199,10 +188,10 @@ class.
 
 In order to avoid polluting your package space accidentally, the package names
 that can be used on the types are restricted. The default package name allowed
-is `ft.onto`. However, in many cases you may want to use custom package name,
- let's say,`awesome.pet.com`, how can we achieve it?
+is `ft.onto`. However, in many cases you may want to use custom package name, such as`awesome.pet.com`, 
+how can we achieve it?
   
-We can explicitly set more attributes in the `additional_prefixes`, as in the 
+We can explicitly define more attributes in the `additional_prefixes`, as shown in the 
 following snippet:
 
 ```json
@@ -243,15 +232,14 @@ following snippet:
 }
 ```
     
-### Generating Python classes from ontology.
+### Generate Python Classes from Ontology.
 * Write the json spec(s) as per the instructions in the previous sections. 
-* Use the command `generate_ontology --create` (added during installation of Forte) to 
+* Use the command `generate_ontology --create` (add during the installation of Forte) to 
 generate the ontology, and `generate_ontology --clean` to clean up the generated ontology. 
 The steps are detailed in the following sections.
 
 ##### Ontology Generation Steps
-At the beginning we have tried generating the ontology. Now let's go into the
-some details.
+Let's drill down into details about how to generate ontology. 
 
 * To verify that the `generate_ontology`
 command is found, run `generate_ontology -h`, and the output should look like the
@@ -328,9 +316,9 @@ following -
         ├── com.py
         └── __init__.py
     ```
- * Our ontology generation is complete!
+ * Ontology generation is completed!
  
-#### Cleaning the generated ontology
+#### Clean the generated ontology
 * Use `clean` mode of `generate_ontology` to clean the generated files from a given directory.
 * All the arguments of `generate_ontology clean` are explained as below:
 
@@ -344,7 +332,7 @@ optional arguments:
               caution.
  ```
  
-* Now, let's try to clean up *only* the automatically generated files and directories. 
+* Now, let's try to clean up the automatically generated files and directories *only* . 
 Say, there are user-created files in the generated folder, ``user_project/src/ft``, 
 called `important_stuff` that we do not want to clean up. 
      ```bash
@@ -368,7 +356,7 @@ called `important_stuff` that we do not want to clean up.
     ``` 
 
 * Run the cleanup command and observe the directory structure. The cleanup preserves the 
-partial directory structure in the case there exists files that are not generated by the framework.
+partial directory structure in the case that there are files that are not generated by the framework.
     ```bash
     $ generate_ontology clean --dir user-project/src
   
@@ -379,10 +367,8 @@ partial directory structure in the case there exists files that are not generate
 * For safety, the deleted directories are not immediately deleted but are moved to a timestamped 
  directory inside ``.deleted`` and can be restored, unless `--force` is passed. 
  
- * If the directories that are to be generated already exist, the files will be generated in the 
- already existing directories.
+ * If the directories that are to be generated already exist, the files will be generated in the  existing directories.
  
- * Automatically generated folders are identified by an empty marker file of the name ``.generated``, 
- and automatically generated files are identified by special headers. If the headers or marker files 
- are removed manually, than the cleanup won't affect them.
+ * Automatically generated folders are identified by an empty marker file with the name ``.generated`` or special headers. 
+ If the headers or marker files are removed manually, the cleanup won't affect them.
  

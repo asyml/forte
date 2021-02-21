@@ -60,7 +60,7 @@ This is particularly helpful during team collaborations!
 -----------------
 | ![forte_arch.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_arch.png) | 
 |:--:| 
-| *A high level Architecture of Forte showing how ontology and entries work with the pipeline.* |
+| *A high level architecture of Forte showing how ontology and entries work with the pipeline.* |
 -----------------
 | ![forte_results.jpg](https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_results.png) | 
 |:--:| 
@@ -135,7 +135,7 @@ Find more examples [here](./examples).
 
 ### Download and Installation
 
-To install the released version from PyPI:
+To install the latest version from PyPI:
 ```bash
 pip install forte
 ```
