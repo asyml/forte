@@ -69,7 +69,7 @@ class OpenIEReaderTest(unittest.TestCase):
             # Force sorting as Link entries have no order when retrieving from
             # data pack.
             actual_link_ids: Iterator[int] = \
-                iter(sorted(pack.get_ids_by_type(PredicateLink)))
+                iter(sorted(pack.get_ids_by_type_subtype(PredicateLink)))
 
             for line, actual_sentence, actual_full_predicate in \
                     zip(lines, actual_sentences, actual_predicates):

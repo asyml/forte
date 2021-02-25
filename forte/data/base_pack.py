@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import copy
+import uuid
 from abc import abstractmethod
 from typing import (
     List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, Tuple, Any,
     Iterable)
-import uuid
 
 import jsonpickle
 
@@ -414,7 +414,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         each creator iteratively and combine the result.
 
         Args:
-            components: The list of components to find.
+            components (): The list of components to find.
 
         Returns:
             The list of entry ids that are created from these components.
@@ -424,7 +424,8 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             valid_component_id |= self.get_ids_by_creator(component)
         return valid_component_id
 
-    def get_ids_by_type(self, entry_type: Type[EntryType]) -> Set[int]:
+    def get_ids_by_type_subtype(
+            self, entry_type: Type[EntryType]) -> Set[int]:
         r"""Look up the type_index with key ``entry_type``.
 
         Args:
@@ -439,6 +440,18 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             if issubclass(index_key, entry_type):
                 subclass_index.update(index_val)
         return subclass_index
+
+    def get_entries_by_type(
+            self, entry_type: Type[EntryType]) -> Iterator[EntryType]:
+        """ Return the entries of a specific type (sub types not included)
+        Args:
+            entry_type: The entry type to search for.
+
+        Returns: Iterator of the entries, in the order of creation.
+
+        """
+        for tid in self._index.query_by_type(entry_type):
+            yield self.get_entry(tid)
 
     def _expand_to_sub_types(self, entry_type: Type[EntryType]) -> List[Type]:
         """
@@ -458,7 +471,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
                 all_types.append(entry_type)
         return all_types
 
-    def get_entries_by_type(
+    def get_entries_by_type_subtype(
             self, entry_type: Type[EntryType]) -> List[EntryType]:
         """
         Return all entries of this particular type without orders. If you
@@ -472,7 +485,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
         """
         entries: List[EntryType] = []
-        for tid in self.get_ids_by_type(entry_type):
+        for tid in self.get_ids_by_type_subtype(entry_type):
             entry: EntryType = self.get_entry(tid)
             if isinstance(entry, entry_type):
                 entries.append(entry)

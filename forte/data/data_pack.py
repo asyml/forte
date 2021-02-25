@@ -638,7 +638,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         context_components, _, context_fields = self._parse_request_args(
             context_type, context_args)
 
-        valid_context_ids: Set[int] = self.get_ids_by_type(context_type)
+        valid_context_ids: Set[int] = self.get_ids_by_type_subtype(context_type)
         if context_components:
             valid_component_id: Set[int] = set()
             for component in context_components:
@@ -1063,6 +1063,10 @@ class DataIndex(BaseIndex):
                                    Dict[int, Set[int]]] = dict()
         self._coverage_index_valid = True
 
+    def remove_entry(self, entry: EntryType):
+        super().remove_entry(entry)
+        self.deactivate_coverage_index()
+
     @property
     def coverage_index_is_valid(self):
         return self._coverage_index_valid
@@ -1117,7 +1121,8 @@ class DataIndex(BaseIndex):
         #  is the same as the covering annotation, or if their spans are the
         #  same.
         self._coverage_index[(outer_type, inner_type)] = dict()
-        for range_annotation in data_pack.get_entries_by_type(outer_type):
+        for range_annotation in data_pack.get_entries_by_type_subtype(
+                outer_type):
             if isinstance(range_annotation, Annotation):
                 entries = data_pack.get(inner_type, range_annotation)
                 entry_ids = {e.tid for e in entries}
