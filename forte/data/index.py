@@ -15,7 +15,7 @@
 import logging
 from collections import defaultdict
 from typing import DefaultDict, Dict, List, Set, Type, Hashable, Generic, \
-    Iterable, Tuple
+    Iterable, Tuple, KeysView
 
 from forte.common.exception import PackIndexError
 from forte.data.ontology.core import GroupType, LinkType, EntryType
@@ -75,6 +75,9 @@ class BaseIndex(Generic[EntryType]):
 
     def get_entry(self, tid: int) -> EntryType:
         return self._entry_index[tid]
+
+    def indexed_types(self) -> KeysView[Type]:
+        return self._type_index.keys()
 
     def iter_type_index(self) -> Iterable[Tuple[Type, Set[int]]]:
         for t, ids in self._type_index.items():

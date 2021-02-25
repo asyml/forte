@@ -15,7 +15,8 @@
 import copy
 from abc import abstractmethod
 from typing import (
-    List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, Tuple, Any)
+    List, Optional, Set, Type, TypeVar, Union, Iterator, Dict, Tuple, Any,
+    Iterable)
 import uuid
 
 import jsonpickle
@@ -355,9 +356,43 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             f"The entry {entry_type} is not found in the provided pack.")
 
     def get_ids_by_creator(self, component: str) -> Set[int]:
-        r"""Look up the component_index with key ``component``."""
+        r"""
+        Look up the component_index with key `component`. This will return
+        the entry ids that are created by the `component`
+
+        Args:
+            component: The component (creator) to find ids for.
+
+        Returns:
+
+        """
         entry_set: Set[int] = self._creation_records[component]
         return entry_set
+
+    def is_created_by(
+            self, entry: Entry,
+            components: Optional[Union[str, Iterable[str]]]) -> bool:
+        """
+        Check if the entry is created by any of the provided components.
+
+        Args:
+            entry: The entry to check.
+            components: The list of component names.
+
+        Returns (bool):
+            True if the entry is created by the component, False otherwise.
+        """
+        if isinstance(components, str):
+            components = [components]
+
+        for c in components:
+            if entry.tid in self._creation_records[c]:
+                break
+        else:
+            # The entry not created by any of these components.
+            return False
+
+        return True
 
     def get_entries_by_creator(self, component: str) -> Set[EntryType]:
         """
@@ -368,13 +403,22 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             component: The component to get the entries.
 
         Returns:
-
+            The list of entry ids that are created from one component.
         """
         return {self.get_entry(tid)
                 for tid in self.get_ids_by_creator(component)}
 
     def get_ids_by_creators(self, components: List[str]) -> Set[int]:
-        """Look up component_index using a list of components."""
+        """
+        Look up entries using a list of components (creators). This will find
+        each creator iteratively and combine the result.
+
+        Args:
+            components: The list of components to find.
+
+        Returns:
+            The list of entry ids that are created from these components.
+        """
         valid_component_id: Set[int] = set()
         for component in components:
             valid_component_id |= self.get_ids_by_creator(component)
@@ -395,6 +439,24 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
             if issubclass(index_key, entry_type):
                 subclass_index.update(index_val)
         return subclass_index
+
+    def _expand_to_sub_types(self, entry_type: Type[EntryType]) -> List[Type]:
+        """
+        Return all the types and the sub types that inherit from the provided
+        type.
+
+        Args:
+            entry_type: The provided type to search for entry.
+
+        Returns:
+            All the sub-types extending the provided type, including the type
+            itself.
+        """
+        all_types: List[Type] = []
+        for data_type in self._index.indexed_types():
+            if issubclass(data_type, entry_type):
+                all_types.append(entry_type)
+        return all_types
 
     def get_entries_by_type(
             self, entry_type: Type[EntryType]) -> List[EntryType]:

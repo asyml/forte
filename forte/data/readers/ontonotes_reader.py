@@ -224,7 +224,7 @@ class OntonotesReader(PackReader):
                 line = line.strip()
 
                 if line.startswith("#end document"):
-                    # group the coreference mentions in the whole document
+                    # Group the coreference mentions in the whole document.
                     for _, mention_list in groups.items():
                         group = CoreferenceGroup(pack)
                         group.add_members(mention_list)
