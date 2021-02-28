@@ -21,7 +21,7 @@ from tqdm import tqdm
 
 from forte.common.configuration import Config
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
-from forte.predictor import Predictor
+from forte.processors.base import Predictor
 from forte.models.ner.model_factory import BiRecurrentConvCRF
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.pipeline import Pipeline
@@ -120,14 +120,6 @@ class TaggingTrainer(BaseTrainer):
         return pack_iterator
 
     def train(self):
-        def predict_forward_fn(_model: BiRecurrentConvCRF,
-                               _batch: Dict) -> Dict:
-            val_output = _model.decode(input_word=_batch["text_tag"]["data"],
-                                       input_char=_batch["char_tag"]["data"],
-                                       mask=_batch["text_tag"]["masks"][0])
-            val_output = val_output.numpy()
-            return {'output_tag': val_output}
-
         schemes: Dict = self.train_preprocessor.request["schemes"]
         text_extractor: BaseExtractor = schemes["text_tag"]["extractor"]
         char_extractor: BaseExtractor = schemes["char_tag"]["extractor"]
@@ -147,18 +139,19 @@ class TaggingTrainer(BaseTrainer):
 
         tp = self.train_preprocessor
 
-        predictor = Predictor(
-            batch_size=tp.config.dataset.batch_size,
-            model=self.model,
-            predict_forward_fn=predict_forward_fn,
-            feature_resource=tp.request,
-            cross_pack=False)
+        predictor = TaggingPredictor()
+        predictor_config = {
+            "scope": tp.request["scope"],
+            "batch_size": self.config_data.batch_size_tokens,
+            "feature_scheme": tp.request["schemes"],
+        }
+        predictor.load(self.model)
         evaluator = CoNLLNEREvaluator()
 
         val_reader = CoNLL03Reader(cache_in_memory=True)
         val_pl: Pipeline = Pipeline()
         val_pl.set_reader(val_reader)
-        val_pl.add(predictor)
+        val_pl.add(predictor, config=predictor_config)
         val_pl.add(evaluator)
 
         epoch: int = 0
@@ -210,3 +203,13 @@ class TaggingTrainer(BaseTrainer):
             logger.info("%dth Epoch evaluating, "
                         "val result: %s",
                         epoch, evaluator.get_result())
+
+
+class TaggingPredictor(Predictor):
+    def predict(self, data_batch: Dict) -> Dict:
+        val_output = \
+            self.model.decode(input_word=data_batch["text_tag"]["data"],
+                              input_char=data_batch["char_tag"]["data"],
+                              mask=data_batch["text_tag"]["masks"][0])
+        val_output = val_output.numpy()
+        return {'output_tag': val_output}
