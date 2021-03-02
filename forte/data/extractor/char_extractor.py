@@ -33,12 +33,6 @@ class CharExtractor(BaseExtractor):
     Text will be split into characters. Most of the time, a
     user will not need to call this class/function explicitly,
     they will be called by the framework.
-
-    Args:
-        config: An instance of `Dict` or
-            :class:`forte.common.configuration.Config` that provides all
-            configurable options. See :meth:`default_configs` for available
-            options and default values.
     """
 
     @classmethod
@@ -74,8 +68,8 @@ class CharExtractor(BaseExtractor):
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
 
-        Returns:
-            Feature: a feature that contains the extracted data.
+        Returns (Feature):
+            a feature that contains the extracted data.
         """
         data = []
         max_char_length = -1

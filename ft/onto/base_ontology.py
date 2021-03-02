@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:forte/ontology_specs/base_ontology.json***
+# ***source json:../../../../../../../../data/NLP/yishan_forte/forte/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -17,9 +17,9 @@ from forte.data.ontology.top import Group
 from forte.data.ontology.top import Link
 from forte.data.ontology.top import MultiPackLink
 from typing import Dict
+from typing import Iterable
 from typing import List
 from typing import Optional
-from typing import Set
 
 __all__ = [
     "Token",
@@ -89,14 +89,15 @@ class Token(Annotation):
 class Subword(Annotation):
     """
     Used to represent subword tokenization results.
+    Attributes:
+        is_first_segment (Optional[bool])
     """
-    is_subword: Optional[bool]
-    ner: Optional[str]
+
+    is_first_segment: Optional[bool]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.is_first_segment: Optional[bool] = None
-        self.ner: Optional[str] = None
 
 
 @dataclass
@@ -353,7 +354,7 @@ class CoreferenceGroup(Group):
     A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.
     """
 
-    def __init__(self, pack: DataPack, members: Optional[Set[Entry]] = None):
+    def __init__(self, pack: DataPack, members: Optional[Iterable[Entry]] = None):
         super().__init__(pack, members)
 
 

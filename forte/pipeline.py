@@ -158,7 +158,7 @@ class Pipeline(Generic[PackType]):
                 # Can be processor, caster, or evaluator
                 self.add(component, component_config.get('configs', {}))
 
-    def initialize(self):
+    def initialize(self) -> 'Pipeline':
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))
 
@@ -168,6 +168,8 @@ class Pipeline(Generic[PackType]):
         self.initialize_processors()
 
         self.initialized = True
+
+        return self
 
     def initialize_processors(self):
         for processor, config in zip(self.components, self.processor_configs):
@@ -179,10 +181,13 @@ class Pipeline(Generic[PackType]):
                               "processor %s", processor.name)
                 raise e
 
-    def set_reader(self, reader: BaseReader,
-                   config: Optional[Union[Config, Dict[str, Any]]] = None):
+    def set_reader(
+            self, reader: BaseReader,
+            config: Optional[Union[Config, Dict[str, Any]]] = None
+    ) -> 'Pipeline':
         self._reader = reader
         self._reader_config = reader.make_configs(config)
+        return self
 
     @property
     def reader(self):
@@ -196,9 +201,11 @@ class Pipeline(Generic[PackType]):
     def processor_configs(self):
         return self._configs
 
-    def add(self, component: PipelineComponent,
+    def add(
+            self, component: PipelineComponent,
             config: Optional[Union[Config, Dict[str, Any]]] = None,
-            selector: Optional[Selector] = None):
+            selector: Optional[Selector] = None
+    ) -> 'Pipeline':
         self._processors_index[component.name] = len(self.components)
 
         if isinstance(component, BaseReader):
@@ -216,6 +223,8 @@ class Pipeline(Generic[PackType]):
             self._selectors.append(DummySelector())
         else:
             self._selectors.append(selector)
+
+        return self
 
     def add_gold_packs(self, pack):
         r"""Add gold packs to the dictionary. This dictionary is used by the
