@@ -27,7 +27,6 @@ class TestStanfordNLPProcessor(unittest.TestCase):
     def setUp(self):
         self.stanford_nlp = Pipeline[DataPack]()
         self.stanford_nlp.set_reader(StringReader())
-        models_path = os.getcwd()
         config = {
             "processors": "tokenize",
             "lang": "en",
@@ -38,9 +37,6 @@ class TestStanfordNLPProcessor(unittest.TestCase):
                               config=config)
         self.stanford_nlp.initialize()
 
-    # TODO
-    @unittest.skip("We need to test this without needing to download models "
-                   "everytime")
     def test_stanford_processor(self):
         sentences = ["This tool is called Forte.",
                      "The goal of this project to help you build NLP "

@@ -53,7 +53,13 @@
     {
       "entry_name": "ft.onto.base_ontology.Subword",
       "parent_entry": "forte.data.ontology.top.Annotation",
-      "description": "Used to represent subword tokenization results."
+      "description": "Used to represent subword tokenization results.",
+      "attributes": [
+        {
+          "name": "is_first_segment",
+          "type": "bool"
+        }
+      ]
     },
     {
       "entry_name": "ft.onto.base_ontology.Document",

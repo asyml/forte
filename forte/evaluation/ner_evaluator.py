@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Dict
 
 from forte.data.data_pack import DataPack
-from forte.data.datasets.conll import conll_utils
+from forte.datasets.conll import conll_utils
 from forte.evaluation.base import Evaluator
 from forte.processors.ner_predictor import CoNLLNERPredictor
 from ft.onto.base_ontology import Sentence, Token

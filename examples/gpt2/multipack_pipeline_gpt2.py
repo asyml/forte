@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     src_cnt = len(list(multipack.get_pack(input_pack_name).get(Sentence)))
     tgt_cnt = len(list(multipack.get_pack(output_pack_name).get(Sentence)))
-    link_cnt = len(multipack.links)
+    link_cnt = multipack.num_links
     print(f'sentence_cnt: src{src_cnt}, tgt{tgt_cnt}, link_cnt{link_cnt}')
 
     with open("multipack_output.txt", "w+") as fout:

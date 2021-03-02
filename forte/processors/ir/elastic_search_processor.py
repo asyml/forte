@@ -52,8 +52,8 @@ class ElasticSearchProcessor(MultiPackProcessor):
         return config
 
     def _process(self, input_pack: MultiPack):
-        r"""Searches ElasticSearch indexer to fetch documents for a query. This
-        query should be contained in the input multipack with name
+        r"""Searches `Elasticsearch` indexer to fetch documents for a query.
+        This query should be contained in the input multipack with name
         `self.config.query_pack_name`.
 
         This method adds new packs to `input_pack` containing the retrieved

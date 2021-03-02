@@ -14,7 +14,7 @@
 # pylint: disable=attribute-defined-outside-init
 import uuid
 from os import getenv
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from urllib.parse import urlencode
 
 import requests
@@ -51,8 +51,7 @@ class MicrosoftBingTranslator(MultiPackProcessor):
         }
 
     # pylint: disable=unused-argument
-    def initialize(self, resources: Optional[Resources],
-                   configs: Optional[Config]):
+    def initialize(self, resources: Resources, configs: Config):
         r"""Initialize the processor with `resources` and `configs`. This method
         is called by the pipeline during the initialization.
 

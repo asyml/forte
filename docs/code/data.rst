@@ -181,6 +181,19 @@ Readers
 .. autoclass:: forte.data.readers.openie_reader.OpenIEReader
     :members:
 
+DataPack Dataset
+=================
+
+:hidden:`DataPackIterator`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.DataPackIterator
+    :members:
+
+:hidden:`DataPackDataset`
+------------------------------
+.. autoclass:: forte.data.data_pack_dataset.DataPackDataset
+    :members:
+
 Batchers
 ==========
 

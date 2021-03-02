@@ -80,19 +80,20 @@ class CustomLSTMCell(tx.core.RNNCellBase[LSTMState]):
         return (self._initial_hidden.expand(batch_size, -1),
                 self._initial_cell.expand(batch_size, -1))
 
-    def forward(self, input: torch.Tensor, state: Optional[LSTMState] = None) \
-            -> Tuple[torch.Tensor, LSTMState]:
-        batch_size = input.size(0)
+    def forward(
+            self, input_tensor: torch.Tensor, state: Optional[LSTMState] = None
+    ) -> Tuple[torch.Tensor, LSTMState]:
+        batch_size = input_tensor.size(0)
         if state is None:
             state = self.zero_state(batch_size)
         h, c = state
         if self.training and self._dropout_rate > 0.0:
             if self._dropout_mask is None:
                 keep_prob = 1 - self._dropout_rate
-                self._dropout_mask = input.new_zeros(
+                self._dropout_mask = input_tensor.new_zeros(
                     batch_size, self._hidden_size).bernoulli_(keep_prob)
             h = h * self._dropout_mask
-        concat_proj = self._projection(torch.cat([input, h], dim=1))
+        concat_proj = self._projection(torch.cat([input_tensor, h], dim=1))
         i, g, o = torch.chunk(concat_proj, 3, dim=1)
         i = torch.sigmoid(i)
         new_c = (1 - i) * c + i * torch.tanh(g)
@@ -122,7 +123,7 @@ class CustomBiLSTM(tx.modules.EncoderBase):
         self.dropout = nn.Dropout(self._hparams.dropout)
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "input_dim": 200,
             "hidden_dim": 200,
@@ -167,7 +168,7 @@ class CharCNN(tx.ModuleBase):
         self._max_filter_width = max(self._hparams.filter_widths)
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "char_embed_size": 8,
             "filter_widths": [3, 4, 5],
@@ -303,7 +304,7 @@ class MLP(tx.ModuleBase):
         self.layers = nn.Sequential(*layers)
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "input_size": 300,
             "num_layers": 2,
@@ -314,8 +315,8 @@ class MLP(tx.ModuleBase):
             "dropout_rate": 0.0,
         }
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return self.layers(input)
+    def forward(self, input_tensor: torch.Tensor) -> torch.Tensor:
+        return self.layers(input_tensor)
 
 
 class ConcatInputMLP(tx.ModuleBase):
@@ -330,7 +331,7 @@ class ConcatInputMLP(tx.ModuleBase):
         self.mlp = MLP(mlp_hparams)
 
     @staticmethod
-    def default_configs() -> Dict[str, Any]:
+    def default_hparams() -> Dict[str, Any]:
         return {
             "input_sizes": [150, 150],
             "num_layers": 2,

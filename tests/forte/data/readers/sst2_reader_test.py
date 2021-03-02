@@ -14,10 +14,9 @@
 """
 Unit tests for SST2Reader.
 """
-import json
 import os
 import unittest
-from typing import Iterator, Iterable
+from typing import Iterable
 
 from forte.data.data_pack import DataPack
 from forte.data.readers import SST2Reader

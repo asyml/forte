@@ -160,7 +160,7 @@ class Entry(Generic[ContainerType]):
         Returns:
 
         """
-        return self.__pack.meta.pack_id  # type: ignore
+        return self.__pack.pack_id  # type: ignore
 
     def set_pack(self, pack: ContainerType):
         self.__pack = pack

@@ -61,9 +61,10 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def __init__(self, pack_name: Optional[str] = None):
         super().__init__(pack_name)
 
-        # Store the global ids.
+        # Store the pack ids of the subpacks. Note that these are UUIDs so
+        # they should be globally non-conflicting.
         self._pack_ref: List[int] = []
-        # Store the reverse mapping from global id to the pack index.
+        # Store the reverse mapping from pack id to the pack index.
         self._inverse_pack_ref: Dict[int, int] = {}
 
         # Store the pack names.
@@ -81,7 +82,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         # Used to automatically give name to sub packs.
         self.__default_pack_prefix = '_pack'
 
-        self.index: MultiIndex = MultiIndex()
+        self._index: MultiIndex = MultiIndex()
 
     def __setstate__(self, state):
         r"""In deserialization, we set up the index and the references to the
@@ -93,11 +94,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.groups = SortedList(self.groups)
         self.generics = SortedList(self.generics)
 
-        self.index = MultiIndex()
+        self._index = MultiIndex()
         # TODO: index those pointers?
-        self.index.update_basic_index(list(self.links))
-        self.index.update_basic_index(list(self.groups))
-        self.index.update_basic_index(list(self.generics))
+        self._index.update_basic_index(list(self.links))
+        self._index.update_basic_index(list(self.groups))
+        self._index.update_basic_index(list(self.generics))
 
         for a in self.links:
             a.set_pack(self)
@@ -203,7 +204,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 f"got {type(pack)}"
             )
 
-        pid = pack.meta.pack_id
+        pid = pack.pack_id
 
         if ref_name is None:
             # Create a default name based on the pack id.
@@ -258,10 +259,15 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         return self._packs[self._name_index[name]]
 
+    def pack_ids(self) -> List[int]:
+        return self._pack_ref
+
     @property
     def packs(self) -> List[DataPack]:
         """
         Get the list of Data packs that in the order of added.
+
+        Note that please do not use this
 
         Returns: List of data packs contained in this multi-pack.
 
@@ -298,8 +304,51 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self._name_index[new_name] = pack_index
         self._pack_names[pack_index] = new_name
 
-    def iter_groups(self):
+    @property
+    def all_links(self) -> Iterator[MultiPackLink]:
+        """
+        An iterator of all links in this multi pack.
+
+        Returns: Iterator of all links, of
+          type :class:"~forte.data.ontology.top.MultiPackLink".
+
+        """
+        yield from self.links
+
+    @property
+    def num_links(self):
+        """
+        Number of groups in this multi pack.
+
+        Returns: Number of links.
+
+        """
+        return len(self.groups)
+
+    @property
+    def all_groups(self) -> Iterator[MultiPackGroup]:
+        """
+         An iterator of all groups in this multi pack.
+
+         Returns: Iterator of all links, of
+           type :class:"~forte.data.ontology.top.MultiPackGroup".
+
+         """
         yield from self.groups
+
+    @property
+    def num_groups(self):
+        """
+        Number of groups in this multi pack.
+
+        Returns: Number of groups.
+
+        """
+        return len(self.groups)
+
+    @property
+    def generic_entries(self) -> Iterator[MultiPackGeneric]:
+        yield from self.generics
 
     def add_all_remaining_entries(self, component: Optional[str] = None):
         """
@@ -439,11 +488,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             # TODO: add the pointers?
 
             # update the data pack index if needed
-            self.index.update_basic_index([entry])
-            if self.index.link_index_on and isinstance(entry, MultiPackLink):
-                self.index.update_link_index([entry])
-            if self.index.group_index_on and isinstance(entry, MultiPackGroup):
-                self.index.update_group_index([entry])
+            self._index.update_basic_index([entry])
+            if self._index.link_index_on and isinstance(entry, MultiPackLink):
+                self._index.update_link_index([entry])
+            if self._index.group_index_on and isinstance(entry,
+                                                         MultiPackGroup):
+                self._index.update_group_index([entry])
 
             self._pending_entries.pop(entry.tid)
             return entry
@@ -484,10 +534,31 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         if components is not None:
             if isinstance(components, str):
                 components = [components]
-            valid_id &= self.get_ids_by_components(components)
+            valid_id &= self.get_ids_by_creators(components)
 
         for entry_id in valid_id:
             yield self.get_entry(entry_id)
+
+    @classmethod
+    def deserialize(cls, string: str) -> "MultiPack":
+        """
+        Deserialize a Multi Pack from a string. Note that this will only
+          deserialize the native multipack content, which means the associated
+          DataPacks contained in the Multipack will not be recovered. A
+          followed-up step need to be performed to add the data packs back
+          to the multi pack.
+
+          This internally calls the
+          internal :meth:`~forte.data.BasePack._deserialize` function from the
+          :class:`~forte.data.BasePack`.
+
+        Args:
+            string: The serialized string of a Multi pack to be deserialized.
+
+        Returns:
+            An data pack object deserialized from the string.
+        """
+        return cls._deserialize(string)
 
     def _add_entry(self, entry: EntryType) -> EntryType:
         r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
@@ -530,11 +601,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 break
 
         # update basic index
-        self.index.remove_entry(entry)
+        self._index.remove_entry(entry)
 
         # set other index invalid
-        self.index.turn_link_index_switch(on=False)
-        self.index.turn_group_index_switch(on=False)
+        self._index.turn_link_index_switch(on=False)
+        self._index.turn_group_index_switch(on=False)
 
     @classmethod
     def validate_link(cls, entry: EntryType) -> bool:

@@ -36,7 +36,7 @@ class MSMarcoEvaluator(Evaluator[MultiPack]):
         query = list(query_pack.get(Query))[0]
         rank = 1
         for pid, _ in query.results.items():
-            doc_id: Optional[str] = query_pack.meta.pack_name
+            doc_id: Optional[str] = query_pack.pack_name
             if doc_id is None:
                 raise ProcessExecutionException(
                     'Doc ID of the query pack is not set, '

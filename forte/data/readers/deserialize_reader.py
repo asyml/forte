@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 from abc import ABC, abstractmethod
 
-from typing import Iterator, List, Any
+from typing import Iterator, List, Any, Union, Optional
 
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
-from forte.data.data_utils import deserialize
 from forte.data.multi_pack import MultiPack
 from forte.data.readers.base_reader import PackReader, MultiPackReader
 
@@ -27,6 +27,7 @@ __all__ = [
     'RecursiveDirectoryDeserializeReader',
     'DirPackReader',
     'MultiPackDirectoryReader',
+    'MultiPackDeserializerBase',
 ]
 
 
@@ -40,8 +41,7 @@ class BaseDeserializeReader(PackReader, ABC):
             raise ProcessExecutionException(
                 "Data source is None, cannot deserialize.")
 
-        # pack: DataPack = DataPack.deserialize(data_source)
-        pack: DataPack = deserialize(data_source)
+        pack: DataPack = DataPack.deserialize(data_source)
 
         if pack is None:
             raise ProcessExecutionException(
@@ -110,7 +110,8 @@ class MultiPackDeserializerBase(MultiPackReader):
       information.
     """
 
-    def _collect(self) -> Iterator[Any]:  # type: ignore
+    def _collect(
+            self, *args: Any, **kwargs: Any) -> Iterator[Any]:
         """
         This collect actually do not need any data source, it directly reads
         the data from the configurations.
@@ -118,20 +119,33 @@ class MultiPackDeserializerBase(MultiPackReader):
         Returns:
 
         """
-        for s in self._get_multipack_content():
+        for s in self._get_multipack_content(*args, **kwargs):
             yield s
 
     def _parse_pack(self, multi_pack_str: str) -> Iterator[MultiPack]:
-        # pylint: disable=protected-access
-        m_pack: MultiPack = deserialize(multi_pack_str)
+        m_pack: MultiPack = MultiPack.deserialize(multi_pack_str)
 
-        for pid in m_pack._pack_ref:
-            pack: DataPack = deserialize(self._get_pack_content(pid))
-            m_pack._packs.append(pack)
-        yield m_pack
+        for pid in m_pack.pack_ids():
+            p_content = self._get_pack_content(pid)
+            if p_content is None:
+                logging.warning(
+                    "Cannot locate the data pack with pid %d "
+                    "for multi pack %d", pid, m_pack.pack_id)
+                break
+            pack: DataPack
+            if isinstance(p_content, str):
+                pack = DataPack.deserialize(p_content)
+            else:
+                pack = p_content
+            # Only in deserialization we can do this.
+            m_pack.packs.append(pack)
+        else:
+            # No multi pack will be yield if there are packs not located.
+            yield m_pack
 
     @abstractmethod
-    def _get_multipack_content(self) -> Iterator[str]:
+    def _get_multipack_content(self, *args: Any, **kwargs: Any
+                               ) -> Iterator[str]:
         """
         Implementation of this method should be responsible for yielding
          the raw content of the multi packs.
@@ -142,7 +156,7 @@ class MultiPackDeserializerBase(MultiPackReader):
         raise NotImplementedError
 
     @abstractmethod
-    def _get_pack_content(self, pack_id: int) -> str:
+    def _get_pack_content(self, pack_id: int) -> Union[None, str, DataPack]:
         """
         Implementation of this method should be responsible for returning the
           raw string of the data pack from the pack id.
@@ -151,6 +165,9 @@ class MultiPackDeserializerBase(MultiPackReader):
             pack_id: representing the id of the data pack.
 
         Returns:
+            The content of this data pack. You can either:
+              - return the raw data pack string.
+              - return the data pack as parsed DataPack object.
 
         """
         raise NotImplementedError
@@ -165,7 +182,7 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
     a directory too (they can be the same directory).
     """
 
-    def _get_multipack_content(self) -> Iterator[str]:
+    def _get_multipack_content(self) -> Iterator[str]:  # type: ignore
         # pylint: disable=protected-access
         for f in os.listdir(self.configs.multi_pack_dir):
             if f.endswith(self.configs.pack_suffix):
@@ -173,18 +190,24 @@ class MultiPackDirectoryReader(MultiPackDeserializerBase):
                         self.configs.multi_pack_dir, f)) as m_data:
                     yield m_data.read()
 
-    def _get_pack_content(self, pack_id: int) -> str:
-        with open(os.path.join(
-                self.configs.data_pack_dir, f'{pack_id}.json')) as pack_data:
-            return pack_data.read()
+    def _get_pack_content(self, pack_id: int) -> Optional[str]:
+        pack_path = os.path.join(
+            self.configs.data_pack_dir, f'{pack_id}.json')
+        if os.path.exists(pack_path):
+            with open(pack_path) as pack_data:
+                return pack_data.read()
+        else:
+            return None
 
     @classmethod
     def default_configs(cls):
-        return {
+        config = super().default_configs()
+        config.update({
             "multi_pack_dir": None,
             "data_pack_dir": None,
             "pack_suffix": '.json'
-        }
+        })
+        return config
 
 
 # A short name for this class.

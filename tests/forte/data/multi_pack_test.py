@@ -133,7 +133,7 @@ class DataPackTest(unittest.TestCase):
 
         # One way to link tokens.
         linked_tokens = []
-        for link in self.multi_pack.links:
+        for link in self.multi_pack.all_links:
             parent_text = link.get_parent().text
             child_text = link.get_child().text
             linked_tokens.append((parent_text, child_text))
@@ -161,7 +161,7 @@ class DataPackTest(unittest.TestCase):
         self.multi_pack.delete_entry(self.multi_pack.links[1])
 
         linked_tokens = []
-        for link in self.multi_pack.links:
+        for link in self.multi_pack.all_links:
             parent_text = link.get_parent().text
             child_text = link.get_child().text
             linked_tokens.append((parent_text, child_text))

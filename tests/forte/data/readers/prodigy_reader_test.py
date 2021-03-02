@@ -73,7 +73,7 @@ class ProdigyReaderTest(unittest.TestCase):
                 doc_exists = True
                 self.token_check(doc, pack)
                 self.label_check(doc, pack)
-            self.assertEqual(pack.meta.pack_name, "doc_1")
+            self.assertEqual(pack.pack_name, "doc_1")
         self.assertTrue(doc_exists)
 
     def token_check(self, doc, pack):

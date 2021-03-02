@@ -23,6 +23,8 @@ __all__ = [
     "PackDataException",
     "ProcessFlowException",
     "ProcessExecutionException",
+    "ValidationError",
+    "ResourceError",
 ]
 
 
@@ -52,6 +54,13 @@ class ProcessorConfigError(ValueError):
     pass
 
 
+class ResourceError(ValueError):
+    r"""Raise this error when there are problems accessing Resources of
+    the processor.
+    """
+    pass
+
+
 class PackDataException(Exception):
     r"""Raise this error when the data in pack is wrong."""
     pass
@@ -64,4 +73,9 @@ class ProcessFlowException(Exception):
 
 class ProcessExecutionException(Exception):
     r"""Raise this when process execution fail"""
+    pass
+
+
+class ValidationError(Exception):
+    r"""Raise this error when input validate fail"""
     pass

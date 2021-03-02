@@ -60,11 +60,9 @@ def write_pack(input_pack: BasePack, output_dir: str, sub_path: str,
         otherwise, will return None.
 
     """
-    output_path = os.path.join(output_dir, sub_path) + '.json'
-    if overwrite or not os.path.exists(output_path):
-        if zip_pack:
-            output_path = output_path + '.gz'
+    output_path = os.path.join(output_dir, sub_path)
 
+    if overwrite or not os.path.exists(output_path):
         ensure_dir(output_path)
 
         out_str: str = input_pack.serialize(drop_record)
@@ -183,7 +181,7 @@ class MultiPackWriter(MultiPackProcessor):
                 self.configs.drop_record)
 
             self.pack_idx_out.write(
-                f'{pack.meta.pack_id}\t'
+                f'{pack.pack_id}\t'
                 f'{posixpath.relpath(pack_out, self.configs.output_dir)}\n')
 
         multi_out = write_pack(
@@ -194,7 +192,7 @@ class MultiPackWriter(MultiPackProcessor):
         )
 
         self.multi_idx_out.write(
-            f'{input_pack.meta.pack_id}\t'
+            f'{input_pack.pack_id}\t'
             f'{posixpath.relpath(multi_out, self.configs.output_dir)}\n')
 
     def finish(self, _):
