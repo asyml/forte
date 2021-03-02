@@ -49,3 +49,11 @@ class PackNameMultiPackWriter(MultiPackWriter):
                 'Cannot used the DocIdMultiPackWriter because the doc id is '
                 'not assigned for the pack.')
         return name
+
+
+class PackIdMultiPackWriter(MultiPackWriter):
+    def pack_name(self, pack: DataPack) -> str:
+        return pack.pack_id
+
+    def multipack_name(self, pack: MultiPack) -> str:
+        return pack.pack_id
