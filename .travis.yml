@@ -28,6 +28,7 @@ install:
   - python manage.py migrate
   - cat sample_sql/*.sql | sqlite3 db.sqlite3
   - cd ../..
+  - [ -f stave/simple-backend/db.sqlite3 ]
   # Now we should have stave database at stave/simple-backend/db.sqlite3
   - wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.4.2-linux-x86_64.tar.gz
   - tar -zxf elasticsearch-7.4.2-linux-x86_64.tar.gz

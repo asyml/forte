@@ -70,6 +70,7 @@ class StaveReaderTest(unittest.TestCase):
             os.path.dirname(os.path.realpath(__file__)),
             *([os.path.pardir] * 5),
             'stave/simple-backend/db.sqlite3'))
+        self.assertTrue(os.path.exists(self.sql_db))
 
     @data('project-1-example', 'project-2-example')
     def test_stave_reader_project(self, project_name: str):
