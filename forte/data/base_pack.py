@@ -371,7 +371,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
 
     def is_created_by(
             self, entry: Entry,
-            components: Optional[Union[str, Iterable[str]]]) -> bool:
+            components: Union[str, Iterable[str]]) -> bool:
         """
         Check if the entry is created by any of the provided components.
 

@@ -884,7 +884,7 @@ class DataPack(BasePack[Entry, Link, Group]):
 
         """
         use_coverage = self._index.coverage_index_is_valid
-        coverage_index: Dict[int, Set[int]] = {}
+        coverage_index: Optional[Dict[int, Set[int]]] = {}
 
         if use_coverage:
             coverage_index = self._index.coverage_index(
@@ -892,9 +892,9 @@ class DataPack(BasePack[Entry, Link, Group]):
             if coverage_index is None:
                 use_coverage = False
 
-        if use_coverage:
+        if use_coverage and coverage_index is not None:
             for tid in coverage_index[range_annotation.tid]:
-                yield self.get_entry(tid)
+                yield self.get_entry(tid)  # type: ignore
         else:
             if issubclass(entry_type, Annotation):
                 range_begin = (
@@ -1028,7 +1028,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             if components is not None:
                 if not self.is_created_by(entry, components):
                     continue
-            yield entry
+            yield entry  # type: ignore
 
 
 class DataIndex(BaseIndex):
@@ -1227,7 +1227,7 @@ class DataIndex(BaseIndex):
                 return False
 
             for mem in inner_entry.get_members():
-                mem_: Annotation = mem
+                mem_: Annotation = mem  # type: ignore
                 if inner_begin == -1:
                     inner_begin = mem_.span.begin
                 inner_begin = min(inner_begin, mem_.span.begin)

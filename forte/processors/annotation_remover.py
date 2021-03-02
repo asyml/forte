@@ -7,9 +7,6 @@ from forte.utils import get_class
 
 class AnnotationRemover(PackProcessor):
     def _process(self, input_pack: DataPack):
-        import pdb
-        pdb.set_trace()
-
         for type_name in self.configs.removal_types:
             type_cls = get_class(type_name)
 
