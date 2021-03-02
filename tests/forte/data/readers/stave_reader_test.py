@@ -1,9 +1,9 @@
+import importlib
 import os
+import sqlite3
 import sys
 import tempfile
 import unittest
-import sqlite3
-import importlib
 
 from ddt import ddt, data
 
@@ -12,7 +12,6 @@ from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.readers.stave_readers import StaveMultiDocSqlReader, \
     StaveDataPackSqlReader
 from forte.pipeline import Pipeline
-from forte.data.data_utils import maybe_download
 
 
 def query(sql_db, q: str):
@@ -58,9 +57,6 @@ def build_ontology(sql_db, project_name):
 @ddt
 class StaveReaderTest(unittest.TestCase):
     def setUp(self):
-        sql_url = "https://raw.githubusercontent.com/asyml/stave/master" \
-                  "/simple-backend/example_db.sql"
-
         self.datapack_table: str = StaveMultiDocSqlReader.default_configs()[
             'datapack_table']
         self.multipack_table: str = StaveMultiDocSqlReader.default_configs()[
@@ -69,21 +65,12 @@ class StaveReaderTest(unittest.TestCase):
             'project_table'
         ]
 
-        self.temp_dir = tempfile.TemporaryDirectory()
-        maybe_download(sql_url, self.temp_dir.name, 'example_db.sql')
-        sql_script: str = os.path.join(self.temp_dir.name, 'example_db.sql')
-        self.sql_db: str = os.path.join(self.temp_dir.name, 'db.sqlite3')
-
-        pack_count: int
-        mp_count: int
-
-        with open(sql_script) as q_file:
-            # Build the example database by executing the sample sql script.
-            q = q_file.read()
-            conn = sqlite3.connect(self.sql_db)
-            c = conn.cursor()
-            c.executescript(q)
-            conn.commit()
+        # This path correspond to the .travis.yml.
+        self.sql_db: str = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            *([os.path.pardir] * 4),
+            'stave/simple-backend/db.sqlite3'))
+        self.assertTrue(os.path.exists(self.sql_db))
 
     @data('project-1-example', 'project-2-example')
     def test_stave_reader_project(self, project_name: str):
@@ -110,9 +97,6 @@ class StaveReaderTest(unittest.TestCase):
             read_pack_count += 1
 
         self.assertEqual(pack_count, read_pack_count)
-
-    def tearDown(self) -> None:
-        self.temp_dir.cleanup()
 
 
 if __name__ == '__main__':
