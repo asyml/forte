@@ -468,7 +468,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         all_types: List[Type] = []
         for data_type in self._index.indexed_types():
             if issubclass(data_type, entry_type):
-                all_types.append(entry_type)
+                all_types.append(data_type)
         return all_types
 
     def get_entries_by_type_subtype(
