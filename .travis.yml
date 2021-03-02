@@ -22,6 +22,7 @@ install:
   - rm -rf texar-pytorch
   # Build database from stave, required for `stave_reader_test`
   - pip install Django
+  - pip install django-guardian
   - git clone https://github.com/asyml/stave.git
   - cd stave/simple-backend
   - python manage.py migrate
