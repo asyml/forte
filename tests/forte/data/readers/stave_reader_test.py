@@ -65,9 +65,10 @@ class StaveReaderTest(unittest.TestCase):
             'project_table'
         ]
 
+        # This path correspond to the .travis.yml.
         self.sql_db: str = os.path.abspath(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            *([os.path.pardir] * 5),
+            *([os.path.pardir] * 4),
             'stave/simple-backend/db.sqlite3'))
         print(self.sql_db)
         self.assertTrue(os.path.exists(self.sql_db))
