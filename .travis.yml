@@ -21,9 +21,6 @@ install:
   - cat sample_sql/*.sql | sqlite3 db.sqlite3
   - cd ../..
   - if [ ! -f "stave/simple-backend/db.sqlite3" ]; then echo "Cannot find the database file" && exit 1; fi
-  - pwd
-  - ls .
-  - ls stave/simple-backend
   - pip install --progress-bar off torch==$TORCH_VER
   - pip install --progress-bar off tensorflow==$TENSORFLOW_VER
   - pip install --progress-bar off .[nltk,ner,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp,augment,cliner]
