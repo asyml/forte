@@ -1,3 +1,7 @@
+"""
+Unit tests for reading database samples form Stave.
+"""
+
 import importlib
 import os
 import sqlite3

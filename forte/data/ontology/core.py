@@ -200,6 +200,14 @@ class Entry(Generic[ContainerType]):
             raise TypeError(
                 f"Unsupported pointer type {ptr.__class__} for entry")
 
+    def entry_type(self) -> str:
+        """Return the full name of this entry type."""
+        module = self.__class__.__module__
+        if module is None or module == str.__class__.__module__:
+            return self.__class__.__name__
+        else:
+            return module + '.' + self.__class__.__name__
+
     def _check_attr_type(self, key, value):
         """
         Use the type hint to validate whether the provided value is as expected.
