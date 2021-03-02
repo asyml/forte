@@ -49,7 +49,7 @@ setuptools.setup(
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch==7.5.1'],
         'spacy': ['spacy==2.3.0'],
         'allennlp': ['allennlp==1.2.0', 'allennlp-models==1.2.0',
-                     'torch>=1.5.0'],
+                     'torch>=pi install pip .5.0'],
         'cliner': ['python-crfsuite==0.9.7'],
         'augment': ['elasticsearch==7.5.1', 'transformers>=3.1']
     },

@@ -79,8 +79,6 @@ class TestJsonWriter(unittest.TestCase):
                 tokens: List[Token] = list(pack.get(Token))
                 token_counts[pack.pack_name] = len(tokens)
 
-                break
-
             expected_count = {
                 'bn/abc/00/abc_0039': 72, 'bn/abc/00/abc_0019': 370,
                 'bn/abc/00/abc_0059': 39, 'bn/abc/00/abc_0009': 424,
