@@ -1,9 +1,9 @@
+import importlib
 import os
+import sqlite3
 import sys
 import tempfile
 import unittest
-import sqlite3
-import importlib
 
 from ddt import ddt, data
 
@@ -12,7 +12,6 @@ from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 from forte.data.readers.stave_readers import StaveMultiDocSqlReader, \
     StaveDataPackSqlReader
 from forte.pipeline import Pipeline
-from forte.data.data_utils import maybe_download
 
 
 def query(sql_db, q: str):
@@ -70,6 +69,7 @@ class StaveReaderTest(unittest.TestCase):
             os.path.dirname(os.path.realpath(__file__)),
             *([os.path.pardir] * 5),
             'stave/simple-backend/db.sqlite3'))
+        print(self.sql_db)
         self.assertTrue(os.path.exists(self.sql_db))
 
     @data('project-1-example', 'project-2-example')
