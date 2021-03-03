@@ -62,7 +62,7 @@ class BaseIndex(Generic[EntryType]):
         r"""Build or update the basic indexes, including
 
         (1) :attr:`entry_index`,
-        the index from each tid to the corresponding entry;
+        the index from each `tid` to the corresponding entry;
 
         (2) :attr:`type_index`, the index from each type to the entries of that
         type;
@@ -191,7 +191,7 @@ class BaseIndex(Generic[EntryType]):
 
     def update_group_index(self, groups: List[GroupType]):
         r"""Build or update :attr:`group_index`, the index from group members
-         to groups.
+        to groups.
 
         Args:
             groups (list): a list of groups to be added into the index.

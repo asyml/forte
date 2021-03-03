@@ -63,6 +63,11 @@ Packs
 .. autoclass:: forte.data.data_pack.DataPack
     :members:
 
+:hidden:`MultiPack`
+------------------------
+.. autoclass:: forte.data.multi_pack.MultiPack
+    :members:
+
 :hidden:`BaseMeta`
 ------------------------
 .. autoclass:: forte.data.base_pack.BaseMeta

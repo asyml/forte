@@ -81,10 +81,10 @@ class EntryContainer(Generic[E, L, G]):
         raise NotImplementedError
 
     @abstractmethod
-    def validate(self, item: E) -> bool:
+    def _validate(self, item: E) -> bool:
         r"""Validate whether this entry type can be added. This method is
-        called by the :meth:`~forte.data.ontology.top.Entry.__init__` method
-        when an instance of :class:`~forte.data.ontology.top.Entry` is being
+        called by the :meth:`~forte.data.ontology.core.Entry.__init__` method
+        when an instance of :class:`~forte.data.ontology.core.Entry` is being
         added to the pack.
 
         Args:

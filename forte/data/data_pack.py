@@ -147,7 +147,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
         return Meta(pack_name)
 
-    def validate(self, entry: EntryType) -> bool:
+    def _validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)
 
     @property
@@ -404,26 +404,27 @@ class DataPack(BasePack[Entry, Link, Group]):
         return Span(orig_begin, orig_end)
 
     @classmethod
-    def deserialize(cls, string: str) -> "DataPack":
+    def deserialize(cls, data_pack_string: str) -> "DataPack":
         """
         Deserialize a Data Pack from a string. This internally calls the
-          internal :meth:`~forte.data.BasePack._deserialize` function from the
-          :class:`~forte.data.BasePack`.
+        internal :meth:`~forte.data.base_pack.BasePack._deserialize` function
+        from :class:`~forte.data.base_pack.BasePack`.
 
         Args:
-            string: The serialized string of a data pack to be deserialized.
+            data_pack_string: The serialized string of a data pack to be
+              deserialized.
 
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(string)
+        return cls._deserialize(data_pack_string)
 
     def _add_entry(self, entry: EntryType) -> EntryType:
-        r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
+        r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -502,7 +503,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             return target[target.index(entry)]
 
     def delete_entry(self, entry: EntryType):
-        r"""Delete an :class:`~forte.data.ontology.top.Entry` object from the
+        r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
         :class:`DataPack`. This find out the entry in the index and remove it
         from the index. Note that entries will only appear in the index if
         `add_entry` (or _add_entry_with_check) is called.
@@ -511,7 +512,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         the related entries.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
                 object to be deleted from the pack.
 
         """
@@ -997,11 +998,11 @@ class DataPack(BasePack[Entry, Link, Group]):
                 return
 
         # Valid entry ids based on type.
-        all_types: List[Type]
+        all_types: Set[Type]
         if include_sub_type:
             all_types = self._expand_to_sub_types(entry_type)
         else:
-            all_types = [entry_type]
+            all_types = {entry_type}
 
         entry_iter: Iterator[Entry]
         if issubclass(entry_type, Generics):
@@ -1121,7 +1122,7 @@ class DataIndex(BaseIndex):
         #  is the same as the covering annotation, or if their spans are the
         #  same.
         self._coverage_index[(outer_type, inner_type)] = dict()
-        for range_annotation in data_pack.get_entries_by_type_subtype(
+        for range_annotation in data_pack.get_entries_of(
                 outer_type):
             if isinstance(range_annotation, Annotation):
                 entries = data_pack.get(inner_type, range_annotation)
