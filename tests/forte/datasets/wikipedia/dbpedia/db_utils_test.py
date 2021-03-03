@@ -127,6 +127,7 @@ class DBUtilTest(unittest.TestCase):
                 s, v, o = statement
 
                 r = get_resource_fragment(v)
+                n = get_resource_name(s)
                 try:
                     parsed[get_resource_name(s)].append(r)
                 except KeyError:
