@@ -83,7 +83,7 @@ class Entry(Generic[ContainerType]):
         self.__pack: ContainerType = pack
         self._tid: int = uuid.uuid4().int
         self._embedding: np.ndarray = np.empty(0)
-        self.pack.validate(self)
+        self.pack._validate(self)
         self.pack.on_entry_creation(self)
 
     def regret_creation(self):
