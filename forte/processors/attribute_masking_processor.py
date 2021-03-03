@@ -58,6 +58,6 @@ class AttributeMasker(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         for entry_type, attributes in self.fields:
-            for entry in input_pack.get_entries_by_type(entry_type):
+            for entry in input_pack.get_entries_of(entry_type):
                 for attribute in attributes:
                     setattr(entry, attribute, None)

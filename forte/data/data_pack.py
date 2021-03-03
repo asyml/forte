@@ -147,7 +147,7 @@ class DataPack(BasePack[Entry, Link, Group]):
     def _init_meta(self, pack_name: Optional[str] = None) -> Meta:
         return Meta(pack_name)
 
-    def validate(self, entry: EntryType) -> bool:
+    def _validate(self, entry: EntryType) -> bool:
         return isinstance(entry, SinglePackEntries)
 
     @property
@@ -404,26 +404,27 @@ class DataPack(BasePack[Entry, Link, Group]):
         return Span(orig_begin, orig_end)
 
     @classmethod
-    def deserialize(cls, string: str) -> "DataPack":
+    def deserialize(cls, data_pack_string: str) -> "DataPack":
         """
         Deserialize a Data Pack from a string. This internally calls the
-          internal :meth:`~forte.data.BasePack._deserialize` function from the
-          :class:`~forte.data.BasePack`.
+        internal :meth:`~forte.data.base_pack.BasePack._deserialize` function
+        from :class:`~forte.data.base_pack.BasePack`.
 
         Args:
-            string: The serialized string of a data pack to be deserialized.
+            data_pack_string: The serialized string of a data pack to be
+              deserialized.
 
         Returns:
             An data pack object deserialized from the string.
         """
-        return cls._deserialize(string)
+        return cls._deserialize(data_pack_string)
 
     def _add_entry(self, entry: EntryType) -> EntryType:
-        r"""Force add an :class:`~forte.data.ontology.top.Entry` object to the
+        r"""Force add an :class:`~forte.data.ontology.core.Entry` object to the
         :class:`DataPack` object. Allow duplicate entries in a pack.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
                 object to be added to the pack.
 
         Returns:
@@ -502,7 +503,7 @@ class DataPack(BasePack[Entry, Link, Group]):
             return target[target.index(entry)]
 
     def delete_entry(self, entry: EntryType):
-        r"""Delete an :class:`~forte.data.ontology.top.Entry` object from the
+        r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
         :class:`DataPack`. This find out the entry in the index and remove it
         from the index. Note that entries will only appear in the index if
         `add_entry` (or _add_entry_with_check) is called.
@@ -511,7 +512,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         the related entries.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
                 object to be deleted from the pack.
 
         """
@@ -638,7 +639,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         context_components, _, context_fields = self._parse_request_args(
             context_type, context_args)
 
-        valid_context_ids: Set[int] = self.get_ids_by_type(context_type)
+        valid_context_ids: Set[int] = self.get_ids_by_type_subtype(context_type)
         if context_components:
             valid_component_id: Set[int] = set()
             for component in context_components:
@@ -861,25 +862,111 @@ class DataPack(BasePack[Entry, Link, Group]):
                 self, context_type, covered_type
             )
 
+    def iter_in_range(
+            self, entry_type: Type[EntryType], range_annotation: Annotation
+    ) -> Iterator[EntryType]:
+        """
+        Iterate the entries of the provided type within or fulfill the
+        constraints of the `range_annotation`. The constraint is True if
+        an entry is `in_span` of the provided `range_annotation`.
+
+        Internally, if the coverage index between the entry type and the
+        type of the `range_annotation` is built, then this will create the
+        iterator from the index. Otherwise, the function will iterate them
+        from scratch (which is slower). If there are frequent usage of this
+        function, it is suggested to build the coverage index.
+
+        Args:
+            entry_type: The type of entry to iterate over.
+            range_annotation: The range annotation that serve as the constraint.
+
+        Returns:
+            An iterator of the entries with in the `range_annotation`.
+
+        """
+        use_coverage = self._index.coverage_index_is_valid
+        coverage_index: Optional[Dict[int, Set[int]]] = {}
+
+        if use_coverage:
+            coverage_index = self._index.coverage_index(
+                type(range_annotation), entry_type)
+            if coverage_index is None:
+                use_coverage = False
+
+        if use_coverage and coverage_index is not None:
+            for tid in coverage_index[range_annotation.tid]:
+                yield self.get_entry(tid)  # type: ignore
+        else:
+            if issubclass(entry_type, Annotation):
+                range_begin = (
+                    range_annotation.span.begin if range_annotation else 0)
+                range_end = (range_annotation.span.end if range_annotation else
+                             self.annotations[-1].span.end)
+
+                if issubclass(entry_type, Annotation):
+                    temp_begin = Annotation(self, range_begin, range_begin)
+                    begin_index = self.annotations.bisect(temp_begin)
+
+                    temp_end = Annotation(self, range_end, range_end)
+                    end_index = self.annotations.bisect(temp_end)
+
+                    # Make sure these temporary annotations are not part of the
+                    # actual data.
+                    temp_begin.regret_creation()
+                    temp_end.regret_creation()
+                    yield from self.annotations[begin_index: end_index]
+            elif issubclass(entry_type, Link):
+                for link in self.links:
+                    if self._index.in_span(link, range_annotation.span):
+                        yield link
+            elif issubclass(entry_type, Group):
+                for group in self.groups:
+                    if self._index.in_span(group, range_annotation.span):
+                        yield group
+
     def get(self, entry_type: Type[EntryType],  # type: ignore
             range_annotation: Optional[Annotation] = None,
-            components: Optional[Union[str, List[str]]] = None
+            components: Optional[Union[str, Iterable[str]]] = None,
+            include_sub_type=True
             ) -> Iterable[EntryType]:
         r"""This function is used to get data from a data pack with various
         methods.
+
+        Depending on the provided arguments, the function will perform several
+        different filtering of the returned data.
+
+        The `entry_type` is mandatory, where all the entries matching this type
+        will be returned. The sub-types of the provided entry type will be
+        also returned if `include_sub_type` is set to True (which is the
+        default behavior).
+
+        The `range_annotation` controls the search area of the subtypes. An
+        entry `E` will be returned if :meth:`in_span(E, range_annotation`
+        returns True. If this function is called frequently with queries
+        related to the `range_annotation`, please consider to build the coverage
+        index regarding the related entry types.
+
+        The `components` list will filter the results by the `component` (i.e
+        the creator of the entry). If `components` is provided, only the entries
+        created by one of the `components` will be returned.
 
         Example:
 
             .. code-block:: python
 
+                # Iterate through all the sentences in the pack.
                 for sentence in input_pack.get(Sentence):
-                    token_entries = input_pack.get(entry_type=Token,
-                                                   range_annotation=sentence,
-                                                   component=token_component)
+                    # Take all tokens from a sentence created by NLTKTokenizer.
+                    token_entries = input_pack.get(
+                        entry_type=Token,
+                        range_annotation=sentence,
+                        component='NLTKTokenizer')
                     ...
 
             In the above code snippet, we get entries of type ``Token`` within
-            each ``sentence`` which were generated by ``token_component``
+            each ``sentence`` which were generated by ``NLTKTokenizer``. You
+            can consider build coverage index between `Token` and `Sentence`
+            if this snippet is frequently used.
 
         Args:
             entry_type (type): The type of entries requested.
@@ -889,65 +976,60 @@ class DataPack(BasePack[Entry, Link, Group]):
             components (str or list, optional): The component (creator)
                 generating the entries requested. If `None`, will return valid
                 entries generated by any component.
+            include_sub_type (bool): whether to consider the sub types of
+                the provided entry type. Default `True`.
         """
-        # If we don't have any annotations, then we yield an empty list.
-        # Note that generics do not work with annotations.
-        if len(self.annotations) == 0 and not issubclass(entry_type, Generics):
-            yield from []
-            return
 
-        # valid type
-        valid_id = self.get_ids_by_type(entry_type)
-        # valid component
-        if components is not None:
-            if isinstance(components, str):
-                components = [components]
-            valid_id &= self.get_ids_by_creators(components)
+        def require_annotations() -> bool:
+            if issubclass(entry_type, Annotation):
+                return True
+            if issubclass(entry_type, Link):
+                return (issubclass(entry_type.ParentType, Annotation)
+                        and issubclass(entry_type.ChildType, Annotation))
+            if issubclass(entry_type, Group):
+                return issubclass(entry_type.MemberType, Annotation)
+            return False
 
-        # Generics do not work with range_annotation.
+        # If we don't have any annotations but the items to check requires them,
+        # then we simply yield from an empty list.
+        if len(self.annotations) == 0 and range_annotation is not None:
+            if require_annotations():
+                yield from []
+                return
+
+        # Valid entry ids based on type.
+        all_types: Set[Type]
+        if include_sub_type:
+            all_types = self._expand_to_sub_types(entry_type)
+        else:
+            all_types = {entry_type}
+
+        entry_iter: Iterator[Entry]
         if issubclass(entry_type, Generics):
-            for entry_id in valid_id:
-                entry: EntryType = self.get_entry(entry_id)  # type: ignore
-                yield entry
-            return
+            entry_iter = self.generics
+        elif range_annotation is not None:
+            if (issubclass(entry_type, Annotation)
+                    or issubclass(entry_type, Link)
+                    or issubclass(entry_type, Group)):
+                entry_iter = self.iter_in_range(entry_type, range_annotation)
+        elif issubclass(entry_type, Annotation):
+            entry_iter = self.annotations
+        elif issubclass(entry_type, Link):
+            entry_iter = self.links
+        elif issubclass(entry_type, Group):
+            entry_iter = self.groups
+        else:
+            raise ValueError(
+                f"The requested type {str(entry_type)} is not supported.")
 
-        # valid span
-        if range_annotation is not None:
-            coverage_index = self._index.coverage_index(type(range_annotation),
-                                                        entry_type)
-            if coverage_index is not None:
-                valid_id &= coverage_index[range_annotation.tid]
-
-        range_begin = range_annotation.span.begin if range_annotation else 0
-        range_end = (range_annotation.span.end if range_annotation else
-                     self.annotations[-1].span.end)
-
-        if issubclass(entry_type, Annotation):
-            temp_begin = Annotation(self, range_begin, range_begin)
-            begin_index = self.annotations.bisect(temp_begin)
-
-            temp_end = Annotation(self, range_end, range_end)
-            end_index = self.annotations.bisect(temp_end)
-
-            # Make sure these temporary annotations are not part of the
-            # actual data.
-            temp_begin.regret_creation()
-            temp_end.regret_creation()
-
-            for annotation in self.annotations[begin_index: end_index]:
-                if annotation.tid not in valid_id:
+        for entry in entry_iter:
+            # Filter by type and components.
+            if type(entry) not in all_types:
+                continue
+            if components is not None:
+                if not self.is_created_by(entry, components):
                     continue
-                if (range_annotation is None or
-                        self._index.in_span(annotation,
-                                            range_annotation.span)):
-                    yield annotation
-
-        elif issubclass(entry_type, (Link, Group)):
-            for entry_id in valid_id:
-                entry: EntryType = self.get_entry(entry_id)  # type: ignore
-                if (range_annotation is None or
-                        self._index.in_span(entry, range_annotation.span)):
-                    yield entry
+            yield entry  # type: ignore
 
 
 class DataIndex(BaseIndex):
@@ -981,6 +1063,10 @@ class DataIndex(BaseIndex):
         self._coverage_index: Dict[Tuple[Type[Annotation], Type[EntryType]],
                                    Dict[int, Set[int]]] = dict()
         self._coverage_index_valid = True
+
+    def remove_entry(self, entry: EntryType):
+        super().remove_entry(entry)
+        self.deactivate_coverage_index()
 
     @property
     def coverage_index_is_valid(self):
@@ -1036,7 +1122,8 @@ class DataIndex(BaseIndex):
         #  is the same as the covering annotation, or if their spans are the
         #  same.
         self._coverage_index[(outer_type, inner_type)] = dict()
-        for range_annotation in data_pack.get_entries_by_type(outer_type):
+        for range_annotation in data_pack.get_entries_of(
+                outer_type):
             if isinstance(range_annotation, Annotation):
                 entries = data_pack.get(inner_type, range_annotation)
                 entry_ids = {e.tid for e in entries}
@@ -1073,10 +1160,25 @@ class DataIndex(BaseIndex):
                     entry1_.span.end <= entry2_.span.begin)
 
     def in_span(self, inner_entry: Union[int, Entry], span: Span) -> bool:
-        r"""Check whether the ``inner entry`` is within the given ``span``. Link
-        entries are considered in a span if both the parent and the child are
-        within the span. Group entries are considered in a span if all the
-        members are within the span.
+        r"""Check whether the ``inner entry`` is within the given ``span``. The
+        criterion are as followed:
+
+        Annotation entries: they are considered in a span if the begin is not
+        smaller than `span.begin` and the end is not larger than `span.end`.
+
+        Link entries: if the parent and child of the links are both
+        `Annotation` type, this link will be considered in span if both parent
+        and child are `in_span` of the provided `span`. If either the parent and
+        the child is not of type `Annotation`, this function will always return
+        `False`.
+
+        Group entries: if the child type of the group is `Annotation` type,
+        then the group will be considered in span if all the elements are
+        `in_span` of the provided `span`. If the child type is not `Annotation`
+        type, this function will always return `False`.
+
+        Other entries (i.e Generics): they will not be considered `in_span` of
+        any spans. The function will always return `False`.
 
         Args:
             inner_entry (int or Entry): The inner entry object to be checked
@@ -1084,6 +1186,10 @@ class DataIndex(BaseIndex):
              or the entry object itself.
             span (Span): A :class:`Span` object to be checked. We will check
                 whether the ``inner_entry`` is within this span.
+
+        Returns:
+            True if the `inner_entry` is considered to be in span of the
+            provided span.
         """
         # The reason of this check is that the get_data method will use numpy
         # integers. This might create problems when other unexpected integers
@@ -1091,10 +1197,19 @@ class DataIndex(BaseIndex):
         if isinstance(inner_entry, (int, np.integer)):
             inner_entry = self._entry_index[inner_entry]
 
+        inner_begin = -1
+        inner_end = -1
+
         if isinstance(inner_entry, Annotation):
             inner_begin = inner_entry.span.begin
             inner_end = inner_entry.span.end
         elif isinstance(inner_entry, Link):
+            if not issubclass(inner_entry.ParentType, Annotation):
+                return False
+
+            if not issubclass(inner_entry.ChildType, Annotation):
+                return False
+
             child = inner_entry.get_child()
             parent = inner_entry.get_parent()
 
@@ -1109,21 +1224,16 @@ class DataIndex(BaseIndex):
             inner_begin = min(child_.span.begin, parent_.span.begin)
             inner_end = max(child_.span.end, parent_.span.end)
         elif isinstance(inner_entry, Group):
-            inner_begin = -1
-            inner_end = -1
-            for mem in inner_entry.get_members():
-                if not isinstance(mem, Annotation):
-                    # Cannot check in_span for non-annotations.
-                    return False
+            if not issubclass(inner_entry.MemberType, Annotation):
+                return False
 
-                mem_: Annotation = mem
+            for mem in inner_entry.get_members():
+                mem_: Annotation = mem  # type: ignore
                 if inner_begin == -1:
                     inner_begin = mem_.span.begin
                 inner_begin = min(inner_begin, mem_.span.begin)
                 inner_end = max(inner_end, mem_.span.end)
         else:
-            raise ValueError(
-                f"Invalid entry type {type(inner_entry)}. A valid entry "
-                f"should be an instance of Annotation, Link, or Group."
-            )
+            # Generics or other user defined types will not be check here.
+            return False
         return inner_begin >= span.begin and inner_end <= span.end

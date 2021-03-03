@@ -96,14 +96,10 @@ class DataPackTest(unittest.TestCase):
         sent_texts: List[Tuple[int, str]] = []
         for doc in self.data_pack.get(Document):
             for sent in self.data_pack.get(Sentence, doc):
-                sent_texts.append((sent.tid, sent.text))
-
-        # sort by sent tid
-        sorted_sents: List[str] = \
-            [x[1] for x in sorted(sent_texts, key=lambda x: x[0])]
+                sent_texts.append(sent.text)
 
         self.assertEqual(
-            sorted_sents,
+            sent_texts,
             [
                 "The Indonesian billionaire James Riady has agreed "
                 "to pay $ 8.5 million and plead guilty to illegally "
@@ -115,22 +111,17 @@ class DataPackTest(unittest.TestCase):
         )
 
         # case 2: test get link
-        links: List[Tuple[int, str, str, str]] = []
+        links: List[Tuple[str, str, str]] = []
         for doc in self.data_pack.get(Document):
             link: PredicateLink
             for link in self.data_pack.get(PredicateLink, doc):
                 links.append(
-                    (link.tid,
-                     link.get_parent().text,
+                    (link.get_parent().text,
                      link.get_child().text,
                      link.arg_type))
 
-        # sort by link tid
-        sorted_links: List[Tuple[str, str, str]] = \
-            [(x[1], x[2], x[3]) for x in sorted(links, key=lambda x: x[0])]
-
         self.assertEqual(
-            sorted_links,
+            links,
             [('agreed', 'The Indonesian billionaire James Riady', 'ARG0'),
              ('agreed',
               "to pay $ 8.5 million and plead guilty to illegally "

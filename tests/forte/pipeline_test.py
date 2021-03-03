@@ -120,7 +120,7 @@ class DummyPackProcessor(PackProcessor):
         super().__init__()
 
     def _process(self, input_pack: DataPack):
-        entries = list(input_pack.get_entries_by_type(NewType))
+        entries = list(input_pack.get_entries_of(NewType))
         if len(entries) == 0:
             NewType(pack=input_pack, value="[PACK]")
         else:
@@ -146,7 +146,7 @@ class DummmyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
         return data_batch
 
     def pack(self, data_pack: DataPack, output_dict: Optional[Dict] = None):
-        entries = list(data_pack.get_entries_by_type(NewType))
+        entries = list(data_pack.get_entries_of(NewType))
         if len(entries) == 0:
             entry = NewType(pack=data_pack, value="[BATCH]")
         else:
@@ -262,7 +262,7 @@ class PipelineTest(unittest.TestCase):
         data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_entries_by_type(NewType))
+            types = list(pack.get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[PACK]")
@@ -283,7 +283,7 @@ class PipelineTest(unittest.TestCase):
         data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_entries_by_type(NewType))
+            types = list(pack.get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH]")
@@ -311,7 +311,7 @@ class PipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_entries_by_type(NewType))
+            types = list(pack.get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH][PACK][BATCH]")
@@ -340,7 +340,7 @@ class PipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_entries_by_type(NewType))
+            types = list(pack.get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[PACK][BATCH][PACK]")
@@ -368,7 +368,7 @@ class PipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_entries_by_type(NewType))
+            types = list(pack.get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH][PACK][BATCH]")
@@ -398,7 +398,7 @@ class PipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_entries_by_type(NewType))
+            types = list(pack.get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH][BATCH][BATCH]")
@@ -430,7 +430,7 @@ class PipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_entries_by_type(NewType))
+            types = list(pack.get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH][BATCH][BATCH][PACK]")
@@ -484,7 +484,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_pack("pack").get_entries_by_type(NewType))
+            types = list(pack.get_pack("pack").get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[PACK]")
@@ -506,7 +506,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         data_path = data_samples_root + "/random_texts/0.txt"
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_pack("pack").get_entries_by_type(NewType))
+            types = list(pack.get_pack("pack").get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH]")
@@ -535,7 +535,7 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_pack("pack").get_entries_by_type(NewType))
+            types = list(pack.get_pack("pack").get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH][PACK][BATCH]")
@@ -566,7 +566,7 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_pack("pack").get_entries_by_type(NewType))
+            types = list(pack.get_pack("pack").get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[PACK][BATCH][PACK]")
@@ -598,7 +598,7 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_pack("pack").get_entries_by_type(NewType))
+            types = list(pack.get_pack("pack").get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH][PACK][BATCH]")
@@ -631,7 +631,7 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_pack("pack").get_entries_by_type(NewType))
+            types = list(pack.get_pack("pack").get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH][BATCH][BATCH]")
@@ -666,7 +666,7 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
-            types = list(pack.get_pack("pack").get_entries_by_type(NewType))
+            types = list(pack.get_pack("pack").get_entries_of(NewType))
             num_packs += 1
             self.assertEqual(len(types), 1)
             self.assertEqual(types[0].value, "[BATCH][BATCH][BATCH][PACK]")

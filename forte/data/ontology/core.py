@@ -15,7 +15,7 @@
 Defines the basic data structures and interfaces for the Forte data
 representation system.
 """
-
+import uuid
 from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
@@ -81,9 +81,9 @@ class Entry(Generic[ContainerType]):
         # to be checked by the pack.
         super().__init__()
         self.__pack: ContainerType = pack
-        self._tid: int = self.pack.get_next_id()
+        self._tid: int = uuid.uuid4().int
         self._embedding: np.ndarray = np.empty(0)
-        self.pack.validate(self)
+        self.pack._validate(self)
         self.pack.on_entry_creation(self)
 
     def regret_creation(self):
@@ -200,6 +200,14 @@ class Entry(Generic[ContainerType]):
             raise TypeError(
                 f"Unsupported pointer type {ptr.__class__} for entry")
 
+    def entry_type(self) -> str:
+        """Return the full name of this entry type."""
+        module = self.__class__.__module__
+        if module is None or module == str.__class__.__module__:
+            return self.__class__.__name__
+        else:
+            return module + '.' + self.__class__.__name__
+
     def _check_attr_type(self, key, value):
         """
         Use the type hint to validate whether the provided value is as expected.
@@ -254,9 +262,9 @@ class Entry(Generic[ContainerType]):
         return (type(self), self._tid) == (type(other), other.tid)
 
     def __lt__(self, other):
-        r"""Comparison based on type and id.
+        r"""By default, compared based on type string.
         """
-        return (str(type(self)), self._tid) < (str(type(other)), other.tid)
+        return (str(type(self))) < (str(type(other)))
 
     def __hash__(self) -> int:
         r"""The hash function for :class:`Entry` objects.

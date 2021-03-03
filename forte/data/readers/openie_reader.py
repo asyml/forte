@@ -20,14 +20,13 @@ import logging
 import os
 from typing import Iterator, List
 
-from forte.common.exception import ProcessorConfigError
 from forte.common.configuration import Config
+from forte.common.exception import ProcessorConfigError
 from forte.common.resources import Resources
-from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
+from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.readers.base_reader import PackReader
-from ft.onto.base_ontology import Sentence, PredicateMention, \
-    PredicateArgument, PredicateLink, Document, Token
+from ft.onto.base_ontology import Sentence, RelationLink, EntityMention
 
 __all__ = [
     "OpenIEReader"
@@ -90,50 +89,31 @@ class OpenIEReader(PackReader):
                 line = line.strip()
                 if line != "":
                     oie_component: List[str] = line.split("\t")
-                    sentence: str = oie_component[0]
 
                     # Add sentence.
+                    sentence = oie_component[0]
+                    text += sentence + "\n"
                     Sentence(pack, offset, offset + len(sentence))
+
+                    # Find argument 1.
+                    arg1_begin = sentence.find(oie_component[3]) + offset
+                    arg1_end = arg1_begin + len(oie_component[3])
+                    arg1: EntityMention = EntityMention(
+                        pack, arg1_begin, arg1_end)
+
+                    # Find argument 2.
+                    arg2_begin = sentence.find(oie_component[4]) + offset
+                    arg2_end = arg2_begin + len(oie_component[4])
+                    arg2: EntityMention = EntityMention(
+                        pack, arg2_begin, arg2_end)
+
+                    head_relation = RelationLink(pack, arg1, arg2)
+                    head_relation.rel_type = oie_component[2]
+
                     offset += len(sentence) + 1
-                    text += sentence + " "
 
-                    head_predicate: str = oie_component[1]
-                    full_predicate: str = oie_component[2]
-
-                    # Add head predicate.
-                    token: Token = Token(pack,
-                                         offset,
-                                         offset + len(head_predicate))
-                    offset += len(head_predicate) + 1
-                    text += head_predicate + " "
-
-                    # Add full predicate.
-                    predicate_mention: PredicateMention = PredicateMention(pack,
-                                                         offset,
-                                                         offset
-                                                         + len(full_predicate))
-                    predicate_mention.headword = token
-                    offset += len(full_predicate) + 1
-                    text += full_predicate + " "
-
-                    for arg in oie_component[3:]:
-                        # Add predicate argument.
-                        predicate_arg: PredicateArgument = \
-                            PredicateArgument(pack,
-                                              offset,
-                                              offset + len(arg))
-                        offset += len(arg) + 1
-                        text += arg + " "
-
-                        # Add predicate link.
-                        PredicateLink(pack, predicate_mention, predicate_arg)
-
-        pack.set_text(text, replace_func=self.text_replace_operation)
-
-        Document(pack, 0, len(text))
-
-        pack.pack_name = file_path
-
+        self.set_text(pack, text)
+        pack.pack_name = os.path.basename(file_path)
         yield pack
 
     @classmethod

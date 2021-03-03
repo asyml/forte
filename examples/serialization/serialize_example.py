@@ -77,7 +77,7 @@ class ExampleCorefCounter(MultiPackProcessor):
         self.coref_count = 0
 
     def _process(self, input_pack: MultiPack):
-        rels = input_pack.get_entries_by_type(CrossDocEntityRelation)
+        rels = list(input_pack.get_entries_of(CrossDocEntityRelation))
         self.coref_count += len(rels)
 
     def finish(self, _):

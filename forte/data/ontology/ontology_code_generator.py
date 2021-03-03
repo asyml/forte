@@ -315,13 +315,14 @@ class OntologyCodeGenerator:
 
             # Adding `__init__` arguments for each class
             if isinstance(elem, ast.ClassDef):
-
                 # Adding base names for each class
                 elem_base_names = set()
                 if elem.bases is not None and len(elem.bases) > 0:
                     for elem_base in elem.bases:
                         while isinstance(elem_base, ast.Subscript):
                             # TODO: Doesn't handle typed class well.
+                            elem_base_names.add(elem_base.slice.value.id)
+                            elem_base_names.add(elem_base.value.id)
                             elem_base = elem_base.slice.value
                         elem_base_names.add(elem_base.id)
                 init_func = None

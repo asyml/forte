@@ -44,30 +44,6 @@ class OntonotesReader(PackReader):
     download the CoNLL style annotations for the OntoNotes v5.0 release
     – LDC2013T19.tgz obtained from LDC.
 
-    Args:
-        column_format: A list of strings indicating which field each column in a
-            line corresponds to. The length of the list should be equal to the
-            number of columns in the files to be read. Available field types
-            include:
-
-            - ``"document_id"``
-            - ``"part_number"``
-            - ``"word"``
-            - ``"pos_tag"``
-            - ``"lemmatised_word"``
-            - ``"framenet_id"``
-            - ``"word_sense"``
-            - ``"speaker"``
-            - ``"entity_label"``
-            - ``"coreference"``
-            - ``"*predicate_labels"``
-
-            Field types marked with ``*`` indicate a variable-column field: it
-            could span multiple fields. Only one such field is allowed in the
-            format specification.
-
-            If a column should be ignored, fill in `None` at the corresponding
-            position.
     """
 
     class ParsedFields(NamedTuple):
@@ -155,7 +131,29 @@ class OntonotesReader(PackReader):
         Here:
 
         `"column_format"`: list
-            A `List` of default column types.
+            A list of strings indicating which field each column in a
+            line corresponds to. The length of the list should be equal to the
+            number of columns in the files to be read. Available field types
+            include:
+
+            - ``"document_id"``
+            - ``"part_number"``
+            - ``"word"``
+            - ``"pos_tag"``
+            - ``"lemmatised_word"``
+            - ``"framenet_id"``
+            - ``"word_sense"``
+            - ``"speaker"``
+            - ``"entity_label"``
+            - ``"coreference"``
+            - ``"*predicate_labels"``
+
+            Field types marked with ``*`` indicate a variable-column field: it
+            could span multiple fields. Only one such field is allowed in the
+            format specification.
+
+            If a column should be ignored, fill in `None` at the corresponding
+            position.
 
             .. note::
                 A `None` field means that column in the dataset file will be
@@ -226,7 +224,7 @@ class OntonotesReader(PackReader):
                 line = line.strip()
 
                 if line.startswith("#end document"):
-                    # group the coreference mentions in the whole document
+                    # Group the coreference mentions in the whole document.
                     for _, mention_list in groups.items():
                         group = CoreferenceGroup(pack)
                         group.add_members(mention_list)

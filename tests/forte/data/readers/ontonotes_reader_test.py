@@ -77,15 +77,9 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
             for sentence in pack.get(Sentence):
                 for pred_link in pack.get(PredicateLink, sentence):
                     pred_link: PredicateLink
-                    actual.append((pred_link.tid,
-                                   pred_link.get_parent().text,
+                    actual.append((pred_link.get_parent().text,
                                    pred_link.get_child().text,
                                    pred_link.arg_type))
-
-        # sort list by link tid
-        actual = [(x[1], x[2], x[3]) for x in
-                  sorted(actual, key=lambda x: x[0])]
-
         self.assertEqual(actual, expected)
 
 
