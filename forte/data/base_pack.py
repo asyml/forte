@@ -444,6 +444,7 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
     def get_entries_by_type(
             self, entry_type: Type[EntryType]) -> Iterator[EntryType]:
         """ Return the entries of a specific type (sub types not included)
+
         Args:
             entry_type: The entry type to search for.
 
