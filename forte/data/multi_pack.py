@@ -509,8 +509,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         else:
             return target[target.index(entry)]
 
-    def get(
-            self, entry_type: Type[EntryType],  # type: ignore
+    def get(  # type: ignore
+            self, entry_type: Type[EntryType],
             components: Optional[Union[str, List[str]]] = None,
             include_sub_type=True
     ) -> Iterator[EntryType]:
@@ -572,7 +572,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 if not self.is_created_by(e, components):
                     continue
 
-            yield e
+            yield e  # type: ignore
 
     @classmethod
     def deserialize(cls, string: str) -> "MultiPack":
