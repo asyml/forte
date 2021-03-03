@@ -19,7 +19,7 @@ import logging
 import os
 import re
 import sys
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from urllib.parse import urlparse, parse_qs
 
 import rdflib
