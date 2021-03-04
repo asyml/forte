@@ -10,7 +10,9 @@ class AnnotationRemover(PackProcessor):
         for type_name in self.configs.removal_types:
             type_cls = get_class(type_name)
 
-            for t in input_pack.get(type_cls):
+            # Note: we cannot delete during iteration, which may cause
+            # un-expected behavior in the iterator.
+            for t in list(input_pack.get(type_cls)):
                 input_pack.delete_entry(t)
 
     @classmethod

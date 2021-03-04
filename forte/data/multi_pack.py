@@ -54,8 +54,8 @@ class MultiPackMeta(BaseMeta):
 # pylint: disable=too-many-public-methods
 
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
-    r"""A :class:`MultiPack' contains multiple DataPacks and a collection of
-    cross-pack entries (links, and groups)
+    r"""A :class:`MultiPack` contains multiple `DataPacks` and a collection of
+    cross-pack entries (such as links and groups)
     """
 
     def __init__(self, pack_name: Optional[str] = None):
@@ -140,7 +140,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def _init_meta(self, pack_name: Optional[str] = None) -> MultiPackMeta:
         return MultiPackMeta(pack_name)
 
-    def validate(self, entry: EntryType) -> bool:
+    def _validate(self, entry: EntryType) -> bool:
         return isinstance(entry, MultiPackEntries)
 
     # TODO: get_subentry maybe useless
@@ -251,8 +251,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def get_pack(self, name: str) -> DataPack:
         """
         Get data pack of name.
+
         Args:
-            name: The name of the pack
+            name: The name of the pack.
 
         Returns: The pack that has that name.
 
@@ -310,13 +311,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         An iterator of all links in this multi pack.
 
         Returns: Iterator of all links, of
-          type :class:"~forte.data.ontology.top.MultiPackLink".
+        type :class:`~forte.data.ontology.top.MultiPackLink`.
 
         """
         yield from self.links
 
     @property
-    def num_links(self):
+    def num_links(self) -> int:
         """
         Number of groups in this multi pack.
 
@@ -330,14 +331,14 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
          An iterator of all groups in this multi pack.
 
-         Returns: Iterator of all links, of
-           type :class:"~forte.data.ontology.top.MultiPackGroup".
+         Returns: Iterator of all groups, of
+         type :class:`~forte.data.ontology.top.MultiPackGroup`.
 
          """
         yield from self.groups
 
     @property
-    def num_groups(self):
+    def num_groups(self) -> int:
         """
         Number of groups in this multi pack.
 
@@ -379,7 +380,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             skip_k: int = 0
     ) -> Iterator[Dict[str, Any]]:
         r"""Get pack data from one of the packs specified by the name. This is
-        equivalent to calling the :meth: `get_data` in :class: `DataPack`.
+        equivalent to calling the
+        :meth:`~forte.data.data_pack.DataPack.get_data` in
+        :class:`~forte.data.data_pack.DataPack`.
 
         Args:
             pack_index (int): The index of a single pack.
@@ -413,46 +416,52 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             request: MdRequest,
     ):
         r"""
-        Example:
-
-            .. code-block:: python
-
-                requests = {
-                    MultiPackLink:
-                        {
-                            "component": ["dummy"],
-                            "fields": ["speaker"],
-                        },
-                    base_ontology.Token: ["pos", "sense""],
-                    base_ontology.EntityMention: {
-                        "unit": "Token",
-                    },
-                }
-                pack.get_cross_pack_data(requests)
+        NOTE: This function is not finished.
 
         Get data via the links and groups across data packs. The keys could be
-        Multipack entries (i.e. MultipackLink and MultipackGroup). The values
-        specifies the detailed entry information to be get. The value can be a
-        List of field names, then the return result will contains all specified
-        fields.
+        `MultiPack` entries (i.e. `MultiPackLink` and `MultiPackGroup`). The
+        values specifies the detailed entry information to be get. The value
+        can be a List of field names, then the return results will contains all
+        specified fields.
 
         One can also call this method with more constraints by providing
-        a Dict, which can contain the following keys:
-          - "fields", this specifies the attribute field names to be obtained
-          - "unit", this specifies the unit used to index the annotation
-          - "component", this specifies a constraint to take only the entries
+        a dictionary, which can contain the following keys:
+
+        - "fields", this specifies the attribute field names to be obtained
+        - "unit", this specifies the unit used to index the annotation
+        - "component", this specifies a constraint to take only the entries
           created by the specified component.
 
-        The data request logic is very similar to :meth: ``get_data`` function
-        in :class: ``Datapack``, only that this is constraint to the Multipack
-        entries.
+        The data request logic is similar to that of
+        :meth:`~forte.data.data_pack.DataPack.get_data` function
+        in :class:`~forte.data.data_pack.DataPack`, but applied on
+        `MultiPack` entries.
+
+        Example:
+
+        .. code-block:: python
+
+            requests = {
+                MultiPackLink:
+                    {
+                        "component": ["dummy"],
+                        "fields": ["speaker"],
+                    },
+                base_ontology.Token: ["pos", "sense""],
+                base_ontology.EntityMention: {
+                    "unit": "Token",
+                },
+            }
+            pack.get_cross_pack_data(requests)
 
         Args:
-            request: A dict containing the data request. The key is the
+            request: A dict containing the data request. The keys are the types
+              to be requested, and the fields are the detailed constraints.
 
         Returns:
 
         """
+        # TODO: Not finished yet
         pass
 
     def __add_entry_with_check(
@@ -500,57 +509,83 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         else:
             return target[target.index(entry)]
 
-    def get(self, entry_type: Type[EntryType],  # type: ignore
-            components: Optional[Union[str, List[str]]] = None):
-        """ Get ``entry_type`` entries from this multi pack.
+    def get(  # type: ignore
+            self, entry_type: Type[EntryType],
+            components: Optional[Union[str, List[str]]] = None,
+            include_sub_type=True
+    ) -> Iterator[EntryType]:
+        """ Get entries of `entry_type` from this multi pack.
 
         Example:
 
-            .. code-block:: python
+        .. code-block:: python
 
-                for relation in pack.get_entries(
-                                    CrossDocEntityRelation,
-                                    component=entity_component
-                                    ):
-                    print(relation.parent)
-                    ...
+            for relation in pack.get_entries(
+                                CrossDocEntityRelation,
+                                component="relation_creator"
+                                ):
+                print(relation.get_parent())
 
-            In the above code snippet, we get entries of type
-            ``CrossDocEntityRelation`` within each ``sentence`` which were
-            generated by ``entity_component``
+        In the above code snippet, we get entries of type
+        ``CrossDocEntityRelation`` which were
+        generated by a component named ``relation_creator``
 
         Args:
             entry_type (type): The type of the entries requested.
             components (str or list, optional): The component generating the
                 entries requested. If `None`, all valid entries generated by
                 any component will be returned.
+            include_sub_type (bool): whether to return the sub types of the
+                queried `entry_type`. True by default.
 
-        Returns:
+        Returns: An iterator of the entries matching the arguments, following
+        the order of entries (first sort by entry comparison, then by
+        insertion)
 
         """
-        # valid type
-        valid_id = self.get_ids_by_type(entry_type)
-        # valid component
+        entry_iter: Iterator[Entry]
+
+        if not include_sub_type:
+            entry_iter = self.get_entries_of(entry_type)
+        elif issubclass(entry_type, MultiPackLink):
+            entry_iter = self.links
+        elif issubclass(entry_type, MultiPackGroup):
+            entry_iter = self.groups
+        elif issubclass(entry_type, MultiPackGeneric):
+            entry_iter = self.generics
+
+        all_types: Set[Type]
+        if include_sub_type:
+            all_types = self._expand_to_sub_types(entry_type)
+
         if components is not None:
             if isinstance(components, str):
                 components = [components]
-            valid_id &= self.get_ids_by_creators(components)
 
-        for entry_id in valid_id:
-            yield self.get_entry(entry_id)
+        for e in entry_iter:
+            # Will check for the type matching if sub types are also requested.
+            if include_sub_type and type(e) not in all_types:
+                continue
+
+            # Check for the component.
+            if components is not None:
+                if not self.is_created_by(e, components):
+                    continue
+
+            yield e  # type: ignore
 
     @classmethod
     def deserialize(cls, string: str) -> "MultiPack":
         """
         Deserialize a Multi Pack from a string. Note that this will only
-          deserialize the native multipack content, which means the associated
-          DataPacks contained in the Multipack will not be recovered. A
-          followed-up step need to be performed to add the data packs back
-          to the multi pack.
+        deserialize the native multi pack content, which means the associated
+        DataPacks contained in the MultiPack will not be recovered. A
+        followed-up step need to be performed to add the data packs back
+        to the multi pack.
 
-          This internally calls the
-          internal :meth:`~forte.data.BasePack._deserialize` function from the
-          :class:`~forte.data.BasePack`.
+        This internally calls the
+        internal :meth:`~forte.data.base_pack.BasePack._deserialize`
+        function from the :class:`~forte.data.base_pack.BasePack`.
 
         Args:
             string: The serialized string of a Multi pack to be deserialized.
@@ -561,12 +596,14 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return cls._deserialize(string)
 
     def _add_entry(self, entry: EntryType) -> EntryType:
-        r"""Force add an :class:`Entry` object to the :class:`MultiPack` object.
+        r"""Force add an :class:`forte.data.ontology.core.Entry` object to the
+        :class:`MultiPack` object.
 
         Allow duplicate entries in a datapack.
 
         Args:
-            entry (Entry): An :class:`Entry` object to be added to the datapack.
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry` object
+                to be added to the datapack.
 
         Returns:
             The input entry itself
@@ -574,11 +611,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return self.__add_entry_with_check(entry, True)
 
     def delete_entry(self, entry: EntryType):
-        r"""Delete an :class:`~forte.data.ontology.top.Entry` object from the
-         :class:`MultiPack`.
+        r"""Delete an :class:`~forte.data.ontology.core.Entry` object from the
+        :class:`MultiPack`.
 
         Args:
-            entry (Entry): An :class:`~forte.data.ontology.top.Entry`
+            entry (Entry): An :class:`~forte.data.ontology.core.Entry`
                 object to be deleted from the pack.
 
         """

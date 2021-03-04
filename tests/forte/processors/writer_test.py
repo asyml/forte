@@ -15,6 +15,7 @@
 """
 Unit tests for the writers.
 """
+import os
 import shutil
 import tempfile
 import unittest
@@ -31,7 +32,14 @@ from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import Token
 
 
-class TestLowerCaserProcessor(unittest.TestCase):
+class TestJsonWriter(unittest.TestCase):
+    def setUp(self):
+        self.data_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__), '..', '..', '..',
+                'data_samples', 'ontonotes/00')
+        )
+
     def test_serialize_deserialize_processor(self):
         pipe_serialize = Pipeline[DataPack]()
         pipe_serialize.set_reader(OntonotesReader())
@@ -48,35 +56,33 @@ class TestLowerCaserProcessor(unittest.TestCase):
         pipe_serialize.add(NLTKWordTokenizer())
         pipe_serialize.add(NLTKPOSTagger())
 
-        output_path = tempfile.mkdtemp()
+        with tempfile.TemporaryDirectory() as output_dir:
+            pipe_serialize.add(
+                PackNameJsonPackWriter(), {
+                    'output_dir': output_dir,
+                    'indent': 2,
+                }
+            )
 
-        pipe_serialize.add(
-            PackNameJsonPackWriter(), {
-                'output_dir': output_path,
-                'indent': 2,
-            }
-        )
+            pipe_serialize.run(self.data_path)
 
-        dataset_path = "data_samples/ontonotes/00"
-        pipe_serialize.run(dataset_path)
+            pipe_deserialize = Pipeline[DataPack]()
+            pipe_deserialize.set_reader(RecursiveDirectoryDeserializeReader())
+            pipe_deserialize.initialize()
 
-        pipe_deserialize = Pipeline[DataPack]()
-        pipe_deserialize.set_reader(RecursiveDirectoryDeserializeReader())
-        pipe_deserialize.initialize()
+            token_counts: Dict[str, int] = {}
 
-        token_counts: Dict[str, int] = {}
+            # This basically test whether the deserialized data is
+            # still the same as expected.
+            pack: DataPack
+            for pack in pipe_deserialize.process_dataset(output_dir):
+                tokens: List[Token] = list(pack.get(Token))
+                token_counts[pack.pack_name] = len(tokens)
 
-        # This basically test whether the deserialized data is still the same
-        # as expected.
-        pack: DataPack
-        for pack in pipe_deserialize.process_dataset(output_path):
-            tokens: List[Token] = list(pack.get(Token))
-            token_counts[pack.pack_name] = len(tokens)
+            expected_count = {
+                'bn/abc/00/abc_0039': 72, 'bn/abc/00/abc_0019': 370,
+                'bn/abc/00/abc_0059': 39, 'bn/abc/00/abc_0009': 424,
+                'bn/abc/00/abc_0029': 487, 'bn/abc/00/abc_0069': 428,
+                'bn/abc/00/abc_0049': 73}
 
-        expected_count = {'bn/abc/00/abc_0039': 72, 'bn/abc/00/abc_0019': 370,
-                          'bn/abc/00/abc_0059': 39, 'bn/abc/00/abc_0009': 424,
-                          'bn/abc/00/abc_0029': 487, 'bn/abc/00/abc_0069': 428,
-                          'bn/abc/00/abc_0049': 73}
-
-        assert token_counts == expected_count
-        shutil.rmtree(output_path)
+            assert token_counts == expected_count

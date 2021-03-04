@@ -360,6 +360,23 @@ class Predictor(BaseBatchProcessor):
             else:
                 job_i.set_status(ProcessJobStatus.QUEUED)
 
+    def flush(self):
+        for batch in self.batcher.flush():
+            packs, instances, features = batch
+            predictions = self.predict(features)
+            for tag, preds in predictions.items():
+                for pred, pack, instance in zip(preds, packs, instances):
+                    self.configs.feature_scheme[tag]["extractor"].\
+                        pre_evaluation_action(pack, instance)
+                    self.configs.feature_scheme[tag]["extractor"].\
+                        add_to_pack(pack, instance, pred)
+                    pack.add_all_remaining_entries()
+
+        current_queue = self._process_manager.current_queue
+
+        for job in current_queue:
+            job.set_status(ProcessJobStatus.PROCESSED)
+
     def predict(self, data_batch: Dict) -> Dict:
         r"""The function that task processors should implement. Make
         predictions for the input ``data_batch``.
