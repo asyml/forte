@@ -20,7 +20,8 @@ import csv
 import logging
 import os
 from collections import defaultdict
-from typing import Iterator, Dict, List, Tuple, TextIO, Any, DefaultDict
+from typing import Iterator, Dict, List, Tuple, TextIO, Any, DefaultDict, \
+    Optional
 
 import rdflib
 from smart_open import open
@@ -82,9 +83,9 @@ class DBpediaWikiReader(PackReader):
                 if (nif_type and nif_type == "context" and
                         fragment is not None and fragment == 'isString'):
                     str_data['text'] = o.toPython()
-                    doc_name: str = get_resource_name(s)
+                    doc_name: Optional[str] = get_resource_name(s)
                     old_id: str = get_resource_attribute(c.identifier, 'oldid')
-                    if doc_name is not None and old_id is not None:
+                    if Optional[doc_name] is not None and old_id is not None:
                         str_data['doc_name'] = doc_name
                         str_data['oldid'] = old_id
                         yield str_data
