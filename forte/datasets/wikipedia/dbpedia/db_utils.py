@@ -88,7 +88,7 @@ def get_resource_attribute(url: str, param_name: str) -> Optional[str]:
     return parse_qs(parsed.query)[param_name][0]
 
 
-def context_base(c: rdflib.Graph) -> str:
+def context_base(c: rdflib.Graph) -> Optional[str]:
     """
     Take the base URL (context) from an URI from an statement.
 
@@ -96,7 +96,7 @@ def context_base(c: rdflib.Graph) -> str:
         c: The statement (which is a parsed rdflib.Graph object)
 
     Returns:
-        The base URL.
+        The base URL. None if the URL cannot be parsed.
 
     """
     return strip_url_params(c.identifier)
@@ -301,6 +301,9 @@ class ContextGroupedNIFReader:
                 statements = next(self.__parser)
                 for s, v, o, c in statements:
                     c_ = context_base(c)
+
+                    if c_ is None:
+                        continue
 
                     if c_ != self.__last_c and self.__last_c != '':
                         res_c = self.__last_c

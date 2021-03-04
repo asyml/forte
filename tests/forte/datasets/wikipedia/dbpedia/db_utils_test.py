@@ -2,9 +2,10 @@ import os
 import unittest
 
 from forte.datasets.wikipedia.dbpedia import db_utils
-from forte.datasets.wikipedia.dbpedia.db_utils import NIFParser, context_base, \
-    get_resource_fragment, get_resource_name, strip_url_params, \
-    ContextGroupedNIFReader, get_resource_attribute
+from forte.datasets.wikipedia.dbpedia.db_utils import (
+    NIFParser, context_base, get_resource_fragment, get_resource_name,
+    strip_url_params, ContextGroupedNIFReader
+)
 
 
 class DBUtilTest(unittest.TestCase):
