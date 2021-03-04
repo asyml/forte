@@ -20,8 +20,8 @@ import csv
 import logging
 import os
 from collections import defaultdict
-from typing import Iterator, Dict, List, Tuple, TextIO, Any, DefaultDict, \
-    Optional
+from typing import (
+    Iterator, Dict, List, Tuple, TextIO, Any, DefaultDict, Optional)
 
 import rdflib
 from smart_open import open
@@ -30,11 +30,11 @@ from forte.common import Resources
 from forte.common.configuration import Config
 from forte.common.exception import ResourceError
 from forte.data.data_pack import DataPack
+from forte.data.readers.base_reader import PackReader
 from forte.datasets.wikipedia.dbpedia.db_utils import (
     NIFParser, get_resource_attribute,
     get_resource_name, get_resource_fragment,
-    print_progress, ContextGroupedNIFReader, print_notice, state_type)
-from forte.data.readers.base_reader import PackReader
+    print_progress, ContextGroupedNIFReader, state_type)
 from forte.processors.base import JsonPackWriter
 from ft.onto.wikipedia import (
     WikiPage, WikiSection, WikiParagraph, WikiTitle, WikiAnchor,
