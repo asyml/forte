@@ -20,7 +20,8 @@ import csv
 import logging
 import os
 from collections import defaultdict
-from typing import Iterator, Dict, List, Tuple, TextIO, Any, DefaultDict
+from typing import Iterator, Dict, List, Tuple, TextIO, Any, DefaultDict, \
+    Optional
 
 import rdflib
 from smart_open import open
@@ -78,14 +79,17 @@ class DBpediaWikiReader(PackReader):
                 nif_type = get_resource_attribute(s, "nif")
                 print_progress(f'Collecting DBpedia resource: [{c.identifier}]')
 
-                if nif_type and nif_type == "context" and get_resource_fragment(
-                        v) == 'isString':
+                fragment = get_resource_fragment(v)
+                if (nif_type and nif_type == "context" and
+                        fragment is not None and fragment == 'isString'):
                     str_data['text'] = o.toPython()
-                    str_data['doc_name'] = get_resource_name(s)
-                    str_data['oldid'] = get_resource_attribute(
+                    doc_name: Optional[str] = get_resource_name(s)
+                    old_id: Optional[str] = get_resource_attribute(
                         c.identifier, 'oldid')
-
-                    yield str_data
+                    if doc_name is not None and old_id is not None:
+                        str_data['doc_name'] = doc_name
+                        str_data['oldid'] = old_id
+                        yield str_data
 
     def _parse_pack(
             self, doc_data: Dict[str, str]
@@ -161,7 +165,9 @@ class WikiPackReader(PackReader):
     def _collect(self, nif_path: str  # type: ignore
                  ) -> Iterator[Tuple[str, Dict[str, List[state_type]]]]:
         for _, statements in ContextGroupedNIFReader(nif_path):
-            yield get_resource_name(statements[0][0]), statements
+            name = get_resource_name(statements[0][0])
+            if name is not None:
+                yield name, statements
 
     def _parse_pack(
             self, collection: Tuple[str, List[state_type]]
@@ -281,8 +287,11 @@ class WikiStructReader(WikiPackReader):
     def add_wiki_info(self, pack: DataPack, statements: List):
         for nif_range, rel, struct_type in statements:
             r = get_resource_fragment(rel)
-            if r == 'type':
+            if r is not None and r == 'type':
                 range_ = get_resource_attribute(nif_range, 'char')
+                if range_ is None:
+                    continue
+
                 begin, end = [int(d) for d in range_.split(',')]
 
                 if end > len(pack.text):
@@ -302,14 +311,16 @@ class WikiStructReader(WikiPackReader):
 
                 struct_ = get_resource_fragment(struct_type)
 
-                if struct_ == 'Section':
-                    WikiSection(pack, begin, end)
-                elif struct_ == 'Paragraph':
-                    WikiParagraph(pack, begin, end)
-                elif struct_ == 'Title':
-                    WikiTitle(pack, begin, end)
-                else:
-                    logging.warning("Unknown struct type: %s", struct_type)
+                if struct_ is not None:
+                    if struct_ == 'Section':
+                        WikiSection(pack, begin, end)
+                    elif struct_ == 'Paragraph':
+                        WikiParagraph(pack, begin, end)
+                    elif struct_ == 'Title':
+                        WikiTitle(pack, begin, end)
+                    else:
+                        logging.warning(
+                            "Unknown struct type: %s", struct_type)
 
 
 class WikiAnchorReader(WikiPackReader):
@@ -324,7 +335,8 @@ class WikiAnchorReader(WikiPackReader):
         for nif_range, rel, info in statements:
             range_ = get_resource_attribute(nif_range, 'char')
             r = get_resource_fragment(rel)
-            link_grouped[range_][r] = info
+            if range_ is not None and r is not None:
+                link_grouped[range_][r] = info
 
         for range_, link_infos in link_grouped.items():
             begin, end = [int(d) for d in range_.split(',')]
@@ -353,7 +365,8 @@ class WikiAnchorReader(WikiPackReader):
                                         info_value)
                 if info_key == 'taIdentRef':
                     target_page_name = get_resource_name(info_value)
-                    if target_page_name in self._redirects:
+                    if (target_page_name is not None
+                            and target_page_name in self._redirects):
                         target_page_name = self._redirects[
                             target_page_name]
                     anchor.target_page_name = target_page_name
@@ -370,9 +383,10 @@ class WikiPropertyReader(WikiPackReader):
         for _, v, o in statements:
             slot_name = v.toPython()
             slot_value = get_resource_name(o)
-            info_box = WikiInfoBoxProperty(pack)
-            info_box.key = slot_name
-            info_box.value = slot_value
+            if slot_value is not None:
+                info_box = WikiInfoBoxProperty(pack)
+                info_box.key = slot_name
+                info_box.value = slot_value
 
 
 class WikiInfoBoxReader(WikiPackReader):
@@ -383,6 +397,8 @@ class WikiInfoBoxReader(WikiPackReader):
 
     def add_wiki_info(self, pack: DataPack, info_box_statements: List):
         for _, v, o in info_box_statements:
-            info_box = WikiInfoBoxMapped(pack)
-            info_box.key = v.toPython()
-            info_box.value = get_resource_name(o)
+            name = get_resource_name(o)
+            if name is not None:
+                info_box = WikiInfoBoxMapped(pack)
+                info_box.key = v.toPython()
+                info_box.value = name

@@ -19,7 +19,7 @@ import logging
 import os
 import re
 import sys
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from urllib.parse import urlparse, parse_qs
 
 import rdflib
@@ -52,16 +52,17 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
         for statement in statements:
             s, v, o, _ = statement
             if str(v) == redirect_rel:
-                count += 1
                 from_page = get_resource_name(s)
                 redirect_page = get_resource_name(o)
-                redirect_to[from_page] = redirect_page
+                if from_page is not None and redirect_page is not None:
+                    redirect_to[from_page] = redirect_page
+                    count += 1
                 if count % 50000 == 0:
                     logging.info("Loaded %d redirects.", count)
     return redirect_to
 
 
-def get_resource_attribute(url: str, param_name: str) -> str:
+def get_resource_attribute(url: str, param_name: str) -> Optional[str]:
     # pylint: disable=line-too-long
     """
     A utility function that extract the attribute of the resource from a NIF
@@ -78,11 +79,16 @@ def get_resource_attribute(url: str, param_name: str) -> str:
     Returns (str):
         The extracted parameter value.
     """
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        logging.warning("Encounter un-parsable URL [%s]", url)
+        return None
+
     return parse_qs(parsed.query)[param_name][0]
 
 
-def context_base(c: rdflib.Graph) -> str:
+def context_base(c: rdflib.Graph) -> Optional[str]:
     """
     Take the base URL (context) from an URI from an statement.
 
@@ -90,13 +96,13 @@ def context_base(c: rdflib.Graph) -> str:
         c: The statement (which is a parsed rdflib.Graph object)
 
     Returns:
-        The base URL.
+        The base URL. None if the URL cannot be parsed.
 
     """
     return strip_url_params(c.identifier)
 
 
-def get_resource_fragment(url: str) -> str:
+def get_resource_fragment(url: str) -> Optional[str]:
     # pylint: disable=line-too-long
     """
     Get the resource fragment from an URL.
@@ -111,10 +117,14 @@ def get_resource_fragment(url: str) -> str:
     Returns:
         The resource fragment.
     """
-    return urlparse(url).fragment
+    try:
+        return urlparse(url).fragment
+    except ValueError:
+        logging.warning("Encounter un-parsable URL [%s]", url)
+        return None
 
 
-def get_resource_name(url: str) -> str:
+def get_resource_name(url: str) -> Optional[str]:
     # pylint: disable=line-too-long
     """
     Get the name of the resource from the URL.
@@ -124,17 +134,22 @@ def get_resource_name(url: str) -> str:
     'Animalia_(book)'
 
     Args:
-        url: The URL to find the resource name.
+        url: The URL to find the resource name. None if the URL cannot be
+          correctly parsed.
 
     Returns:
         The resource name.
     """
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        logging.warning("Encounter un-parsable URL [%s]", url)
+        return None
 
-    parsed = urlparse(url)
     return re.sub('^/resource/', '', parsed.path)
 
 
-def strip_url_params(url) -> str:
+def strip_url_params(url) -> Optional[str]:
     # pylint: disable=line-too-long
     """
     Take only the base URL and strip the parameters.
@@ -149,7 +164,12 @@ def strip_url_params(url) -> str:
     Returns:
         The base URL without all parameters.
     """
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        logging.warning("Encounter un-parsable URL [%s]", url)
+        return None
+
     return parsed.scheme + "://" + parsed.netloc + parsed.path
 
 
@@ -281,6 +301,9 @@ class ContextGroupedNIFReader:
                 statements = next(self.__parser)
                 for s, v, o, c in statements:
                     c_ = context_base(c)
+
+                    if c_ is None:
+                        continue
 
                     if c_ != self.__last_c and self.__last_c != '':
                         res_c = self.__last_c
