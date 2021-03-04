@@ -36,16 +36,21 @@ from forte.pipeline import Pipeline
 def add_wiki_info(
         reader: PackReader, resources: Resources,
         input_path: str, input_pack_path: str,
-        output_path: str, prompt_name: str, skip_existing=True):
+        output_path: str, prompt_name: str,
+        skip_existing=True, overwrite=False,
+        input_index_file_name: str = 'article.idx',
+        output_index_file_name: str = 'article.idx',
+):
     pl = Pipeline[DataPack](resources)
 
-    if skip_existing and os.path.exists(output_path):
+    out_index_path = os.path.join(output_path, output_index_file_name)
+    if skip_existing and os.path.exists(out_index_path):
         print_progress(f'\n{output_path} exist, skipping {prompt_name}', '\n')
         return
 
     pl.set_reader(
         reader, config={
-            'pack_index': os.path.join(input_pack_path, 'article.idx'),
+            'pack_index': os.path.join(input_pack_path, input_index_file_name),
             'pack_dir': input_pack_path,
         }
     )
@@ -55,6 +60,8 @@ def add_wiki_info(
             'output_dir': output_path,
             'zip_pack': True,
             'drop_record': True,
+            'output_index_file': output_index_file_name,
+            'overwrite': overwrite
         },
     )
 
@@ -112,30 +119,41 @@ def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
     read_wiki_text(nif_context, raw_pack_dir, resources, True)
     print_progress("Done reading wikipedia text.", '\n')
 
-    # 2. Add the rest of wiki page structures:
+    # 2. Add wiki page structures, create a new directory for it.
     struct_dir = raw_pack_dir + '_struct'
     add_wiki_info(WikiStructReader(), resources, nif_page_structure,
                   raw_pack_dir, struct_dir, 'page_structures', True)
     print_progress("Done reading wikipedia structures.", '\n')
 
+    # 3. Add wiki links, create a new directory for it.
     link_dir = struct_dir + '_links'
     add_wiki_info(WikiAnchorReader(), resources, nif_text_links,
                   struct_dir, link_dir, 'anchor_links', True)
     print_progress("Done reading wikipedia anchors.", '\n')
 
-    property_dir = link_dir + '_property'
+    # 4 The following steps add info boxes:
+    # 4.1 Add un-mapped infobox, we directly write to the previous directory
+    property_dir = link_dir
     add_wiki_info(WikiPropertyReader(), resources, info_boxs_properties,
-                  link_dir, property_dir, 'info_box_properties', True)
-    print_progress("Done reading wikipedia info-boxes.", '\n')
+                  link_dir, property_dir, 'info_box_properties',
+                  skip_existing=True, overwrite=True,
+                  output_index_file_name='properties.idx')
+    print_progress("Done reading wikipedia info-boxes properties.", '\n')
 
-    literal_dir = property_dir + '_literals'
+    # 4.1 Add mapped literal, we directly write to the previous directory.
+    literal_dir = property_dir
     add_wiki_info(WikiInfoBoxReader(), resources, mapping_literals,
-                  property_dir, literal_dir, 'literals', True)
+                  property_dir, literal_dir, 'literals',
+                  skip_existing=True, overwrite=True,
+                  output_index_file_name='literals.idx')
     print_progress("Done reading wikipedia info-boxes literals.", '\n')
 
-    mapping_dir = literal_dir + '_objects'
+    # 4.1 Add mapped object, we directly write to the previous directory.
+    mapping_dir = literal_dir
     add_wiki_info(WikiInfoBoxReader(), resources, mapping_objects,
-                  literal_dir, mapping_dir, 'objects', True)
+                  literal_dir, mapping_dir, 'objects',
+                  skip_existing=True, overwrite=True,
+                  output_index_file_name='objects.idx')
     print_progress("Done reading wikipedia info-boxes objects.", '\n')
 
 
