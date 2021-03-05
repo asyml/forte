@@ -20,8 +20,8 @@ import csv
 import logging
 import os
 from collections import defaultdict
-from typing import Iterator, Dict, List, Tuple, TextIO, Any, DefaultDict, \
-    Optional
+from typing import (
+    Iterator, Dict, List, Tuple, TextIO, Any, DefaultDict, Optional)
 
 import rdflib
 from smart_open import open
@@ -30,11 +30,11 @@ from forte.common import Resources
 from forte.common.configuration import Config
 from forte.common.exception import ResourceError
 from forte.data.data_pack import DataPack
+from forte.data.readers.base_reader import PackReader
 from forte.datasets.wikipedia.dbpedia.db_utils import (
     NIFParser, get_resource_attribute,
     get_resource_name, get_resource_fragment,
-    print_progress, ContextGroupedNIFReader, print_notice, state_type)
-from forte.data.readers.base_reader import PackReader
+    print_progress, ContextGroupedNIFReader, state_type)
 from forte.processors.base import JsonPackWriter
 from ft.onto.wikipedia import (
     WikiPage, WikiSection, WikiParagraph, WikiTitle, WikiAnchor,
@@ -184,14 +184,14 @@ class WikiPackReader(PackReader):
                 self._pack_index[resource_name]
             )
 
-            # smart_open can handle the `gz` files.
+            # `smart_open` can handle the `gz` files.
             if os.path.exists(pack_path):
                 with open(pack_path) as pack_file:
                     pack: DataPack = DataPack.deserialize(pack_file.read())
                     self.add_wiki_info(pack, statements)
                     yield pack
         else:
-            print_notice(f"Resource {resource_name} pack not found.")
+            logging.info("Resource %s pack not found.", resource_name)
 
     @classmethod
     def default_configs(cls):
@@ -239,7 +239,8 @@ class WikiArticleWriter(JsonPackWriter):
         super().initialize(resources, configs)
         self.article_count = 0
         self.article_index = open(
-            os.path.join(self.configs.output_dir, 'article.idx'), 'w')
+            os.path.join(
+                self.configs.output_dir, self.configs.output_index_file), 'w')
         self.csv_writer = csv.writer(self.article_index, delimiter='\t')
 
     def sub_output_path(self, pack: DataPack) -> str:
@@ -276,6 +277,24 @@ class WikiArticleWriter(JsonPackWriter):
 
     def finish(self, _: Resources):
         self.article_index.close()
+
+    @classmethod
+    def default_configs(cls):
+        """
+        This defines a basic config structure for the reader.
+
+        Here:
+          - pack_dir: the directory that contains all the serialized packs.
+          - pack_index: the file name under the pack directory that points to
+            the index from the name to the actual pack path.
+
+        :return:
+        """
+        config = super().default_configs()
+        config.update({
+            'output_index_file': 'article.idx',
+        })
+        return config
 
 
 class WikiStructReader(WikiPackReader):
