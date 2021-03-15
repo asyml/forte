@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.data.extractor.base_extractor import *
-from forte.data.extractor.attribute_extractor import *
-from forte.data.extractor.char_extractor import *
-from forte.data.extractor.seqtagging_extractor import *
+from forte.data.extractors.attribute_extractor import *
+from forte.data.extractors.char_extractor import *
+from forte.data.extractors.seqtagging_extractor import *

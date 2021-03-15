@@ -19,7 +19,7 @@ import json
 from typing import Any, Iterator
 
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Token, Document, EntityMention
 
 __all__ = [

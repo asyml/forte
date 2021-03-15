@@ -19,7 +19,7 @@ from typing import Any, Union, Iterable, Hashable
 
 from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
-from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
 

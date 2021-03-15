@@ -14,7 +14,7 @@
 import unittest
 import pickle as pkl
 from ft.onto.base_ontology import Token
-from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.base_extractor import BaseExtractor
 
 
 class BaseExtractorTest(unittest.TestCase):

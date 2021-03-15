@@ -30,7 +30,7 @@ from forte.common import Resources
 from forte.common.configuration import Config
 from forte.common.exception import ResourceError
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from forte.datasets.wikipedia.dbpedia.db_utils import (
     NIFParser, get_resource_attribute,
     get_resource_name, get_resource_fragment,

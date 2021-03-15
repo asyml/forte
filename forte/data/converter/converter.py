@@ -42,7 +42,7 @@ class Converter:
             options and default values.
     """
 
-    def __init__(self, config: Union[Dict, Config]):
+    def __init__(self, config: Union[Dict, Config] = None):
         self._config = Config(config,
                               default_hparams=self.default_configs(),
                               allow_new_hparam=True)

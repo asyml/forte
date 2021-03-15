@@ -29,7 +29,7 @@ from forte.datasets.wikipedia.dbpedia import (
     DBpediaWikiReader, WikiArticleWriter,
     WikiStructReader, WikiAnchorReader, WikiPropertyReader, WikiInfoBoxReader
 )
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from forte.pipeline import Pipeline
 
 

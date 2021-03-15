@@ -153,8 +153,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         return None
 
-    # pylint: disable=unused-argument
     def text_replace_operation(self, text: str) -> ReplaceOperationsType:
+        # pylint: disable=unused-argument
         r"""Given the possibly noisy text, compute and return the
         replacement operations in the form of a list of (span, str)
         pairs, where the content in the span will be replaced by the

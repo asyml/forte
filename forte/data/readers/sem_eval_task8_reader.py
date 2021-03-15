@@ -18,7 +18,7 @@ The reader that reads SemEval Task8 data with annotations into Datapacks.
 import os
 from typing import Any, Iterator, Dict
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from forte.data.data_utils_io import dataset_path_iterator
 from ft.onto.base_ontology import Sentence, RelationLink, EntityMention
 

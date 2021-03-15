@@ -21,8 +21,8 @@ from typing import Tuple, List, Dict, Union, Optional, Iterable
 from forte.common.configuration import Config
 from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
-from forte.data.extractor.base_extractor import BaseExtractor
-from forte.data.extractor.utils import bio_tagging
+from forte.data.base_extractor import BaseExtractor
+from forte.data.extractors.utils import bio_tagging
 from forte.data.ontology.top import Annotation
 from ft.onto.base_ontology import EntityMention
 
