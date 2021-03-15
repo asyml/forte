@@ -24,9 +24,13 @@ __all__ = [
 
 
 class AttributeMasker(PackProcessor):
+    def __init__(self):
+        super().__init__()
+        self.fields: Dict = {}
 
     # pylint: disable=attribute-defined-outside-init
-    def initialize(self, _: Resources, config: Config):
+    def initialize(self, resources: Resources, config: Config):
+        super().initialize(resources, config)
         self.fields = config.kwargs
 
     @classmethod
@@ -57,7 +61,7 @@ class AttributeMasker(PackProcessor):
         return config
 
     def _process(self, input_pack: DataPack):
-        for entry_type, attributes in self.fields:
+        for entry_type, attributes in self.fields.items():
             for entry in input_pack.get_entries_of(entry_type):
                 for attribute in attributes:
                     setattr(entry, attribute, None)

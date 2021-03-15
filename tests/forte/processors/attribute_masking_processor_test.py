@@ -23,6 +23,8 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
     def test_attribute_masker(self):
         pl = Pipeline[DataPack]()
         pl.set_reader(ConllUDReader())
+
+        # TODO: should not use class in config.
         config = {
             "kwargs": {
                 Token: ["pos"]

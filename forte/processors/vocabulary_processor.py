@@ -30,10 +30,11 @@ __all__ = [
 class Alphabet:
     """
     Args:
-        name:
-        keep_growing:
+        name: The name of the alphabet
+        keep_growing: If True, new instances not found ruing `get_index` will
+            be added to the vocabulary.
         ignore_case_in_query:
-            If it's True, Alphabet will try to query the lowercased input from
+            If it's True, Alphabet will try to query the lower-cased input from
             it's vocabulary if it cannot find the input in its keys.
     """
 

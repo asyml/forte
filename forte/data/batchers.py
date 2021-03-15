@@ -159,7 +159,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
 
     def __init__(self, cross_pack: bool = True):
         super().__init__(cross_pack=cross_pack)
-        self.scope = None
+        self.scope: Type[EntryType] = None  # type: ignore
         self.feature_scheme: Dict = {}
         self.batch_size: int = -1
 

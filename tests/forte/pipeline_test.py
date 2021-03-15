@@ -43,7 +43,9 @@ from forte.processors.base.batch_processor import Predictor, BatchProcessor
 from forte.train_preprocessor import TrainPreprocessor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
-data_samples_root = "data_samples"
+data_samples_root = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    *([os.path.pardir] * 2), 'data_samples'))
 
 
 @dataclass
@@ -661,7 +663,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(dummy2, config=config)
 
         nlp.initialize()
-        data_path = "data_samples/random_texts"
+        data_path = os.path.join(data_samples_root, "random_texts")
         pack = nlp.process(data_path)
         sent_len = len(list(pack.get(Sentence)))
 
