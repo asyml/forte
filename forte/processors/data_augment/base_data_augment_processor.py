@@ -17,25 +17,26 @@ replacement ops to generate texts similar to those in the input pack
 and create a new pack with them.
 """
 from abc import ABC
-from copy import deepcopy
-from collections import defaultdict
-from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast
 from bisect import bisect_right, bisect_left
+from collections import defaultdict
+from copy import deepcopy
+from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast
+
 from sortedcontainers import SortedList, SortedDict
-from forte.data.ontology.core import Entry, BaseLink
+
 from forte.common.configuration import Config
 from forte.common.resources import Resources
+from forte.data.data_pack import DataPack
+from forte.data.multi_pack import MultiPack
+from forte.data.ontology.core import Entry, BaseLink
 from forte.data.ontology.top import (
     Annotation, MultiPackLink, Link, MultiPackGroup, Group
 )
 from forte.data.span import Span
-from forte.data.data_pack import DataPack
-from forte.data.multi_pack import MultiPack
 from forte.processors.base import MultiPackProcessor
-from forte.processors.base.base_processor import BaseProcessor
-from forte.utils.utils import get_class, create_class_with_kwargs
 from forte.processors.data_augment.algorithms.text_replacement_op \
     import TextReplacementOp
+from forte.utils.utils import get_class, create_class_with_kwargs
 
 __all__ = [
     "BaseDataAugmentProcessor",

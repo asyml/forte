@@ -29,10 +29,9 @@ from forte.data.readers import MultiPackSentenceReader, StringReader
 from forte.data.selector import AllPackSelector
 from forte.data.span import Span
 from forte.pipeline import Pipeline
-from forte.processors.base.data_augment_processor import (
-    ReplacementDataAugmentProcessor,
+from forte.processors.data_augment import ReplacementDataAugmentProcessor
+from forte.processors.data_augment.base_data_augment_processor import \
     modify_index
-)
 from forte.processors.data_augment.algorithms.text_replacement_op import \
     TextReplacementOp
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger

@@ -34,7 +34,7 @@ from forte.evaluation.base.base_evaluator import Evaluator
 from forte.pipeline_component import PipelineComponent
 from forte.process_job import ProcessJob
 from forte.process_manager import ProcessManager, ProcessJobStatus
-from forte.processors.base import BasePackProcessor, BaseProcessor
+from forte.processors.base import BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs
 
