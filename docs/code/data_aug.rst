@@ -10,7 +10,7 @@ Data Augmentation Processors
 
 :hidden:`ReplacementDataAugmentProcessor`
 ---------------------------------------------
-.. autoclass:: forte.processors.base.data_augment_processor.ReplacementDataAugmentProcessor
+.. autoclass:: forte.processors.data_augment.base_data_augment_processor.ReplacementDataAugmentProcessor
 
 :hidden:`DataSelector`
 ---------------------------------------------

@@ -93,17 +93,17 @@ Readers
 
 :hidden:`BaseReader`
 ------------------------
-.. autoclass:: forte.data.readers.base_reader.BaseReader
+.. autoclass:: forte.data.base_reader.BaseReader
     :members:
 
 :hidden:`PackReader`
 ------------------------
-.. autoclass:: forte.data.readers.base_reader.PackReader
+.. autoclass:: forte.data.base_reader.PackReader
     :members:
 
 :hidden:`MultiPackReader`
 --------------------------
-.. autoclass:: forte.data.readers.base_reader.MultiPackReader
+.. autoclass:: forte.data.base_reader.MultiPackReader
     :members:
 
 :hidden:`CoNLL03Reader`
