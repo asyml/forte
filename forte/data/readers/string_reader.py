@@ -18,7 +18,7 @@ import logging
 from typing import Iterator, List, Union
 
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Document
 
 logger = logging.getLogger(__name__)

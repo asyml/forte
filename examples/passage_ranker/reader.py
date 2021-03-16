@@ -15,7 +15,7 @@
 from typing import Iterator
 
 from forte.data.multi_pack import MultiPack
-from forte.data.readers.base_reader import MultiPackReader
+from forte.data.base_reader import MultiPackReader
 from ft.onto.base_ontology import Document
 
 

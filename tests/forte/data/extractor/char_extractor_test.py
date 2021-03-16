@@ -17,7 +17,7 @@ from ft.onto.base_ontology import Sentence, Token, EntityMention
 from forte.pipeline import Pipeline
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.data.data_pack import DataPack
-from forte.data.extractor.char_extractor import CharExtractor
+from forte.data.extractors.char_extractor import CharExtractor
 
 
 class CharExtractorTest(unittest.TestCase):

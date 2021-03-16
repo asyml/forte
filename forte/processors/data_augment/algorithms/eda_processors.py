@@ -27,7 +27,7 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.processors.base import ReplacementDataAugmentProcessor
+from forte.processors.data_augment import ReplacementDataAugmentProcessor
 from forte.utils.utils import get_class, create_class_with_kwargs
 
 __all__ = [
@@ -36,8 +36,8 @@ __all__ = [
     "RandomDeletionDataAugmentProcessor",
 ]
 
-
-english_stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours',
+english_stopwords = [
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours',
     'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your',
     'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself',
     'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its',
@@ -87,9 +87,9 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                     replace_map[swap_idx[1]] = new_idx_1
                 pid: int = data_pack.pack_id
                 for idx in replace_map:
-                    self._replaced_annos[pid]\
+                    self._replaced_annos[pid] \
                         .add((annotations[idx].span,
-                                 annotations[replace_map[idx]].text))
+                              annotations[replace_map[idx]].text))
 
     @classmethod
     def default_configs(cls):
@@ -130,6 +130,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
     not a stop word. Insert that synonym into a random position in
     the sentence. Do this n times, where n = alpha * input length.
     """
+
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         # pylint: disable=attribute-defined-outside-init

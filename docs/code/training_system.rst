@@ -34,22 +34,22 @@ Extractor
 
 :hidden:`BaseExtractor`
 ---------------------------------------
-.. autoclass:: forte.data.extractor.base_extractor.BaseExtractor
+.. autoclass:: forte.data.base_extractor.BaseExtractor
     :members:
 
 :hidden:`AttributeExtractor`
 ---------------------------------------
-.. autoclass:: forte.data.extractor.attribute_extractor.AttributeExtractor
+.. autoclass:: forte.data.extractors.attribute_extractor.AttributeExtractor
     :members:
 
 :hidden:`CharExtractor`
 ---------------------------------------
-.. autoclass:: forte.data.extractor.char_extractor.CharExtractor
+.. autoclass:: forte.data.extractors.char_extractor.CharExtractor
     :members:
 
 :hidden:`BioSeqTaggingExtractor`
 ---------------------------------------
-.. autoclass:: forte.data.extractor.seqtagging_extractor.BioSeqTaggingExtractor
+.. autoclass:: forte.data.extractors.seqtagging_extractor.BioSeqTaggingExtractor
     :members:
 
 Predictor

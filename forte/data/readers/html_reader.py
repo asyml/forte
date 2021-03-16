@@ -23,7 +23,7 @@ from typing import Iterator
 from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Document
 
 # Regular expressions used for parsing. Borrowed from

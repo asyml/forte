@@ -1,3 +1,17 @@
+# Copyright 2021 The Forte Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import csv
 import logging
 from pathlib import Path
@@ -7,7 +21,7 @@ from smart_open import open
 
 from demo.clinical import Description, Body
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 
 
 class Mimic3DischargeNoteReader(PackReader):
@@ -38,10 +52,10 @@ class Mimic3DischargeNoteReader(PackReader):
             for i, h in enumerate(self.headers):
                 if h == 'TEXT':
                     self.text_col = i
-                    logging.info(f"Text Column is {i}")
+                    logging.info("Text Column is %d", i)
                 if h == 'DESCRIPTION':
                     self.description_col = i
-                    logging.info(f"Description Column is {i}")
+                    logging.info("Description Column is %d", i)
         else:
             pack: DataPack = DataPack()
             description: str = row[self.description_col]

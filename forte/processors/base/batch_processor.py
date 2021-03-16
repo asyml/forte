@@ -14,11 +14,9 @@
 """
 The processors that process data in batch.
 """
-import itertools
 from abc import abstractmethod, ABC
 from typing import List, Dict, Optional, Type, Any
-from ft.onto.base_ontology import Sentence
-from forte.train_preprocessor import TrainPreprocessor
+
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data import slice_batch
@@ -30,8 +28,8 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation
 from forte.data.types import DataRequest
-from forte.process_manager import ProcessJobStatus
 from forte.processors.base.base_processor import BaseProcessor
+from forte.train_preprocessor import TrainPreprocessor
 
 __all__ = [
     "BaseBatchProcessor",
@@ -70,7 +68,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         super().__init__()
         self.context_type: Type[Annotation] = self._define_context()
         self.input_info: DataRequest = self._define_input_info()
-        self.batcher: ProcessingBatcher = self.define_batcher()
+        self._batcher: ProcessingBatcher = self.define_batcher()
         self.use_coverage_index = False
 
     def initialize(self, resources: Resources, configs: Optional[Config]):
@@ -78,7 +76,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         assert configs is not None
         try:
-            self.batcher.initialize(configs.batcher)
+            self._batcher.initialize(configs.batcher)
         except AttributeError as e:
             raise ProcessorConfigError(
                 "Error in handling batcher config, please provide the "
@@ -99,34 +97,15 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         if self.use_coverage_index:
             self._prepare_coverage_index(input_pack)
 
-        for packs, _, batch in self.batcher.get_batch(
+        for packs, _, batch in self._batcher.get_batch(
                 input_pack, self.context_type, self.input_info):
             pred = self.predict(batch)
             self.pack_all(packs, pred)
 
-        # update the status of the jobs. The jobs which were removed from
-        # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
-        q_index = self._process_manager.current_queue_index
-        u_index = self._process_manager.unprocessed_queue_indices[q_index]
-        data_pool_length = len(self.batcher.data_pack_pool)
-        current_queue = self._process_manager.current_queue
-
-        for i, job_i in enumerate(
-                itertools.islice(current_queue, 0, u_index + 1)):
-            if i <= u_index - data_pool_length:
-                job_i.set_status(ProcessJobStatus.PROCESSED)
-            else:
-                job_i.set_status(ProcessJobStatus.QUEUED)
-
     def flush(self):
-        for packs, _, batch in self.batcher.flush():
+        for packs, _, batch in self._batcher.flush():
             pred = self.predict(batch)
             self.pack_all(packs, pred)
-
-        current_queue = self._process_manager.current_queue
-
-        for job in current_queue:
-            job.set_status(ProcessJobStatus.PROCESSED)
 
     @abstractmethod
     def predict(self, data_batch: Dict) -> Dict:
@@ -159,7 +138,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         start = 0
         for i, pack_i in enumerate(data_pack_pool):
             output_dict_i = slice_batch(output_dict, start,
-                                current_batch_sources[i])
+                                        current_batch_sources[i])
             self.pack(pack_i, output_dict_i)
             start += current_batch_sources[i]
             pack_i.add_all_remaining_entries()
@@ -241,6 +220,10 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         """
         raise NotImplementedError
 
+    @property
+    def batcher(self) -> ProcessingBatcher:
+        return self._batcher
+
 
 class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
     r"""The batch processors that process :class:`DataPack`.
@@ -262,12 +245,17 @@ class Predictor(BaseBatchProcessor):
     extracted from the datapack and add the prediction back to the
     datapack.
     """
+
+    def __init__(self):
+        super().__init__()
+        self.model = None
+
     @staticmethod
     def _define_context() -> Type[Annotation]:
         r"""This function is just for the compatibility reason.
         And it is not actually used in this class.
         """
-        return Sentence
+        return Annotation
 
     @staticmethod
     def _define_input_info() -> DataRequest:
@@ -304,21 +292,18 @@ class Predictor(BaseBatchProcessor):
         })
         return super_config
 
-    # TODO: typing for configs is removed. It causes error.
-    def initialize(self, resources: Resources, configs):
-        batcher_config = {}
-        batcher_config["scope"] = configs.scope
-        batcher_config["feature_scheme"] = {}
-        for tag, scheme in configs.feature_scheme.items():
-            if scheme["type"] == TrainPreprocessor.DATA_INPUT:
-                batcher_config["feature_scheme"][tag] = scheme
-        batcher_config["batch_size"] = configs.batch_size
+    def initialize(self, resources: Resources, configs: Optional[Config]):
+        if configs is not None:
+            batcher_config = {"scope": configs.scope, "feature_scheme": {}}
+            for tag, scheme in configs.feature_scheme.items():
+                if scheme["type"] == TrainPreprocessor.DATA_INPUT:
+                    batcher_config["feature_scheme"][tag] = scheme
+            batcher_config["batch_size"] = configs.batch_size
+            configs.batcher = batcher_config
 
-        configs.batcher = batcher_config
         super().initialize(resources, configs)
 
     def load(self, model):
-        # pylint: disable=attribute-defined-outside-init
         self.model = model
 
     def _process(self, input_pack: DataPack):
@@ -334,48 +319,25 @@ class Predictor(BaseBatchProcessor):
         if self.use_coverage_index:
             self._prepare_coverage_index(input_pack)
 
-        for batch in self.batcher.get_batch(input_pack,
-                    self.context_type, self.input_info):
-            packs, instances, features = batch
-            predictions = self.predict(features)
-            for tag, preds in predictions.items():
-                for pred, pack, instance in zip(preds, packs, instances):
-                    self.configs.feature_scheme[tag]["extractor"].\
-                        pre_evaluation_action(pack, instance)
-                    self.configs.feature_scheme[tag]["extractor"].\
-                        add_to_pack(pack, instance, pred)
-                    pack.add_all_remaining_entries()
-
-        # update the status of the jobs. The jobs which were removed from
-        # data_pack_pool will have status "PROCESSED" else they are "QUEUED"
-        q_index = self._process_manager.current_queue_index
-        u_index = self._process_manager.unprocessed_queue_indices[q_index]
-        data_pool_length = len(self.batcher.data_pack_pool)
-        current_queue = self._process_manager.current_queue
-
-        for i, job_i in enumerate(
-                itertools.islice(current_queue, 0, u_index + 1)):
-            if i <= u_index - data_pool_length:
-                job_i.set_status(ProcessJobStatus.PROCESSED)
-            else:
-                job_i.set_status(ProcessJobStatus.QUEUED)
+        for batch in self._batcher.get_batch(input_pack,
+                                             self.context_type,
+                                             self.input_info):
+            self.__process_batch(batch)
 
     def flush(self):
-        for batch in self.batcher.flush():
-            packs, instances, features = batch
-            predictions = self.predict(features)
-            for tag, preds in predictions.items():
-                for pred, pack, instance in zip(preds, packs, instances):
-                    self.configs.feature_scheme[tag]["extractor"].\
-                        pre_evaluation_action(pack, instance)
-                    self.configs.feature_scheme[tag]["extractor"].\
-                        add_to_pack(pack, instance, pred)
-                    pack.add_all_remaining_entries()
+        for batch in self._batcher.flush():
+            self.__process_batch(batch)
 
-        current_queue = self._process_manager.current_queue
-
-        for job in current_queue:
-            job.set_status(ProcessJobStatus.PROCESSED)
+    def __process_batch(self, batch):
+        packs, instances, features = batch
+        predictions = self.predict(features)
+        for tag, preds in predictions.items():
+            for pred, pack, instance in zip(preds, packs, instances):
+                self.configs.feature_scheme[tag]["extractor"]. \
+                    pre_evaluation_action(pack, instance)
+                self.configs.feature_scheme[tag]["extractor"]. \
+                    add_to_pack(pack, instance, pred)
+                pack.add_all_remaining_entries()
 
     def predict(self, data_batch: Dict) -> Dict:
         r"""The function that task processors should implement. Make

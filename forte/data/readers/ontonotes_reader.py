@@ -24,7 +24,7 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import (
     CoreferenceGroup, Document, EntityMention, PredicateArgument, PredicateLink,
     PredicateMention, Sentence, Token)

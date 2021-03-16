@@ -18,24 +18,19 @@ Pipeline component module.
 from typing import Generic, Optional, Union, Dict, Any
 
 import yaml
-from forte.common import ProcessorConfigError
 
+from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType, BasePack
 from forte.data.ontology.core import Entry
-from forte.process_manager import ProcessManager
 from forte.utils import get_full_module_name
 
 
 class PipelineComponent(Generic[PackType]):
     def __init__(self):
-        self._process_manager: ProcessManager = None
-        self.resources: Resources = None
+        self.resources: Resources = Resources()
         self.configs: Config = Config({}, {})
-
-    def assign_manager(self, process_manager: ProcessManager):
-        self._process_manager = process_manager
 
     def initialize(self, resources: Resources, configs: Config):
         r"""The pipeline will call the initialize method at the start of a

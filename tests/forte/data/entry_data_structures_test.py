@@ -6,7 +6,7 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Generics, MultiPackGeneric, Annotation
 from forte.data.ontology.core import FList, FDict, MpPointer, Pointer
-from forte.data.readers.base_reader import PackReader, MultiPackReader
+from forte.data.base_reader import PackReader, MultiPackReader
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, MultiPackProcessor
 from ft.onto.base_ontology import EntityMention

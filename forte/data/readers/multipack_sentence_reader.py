@@ -19,7 +19,7 @@ from typing import Any, Iterator, Dict, Tuple
 
 from forte.data.data_utils_io import dataset_path_iterator_with_base
 from forte.data.multi_pack import MultiPack
-from forte.data.readers.base_reader import MultiPackReader
+from forte.data.base_reader import MultiPackReader
 from ft.onto.base_ontology import Sentence
 
 __all__ = [

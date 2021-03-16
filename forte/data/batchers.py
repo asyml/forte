@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=attribute-defined-outside-init
 
 from abc import abstractmethod
 from typing import (
@@ -80,7 +79,7 @@ class ProcessingBatcher(Generic[PackType]):
         raise NotImplementedError
 
     def flush(self) -> Iterator[Tuple[List[PackType],
-                    Optional[List[Annotation]], Dict]]:
+                                      Optional[List[Annotation]], Dict]]:
         r"""Flush the remaining data.
 
         Returns:
@@ -102,8 +101,8 @@ class ProcessingBatcher(Generic[PackType]):
         instance and batch data. In the basic ProcessingBatcher,
         to be compatible with existing implementation,
         instance is not needed, thus using None."""
-        # cache the new pack and generate batches
 
+        # cache the new pack and generate batches
         for (data_batch, instance_num) in self._get_data_batch(
                 input_pack, context_type, requests):
             self.current_batch = merge_batches(
@@ -151,14 +150,19 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
     are added. One is `instance_pool`, which is used to record the
     instance from which feature is extracted. The other one is
     `feature_pool`, which is used to record features before they
-    can be yeild in batch.
+    can be yield in batch.
 
     Args:
         cross_pack (bool, optional): whether to allow batches go across
         data packs when there is no enough data at the end.
     """
+
     def __init__(self, cross_pack: bool = True):
         super().__init__(cross_pack=cross_pack)
+        self.scope: Type[EntryType] = None  # type: ignore
+        self.feature_scheme: Dict = {}
+        self.batch_size: int = -1
+
         self.instance_pool: List[Annotation] = []
         self.feature_pool: List[Dict[str, Feature]] = []
         self.pool_size = 0
@@ -168,11 +172,11 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
         super().initialize(config)
 
         if config["scope"] is None or \
-            config["feature_scheme"] is None or \
-            config["batch_size"] is None:
+                config["feature_scheme"] is None or \
+                config["batch_size"] is None:
             raise AttributeError("scope, feature_scheme and"
-                                "batch_size cannot be None"
-                                "in the config.")
+                                 "batch_size cannot be None"
+                                 "in the config.")
         self.scope: Type[EntryType] = config["scope"]
         self.feature_scheme: Dict = config["feature_scheme"]
         self.batch_size: int = config["batch_size"]
@@ -182,12 +186,12 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
         self.batch_is_full = False
 
     def convert(self, features_collection) -> \
-                Dict[str, Union[Tensor, Dict]]:
+            Dict[str, Union[Tensor, Dict]]:
         r"""This function use converter to turn a
         list of features into batch.
 
         Args:
-            features_collectioin (List[Dict[str, Feature]]):
+            features_collection (List[Dict[str, Feature]]):
                 A list of features.
 
         Returns:
@@ -218,8 +222,10 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
     def flush(self):
         r"""Flush the remaining data."""
         if self.pool_size > 0:
-            yield (self.data_pack_pool, self.instance_pool,
-                    self.convert(self.feature_pool))
+            yield (
+                self.data_pack_pool, self.instance_pool,
+                self.convert(self.feature_pool)
+            )
             self.data_pack_pool = []
             self.instance_pool = []
             self.feature_pool = []
@@ -228,7 +234,8 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
     def get_batch(
             self, input_pack: PackType, context_type: Type[Annotation],
             requests: DataRequest) -> Iterator[Tuple[List[PackType],
-                    Optional[List[Annotation]], Dict]]:
+                                                     Optional[List[
+                                                         Annotation]], Dict]]:
         r"""Returns an iterator of data batches."""
         # cache the new pack and generate batches
 
@@ -278,7 +285,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
             if len(instances) == self.batch_size - current_size:
                 self.batch_is_full = True
                 batch = {"dummy": (packs, instances, features_collection)}
-                yield (batch, len(instances))
+                yield batch, len(instances)
                 self.batch_is_full = False
                 packs = []
                 instances = []
@@ -288,7 +295,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
         # Flush the remaining data.
         if len(instances) > 0:
             batch = {"dummy": (packs, instances, features_collection)}
-            yield (batch, len(instances))
+            yield batch, len(instances)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -301,6 +308,11 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
 
 
 class FixedSizeDataPackBatcher(ProcessingBatcher[DataPack]):
+    def __init__(self):
+        super().__init__()
+        self.batch_size = -1
+        self.batch_is_full = False
+
     def initialize(self, config: Config):
         super().initialize(config)
         self.batch_size = config.batch_size
@@ -363,6 +375,8 @@ class FixedSizeMultiPackProcessingBatcher(ProcessingBatcher[MultiPack]):
     def __init__(self, cross_pack: bool = True):
         super().__init__(cross_pack)
         self.batch_is_full = False
+        self.input_pack_name: str = ''
+        self.batch_size = -1
 
     def initialize(self, config: Config):
         super().initialize(config)

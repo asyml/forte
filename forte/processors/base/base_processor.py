@@ -15,14 +15,12 @@
 Base class for processors.
 """
 
-import itertools
 from abc import abstractmethod, ABC
 from typing import Any, Dict
 
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
 from forte.pipeline_component import PipelineComponent
-from forte.process_manager import ProcessJobStatus
 
 __all__ = [
     "BaseProcessor",
@@ -39,18 +37,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         self.selector = DummySelector()
 
     def process(self, input_pack: PackType):
-        # Set the component for recording purpose.
-        input_pack.set_control_component(self.name)
         self._process(input_pack)
-
-        # Change status for pack processors
-        q_index = self._process_manager.current_queue_index
-        u_index = self._process_manager.unprocessed_queue_indices[q_index]
-        current_queue = self._process_manager.current_queue
-
-        for job_i in itertools.islice(current_queue, 0, u_index + 1):
-            if job_i.status == ProcessJobStatus.UNPROCESSED:
-                job_i.set_status(ProcessJobStatus.PROCESSED)
 
     @abstractmethod
     def _process(self, input_pack: PackType):

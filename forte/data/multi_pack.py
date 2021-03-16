@@ -264,11 +264,15 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         return self._pack_ref
 
     @property
+    def num_pack(self) -> int:
+        return len(self._packs)
+
+    @property
     def packs(self) -> List[DataPack]:
         """
         Get the list of Data packs that in the order of added.
 
-        Note that please do not use this
+        Please do not use this try
 
         Returns: List of data packs contained in this multi-pack.
 

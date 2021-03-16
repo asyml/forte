@@ -18,7 +18,7 @@ from characters of a piece of text.
 import logging
 from forte.data.data_pack import DataPack
 from forte.data.converter.feature import Feature
-from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology import Annotation
 
 logger = logging.getLogger(__name__)

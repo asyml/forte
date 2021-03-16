@@ -17,7 +17,7 @@ This file contains utility functions for extractors.
 
 from typing import Type, List, Tuple, Union, Callable, Optional
 from forte.data.data_pack import DataPack
-from ft.onto.base_ontology import Annotation
+from forte.data.ontology import Annotation
 
 
 def bio_tagging(pack: DataPack, instance: Annotation,

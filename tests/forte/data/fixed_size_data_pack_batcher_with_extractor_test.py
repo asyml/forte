@@ -12,16 +12,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import unittest
-from ft.onto.base_ontology import Sentence, Token, EntityMention
+
+from forte.data.batchers import FixedSizeDataPackBatcherWithExtractor
+from forte.data.converter import Converter
+from forte.data.data_pack import DataPack
+from forte.data.extractors.attribute_extractor import AttributeExtractor
+from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.pipeline import Pipeline
 from forte.train_preprocessor import TrainPreprocessor
-from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.data.data_pack import DataPack
-from forte.data.converter import Converter
-from forte.data.extractor.attribute_extractor import AttributeExtractor
-from forte.data.extractor.seqtagging_extractor import BioSeqTaggingExtractor
-from forte.data.batchers import FixedSizeDataPackBatcherWithExtractor
-from forte.processors.base.batch_processor import Predictor
+from ft.onto.base_ontology import Sentence, Token
 
 
 class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
@@ -57,7 +56,7 @@ class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
             "feature_scheme": {
                 "text_tag": {
                     "extractor": text_extractor,
-                    "converter": Converter({}),
+                    "converter": Converter(),
                     "type": TrainPreprocessor.DATA_INPUT
                 }
             },
@@ -68,7 +67,7 @@ class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
             for batch in batcher.get_batch(pack, Sentence, None):
                 batch_num += 1
                 self.assertEqual(len(batch[0]), batch_size)
-        for batch in batcher.flush():
+        for _ in batcher.flush():
             batch_num += 1
         self.assertEqual(batch_num, 1)
 

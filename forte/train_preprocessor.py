@@ -24,7 +24,7 @@ from forte.common.configuration import Config
 from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
-from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 

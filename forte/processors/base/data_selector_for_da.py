@@ -25,7 +25,7 @@ from typing import Iterator, Any, Dict, Optional
 from forte.common.resources import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 __all__ = [
