@@ -34,7 +34,7 @@ from forte.evaluation.base.base_evaluator import Evaluator
 from forte.pipeline_component import PipelineComponent
 from forte.process_job import ProcessJob
 from forte.process_manager import ProcessManager, ProcessJobStatus
-from forte.processors.base import BasePackProcessor
+from forte.processors.base import BasePackProcessor, BaseProcessor
 from forte.processors.base.batch_processor import BaseBatchProcessor
 from forte.utils import create_class_with_kwargs
 
@@ -491,10 +491,6 @@ class Pipeline(Generic[PackType]):
                         if isinstance(component, Caster):
                             # Replacing the job pack with the casted version.
                             raw_job.alter_pack(component.cast(pack))
-                        elif isinstance(component, BasePackProcessor):
-                            pack.set_control_component(component.name)
-                            component.process(pack)
-                            self.__update_stream_job_status()
                         elif isinstance(component, BaseBatchProcessor):
                             pack.set_control_component(component.name)
                             component.process(pack)
@@ -505,10 +501,13 @@ class Pipeline(Generic[PackType]):
                                 pack, self._predict_to_gold[raw_job.id]
                             )
                             self.__update_stream_job_status()
-                        else:
-                            raise ProcessExecutionException(
-                                f"Unknown component type {component.name}."
-                            )
+                        elif isinstance(component, BaseProcessor):
+                            # Should be BasePackProcessor:
+                            # All other processor are considered to be
+                            #  streaming processor like this.
+                            pack.set_control_component(component.name)
+                            component.process(pack)
+                            self.__update_stream_job_status()
 
                         # After the component action, make sure the entry is
                         # added into the index.
@@ -560,7 +559,7 @@ class Pipeline(Generic[PackType]):
                                 if should_yield:
                                     if job_i.id in self._predict_to_gold:
                                         self._predict_to_gold.pop(job_i.id)
-                                    yield job_i.pack
+                                    yield job_i.pack  # type: ignore
                                 else:
                                     self._proc_mgr.add_to_queue(
                                         queue_index=next_queue_index,
@@ -600,7 +599,10 @@ class Pipeline(Generic[PackType]):
                                 if should_yield:
                                     if job_i.id in self._predict_to_gold:
                                         self._predict_to_gold.pop(job_i.id)
-                                    yield job_i.pack
+                                    # TODO: I don't know why these are
+                                    #  marked as wrong typing by mypy.
+                                    #  the same happens 3 times on every yield.
+                                    yield job_i.pack  # type: ignore
                                 else:
                                     self._proc_mgr.add_to_queue(
                                         queue_index=next_queue_index,
@@ -641,7 +643,7 @@ class Pipeline(Generic[PackType]):
                     if not job.is_poison and should_yield:
                         if job.id in self._predict_to_gold:
                             self._predict_to_gold.pop(job.id)
-                        yield job.pack
+                        yield job.pack  # type: ignore
 
                     elif not should_yield:
                         self._proc_mgr.add_to_queue(

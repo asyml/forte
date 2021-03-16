@@ -16,6 +16,7 @@ Processors that augment the data. The processor will call
 replacement ops to generate texts similar to those in the input pack
 and create a new pack with them.
 """
+from abc import ABC
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast
@@ -30,6 +31,7 @@ from forte.data.ontology.top import (
 from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.processors.base import MultiPackProcessor
 from forte.processors.base.base_processor import BaseProcessor
 from forte.utils.utils import get_class, create_class_with_kwargs
 from forte.processors.data_augment.algorithms.text_replacement_op \
@@ -208,7 +210,7 @@ def modify_index(
     return index + delta_index
 
 
-class BaseDataAugmentProcessor(BaseProcessor):
+class BaseDataAugmentProcessor(MultiPackProcessor, ABC):
     r"""The base class of processors that augment data.
     This processor instantiates replacement ops where specific
     data augmentation algorithms are implemented. The replacement ops
