@@ -483,7 +483,9 @@ class Pipeline(Generic[PackType]):
             should_yield = next_queue_index >= pipeline_length
 
             if not raw_job.is_poison:
+                has_selection = False
                 for pack in selector.select(raw_job.pack):
+                    has_selection = True
                     # First, perform the component action on the pack
                     try:
                         if isinstance(component, Caster):
@@ -514,107 +516,113 @@ class Pipeline(Generic[PackType]):
                             f'Exception occurred when running '
                             f'{component.name}') from e
 
-                    # Then, based on component type, handle the queue.
+                if not has_selection:
+                    # TODO: check batch case.
                     if isinstance(component, BaseBatchProcessor):
-                        index = unprocessed_queue_indices[current_queue_index]
+                        self.__update_batch_job_status(component)
+                    else:
+                        self.__update_stream_job_status()
 
-                        # Check status of all the jobs up to "index".
-                        for i, job_i in enumerate(
-                                itertools.islice(current_queue, 0, index + 1)):
-                            if job_i.status == ProcessJobStatus.PROCESSED:
-                                processed_queue_indices[current_queue_index] = i
+                # Then, based on component type, handle the queue.
+                if isinstance(component, BaseBatchProcessor):
+                    index = unprocessed_queue_indices[current_queue_index]
 
-                        # There are UNPROCESSED jobs in the queue.
-                        if index < len(current_queue) - 1:
-                            unprocessed_queue_indices[current_queue_index] += 1
+                    # Check status of all the jobs up to "index".
+                    for i, job_i in enumerate(
+                            itertools.islice(current_queue, 0, index + 1)):
+                        if job_i.status == ProcessJobStatus.PROCESSED:
+                            processed_queue_indices[current_queue_index] = i
 
-                        # Fetch more data from the reader to process the
-                        # first job.
-                        elif (processed_queue_indices[current_queue_index]
-                              == -1):
-                            unprocessed_queue_indices[
-                                current_queue_index] = len(current_queue)
+                    # There are UNPROCESSED jobs in the queue.
+                    if index < len(current_queue) - 1:
+                        unprocessed_queue_indices[current_queue_index] += 1
+
+                    # Fetch more data from the reader to process the
+                    # first job.
+                    elif (processed_queue_indices[current_queue_index]
+                          == -1):
+                        unprocessed_queue_indices[
+                            current_queue_index] = len(current_queue)
+                        self._proc_mgr.current_processor_index = 0
+                        self._proc_mgr.current_queue_index = -1
+                    else:
+                        processed_queue_index = processed_queue_indices[
+                            current_queue_index]
+                        # Move or yield the pack.
+                        c_queue = list(current_queue)
+                        for job_i in c_queue[:processed_queue_index + 1]:
+                            if should_yield:
+                                if job_i.id in self._predict_to_gold:
+                                    self._predict_to_gold.pop(job_i.id)
+                                # TODO: I don't know why these are
+                                #  marked as incompatible type by mypy.
+                                #  the same happens 3 times on every yield.
+                                #  It is observed that the pack returned
+                                #  from the `ProcessJob` is considered to
+                                #  be different from `PackType`.
+                                yield job_i.pack  # type: ignore
+                            else:
+                                self._proc_mgr.add_to_queue(
+                                    queue_index=next_queue_index, job=job_i)
+                            current_queue.popleft()
+
+                        # Set the UNPROCESSED and PROCESSED indices.
+                        unprocessed_queue_indices[
+                            current_queue_index] = len(current_queue)
+
+                        processed_queue_indices[current_queue_index] = -1
+
+                        if should_yield:
                             self._proc_mgr.current_processor_index = 0
                             self._proc_mgr.current_queue_index = -1
                         else:
-                            processed_queue_index = processed_queue_indices[
-                                current_queue_index]
-                            # Move or yield the pack.
-                            c_queue = list(current_queue)
-                            for job_i in c_queue[:processed_queue_index + 1]:
-                                if should_yield:
-                                    if job_i.id in self._predict_to_gold:
-                                        self._predict_to_gold.pop(job_i.id)
-                                    # TODO: I don't know why these are
-                                    #  marked as incompatible type by mypy.
-                                    #  the same happens 3 times on every yield.
-                                    #  It is observed that the pack returned
-                                    #  from the `ProcessJob` is considered to
-                                    #  be different from `PackType`.
-                                    yield job_i.pack  # type: ignore
-                                else:
-                                    self._proc_mgr.add_to_queue(
-                                        queue_index=next_queue_index, job=job_i)
-                                current_queue.popleft()
+                            self._proc_mgr.current_processor_index \
+                                = next_queue_index
+                            self._proc_mgr.current_queue_index \
+                                = next_queue_index
+                # Besides Batch Processors, the other component type only
+                # deal with one pack at a time, these include: PackProcessor
+                # Evaluator, Caster.
+                # - Move them to the next queue
+                else:
+                    index = unprocessed_queue_indices[current_queue_index]
 
-                            # Set the UNPROCESSED and PROCESSED indices.
-                            unprocessed_queue_indices[
-                                current_queue_index] = len(current_queue)
-
-                            processed_queue_indices[current_queue_index] = -1
-
-                            if should_yield:
-                                self._proc_mgr.current_processor_index = 0
-                                self._proc_mgr.current_queue_index = -1
-                            else:
-                                self._proc_mgr.current_processor_index \
-                                    = next_queue_index
-                                self._proc_mgr.current_queue_index \
-                                    = next_queue_index
-
-                    # Besides Batch Processors, the other component type only
-                    # deal with one pack at a time, these include: PackProcessor
-                    # Evaluator, Caster.
-                    # - Move them to the next queue
+                    # there are UNPROCESSED jobs in the queue
+                    if index < len(current_queue) - 1:
+                        unprocessed_queue_indices[
+                            current_queue_index] += 1
                     else:
-                        index = unprocessed_queue_indices[current_queue_index]
-
-                        # there are UNPROCESSED jobs in the queue
-                        if index < len(current_queue) - 1:
-                            unprocessed_queue_indices[
-                                current_queue_index] += 1
-                        else:
-                            # current_queue is modified in this array
-                            for job_i in list(current_queue):
-                                if should_yield:
-                                    if job_i.id in self._predict_to_gold:
-                                        self._predict_to_gold.pop(job_i.id)
-                                    yield job_i.pack  # type: ignore
-                                else:
-                                    self._proc_mgr.add_to_queue(
-                                        queue_index=next_queue_index,
-                                        job=job_i)
-                                current_queue.popleft()
-
-                            # set the UNPROCESSED index
-                            # we do not use "processed_queue_indices" as the
-                            # jobs get PROCESSED whenever they are passed
-                            # into a PackProcessor
-                            unprocessed_queue_indices[current_queue_index] \
-                                = len(current_queue)
-
-                            # update the current queue and processor only
-                            # when all the jobs are processed in the current
-                            # queue
+                        # current_queue is modified in this array
+                        for job_i in list(current_queue):
                             if should_yield:
-                                self._proc_mgr.current_processor_index = 0
-                                self._proc_mgr.current_queue_index = -1
-
+                                if job_i.id in self._predict_to_gold:
+                                    self._predict_to_gold.pop(job_i.id)
+                                yield job_i.pack  # type: ignore
                             else:
-                                self._proc_mgr.current_processor_index \
-                                    = next_queue_index
-                                self._proc_mgr.current_queue_index \
-                                    = next_queue_index
+                                self._proc_mgr.add_to_queue(
+                                    queue_index=next_queue_index,
+                                    job=job_i)
+                            current_queue.popleft()
+
+                        # set the UNPROCESSED index
+                        # we do not use "processed_queue_indices" as the
+                        # jobs get PROCESSED whenever they are passed
+                        # into a PackProcessor
+                        unprocessed_queue_indices[current_queue_index] \
+                            = len(current_queue)
+
+                        # update the current queue and processor only
+                        # when all the jobs are processed in the current
+                        # queue
+                        if should_yield:
+                            self._proc_mgr.current_processor_index = 0
+                            self._proc_mgr.current_queue_index = -1
+
+                        else:
+                            self._proc_mgr.current_processor_index \
+                                = next_queue_index
+                            self._proc_mgr.current_queue_index \
+                                = next_queue_index
             else:
                 component.flush()
                 self.__flush_batch_job_status()

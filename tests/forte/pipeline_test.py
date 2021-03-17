@@ -34,7 +34,8 @@ from forte.data.extractors.attribute_extractor import AttributeExtractor
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
 from forte.data.readers import PlainTextReader, StringReader
-from forte.data.selector import FirstPackSelector, NameMatchSelector
+from forte.data.selector import FirstPackSelector, NameMatchSelector, \
+    SinglePackSelector
 from forte.data.types import DataRequest
 from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
@@ -56,6 +57,13 @@ class NewType(Generics):
     def __init__(self, pack, value):
         super().__init__(pack)
         self.value = value
+
+
+class NothingSelector(SinglePackSelector):
+    """Select no pack from the :class:`MultiPack`"""
+
+    def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
+        yield from []
 
 
 class SentenceReader(PackReader):
@@ -834,6 +842,24 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         # check that all packs are yielded
         self.assertEqual(num_packs, reader.count)
+
+    def test_empty_selector(self):
+        nlp = Pipeline[MultiPack]()
+        reader = MultiPackSentenceReader()
+        nlp.set_reader(reader)
+        dummy = DummyPackProcessor()
+        nlp.add(component=dummy, selector=NothingSelector())
+        nlp.initialize()
+        data_path = data_samples_root + "/random_texts/0.txt"
+
+        for _ in nlp.process_dataset(data_path):
+            pass
+
+    def test_all_selector(self):
+        pass
+
+    def test_caster(self):
+        pass
 
 
 if __name__ == '__main__':
