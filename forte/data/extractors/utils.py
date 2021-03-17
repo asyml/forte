@@ -15,6 +15,7 @@
 This file contains utility functions for extractors.
 """
 from typing import Type, List, Tuple, Union, Callable, Optional
+from pydoc import locate
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 
@@ -97,23 +98,13 @@ def bio_tagging(pack: DataPack, instance: Annotation,
     return tagged
 
 
-def add_entry_to_pack(pack: DataPack,
-                      entry_type: Type[Annotation],
-                      span_begin: int,
-                      span_end: int) -> Annotation:
+def str_to_module(onto_str: str) -> Type[Annotation]:
     """
-    Add an entry to datapack, given entry_type, span begin and end.
-    Args:
-        pack (Datapack): The datapack to add.
-
-        entry_type (Annotation): The type of entry to be added. For
-            example, EntityMethion.
-
-        span_begin (int): Begin of the entry.
-
-        span_end (int): End of the entry.
-    Returns:
-        The added entry (Annotation)
-
+    Convert a string ontology to actual ontology.
+    Example:
+    Input:
+        onto_str (str): 'ft.onto.base_ontology.Token'
+    Output:
+        ft.onto.base_ontology.Token
     """
-    return entry_type(pack, span_begin, span_end)  # type: ignore
+    return locate(onto_str)

@@ -17,8 +17,9 @@ extractors will inherit from.
 """
 import logging
 from abc import ABC
-from typing import Tuple, List, Dict, Any, Type
-from typing import Union, Hashable, Iterable, Optional
+from typing import Tuple, List, Dict, Any
+from typing import Union, Type, Hashable, Iterable, Optional
+from pydoc import locate
 
 from forte.common.configuration import Config
 from forte.data.converter.feature import Feature
@@ -101,11 +102,13 @@ class BaseExtractor(ABC):
                                  "the configuration of an extractor.")
         self._entry_type = get_class(self.config.entry_type)
 
-        if self.config.vocab_method != "custom":
-            self._vocab = Vocabulary(
-                method=self.config.vocab_method,
-                use_pad=self.config.need_pad,
-                use_unk=self.config.vocab_use_unk)
+        if self.config.vocab_method != "raw":
+            self._vocab: Optional[Vocabulary] = \
+                Vocabulary(method=self.config.vocab_method,
+                           need_pad=self.config.need_pad,
+                           use_unk=self.config.vocab_use_unk,
+                           pad_value=self.config.pad_value,
+                           unk_value=self.config.vocab_unk_value)
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -118,7 +121,7 @@ class BaseExtractor(ABC):
 
         entry_type (str).
             Required. The string to the ontology type that the extractor
-            will get feature from, e.g: `"ft.onto.base_ontology.Token"`.
+            will get feature from, e.g: "ft.onto.base_ontology.Token".
 
         "vocab_method" (str)
             What type of vocabulary is used for this extractor. `custom`,
@@ -134,21 +137,30 @@ class BaseExtractor(ABC):
             Whether the `<PAD>` element should be added to vocabulary. And
             whether the feature need to be batched and padded. Default is True.
 
+        "vocab_use_unk" (bool)
+            Whether the `<UNK>` element should be added to vocabulary.
+            Default is true.
+
+        "pad_value" (int)
+            ID assigned to pad. It should be integer smaller than 0.
+            Default is 0.
+
+        "vocab_unk_value" (int)
+            ID assigned to unk. It should be integer smaller than 0.
+            Default is 1.
         """
         return {
             "entry_type": None,
             "vocab_method": "indexing",
             "vocab_use_unk": True,
             "need_pad": True,
+            "pad_value": 0,
+            "vocab_unk_value": 1
         }
 
     @property
     def entry_type(self) -> Type[Annotation]:
-        return self._entry_type
-
-    @entry_type.setter
-    def entry_type(self, input_entry: Type[Annotation]):
-        self._entry_type = input_entry
+        return locate(self.config.entry_type)
 
     @property
     def vocab_method(self) -> str:
