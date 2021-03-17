@@ -17,8 +17,9 @@ extractors will inherit from.
 """
 import logging
 from abc import ABC
-from typing import Tuple, List, Dict, Any, Type
-from typing import Union, Hashable, Iterable, Optional
+from typing import Tuple, List, Dict, Any
+from typing import Union, Type, Hashable, Iterable, Optional
+from pydoc import locate
 
 from forte.common.configuration import Config
 from forte.data.converter.feature import Feature
@@ -118,7 +119,7 @@ class BaseExtractor(ABC):
 
         entry_type (str).
             Required. The string to the ontology type that the extractor
-            will get feature from, e.g: `"ft.onto.base_ontology.Token"`.
+            will get feature from, e.g: "ft.onto.base_ontology.Token".
 
         "vocab_method" (str)
             What type of vocabulary is used for this extractor. `custom`,
@@ -130,10 +131,13 @@ class BaseExtractor(ABC):
             Whether the `<UNK>` element should be added to vocabulary.
             Default is true.
 
-        "need_pad" (bool)
-            Whether the `<PAD>` element should be added to vocabulary. And
-            whether the feature need to be batched and padded. Default is True.
+        "pad_value" (int)
+            ID assigned to pad. It should be integer smaller than 0.
+            Default is 0.
 
+        "vocab_unk_value" (int)
+            ID assigned to unk. It should be integer smaller than 0.
+            Default is 1.
         """
         return {
             "entry_type": None,
@@ -144,11 +148,7 @@ class BaseExtractor(ABC):
 
     @property
     def entry_type(self) -> Type[Annotation]:
-        return self._entry_type
-
-    @entry_type.setter
-    def entry_type(self, input_entry: Type[Annotation]):
-        self._entry_type = input_entry
+        return locate(self.config.entry_type)
 
     @property
     def vocab_method(self) -> str:
