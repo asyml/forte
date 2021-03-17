@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List, Tuple, Dict, Union, Hashable, Iterable, Optional
+from typing import List, Tuple, Dict, Union, Hashable, Iterable
 
 import texar.torch as tx
 
@@ -117,8 +117,7 @@ class Vocabulary(Generic[ElementType]):
     # TODO: It is better to add a generic type for this class, now every element
     #   is simply empty.
     def __init__(self, method: str, need_pad: bool, use_unk: bool,
-                 pad_value: Optional[int] = None,
-                 unk_value: Optional[int] = None):
+                 pad_value: int = 0, unk_value: int = 1):
         self.method = method
         self.need_pad = need_pad
         self.use_unk = use_unk
@@ -136,24 +135,17 @@ class Vocabulary(Generic[ElementType]):
                 "Cannot use 0 as pad id if one-hot method is used. "
                 "Chaning pad id to -1!")
         if need_pad:
-            if not pad_value:
-                self.add_element(Vocabulary.PAD_ELEMENT)
-            else:
-                self.add_special_element(Vocabulary.PAD_ELEMENT, pad_value)
+            self.add_special_element(Vocabulary.PAD_ELEMENT, pad_value)
 
         if use_unk:
-            if not unk_value:
-                self.add_element(Vocabulary.UNK_ELEMENT)
-            else:
-                self.add_special_element(Vocabulary.UNK_ELEMENT, unk_value)
+            self.add_special_element(Vocabulary.UNK_ELEMENT, unk_value)
 
     def add_special_element(self, element: Hashable, element_id: int):
         r"""
         Add special_elements, such as PAD and UNK.
-
         Args:
             element (Hashable): The element to be added.
-            element_id (int): The ID assigned to the element.
+            element_id (int): The id assigned to the element.
         """
         if element_name in ("PAD", "UNK"):
             if element_name == "PAD":
