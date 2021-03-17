@@ -19,6 +19,7 @@ import logging
 from abc import ABC
 from typing import Tuple, List, Dict, Any
 from typing import Union, Type, Hashable, Iterable, Optional
+from pydoc import locate
 
 from forte.common.configuration import Config
 from forte.data.converter.feature import Feature
@@ -98,7 +99,9 @@ class BaseExtractor(ABC):
             self._vocab: Optional[Vocabulary] = \
                 Vocabulary(method=self.config.vocab_method,
                            need_pad=self.config.need_pad,
-                           use_unk=self.config.vocab_use_unk)
+                           use_unk=self.config.vocab_use_unk,
+                           pad_value=self.config.pad_value,
+                           unk_value=self.config.vocab_unk_value)
         else:
             self._vocab = None
 
@@ -108,9 +111,9 @@ class BaseExtractor(ABC):
 
         Here:
 
-        entry_type (Type[Entry]).
-            Required. The ontology type that the extractor will get feature
-            from.
+        entry_type (str).
+            Required. The string to the ontology type that the extractor
+            will get feature from, e.g: "ft.onto.base_ontology.Token".
 
         "vocab_method" (str)
             What type of vocabulary is used for this extractor.
@@ -125,17 +128,27 @@ class BaseExtractor(ABC):
         "vocab_use_unk" (bool)
             Whether the `<UNK>` element should be added to vocabulary.
             Default is true.
+
+        "pad_value" (int)
+            ID assigned to pad. It should be integer smaller than 0.
+            Default is 0.
+
+        "vocab_unk_value" (int)
+            ID assigned to unk. It should be integer smaller than 0.
+            Default is 1.
         """
         return {
             "entry_type": None,
             "vocab_method": "indexing",
             "vocab_use_unk": True,
             "need_pad": True,
+            "pad_value": 0,
+            "vocab_unk_value": 1
         }
 
     @property
     def entry_type(self) -> Type[Annotation]:
-        return self.config.entry_type
+        return locate(self.config.entry_type)
 
     @property
     def vocab_method(self) -> str:

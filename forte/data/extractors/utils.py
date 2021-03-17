@@ -14,8 +14,8 @@
 """
 This file contains utility functions for extractors.
 """
-
 from typing import Type, List, Tuple, Union, Callable, Optional
+from pydoc import locate
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 
@@ -77,7 +77,8 @@ def bio_tagging(pack: DataPack, instance: Annotation,
 
         is_start = True
         for unit in pack.get(tagging_unit_type, instance_entry[entry_id]):
-            while instance_tagging_unit[unit_id] != unit:
+            while instance_tagging_unit[unit_id].begin != unit.begin and \
+                instance_tagging_unit[unit_id].end != unit.end:
                 tagged.append((None, 'O'))
                 unit_id += 1
 
@@ -95,3 +96,15 @@ def bio_tagging(pack: DataPack, instance: Annotation,
                                location))
         entry_id += 1
     return tagged
+
+
+def str_to_module(onto_str: str) -> Type[Annotation]:
+    """
+    Convert a string ontology to actual ontology.
+    Example:
+    Input:
+        onto_str (str): 'ft.onto.base_ontology.Token'
+    Output:
+        ft.onto.base_ontology.Token
+    """
+    return locate(onto_str)
