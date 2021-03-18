@@ -98,7 +98,7 @@ def bio_tagging(pack: DataPack, instance: Annotation,
     return tagged
 
 
-def str_to_module(onto_str: str) -> Type[Annotation]:
+def str_to_module(onto_str: str) -> object:
     """
     Convert a string ontology to actual ontology.
     Example:
