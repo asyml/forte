@@ -26,6 +26,7 @@ from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.data.vocabulary import Vocabulary
+from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +149,7 @@ class BaseExtractor(ABC):
 
     @property
     def entry_type(self) -> object:
-        return locate(self.config.entry_type)
+        return get_class(self.config.entry_type)
 
     @property
     def vocab_method(self) -> str:

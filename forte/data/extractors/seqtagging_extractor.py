@@ -25,7 +25,7 @@ from forte.data.data_pack import DataPack
 from forte.data.base_extractor import BaseExtractor
 from forte.data.extractors.utils import bio_tagging
 from forte.data.ontology import Annotation
-from forte.data.extractors.utils import str_to_module
+from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +56,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
         if self.config.tagging_unit == "":
             raise AttributeError("tagging_unit is required in "
                                  "BioSeqTaggingExtractor.")
-        self.entry = str_to_module(self.config.entry_type)
-        self.tagging_unit = str_to_module(self.config.tagging_unit)
+        self.entry = get_class(self.config.entry_type)
+        self.tagging_unit = get_class(self.config.tagging_unit)
 
     @classmethod
     def default_configs(cls):
