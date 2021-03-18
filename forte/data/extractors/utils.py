@@ -15,7 +15,6 @@
 This file contains utility functions for extractors.
 """
 from typing import Type, List, Tuple, Union, Callable, Optional
-from pydoc import locate
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 
