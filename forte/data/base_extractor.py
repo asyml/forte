@@ -160,7 +160,7 @@ class BaseExtractor(ABC):
 
     @property
     def entry_type(self) -> object:
-        return locate(self.config.entry_type)
+        return get_class(self.config.entry_type)
 
     @property
     def vocab_method(self) -> str:

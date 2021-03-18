@@ -96,15 +96,3 @@ def bio_tagging(pack: DataPack, instance: Annotation,
                                location))
         entry_id += 1
     return tagged
-
-
-def str_to_module(onto_str: str) -> object:
-    """
-    Convert a string ontology to actual ontology.
-    Example:
-    Input:
-        onto_str (str): 'ft.onto.base_ontology.Token'
-    Output:
-        ft.onto.base_ontology.Token
-    """
-    return locate(onto_str)
