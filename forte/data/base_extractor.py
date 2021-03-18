@@ -18,8 +18,7 @@ extractors will inherit from.
 import logging
 from abc import ABC
 from typing import Tuple, List, Dict, Any
-from typing import Union, Type, Hashable, Iterable, Optional
-from pydoc import locate
+from typing import Union, Hashable, Iterable, Optional
 
 from forte.common.configuration import Config
 from forte.data.converter.feature import Feature
