@@ -159,7 +159,7 @@ class BaseExtractor(ABC):
         }
 
     @property
-    def entry_type(self) -> Type[Annotation]:
+    def entry_type(self) -> object:
         return locate(self.config.entry_type)
 
     @property
