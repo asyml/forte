@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for Selector
+Unit tests for Selector. For selector functioning in a pipeline, see
+`pipeline_test.py` instead.
 """
 import unittest
 
