@@ -74,8 +74,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._cache_ready: bool = False
         self._data_packs: List[PackType] = []
 
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
+    def initialize(self, resources: Resources, configs: Config, check_type_consistency: bool):
+        super().initialize(resources, configs, check_type_consistency)
 
         # Clear memory cache
         self._cache_ready = False

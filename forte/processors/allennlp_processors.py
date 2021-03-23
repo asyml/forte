@@ -46,8 +46,8 @@ MODEL2URL = {
 class AllenNLPProcessor(PackProcessor):
 
     # pylint: disable=attribute-defined-outside-init,unused-argument
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
+    def initialize(self, resources: Resources, configs: Config, check_type_consistency: bool):
+        super().initialize(resources, configs, check_type_consistency)
 
         if configs.tag_formalism not in MODEL2URL:
             raise ProcessorConfigError('Incorrect value for tag_formalism')
@@ -183,3 +183,8 @@ class AllenNLPProcessor(PackProcessor):
                     tokens[arg_span.begin].begin, tokens[arg_span.end].end)
                 link = PredicateLink(input_pack, pred, arg)
                 link.arg_type = label
+
+    def expected_type(cls) -> Dict:
+        expected_type_dict = dict()
+        expected_type_dict["ft.onto.base_ontology.Sentence"] = []
+        return expected_type_dict

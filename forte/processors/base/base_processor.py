@@ -38,11 +38,26 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         super().__init__()
         self.selector = DummySelector()
 
+    def record(self, record_meta: Dict):
+        pass
+
+    @classmethod
+    def expected_type(cls) -> Dict:
+        return {}
+
     def process(self, input_pack: PackType):
+        if self.__check_type_consistency:
+            expected_types = self.expected_type()
+            # check if expected types are in input pack
+            # for t in expected_types:
+            print(expected_types)
+            print(input_pack.annotations)
+
         # Set the component for recording purpose.
         input_pack.set_control_component(self.name)
         self._process(input_pack)
-
+        # add stuff to meta
+        self.record(input_pack._meta.record)
         # Change status for pack processors
         q_index = self._process_manager.current_queue_index
         u_index = self._process_manager.unprocessed_queue_indices[q_index]
