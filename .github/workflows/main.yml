@@ -41,7 +41,7 @@ jobs:
       - name: Install deep learning frameworks
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
-          pip install --progress-bar off tensorflow==${{ tensorflow-version }}
+          pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
       - name: Install Texar
         run: |
           git clone https://github.com/asyml/texar-pytorch.git
