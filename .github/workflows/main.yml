@@ -2,8 +2,6 @@ name: Python package
 
 on:
   push:
-    branches:
-      - master
   pull_request:
 
 jobs:
@@ -11,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.5, 3.6, 3.7, 3.8 ]
+        python-version: [ 3.6, 3.7, 3.8 ]
         torch-version: [ 1.5.0, 1.6.0, 1.7.1 ]
         tensorflow-version: [ 1.15.0 ]
 
