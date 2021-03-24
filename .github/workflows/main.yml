@@ -8,8 +8,8 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.5, 3.6, 3.7, 3.8 ]
-        torch-version: [1.5.0, 1.6.0, 1.7.1]
-        tensorflow-version: [1.15.0]
+        torch-version: [ 1.5.0, 1.6.0, 1.7.1 ]
+        tensorflow-version: [ 1.15.0 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -95,8 +95,32 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}  deploy:
-    needs: [build, docs]
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: |
+          sudo apt-get install libenchant1c2a myspell-en-us
+          python -m pip install --progress-bar off --upgrade pip
+          pip install --progress-bar off -r requirements.txt
+          git clone https://github.com/asyml/texar-pytorch.git
+          cd texar-pytorch
+          pip install --progress-bar off .
+          cd ..
+          rm -rf texar-pytorch
+          cd docs
+      - name: Build Docs
+          sphinx-build -W -b html -d _build/doctrees . _build/html
+          pip install --progress-bar off coverage codecov
+          sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
+  deploy:
+    needs: [ build, docs ]
     runs-on: ubuntu-latest
     steps:
       - name: Install pypa/build
