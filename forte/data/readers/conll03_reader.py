@@ -28,10 +28,10 @@ __all__ = [
 class CoNLL03Reader(PackReader):
     r""":class:`CoNLL03Reader` is designed to read in the CoNLL03 dataset.
 
-    The dataset is from the following paper,
-    Sang, Erik F., and Fien De Meulder. "Introduction to the CoNLL-2003
+    The dataset is from the following paper:
+    `Sang, Erik F., and Fien De Meulder. "Introduction to the CoNLL-2003
     shared task: Language-independent named entity recognition."
-    arXiv preprint cs/0306050 (2003).
+    arXiv preprint cs/0306050 (2003).`
 
     Data could be downloaded from
     https://deepai.org/dataset/conll-2003-english

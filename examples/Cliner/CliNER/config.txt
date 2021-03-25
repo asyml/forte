@@ -1,2 +1,0 @@
-GENIA None
-UMLS None

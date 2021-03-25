@@ -7,8 +7,7 @@ typed_astunparse~=2.1.4
 funcsigs==1.0.2
 mypy_extensions~=0.4.3
 typed_ast~=1.4.0
-jsonschema~=3.0.0
+jsonschema~=3.0.2
 texar-pytorch>=0.1.1
-typing>=3.7.4; python_version < '3.5'
 typing-inspect>=0.6.0
 dataclasses~=0.7; python_version <'3.7'

@@ -7,6 +7,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7 ]
+        torch-version: [ 1.5.0]
+        tensorflow-version: [ 1.15.0 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -14,3 +19,137 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: |
+          python -m pip install --progress-bar off --upgrade pip
+          pip install --progress-bar off Django django-guardian
+          pip install --progress-bar off pylint==2.6.0 flake8==3.8.2 mypy==0.790 pytest==5.1.3
+          pip install --progress-bar off coverage codecov
+      - name: Obtain Stave Database Examples
+        run: |
+          git clone https://github.com/asyml/stave.git
+          cd stave/simple-backend
+          python manage.py migrate
+          cat sample_sql/*.sql | sqlite3 db.sqlite3
+          cd ../..
+          # Simply keep the database file but remove the repo.
+          cp stave/simple-backend/db.sqlite3 .
+          rm -rf stave
+      - name: Install deep learning frameworks
+        run: |
+          pip install --progress-bar off torch==${{ matrix.torch-version }}
+          pip install --progress-bar off tensorflow==${{ matrix.tensorflow-version }}
+      - name: Install Texar
+        run: |
+          git clone https://github.com/asyml/texar-pytorch.git
+          cd texar-pytorch
+          pip install --progress-bar off .
+          cd ..
+          # Remove them to avoid confusing pytest.
+          rm -rf texar-pytorch
+      - name: Install Forte
+        run: |
+          pip install --progress-bar off .[nltk,ner,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp,augment,cliner]
+      - name: Build ontology
+        run: |
+          ./scripts/build_ontology_specs.sh
+      - name: Start Elastic Server
+        run: |
+          wget -q https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.4.2-linux-x86_64.tar.gz
+          tar -zxf elasticsearch-7.4.2-linux-x86_64.tar.gz
+          rm -rf elasticsearch-7.4.2-linux-x86_64.tar.gz
+          elasticsearch-7.4.2/bin/elasticsearch -d
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 forte/ examples/ ft/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 forte/ examples/ ft/ scripts/ tests/  --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Lint with pylint
+        run: |
+          pylint forte/ examples/ ft/ scripts/ tests/
+      - name: Lint with mypy
+        run: |
+          mypy .
+      - name: Download models for testing
+        run: |
+          spacy download en_core_web_sm
+          spacy download xx_ent_wiki_sm
+          python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker words
+      - name: Test with pytest and run coverage
+        run: |
+          coverage run -m pytest
+      - name: Test doctest
+        run: |
+          pytest --doctest-modules forte
+      - name: Upload to codecov
+        run: |
+          codecov
+  docs:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.7
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: |
+          python -m pip install --progress-bar off --upgrade pip
+          pip install --progress-bar off -r requirements.txt
+          pip install --progress-bar off -r docs/requirements.txt
+          git clone https://github.com/asyml/texar-pytorch.git
+          cd texar-pytorch
+          pip install --progress-bar off .
+          cd ..
+          rm -rf texar-pytorch
+      - name: Build Docs
+        run: |
+          cd docs
+          sphinx-build -W -b html -d _build/doctrees . _build/html
+          sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
+  deploy:
+    needs: [ build, docs ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install pypa/build
+        run: |
+          python -m pip install build --user
+      - name: Build a binary wheel and a source tarball
+        run: |
+          python -m build --sdist --wheel --outdir dist/ .
+      - name: Publish Python 🐍 distributions 📦 to Test PyPI
+        # Upload only on tagged commits.
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          repository_url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      - name: Publish Python 🐍 distributions 📦 to PyPI
+        # Upload only on tagged commits.
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+

@@ -4,7 +4,7 @@
 Training System
 ******************************
 
-Forte advocates the convention to separate data preprocessing (Domain Dependent)
+Forte promotes the convention to separate data pre-processing (Domain Dependent)
 and actual training process. This is simply done by creating an intermediate
 layer to extract raw features from data packs. In this documentation, we will
 visit several components in this system, which includes:
