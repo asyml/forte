@@ -34,11 +34,13 @@ from forte.data.extractors.attribute_extractor import AttributeExtractor
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
 from forte.data.readers import PlainTextReader, StringReader
-from forte.data.selector import FirstPackSelector, NameMatchSelector
+from forte.data.selector import FirstPackSelector, NameMatchSelector, \
+    SinglePackSelector, AllPackSelector
 from forte.data.types import DataRequest
 from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
-from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
+from forte.processors.base import PackProcessor, FixedSizeBatchProcessor, \
+    MultiPackProcessor
 from forte.processors.base.batch_processor import Predictor, BatchProcessor
 from forte.train_preprocessor import TrainPreprocessor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
@@ -56,6 +58,13 @@ class NewType(Generics):
     def __init__(self, pack, value):
         super().__init__(pack)
         self.value = value
+
+
+class NothingSelector(SinglePackSelector):
+    """Select no pack from the :class:`MultiPack`"""
+
+    def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
+        yield from []
 
 
 class SentenceReader(PackReader):
@@ -90,7 +99,8 @@ class SentenceReader(PackReader):
 
 
 class MultiPackSentenceReader(MultiPackReader):
-    """A simple sentence reader for pipeline tests."""
+    """A simple sentence reader for pipeline tests. This creates a multipack
+    with only one pack inside."""
 
     def __init__(self):
         super().__init__()
@@ -120,6 +130,16 @@ class MultiPackSentenceReader(MultiPackReader):
                 self.count += 1
 
                 yield m_pack  # type: ignore
+
+
+class MultiPackCopier(MultiPackProcessor):
+    """
+    Create a new pack inside the multi pack, make a copy of the first pack.
+    """
+
+    def _process(self, input_pack: MultiPack):
+        pack = input_pack.add_pack()
+        pack.set_text(input_pack.get_pack_at(0).text)
 
 
 class PeriodSentenceSplitter(PackProcessor):
@@ -692,7 +712,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(component=dummy3, config=config,
                 selector=FirstPackSelector())
         nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
+        data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -723,7 +743,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(component=dummy3,
                 selector=FirstPackSelector())
         nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
+        data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -755,7 +775,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(component=dummy3, config=config,
                 selector=FirstPackSelector())
         nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
+        data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -788,7 +808,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         nlp.add(component=dummy3, config=config,
                 selector=FirstPackSelector())
         nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
+        data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -823,7 +843,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         dummy4 = DummyPackProcessor()
         nlp.add(component=dummy4, selector=FirstPackSelector())
         nlp.initialize()
-        data_path = data_samples_root + "/random_texts/0.txt"
+        data_path = os.path.join(data_samples_root, "random_texts", "0.txt")
 
         num_packs = 0
         for pack in nlp.process_dataset(data_path):
@@ -834,6 +854,46 @@ class MultiPackPipelineTest(unittest.TestCase):
 
         # check that all packs are yielded
         self.assertEqual(num_packs, reader.count)
+
+    def test_empty_selector(self):
+        """
+        Test the selector that doesn't select anything perform well in the
+        pipeline.
+        """
+        for pack in Pipeline().set_reader(MultiPackSentenceReader()).add(
+                DummyPackProcessor(), selector=NothingSelector()
+        ).initialize().process_dataset(
+            os.path.join(data_samples_root, "random_texts", "0.txt")
+        ):
+            # Because no packs are selected, we do not have any entries added.
+            self.assertTrue(pack.get_pack('pack').num_generics_entries == 0)
+
+    def test_caster_all_selector(self):
+        """
+        Test if the caster and all pack selector works well.
+        The caster is used to convert a single pack to multi pack, and then
+        pack copier is used to create a new pack. The all pack selector selects
+        all the pack from the multi pack. This test make sure this pipeline
+        works OK.
+        """
+        mp: MultiPack
+        for mp in Pipeline().set_reader(SentenceReader()).add(
+                MultiPackBoxer()
+        ).add(
+            MultiPackCopier()
+        ).add(
+            DummyPackProcessor(), selector=AllPackSelector()
+        ).initialize().process_dataset(
+            os.path.join(data_samples_root, "random_texts", "0.txt")
+        ):
+            num_pack = 0
+            for pack in mp.packs:
+                num_pack += 1
+                entries = list(pack.get(NewType))
+                self.assertEqual(len(entries), 1)
+                self.assertEqual(
+                    entries[0].value, "[PACK]")
+            self.assertEqual(num_pack, 2)
 
 
 if __name__ == '__main__':

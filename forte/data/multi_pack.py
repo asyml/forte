@@ -557,6 +557,9 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             entry_iter = self.groups
         elif issubclass(entry_type, MultiPackGeneric):
             entry_iter = self.generics
+        else:
+            raise ValueError(
+                f"The entry type: {entry_type} is not supported by MultiPack.")
 
         all_types: Set[Type]
         if include_sub_type:
