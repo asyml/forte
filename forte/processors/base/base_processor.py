@@ -60,8 +60,8 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
             for expected_t in expected_types:
                 if expected_t not in input_pack._meta.record.keys():
                     raise ExpectedRecordNotFound(
-                        f"The entry {expected_t} is not found in "
-                        f"the provided pack.")
+                        f"The record type {expected_t} is not found in "
+                        f"meta of the provided pack.")
         # Set the component for recording purpose.
         input_pack.set_control_component(self.name)
         self._process(input_pack)
