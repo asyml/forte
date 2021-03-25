@@ -4,7 +4,7 @@
 
 -----------------
 
-[![Build Status](https://travis-ci.org/asyml/forte.svg?branch=master)](https://travis-ci.org/asyml/forte)
+[![Build Status](https://github.com/asyml/forte/actions/workflows/main.yml/badge.svg)](https://github.com/asyml/forte/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/asyml/forte/branch/master/graph/badge.svg)](https://codecov.io/gh/asyml/forte)
 [![Documentation Status](https://readthedocs.org/projects/asyml-forte/badge/?version=latest)](https://asyml-forte.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/asyml/forte/blob/master/LICENSE)
@@ -14,7 +14,7 @@
 **Forte** is a toolkit for building Natural Language Processing pipelines, featuring cross-task 
 interaction, adaptable data-model interfaces and composable pipeline. 
 Forte was originally developed in CMU and is actively contributed by [Petuum](https://petuum.com/) 
-in collaboration with other institutes.
+in collaboration with other institutes.~~~~
 This project is part of the [CASL Open Source](http://casl-project.ai/) family.
 
 Forte provides a platform to assemble
