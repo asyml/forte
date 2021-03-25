@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Optional
+from typing import Optional, Dict
 
 import spacy
 from spacy.language import Language
@@ -126,3 +126,6 @@ class SpacyProcessor(PackProcessor):
 
         # Process sentence parses.
         self._process_parser(result.sents, input_pack)
+
+    def record(self, record_meta: Dict):
+        record_meta["ft.onto.base_ontology.Sentence"] = []

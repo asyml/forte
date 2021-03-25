@@ -56,6 +56,7 @@ class Meta(BaseMeta):
         super().__init__(pack_name)
         self.language = language
         self.span_unit = span_unit
+        self.record: Dict[str, Any] = dict()
 
 
 class DataPack(BasePack[Entry, Link, Group]):

@@ -19,6 +19,7 @@ import itertools
 from abc import abstractmethod, ABC
 from typing import Any, Dict
 
+from forte.common import ExpectedRecordNotFound
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
 from forte.pipeline_component import PipelineComponent
@@ -39,24 +40,32 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         self.selector = DummySelector()
 
     def record(self, record_meta: Dict):
+        r"""Method to add output type record of current processor
+        to Meta attribute record dictionary.
+        """
         pass
 
     @classmethod
     def expected_type(cls) -> Dict:
+        r"""Method to add expected type for current processor input which
+        would be checked before running the processor if enforce_consistency()
+        was called for the pipeline.
+        """
         return {}
 
     def process(self, input_pack: PackType):
-        if self.__check_type_consistency:
+        if self._check_type_consistency:
             expected_types = self.expected_type()
             # check if expected types are in input pack
-            # for t in expected_types:
-            print(expected_types)
-            print(input_pack.annotations)
-
+            for expected_t in expected_types:
+                if expected_t not in input_pack._meta.record.keys():
+                    raise ExpectedRecordNotFound(
+                        f"The entry {expected_t} is not found in "
+                        f"the provided pack.")
         # Set the component for recording purpose.
         input_pack.set_control_component(self.name)
         self._process(input_pack)
-        # add stuff to meta
+        # add type record of output to meta
         self.record(input_pack._meta.record)
         # Change status for pack processors
         q_index = self._process_manager.current_queue_index

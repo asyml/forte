@@ -120,13 +120,14 @@ class Pipeline(Generic[PackType]):
             self.resource = resource
 
         self.initialized: bool = False
-        self.__check_type_consistency: bool = False
+        self._check_type_consistency: bool = False
 
     def enforce_consistency(self):
-        r"""This function enforces a type consistency checking for all the pipeline components.
+        r"""This function enforces a type consistency checking for
+        all the pipeline components.
 
         """
-        self.__check_type_consistency = True
+        self._check_type_consistency = True
 
     def init_from_config_path(self, config_path):
         r"""Read the configurations from the given path ``config_path``
@@ -171,7 +172,9 @@ class Pipeline(Generic[PackType]):
 
         self._reader.assign_manager(self._proc_mgr)
 
-        self._reader.initialize(self.resource, self._reader_config, self.__check_type_consistency)
+        self._reader.initialize(self.resource, self._reader_config)
+        if self._check_type_consistency:
+            self.reader.enforce_consistency()
         self.initialize_processors()
 
         self.initialized = True
@@ -182,7 +185,9 @@ class Pipeline(Generic[PackType]):
         for processor, config in zip(self.components, self.processor_configs):
             try:
                 processor.assign_manager(self._proc_mgr)
-                processor.initialize(self.resource, config, self.__check_type_consistency)
+                processor.initialize(self.resource, config)
+                if self._check_type_consistency:
+                    processor.enforce_consistency()
             except ProcessorConfigError as e:
                 logging.error("Exception occur when initializing "
                               "processor %s", processor.name)

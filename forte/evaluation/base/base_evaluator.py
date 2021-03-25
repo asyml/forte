@@ -15,7 +15,7 @@
 Defines the Evaluator interface and related functions.
 """
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Dict
 
 from forte.data.base_pack import PackType
 from forte.pipeline_component import PipelineComponent
@@ -47,3 +47,10 @@ class Evaluator(PipelineComponent[PackType]):
         r"""The evaluator gather the results and the score can be obtained here.
         """
         raise NotImplementedError
+
+    def record(self, record_meta: Dict):
+        pass
+
+    @classmethod
+    def expected_type(cls) -> Dict:
+        return {}

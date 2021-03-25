@@ -25,6 +25,7 @@ __all__ = [
     "ProcessExecutionException",
     "ValidationError",
     "ResourceError",
+    "ExpectedRecordNotFound",
 ]
 
 
@@ -78,4 +79,9 @@ class ProcessExecutionException(Exception):
 
 class ValidationError(Exception):
     r"""Raise this error when input validate fail"""
+    pass
+
+
+class ExpectedRecordNotFound(ValueError):
+    r"""Raise this error when expected type for input is not in input record"""
     pass

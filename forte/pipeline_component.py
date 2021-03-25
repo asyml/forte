@@ -33,12 +33,19 @@ class PipelineComponent(Generic[PackType]):
         self._process_manager: ProcessManager = None
         self.resources: Resources = None
         self.configs: Config = Config({}, {})
-        self.__check_type_consistency = False
+        self._check_type_consistency = False
 
     def assign_manager(self, process_manager: ProcessManager):
         self._process_manager = process_manager
 
-    def initialize(self, resources: Resources, configs: Config, check_type_consistency: bool):
+    def enforce_consistency(self):
+        r"""This function enforces a type consistency checking
+        for all the pipeline components.
+
+        """
+        self._check_type_consistency = True
+
+    def initialize(self, resources: Resources, configs: Config):
         r"""The pipeline will call the initialize method at the start of a
         processing. The processor and reader will be initialized with
         ``configs``, and register global resources into ``resource``. The
@@ -49,12 +56,9 @@ class PipelineComponent(Generic[PackType]):
                 shareable resources here, for example, the vocabulary.
             configs (Config): The configuration passed in to set up this
                 component.
-            check_type_consistency (bool): Whether enforce a type consistency
-                checking for this component.
         """
         self.resources = resources
         self.configs = configs
-        self.__check_type_consistency = check_type_consistency
 
     def add_entry(self, pack: BasePack, entry: Entry):
         """

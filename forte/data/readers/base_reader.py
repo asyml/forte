@@ -18,7 +18,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Any, Iterator, Optional, Union, List
+from typing import Any, Iterator, Optional, Union, List, Dict
 
 from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
@@ -74,8 +74,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._cache_ready: bool = False
         self._data_packs: List[PackType] = []
 
-    def initialize(self, resources: Resources, configs: Config, check_type_consistency: bool):
-        super().initialize(resources, configs, check_type_consistency)
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
 
         # Clear memory cache
         self._cache_ready = False
@@ -222,15 +222,26 @@ class BaseReader(PipelineComponent[PackType], ABC):
         if self._cache_in_memory and self._cache_ready:
             # Read from memory
             for pack in self._data_packs:
+                self.record(pack._meta.record)
                 yield pack
         else:
             # Read via parsing dataset
             for pack in self._lazy_iter(*args, **kwargs):
+                self.record(pack._meta.record)
                 if self._cache_in_memory:
                     self._data_packs.append(pack)
                 yield pack
 
         self._cache_ready = True
+
+    def record(self, record_meta: Dict):
+        r"""Modify the datapack meta record field
+        Args:
+            record_meta: the field in the datapack for type record that need to fill in
+            for consistency checking.
+
+        """
+        pass
 
     def cache_data(self, collection: Any, pack: PackType, append: bool):
         r"""Specify the path to the cache directory.
