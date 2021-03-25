@@ -114,7 +114,6 @@ jobs:
             ${{ runner.os }}-
       - name: Install dependencies
         run: |
-          sudo apt-get install libenchant1c2a myspell-en-us
           python -m pip install --progress-bar off --upgrade pip
           pip install --progress-bar off -r requirements.txt
           pip install --progress-bar off -r docs/requirements.txt
