@@ -126,7 +126,6 @@ jobs:
         run: |
           cd docs
           sphinx-build -W -b html -d _build/doctrees . _build/html
-          pip install --progress-bar off coverage codecov
           sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
   deploy:
     needs: [ build, docs ]

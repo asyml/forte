@@ -24,6 +24,10 @@ from texar.torch.losses.info_loss import kl_divg_loss_with_logits
 from texar.torch.data import DataIterator
 from texar.torch.data.data.dataset_utils import Batch
 
+__all__ = [
+    "UDAIterator",
+]
+
 
 class UDAIterator:
     r"""
@@ -70,6 +74,7 @@ class UDAIterator:
             - ``'mean'``: the output will be divided by the number of elements
               in the output.
     """
+
     def __init__(
             self,
             sup_iterator: DataIterator,

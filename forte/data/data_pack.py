@@ -940,7 +940,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         also returned if `include_sub_type` is set to True (which is the
         default behavior).
 
-        The `range_annotation` controls the search area of the subtypes. An
+        The `range_annotation` controls the search area of the sub-types. An
         entry `E` will be returned if :meth:`in_span(E, range_annotation`
         returns True. If this function is called frequently with queries
         related to the `range_annotation`, please consider to build the coverage

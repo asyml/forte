@@ -125,3 +125,12 @@ cuda
 gpu
 cpu
 unigram
+iteratively
+dimensionality
+preprocessor
+Getter
+getter
+declaratively
+boolean
+embedding
+embeddings
