@@ -40,6 +40,9 @@ jobs:
           python manage.py migrate
           cat sample_sql/*.sql | sqlite3 db.sqlite3
           cd ../..
+          # Simply keep the database file but remove the repo.
+          cp stave/simple-backend/db.sqlite3 .
+          rm -rf stave
       - name: Install deep learning frameworks
         run: |
           pip install --progress-bar off torch==${{ matrix.torch-version }}
@@ -50,6 +53,8 @@ jobs:
           cd texar-pytorch
           pip install --progress-bar off .
           cd ..
+          # Remove them to avoid confusing pytest.
+          rm -rf texar-pytorch
       - name: Install Forte
         run: |
           pip install --progress-bar off .[nltk,ner,txtgen,stanza,test,example,ir,wikipedia,spacy,sentiment,allennlp,augment,cliner]
