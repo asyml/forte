@@ -25,7 +25,7 @@ setuptools.setup(
         'sortedcontainers==2.1.0',
         'numpy==1.16.5',
         'jsonpickle==1.4',
-        'pyyaml==5.1.2',
+        'pyyaml==5.4',
         'smart-open==1.8.4',
         'typed_astunparse==2.1.4',
         'funcsigs==1.0.2',
