@@ -41,7 +41,7 @@ class TrainPreprocessor:
     including building vocabulary, extracting the features, batching and
     padding (optional). The main functionality is provided by its method
     :meth:`get_train_batch_iterator` which will return an `iterator` over the
-    batch of preprocessed data. Please refer to the documentation of
+    batch of pre-processed data. Please refer to the documentation of
     that method for how the pre-processing is done.
 
     `TrainPreprocessor` will maintain a Config that stores all the configurable
@@ -307,7 +307,7 @@ class TrainPreprocessor:
         4. (optional) Pad a batch of
            :class:`~forte.data.converter.feature.Feature`
 
-        It will return an `iterator` of a batch of preprocessed data.
+        It will return an `iterator` of a batch of pre-processed data.
 
         Returns:
             An `Iterator` of type :class:`~texar.torch.data.Batch`
