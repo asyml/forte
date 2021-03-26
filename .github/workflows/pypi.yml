@@ -28,16 +28,12 @@ jobs:
         run: |
           python -m build --sdist --wheel --outdir dist/ .
       - name: Publish Python 🐍 distributions 📦 to Test PyPI
-        # Upload only on tagged commits.
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           repository_url: https://test.pypi.org/legacy/
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
       - name: Publish Python 🐍 distributions 📦 to PyPI
-        # Upload only on tagged commits.
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
