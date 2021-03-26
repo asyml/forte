@@ -9,7 +9,7 @@ if sys.version_info < (3, 6):
 
 setuptools.setup(
     name="forte",
-    version="0.1.0a2",
+    version="0.1.0a10",
     url="https://github.com/asyml/forte",
 
     description="Forte is extensible framework for building composable and "

@@ -15,7 +15,7 @@
 _MAJOR = "0"
 _MINOR = "1"
 _REVISION = "0"
-_PRE = "a2"
+_PRE = "a10"
 
 VERSION_SHORT = "{0}.{1}".format(_MAJOR, _MINOR)
 VERSION = "{0}.{1}.{2}{3}".format(_MAJOR, _MINOR, _REVISION, _PRE)
