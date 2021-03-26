@@ -131,12 +131,21 @@ jobs:
   deploy:
     needs: [ build, docs ]
     runs-on: ubuntu-latest
+    env:
+      python-version: 3.7
     steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python-version }}    
       - name: Install pypa/build
         run: |
           python -m pip install build --user
       - name: Check current directory
-        run: pwd
+        run: |
+           pwd
+           ls
       - name: Build a binary wheel and a source tarball
         run: |
           python -m build --sdist --wheel --outdir dist/ .
