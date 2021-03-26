@@ -128,4 +128,7 @@ class SpacyProcessor(PackProcessor):
         self._process_parser(result.sents, input_pack)
 
     def record(self, record_meta: Dict):
+        r"""Method to add output type record of current processor
+        to :attr:`forte.data.data_pack.Meta.record`
+        """
         record_meta["ft.onto.base_ontology.Sentence"] = []

@@ -235,10 +235,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._cache_ready = True
 
     def record(self, record_meta: Dict):
-        r"""Modify the datapack meta record field
+        r"""Modify the datapack meta record field.
         Args:
             record_meta: the field in the datapack for type record that need to fill in
-            for consistency checking.
+                for consistency checking.
 
         """
         pass

@@ -122,12 +122,26 @@ class Pipeline(Generic[PackType]):
         self.initialized: bool = False
         self._check_type_consistency: bool = False
 
-    def enforce_consistency(self):
+    def enforce_consistency(self, enforce: bool = True):
         r"""This function enforces a type consistency checking for
-        all the pipeline components.
+        all the pipeline components. When this function is called
+        with enforce is ``True``, all the pipeline component would check
+        if the input datapack record matches with the expected type
+        if function ``expected_type`` is implemented for the processor.
+        For example, Allennlp processor requires entry type of
+        ``ft.onto.base_ontology.Sentence``, and Spacy processor would
+        produce this type in the output datapack, so ``record`` function
+        of Spacy processor writes the record of this type in the datapack
+        and Allennlp processor implements ``expected_type`` to add this type.
+        Then when the pipeline runs with enforce_consistency, Allennlp
+        would check if this type exists in the record of the output of the
+        previous pipeline component.
+        Args:
+            enforce: A boolean of whether to enable consistency checking
+                for the pipeline or not
 
         """
-        self._check_type_consistency = True
+        self._check_type_consistency = enforce
 
     def init_from_config_path(self, config_path):
         r"""Read the configurations from the given path ``config_path``
