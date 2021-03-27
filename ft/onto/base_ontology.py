@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:../../../../../../../../data/NLP/yishan_forte/forte/base_ontology.json***
+# ***source json:forte/ontology_specs/base_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -353,6 +353,8 @@ class CoreferenceGroup(Group):
     """
     A group type entry that take `EntityMention`, as members, used to represent coreferent group of entities.
     """
+
+    MemberType = EntityMention
 
     def __init__(self, pack: DataPack, members: Optional[Iterable[Entry]] = None):
         super().__init__(pack, members)

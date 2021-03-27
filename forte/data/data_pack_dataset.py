@@ -27,7 +27,7 @@ from texar.torch.data import IterDataSource, DatasetBase, Batch
 from forte.data.converter import Converter
 from forte.data.converter import Feature
 from forte.data.data_pack import DataPack
-from forte.data.extractor.base_extractor import BaseExtractor
+from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import Annotation
 from forte.data.types import DataRequest
@@ -182,7 +182,7 @@ class DataPackDataset(DatasetBase):
             :class:`~forte.data.converter.Feature` extracted.
 
             .. note::
-                Please refer to Please refer to :meth:`feature_resource` in
+                Please refer to :meth:`feature_resource` in
                 :class:`~forte.train_preprocessor.TrainPreprocessor` for details
                 about user-specified tags.
         """
@@ -207,7 +207,7 @@ class DataPackDataset(DatasetBase):
             examples: A `List` of result from :meth:`process`.
 
         Returns:
-            A texar :class:`~texar.torch.data.Batch`
+            A Texar Pytorch :class:`~Texar.torch.data.Batch`
             It can be treated as a `Dict` with the following structure:
 
             .. code-block:: python

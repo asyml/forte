@@ -18,7 +18,7 @@ from typing import Iterator, Any
 from ft.onto.base_ontology import Token, Sentence, Document, EntityMention
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 
 __all__ = [
     "CoNLL03Reader"
@@ -28,10 +28,10 @@ __all__ = [
 class CoNLL03Reader(PackReader):
     r""":class:`CoNLL03Reader` is designed to read in the CoNLL03 dataset.
 
-    The dataset is from the following paper,
-    Sang, Erik F., and Fien De Meulder. "Introduction to the CoNLL-2003
+    The dataset is from the following paper:
+    `Sang, Erik F., and Fien De Meulder. "Introduction to the CoNLL-2003
     shared task: Language-independent named entity recognition."
-    arXiv preprint cs/0306050 (2003).
+    arXiv preprint cs/0306050 (2003).`
 
     Data could be downloaded from
     https://deepai.org/dataset/conll-2003-english
@@ -102,7 +102,7 @@ class CoNLL03Reader(PackReader):
                         sentence_cnt += 1
 
                     pack.set_text(text,
-                        replace_func=self.text_replace_operation)
+                                  replace_func=self.text_replace_operation)
                     Document(pack, 0, len(text))
                     pack.pack_name = collection + "_%d" % pack_id
                     pack_id += 1
@@ -135,7 +135,8 @@ class CoNLL03Reader(PackReader):
                         # Add previous ner tag to sentence if it exists.
                         if prev_y is not None:
                             entity_mention = EntityMention(pack,
-                                                    start_index, offset - 1)
+                                                           start_index,
+                                                           offset - 1)
                             entity_mention.ner_type = prev_y
 
                         # Start process current ner tag.
@@ -178,7 +179,7 @@ class CoNLL03Reader(PackReader):
                     # Handle the last ner tag if exists.
                     if prev_x is not None:
                         entity_mention = EntityMention(pack, start_index,
-                                                        offset - 1)
+                                                       offset - 1)
                         entity_mention.ner_type = prev_y
 
                     # Reset information.
@@ -195,6 +196,6 @@ class CoNLL03Reader(PackReader):
 
             pack.set_text(text, replace_func=self.text_replace_operation)
             Document(pack, 0, len(text))
-            pack.pack_name = collection
+            pack.pack_name = os.path.basename(collection)
 
             yield pack

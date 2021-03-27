@@ -23,7 +23,7 @@ from forte.data.converter import Feature
 
 class ConverterTest(unittest.TestCase):
     def setUp(self):
-        self.converter: Converter = Converter({})
+        self.converter: Converter = Converter()
 
     def test_convert1(self):
         features1: List[Feature] = self.create_features1()
@@ -166,7 +166,7 @@ class ConverterTest(unittest.TestCase):
                 data_list=[[7], [1], [4]],
                 need_pad=False)
 
-        converter: Converter = Converter({})
+        converter: Converter = Converter()
         data, _ = converter.convert(features1)
         self.assertTrue(
             torch.allclose(data,
@@ -196,7 +196,7 @@ class ConverterTest(unittest.TestCase):
         torch.save(converter.state, tmp_state_file)
         self.assertTrue(os.path.exists(tmp_state_file))
 
-        recover_converter: Converter = Converter({})
+        recover_converter: Converter = Converter()
         recover_converter.load_state(torch.load(tmp_state_file))
 
         self.assertEqual(recover_converter.state, converter_states)

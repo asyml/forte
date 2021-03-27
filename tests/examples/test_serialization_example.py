@@ -20,7 +20,7 @@ import unittest
 from examples.serialization import serialize_example
 
 
-class SerializationTest(unittest.TestCase):
+class SerializationExampleTest(unittest.TestCase):
     def test_run_example(self):
         data_path = os.path.abspath(os.path.join(
             os.path.dirname(__file__),
@@ -28,14 +28,14 @@ class SerializationTest(unittest.TestCase):
 
         serialize_example.main(data_path)
 
-        assert os.path.exists(os.path.join('multi_out', 'multi.idx'))
-        assert os.path.exists(os.path.join('multi_out', 'pack.idx'))
-        assert os.path.exists(os.path.join('multi_out', 'packs'))
-        assert os.path.exists(os.path.join('multi_out', 'multi'))
+        self.assertTrue(os.path.exists(os.path.join('multi_out', 'multi.idx')))
+        self.assertTrue(os.path.exists(os.path.join('multi_out', 'pack.idx')))
+        self.assertTrue(os.path.exists(os.path.join('multi_out', 'packs')))
+        self.assertTrue(os.path.exists(os.path.join('multi_out', 'multi')))
 
-        assert os.path.exists('pack_out')
+        self.assertTrue(os.path.exists('pack_out'))
 
         with open(os.path.join('multi_out', 'multi.idx')) as f:
             for line in f:
-                assert '/' in line
-                assert '\\' not in line
+                self.assertTrue('/' in line)
+                self.assertTrue('\\' not in line)

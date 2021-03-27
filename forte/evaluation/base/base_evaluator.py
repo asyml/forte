@@ -35,8 +35,9 @@ class Evaluator(PipelineComponent[PackType]):
 
     @abstractmethod
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
-        r"""Consume the prediction pack and the reference pack to compute
-        evaluation results.
+        r"""The actual consume function that will be called by the pipeline.
+        This function will deal with the basic pipeline status and call the
+        `consume_next` function.
 
         Args:
             pred_pack: The prediction datapack, which should contain the system
@@ -49,7 +50,8 @@ class Evaluator(PipelineComponent[PackType]):
 
     @abstractmethod
     def get_result(self) -> Any:
-        r"""The evaluator gather the results and the score can be obtained here.
+        r"""The evaluator gather the results and the score should be obtained
+        here.
         """
         raise NotImplementedError
 

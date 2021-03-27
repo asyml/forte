@@ -66,7 +66,7 @@ class SRLPredictor(FixedSizeBatchProcessor):
 
         # initialize the batcher
         if configs:
-            self.batcher.initialize(configs.batcher)
+            self._batcher.initialize(configs.batcher)
 
         self.word_vocab = tx.data.Vocab(
             os.path.join(model_dir, "embeddings/word_vocab.english.txt"))

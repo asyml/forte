@@ -24,7 +24,7 @@ from typing import Iterator, Dict, Optional
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
-from forte.data.readers.base_reader import PackReader
+from forte.data.base_reader import PackReader
 from forte.data.readers.deserialize_reader import MultiPackDeserializerBase
 
 __all__ = [

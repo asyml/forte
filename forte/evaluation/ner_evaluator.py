@@ -32,7 +32,7 @@ class CoNLLNEREvaluator(Evaluator):
         self.scores: Dict[str, float] = {}
 
     def consume_next(self, pred_pack: DataPack, refer_pack: DataPack):
-        pred_getdata_args = {
+        pred_get_data_args = {
             "context_type": Sentence,
             "request": {
                 Token: {
@@ -42,7 +42,7 @@ class CoNLLNEREvaluator(Evaluator):
             },
         }
 
-        refer_getdata_args = {
+        refer_get_data_args = {
             "context_type": Sentence,
             "request": {
                 Token: {
@@ -52,9 +52,9 @@ class CoNLLNEREvaluator(Evaluator):
         }
 
         conll_utils.write_tokens_to_file(pred_pack=pred_pack,
-                                         pred_request=pred_getdata_args,
+                                         pred_request=pred_get_data_args,
                                          refer_pack=refer_pack,
-                                         refer_request=refer_getdata_args,
+                                         refer_request=refer_get_data_args,
                                          output_filename=self.output_file)
         eval_script = \
             Path(os.path.abspath(__file__)).parents[1] / \

@@ -64,6 +64,7 @@ class CoNLL03VocabularyProcessor(VocabularyProcessor):
 
     def __init__(self) -> None:
         super().__init__()
+        self.min_frequency = 0
         self.normalize_digit: bool = True
         self.embedding_path: str = '.'
 

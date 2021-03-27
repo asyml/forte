@@ -141,7 +141,7 @@ class AllenNLPProcessor(PackProcessor):
             else:
                 # delete existing tokens and dependencies
                 for entry_type in (Token, Dependency):
-                    for entry in input_pack.get(entry_type):
+                    for entry in list(input_pack.get(entry_type)):
                         input_pack.delete_entry(entry)
 
     def _create_tokens(self, input_pack, sentence, result):

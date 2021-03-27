@@ -30,14 +30,14 @@ __all__ = [
 
 
 class BasePackProcessor(BaseProcessor[PackType], ABC):
-    r"""The base class of processors that process one pack sequentially. If you
-    are looking for batching (that might happen across packs, refer to
+    r"""The base class of processors that process one pack in a streaming way.
+    If you are looking for batching (that might happen across packs, refer to
     :class:`BaseBatchProcessor`.
     """
     pass
 
 
-class PackProcessor(BaseProcessor[DataPack], ABC):
+class PackProcessor(BasePackProcessor[DataPack], ABC):
     r"""The base class of processors that process one :class:`DataPack` each
     time.
     """
@@ -46,7 +46,7 @@ class PackProcessor(BaseProcessor[DataPack], ABC):
         raise NotImplementedError
 
 
-class MultiPackProcessor(BaseProcessor[MultiPack], ABC):
+class MultiPackProcessor(BasePackProcessor[MultiPack], ABC):
     r"""The base class of processors that process :class:`MultiPack` each time.
     """
 

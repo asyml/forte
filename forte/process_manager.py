@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import deque
-from typing import List
+from typing import List, Deque
 
 from forte.process_job import ProcessJob, ProcessJobStatus
 
@@ -70,17 +70,22 @@ class ProcessManager:
 
     def __init__(self, pipeline_length):
         self._pipeline_length: int = pipeline_length
+        self._queues: List[Deque[ProcessJob]] = []
+        self._current_queue_index: int = -1
+        self._current_processor_index: int = 0
+        self._unprocessed_queue_indices: List[int] = []
+        self._processed_queue_indices: List[int] = []
         self.reset()
 
     def reset(self):
         self._queues = [deque() for _ in range(self._pipeline_length)]
-        self._current_queue_index: int = -1
-        self._current_processor_index: int = 0
-        self._unprocessed_queue_indices: List[int] = [0] * self._pipeline_length
-        self._processed_queue_indices: List[int] = [-1] * self._pipeline_length
+        self._current_queue_index = -1
+        self._current_processor_index = 0
+        self._unprocessed_queue_indices = [0] * self._pipeline_length
+        self._processed_queue_indices = [-1] * self._pipeline_length
 
     @property
-    def current_processor_index(self):
+    def current_processor_index(self) -> int:
         return self._current_processor_index
 
     @current_processor_index.setter
@@ -91,7 +96,7 @@ class ProcessManager:
         self._current_processor_index = processor_index
 
     @property
-    def current_queue_index(self):
+    def current_queue_index(self) -> int:
         return self._current_queue_index
 
     @current_queue_index.setter
@@ -102,31 +107,42 @@ class ProcessManager:
         self._current_queue_index = queue_index
 
     @property
-    def unprocessed_queue_indices(self):
+    def unprocessed_queue_indices(self) -> List[int]:
         return self._unprocessed_queue_indices
 
     @property
-    def processed_queue_indices(self):
+    def processed_queue_indices(self) -> List[int]:
         return self._processed_queue_indices
 
     @property
-    def current_queue(self):
+    def current_queue(self) -> Deque[ProcessJob]:
         return self._queues[self.current_queue_index]
 
     @property
-    def pipeline_length(self):
+    def pipeline_length(self) -> int:
         return self._pipeline_length
 
     def add_to_queue(self, queue_index: int, job: ProcessJob):
+        """
+        Add a job to a particular queue.
+
+        Args:
+            queue_index: The queue that the job is to be added.
+            job: The job to be added.
+
+        Returns:
+
+        """
         if queue_index > len(self._queues):
             raise ValueError(f"Queue number {queue_index} exceeds queue "
                              f"size {len(self._queues)}")
         else:
-            # change the job status
+            # When a job is added to a queue, it will be
+            # consider as unprocessed.
             job.set_status(ProcessJobStatus.UNPROCESSED)
             self._queues[queue_index].append(job)
 
-    def exhausted(self):
+    def exhausted(self) -> bool:
         r"""Returns True only if the last element remaining in the last queue is
          a poison pack."""
 

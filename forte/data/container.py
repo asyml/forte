@@ -24,7 +24,6 @@ from typing import Dict, Generic, Set, Tuple, TypeVar, Iterator
 from forte.data.span import Span
 
 __all__ = [
-    "EntryIdManager",
     "EntryContainer",
     "ContainerType",
     "BasePointer",
@@ -48,21 +47,6 @@ class BasePointer:
         return state
 
 
-class EntryIdManager:
-    r"""Control the ids assigned to each entry."""
-
-    def __init__(self, initial_id_count: int = 0):
-        self.__id_counter = initial_id_count
-
-    def get_id(self) -> int:
-        i = self.__id_counter
-        self.__id_counter += 1
-        return i
-
-    def current_id_counter(self) -> int:
-        return self.__id_counter
-
-
 class EntryContainer(Generic[E, L, G]):
     def __init__(self):
         # Record the set of entries created by some components.
@@ -71,22 +55,6 @@ class EntryContainer(Generic[E, L, G]):
         # Record the set of fields modified by this component. The 2-tuple
         # identify the entry field, such as (2, lemma).
         self._field_records: Dict[str, Set[Tuple[int, str]]] = {}
-
-        # The Id manager controls the ID management in this container
-        self._id_manager = EntryIdManager()
-
-    def __getstate__(self):
-        r"""In serialization:
-            - We create a special field for serialization information.
-            - we don't serialize the :class:`IdManager` directly, instead we
-              save the max count in the serialization information dictionary.
-        """
-        state = self.__dict__.copy()
-        state['serialization'] = {}
-        state['serialization']['next_id'] = \
-            self._id_manager.current_id_counter()
-        state.pop('_id_manager')
-        return state
 
     def __setstate__(self, state):
         r"""In deserialization,
@@ -99,10 +67,6 @@ class EntryContainer(Generic[E, L, G]):
 
         if 'field_records' in self.__dict__:
             self._field_records = self.__dict__.pop('field_records')
-
-        if 'serialization' in self.__dict__:
-            self._id_manager = EntryIdManager(
-                self.__dict__.pop('serialization')['next_id'])
 
     @abstractmethod
     def on_entry_creation(self, entry: E):
@@ -117,10 +81,10 @@ class EntryContainer(Generic[E, L, G]):
         raise NotImplementedError
 
     @abstractmethod
-    def validate(self, item: E) -> bool:
+    def _validate(self, item: E) -> bool:
         r"""Validate whether this entry type can be added. This method is
-        called by the :meth:`~forte.data.ontology.top.Entry.__init__` method
-        when an instance of :class:`~forte.data.ontology.top.Entry` is being
+        called by the :meth:`~forte.data.ontology.core.Entry.__init__` method
+        when an instance of :class:`~forte.data.ontology.core.Entry` is being
         added to the pack.
 
         Args:
@@ -134,9 +98,6 @@ class EntryContainer(Generic[E, L, G]):
 
     def get_span_text(self, span: Span):
         raise NotImplementedError
-
-    def get_next_id(self):
-        return self._id_manager.get_id()
 
     def get_all_creator(self) -> Iterator[str]:
         yield from self._creation_records.keys()

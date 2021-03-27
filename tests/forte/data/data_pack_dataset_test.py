@@ -31,8 +31,7 @@ class DataPackDatasetTest(unittest.TestCase):
         skip_k = 0
 
         self.input_files = [
-            "data_samples/data_pack_dataset_test/conll03_1.conll",
-            "data_samples/data_pack_dataset_test/conll03_2.conll"
+            "conll03_1.conll", "conll03_2.conll"
         ]
         self.feature_schemes = {}
 
@@ -42,34 +41,34 @@ class DataPackDatasetTest(unittest.TestCase):
         pack_iterator: Iterator[PackType] = \
             train_pl.process_dataset(file_path)
 
-        self.data_source: DataPackIterator = DataPackIterator(pack_iterator,
-                                                              context_type,
-                                                              request,
-                                                              skip_k)
+        self.data_source: DataPackIterator = DataPackIterator(
+            pack_iterator, context_type, request, skip_k)
 
     def test_data_pack_iterator(self):
         data_pack_iter = iter(self.data_source)
         raw_examples_1: List[RawExample] = []
         raw_examples_2: List[RawExample] = []
-        data_packs: List[DataPack] = []
+        packs_1: List[DataPack] = []
+        packs_2: List[DataPack] = []
 
         for idx, raw_example in enumerate(data_pack_iter):
             curr_pack: DataPack = raw_example[1]
             if curr_pack.pack_name == self.input_files[0]:
                 raw_examples_1.append(raw_example)
+                packs_1.append(curr_pack)
             else:
                 raw_examples_2.append(raw_example)
-            data_packs.append(curr_pack)
+                packs_2.append(curr_pack)
 
         self.assertEqual(len(raw_examples_1), 7)
         self.assertEqual(len(raw_examples_2), 3)
-        self.assertEqual(data_packs[0].get_entry(raw_examples_1[0][0]).text,
+        self.assertEqual(packs_1[0].get_entry(raw_examples_1[0][0]).text,
                          "EU rejects German call to boycott British lamb .")
-        self.assertEqual(data_packs[0].get_entry(raw_examples_1[1][0]).text,
+        self.assertEqual(packs_1[0].get_entry(raw_examples_1[1][0]).text,
                          "Peter Blackburn")
-        self.assertEqual(data_packs[1].get_entry(raw_examples_2[0][0]).text,
+        self.assertEqual(packs_2[0].get_entry(raw_examples_2[0][0]).text,
                          "EU rejects German call to boycott British lamb .")
-        self.assertEqual(data_packs[1].get_entry(raw_examples_2[1][0]).text,
+        self.assertEqual(packs_2[0].get_entry(raw_examples_2[1][0]).text,
                          "Peter Blackburn")
 
 

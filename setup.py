@@ -1,6 +1,6 @@
 import sys
-import setuptools
 from pathlib import Path
+import setuptools
 
 long_description = (Path(__file__).parent / "README.md").read_text()
 
@@ -9,7 +9,7 @@ if sys.version_info < (3, 6):
 
 setuptools.setup(
     name="forte",
-    version="0.0.1a3",
+    version="0.1.0",
     url="https://github.com/asyml/forte",
 
     description="Forte is extensible framework for building composable and "
@@ -25,7 +25,7 @@ setuptools.setup(
         'sortedcontainers==2.1.0',
         'numpy==1.16.5',
         'jsonpickle==1.4',
-        'pyyaml==5.1.2',
+        'pyyaml==5.4',
         'smart-open==1.8.4',
         'typed_astunparse==2.1.4',
         'funcsigs==1.0.2',

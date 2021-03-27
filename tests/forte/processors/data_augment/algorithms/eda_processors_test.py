@@ -16,23 +16,20 @@ Unit tests for EDA data augment processors
 """
 
 import unittest
-import tempfile
-import os
 import random
 
-from forte.processors.data_augment.algorithms.text_replacement_op import TextReplacementOp
 from forte.data.selector import AllPackSelector
 from forte.pipeline import Pipeline
 from forte.data.multi_pack import MultiPack
-from forte.data.ontology.top import MultiPackLink
 from forte.data.readers import StringReader
 from forte.data.caster import MultiPackBoxer
-from forte.processors.base.data_augment_processor import ReplacementDataAugmentProcessor
-from forte.processors.data_augment.algorithms.eda_processors \
-    import RandomDeletionDataAugmentProcessor, RandomInsertionDataAugmentProcessor, \
+from forte.processors.data_augment.algorithms.eda_processors import (
+    RandomDeletionDataAugmentProcessor,
+    RandomInsertionDataAugmentProcessor,
     RandomSwapDataAugmentProcessor
+)
 from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
-from ft.onto.base_ontology import Token, Sentence, Document, Annotation
+from ft.onto.base_ontology import Token
 
 from ddt import ddt, data, unpack
 
@@ -53,9 +50,15 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
         self.nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
 
     @data(
-        (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
-         ["Mary early Samantha arrived at the bus station and but waited until for noon the bus."],
-         [['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'and', 'but', 'waited', 'until', 'for', 'noon', 'the', 'bus', '.']],
+        ([
+             "Mary and Samantha arrived at the bus station "
+             "early but waited until noon for the bus."],
+         [
+             "Mary early Samantha arrived at the bus station "
+             "and but waited until for noon the bus."],
+         [['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus',
+           'station', 'and', 'but', 'waited', 'until', 'for', 'noon', 'the',
+           'bus', '.']],
         )
     )
     @unpack
@@ -72,9 +75,15 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 self.assertEqual(token.text, expected_tokens[idx][j])
 
     @data(
-        (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
-         ["await Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
-         [['await ', 'Mary', 'and', 'Samantha', 'arrived', 'at', 'the', 'bus', 'station', 'early', 'but', 'waited', 'until', 'noon', 'for', 'the', 'bus', '.']],
+        ([
+             "Mary and Samantha arrived at the bus station early "
+             "but waited until noon for the bus."],
+         [
+             "await Mary and Samantha arrived at the bus station "
+             "early but waited until noon for the bus."],
+         [['await ', 'Mary', 'and', 'Samantha', 'arrived', 'at', 'the', 'bus',
+           'station', 'early', 'but', 'waited', 'until', 'noon', 'for', 'the',
+           'bus', '.']],
         )
     )
     @unpack
@@ -91,14 +100,18 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
                 self.assertEqual(token.text, expected_tokens[idx][j])
 
     @data(
-        (["Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+        ([
+             "Mary and Samantha arrived at the bus station "
+             "early but waited until noon for the bus."],
          ["Mary and   at  bus   but waited until  for the ."],
-         [['Mary', 'and', 'at', 'bus', 'but', 'waited', 'until', 'for', 'the', '.']],
+         [['Mary', 'and', 'at', 'bus', 'but', 'waited', 'until', 'for', 'the',
+           '.']],
         )
     )
     @unpack
     def test_random_delete(self, texts, expected_outputs, expected_tokens):
-        self.nlp.add(component=RandomDeletionDataAugmentProcessor(), config={"alpha": 0.5})
+        self.nlp.add(component=RandomDeletionDataAugmentProcessor(),
+                     config={"alpha": 0.5})
         self.nlp.initialize()
 
         for idx, m_pack in enumerate(self.nlp.process_dataset(texts)):

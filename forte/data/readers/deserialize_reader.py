@@ -20,7 +20,7 @@ from typing import Iterator, List, Any, Union, Optional
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.data.readers.base_reader import PackReader, MultiPackReader
+from forte.data.base_reader import PackReader, MultiPackReader
 
 __all__ = [
     'RawDataDeserializeReader',
