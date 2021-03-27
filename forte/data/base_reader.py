@@ -209,6 +209,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     yield pack
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:
+        # pylint: disable=protected-access
         r"""An iterator over the entire dataset, giving all Packs processed
         as list or Iterator depending on `lazy`, giving all the Packs read
         from the data source(s). If not reading from cache, should call
@@ -237,8 +238,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
     def record(self, record_meta: Dict):
         r"""Modify the datapack meta record field.
         Args:
-            record_meta: the field in the datapack for type record that need to fill in
-                for consistency checking.
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
 
         """
         pass

@@ -53,6 +53,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         return {}
 
     def check_record_and_writes_record(self, input_pack: PackType):
+        # pylint: disable=protected-access
         r"""Method to check type consistency if
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
         for the pipeline and write record of the output type of the current
