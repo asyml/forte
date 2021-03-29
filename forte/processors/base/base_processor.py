@@ -74,13 +74,15 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
                         f"meta of the provided pack.")
                 else:
                     expected_t_value = self.expected_type().get(expected_t)
-                    for expected_t_v in expected_t_value:
-                        if expected_t_v not in input_pack._meta.\
-                                record.get(expected_t):
-                            raise ExpectedRecordNotFound(
-                                f"The record attribute type {expected_t_v} is "
-                                f"not found in attribute of record {expected_t}"
-                                f" in meta of the input datapack.")
+                    if expected_t_value is not None:
+                        for expected_t_v in expected_t_value:
+                            if expected_t_v not in input_pack._meta.\
+                                    record.get(expected_t):
+                                raise ExpectedRecordNotFound(
+                                    f"The record attribute type {expected_t_v} "
+                                    f"is not found in attribute of record "
+                                    f"{expected_t} in meta of the input "
+                                    f"datapack.")
         # add type record of output to meta of the input pack.
         self.record(input_pack._meta.record)
 

@@ -30,8 +30,8 @@ class Evaluator(PipelineComponent[PackType]):
     r"""The base class of the evaluator."""
     def __init__(self):
         super().__init__()
-        self._pred_pack_expected_type: Dict = None
-        self._ref_pack_expected_type: Dict = None
+        self._pred_pack_expected_type: Dict = dict()
+        self._ref_pack_expected_type: Dict = dict()
 
     @abstractmethod
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
@@ -103,14 +103,15 @@ class Evaluator(PipelineComponent[PackType]):
                     else:
                         expected_value = self._pred_pack_expected_type.get(
                             expected_t)
-                        for expected_t_v in expected_value:
-                            if expected_t_v not in pred_pack._meta.record.get(
-                                    expected_t):
-                                raise ExpectedRecordNotFound(
-                                    f"The record attribute type {expected_t_v}"
-                                    f" is not found in attribute of record "
-                                    f"{expected_t} in meta of the prediction "
-                                    f"datapack.")
+                        if expected_value is not None:
+                            for expected_t_v in expected_value:
+                                if expected_t_v not in pred_pack._meta.record\
+                                        .get(expected_t):
+                                    raise ExpectedRecordNotFound(
+                                        f"The record attribute type "
+                                        f"{expected_t_v} is not found in "
+                                        f"attribute of record {expected_t} "
+                                        f"in meta of the prediction datapack.")
             if self._ref_pack_expected_type is not None:
                 # check if expected types are in input pack.
                 for expected_t in self._ref_pack_expected_type:
@@ -121,14 +122,15 @@ class Evaluator(PipelineComponent[PackType]):
                     else:
                         expected_value = self._ref_pack_expected_type.get(
                             expected_t)
-                        for expected_t_v in expected_value:
-                            if expected_t_v not in ref_pack._meta.record.get(
-                                    expected_t):
-                                raise ExpectedRecordNotFound(
-                                    f"The record attribute type {expected_t_v}"
-                                    f" is not found in attribute of record "
-                                    f"{expected_t} in meta of the reference "
-                                    f"datapack.")
+                        if expected_value is not None:
+                            for expected_t_v in expected_value:
+                                if expected_t_v not in ref_pack._meta.record.\
+                                        get(expected_t):
+                                    raise ExpectedRecordNotFound(
+                                        f"The record attribute type "
+                                        f"{expected_t_v} is not found in "
+                                        f"attribute of record {expected_t} "
+                                        f"in meta of the reference datapack.")
         # add type record of output to meta of the input pack.
         self.pred_pack_record(pred_pack._meta.record)
         self.ref_pack_record(ref_pack._meta.record)
