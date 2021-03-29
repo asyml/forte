@@ -16,7 +16,7 @@ Base class for processors.
 """
 
 from abc import abstractmethod, ABC
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from forte.common import ExpectedRecordNotFound
 from forte.data.base_pack import PackType
@@ -44,7 +44,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         pass
 
     @classmethod
-    def expected_type(cls) -> Dict:
+    def expected_type(cls) -> Dict[str, List[str]]:
         r"""Method to add expected type for current processor input which
         would be checked before running the processor if
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
@@ -77,7 +77,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
                     if expected_t_value is not None:
                         for expected_t_v in expected_t_value:
                             if expected_t_v not in input_pack._meta.\
-                                    record.get(expected_t):
+                                    record.get(expected_t, []):
                                 raise ExpectedRecordNotFound(
                                     f"The record attribute type {expected_t_v} "
                                     f"is not found in attribute of record "

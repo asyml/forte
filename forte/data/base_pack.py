@@ -47,7 +47,7 @@ class BaseMeta:
     def __init__(self, pack_name: Optional[str] = None):
         self.pack_name: Optional[str] = pack_name
         self._pack_id: int = uuid.uuid4().int
-        self.record: Dict[str, Any] = dict()
+        self.record: Dict[str, List[str]] = dict()
 
     def __getstate__(self):
         state = self.__dict__.copy()

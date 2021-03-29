@@ -106,7 +106,7 @@ class Evaluator(PipelineComponent[PackType]):
                         if expected_value is not None:
                             for expected_t_v in expected_value:
                                 if expected_t_v not in pred_pack._meta.record\
-                                        .get(expected_t):
+                                        .get(expected_t, []):
                                     raise ExpectedRecordNotFound(
                                         f"The record attribute type "
                                         f"{expected_t_v} is not found in "
@@ -125,7 +125,7 @@ class Evaluator(PipelineComponent[PackType]):
                         if expected_value is not None:
                             for expected_t_v in expected_value:
                                 if expected_t_v not in ref_pack._meta.record.\
-                                        get(expected_t):
+                                        get(expected_t, []):
                                     raise ExpectedRecordNotFound(
                                         f"The record attribute type "
                                         f"{expected_t_v} is not found in "
