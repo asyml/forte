@@ -69,7 +69,7 @@ class ElasticSearchProcessor(MultiPackProcessor):
         first_query: Query = query_pack.get_single(Query)  # type: ignore
         # pylint: disable=isinstance-second-argument-not-valid-type
         # TODO: until fix: https://github.com/PyCQA/pylint/issues/3507
-        if not isinstance(first_query, Dict):
+        if not isinstance(first_query.value, Dict):
             raise ValueError(
                 "The query to the elastic indexer need to be a dictionary.")
         results = self.index.search(first_query.value)
