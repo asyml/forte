@@ -40,6 +40,10 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
     def record(self, record_meta: Dict):
         r"""Method to add output type record of current processor
         to :attr:`forte.data.data_pack.Meta.record`
+
+        Args:
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
         """
         pass
 

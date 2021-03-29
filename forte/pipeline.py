@@ -135,6 +135,7 @@ class Pipeline(Generic[PackType]):
         Then when the pipeline runs with enforce_consistency, Allennlp
         would check if this type exists in the record of the output of the
         previous pipeline component.
+
         Args:
             enforce: A boolean of whether to enable consistency checking
                 for the pipeline or not

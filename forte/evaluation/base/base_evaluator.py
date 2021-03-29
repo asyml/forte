@@ -15,7 +15,7 @@
 Defines the Evaluator interface and related functions.
 """
 from abc import abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from forte.data.base_pack import PackType
 from forte.pipeline_component import PipelineComponent
@@ -55,10 +55,14 @@ class Evaluator(PipelineComponent[PackType]):
         """
         raise NotImplementedError
 
-    def expected_type(self, pred_pack_expected_type: Dict,
-                      ref_pack_expected_type: Dict):
+    def expected_type(self, pred_pack_expected_type: Dict[str, List[str]],
+                      ref_pack_expected_type: Dict[str, List[str]]):
         r"""If the evaluator has required input type for pred_pack or ref_pack,
         user could add the type required with this function.
+
+        Args:
+            pred_pack_expected_type: The expected type of prediction datapack.
+            ref_pack_expected_type: The expected type of reference datapack.
 
         """
         self._pred_pack_expected_type = pred_pack_expected_type
@@ -67,12 +71,20 @@ class Evaluator(PipelineComponent[PackType]):
     def pred_pack_record(self, record_meta: Dict):
         r"""Method to add output type record of prediction datapack of
         current processor to :attr:`forte.data.data_pack.Meta.record`
+
+        Args:
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
         """
         pass
 
     def ref_pack_record(self, record_meta: Dict):
         r"""Method to add output type record of reference datapack of
         current processor to :attr:`forte.data.data_pack.Meta.record`
+
+        Args:
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
         """
         pass
 
