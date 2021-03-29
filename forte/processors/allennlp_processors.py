@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict
 from allennlp.predictors import Predictor
 from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
