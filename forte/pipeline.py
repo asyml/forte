@@ -138,8 +138,7 @@ class Pipeline(Generic[PackType]):
 
         Args:
             enforce: A boolean of whether to enable consistency checking
-                for the pipeline or not
-
+                for the pipeline or not.
         """
         self._check_type_consistency = enforce
 

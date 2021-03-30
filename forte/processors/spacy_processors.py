@@ -129,7 +129,7 @@ class SpacyProcessor(PackProcessor):
 
     def record(self, record_meta: Dict[str, List[str]]):
         r"""Method to add output type record of current processor
-        to :attr:`forte.data.data_pack.Meta.record`
+        to :attr:`forte.data.data_pack.Meta.record`.
 
         Args:
             record_meta: the field in the datapack for type record that need to

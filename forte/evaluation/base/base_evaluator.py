@@ -63,14 +63,13 @@ class Evaluator(PipelineComponent[PackType]):
         Args:
             pred_pack_expected_type: The expected type of prediction datapack.
             ref_pack_expected_type: The expected type of reference datapack.
-
         """
         self._pred_pack_expected_type = pred_pack_expected_type
         self._ref_pack_expected_type = ref_pack_expected_type
 
     def pred_pack_record(self, record_meta: Dict):
         r"""Method to add output type record of prediction datapack of
-        current processor to :attr:`forte.data.data_pack.Meta.record`
+        current processor to :attr:`forte.data.data_pack.Meta.record`.
 
         Args:
             record_meta: the field in the datapack for type record that need to
@@ -80,7 +79,7 @@ class Evaluator(PipelineComponent[PackType]):
 
     def ref_pack_record(self, record_meta: Dict):
         r"""Method to add output type record of reference datapack of
-        current processor to :attr:`forte.data.data_pack.Meta.record`
+        current processor to :attr:`forte.data.data_pack.Meta.record`.
 
         Args:
             record_meta: the field in the datapack for type record that need to

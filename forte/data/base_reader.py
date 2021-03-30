@@ -243,7 +243,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
         Args:
             record_meta: the field in the datapack for type record that need to
                 fill in for consistency checking.
-
         """
         pass
 
