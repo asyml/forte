@@ -122,17 +122,21 @@ class Pipeline(Generic[PackType]):
         self._check_type_consistency: bool = False
 
     def enforce_consistency(self, enforce: bool = True):
-        r"""This function enforces a type consistency checking for
-        all the pipeline components. When this function is called
-        with enforce is ``True``, all the pipeline component would check
-        if the input datapack record matches with the expected type
-        if function ``expected_type`` is implemented for the processor.
-        For example, Allennlp processor requires entry type of
-        ``ft.onto.base_ontology.Sentence``, and Spacy processor would
+        r"""This function determines whether the pipeline will enforce
+        the content expectations specified in each pipeline component. Each
+        component will check whether the input pack contains the expected data
+        via checking the meta-data, and throws a
+        :class:`~forte.common.exception.ExpectedEntryNotFound` if the check
+        fails. When this function is called with enforce is ``True``, all the
+        pipeline components would check if the input datapack record matches
+        with the expected types and attributes if function
+        ``expected_types_and_attributes`` is implemented
+        for the processor. For example, processor A requires entry type of
+        ``ft.onto.base_ontology.Sentence``, and processor B would
         produce this type in the output datapack, so ``record`` function
-        of Spacy processor writes the record of this type in the datapack
-        and Allennlp processor implements ``expected_type`` to add this type.
-        Then when the pipeline runs with enforce_consistency, Allennlp
+        of processor B writes the record of this type in the datapack
+        and processor A implements ``expected_types_and_attributes`` to add this
+        type. Then when the pipeline runs with enforce_consistency, processor A
         would check if this type exists in the record of the output of the
         previous pipeline component.
 
@@ -184,7 +188,7 @@ class Pipeline(Generic[PackType]):
         self._proc_mgr = ProcessManager(len(self._components))
         self._reader.initialize(self.resource, self._reader_config)
         if self._check_type_consistency:
-            self.reader.enforce_consistency()
+            self.reader.enforce_consistency(enforce=True)
         self.initialize_processors()
         self.initialized = True
         return self
@@ -194,7 +198,7 @@ class Pipeline(Generic[PackType]):
             try:
                 processor.initialize(self.resource, config)
                 if self._check_type_consistency:
-                    processor.enforce_consistency()
+                    processor.enforce_consistency(enforce=True)
             except ProcessorConfigError as e:
                 logging.error("Exception occur when initializing "
                               "processor %s", processor.name)

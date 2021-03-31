@@ -185,12 +185,12 @@ class AllenNLPProcessor(PackProcessor):
                 link.arg_type = label
 
     @classmethod
-    def expected_type(cls) -> Dict[str, List[str]]:
+    def expected_types_and_attributes(cls) -> Dict[str, List[str]]:
         r"""Method to add expected type for current processor input which
         would be checked before running the processor if
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
         the pipeline.
         """
-        expected_type_dict: Dict[str, List[str]] = dict()
-        expected_type_dict["ft.onto.base_ontology.Sentence"] = []
-        return expected_type_dict
+        expectation_dict: Dict[str, List[str]] = dict()
+        expectation_dict["ft.onto.base_ontology.Sentence"] = []
+        return expectation_dict

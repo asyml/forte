@@ -41,7 +41,13 @@ class BaseMeta:
         pack_name:  An name to identify the data pack, which is helpful in
            situation like serialization. It is suggested that the packs should
            have different doc ids.
-
+    Attributes:
+        record: Initialized as a dictionary. This is not a required field.
+            The key of the record should be the entry type and values should
+            be attributes of the entry type. All the information would be used
+            for consistency checking purpose if
+            :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
+            for the pipeline.
     """
 
     def __init__(self, pack_name: Optional[str] = None):
