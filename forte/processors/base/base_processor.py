@@ -65,7 +65,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         r"""Method to check type consistency if
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
         for the pipeline. If any expected type or its attribute
-        doesn't exist in the datapack record of the previous pipeline
+        does not exist in the datapack record of the previous pipeline
         component, an error of
         :class:`~forte.common.exception.ExpectedRecordNotFound` will be raised.
 

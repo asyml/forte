@@ -98,7 +98,7 @@ class Evaluator(PipelineComponent[PackType]):
         r"""Method to check type consistency if
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
         for the pipeline. If any expected type or its attribute
-        doesn't exist in the `pred_pack` or `ref_pack` record of the previous
+        does not exist in the `pred_pack` or `ref_pack` record of the previous
         pipeline component, an error of
         :class:`~forte.common.exception.ExpectedRecordNotFound` will be raised.
 
