@@ -119,6 +119,12 @@ def validate_entry(entry_name: str, sorted_packages: List[str],
 
     entry_splits = entry_name.split('.')
 
+    for e in entry_splits:
+        if not e.isidentifier():
+            raise InvalidIdentifierException(
+                f"The entry name segment {e} is not a valid python identifier."
+            )
+
     if len(entry_splits) < 3:
         raise InvalidIdentifierException(
             f"We currently require each entry to contains at least 3 levels, "
@@ -643,6 +649,13 @@ class OntologyCodeGenerator:
 
             # Adding entry attributes to the allowed types for validation.
             for property_name in properties:
+                # Check if the name is allowed.
+                if not property_name.isidentifier():
+                    raise InvalidIdentifierException(
+                        f"The property name: {property_name} is not a valid "
+                        f"python identifier."
+                    )
+
                 if property_name in self.allowed_types_tree[en.class_name]:
                     warnings.warn(
                         f"Attribute type for the entry {en.class_name} "
