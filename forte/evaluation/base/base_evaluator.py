@@ -30,8 +30,8 @@ class Evaluator(PipelineComponent[PackType]):
     r"""The base class of the evaluator."""
     def __init__(self):
         super().__init__()
-        self._pred_pack_expectation: Dict[str, List[str]] = dict()
-        self._ref_pack_expectation: Dict[str, List[str]] = dict()
+        self._pred_pack_expectation: Dict[str, List[str]] = None
+        self._ref_pack_expectation: Dict[str, List[str]] = None
 
     @abstractmethod
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
