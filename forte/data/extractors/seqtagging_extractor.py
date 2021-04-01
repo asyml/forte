@@ -56,8 +56,9 @@ class BioSeqTaggingExtractor(BaseExtractor):
         if self.config.tagging_unit == "":
             raise AttributeError("tagging_unit is required in "
                                  "BioSeqTaggingExtractor.")
-        self.entry = get_class(self.config.entry_type)
+        self.attribute = self.config.attribute
         self.tagging_unit = get_class(self.config.tagging_unit)
+        self.is_bert = self.config.is_bert
 
     @classmethod
     def default_configs(cls):
@@ -116,8 +117,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
         """
         config = super().default_configs()
         config.update({"attribute": None,
-                        "tagging_unit": "",
-                        "is_bert": False})
+                       "tagging_unit": "",
+                       "is_bert": False})
         return config
 
     @classmethod
@@ -153,8 +154,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
         """
-        for entry in pack.get(self.entry, instance):
-            attribute = getattr(entry, self.config.attribute)
+        for entry in pack.get(self._entry_type, instance):
+            attribute = getattr(entry, self.attribute)
             for tag_variance in self._bio_variance(attribute):
                 self.add(tag_variance)
 
@@ -175,18 +176,17 @@ class BioSeqTaggingExtractor(BaseExtractor):
         instance_tagged: List[Tuple[Optional[str], str]] = \
             bio_tagging(pack, instance,
             self.tagging_unit,
-            self.entry,
-            self.config.attribute)
+            self._entry_type,
+            self.attribute)
 
         pad_value = self.get_pad_value()
-
         if self.vocab:
             # Use the vocabulary to map data into representation.
             vocab_mapped: List[Union[int, List[int]]] = []
             for pair in instance_tagged:
                 vocab_mapped.append(self.element2repr(pair))
             raw_data: List = vocab_mapped
-            if self.config.is_bert:
+            if self.is_bert:
                 raw_data = [pad_value] + raw_data + [pad_value]
         else:
             # When vocabulary is not available, use the original data.
@@ -212,7 +212,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
             instance (Annotation): The instance on which the
                 extractor performs the pre-evaluation action.
         """
-        for entry in pack.get(self.entry, instance):
+        for entry in pack.get(self._entry_type, instance):
             pack.delete_entry(entry)
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
@@ -238,7 +238,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         instance_tagging_unit: List[Annotation] = \
             list(pack.get(self.tagging_unit, instance))
 
-        if self.config.is_bert:
+        if self.is_bert:
             prediction = prediction[1:-1]
 
         prediction = prediction[:len(instance_tagging_unit)]
@@ -252,8 +252,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
             if tag[1] == "O" or tag[1] == "B" or \
                     (tag[1] == "I" and tag[0] != tag_type):
                 if tag_type:
-                    entity_mention = self.entry(pack, tag_start, tag_end)
-                    setattr(entity_mention, self.config.attribute, tag_type)
+                    entity_mention = self._entry_type(pack, tag_start, tag_end)
+                    setattr(entity_mention, self.attribute, tag_type)
                 tag_start = entry.begin
                 tag_end = entry.end
                 tag_type = tag[0]
@@ -264,5 +264,5 @@ class BioSeqTaggingExtractor(BaseExtractor):
         if tag_type is not None and \
                 tag_start is not None and \
                 tag_end is not None:
-            entity_mention = self.entry(pack, tag_start, tag_end)
-            setattr(entity_mention, self.config.attribute, tag_type)
+            entity_mention = self._entry_type(pack, tag_start, tag_end)
+            setattr(entity_mention, self.attribute, tag_type)

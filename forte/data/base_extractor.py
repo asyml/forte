@@ -88,6 +88,7 @@ class BaseExtractor(ABC):
                        "on vocabulary should not be called."
 
     def __init__(self):
+        self._entry_type: Optional[Annotation] = None
         self._vocab: Optional[Vocabulary] = None
         self._entry_type: Type[Annotation] = None
         self.config: Config = None
@@ -97,15 +98,17 @@ class BaseExtractor(ABC):
         # pylint: disable=attribute-defined-outside-init
         self.config = Config(config, self.default_configs())
         if self.config.entry_type is None:
-            raise AttributeError("`entry_type` needs to be specified in "
-                                 "the configuration of an extractor.")
+            raise AttributeError("entry_type needs to be specified in "
+                                "the configuration of an extractor.")
         self._entry_type = get_class(self.config.entry_type)
 
-        if self.config.vocab_method != "custom":
-            self._vocab = Vocabulary(
-                method=self.config.vocab_method,
-                use_pad=self.config.need_pad,
-                use_unk=self.config.vocab_use_unk)
+        if self.config.vocab_method != "raw":
+            self._vocab = \
+                Vocabulary(method=self.config.vocab_method,
+                           need_pad=self.config.need_pad,
+                           use_unk=self.config.vocab_use_unk,
+                           pad_value=self.config.pad_value,
+                           unk_value=self.config.vocab_unk_value)
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -147,7 +150,7 @@ class BaseExtractor(ABC):
 
     @property
     def entry_type(self) -> object:
-        return get_class(self.config.entry_type)
+        return self._entry_type
 
     @property
     def vocab_method(self) -> str:
@@ -162,6 +165,10 @@ class BaseExtractor(ABC):
 
         """
         return self._vocab
+
+    @entry_type.setter
+    def entry_type(self, entry_type: Annotation):
+        self._entry_type = entry_type
 
     @vocab.setter
     def vocab(self, vocab: Vocabulary):
