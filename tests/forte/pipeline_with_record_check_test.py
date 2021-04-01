@@ -175,8 +175,8 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.add(dummy)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
-        self.assertRaises(ProcessExecutionException,
-                          nlp.process, data_path)
+        with self.assertRaises(ProcessExecutionException):
+            nlp.process(data_path)
 
 
 if __name__ == '__main__':
