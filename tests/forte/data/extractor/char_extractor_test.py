@@ -33,20 +33,21 @@ class CharExtractorTest(unittest.TestCase):
         pipeline.initialize()
 
         config1 = {
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "need_pad": True,
             "vocab_use_unk": True,
         }
 
         config2 = {
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "need_pad": True,
             "vocab_use_unk": True,
             "max_char_length": 4
         }
 
         for config in [config1, config2]:
-            extractor = CharExtractor(config)
+            extractor = CharExtractor()
+            extractor.initialize(config=config)
 
             sentence = "The European Commission said on Thursday it disagreed "\
                         "with German advice to consumers to shun British lamb "\

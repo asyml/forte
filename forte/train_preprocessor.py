@@ -27,6 +27,7 @@ from forte.data.data_pack_dataset import DataPackDataset, DataPackIterator
 from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
+from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
@@ -70,21 +71,20 @@ class TrainPreprocessor:
     DATA_OUTPUT = 1
 
     def __init__(self,
-                 pack_iterator: Iterator[DataPack],
-                 request: Dict,
-                 config: Optional[Union[Config, Dict]] = None):
-        self._config: Config = \
-            Config(config, default_hparams=self.default_configs())
-        self._validate_config()
-
+                 pack_iterator: Iterator[DataPack]):
         self._pack_iterator: Iterator[DataPack] = pack_iterator
         self._cached_packs: List[DataPack] = []
 
-        self._user_request: Dict = request
+        self._user_request: Dict = {}
         self._request: Dict = {}
         self._request_ready: bool = False
         self._vocab_ready: bool = False
 
+    def initialize(self, config: Optional[Union[Config, Dict]] = None):
+        # pylint: disable=attribute-defined-outside-init,unused-argument
+        self._config = Config(config, default_hparams=self.default_configs())
+        self._user_request = self._config.request
+        self._validate_config()
         self._parse_request(self._user_request)
         self._build_vocab()
 
@@ -110,7 +110,6 @@ class TrainPreprocessor:
         `"dataset"`:
             This contains all the configurable options same as
             :class:`~forte.data.data_pack_dataset.DataPackDataset`.
-
         """
 
         # Configs should be serializable
@@ -118,7 +117,11 @@ class TrainPreprocessor:
             "preprocess": {
                 "device": "cpu",
             },
-            "dataset": DataPackDataset.default_hparams()
+            "dataset": DataPackDataset.default_hparams(),
+            "request": {
+                "scope": None,
+                "feature_scheme": None
+            }
         }
 
     def _validate_config(self):
@@ -131,29 +134,44 @@ class TrainPreprocessor:
         1. parse the given data request and stored it internally
         2. validate if the given data request is valid
         """
+        parsed_request: Dict[str, Any] = {}
 
         assert "scope" in request, \
             "Field not found for data request: `scope`"
-        assert "schemes" in request, \
+        assert "feature_scheme" in request, \
             "Field not found for data request: `schemes`"
 
-        resource_schemes: Dict[str, Dict] = {}
+        parsed_request["scope"] = get_class(request["scope"])
+        parsed_request["schemes"] = {}
+
         # Used for check dependency between different extractors
         scheme_group: Dict[str, Dict] = {
             "dependent": {}, "dependee": {}
         }
 
-        for tag, scheme in request["schemes"].items():
+        for tag, scheme in request["feature_scheme"].items():
             assert "extractor" in scheme, \
                 "Field not found for data request scheme: `extractor`"
+            parsed_request["schemes"][tag] = {}
+
             assert "type" in scheme, \
                 "Field not found for data request scheme: `type`"
-            resource_schemes[tag] = {}
+            assert scheme["type"] in ["data_input", "data_output"], \
+                "Type field must be either data_input or data_output."
+            if scheme["type"] == "data_input":
+                parsed_request["schemes"][tag]["type"] = \
+                    TrainPreprocessor.DATA_INPUT
+            if scheme["type"] == "data_output":
+                parsed_request["schemes"][tag]["type"] = \
+                    TrainPreprocessor.DATA_OUTPUT
 
-            if not isinstance(scheme["extractor"], BaseExtractor):
+            extractor_class = scheme["extractor"]["class_name"]
+            if not isinstance(get_class(extractor_class)(), BaseExtractor):
                 raise RuntimeError("Invalid extractor: ", scheme["extractor"])
 
-            extractor: BaseExtractor = scheme["extractor"]
+            extractor: BaseExtractor = get_class(extractor_class)()
+            extractor.initialize(config=scheme["extractor"]["config"])
+            parsed_request["schemes"][tag]["extractor"] = extractor
 
             # Track dependency
             if hasattr(extractor, "based_on"):
@@ -170,7 +188,7 @@ class TrainPreprocessor:
             # Create default converter if there is no given converter
             if "converter" not in scheme:
                 converter: Converter = Converter({})
-                scheme["converter"] = converter
+                parsed_request["schemes"][tag]["converter"] = converter
 
         # Check dependency
         for _, dependent_extractors in scheme_group["dependent"].items():
@@ -183,7 +201,7 @@ class TrainPreprocessor:
                         "extractors given in request".
                             format(based_on, dependent_extractor.tag))
 
-        self._request = request
+        self._request = parsed_request
         self._request_ready = True
 
     def _build_vocab(self):

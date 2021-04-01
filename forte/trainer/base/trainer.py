@@ -168,9 +168,8 @@ class BaseTrainer:
         self._tp_request: Dict = self.create_tp_request()
         self._tp_config: Dict = self.create_tp_config()
         self._pack_iterator: Iterator[DataPack] = self.create_pack_iterator()
-        self._tp = TrainPreprocessor(pack_iterator=self._pack_iterator,
-                                     request=self._tp_request,
-                                     config=self._tp_config)
+        self._tp = TrainPreprocessor(pack_iterator=self._pack_iterator)
+        self._tp.initialize(config=self._tp_config)
         self._initialized = True
 
     @property
