@@ -22,7 +22,7 @@ from forte.utils import utils
 class UtilsTest(unittest.TestCase):
 
     def test_get_full_module_name(self):
-        from forte.processors.lowercaser_processor import LowerCaserProcessor
+        from forte.processors.misc import LowerCaserProcessor
         full_name = utils.get_full_module_name(LowerCaserProcessor)
         self.assertEqual(
             full_name,

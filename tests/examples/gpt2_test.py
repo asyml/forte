@@ -31,10 +31,9 @@ class Gpt2Test(unittest.TestCase):
         self.assertEqual(len(p.components), 3)
 
         p_names = [
-            'forte.processors.text_generation_processor.'
-            'TextGenerationProcessor',
-            'forte.processors.nltk_processors.NLTKWordTokenizer',
-            'forte.processors.nltk_processors.NLTKPOSTagger',
+            'forte.processors.third_party.TextGenerationProcessor',
+            'forte.processors.third_party.NLTKWordTokenizer',
+            'forte.processors.third_party.NLTKPOSTagger',
         ]
 
         for proc, p_name in zip(p.components, p_names):
