@@ -25,8 +25,8 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import OntonotesReader, \
     RecursiveDirectoryDeserializeReader
 from forte.pipeline import Pipeline
-from forte.processors.annotation_remover import AnnotationRemover
-from forte.processors.nltk_processors import NLTKWordTokenizer, \
+from forte.processors.misc import AnnotationRemover
+from forte.processors.third_party import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
 from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import Token
@@ -86,3 +86,7 @@ class TestJsonWriter(unittest.TestCase):
                 'bn/abc/00/abc_0049': 73}
 
             assert token_counts == expected_count
+
+
+if __name__ == "__main__":
+    unittest.main()

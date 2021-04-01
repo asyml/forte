@@ -19,7 +19,7 @@ from typing import Dict
 from forte.data.data_pack import DataPack
 from forte.datasets.conll import conll_utils
 from forte.evaluation.base import Evaluator
-from forte.processors.ner_predictor import CoNLLNERPredictor
+from forte.processors.nlp import CoNLLNERPredictor
 from ft.onto.base_ontology import Sentence, Token
 
 
