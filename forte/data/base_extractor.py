@@ -101,7 +101,7 @@ class BaseExtractor(ABC):
         self._entry_type = get_class(self.config.entry_type)
 
         if self.config.vocab_method != "raw":
-            self._vocab: Optional[Vocabulary] = \
+            self._vocab = \
                 Vocabulary(method=self.config.vocab_method,
                            need_pad=self.config.need_pad,
                            use_unk=self.config.vocab_use_unk,
@@ -155,6 +155,10 @@ class BaseExtractor(ABC):
     @property
     def entry_type(self) -> object:
         return self._entry_type
+    
+    @entry_type.setter
+    def entry_type(self, input_entry: Annotation):
+        self._entry_type = input_entry
 
     @property
     def vocab_method(self) -> str:
@@ -170,12 +174,8 @@ class BaseExtractor(ABC):
         """
         return self._vocab
 
-    @entry_type.setter
-    def entry_type(self, entry_type: Annotation):
-        self._entry_type = entry_type
-
     @vocab.setter
-    def vocab(self, vocab: Vocabulary):
+    def vocab(self, input_vocab: Vocabulary):
         """
         Setter of the vocabulary, used when user build the vocabulary
         externally.
@@ -186,7 +186,7 @@ class BaseExtractor(ABC):
         Returns:
 
         """
-        self._vocab = vocab
+        self._vocab = input_vocab
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
         if self.vocab is not None:
