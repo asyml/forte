@@ -151,6 +151,10 @@ class BaseExtractor(ABC):
     @property
     def entry_type(self) -> object:
         return self._entry_type
+    
+    @entry_type.setter
+    def entry_type(self, input_entry: Annotation):
+        self._entry_type = input_entry
 
     @property
     def vocab_method(self) -> str:
@@ -165,10 +169,6 @@ class BaseExtractor(ABC):
 
         """
         return self._vocab
-
-    @entry_type.setter
-    def entry_type(self, entry_type: Annotation):
-        self._entry_type = entry_type
 
     @vocab.setter
     def vocab(self, vocab: Vocabulary):

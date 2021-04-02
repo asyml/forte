@@ -77,7 +77,7 @@ class SubwordExtractor(BaseExtractor):
             Feature: a feature that contains the extracted data.
         """
         data = []
-        for subword in pack.get(self.entry_type, instance):
+        for subword in pack.get(self._entry_type, instance):
             text = subword.text
             if not subword.is_first_segment:
                 text = '##' + text
