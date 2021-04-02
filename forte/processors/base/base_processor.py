@@ -16,7 +16,7 @@ Base class for processors.
 """
 
 from abc import abstractmethod, ABC
-from typing import Any, Dict, List
+from typing import Any, Dict, Set
 
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
@@ -37,7 +37,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         super().__init__()
         self.selector = DummySelector()
 
-    def record(self, record_meta: Dict[str, List[str]]):
+    def record(self, record_meta: Dict[str, Set[str]]):
         r"""Method to add output record of the current processor to
         :attr:`forte.data.data_pack.Meta.record`. The key of the record
         should be the entry type and values should be attributes of the entry
@@ -52,7 +52,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         pass
 
     @classmethod
-    def expected_types_and_attributes(cls) -> Dict[str, List[str]]:
+    def expected_types_and_attributes(cls) -> Dict[str, Set[str]]:
         r"""Method to add expected types and attributes for the input of the
         current processor which would be checked before running the processor if
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for

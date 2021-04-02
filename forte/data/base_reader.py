@@ -18,7 +18,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Any, Iterator, Optional, Union, List, Dict
+from typing import Any, Iterator, Optional, Union, List, Dict, Set
 
 from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
@@ -237,7 +237,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         self._cache_ready = True
 
-    def record(self, record_meta: Dict[str, List[str]]):
+    def record(self, record_meta: Dict[str, Set[str]]):
         r"""Modify the pack meta record field of the reader's output. The
         key of the record should be the entry type and values should
         be attributes of the entry type. All the information would be used

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Optional, Dict, List
+from typing import Optional, Dict, Set
 
 import spacy
 from spacy.language import Language
@@ -127,7 +127,7 @@ class SpacyProcessor(PackProcessor):
         # Process sentence parses.
         self._process_parser(result.sents, input_pack)
 
-    def record(self, record_meta: Dict[str, List[str]]):
+    def record(self, record_meta: Dict[str, Set[str]]):
         r"""Method to add output type record of current processor
         to :attr:`forte.data.data_pack.Meta.record`.
 
@@ -135,4 +135,4 @@ class SpacyProcessor(PackProcessor):
             record_meta: the field in the datapack for type record that need to
                 fill in for consistency checking.
         """
-        record_meta["ft.onto.base_ontology.Sentence"] = []
+        record_meta["ft.onto.base_ontology.Sentence"] = set()

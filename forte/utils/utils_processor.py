@@ -21,7 +21,7 @@ __all__ = [
     "record_types_and_attributes_check"
 ]
 
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Dict, List, Tuple, Any, Optional, Set
 from collections import defaultdict
 from forte.data.span import Span
 from forte.common import ExpectedRecordNotFound
@@ -85,7 +85,7 @@ def parse_allennlp_srl_tags(tags: str) -> \
     return pred_span, arguments
 
 
-def record_types_and_attributes_check(expectation: Dict[str, List[str]],
+def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
                                       input_pack: PackType):
     r"""Check if any types or attributes in expectation dictionary doesn't
     match with input_pack.record. If not, an error of

@@ -189,6 +189,8 @@ class Pipeline(Generic[PackType]):
         self._reader.initialize(self.resource, self._reader_config)
         if self._check_type_consistency:
             self.reader.enforce_consistency(enforce=True)
+        else:
+            self.reader.enforce_consistency(enforce=False)
         self.initialize_processors()
         self.initialized = True
         return self
@@ -199,6 +201,8 @@ class Pipeline(Generic[PackType]):
                 processor.initialize(self.resource, config)
                 if self._check_type_consistency:
                     processor.enforce_consistency(enforce=True)
+                else:
+                    processor.enforce_consistency(enforce=False)
             except ProcessorConfigError as e:
                 logging.error("Exception occur when initializing "
                               "processor %s", processor.name)
