@@ -18,7 +18,7 @@ import logging
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Any, Iterator, Optional, Union, List
+from typing import Any, Iterator, Optional, Union, List, Dict, Set
 
 from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
@@ -209,6 +209,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     yield pack
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:
+        # pylint: disable=protected-access
         r"""An iterator over the entire dataset, giving all Packs processed
         as list or Iterator depending on `lazy`, giving all the Packs read
         from the data source(s). If not reading from cache, should call
@@ -222,15 +223,33 @@ class BaseReader(PipelineComponent[PackType], ABC):
         if self._cache_in_memory and self._cache_ready:
             # Read from memory
             for pack in self._data_packs:
+                if hasattr(pack._meta, 'record'):
+                    self.record(pack._meta.record)
                 yield pack
         else:
             # Read via parsing dataset
             for pack in self._lazy_iter(*args, **kwargs):
+                if hasattr(pack._meta, 'record'):
+                    self.record(pack._meta.record)
                 if self._cache_in_memory:
                     self._data_packs.append(pack)
                 yield pack
 
         self._cache_ready = True
+
+    def record(self, record_meta: Dict[str, Set[str]]):
+        r"""Modify the pack meta record field of the reader's output. The
+        key of the record should be the entry type and values should
+        be attributes of the entry type. All the information would be used
+        for consistency checking purpose if
+        :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
+        for the pipeline.
+
+        Args:
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
+        """
+        pass
 
     def cache_data(self, collection: Any, pack: PackType, append: bool):
         r"""Specify the path to the cache directory.

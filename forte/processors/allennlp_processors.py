@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import List, Dict
+from typing import List, Dict, Set
 from allennlp.predictors import Predictor
 from forte.common import ProcessorConfigError
 from forte.common.configuration import Config
@@ -183,3 +183,14 @@ class AllenNLPProcessor(PackProcessor):
                     tokens[arg_span.begin].begin, tokens[arg_span.end].end)
                 link = PredicateLink(input_pack, pred, arg)
                 link.arg_type = label
+
+    @classmethod
+    def expected_types_and_attributes(cls) -> Dict[str, Set[str]]:
+        r"""Method to add expected type for current processor input which
+        would be checked before running the processor if
+        :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
+        the pipeline.
+        """
+        expectation_dict: Dict[str, Set[str]] = dict()
+        expectation_dict["ft.onto.base_ontology.Sentence"] = set()
+        return expectation_dict
