@@ -200,11 +200,21 @@ class Pipeline(Generic[PackType]):
     def initialize(self) -> 'Pipeline':
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))
-        self._reader.initialize(self.resource, self._reader_config)
+
+        # Handle the reader.
+        if not self._reader.is_initialized:
+            self._reader.initialize(self.resource, self._reader_config)
+        else:
+            logging.info(
+                "The reader [%s] has already initialized, "
+                "will skip its initialization.", self._reader.name)
+
         if self._check_type_consistency:
             self.reader.enforce_consistency(enforce=True)
         else:
             self.reader.enforce_consistency(enforce=False)
+
+        # Handle the processors.
         self.initialize_processors()
         self.initialized = True
 
@@ -216,17 +226,23 @@ class Pipeline(Generic[PackType]):
         return self
 
     def initialize_processors(self):
-        for processor, config in zip(self.components, self.processor_configs):
+        for component, config in zip(self.components, self.processor_configs):
             try:
-                processor.initialize(self.resource, config)
-                if self._check_type_consistency:
-                    processor.enforce_consistency(enforce=True)
+                if not component.is_initialized:
+                    component.initialize(self.resource, config)
                 else:
-                    processor.enforce_consistency(enforce=False)
+                    logging.info(
+                        "The component [%s] has already initialized, "
+                        "will skip its initialization.", component.name)
             except ProcessorConfigError as e:
                 logging.error("Exception occur when initializing "
-                              "processor %s", processor.name)
+                              "processor %s", component.name)
                 raise e
+
+            if self._check_type_consistency:
+                component.enforce_consistency(enforce=True)
+            else:
+                component.enforce_consistency(enforce=False)
 
     def set_reader(
             self, reader: BaseReader,

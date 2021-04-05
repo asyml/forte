@@ -32,7 +32,7 @@ from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
-from forte.data.readers import PlainTextReader, StringReader
+from forte.data.readers import PlainTextReader, StringReader, OntonotesReader
 from forte.data.selector import FirstPackSelector, NameMatchSelector, \
     SinglePackSelector, AllPackSelector
 from forte.data.types import DataRequest
@@ -42,6 +42,7 @@ from forte.processors.base import PackProcessor, FixedSizeBatchProcessor, \
     MultiPackProcessor
 from forte.processors.base.batch_processor import Predictor, BatchProcessor
 from forte.train_preprocessor import TrainPreprocessor
+from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 from forte.common import ProcessExecutionException
 
@@ -163,6 +164,12 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self):
         super().__init__()
+        # Use to test the initialization behavior.
+        self.initialize_count = 0
+
+    def initialize(self, resources, configs):
+        super().initialize(resources, configs)
+        self.initialize_count += 1
 
     @staticmethod
     def define_batcher() -> ProcessingBatcher:
@@ -372,8 +379,6 @@ class PredictorPipelineTest(unittest.TestCase):
 class PipelineTest(unittest.TestCase):
 
     def test_process_next(self):
-        from forte.data.readers import OntonotesReader
-
         # Define and config the Pipeline
         nlp = Pipeline[DataPack]()
         nlp.set_reader(OntonotesReader())
@@ -1051,6 +1056,35 @@ class RecordCheckPipelineTest(unittest.TestCase):
         data_path = data_samples_root + "/random_texts/0.txt"
         with self.assertRaises(ProcessExecutionException):
             nlp.process(data_path)
+
+    def test_reuse_processor(self):
+        nlp = Pipeline[DataPack]()
+        nlp.set_reader(OntonotesReader())
+        dummy = DummyRelationExtractor()
+        nlp.add(dummy, config={"batcher": {"batch_size": 5}})
+        # This will not change the batch size because the processor is
+        # initialized.
+        nlp.add(dummy, config={"batcher": {"batch_size": 3}})
+        nlp.initialize()
+
+        # Check that the two processors are both the same.
+        self.assertEqual(nlp._components[0].name,
+                         get_full_module_name(DummyRelationExtractor))
+        self.assertEqual(nlp._components[1].name,
+                         get_full_module_name(DummyRelationExtractor))
+
+        # Check that the initialization is only done once.
+        self.assertEqual(nlp._components[0].initialize_count, 1)
+        self.assertEqual(nlp._components[1].initialize_count, 1)
+
+        # Check that the configuration is not changed by the second add.
+        self.assertEqual(nlp._components[1]._batcher.batch_size, 5)
+
+        dataset_path = os.path.join(data_samples_root, "ontonotes", "00")
+        nlp.run(dataset_path)
+
+        self.assertFalse(nlp._components[0].is_initialized)
+        self.assertFalse(nlp._components[1].is_initialized)
 
 
 if __name__ == '__main__':
