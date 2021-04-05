@@ -15,6 +15,7 @@ import unittest
 import torch
 from typing import Dict, Any, Iterator
 
+from forte.common.resources import Resources
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from forte.data.base_pack import PackType
 from forte.data.vocabulary import Vocabulary
@@ -42,51 +43,66 @@ class TrainPreprocessorTest(unittest.TestCase):
             "nesterov": True
         }
 
-        text_extractor: AttributeExtractor = \
-            AttributeExtractor(config={"entry_type": Token,
-                                       "vocab_method": "indexing",
-                                       "attribute": "text"})
+        text_extractor = \
+            "forte.data.extractors.attribute_extractor.AttributeExtractor"
+        text_extractor_config = \
+            {"entry_type": "ft.onto.base_ontology.Token",
+             "vocab_method": "indexing",
+             "attribute": "text"}
 
-        char_extractor: CharExtractor = \
-            CharExtractor(
-                config={"entry_type": Token,
-                        "vocab_method": "indexing",
-                        "max_char_length": self.config["max_char_length"]})
+        char_extractor = \
+            "forte.data.extractors.char_extractor.CharExtractor"
+        char_extractor_config = \
+            {"entry_type": "ft.onto.base_ontology.Token",
+             "vocab_method": "indexing",
+             "max_char_length": self.config["max_char_length"]}
 
         # Add output part in request based on different task type
-        ner_extractor: BioSeqTaggingExtractor = \
-            BioSeqTaggingExtractor(config={"entry_type": EntityMention,
-                                           "attribute": "ner_type",
-                                           "tagging_unit": Token,
-                                           "vocab_method": "indexing"})
+        ner_extractor = \
+            "forte.data.extractors.seqtagging_extractor.BioSeqTaggingExtractor"  # pylint: disable=line-too-long
+        ner_extractor_config = \
+            {"entry_type": "ft.onto.base_ontology.EntityMention",
+             "attribute": "ner_type",
+             "tagging_unit": "ft.onto.base_ontology.Token",
+             "vocab_method": "indexing"}
 
         self.tp_request = {
-            "scope": Sentence,
-            "schemes": {
+            "scope": "ft.onto.base_ontology.Sentence",
+            "feature_scheme": {
                 "text_tag": {
-                    "type": TrainPreprocessor.DATA_INPUT,
-                    "extractor": text_extractor
+                    "type": "data_input",
+                    "extractor": {
+                        "class_name": text_extractor,
+                        "config": text_extractor_config
+                    }
                 },
                 "char_tag": {
-                    "type": TrainPreprocessor.DATA_INPUT,
-                    "extractor": char_extractor
+                    "type": "data_input",
+                    "extractor": {
+                        "class_name": char_extractor,
+                        "config": char_extractor_config
+                    }
                 },
                 "ner_tag": {
-                    "type": TrainPreprocessor.DATA_OUTPUT,
-                    "extractor": ner_extractor
+                    "type": "data_output",
+                    "extractor": {
+                        "class_name": ner_extractor,
+                        "config": ner_extractor_config
+                    }
                 }
+            }
+        }
+
+        self.tp_config = {
+            "request": self.tp_request,
+            "dataset": {
+                "batch_size": self.config["batch_size_tokens"]
             }
         }
 
         self.reader = CoNLL03Reader()
 
         self.evaluator = CoNLLNEREvaluator()
-
-        self.tp_config = {
-            "dataset": {
-                "batch_size": self.config["batch_size_tokens"]
-            }
-        }
 
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(self.reader)
@@ -95,9 +111,8 @@ class TrainPreprocessorTest(unittest.TestCase):
             train_pl.process_dataset(self.config["train_path"])
 
         self.train_preprocessor = \
-            TrainPreprocessor(pack_iterator=pack_iterator,
-                              request=self.tp_request,
-                              config=self.tp_config)
+            TrainPreprocessor(pack_iterator=pack_iterator)
+        self.train_preprocessor.initialize(config=self.tp_config)
 
     def test_parse_request(self):
         self.assertTrue(self.train_preprocessor.request is not None)

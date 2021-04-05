@@ -88,15 +88,20 @@ class BaseExtractor(ABC):
                        "will not be built. Functions operating " \
                        "on vocabulary should not be called."
 
-    def __init__(self, config: Union[Dict, Config]):
-        self.config = Config(config, self.default_configs())
+    def __init__(self):
+        self._entry_type: Optional[Annotation] = None
+        self._vocab: Optional[Vocabulary] = None
 
+    def initialize(self, config: Union[Dict, Config]):
+        # pylint: disable=attribute-defined-outside-init
+        self.config = Config(config, self.default_configs())
         if self.config.entry_type is None:
             raise AttributeError("entry_type needs to be specified in "
-                                 "the configuration of an extractor.")
+                                "the configuration of an extractor.")
+        self._entry_type = get_class(self.config.entry_type)
 
         if self.config.vocab_method != "raw":
-            self._vocab: Optional[Vocabulary] = \
+            self._vocab = \
                 Vocabulary(method=self.config.vocab_method,
                            need_pad=self.config.need_pad,
                            use_unk=self.config.vocab_use_unk,
@@ -104,6 +109,7 @@ class BaseExtractor(ABC):
                            unk_value=self.config.vocab_unk_value)
         else:
             self._vocab = None
+        self._vocab_method = self.config.vocab_method
 
     @classmethod
     def default_configs(cls):
@@ -148,11 +154,15 @@ class BaseExtractor(ABC):
 
     @property
     def entry_type(self) -> object:
-        return get_class(self.config.entry_type)
+        return self._entry_type
+
+    @entry_type.setter
+    def entry_type(self, input_entry: Annotation):
+        self._entry_type = input_entry
 
     @property
     def vocab_method(self) -> str:
-        return self.config.vocab_method
+        return self._vocab_method
 
     @property
     def vocab(self) -> Optional[Vocabulary]:
@@ -165,7 +175,7 @@ class BaseExtractor(ABC):
         return self._vocab
 
     @vocab.setter
-    def vocab(self, vocab: Vocabulary):
+    def vocab(self, input_vocab: Vocabulary):
         """
         Setter of the vocabulary, used when user build the vocabulary
         externally.
@@ -176,7 +186,7 @@ class BaseExtractor(ABC):
         Returns:
 
         """
-        self._vocab = vocab
+        self._vocab = input_vocab
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
         if self.vocab is not None:
