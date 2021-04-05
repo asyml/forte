@@ -47,7 +47,7 @@ class BaseExtractor(ABC):
     Explanation:
 
         Vocabulary:
-            Vocabulary is maintained as an inner class
+            Vocabulary is maintained as an attribute
             in extractor. It will store the mapping from element
             to index, which is an integer, and representation,
             which could be an index integer or one-hot vector
@@ -96,16 +96,14 @@ class BaseExtractor(ABC):
         self.config = Config(config, self.default_configs())
         if self.config.entry_type is None:
             raise AttributeError("entry_type needs to be specified in "
-                                "the configuration of an extractor.")
+                                 "the configuration of an extractor.")
         self._entry_type: Type[Annotation] = get_class(self.config.entry_type)
 
-        if self.config.vocab_method != "raw":
-            self._vocab = \
+        if self.config.vocab_method != "custom":
+            self._vocab: Optional[Vocabulary] = \
                 Vocabulary(method=self.config.vocab_method,
                            need_pad=self.config.need_pad,
-                           use_unk=self.config.vocab_use_unk,
-                           pad_value=self.config.pad_value,
-                           unk_value=self.config.vocab_unk_value)
+                           use_unk=self.config.vocab_use_unk)
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -145,8 +143,8 @@ class BaseExtractor(ABC):
             "vocab_method": "indexing",
             "vocab_use_unk": True,
             "need_pad": True,
-            "pad_value": 0,
-            "vocab_unk_value": 1
+            "add_bos": False,
+            "add_eos": False,
         }
 
     @property
@@ -196,11 +194,6 @@ class BaseExtractor(ABC):
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.items()
 
-    def size(self) -> int:
-        if self.vocab is None:
-            raise AttributeError(self._VOCAB_ERROR_MSG)
-        return len(self.vocab)
-
     def add(self, element: Hashable):
         if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
@@ -220,11 +213,6 @@ class BaseExtractor(ABC):
         if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.id2element(idx)
-
-    def get_dict(self) -> Dict[Hashable, int]:
-        if self.vocab is None:
-            raise AttributeError(self._VOCAB_ERROR_MSG)
-        return self.vocab.get_dict()
 
     def predefined_vocab(self, predefined: Iterable):
         r"""Populate the vocabulary with predefined values. You can also extend

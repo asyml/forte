@@ -31,6 +31,7 @@ class Alphabet:
     """
     Args:
         name: The name of the alphabet
+        word_cnt: Initial vocabulary counting
         keep_growing: If True, new instances not found ruing `get_index` will
             be added to the vocabulary.
         ignore_case_in_query:
@@ -44,7 +45,6 @@ class Alphabet:
             word_cnt: Optional[CounterType[str]] = None,
             keep_growing: bool = True,
             ignore_case_in_query: bool = True,
-            other_embeddings: Optional[Dict] = None,
     ):
         self.__name = name
         self.reserved_tokens = tx.data.SpecialTokens
@@ -68,8 +68,6 @@ class Alphabet:
 
         self.keep_growing = keep_growing
         self.ignore_case_in_query = ignore_case_in_query
-
-        self.other_embeddings = other_embeddings
 
         if word_cnt is not None:
             for word in word_cnt:

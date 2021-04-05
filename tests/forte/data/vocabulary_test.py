@@ -11,13 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import unittest
 import pickle as pkl
 from itertools import product
-from forte.data.vocabulary import Vocabulary
+
+from texar.torch.data import SpecialTokens
+
+from forte.data import dataset_path_iterator
+from forte.data.readers import plaintext_reader
+from forte.data.vocabulary import Vocabulary, VocabFilter, FrequencyVocabFilter
 
 
 class VocabularyTest(unittest.TestCase):
+    def setUp(self):
+        self.data_path = os.path.abspath(os.path.join(
+            os.path.dirname(__file__),
+            '../../../', 'data_samples', 'random_texts'
+        ))
+
     def argmax(self, one_hot):
         idx = -1
         for i, flag in enumerate(one_hot):
@@ -30,7 +42,8 @@ class VocabularyTest(unittest.TestCase):
         methods = ["indexing", "one-hot"]
         flags = [True, False]
         for method, need_pad, use_unk in product(methods, flags, flags):
-            vocab = Vocabulary(method=method, need_pad=need_pad, use_unk=use_unk)
+            vocab = Vocabulary[str](
+                method=method, need_pad=need_pad, use_unk=use_unk)
 
             # Check vocabulary add_element, element2repr and id2element
             elements = ["EU", "rejects", "German", "call",
@@ -63,8 +76,8 @@ class VocabularyTest(unittest.TestCase):
 
             # Check __len__, items.
             self.assertEqual(len(set(elements)) + int(use_unk) +
-                        int(need_pad),
-                        len(vocab))
+                             int(need_pad),
+                             len(vocab))
             saved_len = len(vocab)
 
             # Check has_element
@@ -80,7 +93,7 @@ class VocabularyTest(unittest.TestCase):
                 else:
                     expected_pad_repr = [0] * (len(vocab) - 1)
                 self.assertEqual(expected_pad_repr,
-                            vocab.element2repr(Vocabulary.PAD_ELEMENT))
+                                 vocab.element2repr(SpecialTokens.PAD))
 
             # Check UNK_ELEMENT
             if use_unk:
@@ -90,9 +103,9 @@ class VocabularyTest(unittest.TestCase):
                     expected_unk_repr = [0] * (len(vocab) - int(need_pad))
                     expected_unk_repr[0] = 1
                 self.assertEqual(expected_unk_repr,
-                            vocab.element2repr(Vocabulary.UNK_ELEMENT))
+                                 vocab.element2repr(SpecialTokens.UNK))
                 self.assertEqual(expected_unk_repr,
-                            vocab.element2repr("random_element"))
+                                 vocab.element2repr("random_element"))
                 self.assertEqual(saved_len, len(vocab))
 
             # Check state
@@ -100,9 +113,34 @@ class VocabularyTest(unittest.TestCase):
             self.assertEqual(vocab.method, new_vocab.method)
             self.assertEqual(vocab.need_pad, new_vocab.need_pad)
             self.assertEqual(vocab.use_unk, new_vocab.use_unk)
-            self.assertEqual(vocab.element2id_dict, new_vocab.element2id_dict)
-            self.assertEqual(vocab.id2element_dict, new_vocab.id2element_dict)
+            self.assertEqual(vocab._element2id, new_vocab._element2id)
+            self.assertEqual(vocab._id2element, new_vocab._id2element)
             self.assertEqual(vocab.next_id, new_vocab.next_id)
+
+    def test_freq_filtering(self):
+        base_vocab = Vocabulary()
+        for p in dataset_path_iterator(self.data_path, '.txt'):
+            with open(p) as f:
+                for line in f:
+                    for w in line.strip().split():
+                        base_vocab.add_element(w)
+
+        vocab_filter = FrequencyVocabFilter(
+            base_vocab, min_frequency=2, max_frequency=4)
+
+        filtered = base_vocab.filter(vocab_filter)
+
+        for e, eid in base_vocab.items():
+            base_count = base_vocab.get_count(e)
+            if eid in base_vocab.special_ids:
+                self.assertTrue(filtered.has_element(e))
+                self.assertEqual(base_vocab.get_count(e), filtered.get_count(e))
+            elif 2 <= base_count <= 4:
+                print(e, base_vocab.get_count(e))
+                self.assertTrue(filtered.has_element(e))
+                self.assertEqual(base_count, filtered.get_count(e))
+            else:
+                self.assertFalse(filtered.has_element(e))
 
 
 if __name__ == '__main__':
