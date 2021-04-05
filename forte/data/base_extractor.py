@@ -151,7 +151,7 @@ class BaseExtractor(ABC):
     @property
     def entry_type(self) -> object:
         return self._entry_type
-    
+
     @entry_type.setter
     def entry_type(self, input_entry: Annotation):
         self._entry_type = input_entry
