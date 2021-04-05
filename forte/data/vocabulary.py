@@ -139,7 +139,7 @@ class Vocabulary(Generic[ElementType]):
 
         # Count the number of appearance of an element, indexed by the element
         #  id.
-        self.__counter = Counter()
+        self.__counter: Counter = Counter()
 
         # Keep a set of the special ids.
         self.__special_ids: Set[int] = set()
@@ -248,7 +248,7 @@ class Vocabulary(Generic[ElementType]):
 
         Returns:
             The corresponding element if exist. Check the behavior
-            of this function under different setting in the documentation.
+             of this function under different setting in the documentation.
 
         Raises:
             KeyError: If the id is not found.
@@ -264,8 +264,8 @@ class Vocabulary(Generic[ElementType]):
 
         Returns:
             Union[int, List[int]]: The corresponding representation
-            of the element. Check the behavior of this function
-            under different setting in the documentation.
+             of the element. Check the behavior of this function
+             under different setting in the documentation.
 
         Raises:
             KeyError: If element is not found and vocabulary does
@@ -277,14 +277,18 @@ class Vocabulary(Generic[ElementType]):
         else:
             idx = self._element2id[element]
 
-        # If a specific representation is set for this idx, we will use it.
+        # If a custom representation is set for this idx, we will use it.
         if idx in self._id2repr:
             return self._id2repr[idx]
-
-        if self.method == "indexing":
+        elif self.method == "indexing":
             return idx
         elif self.method == "one-hot":
             return self._one_hot(idx)
+        else:
+            raise InvalidOperationException(
+                f"Cannot find the representation for idx at [{idx}], it does"
+                f" not have a customized representation, and the representation"
+                f" method [{self.method}] is not supported.")
 
     def _one_hot(self, idx: int):
         vec_size = len(self._element2id)
@@ -349,8 +353,9 @@ class Vocabulary(Generic[ElementType]):
         Returns:
             A new vocabulary after filtering.
         """
-        vocab = Vocabulary(self.method, self.need_pad, self.use_unk,
-                           self.add_bos, self.add_eos, self.do_counting)
+        vocab: Vocabulary = Vocabulary(
+            self.method, self.need_pad, self.use_unk,
+            self.add_bos, self.add_eos, self.do_counting)
 
         for eid in self.get_ids():
             # Special ids are added internally.
