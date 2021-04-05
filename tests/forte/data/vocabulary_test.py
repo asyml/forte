@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import unittest
 import pickle as pkl
+import unittest
 from itertools import product
 
 from texar.torch.data import SpecialTokens
 
 from forte.data import dataset_path_iterator
-from forte.data.readers import plaintext_reader
-from forte.data.vocabulary import Vocabulary, VocabFilter, FrequencyVocabFilter
+from forte.data.vocabulary import Vocabulary, FrequencyVocabFilter
 
 
 class VocabularyTest(unittest.TestCase):
@@ -42,7 +41,11 @@ class VocabularyTest(unittest.TestCase):
         methods = ["indexing", "one-hot"]
         flags = [True, False]
         for method, need_pad, use_unk in product(methods, flags, flags):
-            vocab = Vocabulary[str](
+            # As stated here: https://github.com/python/typing/issues/511
+            # If we use the generic type here we cannot pickle the class
+            # in python 3.6 or earlier (the issue is fixed in 3.7).
+            # So here we do not use the type annotation for testing.
+            vocab = Vocabulary(
                 method=method, need_pad=need_pad, use_unk=use_unk)
 
             # Check vocabulary add_element, element2repr and id2element
