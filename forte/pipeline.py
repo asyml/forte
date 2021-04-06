@@ -30,7 +30,7 @@ from forte.common.exception import (
     ProcessFlowException)
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
-from forte.data.base_reader import BaseReader, ReaderType
+from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
@@ -285,12 +285,33 @@ class Pipeline(Generic[PackType]):
             self, reader: BaseReader,
             config: Optional[Union[Config, Dict[str, Any]]] = None
     ) -> 'Pipeline':
+        """
+        Set the reader of the pipeline. A reader is the entry point of
+        this pipeline, data flown into the reader will be converted to the
+        data pack format, and being passed onto the other components for
+        processing.
+
+        Args:
+            reader: The reader to be used of the pipeline
+            config: The custom configuration to be passed to the reader. If
+              the config is not provided, the default config defined by the
+              reader class will be used.
+
+        Returns:
+            The pipeline itself, which allows you to directly chain other
+            pipeline construction code afterwards, i.e., you can do:
+
+            .. code-block:: python
+
+                Pipeline().set_reader(your_reader()).add(your_processor())
+
+        """
         self._reader = reader
         self._reader_config = reader.make_configs(config)
         return self
 
     @property
-    def reader(self) -> ReaderType:
+    def reader(self) -> BaseReader:
         return self._reader
 
     @property
@@ -319,7 +340,7 @@ class Pipeline(Generic[PackType]):
             selector: Optional[Selector] = None
     ) -> 'Pipeline':
         """
-        Adding a pipeline component to the pipeline. The pipeline components
+        Adds a pipeline component to the pipeline. The pipeline components
         will form a chain based on the insertion order. The customized
         `config` and `selector` (:class:`~forte.data.selector.Selector`)
         will be associated with this particular component. If the `config`
@@ -329,10 +350,10 @@ class Pipeline(Generic[PackType]):
         times to the pipeline. In such cases, the instance will only be
         setup at the first insertion (i.e. its `initialize` function will
         only be called once). The subsequent insertion of the same component
-        instance will not change the behavior of the instance, specifically,
-        a different `config` and will take effect. One can use a different
-        instance of to use the same component class if different behaviors
-        are desired.
+        instance will not change the behavior nor the states of the instance,
+        specifically, a different `config` will *not* take any effect.
+        In the case where one want to them to behave differently, a different
+        instance should be used.
 
         Args:
             component (PipelineComponent): The component to be inserted next
@@ -341,13 +362,17 @@ class Pipeline(Generic[PackType]):
               to be used for the added component. Default None, which means
               the `default_configs()` of the component will be used.
             selector (Selector): The selector used to pick the corresponding
-              data pack to be comsumed by the component. Default None, which
+              data pack to be consumed by the component. Default None, which
               means the whole pack will be used.
 
         Returns:
             The pipeline itself, which enables one to chain the creation of
-            the pipeline.
+            the pipeline, i.e., you can do:
 
+            .. code-block:: python
+
+                Pipeline().set_reader(your_reader()).add(
+                    your_processor()).add(anther_processor())
         """
         self._processors_index[component.name] = len(self.components)
 
