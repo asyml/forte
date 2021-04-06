@@ -90,6 +90,13 @@ class PipelineComponent(Generic[PackType]):
         self.configs = configs
         self.__is_initialized = True
 
+    def reset_flag(self):
+        """
+        Reset the flags related to this component. This will be called first
+        when doing initialization.
+        """
+        self.__is_initialized = False
+
     @property
     def is_initialized(self) -> bool:
         return self.__is_initialized
@@ -135,7 +142,7 @@ class PipelineComponent(Generic[PackType]):
             cls, configs: Optional[Union[Config, Dict[str, Any]]]) -> Config:
         """
         Create the component configuration for this class, by merging the
-        provided config with the ``default_config``.
+        provided config with the ``default_configs()``.
 
         The following config conventions are expected:
           - The top level key can be a special `config_path`.

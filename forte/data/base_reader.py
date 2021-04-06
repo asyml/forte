@@ -19,7 +19,7 @@ import os
 from time import time
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Any, Iterator, Optional, Union, List, Dict, Set
+from typing import Any, Iterator, Optional, Union, List, Dict, Set, TypeVar
 
 from forte.common.configuration import Config
 from forte.common.exception import ProcessExecutionException
@@ -35,6 +35,7 @@ __all__ = [
     "BaseReader",
     "PackReader",
     'MultiPackReader',
+    'ReaderType',
 ]
 
 logger = logging.getLogger(__name__)
@@ -379,3 +380,6 @@ class MultiPackReader(BaseReader[MultiPack], ABC):
     @property
     def pack_type(self):
         return MultiPack
+
+
+ReaderType = TypeVar('ReaderType', bound=BaseReader)

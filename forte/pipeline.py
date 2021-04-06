@@ -30,7 +30,7 @@ from forte.common.exception import (
     ProcessFlowException)
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
-from forte.data.base_reader import BaseReader
+from forte.data.base_reader import BaseReader, ReaderType
 from forte.data.caster import Caster
 from forte.data.selector import Selector, DummySelector
 from forte.evaluation.base.base_evaluator import Evaluator
@@ -119,7 +119,10 @@ class Pipeline(Generic[PackType]):
         else:
             self.resource = resource
 
-        self.initialized: bool = False
+        # The flag indicating whether this pipeline is initialized.
+        self._initialized: bool = False
+        # The flag indicating whether we want to enforce type consistency
+        #  between the processors.
         self._check_type_consistency: bool = False
 
         # needed for time profiling of pipeline
@@ -198,8 +201,26 @@ class Pipeline(Generic[PackType]):
         self._enable_profiling = enable_profiling
 
     def initialize(self) -> 'Pipeline':
+        """
+        This function should be called before the pipeline can be used to
+        process the actual data. This function will call the `initialize` of
+        all the components inside this pipeline.
+
+        Returns:
+
+        """
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))
+
+        if self._initialized:
+            # The pipeline has already been initialized, so we are doing
+            # re-initialization here.
+            logging.info("Re-initializing the Pipeline.")
+
+        # Reset the flags of the components before initializing them.
+        self._reader.reset_flag()
+        for c in self._components:
+            c.reset_flag()
 
         # Handle the reader.
         if not self._reader.is_initialized:
@@ -216,7 +237,7 @@ class Pipeline(Generic[PackType]):
 
         # Handle the processors.
         self.initialize_processors()
-        self.initialized = True
+        self._initialized = True
 
         # Create profiler
         if self._enable_profiling:
@@ -226,7 +247,23 @@ class Pipeline(Generic[PackType]):
         return self
 
     def initialize_processors(self):
-        for component, config in zip(self.components, self.processor_configs):
+        """
+        This function will initialize all the components in ths pipeline, except
+        the reader. The components are initialized in a FIFO manner based on
+        the order of insertion,
+
+        During initialization, the component will be configured based on its
+        corresponding configuration. However, if the component is already
+        initialized (for example, being initialized manually or used twice
+        in the same pipeline), the new configuration will be ignored.
+
+        The pipeline will check for type dependencies between the components
+        inside this pipeline, see
+        :func:`~forte.pipeline_component.PipelineComponent.enforce_consistency`
+        for more details.
+
+        """
+        for component, config in zip(self.components, self.component_configs):
             try:
                 if not component.is_initialized:
                     component.initialize(self.resource, config)
@@ -253,15 +290,27 @@ class Pipeline(Generic[PackType]):
         return self
 
     @property
-    def reader(self):
+    def reader(self) -> ReaderType:
         return self._reader
 
     @property
-    def components(self):
+    def components(self) -> List[PipelineComponent]:
+        """
+        Return all the components in this pipeline, except the reader.
+
+        Returns: A list containing the components.
+
+        """
         return self._components
 
     @property
-    def processor_configs(self):
+    def component_configs(self) -> List[Optional[Config]]:
+        """
+        Return the configs related to the components, except the reader.
+
+        Returns: A list containing the components configs.
+
+        """
         return self._configs
 
     def add(
@@ -269,6 +318,37 @@ class Pipeline(Generic[PackType]):
             config: Optional[Union[Config, Dict[str, Any]]] = None,
             selector: Optional[Selector] = None
     ) -> 'Pipeline':
+        """
+        Adding a pipeline component to the pipeline. The pipeline components
+        will form a chain based on the insertion order. The customized
+        `config` and `selector` (:class:`~forte.data.selector.Selector`)
+        will be associated with this particular component. If the `config`
+        or the `selector` is not provided, the default ones will be used.
+
+        Here, note that the same component instance can be added multiple
+        times to the pipeline. In such cases, the instance will only be
+        setup at the first insertion (i.e. its `initialize` function will
+        only be called once). The subsequent insertion of the same component
+        instance will not change the behavior of the instance, specifically,
+        a different `config` and will take effect. One can use a different
+        instance of to use the same component class if different behaviors
+        are desired.
+
+        Args:
+            component (PipelineComponent): The component to be inserted next
+              to the pipeline.
+            config (Union[Config, Dict[str, Any]): The custom configuration
+              to be used for the added component. Default None, which means
+              the `default_configs()` of the component will be used.
+            selector (Selector): The selector used to pick the corresponding
+              data pack to be comsumed by the component. Default None, which
+              means the whole pack will be used.
+
+        Returns:
+            The pipeline itself, which enables one to chain the creation of
+            the pipeline.
+
+        """
         self._processors_index[component.name] = len(self.components)
 
         if isinstance(component, BaseReader):
@@ -279,7 +359,7 @@ class Pipeline(Generic[PackType]):
             self.evaluator_indices.append(len(self.components))
 
         self._components.append(component)
-        self.processor_configs.append(component.make_configs(config))
+        self.component_configs.append(component.make_configs(config))
 
         if selector is None:
             self._selectors.append(DummySelector())
@@ -289,8 +369,9 @@ class Pipeline(Generic[PackType]):
         return self
 
     def add_gold_packs(self, pack):
-        r"""Add gold packs to the dictionary. This dictionary is used by the
-        evaluator while calling `consume_next(...)`
+        r"""Add gold packs to a internal dictionary used for evaluation.
+        This dictionary is used by the evaluator while calling
+        `consume_next(...)`
 
         Args:
             pack (Dict): A key, value pair containing job.id -> gold_pack
@@ -338,7 +419,7 @@ class Pipeline(Generic[PackType]):
                 :attr:`_reader` is a file reader, this can point to the file
                 path.
         """
-        if not self.initialized:
+        if not self._initialized:
             raise ProcessFlowException(
                 "Please call initialize before running the pipeline")
 
@@ -359,7 +440,7 @@ class Pipeline(Generic[PackType]):
         iterator or list of DataPacks. The arguments are directly passed
         to the reader to take data from the source.
         """
-        if not self.initialized:
+        if not self._initialized:
             raise ProcessFlowException(
                 "Please call initialize before running the pipeline")
 
@@ -370,9 +451,6 @@ class Pipeline(Generic[PackType]):
         """
         Call the finish method of all pipeline component. This need to be called
         explicitly to release all resources.
-
-        Returns:
-
         """
 
         # Report time profiling of readers and processors
@@ -565,7 +643,7 @@ class Pipeline(Generic[PackType]):
         #        |___________|       |_______________|     |_______________|
         #        |___________|       |_______________|     |_______________|
 
-        if not self.initialized:
+        if not self._initialized:
             raise ProcessFlowException(
                 "Please call initialize before running the pipeline")
 
@@ -593,7 +671,6 @@ class Pipeline(Generic[PackType]):
             should_yield = next_queue_index >= pipeline_length
 
             if not raw_job.is_poison:
-
                 # Start timer
                 if self._enable_profiling:
                     start_time: float = time()
@@ -746,6 +823,15 @@ class Pipeline(Generic[PackType]):
         self._proc_mgr.reset()
 
     def evaluate(self) -> Iterator[Tuple[str, Any]]:
+        """
+        Call the evaluators in the pipeline to collect their results.
+
+        Returns:
+            Iterator of the evaluator results. Each element is a tuple, where
+            the first one is the name of the evaluator, and the second one
+            is the output of the evaluator (see
+            :func:`~forte.evaluation.base.evaluator.get_result`).
+        """
         for i in self.evaluator_indices:
             p = self.components[i]
             assert isinstance(p, Evaluator)

@@ -139,7 +139,7 @@ class MultiPackCopier(MultiPackProcessor):
     """
 
     def _process(self, input_pack: MultiPack):
-        pack = input_pack.add_pack()
+        pack = input_pack.add_pack('copy')
         pack.set_text(input_pack.get_pack_at(0).text)
 
 
@@ -164,12 +164,6 @@ class DummyRelationExtractor(BatchProcessor):
 
     def __init__(self):
         super().__init__()
-        # Use to test the initialization behavior.
-        self.initialize_count = 0
-
-    def initialize(self, resources, configs):
-        super().initialize(resources, configs)
-        self.initialize_count += 1
 
     @staticmethod
     def define_batcher() -> ProcessingBatcher:
@@ -256,6 +250,12 @@ class DummyPackProcessor(PackProcessor):
 
     def __init__(self):
         super().__init__()
+        # Use to test the initialization behavior.
+        self.initialize_count = 0
+
+    def initialize(self, resources, configs):
+        super().initialize(resources, configs)
+        self.initialize_count += 1
 
     def _process(self, input_pack: DataPack):
         entries = list(input_pack.get_entries_of(NewType))
@@ -264,6 +264,12 @@ class DummyPackProcessor(PackProcessor):
         else:
             entry = entries[0]  # type: ignore
             entry.value += "[PACK]"
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        configs = super().default_configs()
+        configs['test'] = "test"
+        return configs
 
 
 class DummyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
@@ -1058,33 +1064,67 @@ class RecordCheckPipelineTest(unittest.TestCase):
             nlp.process(data_path)
 
     def test_reuse_processor(self):
-        nlp = Pipeline[DataPack]()
-        nlp.set_reader(OntonotesReader())
-        dummy = DummyRelationExtractor()
-        nlp.add(dummy, config={"batcher": {"batch_size": 5}})
-        # This will not change the batch size because the processor is
-        # initialized.
-        nlp.add(dummy, config={"batcher": {"batch_size": 3}})
+        # Create a basic pipeline of multi packs that have two pack (by copying)
+        nlp = Pipeline().set_reader(
+            SentenceReader()).add(
+            MultiPackBoxer()).add(
+            MultiPackCopier())
+
+        # Create one shared instance of this extractor
+        dummy = DummyPackProcessor()
+        nlp.add(dummy, config={"test": "dummy1"},
+                selector=NameMatchSelector("default"))
+        # This will not change config because the processor is initialized.
+        #  but the selector should work.
+        nlp.add(dummy, config={"test": "dummy2"},
+                selector=NameMatchSelector("copy"))
         nlp.initialize()
 
-        # Check that the two processors are both the same.
-        self.assertEqual(nlp._components[0].name,
-                         get_full_module_name(DummyRelationExtractor))
-        self.assertEqual(nlp._components[1].name,
-                         get_full_module_name(DummyRelationExtractor))
+        # Check that the two processors have the same name.
+        self.assertEqual(nlp.components[2].name,
+                         get_full_module_name(DummyPackProcessor))
+        self.assertEqual(nlp.components[3].name,
+                         get_full_module_name(DummyPackProcessor))
 
-        # Check that the initialization is only done once.
-        self.assertEqual(nlp._components[0].initialize_count, 1)
-        self.assertEqual(nlp._components[1].initialize_count, 1)
+        # Check that the two processors are also the same instance.
+        self.assertEqual(nlp.components[2], nlp.components[3])
 
-        # Check that the configuration is not changed by the second add.
-        self.assertEqual(nlp._components[1]._batcher.batch_size, 5)
+        # Check that the initialization is only done once, here the count
+        #  will only be 1.
+        self.assertEqual(nlp.components[2].initialize_count, 1)
+        self.assertEqual(nlp.components[3].initialize_count, 1)
 
-        dataset_path = os.path.join(data_samples_root, "ontonotes", "00")
+        # Check that the configuration is not changed by the second insertion.
+        self.assertEqual(nlp.components[3].configs.test, 'dummy1')
+
+        # Run it once to make sure it can run.
+        dataset_path = os.path.join(data_samples_root, "random_texts", "0.txt")
         nlp.run(dataset_path)
 
-        self.assertFalse(nlp._components[0].is_initialized)
-        self.assertFalse(nlp._components[1].is_initialized)
+        # Check that initialization will be false after `run`, because it
+        #  calls the `finish` function of all components.
+        self.assertFalse(nlp.components[2].is_initialized)
+        self.assertFalse(nlp.components[3].is_initialized)
+
+        # Check that we are able to re-initialize the pipeline.
+        nlp.initialize()  # initialize the first time.
+        nlp.initialize()  # re-initialize.
+
+        # Check the name again after re-initialize.
+        self.assertEqual(nlp.components[2].name,
+                         get_full_module_name(DummyPackProcessor))
+        self.assertEqual(nlp.components[3].name,
+                         get_full_module_name(DummyPackProcessor))
+
+        # Obtain the results from the multipack.
+        mp: MultiPack = nlp.process(dataset_path)
+        pack: DataPack = mp.get_pack("default")
+        pack_copy: DataPack = mp.get_pack("copy")
+
+        # Check both pack are processed by the DummyProcessor once, because
+        #  we use different selector.
+        pack.get_single(NewType).value = "[PACK]"
+        pack_copy.get_single(NewType).value = "[PACK]"
 
 
 if __name__ == '__main__':
