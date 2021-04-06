@@ -248,9 +248,9 @@ class Pipeline(Generic[PackType]):
 
     def initialize_processors(self):
         """
-        This function will initialize all the components in ths pipeline, except
-        the reader. The components are initialized in a FIFO manner based on
-        the order of insertion,
+        This function will initialize all the components in this pipeline,
+        except the reader. The components are initialized in a FIFO manner
+        based on the order of insertion,
 
         During initialization, the component will be configured based on its
         corresponding configuration. However, if the component is already
