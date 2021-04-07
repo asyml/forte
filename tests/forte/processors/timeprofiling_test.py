@@ -64,10 +64,12 @@ class TestTimeProfiling(unittest.TestCase):
         lines: List[str] = log.output[0].split('\n')
         self.assertEqual(len(lines), 5)
         self.assertEqual('INFO:forte.pipeline:Pipeline Time Profile', lines[0])
-        self.assertIn('- Reader: forte.data.readers.string_reader.StringReader, ', lines[1])
-        self.assertIn('- Component [0]: __main__.DummyPackProcessor, ', lines[2])
-        self.assertIn('- Component [1]: __main__.DummyPackProcessor, ', lines[3])
-        self.assertIn('- Component [2]: __main__.DummyPackProcessor, ', lines[4])
+        self.assertEqual(f'- Reader: {self.pl.reader.component_name}, ' + \
+            f'{self.pl.reader.time_profile} s', lines[1])
+        for i in range(3):
+            self.assertIn(f'- Component [{i}]: ' + \
+                f'{self.pl.components[i].name}, ' + \
+                f'{self.pl._profiler[i]} s', lines[i + 2])
 
         self.assertGreater(self.pl.reader.time_profile, 0.0)
         self.assertTrue(all(t > 0.0 for t in self.pl._profiler))
