@@ -75,6 +75,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._cache_ready: bool = False
         self._data_packs: List[PackType] = []
 
+        # provide an option for the reader to start the profiling
         self._enable_profiling: bool = False
         self._start_time: float = 0.0
         self.time_profile: float = 0.0
@@ -226,7 +227,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         'yield' to support time profiling for reader.
 
         Args:
-            pack: DataPack passed from self.iter
+            pack: DataPack passed from self.iter()
         """
         # Aggregate time cost
         if self._enable_profiling:
