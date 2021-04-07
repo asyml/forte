@@ -215,11 +215,18 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
     def set_profiling(self, enable_profiling: bool = True):
         r""" Set profiling option.
+        Args:
+            enable_profiling: A boolean of whether to enable profiling
+                for the reader or not.
         """
         self._enable_profiling = enable_profiling
 
     def timer_yield(self, pack: PackType):
-        r""" Wrapper for time profiling
+        r""" Wrapper generator for time profiling. Insert timers around
+        'yield' to support time profiling for reader.
+
+        Args:
+            pack: DataPack passed from self.iter
         """
         # Aggregate time cost
         if self._enable_profiling:

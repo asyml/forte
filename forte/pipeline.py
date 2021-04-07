@@ -124,6 +124,7 @@ class Pipeline(Generic[PackType]):
 
         # provide an option for the pipeline to start the profiling
         self._enable_profiling: bool = False
+        self._profiler: List[float] = []
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will enforce
@@ -189,6 +190,9 @@ class Pipeline(Generic[PackType]):
 
     def set_profiling(self, enable_profiling: bool = True):
         r""" Set profiling option.
+        Args:
+            enable_profiling: A boolean of whether to enable profiling
+                for the pipeline or not.
         """
         self._enable_profiling = enable_profiling
 
@@ -206,7 +210,7 @@ class Pipeline(Generic[PackType]):
         # Create profiler
         if self._enable_profiling:
             self.reader.set_profiling(True)
-            self._profiler: List[float] = [0.0] * len(self.components)
+            self._profiler = [0.0] * len(self.components)
 
         return self
 
@@ -354,7 +358,7 @@ class Pipeline(Generic[PackType]):
 
         """
 
-        # Report profiling stats
+        # Report time profiling of readers and processors
         if self._enable_profiling:
             out_header: str = "Pipeline Time Profile\n"
             out_reader: str = f"- Reader: {self.reader.component_name}, " + \
@@ -580,7 +584,7 @@ class Pipeline(Generic[PackType]):
 
                 self._process_with_component(selector, component, raw_job)
 
-                # Stop timer
+                # Stop timer and add to time profiler
                 if self._enable_profiling:
                     self._profiler[component_index] += time() - start_time
 
