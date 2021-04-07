@@ -215,7 +215,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     yield pack
 
     def set_profiling(self, enable_profiling: bool = True):
-        r""" Set profiling option.
+        r"""Set profiling option.
+
         Args:
             enable_profiling: A boolean of whether to enable profiling
                 for the reader or not (the default is True).
@@ -223,7 +224,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._enable_profiling = enable_profiling
 
     def timer_yield(self, pack: PackType):
-        r""" Wrapper generator for time profiling. Insert timers around
+        r"""Wrapper generator for time profiling. Insert timers around
         'yield' to support time profiling for reader.
 
         Args:
