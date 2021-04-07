@@ -17,7 +17,6 @@ Base class for Pipeline module.
 
 import itertools
 import logging
-from collections import defaultdict
 from time import time
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
     Deque
@@ -188,10 +187,10 @@ class Pipeline(Generic[PackType]):
                 # Can be processor, caster, or evaluator
                 self.add(component, component_config.get('configs', {}))
 
-    def enable_profiling(self):
-        r''' Enable profiling option.
-        '''
-        self._enable_profiling = True
+    def set_profiling(self, enable_profiling: bool = True):
+        r""" Set profiling option.
+        """
+        self._enable_profiling = enable_profiling
 
     def initialize(self) -> 'Pipeline':
         # The process manager need to be assigned first.
@@ -206,7 +205,8 @@ class Pipeline(Generic[PackType]):
 
         # Create profiler
         if self._enable_profiling:
-            self._profiler: Dict[str, float] = defaultdict(float)
+            self.reader.set_profiling(True)
+            self._profiler: List[float] = [0.0] * len(self.components)
 
         return self
 
@@ -354,15 +354,20 @@ class Pipeline(Generic[PackType]):
 
         """
 
+        # Report profiling stats
+        if self._enable_profiling:
+            out_header: str = "Pipeline Time Profile\n"
+            out_reader: str = f"- Reader: {self.reader.component_name}, " + \
+                f"{self.reader.time_profile} s\n"
+            out_info: List[str] = [
+                f"- Component [{i}]: {self.components[i].name}, {t} s" 
+                for i, t in enumerate(self._profiler)]
+            logger.info(out_header + out_reader + '\n'.join(out_info))
+
         self.reader.finish(self.resource)
         for p in self.components:
             p.finish(self.resource)
-
-        # Report profiling stats
-        if self._enable_profiling:
-            logging.basicConfig(level = logging.INFO)
-            out_info: List[str] = [f"{v}\t{k}" for k, v in self._profiler.items()]
-            logger.info('Pipeline Time Profile\n' + '\n'.join(out_info))
+        
 
     def __update_stream_job_status(self):
         q_index = self._proc_mgr.current_queue_index
@@ -400,10 +405,6 @@ class Pipeline(Generic[PackType]):
         for pack in selector.select(raw_job.pack):
             # First, perform the component action on the pack
             try:
-                # Start timer
-                if self._enable_profiling:
-                    start_time: float = time()
-
                 if isinstance(component, Caster):
                     # Replacing the job pack with the casted version.
                     raw_job.alter_pack(component.cast(pack))
@@ -424,10 +425,6 @@ class Pipeline(Generic[PackType]):
                 # After the component action, make sure the entry is
                 # added into the index.
                 pack.add_all_remaining_entries()
-
-                # Stop timer
-                if self._enable_profiling:
-                    self._profiler[component.name] += time() - start_time
             except ValueError as e:
                 raise ProcessExecutionException(
                     f'Exception occurred when running '
@@ -576,7 +573,16 @@ class Pipeline(Generic[PackType]):
             should_yield = next_queue_index >= pipeline_length
 
             if not raw_job.is_poison:
+
+                # Start timer
+                if self._enable_profiling:
+                    start_time: float = time()
+
                 self._process_with_component(selector, component, raw_job)
+
+                # Stop timer
+                if self._enable_profiling:
+                    self._profiler[component_index] += time() - start_time
 
                 # Then, based on component type, handle the queue.
                 if isinstance(component, BaseBatchProcessor):

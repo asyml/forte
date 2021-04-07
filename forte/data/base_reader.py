@@ -16,6 +16,7 @@ Base reader type to be inherited by all readers.
 """
 import logging
 import os
+from time import time
 from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Any, Iterator, Optional, Union, List, Dict, Set
@@ -73,6 +74,10 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._cache_in_memory = cache_in_memory
         self._cache_ready: bool = False
         self._data_packs: List[PackType] = []
+
+        self._enable_profiling: bool = False
+        self._start_time: float = 0.0
+        self.time_profile: float = 0.0
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -208,6 +213,24 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     pack.add_all_remaining_entries()
                     yield pack
 
+    def set_profiling(self, enable_profiling: bool = True):
+        r""" Set profiling option.
+        """
+        self._enable_profiling = enable_profiling
+
+    def timer_yield(self, pack: PackType):
+        r""" Wrapper for time profiling
+        """
+        # Aggregate time cost
+        if self._enable_profiling:
+            self.time_profile += time() - self._start_time
+
+        yield pack
+
+        # Start timer
+        if self._enable_profiling:
+            self._start_time: float = time()
+
     def iter(self, *args, **kwargs) -> Iterator[PackType]:
         # pylint: disable=protected-access
         r"""An iterator over the entire dataset, giving all Packs processed
@@ -220,12 +243,18 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 DataPack readers accept `data_source` as file/folder path.
             kwargs: Iterator of DataPacks.
         """
+
+        # Start timer
+        if self._enable_profiling:
+            self._start_time: float = time()
+
         if self._cache_in_memory and self._cache_ready:
             # Read from memory
             for pack in self._data_packs:
                 if hasattr(pack._meta, 'record'):
                     self.record(pack._meta.record)
-                yield pack
+
+                yield from self.timer_yield(pack)
         else:
             # Read via parsing dataset
             for pack in self._lazy_iter(*args, **kwargs):
@@ -233,7 +262,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
                     self.record(pack._meta.record)
                 if self._cache_in_memory:
                     self._data_packs.append(pack)
-                yield pack
+
+                yield from self.timer_yield(pack)
 
         self._cache_ready = True
 
