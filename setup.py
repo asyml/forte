@@ -9,7 +9,7 @@ if sys.version_info < (3, 6):
 
 setuptools.setup(
     name="forte",
-    version="0.1.0",
+    version="0.1.0post1",
     url="https://github.com/asyml/forte",
 
     description="Forte is extensible framework for building composable and "
@@ -17,7 +17,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     license='Apache License Version 2.0',
-    packages=setuptools.find_packages(exclude=["scripts", "examples", "tests"]),
+    packages=setuptools.find_packages(
+        exclude=["scripts*", "examples*", "tests*"]),
     include_package_data=True,
     platforms='any',
 
