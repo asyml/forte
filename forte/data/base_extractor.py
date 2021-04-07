@@ -89,7 +89,6 @@ class BaseExtractor(ABC):
                        "on vocabulary should not be called."
 
     def __init__(self):
-        self._entry_type: Optional[Type[Annotation]] = None
         self._vocab: Optional[Vocabulary] = None
 
     def initialize(self, config: Union[Dict, Config]):
@@ -98,7 +97,7 @@ class BaseExtractor(ABC):
         if self.config.entry_type is None:
             raise AttributeError("entry_type needs to be specified in "
                                 "the configuration of an extractor.")
-        self._entry_type = get_class(self.config.entry_type)
+        self._entry_type: Type[Annotation] = get_class(self.config.entry_type)
 
         if self.config.vocab_method != "raw":
             self._vocab = \
@@ -151,7 +150,7 @@ class BaseExtractor(ABC):
         }
 
     @property
-    def entry_type(self) -> Optional[Type[Annotation]]:
+    def entry_type(self) -> Type[Annotation]:
         return self._entry_type
 
     @entry_type.setter

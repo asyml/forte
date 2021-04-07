@@ -16,7 +16,7 @@ This file implements BioSeqTaggingExtractor, which is used to extract feature
 from the tagging label.
 """
 import logging
-from typing import Tuple, List, Dict, Union, Optional, Iterable
+from typing import Tuple, List, Dict, Union, Optional, Iterable, Type
 
 from torch import Tensor
 from forte.common.configuration import Config
@@ -57,7 +57,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
             raise AttributeError("tagging_unit is required in "
                                  "BioSeqTaggingExtractor.")
         self.attribute: str = self.config.attribute
-        self.tagging_unit: str = get_class(self.config.tagging_unit)
+        self.tagging_unit: Type[Annotation] = get_class(self.config.tagging_unit)
         self.is_bert: bool = self.config.is_bert
 
     @classmethod
