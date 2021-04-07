@@ -366,7 +366,7 @@ class Pipeline(Generic[PackType]):
             out_processor: str = '\n'.join([
                 f"- Component [{i}]: {self.components[i].name}, {t} s"
                 for i, t in enumerate(self._profiler)])
-            logger.info(f"{out_header}{out_reader}{out_processor}")
+            logger.info("%s%s%s", out_header, out_reader, out_processor)
 
         self.reader.finish(self.resource)
         for p in self.components:
