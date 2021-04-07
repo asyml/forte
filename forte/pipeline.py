@@ -190,7 +190,7 @@ class Pipeline(Generic[PackType]):
 
     def set_profiling(self, enable_profiling: bool = True):
         r"""Set profiling option.
-        
+
         Args:
             enable_profiling: A boolean of whether to enable profiling
                 for the pipeline or not (the default is True).

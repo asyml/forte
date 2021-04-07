@@ -64,11 +64,11 @@ class TestTimeProfiling(unittest.TestCase):
         lines: List[str] = log.output[0].split('\n')
         self.assertEqual(len(lines), 5)
         self.assertEqual('INFO:forte.pipeline:Pipeline Time Profile', lines[0])
-        self.assertEqual(f'- Reader: {self.pl.reader.component_name}, ' + \
+        self.assertEqual(f'- Reader: {self.pl.reader.component_name}, ' +
             f'{self.pl.reader.time_profile} s', lines[1])
         for i in range(3):
-            self.assertIn(f'- Component [{i}]: ' + \
-                f'{self.pl.components[i].name}, ' + \
+            self.assertIn(f'- Component [{i}]: ' +
+                f'{self.pl.components[i].name}, ' +
                 f'{self.pl._profiler[i]} s', lines[i + 2])
 
         self.assertGreater(self.pl.reader.time_profile, 0.0)
