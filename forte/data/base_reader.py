@@ -237,7 +237,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         # Start timer
         if self._enable_profiling:
-            self._start_time: float = time()
+            self._start_time = time()
 
     def iter(self, *args, **kwargs) -> Iterator[PackType]:
         # pylint: disable=protected-access
@@ -254,7 +254,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
         # Start timer
         if self._enable_profiling:
-            self._start_time: float = time()
+            self._start_time = time()
 
         if self._cache_in_memory and self._cache_ready:
             # Read from memory
