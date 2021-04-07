@@ -75,7 +75,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         self._cache_ready: bool = False
         self._data_packs: List[PackType] = []
 
-        # provide an option for the reader to start the profiling
+        # needed for time profiling of reader
         self._enable_profiling: bool = False
         self._start_time: float = 0.0
         self.time_profile: float = 0.0
@@ -218,7 +218,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
         r""" Set profiling option.
         Args:
             enable_profiling: A boolean of whether to enable profiling
-                for the reader or not.
+                for the reader or not (the default is True).
         """
         self._enable_profiling = enable_profiling
 

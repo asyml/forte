@@ -26,6 +26,7 @@ from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from forte.processors.base.batch_processor import Predictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
+
 class DummyPackProcessor(PackProcessor):
 
     def __init__(self, sleep_time: float):
@@ -54,7 +55,7 @@ class TestTimeProfiling(unittest.TestCase):
                      "pipelines.",
                      "NLP has never been made this easy before."]
         document = ' '.join(sentences)
-        
+
         with self.assertLogs('forte.pipeline', level='INFO') as log:
             pack = self.pl.process_one(document)
             self.pl.finish()
@@ -64,9 +65,13 @@ class TestTimeProfiling(unittest.TestCase):
         self.assertEqual(len(lines), 5)
         self.assertEqual('INFO:forte.pipeline:Pipeline Time Profile', lines[0])
         self.assertIn('- Reader: forte.data.readers.string_reader.StringReader, ', lines[1])
-        self.assertIn('- Component [0]: __main__.DummyPackProcessor, 0.90', lines[2])
-        self.assertIn('- Component [1]: __main__.DummyPackProcessor, 0.50', lines[3])
-        self.assertIn('- Component [2]: __main__.DummyPackProcessor, 1.20', lines[4])
+        self.assertIn('- Component [0]: __main__.DummyPackProcessor, ', lines[2])
+        self.assertIn('- Component [1]: __main__.DummyPackProcessor, ', lines[3])
+        self.assertIn('- Component [2]: __main__.DummyPackProcessor, ', lines[4])
+
+        self.assertGreater(self.pl.reader.time_profile, 0.0)
+        self.assertTrue(all(t > 0.0 for t in self.pl._profiler))
+
 
 if __name__ == "__main__":
     unittest.main()

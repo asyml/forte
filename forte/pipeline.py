@@ -122,7 +122,7 @@ class Pipeline(Generic[PackType]):
         self.initialized: bool = False
         self._check_type_consistency: bool = False
 
-        # provide an option for the pipeline to start the profiling
+        # needed for time profiling of pipeline
         self._enable_profiling: bool = False
         self._profiler: List[float] = []
 
@@ -192,7 +192,7 @@ class Pipeline(Generic[PackType]):
         r""" Set profiling option.
         Args:
             enable_profiling: A boolean of whether to enable profiling
-                for the pipeline or not.
+                for the pipeline or not (the default is True).
         """
         self._enable_profiling = enable_profiling
 
@@ -363,15 +363,14 @@ class Pipeline(Generic[PackType]):
             out_header: str = "Pipeline Time Profile\n"
             out_reader: str = f"- Reader: {self.reader.component_name}, " + \
                 f"{self.reader.time_profile} s\n"
-            out_info: List[str] = [
-                f"- Component [{i}]: {self.components[i].name}, {t} s" 
-                for i, t in enumerate(self._profiler)]
-            logger.info(out_header + out_reader + '\n'.join(out_info))
+            out_processor: str = '\n'.join([
+                f"- Component [{i}]: {self.components[i].name}, {t} s"
+                for i, t in enumerate(self._profiler)])
+            logger.info(f"{out_header}{out_reader}{out_processor}")
 
         self.reader.finish(self.resource)
         for p in self.components:
             p.finish(self.resource)
-        
 
     def __update_stream_job_status(self):
         q_index = self._proc_mgr.current_queue_index
