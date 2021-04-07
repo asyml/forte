@@ -57,7 +57,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
             raise AttributeError("tagging_unit is required in "
                                  "BioSeqTaggingExtractor.")
         self.attribute: str = self.config.attribute
-        self.tagging_unit: Type[Annotation] = get_class(self.config.tagging_unit)
+        self.tagging_unit: Type[Annotation] = \
+                get_class(self.config.tagging_unit)
         self.is_bert: bool = self.config.is_bert
 
     @classmethod
