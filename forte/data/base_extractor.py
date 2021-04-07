@@ -17,7 +17,7 @@ extractors will inherit from.
 """
 import logging
 from abc import ABC
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Type
 from typing import Union, Hashable, Iterable, Optional
 
 from forte.common.configuration import Config
@@ -89,7 +89,7 @@ class BaseExtractor(ABC):
                        "on vocabulary should not be called."
 
     def __init__(self):
-        self._entry_type: Optional[Annotation] = None
+        self._entry_type: Optional[Type[Annotation]] = None
         self._vocab: Optional[Vocabulary] = None
 
     def initialize(self, config: Union[Dict, Config]):
@@ -136,12 +136,10 @@ class BaseExtractor(ABC):
             Default is true.
 
         "pad_value" (int)
-            ID assigned to pad. It should be integer smaller than 0.
-            Default is 0.
+            ID assigned to pad. Default is 0.
 
         "vocab_unk_value" (int)
-            ID assigned to unk. It should be integer smaller than 0.
-            Default is 1.
+            ID assigned to unk. Default is 1.
         """
         return {
             "entry_type": None,
@@ -153,11 +151,11 @@ class BaseExtractor(ABC):
         }
 
     @property
-    def entry_type(self) -> object:
+    def entry_type(self) -> Optional[Type[Annotation]]:
         return self._entry_type
 
     @entry_type.setter
-    def entry_type(self, input_entry: Annotation):
+    def entry_type(self, input_entry: Type[Annotation]):
         self._entry_type = input_entry
 
     @property
