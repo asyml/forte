@@ -53,12 +53,12 @@ class BioSeqTaggingExtractor(BaseExtractor):
         if self.config.attribute is None:
             raise AttributeError("attribute is required "
                                  "in BioSeqTaggingExtractor.")
-        if self.config.tagging_unit == "":
+        if not self.config.tagging_unit:
             raise AttributeError("tagging_unit is required in "
                                  "BioSeqTaggingExtractor.")
-        self.attribute = self.config.attribute
-        self.tagging_unit = get_class(self.config.tagging_unit)
-        self.is_bert = self.config.is_bert
+        self.attribute: str = self.config.attribute
+        self.tagging_unit: str = get_class(self.config.tagging_unit)
+        self.is_bert: bool = self.config.is_bert
 
     @classmethod
     def default_configs(cls):
