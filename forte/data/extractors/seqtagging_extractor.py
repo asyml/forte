@@ -172,7 +172,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 extractor will extractor feature.
 
         Returns (Feature):
--           a feature that contains the extracted data.
+           a feature that contains the extracted data.
         """
         instance_tagged: List[Tuple[Optional[str], str]] = \
             bio_tagging(pack, instance,
