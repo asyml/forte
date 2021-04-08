@@ -69,14 +69,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         entry_type (str).
             Required. The string to the ontology type that the extractor
-            will get feature from, e.g: "ft.onto.base_ontology.EntityMention".
+            will get feature from, e.g: `"ft.onto.base_ontology.EntityMention"`.
 
         attribute (str): Required. The attribute name of the
             entry from which labels are extracted.
 
         tagging_unit (str): Required. The tagging label
             will align to the tagging_unit Entry,
-            e.g: "ft.onto.base_ontology.Token"
+            e.g: `"ft.onto.base_ontology.Token"`.
 
         "vocab_method" (str)
             What type of vocabulary is used for this extractor.
@@ -103,18 +103,27 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         is_bert (bool)
             It indicates whether Bert model is used. If true, padding
-            will be added to the begining and end of a sentence
+            will be added to the beginning and end of a sentence
             corresponding to the special tokens ([CLS], [SEP])
-            used in Bert. Default is False
+            used in Bert. Default is False.
 
-        For example, the config can be
-            "entry_type": "ft.onto.base_ontology.EntityMention",
-            "attribute": "ner_type",
-            "tagging_unit": "ft.onto.base_ontology.Token".
+        For example, the config can be:
+
+        .. code-block:: python
+            {
+                "entry_type": "ft.onto.base_ontology.EntityMention",
+                "attribute": "ner_type",
+                "tagging_unit": "ft.onto.base_ontology.Token"
+            }
 
         The extractor will extract the BIO NER tags for instances.
-            A possible feature can be [[None, "O"], [LOC, "B"], [LOC, "I"],
-            [None, "O"], [None, "O"], [PER, "B"], [None, "O"]]
+        A possible feature can be:
+
+        .. code-block:: python
+
+            [[None, "O"], ["LOC", "B"], ["LOC", "I"], [None, "O"],
+            [None, "O"], ["PER", "B"], [None, "O"]]
+
         """
         config = super().default_configs()
         config.update({"attribute": None,

@@ -150,9 +150,10 @@ class Vocabulary(Generic[ElementType]):
     def add_special_element(self, element: Hashable, element_id: int):
         r"""
         Add special_elements, such as PAD and UNK.
+
         Args:
             element (Hashable): The element to be added.
-            element_id (int): The id assigned to the element.
+            element_id (int): The ID assigned to the element.
         """
         if element_name in ("PAD", "UNK"):
             if element_name == "PAD":
