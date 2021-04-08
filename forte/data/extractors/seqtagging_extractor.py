@@ -110,6 +110,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         For example, the config can be:
 
         .. code-block:: python
+
             {
                 "entry_type": "ft.onto.base_ontology.EntityMention",
                 "attribute": "ner_type",
