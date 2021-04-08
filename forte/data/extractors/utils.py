@@ -95,3 +95,25 @@ def bio_tagging(pack: DataPack, instance: Annotation,
                                location))
         entry_id += 1
     return tagged
+
+
+def add_entry_to_pack(pack: DataPack,
+                      entry_type: Type[Annotation],
+                      span_begin: int,
+                      span_end: int) -> Annotation:
+    """
+    Add an entry to datapack, given entry_type, span begin and end.
+    Args:
+        pack (Datapack): The datapack to add.
+
+        entry_type (Annotation): The type of entry to be added. For
+            example, EntityMethion.
+
+        span_begin (int): Begin of the entry.
+
+        span_end (int): End of the entry.
+    Returns:
+        The added entry (Annotation)
+
+    """
+    return entry_type(pack, span_begin, span_end)  # type: ignore
