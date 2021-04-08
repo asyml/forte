@@ -15,30 +15,65 @@
 Here we define some utility functions for CoNLL evaluation datasets change.
 We can add other datasets conversion function for CoNLL here in the future.
 """
+from typing import List, Dict, Optional, Type
+
+from forte.data.data_pack import DataPack
+from forte.data.base_pack import PackType
+from forte.data.ontology import Annotation
+from forte.data.extractors.utils import bio_tagging
+from ft.onto.base_ontology import Sentence
 
 
-def write_tokens_to_file(pred_pack, pred_request, refer_pack, refer_request,
-                         output_filename):
-    opened_file = open(output_filename, "w+")
-    for pred_sentence, tgt_sentence in zip(
-            pred_pack.get_data(**pred_request),
-            refer_pack.get_data(**refer_request)
-    ):
+def post_edit(element: List[Optional[str]]) -> str:
+    if element[0] is None:
+        return "O"
+    return "%s-%s" % (element[1], element[0])
 
-        pred_tokens, tgt_tokens = (
-            pred_sentence["Token"],
-            tgt_sentence["Token"],
-        )
-        for i in range(len(pred_tokens["text"])):
-            w = tgt_tokens["text"][i]
-            p = tgt_tokens["pos"][i]
-            ch = tgt_tokens["chunk"][i]
-            tgt = tgt_tokens["ner"][i]
-            pred = pred_tokens["ner"][i]
 
+def get_tag(pack: DataPack,
+            sentence: Annotation,
+            tagging_unit: Type[Annotation],
+            entry: Type[Annotation],
+            attribute: str) -> List[str]:
+    tag = bio_tagging(pack,
+                        sentence,
+                        tagging_unit,
+                        entry,
+                        attribute)
+    tag = [post_edit(x) for x in tag]
+    return tag
+
+
+def write_tokens_to_file(pred_pack: PackType,
+                         refer_pack: PackType,
+                         refer_request: Dict,
+                         tagging_unit: Type[Annotation],
+                         entry: Type[Annotation],
+                         attribute: str,
+                         output_file: str):
+    opened_file = open(output_file, "a+")
+    for refer_data, pred_sent, refer_sent in zip(
+        refer_pack.get_data(**refer_request),
+        pred_pack.get(Sentence),
+        refer_pack.get(Sentence)):
+
+        refer_tag = get_tag(refer_pack,
+                            refer_sent,
+                            tagging_unit,
+                            entry,
+                            attribute)
+        pred_tag = get_tag(pred_pack,
+                           pred_sent,
+                           tagging_unit,
+                           entry,
+                           attribute)
+
+        words = refer_data["Token"]["text"]
+
+        for i, (word, tgt, pred) in \
+                enumerate(zip(words, refer_tag, pred_tag), 1):
             opened_file.write(
-                "%d %s %s %s %s %s\n" % (i + 1, w, p, ch, tgt, pred)
+                "%d %s %s %s\n" % (i, word, tgt, pred)
             )
-
         opened_file.write("\n")
     opened_file.close()
