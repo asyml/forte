@@ -28,7 +28,7 @@ from forte.datasets.conll.conll_utils import write_tokens_to_file
 class CoNLLNEREvaluator(Evaluator):
     def __init__(self):
         super().__init__()
-        self.output_file = "temp_eval.txt"
+        self.output_file = "tmp_eval.txt"
         self.score_file = "tmp_eval.score"
         self.scores: Dict[str, float] = {}
         if os.path.isfile(self.output_file):
@@ -90,7 +90,7 @@ class CoNLLNEREvaluator(Evaluator):
     def get_result(self) -> Dict:
         eval_script = \
             Path(os.path.abspath(__file__)).parents[2] / \
-            "examples/tagging/conll03eval.v2"
+            "utils/eval_scripts/conll03eval.v2"
         os.system(f"perl {eval_script} < {self.output_file} > "
                   f"{self.score_file}")
         with open(self.score_file, "r") as fin:
