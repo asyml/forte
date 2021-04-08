@@ -118,7 +118,7 @@ class BaseExtractor(ABC):
 
         entry_type (str).
             Required. The string to the ontology type that the extractor
-            will get feature from, e.g: "ft.onto.base_ontology.Token".
+            will get feature from, e.g: `"ft.onto.base_ontology.Token"`.
 
         "vocab_method" (str)
             What type of vocabulary is used for this extractor.
