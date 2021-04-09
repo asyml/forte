@@ -29,7 +29,8 @@ from forte.data.ontology import utils
 from forte.data.ontology.code_generation_exceptions import (
     DuplicatedAttributesWarning, DuplicateEntriesWarning,
     OntologySourceNotFoundException, TypeNotDeclaredException,
-    UnsupportedTypeException, ParentEntryNotSupportedException)
+    UnsupportedTypeException, ParentEntryNotSupportedException,
+    InvalidIdentifierException)
 from forte.data.ontology.code_generation_objects import ImportManager
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
 
@@ -148,7 +149,10 @@ class GenerateOntologyTest(unittest.TestCase):
           (False, 'test_invalid_attribute.json', TypeNotDeclaredException),
           (False, 'test_nested_item_type.json', UnsupportedTypeException),
           (False, 'test_no_item_type.json', TypeNotDeclaredException),
-          (False, 'test_unknown_item_type.json', TypeNotDeclaredException))
+          (False, 'test_unknown_item_type.json', TypeNotDeclaredException),
+          (False, 'test_invalid_entry_name.json', InvalidIdentifierException),
+          (False, 'test_invalid_attr_name.json', InvalidIdentifierException),
+          )
     def test_warnings_errors(self, value):
         expected_warning, file, msg_type = value
         temp_dir = tempfile.mkdtemp()

@@ -1,7 +1,7 @@
 {
   "name": "race_multi_choice_qa_ontology",
   "imports": [
-    "forte/ontology_specs/base_ontology.json"
+    "base_ontology.json"
   ],
   "definitions": [
     {

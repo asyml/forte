@@ -16,11 +16,12 @@ Base class for processors.
 """
 
 from abc import abstractmethod, ABC
-from typing import Any, Dict
+from typing import Any, Dict, Set
 
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
 from forte.pipeline_component import PipelineComponent
+from forte.utils.utils_processor import record_types_and_attributes_check
 
 __all__ = [
     "BaseProcessor",
@@ -36,8 +37,65 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         super().__init__()
         self.selector = DummySelector()
 
+    def record(self, record_meta: Dict[str, Set[str]]):
+        r"""Method to add output record of the current processor to
+        :attr:`forte.data.data_pack.Meta.record`. The key of the record
+        should be the entry type and values should be attributes of the entry
+        type. All the information would be used for consistency checking
+        purpose if :meth:`~forte.pipeline.Pipeline.enforce_consistency` is
+        enabled for the pipeline.
+
+        Args:
+            record_meta: The field in the datapack for type record that need to
+                fill in for consistency checking.
+        """
+        pass
+
+    @classmethod
+    def expected_types_and_attributes(cls) -> Dict[str, Set[str]]:
+        r"""Method to add expected types and attributes for the input of the
+        current processor which would be checked before running the processor if
+        :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
+        the pipeline.
+        """
+        return {}
+
+    def check_record(self, input_pack: PackType):
+        # pylint: disable=protected-access
+        r"""Method to check type consistency if
+        :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
+        for the pipeline. If any expected type or its attribute
+        does not exist in the datapack record of the previous pipeline
+        component, an error of
+        :class:`~forte.common.exception.ExpectedRecordNotFound` will be raised.
+
+        Args:
+            input_pack: The input datapack.
+        """
+        if self._check_type_consistency:
+            expectation = self.expected_types_and_attributes()
+            record_types_and_attributes_check(expectation, input_pack)
+
+    def write_record(self, input_pack: PackType):
+        r"""Method to write records of the output type of the current
+        processor to the datapack. The key of the record should be the entry
+        type and values should be attributes of the entry type. All the
+        information would be used for consistency checking purpose if
+        :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
+        for the pipeline.
+
+        Args:
+            input_pack: The input datapack.
+
+        """
+        # pylint: disable=protected-access
+        self.record(input_pack._meta.record)
+
     def process(self, input_pack: PackType):
+        self.check_record(input_pack)
+        # Set the component for recording purpose.
         self._process(input_pack)
+        self.write_record(input_pack)
 
     @abstractmethod
     def _process(self, input_pack: PackType):

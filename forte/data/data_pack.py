@@ -49,6 +49,13 @@ class Meta(BaseMeta):
         language: The language used by this data pack, default is English.
         span_unit: The unit used for interpreting the Span object of this
           data pack. Default is character.
+    Attributes:
+        record: Initialized as a dictionary. This is not a required field.
+            The key of the record should be the entry type and values should
+            be attributes of the entry type. All the information would be used
+            for consistency checking purpose if
+            :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
+            for the pipeline.
     """
 
     def __init__(self, pack_name: Optional[str] = None,
@@ -56,6 +63,7 @@ class Meta(BaseMeta):
         super().__init__(pack_name)
         self.language = language
         self.span_unit = span_unit
+        self.record: Dict[str, Set[str]] = dict()
 
 
 class DataPack(BasePack[Entry, Link, Group]):

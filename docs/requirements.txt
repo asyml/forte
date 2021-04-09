@@ -1,9 +1,16 @@
-# Addtional requirements for docs.
-
 sphinx-rtd-theme >= 0.5.0
-sphinxcontrib-spelling
 Pygments >= 2.1.1
+funcsigs~=1.0.2
 recommonmark
+mypy_extensions~=0.4.1
+sphinxcontrib-spelling
+
+pyyaml==5.4
+jsonpickle==1.4
+sortedcontainers==2.1.0
+texar-pytorch>=0.1.1
+typing>=3.7.4; python_version < '3.5'
+typing-inspect>=0.6.0
 
 # PyTorch installation for ReadTheDocs
 https://download.pytorch.org/whl/cpu/torch-1.1.0-cp37-cp37m-linux_x86_64.whl
@@ -13,6 +20,11 @@ faiss-cpu>=1.6.1
 
 # elasticsearch
 elasticsearch==7.5.1
+
+# code generation
+typed_astunparse~=2.1.4
+typed_ast~=1.4.0
+jsonschema==3.0.2
 
 # Transformers
 transformers>=3.1
