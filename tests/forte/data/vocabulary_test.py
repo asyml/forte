@@ -16,12 +16,15 @@ import pickle as pkl
 import unittest
 from itertools import product
 
+from ddt import ddt, data, unpack
 from texar.torch.data import SpecialTokens
 
+from forte.common import InvalidOperationException
 from forte.data import dataset_path_iterator
 from forte.data.vocabulary import Vocabulary, FrequencyVocabFilter
 
 
+@ddt
 class VocabularyTest(unittest.TestCase):
     def setUp(self):
         self.data_path = os.path.abspath(os.path.join(
@@ -120,8 +123,23 @@ class VocabularyTest(unittest.TestCase):
             self.assertEqual(vocab._id2element, new_vocab._id2element)
             self.assertEqual(vocab.next_id, new_vocab.next_id)
 
-    def test_freq_filtering(self):
-        base_vocab = Vocabulary()
+    # These cases correspond to different combinations of PAD and UNK, and
+    # whether we have additional specials.
+    @data(
+        (True, False, ["cls", "blah"]),
+        (False, False, ["cls", "blah"]),
+        (False, True, ["cls", "blah"]),
+        (False, False, ["cls", "blah"]),
+        (True, False, None),
+        (False, False, None),
+        (False, True, None),
+        (False, False, None),
+    )
+    @unpack
+    def test_freq_filtering(self, need_pad, use_unk, special_tokens):
+        base_vocab = Vocabulary(
+            need_pad=need_pad, use_unk=use_unk, special_tokens=special_tokens)
+
         for p in dataset_path_iterator(self.data_path, '.txt'):
             with open(p) as f:
                 for line in f:
@@ -133,17 +151,48 @@ class VocabularyTest(unittest.TestCase):
 
         filtered = base_vocab.filter(vocab_filter)
 
-        for e, eid in base_vocab.items():
+        for e, eid in base_vocab.vocab_items():
             base_count = base_vocab.get_count(e)
-            if eid in base_vocab.special_ids:
+
+            if base_vocab.is_special_token(eid):
+                # Check that the filtered vocab have all special elements.
                 self.assertTrue(filtered.has_element(e))
-                self.assertEqual(base_vocab.get_count(e), filtered.get_count(e))
             elif 2 <= base_count <= 4:
                 print(e, base_vocab.get_count(e))
                 self.assertTrue(filtered.has_element(e))
                 self.assertEqual(base_count, filtered.get_count(e))
             else:
                 self.assertFalse(filtered.has_element(e))
+
+        self.assertEqual(len(base_vocab._element2id),
+                         len(base_vocab._id2element))
+
+    @data(
+        ("indexing", 0, 2),
+        ("one_hot", [0] * 5, [0, 1, 0, 0, 0]),
+    )
+    @unpack
+    def test_custom_vocab(self, method, expected_pad_value, expected_unk_value):
+        vocab = Vocabulary(method=method, need_pad=False, use_unk=False)
+        predefined = {
+            "[PAD]": -1, "[CLS]": -1, "[UNK]": -1, "a": 2, "b": 3, "c": 4}
+        for e, count in predefined.items():
+            if count == -1:
+                vocab.add_special_element(e)
+            else:
+                vocab.add_element(e, count=count)
+
+        vocab.mark_special_element(0, "PAD")
+        vocab.mark_special_element(2, "UNK")
+
+        self.assertEqual(vocab.get_pad_value(), expected_pad_value)
+        self.assertEqual(vocab.element2repr("[PAD]"), expected_pad_value)
+        self.assertEqual(vocab.element2repr("something else"),
+                         expected_unk_value)
+
+        for i in [0, 1, 2]:
+            self.assertTrue(vocab.is_special_token(i))
+            self.assertRaises(InvalidOperationException, vocab.get_count(i))
 
 
 if __name__ == '__main__':

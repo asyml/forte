@@ -124,27 +124,20 @@ class BaseExtractor(ABC):
             Check the behavior of vocabulary under different setting
             in :class:`~forte.data.vocabulary.Vocabulary`
 
-        "need_pad" (bool)
-            Whether the `<PAD>` element should be added to vocabulary. And
-            whether the feature need to be batched and padded. Default is True.
-
         "vocab_use_unk" (bool)
             Whether the `<UNK>` element should be added to vocabulary.
             Default is true.
 
-        "pad_value" (int)
-            ID assigned to pad. Default is 0.
+        "need_pad" (bool)
+            Whether the `<PAD>` element should be added to vocabulary. And
+            whether the feature need to be batched and padded. Default is True.
 
-        "vocab_unk_value" (int)
-            ID assigned to unk. Default is 1.
         """
         return {
             "entry_type": None,
             "vocab_method": "indexing",
             "vocab_use_unk": True,
             "need_pad": True,
-            "add_bos": False,
-            "add_eos": False,
         }
 
     @property
@@ -170,7 +163,7 @@ class BaseExtractor(ABC):
         return self._vocab
 
     @vocab.setter
-    def vocab(self, input_vocab: Vocabulary):
+    def vocab(self, vocab: Vocabulary):
         """
         Setter of the vocabulary, used when user build the vocabulary
         externally.
@@ -181,7 +174,7 @@ class BaseExtractor(ABC):
         Returns:
 
         """
-        self._vocab = input_vocab
+        self._vocab = vocab
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
         if self.vocab is not None:
@@ -189,10 +182,10 @@ class BaseExtractor(ABC):
         else:
             return None
 
-    def items(self) -> Iterable[Tuple[Hashable, int]]:
+    def vocab_items(self) -> Iterable[Tuple[Hashable, int]]:
         if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
-        return self.vocab.items()
+        return self.vocab.vocab_items()
 
     def add(self, element: Hashable):
         if self.vocab is None:

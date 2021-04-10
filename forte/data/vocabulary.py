@@ -42,8 +42,13 @@ class Vocabulary(Generic[ElementType]):
        different representation according to different setting.
     2. <UNK>: if added into the vocabulary,
        will be the default element if the queried element is not found.
-    3. <EOS>: End of sentence marker
-    4. <BOS>: Begin of sentence marker
+
+    Note that these two special tokens are necessary for the system in certain
+    cases and thus must present in the vocabulary. The behavior of these
+    special tokens are pre-defined based on different settings. To get around
+    the default behavior (for example, if you have a pre-defined vocabulary
+    with different setups), you can instruct the class to not adding these tokens
+    automatically, and use the :func:`mark_special_element` instead.
 
     Here is a table on how our Vocabulary class behavior under different
     settings. Element0 means the first element that is added to the vocabulary.
@@ -91,43 +96,39 @@ class Vocabulary(Generic[ElementType]):
           - 0->element0
 
     Args:
-        method (str): The method to represent element in vocabulary.
-        need_pad (bool): Whether to add <PAD> element in vocabulary.
-        use_unk (bool): Whether to add <UNK> element in vocabulary.
-            Elements that are not found in vocabulary will be directed
-            to <UNK> element.
+        method (str): The method to represent element in vocabulary, currently
+            supporting "indexing" and "one-hot".
+        need_pad (bool): Whether to add <PAD> element to the vocabulary on
+            creation. It will be added to the vocabulary first, but the id of
+            it depends on the specific settings.
+        use_unk (bool): Whether to add <UNK> element to the vocabulary on
+            creation. Elements that are not found in vocabulary will be
+            directed to <UNK> element. It will be added right after the <PAD>
+            element if provided.
+        special_tokens (List[str]): Additional special tokens to be added, they
+            will be added at the beginning of vocabulary (but right after the
+            <UNK> token) one by one.
+
 
 
     Attributes:
         method (str): Same as above.
         need_pad (bool): Same as above.
         use_unk (bool): Same as above.
-        next_id (int): The id that will be used when next element is added.
-        _element2id (dict): This stores the mapping from element to id.
-        _id2element (dict): This stores the mapping from id to element.
     """
 
-    # TODO: It is better to add a generic type for this class, now every element
-    #   is simply empty.
     def __init__(
             self, method: str = "indexing",
             need_pad: bool = True, use_unk: bool = True,
-            add_bos: bool = False, add_eos: bool = False,
-            do_counting: bool = True
+            special_tokens: List[str] = None, do_counting: bool = True
     ):
         self.method: str = method
         self.need_pad: bool = need_pad
         self.use_unk: bool = use_unk
-        self.add_bos: bool = add_bos
-        self.add_eos: bool = add_eos
         self.do_counting: bool = do_counting
-
-        self._special_tokens = tx.data.SpecialTokens
 
         self._pad_id: Optional[int] = None
         self._unk_id: Optional[int] = None
-        self._bos_id: Optional[int] = None
-        self._eos_id: Optional[int] = None
 
         # Maps the raw element to the internal id.
         self._element2id: Dict = {}
@@ -138,53 +139,32 @@ class Vocabulary(Generic[ElementType]):
         self._id2repr: Dict = {}
 
         # Count the number of appearance of an element, indexed by the element
-        #  id.
+        # id.
         self.__counter: Counter = Counter()
 
-        # Keep a set of the special ids.
+        # Initialize the id auto counter.
+        self.next_id = 0
+
+        # Store special token names and their surface form.
+        # By default, following the texar-pytorch special tokens:
+        #   PAD: <PAD>
+        #   UNK: <UNK>
+        self._required_special_tokens: Dict[str, str] = {}
+
+        # Store the id position of the special ids.
         self.__special_ids: Set[int] = set()
 
-        if method == "one-hot" and need_pad:
-            self.next_id = -1
-            logging.warning(
-                "Cannot use 0 as pad id if one-hot method is used. "
-                "Chaning pad id to -1!")
-        else:
-            self.next_id = 0
-
-        # When the element type is not string, this will still add these special
-        #  tokens.
         if need_pad:
-            self.__special_ids.add(self.add_element(self._special_tokens.PAD))
+            pad_id = -1 if "one-hot" else None
+            self.add_special_element(tx.data.SpecialTokens.PAD, pad_id, "PAD")
 
         if use_unk:
-            self.__special_ids.add(self.add_element(self._special_tokens.UNK))
+            self.add_special_element(
+                tx.data.SpecialTokens.UNK, special_token_name="UNK")
 
-        if add_bos:
-            self.__special_ids.add(self.add_element(self._special_tokens.BOS))
-
-        if add_eos:
-            self.__special_ids.add(self.add_element(self._special_tokens.EOS))
-
-    @property
-    def special_ids(self) -> Set[int]:
-        """
-        Get all the ids of the special tokens.
-
-        Returns: A set containing the ids of the special tokens.
-
-        """
-        return self.__special_ids
-
-    def get_ids(self):
-        """
-        Get all the ids of this vocabulary.
-
-        Returns: All the ids.
-
-        """
-
-        return range(self.__len__())
+        if special_tokens is not None:
+            for t in special_tokens:
+                self.add_special_element(t)
 
     def get_count(self, e: Union[ElementType, int]) -> int:
         """
@@ -198,47 +178,150 @@ class Vocabulary(Generic[ElementType]):
             The count of the element.
         """
         if not self.do_counting:
-            raise InvalidOperationException(
-                "The vocabulary is not configured to count the elements.")
+            if not self.do_counting:
+                raise InvalidOperationException(
+                    "The vocabulary is not configured to count the elements.")
 
-        if isinstance(e, int):
-            return self.__counter[e]
+        eid: int = e if isinstance(e, int) else self._element2id[e]
+        if self.is_special_token(eid):
+            raise InvalidOperationException(
+                "Count for special element is not available.")
+        return self.__counter[eid]
+
+    def mark_special_element(
+            self, element_id: int, element_name: str
+    ):
+        """
+        Mark a particular (but already existed) index in the vocabulary to be
+        a special required element (i.e `PAD` or `UNK).
+
+        Args:
+            element_id (int): The id to be set for the special element.
+            element_name (str): The name of this element to be set, it can
+              be one of `PAD`, `UNK`.
+
+        """
+        if element_name == "PAD" or element_name == "UNK":
+            if element_id in self._id2element:
+                self._required_special_tokens[element_name] = self._id2element[
+                    element_id]
+            else:
+                raise ValueError(f"Supplied {element_id} is not in the"
+                                 f" current vocabulary.")
         else:
-            return self.__counter[self._element2id[e]]
+            raise ValueError(
+                f"{element_name} is not a required special element, you can"
+                f" add it in through `special_tokens` argument during class"
+                f" creation, or calling the `add_special_element` method")
+
+    def is_special_token(self, element_id: int):
+        """Check whether the element is a special token."""
+        return element_id in self.__special_ids
+
+    def add_special_element(
+            self, element: str, element_id: int = None,
+            representation: Any = None, special_token_name: str = None):
+        """
+        This function will add special elements to the vocabulary, such as
+        `UNK`, `PAD`, `BOS`, `CLS` symbols. Some special tokens has their
+        unique behavior in the system. And they will also not be filtered
+        by any `VocabFilter`.
+
+        To call this method, you may want to add the element at a unused index,
+        for example, the last index of the vocabulary, or a unused negative
+        id.
+
+        Note: most of the time, you don't have to call this method yourself,
+        but should let the `init` function to handle that.
+
+        Args:
+            element (str): The surface form of this special element.
+            element_id (Optional[int]): The to be used for this special token.
+                If not provided, the vocabulary will use the next id internally.
+                If this id is occupied, a `ValueError` will be thrown. The id
+                can be negative.
+            representation: The representation value you want to assign to this
+                special token. If None, the representation may be computed
+                based on the index (which may or may not be desirable)
+            special_token_name (Optional[str]): An internal representation of
+                this special token. This is used if you want to use this
+                token to be the required specials: <PAD> or <UNK>, you need to
+                provide the string "PAD" and "UNK" respectively. Any other
+                name here is considered invalid, and a `ValueError` will be
+                thrown.
+
+        Returns:
+
+        """
+        if special_token_name is not None:
+            if (not special_token_name == "PAD"
+                    and not special_token_name == "UNK"):
+                raise ValueError(
+                    f"You don't have to and shouldn't provide the "
+                    f"`special_token_name` if this token is not PAD or UNK")
+            self._required_special_tokens[special_token_name] = element
+
+        if element_id is not None:
+            if element_id in self._id2element:
+                raise ValueError(
+                    f"ID {element_id} has already been used in Vocabulary. ")
+        else:
+            # Use auto-incremented id.
+            element_id = self.__get_next_available_id()
+
+        self._element2id[element] = element_id
+        self._id2element[element_id] = element
+
+        self.__special_ids.add(element_id)
+
+        if representation is not None:
+            self._id2repr[element_id] = representation
 
     def add_element(self, element: ElementType, representation: Any = None,
-                    count: int = 1):
-        r"""This function will add element to the vocabulary.
+                    count: int = 1) -> int:
+        r"""This function will add a regular element to the vocabulary.
 
         Args:
             element (Hashable): The element to be added.
             representation: The vocabulary representation of this element
-             will use this value. For example, you may want to use `-100`
-             for ignored tokens for PyTorch skipped tokens.
+                will use this value. For example, you may want to use `-100`
+                for ignored tokens for PyTorch skipped tokens. Note that the
+                class do not check whether this representation is used by
+                another element, so the caller have to manage the behavior
+                itself.
             count (int): the count to be incremented for this element, default
-             is 1 (i.e. consider it appear once on every add). This value
-             will have effect only if `do_counting` is True.
+                is 1 (i.e. consider it appear once on every add). This value
+                will have effect only if `do_counting` is True.
 
         Returns:
             The internal id of the element.
         """
-        element_id: int
+        element_id_: int
         try:
-            element_id = self._element2id[element]
+            element_id_ = self._element2id[element]
             if self.do_counting:
-                self.__counter[element_id] += count
+                self.__counter[element_id_] += count
         except KeyError:
-            element_id = self.next_id
-            self._element2id[element] = element_id
-            self._id2element[element_id] = element
+            element_id_ = self.__get_next_available_id()
+            self._element2id[element] = element_id_
+            self._id2element[element_id_] = element
             if representation:
-                self._id2repr[element_id] = representation
+                self._id2repr[element_id_] = representation
             if self.do_counting:
-                self.__counter[element_id] = count
+                self.__counter[element_id_] = count
 
+        return element_id_
+
+    def __get_next_available_id(self):
+        """ Try to get the next available id correctly even if someone
+        assign an arbitrary id in between.
+        """
+        eid = self.next_id
+        while eid in self._id2element:
             self.next_id += 1
-
-        return element_id
+            eid = self.next_id
+        self.next_id += 1
+        return eid
 
     def id2element(self, idx: int) -> ElementType:
         r"""This function will map id to element.
@@ -255,8 +338,7 @@ class Vocabulary(Generic[ElementType]):
         """
         return self._id2element[idx]
 
-    def element2repr(
-            self, element: ElementType) -> Union[int, List[int]]:
+    def element2repr(self, element: ElementType) -> Union[int, List[int]]:
         r"""This function will map element to representation.
 
         Args:
@@ -273,7 +355,7 @@ class Vocabulary(Generic[ElementType]):
         """
         if self.use_unk:
             idx = self._element2id.get(
-                element, self._element2id[self._special_tokens.UNK])
+                element, self._element2id[self._required_special_tokens['UNK']])
         else:
             idx = self._element2id[element]
 
@@ -291,6 +373,7 @@ class Vocabulary(Generic[ElementType]):
                 f" method [{self.method}] is not supported.")
 
     def _one_hot(self, idx: int):
+        """Compute the one-hot encoding on the fly."""
         vec_size = len(self._element2id)
         if self.need_pad:
             vec_size -= 1
@@ -303,8 +386,7 @@ class Vocabulary(Generic[ElementType]):
         r"""This function return the size of vocabulary.
 
         Returns:
-            int: The number of elements, including
-                <PAD>, <UNK>.
+            int: The number of elements, including <PAD>, <UNK>.
         """
         return len(self._element2id)
 
@@ -319,7 +401,7 @@ class Vocabulary(Generic[ElementType]):
         """
         return element in self._element2id
 
-    def items(self) -> Iterable[Tuple[ElementType, int]]:
+    def vocab_items(self) -> Iterable[Tuple[ElementType, int]]:
         r"""This function will loop over the (element, id) pair inside this
         class.
 
@@ -329,14 +411,16 @@ class Vocabulary(Generic[ElementType]):
         return self._element2id.items()
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
-        r"""This function will get the PAD element for the vocabulary.
+        r"""This function will get the representation of the PAD element for
+        the vocabulary. The representation depends on the settings of this
+        class, it can be an integer or a list of int (e.g. a vector).
 
         Returns:
             Union[None, int, List[int]]: The PAD element. Check
-            the behavior of this function in the documentation.
+            the behavior of this function in the class documentation.
         """
         if self.need_pad:
-            return self.element2repr(self._special_tokens.PAD)
+            return self.element2repr(self._required_special_tokens['PAD'])
         return None
 
     def filter(self, vocab_filter: "VocabFilter") -> "Vocabulary":
@@ -353,24 +437,35 @@ class Vocabulary(Generic[ElementType]):
         Returns:
             A new vocabulary after filtering.
         """
+        # Make a new vocab class:
+        # 1. We do not add the PAD or UNK at init, but will copy them later.
+        # 2. We also ignore other special tokens at init, but copy them later.
+        # 2. We follow the do_counting setup.
         vocab: Vocabulary = Vocabulary(
-            self.method, self.need_pad, self.use_unk,
-            self.add_bos, self.add_eos, self.do_counting)
+            self.method, need_pad=False, use_unk=False,
+            do_counting=self.do_counting
+        )
+        # We then set these flag manually.
+        vocab.need_pad = self.need_pad
+        vocab.use_unk = self.use_unk
 
-        for eid in self.get_ids():
-            # Special ids are added internally.
-            if eid in self.__special_ids:
-                continue
-
-            # Filtered vocabulary will be ignored.
-            if vocab_filter.filter(eid):
-                continue
-
-            # Adding vocabulary fulfilling the criteria, along with the count.
-            vocab.add_element(
-                self._id2element[eid],
-                count=self.get_count(eid) if self.do_counting else 1)
-
+        # Now we copy all the vocabulary items to the new vocab.
+        for element, eid in self.vocab_items():
+            # Copy the special tokens regardless of the filter.
+            if self.is_special_token(eid):
+                element_name = None
+                if element == self._required_special_tokens["PAD"]:
+                    element_name = "PAD"
+                if element == self._required_special_tokens["UNK"]:
+                    element_name = "UNK"
+                vocab.add_special_element(
+                    element, eid, self._id2repr.get(element, None),
+                    element_name)
+            elif not vocab_filter.filter(eid):
+                vocab.add_element(
+                    element,
+                    count=self.get_count(eid) if self.do_counting else 1
+                )
         return vocab
 
 
@@ -434,7 +529,7 @@ class FrequencyVocabFilter(VocabFilter):
         if self.min_freq >= 0 and freq < self.min_freq:
             will_filter = True
 
-        if self.max_freq >= 0 and freq > self.max_freq:
+        if 0 <= self.max_freq < freq:
             will_filter = True
 
         return will_filter
