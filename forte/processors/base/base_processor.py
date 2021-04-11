@@ -14,7 +14,7 @@
 """
 Base class for processors.
 """
-
+import logging
 from abc import abstractmethod, ABC
 from typing import Any, Dict, Set
 
@@ -89,7 +89,12 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
 
         """
         # pylint: disable=protected-access
-        self.record(input_pack._meta.record)
+        try:
+            self.record(input_pack._meta.record)
+        except AttributeError:
+            # For backward compatibility, no record to write.
+            logging.info(
+                "Packs of the old format do not have the record field.")
 
     def process(self, input_pack: PackType):
         self.check_record(input_pack)
