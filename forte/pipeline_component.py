@@ -90,7 +90,7 @@ class PipelineComponent(Generic[PackType]):
         self.configs = configs
         self.__is_initialized = True
 
-    def reset_flag(self):
+    def reset_flags(self):
         """
         Reset the flags related to this component. This will be called first
         when doing initialization.

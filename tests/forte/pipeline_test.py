@@ -44,7 +44,7 @@ from forte.processors.base.batch_processor import Predictor, BatchProcessor
 from forte.train_preprocessor import TrainPreprocessor
 from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
-from forte.common import ProcessExecutionException
+from forte.common import ProcessExecutionException, ProcessorConfigError
 
 data_samples_root = os.path.abspath(os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
@@ -1074,10 +1074,14 @@ class RecordCheckPipelineTest(unittest.TestCase):
         dummy = DummyPackProcessor()
         nlp.add(dummy, config={"test": "dummy1"},
                 selector=NameMatchSelector("default"))
-        # This will not change config because the processor is initialized.
-        #  but the selector should work.
-        nlp.add(dummy, config={"test": "dummy2"},
-                selector=NameMatchSelector("copy"))
+
+        # This will not add the component successfully because the processor is
+        # initialized.
+        with self.assertRaises(ProcessorConfigError):
+            nlp.add(dummy, config={"test": "dummy2"})
+
+        # This will add the component, with a different selector
+        nlp.add(dummy, selector=NameMatchSelector("copy"))
         nlp.initialize()
 
         # Check that the two processors have the same name.

@@ -18,6 +18,7 @@ Base class for Pipeline module.
 import itertools
 import logging
 from time import time
+from collections import defaultdict
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
     Deque
 
@@ -99,11 +100,14 @@ class Pipeline(Generic[PackType]):
         self._reader: BaseReader
         self._reader_config: Optional[Config] = None
 
+        # These variables defines the units in the pipeline, they should be
+        # of the same length
         self._components: List[PipelineComponent] = []
         self._selectors: List[Selector] = []
-
-        self._processors_index: Dict = {'': -1}
         self._configs: List[Optional[Config]] = []
+
+        self.__hashed_components: \
+            defaultdict[int, List[int]] = defaultdict(list)
 
         # Will initialize at `initialize` because the processors length is
         # unknown.
@@ -124,6 +128,9 @@ class Pipeline(Generic[PackType]):
         # The flag indicating whether we want to enforce type consistency
         #  between the processors.
         self._check_type_consistency: bool = False
+
+        # Create one copy of the dummy selector to reduce class creation.
+        self.__default_selector = DummySelector()
 
         # needed for time profiling of pipeline
         self._enable_profiling: bool = False
@@ -218,9 +225,9 @@ class Pipeline(Generic[PackType]):
             logging.info("Re-initializing the Pipeline.")
 
         # Reset the flags of the components before initializing them.
-        self._reader.reset_flag()
+        self._reader.reset_flags()
         for c in self._components:
-            c.reset_flag()
+            c.reset_flags()
 
         # Handle the reader.
         if not self._reader.is_initialized:
@@ -235,8 +242,8 @@ class Pipeline(Generic[PackType]):
         else:
             self.reader.enforce_consistency(enforce=False)
 
-        # Handle the processors.
-        self.initialize_processors()
+        # Handle other components.
+        self.initialize_components()
         self._initialized = True
 
         # Create profiler
@@ -246,7 +253,7 @@ class Pipeline(Generic[PackType]):
 
         return self
 
-    def initialize_processors(self):
+    def initialize_components(self):
         """
         This function will initialize all the components in this pipeline,
         except the reader. The components are initialized in a FIFO manner
@@ -276,10 +283,7 @@ class Pipeline(Generic[PackType]):
                               "processor %s", component.name)
                 raise e
 
-            if self._check_type_consistency:
-                component.enforce_consistency(enforce=True)
-            else:
-                component.enforce_consistency(enforce=False)
+            component.enforce_consistency(enforce=self._check_type_consistency)
 
     def set_reader(
             self, reader: BaseReader,
@@ -334,6 +338,21 @@ class Pipeline(Generic[PackType]):
         """
         return self._configs
 
+    def __find_existing_component(
+            self, component: PipelineComponent) -> Optional[PipelineComponent]:
+        """
+        Find whether this component exists in the pipeline.
+
+        Returns: The component if found, None otherwise.
+        """
+        h = hash(component)
+        if h in self.__hashed_components:
+            for existing_index in self.__hashed_components[h]:
+                c = self._components[existing_index]
+                if c == component:
+                    return self._components[existing_index]
+        return None
+
     def add(
             self, component: PipelineComponent,
             config: Optional[Union[Config, Dict[str, Any]]] = None,
@@ -350,10 +369,11 @@ class Pipeline(Generic[PackType]):
         times to the pipeline. In such cases, the instance will only be
         setup at the first insertion (i.e. its `initialize` function will
         only be called once). The subsequent insertion of the same component
-        instance will not change the behavior nor the states of the instance,
-        specifically, a different `config` will *not* take any effect.
-        In the case where one want to them to behave differently, a different
-        instance should be used.
+        instance will not change the behavior nor the states of the instance.
+        Thus, a different `config` cannot be provided (should be `None`) when
+        added the second time, otherwise a `ProcessorConfigError` will be
+        thrown. In the case where one want to them to behave differently, a
+        different instance should be used.
 
         Args:
             component (PipelineComponent): The component to be inserted next
@@ -374,8 +394,6 @@ class Pipeline(Generic[PackType]):
                 Pipeline().set_reader(your_reader()).add(
                     your_processor()).add(anther_processor())
         """
-        self._processors_index[component.name] = len(self.components)
-
         if isinstance(component, BaseReader):
             raise ProcessFlowException("Reader need to be set via set_reader()")
 
@@ -383,13 +401,37 @@ class Pipeline(Generic[PackType]):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
 
-        self._components.append(component)
-        self.component_configs.append(component.make_configs(config))
+        existing_component = self.__find_existing_component(component)
+
+        if existing_component is None:
+            # The case where the component is not found.
+            self._components.append(component)
+            self.component_configs.append(component.make_configs(config))
+        else:
+            if config is None:
+                self._components.append(component)
+                # We insert a `None` value here just to make the config list
+                # to match the component list, but this config should not be
+                # used.
+                self.component_configs.append(None)
+            else:
+                raise ProcessorConfigError(
+                    f"The same instance of a component named {component.name} "
+                    f" has already been added to"
+                    f" the pipeline, we do not accept a different configuration"
+                    f" for it. If you would like to use a differently"
+                    f" configured component, please create another instance."
+                    f" If you intend to re-use the component instance, please"
+                    f" do not provide the `config` (or provide a `None`).")
 
         if selector is None:
-            self._selectors.append(DummySelector())
+            self._selectors.append(self.__default_selector)
         else:
             self._selectors.append(selector)
+
+        # Map the hash value of this component to its component index.
+        self.__hashed_components[hash(component)].append(
+            len(self._components) - 1)
 
         return self
 
@@ -491,6 +533,7 @@ class Pipeline(Generic[PackType]):
         self.reader.finish(self.resource)
         for p in self.components:
             p.finish(self.resource)
+        self._initialized = False
 
     def __update_stream_job_status(self):
         q_index = self._proc_mgr.current_queue_index
