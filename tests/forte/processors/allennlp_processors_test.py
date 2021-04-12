@@ -174,7 +174,7 @@ class TestAllenNLPProcessor(unittest.TestCase):
                         indexed_srls[d.get_child().tid] = d
 
                     sorted_srls = []
-                    for ind in sorted(indexed_srls):
+                    for ind in indexed_srls:
                         sorted_srls.append(indexed_srls[ind])
 
                     self._test_srls(i, tokens, sorted_srls)
@@ -222,7 +222,7 @@ class TestAllenNLPProcessor(unittest.TestCase):
                 self.results[tag_format]['dep_types'][sent_idx][j])
 
     def _test_srls(self, sent_idx: int, tokens: List[Token],
-            srl_links: List[PredicateLink]) -> None:
+                   srl_links: List[PredicateLink]) -> None:
         index = 0
         for tag in self.results['srl']['srl_tags'][sent_idx]:
             pred_span, arguments = parse_allennlp_srl_tags(tag)
@@ -230,9 +230,13 @@ class TestAllenNLPProcessor(unittest.TestCase):
                 parent: PredicateMention = srl_links[index].get_parent()
                 child: PredicateArgument = srl_links[index].get_child()
                 self.assertEqual(srl_links[index].arg_type,
-                    argument)
-                self.assertEqual(parent.text,
-                    ' '.join([token.text for token in tokens[pred_span.begin: pred_span.end + 1]]))
-                self.assertEqual(child.text,
-                    ' '.join([token.text for token in tokens[arg_span.begin: arg_span.end + 1]]))
+                                 argument)
+                self.assertEqual(
+                    parent.text,
+                    ' '.join([token.text for token in
+                              tokens[pred_span.begin: pred_span.end + 1]]))
+                self.assertEqual(
+                    child.text,
+                    ' '.join([token.text for token in
+                              tokens[arg_span.begin: arg_span.end + 1]]))
                 index += 1
