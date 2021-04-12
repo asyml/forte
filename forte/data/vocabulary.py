@@ -193,18 +193,15 @@ class Vocabulary(Generic[ElementType]):
                 "Count for special element is not available.")
         return self.__counter[eid]
 
-    def mark_special_element(
-            self, element_id: int, element_name: str
-    ):
+    def mark_special_element(self, element_id: int, element_name: str):
         """
         Mark a particular (but already existed) index in the vocabulary to be
-        a special required element (i.e `PAD` or `UNK).
+        a special required element (i.e `PAD` or `UNK`).
 
         Args:
             element_id (int): The id to be set for the special element.
             element_name (str): The name of this element to be set, it can
               be one of `PAD`, `UNK`.
-
         """
         if element_name in ("PAD", "UNK"):
             if element_name == "PAD":
