@@ -15,3 +15,4 @@
 from forte.processors.misc.annotation_remover import *
 from forte.processors.misc.attribute_masking_processor import *
 from forte.processors.misc.lowercaser_processor import *
+from forte.processors.misc.vocabulary_processor import *

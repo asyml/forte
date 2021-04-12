@@ -49,10 +49,10 @@ Task Processors
 
 :hidden:`VocabularyProcessor`
 ----------------------------------
-.. autoclass:: forte.processors.third_party.vocabulary_processor.VocabularyProcessor
+.. autoclass:: forte.processors.misc.vocabulary_processor.VocabularyProcessor
     :members:
 
 :hidden:`Alphabet`
 ----------------------------------
-.. autoclass:: forte.processors.third_party.vocabulary_processor.Alphabet
+.. autoclass:: forte.processors.misc.vocabulary_processor.Alphabet
     :members:
