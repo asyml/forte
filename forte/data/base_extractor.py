@@ -47,7 +47,7 @@ class BaseExtractor(ABC):
     Explanation:
 
         Vocabulary:
-            Vocabulary is maintained as an inner class
+            Vocabulary is maintained as an attribute
             in extractor. It will store the mapping from element
             to index, which is an integer, and representation,
             which could be an index integer or one-hot vector
@@ -75,13 +75,12 @@ class BaseExtractor(ABC):
             remove those data and then add our model prediction to
             the pack.
 
-    Args:
-        config:
-            An instance of `Dict` or
-            :class:`~forte.common.Config` that provides all
-            configurable options. See :meth:`default_configs` for available
-            options and default values. Entry_type is the key that need to
-            be passed in and there will not be default value for this key.
+    Attributes:
+        config: An instance of `Dict` or :class:`~forte.common.Config` that
+            provides configurable options. See :meth:`default_configs` for
+            available options and default values. Entry_type is the key that
+            need to be passed in and there will not be default value for
+            this key.
 
     """
     _VOCAB_ERROR_MSG = "When vocab_method is raw, vocabulary " \
@@ -90,22 +89,23 @@ class BaseExtractor(ABC):
 
     def __init__(self):
         self._vocab: Optional[Vocabulary] = None
+        self._entry_type: Type[Annotation] = None
+        self.config: Config = None
+        self._vocab_method = None
 
     def initialize(self, config: Union[Dict, Config]):
         # pylint: disable=attribute-defined-outside-init
         self.config = Config(config, self.default_configs())
         if self.config.entry_type is None:
-            raise AttributeError("entry_type needs to be specified in "
-                                "the configuration of an extractor.")
-        self._entry_type: Type[Annotation] = get_class(self.config.entry_type)
+            raise AttributeError("`entry_type` needs to be specified in "
+                                 "the configuration of an extractor.")
+        self._entry_type = get_class(self.config.entry_type)
 
-        if self.config.vocab_method != "raw":
-            self._vocab = \
-                Vocabulary(method=self.config.vocab_method,
-                           need_pad=self.config.need_pad,
-                           use_unk=self.config.vocab_use_unk,
-                           pad_value=self.config.pad_value,
-                           unk_value=self.config.vocab_unk_value)
+        if self.config.vocab_method != "custom":
+            self._vocab = Vocabulary(
+                method=self.config.vocab_method,
+                use_pad=self.config.need_pad,
+                use_unk=self.config.vocab_use_unk)
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -121,32 +121,25 @@ class BaseExtractor(ABC):
             will get feature from, e.g: `"ft.onto.base_ontology.Token"`.
 
         "vocab_method" (str)
-            What type of vocabulary is used for this extractor.
-            `raw`, `indexing`, `one-hot` are supported, default is `indexing`.
+            What type of vocabulary is used for this extractor. `custom`,
+            `indexing`, `one-hot` are supported, default is `indexing`.
             Check the behavior of vocabulary under different setting
             in :class:`~forte.data.vocabulary.Vocabulary`
-
-        "need_pad" (bool)
-            Whether the `<PAD>` element should be added to vocabulary. And
-            whether the feature need to be batched and padded. Default is True.
 
         "vocab_use_unk" (bool)
             Whether the `<UNK>` element should be added to vocabulary.
             Default is true.
 
-        "pad_value" (int)
-            ID assigned to pad. Default is 0.
+        "need_pad" (bool)
+            Whether the `<PAD>` element should be added to vocabulary. And
+            whether the feature need to be batched and padded. Default is True.
 
-        "vocab_unk_value" (int)
-            ID assigned to unk. Default is 1.
         """
         return {
             "entry_type": None,
             "vocab_method": "indexing",
             "vocab_use_unk": True,
             "need_pad": True,
-            "pad_value": 0,
-            "vocab_unk_value": 1
         }
 
     @property
@@ -172,7 +165,7 @@ class BaseExtractor(ABC):
         return self._vocab
 
     @vocab.setter
-    def vocab(self, input_vocab: Vocabulary):
+    def vocab(self, vocab: Vocabulary):
         """
         Setter of the vocabulary, used when user build the vocabulary
         externally.
@@ -183,7 +176,7 @@ class BaseExtractor(ABC):
         Returns:
 
         """
-        self._vocab = input_vocab
+        self._vocab = vocab
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
         if self.vocab is not None:
@@ -191,15 +184,10 @@ class BaseExtractor(ABC):
         else:
             return None
 
-    def items(self) -> Iterable[Tuple[Hashable, int]]:
+    def vocab_items(self) -> Iterable[Tuple[Hashable, int]]:
         if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
-        return self.vocab.items()
-
-    def size(self) -> int:
-        if self.vocab is None:
-            raise AttributeError(self._VOCAB_ERROR_MSG)
-        return len(self.vocab)
+        return self.vocab.vocab_items()
 
     def add(self, element: Hashable):
         if self.vocab is None:
@@ -220,11 +208,6 @@ class BaseExtractor(ABC):
         if self.vocab is None:
             raise AttributeError(self._VOCAB_ERROR_MSG)
         return self.vocab.id2element(idx)
-
-    def get_dict(self) -> Dict[Hashable, int]:
-        if self.vocab is None:
-            raise AttributeError(self._VOCAB_ERROR_MSG)
-        return self.vocab.get_dict()
 
     def predefined_vocab(self, predefined: Iterable):
         r"""Populate the vocabulary with predefined values. You can also extend
