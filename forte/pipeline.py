@@ -20,7 +20,7 @@ import logging
 from time import time
 from collections import defaultdict
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
-    Deque, DefaultDict, Set
+    Deque, Set
 
 import yaml
 
