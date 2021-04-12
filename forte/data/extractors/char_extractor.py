@@ -55,7 +55,7 @@ class CharExtractor(BaseExtractor):
             instance (Annotation): The instance from which the
                 extractor will get text from.
         """
-        for word in pack.get(self.config.entry_type, instance):
+        for word in pack.get(self._entry_type, instance):
             for char in word.text:
                 self.add(char)
 
@@ -74,7 +74,7 @@ class CharExtractor(BaseExtractor):
         data = []
         max_char_length = -1
 
-        for word in pack.get(self.config.entry_type, instance):
+        for word in pack.get(self._entry_type, instance):
             if self.vocab:
                 data.append([self.element2repr(char)
                              for char in word.text])
