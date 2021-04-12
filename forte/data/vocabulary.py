@@ -13,12 +13,11 @@
 # limitations under the License.
 from abc import ABC
 from collections import Counter
-from typing import List, Tuple, Dict, Union, Hashable, Iterable, TypeVar, \
-    Generic, Any, Optional, Set
+from typing import List, Tuple, Dict, Union, Hashable, Iterable, Optional
+from typing import TypeVar, \
+    Generic, Any, Set
 
 import texar.torch as tx
-import logging
-from typing import List, Tuple, Dict, Union, Hashable, Iterable, Optional
 
 from forte.common import InvalidOperationException
 
@@ -108,13 +107,14 @@ class Vocabulary(Generic[ElementType]):
         special_tokens (List[str]): Additional special tokens to be added, they
             will be added at the beginning of vocabulary (but right after the
             <UNK> token) one by one.
-
-
+        do_counting (bool): Whether the vocabulary class will count the
+            elements.
 
     Attributes:
         method (str): Same as above.
         need_pad (bool): Same as above.
         use_unk (bool): Same as above.
+        do_counting (bool): Same as above.
     """
 
     def __init__(

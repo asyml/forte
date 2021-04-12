@@ -75,13 +75,12 @@ class BaseExtractor(ABC):
             remove those data and then add our model prediction to
             the pack.
 
-    Args:
-        config:
-            An instance of `Dict` or
-            :class:`~forte.common.Config` that provides all
-            configurable options. See :meth:`default_configs` for available
-            options and default values. Entry_type is the key that need to
-            be passed in and there will not be default value for this key.
+    Attributes:
+        config: An instance of `Dict` or :class:`~forte.common.Config` that
+            provides configurable options. See :meth:`default_configs` for
+            available options and default values. Entry_type is the key that
+            need to be passed in and there will not be default value for
+            this key.
 
     """
     _VOCAB_ERROR_MSG = "When vocab_method is raw, vocabulary " \
@@ -90,20 +89,23 @@ class BaseExtractor(ABC):
 
     def __init__(self):
         self._vocab: Optional[Vocabulary] = None
+        self._entry_type: Type[Annotation] = None
+        self.config: Config = None
+        self._vocab_method = None
 
     def initialize(self, config: Union[Dict, Config]):
         # pylint: disable=attribute-defined-outside-init
         self.config = Config(config, self.default_configs())
         if self.config.entry_type is None:
-            raise AttributeError("entry_type needs to be specified in "
+            raise AttributeError("`entry_type` needs to be specified in "
                                  "the configuration of an extractor.")
-        self._entry_type: Type[Annotation] = get_class(self.config.entry_type)
+        self._entry_type = get_class(self.config.entry_type)
 
         if self.config.vocab_method != "custom":
-            self._vocab: Optional[Vocabulary] = \
-                Vocabulary(method=self.config.vocab_method,
-                           need_pad=self.config.need_pad,
-                           use_unk=self.config.vocab_use_unk)
+            self._vocab = Vocabulary(
+                method=self.config.vocab_method,
+                need_pad=self.config.need_pad,
+                use_unk=self.config.vocab_use_unk)
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -119,8 +121,8 @@ class BaseExtractor(ABC):
             will get feature from, e.g: `"ft.onto.base_ontology.Token"`.
 
         "vocab_method" (str)
-            What type of vocabulary is used for this extractor.
-            `raw`, `indexing`, `one-hot` are supported, default is `indexing`.
+            What type of vocabulary is used for this extractor. `custom`,
+            `indexing`, `one-hot` are supported, default is `indexing`.
             Check the behavior of vocabulary under different setting
             in :class:`~forte.data.vocabulary.Vocabulary`
 
