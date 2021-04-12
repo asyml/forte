@@ -20,7 +20,7 @@ import logging
 from time import time
 from collections import defaultdict
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
-    Deque
+    Deque, DefaultDict
 
 import yaml
 
@@ -106,8 +106,8 @@ class Pipeline(Generic[PackType]):
         self._selectors: List[Selector] = []
         self._configs: List[Optional[Config]] = []
 
-        self.__hashed_components: \
-            defaultdict[int, List[int]] = defaultdict(list)
+        self.__hashed_components: DefaultDict[
+            int, List[int]] = defaultdict(list)
 
         # Will initialize at `initialize` because the processors length is
         # unknown.
@@ -130,7 +130,7 @@ class Pipeline(Generic[PackType]):
         self._check_type_consistency: bool = False
 
         # Create one copy of the dummy selector to reduce class creation.
-        self.__default_selector = DummySelector()
+        self.__default_selector: Selector = DummySelector()
 
         # needed for time profiling of pipeline
         self._enable_profiling: bool = False
