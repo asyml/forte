@@ -23,7 +23,7 @@ from forte.common.configuration import Config
 from forte.data.converter.feature import Feature
 from forte.data.data_pack import DataPack
 from forte.data.base_extractor import BaseExtractor
-from forte.data.extractors.utils import bio_tagging
+from forte.data.extractors.utils import bio_tagging, add_entry_to_pack
 from forte.data.ontology import Annotation
 from forte.utils import get_class
 
@@ -69,14 +69,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         entry_type (str).
             Required. The string to the ontology type that the extractor
-            will get feature from, e.g: "ft.onto.base_ontology.EntityMention".
+            will get feature from, e.g: `"ft.onto.base_ontology.EntityMention"`.
 
         attribute (str): Required. The attribute name of the
             entry from which labels are extracted.
 
         tagging_unit (str): Required. The tagging label
             will align to the tagging_unit Entry,
-            e.g: "ft.onto.base_ontology.Token"
+            e.g: `"ft.onto.base_ontology.Token"`.
 
         "vocab_method" (str)
             What type of vocabulary is used for this extractor.
@@ -103,18 +103,28 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         is_bert (bool)
             It indicates whether Bert model is used. If true, padding
-            will be added to the begining and end of a sentence
+            will be added to the beginning and end of a sentence
             corresponding to the special tokens ([CLS], [SEP])
-            used in Bert. Default is False
+            used in Bert. Default is False.
 
-        For example, the config can be
-            "entry_type": "ft.onto.base_ontology.EntityMention",
-            "attribute": "ner_type",
-            "tagging_unit": "ft.onto.base_ontology.Token".
+        For example, the config can be:
+
+        .. code-block:: python
+
+            {
+                "entry_type": "ft.onto.base_ontology.EntityMention",
+                "attribute": "ner_type",
+                "tagging_unit": "ft.onto.base_ontology.Token"
+            }
 
         The extractor will extract the BIO NER tags for instances.
-            A possible feature can be [[None, "O"], [LOC, "B"], [LOC, "I"],
-            [None, "O"], [None, "O"], [PER, "B"], [None, "O"]]
+        A possible feature can be:
+
+        .. code-block:: python
+
+            [[None, "O"], ["LOC", "B"], ["LOC", "I"], [None, "O"],
+            [None, "O"], ["PER", "B"], [None, "O"]]
+
         """
         config = super().default_configs()
         config.update({"attribute": None,
@@ -172,7 +182,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 extractor will extractor feature.
 
         Returns (Feature):
--           a feature that contains the extracted data.
+           a feature that contains the extracted data.
         """
         instance_tagged: List[Tuple[Optional[str], str]] = \
             bio_tagging(pack, instance,
@@ -253,7 +263,10 @@ class BioSeqTaggingExtractor(BaseExtractor):
             if tag[1] == "O" or tag[1] == "B" or \
                     (tag[1] == "I" and tag[0] != tag_type):
                 if tag_type:
-                    entity_mention = self._entry_type(pack, tag_start, tag_end)
+                    entity_mention = add_entry_to_pack(pack,
+                                                       self._entry_type,
+                                                       tag_start,
+                                                       tag_end)
                     setattr(entity_mention, self.attribute, tag_type)
                 tag_start = entry.begin
                 tag_end = entry.end
@@ -262,8 +275,9 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 tag_end = entry.end
 
         # Handle the final tag
-        if tag_type is not None and \
-                tag_start is not None and \
-                tag_end is not None:
-            entity_mention = self._entry_type(pack, tag_start, tag_end)
+        if tag_type and tag_start and tag_end:
+            entity_mention = add_entry_to_pack(pack,
+                                               self._entry_type,
+                                               tag_start,
+                                               tag_end)
             setattr(entity_mention, self.attribute, tag_type)

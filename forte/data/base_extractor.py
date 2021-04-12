@@ -89,22 +89,23 @@ class BaseExtractor(ABC):
 
     def __init__(self):
         self._vocab: Optional[Vocabulary] = None
+        self._entry_type: Type[Annotation] = None
+        self.config: Config = None
+        self._vocab_method = None
 
     def initialize(self, config: Union[Dict, Config]):
         # pylint: disable=attribute-defined-outside-init
         self.config = Config(config, self.default_configs())
         if self.config.entry_type is None:
-            raise AttributeError("entry_type needs to be specified in "
-                                "the configuration of an extractor.")
-        self._entry_type: Type[Annotation] = get_class(self.config.entry_type)
+            raise AttributeError("`entry_type` needs to be specified in "
+                                 "the configuration of an extractor.")
+        self._entry_type = get_class(self.config.entry_type)
 
-        if self.config.vocab_method != "raw":
-            self._vocab = \
-                Vocabulary(method=self.config.vocab_method,
-                           need_pad=self.config.need_pad,
-                           use_unk=self.config.vocab_use_unk,
-                           pad_value=self.config.pad_value,
-                           unk_value=self.config.vocab_unk_value)
+        if self.config.vocab_method != "custom":
+            self._vocab = Vocabulary(
+                method=self.config.vocab_method,
+                use_pad=self.config.need_pad,
+                use_unk=self.config.vocab_use_unk)
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -117,7 +118,7 @@ class BaseExtractor(ABC):
 
         entry_type (str).
             Required. The string to the ontology type that the extractor
-            will get feature from, e.g: "ft.onto.base_ontology.Token".
+            will get feature from, e.g: `"ft.onto.base_ontology.Token"`.
 
         "vocab_method" (str)
             What type of vocabulary is used for this extractor. `custom`,
@@ -133,23 +134,12 @@ class BaseExtractor(ABC):
             Whether the `<PAD>` element should be added to vocabulary. And
             whether the feature need to be batched and padded. Default is True.
 
-        "vocab_use_unk" (bool)
-            Whether the `<UNK>` element should be added to vocabulary.
-            Default is true.
-
-        "pad_value" (int)
-            ID assigned to pad. Default is 0.
-
-        "vocab_unk_value" (int)
-            ID assigned to unk. Default is 1.
         """
         return {
             "entry_type": None,
             "vocab_method": "indexing",
             "vocab_use_unk": True,
             "need_pad": True,
-            "pad_value": 0,
-            "vocab_unk_value": 1
         }
 
     @property
@@ -175,7 +165,7 @@ class BaseExtractor(ABC):
         return self._vocab
 
     @vocab.setter
-    def vocab(self, input_vocab: Vocabulary):
+    def vocab(self, vocab: Vocabulary):
         """
         Setter of the vocabulary, used when user build the vocabulary
         externally.
@@ -186,7 +176,7 @@ class BaseExtractor(ABC):
         Returns:
 
         """
-        self._vocab = input_vocab
+        self._vocab = vocab
 
     def get_pad_value(self) -> Union[None, int, List[int]]:
         if self.vocab is not None:
