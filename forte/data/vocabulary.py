@@ -120,7 +120,7 @@ class Vocabulary(Generic[ElementType]):
     def __init__(
             self, method: str = "indexing",
             use_pad: bool = True, use_unk: bool = True,
-            special_tokens: List[str] = None, do_counting: bool = True
+            special_tokens: Optional[List[str]] = None, do_counting: bool = True
     ):
         self.method: str = method
         self.use_pad: bool = use_pad
@@ -228,8 +228,8 @@ class Vocabulary(Generic[ElementType]):
         return element_id in self.__special_ids
 
     def add_special_element(
-            self, element: str, element_id: int = None,
-            representation: Any = None, special_token_name: str = None):
+            self, element: str, element_id: Optional[int] = None,
+            representation=None, special_token_name: Optional[str] = None):
         """
         This function will add special elements to the vocabulary, such as
         `UNK`, `PAD`, `BOS`, `CLS` symbols. Some special tokens has their
@@ -347,11 +347,13 @@ class Vocabulary(Generic[ElementType]):
         """
         return self._id2element[idx]
 
-    def element2repr(self, element: ElementType) -> Union[int, List[int]]:
+    def element2repr(
+            self, element: Union[ElementType, str]) -> Union[int, List[int]]:
         r"""This function will map element to representation.
 
         Args:
-            element (Hashable): The queried element.
+            element (Hashable): The queried element. It can be either the same
+              type as the element, or string (for the special tokens).
 
         Returns:
             Union[int, List[int]]: The corresponding representation
@@ -399,7 +401,7 @@ class Vocabulary(Generic[ElementType]):
         """
         return len(self._element2id)
 
-    def has_element(self, element: ElementType) -> bool:
+    def has_element(self, element: Union[ElementType, str]) -> bool:
         r"""This function checks whether an element is added to vocabulary.
 
         Args:
@@ -410,7 +412,7 @@ class Vocabulary(Generic[ElementType]):
         """
         return element in self._element2id
 
-    def vocab_items(self) -> Iterable[Tuple[ElementType, int]]:
+    def vocab_items(self) -> Iterable[Tuple[Union[ElementType, str], int]]:
         r"""This function will loop over the (element, id) pair inside this
         class.
 
@@ -476,6 +478,9 @@ class Vocabulary(Generic[ElementType]):
                 except KeyError:
                     # No UNK in the origin vocab.
                     pass
+
+                # Special element value must be string.
+                assert isinstance(element, str)
                 vocab.add_special_element(
                     element, eid, self._id2repr.get(element, None),
                     element_name)
