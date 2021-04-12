@@ -20,7 +20,7 @@ import logging
 from time import time
 from collections import defaultdict
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
-    Deque, DefaultDict
+    Deque, DefaultDict, Set
 
 import yaml
 
@@ -106,8 +106,9 @@ class Pipeline(Generic[PackType]):
         self._selectors: List[Selector] = []
         self._configs: List[Optional[Config]] = []
 
-        self.__hashed_components: DefaultDict[
-            int, List[int]] = defaultdict(list)
+        # Maintain a set of the pipeline components to fast check whether
+        # the component is already there.
+        self.__component_set: Set[PipelineComponent] = set()
 
         # Will initialize at `initialize` because the processors length is
         # unknown.
@@ -338,21 +339,6 @@ class Pipeline(Generic[PackType]):
         """
         return self._configs
 
-    def __find_existing_component(
-            self, component: PipelineComponent) -> Optional[PipelineComponent]:
-        """
-        Find whether this component exists in the pipeline.
-
-        Returns: The component if found, None otherwise.
-        """
-        h = hash(component)
-        if h in self.__hashed_components:
-            for existing_index in self.__hashed_components[h]:
-                c = self._components[existing_index]
-                if c == component:
-                    return self._components[existing_index]
-        return None
-
     def add(
             self, component: PipelineComponent,
             config: Optional[Union[Config, Dict[str, Any]]] = None,
@@ -401,11 +387,10 @@ class Pipeline(Generic[PackType]):
             # This will ask the job to keep a copy of the gold standard.
             self.evaluator_indices.append(len(self.components))
 
-        existing_component = self.__find_existing_component(component)
-
-        if existing_component is None:
+        if component not in self.__component_set:
             # The case where the component is not found.
             self._components.append(component)
+            self.__component_set.add(component)
             self.component_configs.append(component.make_configs(config))
         else:
             if config is None:
@@ -428,10 +413,6 @@ class Pipeline(Generic[PackType]):
             self._selectors.append(self.__default_selector)
         else:
             self._selectors.append(selector)
-
-        # Map the hash value of this component to its component index.
-        self.__hashed_components[hash(component)].append(
-            len(self._components) - 1)
 
         return self
 
