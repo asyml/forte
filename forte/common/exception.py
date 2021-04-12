@@ -26,6 +26,7 @@ __all__ = [
     "ValidationError",
     "ResourceError",
     "ExpectedRecordNotFound",
+    "InvalidOperationException",
 ]
 
 
@@ -84,4 +85,9 @@ class ValidationError(Exception):
 
 class ExpectedRecordNotFound(ValueError):
     r"""Raise this error when expected type for input is not in input record"""
+    pass
+
+
+class InvalidOperationException(Exception):
+    """Throw when a methoc call is invalid for the object's current state"""
     pass
