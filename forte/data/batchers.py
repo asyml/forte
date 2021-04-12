@@ -274,7 +274,7 @@ class FixedSizeDataPackBatcherWithExtractor(ProcessingBatcher):
         features_collection: List[Dict[str, Feature]] = []
         current_size = self.pool_size
 
-        for instance in data_pack.get(self.scope):
+        for instance in list(data_pack.get(self.scope)):
             features = {}
             for tag, scheme in self.feature_scheme.items():
                 features[tag] = scheme['extractor'].extract(data_pack, instance)
