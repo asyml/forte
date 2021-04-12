@@ -18,7 +18,6 @@ Base class for Pipeline module.
 import itertools
 import logging
 from time import time
-from collections import defaultdict
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
     Deque, Set
 
@@ -505,7 +504,7 @@ class Pipeline(Generic[PackType]):
         if self._enable_profiling:
             out_header: str = "Pipeline Time Profile\n"
             out_reader: str = f"- Reader: {self.reader.component_name}, " + \
-                f"{self.reader.time_profile} s\n"
+                              f"{self.reader.time_profile} s\n"
             out_processor: str = '\n'.join([
                 f"- Component [{i}]: {self.components[i].name}, {t} s"
                 for i, t in enumerate(self._profiler)])
