@@ -165,12 +165,10 @@ class BaseTrainer:
         if self._initialized:
             return
 
-        self._tp_request: Dict = self.create_tp_request()
         self._tp_config: Dict = self.create_tp_config()
         self._pack_iterator: Iterator[DataPack] = self.create_pack_iterator()
-        self._tp = TrainPreprocessor(pack_iterator=self._pack_iterator,
-                                     request=self._tp_request,
-                                     config=self._tp_config)
+        self._tp = TrainPreprocessor(pack_iterator=self._pack_iterator)
+        self._tp.initialize(config=self._tp_config)
         self._initialized = True
 
     @property
@@ -189,16 +187,6 @@ class BaseTrainer:
         """
         self.initialize()
         self.train()
-
-    @abstractmethod
-    def create_tp_request(self) -> Dict:
-        r"""Users should overwrite this method to provide a concrete train
-        preprocessor request. An example request is given in the example above.
-        Please refer to :meth:`request` in class
-        :class:`~forte.train_preprocessor.TrainPreprocessor` for detailed
-        specification of each options in the request.
-        """
-        raise NotImplementedError
 
     @abstractmethod
     def create_tp_config(self) -> Dict:

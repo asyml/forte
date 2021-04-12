@@ -34,11 +34,12 @@ class AttributeExtractorTest(unittest.TestCase):
 
         config = {
             "need_pad": True,
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "attribute": "text",
         }
 
-        extractor = AttributeExtractor(config)
+        extractor = AttributeExtractor()
+        extractor.initialize(config=config)
 
         sentence = "The European Commission said on Thursday it disagreed "\
                     "with German advice to consumers to shun British lamb "\

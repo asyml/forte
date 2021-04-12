@@ -17,6 +17,7 @@ Base class for Pipeline module.
 
 import itertools
 import logging
+from time import time
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
     Deque
 
@@ -121,6 +122,10 @@ class Pipeline(Generic[PackType]):
         self.initialized: bool = False
         self._check_type_consistency: bool = False
 
+        # needed for time profiling of pipeline
+        self._enable_profiling: bool = False
+        self._profiler: List[float] = []
+
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will enforce
         the content expectations specified in each pipeline component. Each
@@ -183,6 +188,15 @@ class Pipeline(Generic[PackType]):
                 # Can be processor, caster, or evaluator
                 self.add(component, component_config.get('configs', {}))
 
+    def set_profiling(self, enable_profiling: bool = True):
+        r"""Set profiling option.
+
+        Args:
+            enable_profiling: A boolean of whether to enable profiling
+                for the pipeline or not (the default is True).
+        """
+        self._enable_profiling = enable_profiling
+
     def initialize(self) -> 'Pipeline':
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))
@@ -193,6 +207,12 @@ class Pipeline(Generic[PackType]):
             self.reader.enforce_consistency(enforce=False)
         self.initialize_processors()
         self.initialized = True
+
+        # Create profiler
+        if self._enable_profiling:
+            self.reader.set_profiling(True)
+            self._profiler = [0.0] * len(self.components)
+
         return self
 
     def initialize_processors(self):
@@ -338,6 +358,17 @@ class Pipeline(Generic[PackType]):
         Returns:
 
         """
+
+        # Report time profiling of readers and processors
+        if self._enable_profiling:
+            out_header: str = "Pipeline Time Profile\n"
+            out_reader: str = f"- Reader: {self.reader.component_name}, " + \
+                f"{self.reader.time_profile} s\n"
+            out_processor: str = '\n'.join([
+                f"- Component [{i}]: {self.components[i].name}, {t} s"
+                for i, t in enumerate(self._profiler)])
+            logger.info("%s%s%s", out_header, out_reader, out_processor)
+
         self.reader.finish(self.resource)
         for p in self.components:
             p.finish(self.resource)
@@ -546,7 +577,16 @@ class Pipeline(Generic[PackType]):
             should_yield = next_queue_index >= pipeline_length
 
             if not raw_job.is_poison:
+
+                # Start timer
+                if self._enable_profiling:
+                    start_time: float = time()
+
                 self._process_with_component(selector, component, raw_job)
+
+                # Stop timer and add to time profiler
+                if self._enable_profiling:
+                    self._profiler[component_index] += time() - start_time
 
                 # Then, based on component type, handle the queue.
                 if isinstance(component, BaseBatchProcessor):

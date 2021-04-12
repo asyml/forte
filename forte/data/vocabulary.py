@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Tuple, Dict, Union, Hashable, Iterable
+import logging
+from typing import List, Tuple, Dict, Union, Hashable, Iterable, Optional
 
 
 class Vocabulary:
@@ -83,11 +84,15 @@ class Vocabulary:
         use_unk (bool): Whether to add <UNK> element in vocabulary.
             Elements that are not found in vocabulary will be directed
             to <UNK> element.
+        pad_value (int): Value used by <PAD> element. Default is 0.
+        unk_value (int): Value used by <UNK> element. Default is 1.
 
     Attributes:
         method (str): Same as above.
         need_pad (bool): Same as above.
         use_unk (bool): Same as above.
+        pad_value (int): Same as above.
+        unk_value (int): Same as above.
         next_id (int): The id that will be used when next element is added.
         element2id_dict (dict): This stores the mapping from element to id.
         id2element_dict (dict): This stores the mapping from id to element.
@@ -97,7 +102,9 @@ class Vocabulary:
 
     # TODO: It is better to add a generic type for this class, now every element
     #   is simply empty.
-    def __init__(self, method: str, need_pad: bool, use_unk: bool):
+    def __init__(self, method: str, need_pad: bool, use_unk: bool,
+                 pad_value: Optional[int] = None,
+                 unk_value: Optional[int] = None):
         self.method = method
         self.need_pad = need_pad
         self.use_unk = use_unk
@@ -105,16 +112,38 @@ class Vocabulary:
         self.element2id_dict: Dict = dict()
         self.id2element_dict: Dict = dict()
 
+        self.next_id = 0
         if method == "one-hot" and need_pad:
-            self.next_id = -1
-        else:
-            self.next_id = 0
-
+            pad_value = -1
+            logging.warning(
+                "Cannot use 0 as pad id if one-hot method is used. "
+                "Chaning pad id to -1!")
         if need_pad:
-            self.add_element(Vocabulary.PAD_ELEMENT)
+            if not pad_value:
+                self.add_element(Vocabulary.PAD_ELEMENT)
+            else:
+                self.add_special_element(Vocabulary.PAD_ELEMENT, pad_value)
 
         if use_unk:
-            self.add_element(Vocabulary.UNK_ELEMENT)
+            if not unk_value:
+                self.add_element(Vocabulary.UNK_ELEMENT)
+            else:
+                self.add_special_element(Vocabulary.UNK_ELEMENT, unk_value)
+
+    def add_special_element(self, element: Hashable, element_id: int):
+        r"""
+        Add special_elements, such as PAD and UNK.
+
+        Args:
+            element (Hashable): The element to be added.
+            element_id (int): The ID assigned to the element.
+        """
+        if element_id in self.id2element_dict:
+            raise ValueError(
+                    "ID %d is alreay being used in Vocabulary. " % element_id)
+        if element not in self.element2id_dict:
+            self.element2id_dict[element] = element_id
+            self.id2element_dict[element_id] = element
 
     def add_element(self, element: Hashable):
         r"""This function will add element to the vocabulary.
@@ -122,6 +151,8 @@ class Vocabulary:
         Args:
             element (Hashable): The element to be added.
         """
+        while self.next_id in self.id2element_dict:
+            self.next_id += 1
         if element not in self.element2id_dict:
             self.element2id_dict[element] = self.next_id
             self.id2element_dict[self.next_id] = element

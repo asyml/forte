@@ -30,7 +30,6 @@ from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.caster import MultiPackBoxer
 from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
-from forte.data.extractors.attribute_extractor import AttributeExtractor
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
 from forte.data.readers import PlainTextReader, StringReader
@@ -324,25 +323,25 @@ class PredictorPipelineTest(unittest.TestCase):
         pipeline.set_reader(SentenceReader())
         pipeline.initialize()
 
-        text_extractor = AttributeExtractor({
+        text_extractor_name = "forte.data.extractors.AttributeExtractor"
+        text_extractor_config = {
             "need_pad": True,
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "attribute": "text",
-        })
-        for pack in pipeline.process_dataset(data_path):
-            for instance in pack.get(Sentence):
-                text_extractor.update_vocab(pack, instance)
+        }
 
         model = DummyModel()
         predictor = DummyPredictor()
         predictor_config = {
-            "scope": Sentence,
+            "scope": "ft.onto.base_ontology.Sentence",
             "batch_size": batch_size,
             "feature_scheme": {
                 "text_tag": {
-                    "extractor": text_extractor,
-                    "converter": Converter(),
-                    "type": TrainPreprocessor.DATA_INPUT
+                    "extractor": {
+                        "class_name": text_extractor_name,
+                        "config": text_extractor_config
+                    },
+                    "type": "data_input"
                 },
             },
         }
@@ -354,6 +353,13 @@ class PredictorPipelineTest(unittest.TestCase):
         nlp.add(predictor, config=predictor_config)
         nlp.add(DummyEvaluator())
         nlp.initialize()
+
+        text_extractor = predictor.configs.\
+            feature_scheme.text_tag.extractor
+        for pack in pipeline.process_dataset(data_path):
+            for instance in pack.get(Sentence):
+                text_extractor.update_vocab(pack, instance)
+
         num_packs = 0
         for _ in nlp.process_dataset(data_path):
             num_packs += 1
