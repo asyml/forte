@@ -232,13 +232,9 @@ class Vocabulary(Generic[ElementType]):
             representation=None, special_token_name: Optional[str] = None):
         """
         This function will add special elements to the vocabulary, such as
-        `UNK`, `PAD`, `BOS`, `CLS` symbols. Some special tokens has their
-        unique behavior in the system. And they will also not be filtered
-        by any `VocabFilter`.
-
-        To call this method, you may want to add the element at a unused index,
-        for example, the last index of the vocabulary, or a unused negative
-        id.
+        `UNK`, `PAD`, `BOS`, `CLS` symbols. Some special tokens will not be
+        filtered by any `VocabFilter`. Some special tokens has their
+        unique behavior in the system.
 
         Note: most of the time, you don't have to call this method yourself,
         but should let the `init` function to handle that.
@@ -247,24 +243,19 @@ class Vocabulary(Generic[ElementType]):
             element (str): The surface form of this special element.
             element_id (Optional[int]): The to be used for this special token.
                 If not provided, the vocabulary will use the next id internally.
-                If this id is occupied, a `ValueError` will be thrown. The id
-                can be negative.
-            representation: The representation value you want to assign to this
+                If the provided id is occupied, a `ValueError` will be thrown.
+                The id can be any integer, including negative ones.
+            representation: The representation you want to assign to this
                 special token. If None, the representation may be computed
-                based on the index (which may or may not be desirable)
-            special_token_name (Optional[str]): An internal representation of
-                this special token. This is used if you want to use this
-                token to be the required specials: <PAD> or <UNK>, you need to
-                provide the string "PAD" and "UNK" respectively. Any other
-                name here is considered invalid, and a `ValueError` will be
-                thrown.
-
-        Returns:
-
+                based on the index (which depends on the vocabulary setting).
+            special_token_name (Optional[str]): An internal name of
+                this special token. This only matters for the base special
+                tokens: <PAD> or <UNK>, and the name should be "PAD" and "UNK"
+                respectively. Any other name here is considered invalid,
+                and a `ValueError` will be thrown if provided.
         """
         if special_token_name is not None:
-            if (not special_token_name == "PAD"
-                    and not special_token_name == "UNK"):
+            if special_token_name not in ("PAD", "UNK"):
                 raise ValueError(
                     "You don't have to and shouldn't provide the "
                     "`special_token_name` if this token is not PAD or UNK")
@@ -322,14 +313,13 @@ class Vocabulary(Generic[ElementType]):
         return element_id_
 
     def __get_next_available_id(self):
-        """ Try to get the next available id correctly even if someone
-        assign an arbitrary id in between.
+        """ Find the next available id by incrementing the auto counter until
+        one is found.
         """
         eid = self.next_id
         while eid in self._id2element:
             self.next_id += 1
             eid = self.next_id
-        self.next_id += 1
         return eid
 
     def id2element(self, idx: int) -> ElementType:
