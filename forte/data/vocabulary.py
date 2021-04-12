@@ -11,8 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
+from abc import ABC
+from collections import Counter
 from typing import List, Tuple, Dict, Union, Hashable, Iterable, Optional
+from typing import TypeVar, \
+    Generic, Any, Set
 
 import texar.torch as tx
 
@@ -114,14 +117,33 @@ class Vocabulary(Generic[ElementType]):
         do_counting (bool): Same as above.
     """
 
-    # TODO: It is better to add a generic type for this class, now every element
-    #   is simply empty.
-    def __init__(self, method: str, need_pad: bool, use_unk: bool,
-                 pad_value: Optional[int] = None,
-                 unk_value: Optional[int] = None):
-        self.method = method
-        self.need_pad = need_pad
-        self.use_unk = use_unk
+    def __init__(
+            self, method: str = "indexing",
+            use_pad: bool = True, use_unk: bool = True,
+            special_tokens: Optional[List[str]] = None, do_counting: bool = True
+    ):
+        self.method: str = method
+        self.use_pad: bool = use_pad
+        self.use_unk: bool = use_unk
+        self.do_counting: bool = do_counting
+
+        self._pad_id: Optional[int] = None
+        self._unk_id: Optional[int] = None
+
+        # Maps the raw element to the internal id.
+        self._element2id: Dict = {}
+        # Maps the internal id to the raw element.
+        self._id2element: Dict = {}
+        # Maps the internal id to the representation. This dict is populated
+        #  when users provided customized representation of elements.
+        self._id2repr: Dict = {}
+
+        # Count the number of appearance of an element, indexed by the element
+        # id.
+        self.__counter: Counter = Counter()
+
+        # Initialize the id auto counter.
+        self.next_id = 0
 
         # Store the base special token names and their surface form.
         # By default, following the texar-pytorch special tokens:
@@ -129,31 +151,57 @@ class Vocabulary(Generic[ElementType]):
         #   UNK: <UNK>
         self._base_special_tokens: Dict[str, str] = {}
 
-        self.next_id = 0
-        if method == "one-hot" and need_pad:
-            pad_value = -1
-            logging.warning(
-                "Cannot use 0 as pad id if one-hot method is used. "
-                "Chaning pad id to -1!")
-        if need_pad:
-            if not pad_value:
-                self.add_element(Vocabulary.PAD_ELEMENT)
-            else:
-                self.add_special_element(Vocabulary.PAD_ELEMENT, pad_value)
+        # Store the id position of the special ids.
+        self.__special_ids: Set[int] = set()
+
+        if use_pad:
+            # If not specified, will use -1 for padding in the case of
+            #  one-hot. This will make the actual PAD representation to be
+            #  a vector of zeros.
+            pad_id = -1 if method == "one-hot" else None
+            self.add_special_element(
+                tx.data.SpecialTokens.PAD, element_id=pad_id,
+                special_token_name="PAD")
 
         if use_unk:
-            if not unk_value:
-                self.add_element(Vocabulary.UNK_ELEMENT)
-            else:
-                self.add_special_element(Vocabulary.UNK_ELEMENT, unk_value)
+            self.add_special_element(
+                tx.data.SpecialTokens.UNK, special_token_name="UNK")
 
-    def add_special_element(self, element: Hashable, element_id: int):
-        r"""
-        Add special_elements, such as PAD and UNK.
+        if special_tokens is not None:
+            for t in special_tokens:
+                self.add_special_element(t)
+
+    def get_count(self, e: Union[ElementType, int]) -> int:
+        """
+        Get the counts of the vocabulary element.
 
         Args:
-            element (Hashable): The element to be added.
-            element_id (int): The ID assigned to the element.
+            e: The element to get counts for. It can be the element id or the
+              element's raw type.
+
+        Returns:
+            The count of the element.
+        """
+        if not self.do_counting:
+            if not self.do_counting:
+                raise InvalidOperationException(
+                    "The vocabulary is not configured to count the elements.")
+
+        eid: int = e if isinstance(e, int) else self._element2id[e]
+        if self.is_special_token(eid):
+            raise InvalidOperationException(
+                "Count for special element is not available.")
+        return self.__counter[eid]
+
+    def mark_special_element(self, element_id: int, element_name: str):
+        """
+        Mark a particular (but already existed) index in the vocabulary to be
+        a special required element (i.e `PAD` or `UNK`).
+
+        Args:
+            element_id (int): The id to be set for the special element.
+            element_name (str): The name of this element to be set, it can
+              be one of `PAD`, `UNK`.
         """
         if element_name in ("PAD", "UNK"):
             if element_name == "PAD":

@@ -97,17 +97,15 @@ class BaseExtractor(ABC):
         # pylint: disable=attribute-defined-outside-init
         self.config = Config(config, self.default_configs())
         if self.config.entry_type is None:
-            raise AttributeError("entry_type needs to be specified in "
-                                "the configuration of an extractor.")
-        self._entry_type: Type[Annotation] = get_class(self.config.entry_type)
+            raise AttributeError("`entry_type` needs to be specified in "
+                                 "the configuration of an extractor.")
+        self._entry_type = get_class(self.config.entry_type)
 
-        if self.config.vocab_method != "raw":
-            self._vocab = \
-                Vocabulary(method=self.config.vocab_method,
-                           need_pad=self.config.need_pad,
-                           use_unk=self.config.vocab_use_unk,
-                           pad_value=self.config.pad_value,
-                           unk_value=self.config.vocab_unk_value)
+        if self.config.vocab_method != "custom":
+            self._vocab = Vocabulary(
+                method=self.config.vocab_method,
+                use_pad=self.config.need_pad,
+                use_unk=self.config.vocab_use_unk)
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -132,11 +130,10 @@ class BaseExtractor(ABC):
             Whether the `<UNK>` element should be added to vocabulary.
             Default is true.
 
-        "pad_value" (int)
-            ID assigned to pad. Default is 0.
+        "need_pad" (bool)
+            Whether the `<PAD>` element should be added to vocabulary. And
+            whether the feature need to be batched and padded. Default is True.
 
-        "vocab_unk_value" (int)
-            ID assigned to unk. Default is 1.
         """
         return {
             "entry_type": None,
