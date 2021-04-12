@@ -49,7 +49,7 @@ class VocabularyTest(unittest.TestCase):
             # in python 3.6 or earlier (the issue is fixed in 3.7).
             # So here we do not use the type annotation for testing.
             vocab = Vocabulary(
-                method=method, need_pad=need_pad, use_unk=use_unk)
+                method=method, use_pad=need_pad, use_unk=use_unk)
 
             # Check vocabulary add_element, element2repr and id2element
             elements = ["EU", "rejects", "German", "call",
@@ -117,7 +117,7 @@ class VocabularyTest(unittest.TestCase):
             # Check state
             new_vocab = pkl.loads(pkl.dumps(vocab))
             self.assertEqual(vocab.method, new_vocab.method)
-            self.assertEqual(vocab.need_pad, new_vocab.need_pad)
+            self.assertEqual(vocab.use_pad, new_vocab.use_pad)
             self.assertEqual(vocab.use_unk, new_vocab.use_unk)
             self.assertEqual(vocab._element2id, new_vocab._element2id)
             self.assertEqual(vocab._id2element, new_vocab._id2element)
@@ -138,7 +138,7 @@ class VocabularyTest(unittest.TestCase):
     @unpack
     def test_freq_filtering(self, need_pad, use_unk, special_tokens):
         base_vocab = Vocabulary(
-            need_pad=need_pad, use_unk=use_unk, special_tokens=special_tokens)
+            use_pad=need_pad, use_unk=use_unk, special_tokens=special_tokens)
 
         for p in dataset_path_iterator(self.data_path, '.txt'):
             with open(p) as f:
@@ -152,28 +152,27 @@ class VocabularyTest(unittest.TestCase):
         filtered = base_vocab.filter(vocab_filter)
 
         for e, eid in base_vocab.vocab_items():
-            base_count = base_vocab.get_count(e)
-
             if base_vocab.is_special_token(eid):
                 # Check that the filtered vocab have all special elements.
                 self.assertTrue(filtered.has_element(e))
-            elif 2 <= base_count <= 4:
-                print(e, base_vocab.get_count(e))
-                self.assertTrue(filtered.has_element(e))
-                self.assertEqual(base_count, filtered.get_count(e))
             else:
-                self.assertFalse(filtered.has_element(e))
+                base_count = base_vocab.get_count(e)
+                if 2 <= base_count <= 4:
+                    self.assertTrue(filtered.has_element(e))
+                    self.assertEqual(base_count, filtered.get_count(e))
+                else:
+                    self.assertFalse(filtered.has_element(e))
 
         self.assertEqual(len(base_vocab._element2id),
                          len(base_vocab._id2element))
 
     @data(
         ("indexing", 0, 2),
-        ("one_hot", [0] * 5, [0, 1, 0, 0, 0]),
+        ("one-hot", [1, 0, 0, 0, 0], [0, 0, 1, 0, 0]),
     )
     @unpack
     def test_custom_vocab(self, method, expected_pad_value, expected_unk_value):
-        vocab = Vocabulary(method=method, need_pad=False, use_unk=False)
+        vocab = Vocabulary(method=method, use_pad=False, use_unk=False)
         predefined = {
             "[PAD]": -1, "[CLS]": -1, "[UNK]": -1, "a": 2, "b": 3, "c": 4}
         for e, count in predefined.items():
@@ -182,17 +181,23 @@ class VocabularyTest(unittest.TestCase):
             else:
                 vocab.add_element(e, count=count)
 
+        # Set the first element [PAD] to be the padding value.
         vocab.mark_special_element(0, "PAD")
+        # Set the third element [UNK] to be the unknown value.
         vocab.mark_special_element(2, "UNK")
 
+        # Check that padding values are the same as the expected representation.
         self.assertEqual(vocab.get_pad_value(), expected_pad_value)
         self.assertEqual(vocab.element2repr("[PAD]"), expected_pad_value)
+
+        # Check that unknown words are mapped to expected representation.
         self.assertEqual(vocab.element2repr("something else"),
                          expected_unk_value)
 
         for i in [0, 1, 2]:
             self.assertTrue(vocab.is_special_token(i))
-            self.assertRaises(InvalidOperationException, vocab.get_count(i))
+            with self.assertRaises(InvalidOperationException):
+                vocab.get_count(i)
 
 
 if __name__ == '__main__':

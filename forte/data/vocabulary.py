@@ -46,8 +46,8 @@ class Vocabulary(Generic[ElementType]):
     cases and thus must present in the vocabulary. The behavior of these
     special tokens are pre-defined based on different settings. To get around
     the default behavior (for example, if you have a pre-defined vocabulary
-    with different setups), you can instruct the class to not adding these tokens
-    automatically, and use the :func:`mark_special_element` instead.
+    with different setups), you can instruct the class to not adding these
+    tokens automatically, and use the :func:`mark_special_element` instead.
 
     Here is a table on how our Vocabulary class behavior under different
     settings. Element0 means the first element that is added to the vocabulary.
@@ -97,7 +97,7 @@ class Vocabulary(Generic[ElementType]):
     Args:
         method (str): The method to represent element in vocabulary, currently
             supporting "indexing" and "one-hot".
-        need_pad (bool): Whether to add <PAD> element to the vocabulary on
+        use_pad (bool): Whether to add <PAD> element to the vocabulary on
             creation. It will be added to the vocabulary first, but the id of
             it depends on the specific settings.
         use_unk (bool): Whether to add <UNK> element to the vocabulary on
@@ -112,18 +112,18 @@ class Vocabulary(Generic[ElementType]):
 
     Attributes:
         method (str): Same as above.
-        need_pad (bool): Same as above.
+        use_pad (bool): Same as above.
         use_unk (bool): Same as above.
         do_counting (bool): Same as above.
     """
 
     def __init__(
             self, method: str = "indexing",
-            need_pad: bool = True, use_unk: bool = True,
+            use_pad: bool = True, use_unk: bool = True,
             special_tokens: List[str] = None, do_counting: bool = True
     ):
         self.method: str = method
-        self.need_pad: bool = need_pad
+        self.use_pad: bool = use_pad
         self.use_unk: bool = use_unk
         self.do_counting: bool = do_counting
 
@@ -145,18 +145,23 @@ class Vocabulary(Generic[ElementType]):
         # Initialize the id auto counter.
         self.next_id = 0
 
-        # Store special token names and their surface form.
+        # Store the base special token names and their surface form.
         # By default, following the texar-pytorch special tokens:
         #   PAD: <PAD>
         #   UNK: <UNK>
-        self._required_special_tokens: Dict[str, str] = {}
+        self._base_special_tokens: Dict[str, str] = {}
 
         # Store the id position of the special ids.
         self.__special_ids: Set[int] = set()
 
-        if need_pad:
-            pad_id = -1 if "one-hot" else None
-            self.add_special_element(tx.data.SpecialTokens.PAD, pad_id, "PAD")
+        if use_pad:
+            # If not specified, will use -1 for padding in the case of
+            #  one-hot. This will make the actual PAD representation to be
+            #  a vector of zeros.
+            pad_id = -1 if method == "one-hot" else None
+            self.add_special_element(
+                tx.data.SpecialTokens.PAD, element_id=pad_id,
+                special_token_name="PAD")
 
         if use_unk:
             self.add_special_element(
@@ -201,9 +206,13 @@ class Vocabulary(Generic[ElementType]):
               be one of `PAD`, `UNK`.
 
         """
-        if element_name == "PAD" or element_name == "UNK":
+        if element_name in ("PAD", "UNK"):
+            if element_name == "PAD":
+                self.use_pad = True
+            if element_name == "UNK":
+                self.use_unk = True
             if element_id in self._id2element:
-                self._required_special_tokens[element_name] = self._id2element[
+                self._base_special_tokens[element_name] = self._id2element[
                     element_id]
             else:
                 raise ValueError(f"Supplied {element_id} is not in the"
@@ -257,9 +266,9 @@ class Vocabulary(Generic[ElementType]):
             if (not special_token_name == "PAD"
                     and not special_token_name == "UNK"):
                 raise ValueError(
-                    f"You don't have to and shouldn't provide the "
-                    f"`special_token_name` if this token is not PAD or UNK")
-            self._required_special_tokens[special_token_name] = element
+                    "You don't have to and shouldn't provide the "
+                    "`special_token_name` if this token is not PAD or UNK")
+            self._base_special_tokens[special_token_name] = element
 
         if element_id is not None:
             if element_id in self._id2element:
@@ -355,7 +364,7 @@ class Vocabulary(Generic[ElementType]):
         """
         if self.use_unk:
             idx = self._element2id.get(
-                element, self._element2id[self._required_special_tokens['UNK']])
+                element, self._element2id[self._base_special_tokens['UNK']])
         else:
             idx = self._element2id[element]
 
@@ -375,7 +384,7 @@ class Vocabulary(Generic[ElementType]):
     def _one_hot(self, idx: int):
         """Compute the one-hot encoding on the fly."""
         vec_size = len(self._element2id)
-        if self.need_pad:
+        if self.use_pad:
             vec_size -= 1
         vec = [0 for _ in range(vec_size)]
         if idx != -1:
@@ -419,8 +428,8 @@ class Vocabulary(Generic[ElementType]):
             Union[None, int, List[int]]: The PAD element. Check
             the behavior of this function in the class documentation.
         """
-        if self.need_pad:
-            return self.element2repr(self._required_special_tokens['PAD'])
+        if self.use_pad:
+            return self.element2repr(self._base_special_tokens['PAD'])
         return None
 
     def filter(self, vocab_filter: "VocabFilter") -> "Vocabulary":
@@ -442,11 +451,11 @@ class Vocabulary(Generic[ElementType]):
         # 2. We also ignore other special tokens at init, but copy them later.
         # 2. We follow the do_counting setup.
         vocab: Vocabulary = Vocabulary(
-            self.method, need_pad=False, use_unk=False,
+            self.method, use_pad=False, use_unk=False,
             do_counting=self.do_counting
         )
-        # We then set these flag manually.
-        vocab.need_pad = self.need_pad
+        # We then set these flag manually based on this vocabulary.
+        vocab.use_pad = self.use_pad
         vocab.use_unk = self.use_unk
 
         # Now we copy all the vocabulary items to the new vocab.
@@ -454,10 +463,19 @@ class Vocabulary(Generic[ElementType]):
             # Copy the special tokens regardless of the filter.
             if self.is_special_token(eid):
                 element_name = None
-                if element == self._required_special_tokens["PAD"]:
-                    element_name = "PAD"
-                if element == self._required_special_tokens["UNK"]:
-                    element_name = "UNK"
+                try:
+                    if element == self._base_special_tokens["PAD"]:
+                        element_name = "PAD"
+                except KeyError:
+                    # No PAD in the origin vocab.
+                    pass
+
+                try:
+                    if element == self._base_special_tokens["UNK"]:
+                        element_name = "UNK"
+                except KeyError:
+                    # No UNK in the origin vocab.
+                    pass
                 vocab.add_special_element(
                     element, eid, self._id2repr.get(element, None),
                     element_name)

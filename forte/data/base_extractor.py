@@ -104,7 +104,7 @@ class BaseExtractor(ABC):
         if self.config.vocab_method != "custom":
             self._vocab = Vocabulary(
                 method=self.config.vocab_method,
-                need_pad=self.config.need_pad,
+                use_pad=self.config.need_pad,
                 use_unk=self.config.vocab_use_unk)
         else:
             self._vocab = None
