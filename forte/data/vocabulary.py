@@ -222,7 +222,7 @@ class Vocabulary(Generic[ElementType]):
                 f"{element_name} is not a required special element, you can"
                 f" add it in through `special_tokens` argument during class"
                 f" creation, or calling the `add_special_element` method")
- 
+
         if representation is not None:
             self._id2repr[element_id] = representation
 
