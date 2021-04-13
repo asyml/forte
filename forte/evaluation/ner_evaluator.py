@@ -48,10 +48,10 @@ class CoNLLNEREvaluator(Evaluator):
                 following (key, value) pairs
                 - `"entry_type"` (str): The entry to be evaluated.
                 - `"tagging_unit"` (str): The tagging unit that the evalution
-                                is preformned on.
-                                e.g. "ft.onto.base_ontology.Sentence"
+                is preformned on. e.g. `"ft.onto.base_ontology.Sentence"`
                 - `"attribute"` (str): The attribute of the entry to be
-                                evaluated.
+                evaluated.
+
         """
         super().initialize(resources, configs)
         self.entry_type = get_class(configs.entry_type)
