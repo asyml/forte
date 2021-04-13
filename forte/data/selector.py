@@ -81,8 +81,8 @@ class NameMatchSelector(SinglePackSelector):
                 yield pack
 
         if matches == 0:
-            raise ValueError(f"pack name {self.select_name}"
-                             f"not in the MultiPack")
+            raise ValueError(f"Pack name {self.select_name}"
+                             f" not in the MultiPack")
 
 
 class RegexNameMatchSelector(SinglePackSelector):
