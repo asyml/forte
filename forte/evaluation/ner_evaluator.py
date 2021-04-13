@@ -38,9 +38,10 @@ class CoNLLNEREvaluator(Evaluator):
         # pylint: disable=attribute-defined-outside-init,unused-argument
         r"""Initialize the evaluator with `resources` and `configs`.
         This method is called by the pipeline during the initialization.
+
         Args:
             resources (Resources): An object of class
-                :class:`forte.common.Resources` that holds references to
+                :class:`~forte.common.Resources` that holds references to
                 objects that can be shared throughout the pipeline.
             configs (Config): A configuration to initialize the
                 evaluator. This evaluator is expected to hold the
