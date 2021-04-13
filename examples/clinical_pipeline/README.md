@@ -21,10 +21,13 @@ First, you should start an Elastic Indexer backend.
 
 Second, you can run the following command to parse some files and index them.
 ```bash
-python clinical_processing_pipeline.py
+python clinical_processing_pipeline.py /path/to/mimiciii/1.4/NOTEEVENTS.csv.gz /path_to_sample_output 10000
 ```
 
-Now we are ready on the data processing part. Let's start the GUI.
+Here, we also write out the raw data pack to `/path_to_sample_output`, and only
+index the first 10k notes. Remove the `10000` parameter to index all documents.
+
+After the indexing is done, we are ready with the data processing part. Let's start the GUI.
 
 ## Stave 
 First, set up Stave following the instructions.
