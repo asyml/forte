@@ -102,7 +102,7 @@ import yaml
 
 from forte.pipeline import Pipeline
 from forte.data.readers import CoNLL03Reader
-from forte.processors import CoNLLNERPredictor
+from forte.processors.nlp import CoNLLNERPredictor
 from ft.onto.base_ontology import Token, Sentence
 from forte.common.configuration import Config
 

@@ -28,10 +28,26 @@ from forte.utils import get_full_module_name
 
 
 class PipelineComponent(Generic[PackType]):
+    """
+    The base class for all pipeline component. A pipeline component represents
+    one node in the pipeline, and would perform certain action on the data
+    pack. All pipeline components should extend this class.
+
+    Attributes:
+        resources: The resources that can be used by this component, the
+          `resources` object is a shared object across the whole pipeline.
+        configs: The configuration of this component, will be built by the
+          pipeline based on the `default_configs()` and the configs provided
+          by the users.
+    """
+
     def __init__(self):
         self.resources: Resources = Resources()
         self.configs: Config = Config({}, {})
-        self._check_type_consistency = False
+        # Determine whether to check the consistencies between components.
+        self._check_type_consistency: bool = False
+        # The flag indicating whether the component is initialized.
+        self.__is_initialized: bool = False
 
     def enforce_consistency(self, enforce: bool = True):
         r"""This function determines whether the pipeline will enforce
@@ -72,6 +88,18 @@ class PipelineComponent(Generic[PackType]):
         """
         self.resources = resources
         self.configs = configs
+        self.__is_initialized = True
+
+    def reset_flags(self):
+        """
+        Reset the flags related to this component. This will be called first
+        when doing initialization.
+        """
+        self.__is_initialized = False
+
+    @property
+    def is_initialized(self) -> bool:
+        return self.__is_initialized
 
     def add_entry(self, pack: BasePack, entry: Entry):
         """
@@ -98,6 +126,7 @@ class PipelineComponent(Generic[PackType]):
         pass
 
     def finish(self, resource: Resources):
+        # pylint: disable = unused-argument
         r"""The pipeline will call this function at the end of the pipeline to
         notify all the components. The user can implement this function to
         release resources used by this component. The component can also add
@@ -106,14 +135,14 @@ class PipelineComponent(Generic[PackType]):
         Args:
             resource (Resources): A global resource registry.
         """
-        pass
+        self.__is_initialized = False
 
     @classmethod
     def make_configs(
             cls, configs: Optional[Union[Config, Dict[str, Any]]]) -> Config:
         """
         Create the component configuration for this class, by merging the
-        provided config with the ``default_config``.
+        provided config with the ``default_configs()``.
 
         The following config conventions are expected:
           - The top level key can be a special `config_path`.
