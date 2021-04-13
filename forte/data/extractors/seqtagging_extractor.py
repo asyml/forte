@@ -60,7 +60,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
         self.tagging_unit: Type[Annotation] = \
                 get_class(self.config.tagging_unit)
         self.is_bert: bool = self.config.is_bert
-        self.vocab.mark_special_element(0, "PAD", self.config.pad_value)
+        if self.vocab:
+            self.vocab.mark_special_element(0, "PAD", self.config.pad_value)
 
     @classmethod
     def default_configs(cls):
@@ -201,11 +202,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
             raw_data: List = vocab_mapped
             if self.is_bert:
                 raw_data = [pad_value] + raw_data + [pad_value]
+
+            need_pad = self.vocab.use_pad
         else:
             # When vocabulary is not available, use the original data.
             raw_data = instance_tagged
+            need_pad = self.config.need_pad
 
-        meta_data = {"need_pad": self.vocab.use_pad,
+        meta_data = {"need_pad": need_pad,
                      "pad_value": pad_value,
                      "dim": 1,
                      "dtype": int if self.vocab else tuple}
