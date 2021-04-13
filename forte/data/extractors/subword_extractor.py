@@ -51,8 +51,10 @@ class SubwordExtractor(BaseExtractor):
         predifined_dict = [key for key, _ in self.tokenizer.vocab.items()]
         self.predefined_vocab(predifined_dict)
         if self.vocab:
-            self.vocab.mark_special_element(0, "PAD")
-            self.vocab.mark_special_element(100, "UNK")
+            self.vocab.mark_special_element(self.tokenizer.vocab['[PAD]'],
+                                            "PAD")
+            self.vocab.mark_special_element(self.tokenizer.vocab['[UNK]'],
+                                            "UNK")
 
     @classmethod
     def default_configs(cls):
