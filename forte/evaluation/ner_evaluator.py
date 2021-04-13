@@ -47,8 +47,8 @@ class CoNLLNEREvaluator(Evaluator):
                 evaluator. This evaluator is expected to hold the
                 following (key, value) pairs
                 - `"entry_type"` (str): The entry to be evaluated.
-                - `"tagging_unit"` (str): The tagging unit that the evalution
-                is preformned on. e.g. `"ft.onto.base_ontology.Sentence"`
+                - `"tagging_unit"` (str): The tagging unit that the evaluation
+                is performed on. e.g. `"ft.onto.base_ontology.Sentence"`
                 - `"attribute"` (str): The attribute of the entry to be
                 evaluated.
 
