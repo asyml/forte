@@ -8,7 +8,7 @@ from forte.common.configuration import Config
 from forte.data.common_entry_utils import create_utterance, \
     get_last_utterance
 from forte.data.data_pack import DataPack
-from forte.indexers import ElasticSearchIndexer
+from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance
 
