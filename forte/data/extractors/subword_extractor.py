@@ -50,8 +50,9 @@ class SubwordExtractor(BaseExtractor):
             hparams=None)
         predifined_dict = [key for key, _ in self.tokenizer.vocab.items()]
         self.predefined_vocab(predifined_dict)
-        self.vocab.mark_special_element(0, "PAD")
-        self.vocab.mark_special_element(100, "UNK")
+        if self.vocab:
+            self.vocab.mark_special_element(0, "PAD")
+            self.vocab.mark_special_element(100, "UNK")
 
     @classmethod
     def default_configs(cls):
@@ -91,7 +92,12 @@ class SubwordExtractor(BaseExtractor):
         data = [self.element2repr('[CLS]')] + data + \
                [self.element2repr('[SEP]')]
 
-        meta_data = {"need_pad": self.vocab.use_pad,
+        if self.vocab:
+            need_pad = self.vocab.use_pad
+        else:
+            need_pad = self.config.need_pad
+
+        meta_data = {"need_pad": need_pad,
                      "pad_value": self.get_pad_value(),
                      "dim": 1,
                      "dtype": int}
