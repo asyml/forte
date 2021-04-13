@@ -21,10 +21,11 @@ from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
 from forte.common.resources import Resources
 from forte.pipeline import Pipeline
-from forte.processors import MicrosoftBingTranslator, SRLPredictor
+from forte.processors.third_party import MicrosoftBingTranslator
+from forte.processors.nlp import SRLPredictor
 from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
-from forte.processors.nltk_processors import (
+from forte.processors.third_party import (
     NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
 from ft.onto.base_ontology import PredicateLink, Sentence
 

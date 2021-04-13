@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "AllenNLPProcessor",
+    "MODEL2URL"
 ]
 
 # pylint: disable=line-too-long

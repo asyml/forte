@@ -8,7 +8,7 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor
-from forte.processors.eliza_processor import ElizaProcessor
+from forte.processors.nlp import ElizaProcessor
 from ft.onto.base_ontology import Utterance
 
 
@@ -54,3 +54,7 @@ class TestElizaProcessor(unittest.TestCase):
         self.assertEqual(
             u.text, o_str
         )
+
+
+if __name__ == '__main__':
+    unittest.main()

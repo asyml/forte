@@ -5,7 +5,7 @@
     input_pack_name: "input_src"
     output_pack_name: "output_tgt"
 
-- type: "forte.processors.TextGenerationProcessor"
+- type: "forte.processors.third_party.TextGenerationProcessor"
   configs:
     max_decoding_length: 128
     temperature: 0.7
@@ -16,14 +16,14 @@
     batcher:
       batch_size: 64
 
-- type: "forte.processors.nltk_processors.NLTKWordTokenizer"
+- type: "forte.processors.third_party.NLTKWordTokenizer"
   configs:
     selector:
       type: "forte.data.selector.NameMatchSelector"
       kwargs:
         select_name: "output_tgt"
 
-- type: "forte.processors.nltk_processors.NLTKPOSTagger"
+- type: "forte.processors.third_party.NLTKPOSTagger"
   configs:
     selector:
       type: "forte.data.selector.NameMatchSelector"

@@ -24,7 +24,7 @@ from ddt import ddt, data, unpack
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.data.readers import MultiPackSentenceReader
-from forte.processors import MicrosoftBingTranslator
+from forte.processors.third_party import MicrosoftBingTranslator
 
 
 @unittest.skip("BingTranslator will be moved into examples. A texar model will "
@@ -70,3 +70,7 @@ class TestMachineTranslationProcessor(unittest.TestCase):
                              set(["input", "output", "result"]))
             self.assertEqual(m_pack.get_pack("result").text,
                              english_results[idx] + "\n")
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -4,7 +4,7 @@ import unittest
 from forte.data.data_pack import DataPack
 from forte.data.readers import ConllUDReader
 from forte.pipeline import Pipeline
-from forte.processors import AttributeMasker
+from forte.processors.misc import AttributeMasker
 from ft.onto.base_ontology import Token
 
 
@@ -38,3 +38,7 @@ class TestAttributeMaskingProcessor(unittest.TestCase):
             entries = pack.get(Token)
             for entry in entries:
                 self.assertIsNone(entry.pos)
+
+
+if __name__ == '__main__':
+    unittest.main()
