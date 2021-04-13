@@ -17,7 +17,7 @@ We can add other datasets conversion function for CoNLL here in the future.
 """
 from typing import List, Dict, Optional, Type, Tuple
 
-from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.data.extractors.utils import bio_tagging
 from ft.onto.base_ontology import Sentence
@@ -42,7 +42,7 @@ def post_edit(element: Tuple[Optional[str], str]) -> str:
     return "%s-%s" % (element[1], element[0])
 
 
-def get_tag(pack: PackType,
+def get_tag(pack: DataPack,
             instance: Annotation,
             tagging_unit: Type[Annotation],
             entry_type: Type[Annotation],
@@ -50,7 +50,7 @@ def get_tag(pack: PackType,
     r"""Align entries to tagging units, and convert it to string format.
 
     Args:
-        pack (PackType): The datapack that contains the current
+        pack (DataPack): The datapack that contains the current
             instance.
 
         instance (Annotation): The instance from which the
@@ -85,8 +85,8 @@ def get_tag(pack: PackType,
     return tag
 
 
-def write_tokens_to_file(pred_pack: PackType,
-                         refer_pack: PackType,
+def write_tokens_to_file(pred_pack: DataPack,
+                         refer_pack: DataPack,
                          refer_request: Dict,
                          tagging_unit: Type[Annotation],
                          entry_type: Type[Annotation],
@@ -96,9 +96,9 @@ def write_tokens_to_file(pred_pack: PackType,
     labels, for performance evaluation.
 
     Args:
-        pred_pack (PackType): The predicated datapack.
+        pred_pack (DataPack): The predicated datapack.
 
-        refer_pack (PackType): The reference datapack.
+        refer_pack (DataPack): The reference datapack.
 
         refer_request (Dict): Reference request.
 

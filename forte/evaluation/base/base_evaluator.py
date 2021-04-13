@@ -17,7 +17,7 @@ Defines the Evaluator interface and related functions.
 from abc import abstractmethod
 from typing import Any, Dict, Set
 
-from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
 from forte.pipeline_component import PipelineComponent
 from forte.utils.utils_processor import record_types_and_attributes_check
 
@@ -34,7 +34,7 @@ class Evaluator(PipelineComponent[PackType]):
         self._ref_pack_expectation: Dict[str, Set[str]] = None
 
     @abstractmethod
-    def consume_next(self, pred_pack: PackType, ref_pack: PackType):
+    def consume_next(self, pred_pack: DataPack, ref_pack: DataPack):
         r"""The actual consume function that will be called by the pipeline.
         This function will deal with the basic pipeline status and call the
         `consume_next` function.

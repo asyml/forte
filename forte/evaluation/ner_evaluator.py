@@ -19,7 +19,7 @@ from pathlib import Path
 from ft.onto.base_ontology import Sentence
 from forte.common.configuration import Config
 from forte.common.resources import Resources
-from forte.data.base_pack import PackType
+from forte.data.data_pack import DataPack
 from forte.evaluation.base import Evaluator
 from forte.utils import get_class
 from forte.datasets.conll.conll_utils import write_tokens_to_file
@@ -68,7 +68,7 @@ class CoNLLNEREvaluator(Evaluator):
         })
         return config
 
-    def consume_next(self, pred_pack: PackType, ref_pack: PackType):
+    def consume_next(self, pred_pack: DataPack, ref_pack: DataPack):
         refer_getdata_args = {
             "context_type": Sentence,
             "request": {
