@@ -30,6 +30,7 @@ logging.basicConfig(level=logging.DEBUG)
 def main():
     config_data = yaml.safe_load(open("config_data.yml", "r"))
     config_model = yaml.safe_load(open("config_model.yml", "r"))
+    config_evaluator = yaml.safe_load(open("config_evaluator.yml", "r"))
     config_preprocess = yaml.safe_load(open("config_preprocessor.yml", "r"))
 
     # All the configs
@@ -38,7 +39,7 @@ def main():
     config.add_hparam('config_model', config_model)
     config.add_hparam('preprocessor', config_preprocess)
     config.add_hparam('reader', {})
-    config.add_hparam('evaluator', {})
+    config.add_hparam('evaluator', config_evaluator)
 
     reader = CoNLL03Reader()
 
