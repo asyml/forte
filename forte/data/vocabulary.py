@@ -115,7 +115,7 @@ class Vocabulary(Generic[ElementType]):
             Default is None, where the value of padding is determined by
             the system.
         unk_value: A customized value/representation to be used for
-            unknown value (`unk`). This value is onlyu needed when `use_unk`
+            unknown value (`unk`). This value is only needed when `use_unk`
             is True. Default is None, where the value of `UNK` is determined
             by the system.
 
