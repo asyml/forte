@@ -60,6 +60,8 @@ class BioSeqTaggingExtractor(BaseExtractor):
         self.tagging_unit: Type[Annotation] = \
                 get_class(self.config.tagging_unit)
         self.is_bert: bool = self.config.is_bert
+        if self.vocab:
+            self.vocab.mark_special_element(0, "PAD", self.config.pad_value)
 
     @classmethod
     def default_configs(cls):
