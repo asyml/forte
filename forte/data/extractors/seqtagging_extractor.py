@@ -60,8 +60,6 @@ class BioSeqTaggingExtractor(BaseExtractor):
         self.tagging_unit: Type[Annotation] = \
                 get_class(self.config.tagging_unit)
         self.is_bert: bool = self.config.is_bert
-        if self.vocab:
-            self.vocab.mark_special_element(0, "PAD", self.config.pad_value)
 
     @classmethod
     def default_configs(cls):
@@ -69,9 +67,10 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         Here:
 
-        entry_type (str).
+        entry_type (str):
             Required. The string to the ontology type that the extractor
-            will get feature from, e.g: `"ft.onto.base_ontology.EntityMention"`.
+            will get feature from,
+            e.g: `"ft.onto.base_ontology.EntityMention"`.
 
         attribute (str): Required. The attribute name of the
             entry from which labels are extracted.
@@ -80,30 +79,34 @@ class BioSeqTaggingExtractor(BaseExtractor):
             will align to the tagging_unit Entry,
             e.g: `"ft.onto.base_ontology.Token"`.
 
-        "vocab_method" (str)
+        vocab_method (str):
             What type of vocabulary is used for this extractor.
             `raw`, `indexing`, `one-hot` are supported, default is `indexing`.
             Check the behavior of vocabulary under different setting
             in :class:`~forte.data.vocabulary.Vocabulary`
 
-        "need_pad" (bool)
+        need_pad (bool):
             Whether the `<PAD>` element should be added to vocabulary. And
             whether the feature need to be batched and padded. Default is True.
             When True, pad_value has to be set.
 
-        "vocab_use_unk" (bool)
+        vocab_use_unk (bool):
             Whether the `<UNK>` element should be added to vocabulary.
             Default is true.
 
-        "pad_value" (int)
-            ID assigned to pad. It should be integer smaller than 0.
-            Default is 0.
+        pad_value (int):
+            A customized value/representation to be used for
+            padding. This value is only needed when `use_pad` is True.
+            Default is None, where the value of padding is determined by
+            the system.
 
-        "vocab_unk_id" (int)
-            ID assigned to unk. It should be integer smaller than 0.
-            Default is 1.
+        unk_value (int):
+            A customized value/representation to be used for
+            unknown value (`unk`). This value is only needed when
+            `vocab_use_unk` is True. Default is None, where the value
+            of `UNK` is determined by the system.
 
-        is_bert (bool)
+        is_bert (bool):
             It indicates whether Bert model is used. If true, padding
             will be added to the beginning and end of a sentence
             corresponding to the special tokens ([CLS], [SEP])
@@ -132,7 +135,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         config.update({"attribute": None,
                        "tagging_unit": "",
                        "is_bert": False,
-                       "pad_value": 0})
+                       "pad_value": -100})
         return config
 
     @classmethod
