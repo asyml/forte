@@ -205,7 +205,8 @@ class Vocabulary(Generic[ElementType]):
                 "Count for special element is not available.")
         return self.__counter[eid]
 
-    def mark_special_element(self, element_id: int, element_name: str):
+    def mark_special_element(self, element_id: int, element_name: str,
+                             representation: Any = None):
         """
         Mark a particular (but already existed) index in the vocabulary to be
         a special required element (i.e `PAD` or `UNK`).
@@ -214,6 +215,9 @@ class Vocabulary(Generic[ElementType]):
             element_id (int): The id to be set for the special element.
             element_name (str): The name of this element to be set, it can
               be one of `PAD`, `UNK`.
+            representation: The representation/value that this element should
+              be assigned. Default is None, then its representation will be
+              computed from the internal indexing.
         """
         if element_name in ("PAD", "UNK"):
             if element_name == "PAD":
@@ -226,6 +230,10 @@ class Vocabulary(Generic[ElementType]):
             else:
                 raise ValueError(f"Supplied {element_id} is not in the"
                                  f" current vocabulary.")
+
+            # Store the customized representation
+            if representation is not None:
+                self._id2repr[element_id] = representation                
         else:
             raise ValueError(
                 f"{element_name} is not a required special element, you can"
