@@ -233,7 +233,7 @@ class Vocabulary(Generic[ElementType]):
 
             # Store the customized representation
             if representation is not None:
-                self._id2repr[element_id] = representation                
+                self._id2repr[element_id] = representation
         else:
             raise ValueError(
                 f"{element_name} is not a required special element, you can"
