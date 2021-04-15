@@ -88,13 +88,15 @@ class BioSeqTaggingExtractor(BaseExtractor):
             in :class:`~forte.data.vocabulary.Vocabulary`
 
         need_pad (bool):
-            Whether the `<PAD>` element should be added to vocabulary. And
-            whether the feature need to be batched and padded. Default is True.
-            When True, pad_value has to be set.
-
+            Whether the `<PAD>` element will be added to the vocabulary
+            internally, which will be used for batching and padding in the
+            extracted features. Default is True. You can check more of its
+            behavior in the `~forte.data.vocabulary.Vocabulary`.
+            
         vocab_use_unk (bool):
-            Whether the `<UNK>` element should be added to vocabulary.
-            Default is true.
+            Whether the `<UNK>` element should be added to vocabulary
+            internally. Default is true. You can check more of its
+            behavior in the `~forte.data.vocabulary.Vocabulary`.
 
         pad_value (int):
             A customized value/representation to be used for
