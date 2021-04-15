@@ -105,7 +105,9 @@ class BaseExtractor(ABC):
             self._vocab = Vocabulary(
                 method=self.config.vocab_method,
                 use_pad=self.config.need_pad,
-                use_unk=self.config.vocab_use_unk)
+                use_unk=self.config.vocab_use_unk,
+                pad_value=self.config.pad_value,
+                unk_value=self.config.unk_value)
         else:
             self._vocab = None
         self._vocab_method = self.config.vocab_method
@@ -120,19 +122,31 @@ class BaseExtractor(ABC):
             Required. The string to the ontology type that the extractor
             will get feature from, e.g: `"ft.onto.base_ontology.Token"`.
 
-        "vocab_method" (str)
+        vocab_method (str)
             What type of vocabulary is used for this extractor. `custom`,
             `indexing`, `one-hot` are supported, default is `indexing`.
             Check the behavior of vocabulary under different setting
             in :class:`~forte.data.vocabulary.Vocabulary`
 
-        "vocab_use_unk" (bool)
+        vocab_use_unk (bool)
             Whether the `<UNK>` element should be added to vocabulary.
             Default is true.
 
-        "need_pad" (bool)
+        need_pad (bool)
             Whether the `<PAD>` element should be added to vocabulary. And
             whether the feature need to be batched and padded. Default is True.
+
+        pad_value (int)
+            A customized value/representation to be used for
+            padding. This value is only needed when `use_pad` is True.
+            Default is None, where the value of padding is determined by
+            the system.
+
+        unk_value (int)
+            A customized value/representation to be used for
+            unknown value (`unk`). This value is only needed when
+            `vocab_use_unk` is True. Default is None, where the value
+            of `UNK` is determined by the system.
 
         """
         return {
@@ -140,6 +154,8 @@ class BaseExtractor(ABC):
             "vocab_method": "indexing",
             "vocab_use_unk": True,
             "need_pad": True,
+            "pad_value": None,
+            "unk_value": None
         }
 
     @property
