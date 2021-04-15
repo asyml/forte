@@ -44,11 +44,7 @@ from forte.processors.base.batch_processor import Predictor, BatchProcessor
 from forte.train_preprocessor import TrainPreprocessor
 from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
-<<<<<<< HEAD
-from forte.common import ProcessExecutionException
-=======
 from forte.common import ProcessExecutionException, ProcessorConfigError
->>>>>>> upstream/master
 
 data_samples_root = os.path.abspath(os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
@@ -932,14 +928,10 @@ class DummyPackProcessorOne(DummyPackProcessor):
 
     @classmethod
     def expected_types_and_attributes(cls):
-<<<<<<< HEAD
         expectation: Dict[str, Set[str]] = {
             "Sentence": {"1", "2", "3"}
         }
-=======
-        expectation = dict()
-        expectation["Sentence"] = {"1", "2", "3"}
->>>>>>> upstream/master
+
         return expectation
 
 
@@ -951,14 +943,10 @@ class DummyPackProcessorTwo(DummyPackProcessor):
 
     @classmethod
     def expected_types_and_attributes(cls):
-<<<<<<< HEAD
         expectation: Dict[str, Set[str]] = {
             "Document": {"1", "2", "3", "4"}
         }
-=======
-        expectation = dict()
-        expectation["Document"] = {"1", "2", "3", "4"}
->>>>>>> upstream/master
+
         return expectation
 
 
@@ -969,19 +957,13 @@ class DummyEvaluatorOne(Evaluator):
         record_meta["Token"] = {"1", "2"}
 
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
-<<<<<<< HEAD
         pred_pack_expectation: Dict[str, Set[str]] = {
             "Sentence": {"1", "2", "3"}
         }
         ref_pack_expectation: Dict[str, Set[str]] = {
             "Sentence": {"1", "2", "3"}
         }
-=======
-        pred_pack_expectation = dict()
-        pred_pack_expectation["Sentence"] = {"1", "2", "3"}
-        ref_pack_expectation = dict()
-        ref_pack_expectation["Sentence"] = {"1", "2", "3"}
->>>>>>> upstream/master
+
         self.expected_types_and_attributes(pred_pack_expectation,
                                            ref_pack_expectation)
         self.check_record(pred_pack, ref_pack)
@@ -998,19 +980,13 @@ class DummyEvaluatorTwo(Evaluator):
         record_meta["Token"] = {"1", "2"}
 
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
-<<<<<<< HEAD
         pred_pack_expectation: Dict[str, Set[str]] = {
             "Sentence": {"1", "2", "3"}
         }
         ref_pack_expectation: Dict[str, Set[str]] = {
             "Document": {"1", "2", "3"}
         }
-=======
-        pred_pack_expectation = dict()
-        pred_pack_expectation["Sentence"] = {"1", "2", "3"}
-        ref_pack_expectation = dict()
-        ref_pack_expectation["Document"] = {"1", "2", "3"}
->>>>>>> upstream/master
+
         self.expected_types_and_attributes(pred_pack_expectation,
                                            ref_pack_expectation)
         self.check_record(pred_pack, ref_pack)
