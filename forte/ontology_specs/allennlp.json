@@ -1,0 +1,12 @@
+{
+    "name": "allennlp",
+    "imports": [
+      "base_ontology.json"
+    ],
+    "definitions": [
+      {
+        "entry_name": "ft.onto.allennlp.Token",
+        "parent_entry": "ft.onto.base_ontology.Token"
+      }
+    ]
+}

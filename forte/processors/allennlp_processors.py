@@ -48,7 +48,6 @@ class AllenNLPProcessor(PackProcessor):
     # pylint: disable=attribute-defined-outside-init,unused-argument
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-
         if configs.tag_formalism not in MODEL2URL:
             raise ProcessorConfigError('Incorrect value for tag_formalism')
         if configs.tag_formalism == 'stanford':
@@ -100,7 +99,7 @@ class AllenNLPProcessor(PackProcessor):
         """
         config = super().default_configs()
         config.update({
-            'processors': "tokenize,pos,depparse",
+            'processors': "tokenize, pos, depparse",
             'tag_formalism': "stanford",
             'overwrite_entries': False,
             'allow_parallel_entries': True
@@ -191,6 +190,7 @@ class AllenNLPProcessor(PackProcessor):
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
         the pipeline.
         """
-        expectation_dict: Dict[str, Set[str]] = dict()
-        expectation_dict["ft.onto.base_ontology.Sentence"] = set()
+        expectation_dict: Dict[str, Set[str]] = {
+             "ft.onto.base_ontology.Sentence": set()
+        }
         return expectation_dict

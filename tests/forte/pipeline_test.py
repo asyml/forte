@@ -911,8 +911,9 @@ class DummyPackProcessorOne(DummyPackProcessor):
 
     @classmethod
     def expected_types_and_attributes(cls):
-        expectation = dict()
-        expectation["Sentence"] = {"1", "2", "3"}
+        expectation: Dict[str, Set[str]] = {
+            "Sentence": {"1", "2", "3"}
+        }
         return expectation
 
 
@@ -924,8 +925,9 @@ class DummyPackProcessorTwo(DummyPackProcessor):
 
     @classmethod
     def expected_types_and_attributes(cls):
-        expectation = dict()
-        expectation["Document"] = {"1", "2", "3", "4"}
+        expectation: Dict[str, Set[str]] = {
+            "Document": {"1", "2", "3", "4"}
+        }
         return expectation
 
 
@@ -936,10 +938,12 @@ class DummyEvaluatorOne(Evaluator):
         record_meta["Token"] = {"1", "2"}
 
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
-        pred_pack_expectation = dict()
-        pred_pack_expectation["Sentence"] = {"1", "2", "3"}
-        ref_pack_expectation = dict()
-        ref_pack_expectation["Sentence"] = {"1", "2", "3"}
+        pred_pack_expectation: Dict[str, Set[str]] = {
+            "Sentence": {"1", "2", "3"}
+        }
+        ref_pack_expectation: Dict[str, Set[str]] = {
+            "Sentence": {"1", "2", "3"}
+        }
         self.expected_types_and_attributes(pred_pack_expectation,
                                            ref_pack_expectation)
         self.check_record(pred_pack, ref_pack)
@@ -956,10 +960,12 @@ class DummyEvaluatorTwo(Evaluator):
         record_meta["Token"] = {"1", "2"}
 
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
-        pred_pack_expectation = dict()
-        pred_pack_expectation["Sentence"] = {"1", "2", "3"}
-        ref_pack_expectation = dict()
-        ref_pack_expectation["Document"] = {"1", "2", "3"}
+        pred_pack_expectation: Dict[str, Set[str]] = {
+            "Sentence": {"1", "2", "3"}
+        }
+        ref_pack_expectation: Dict[str, Set[str]] = {
+            "Document": {"1", "2", "3"}
+        }
         self.expected_types_and_attributes(pred_pack_expectation,
                                            ref_pack_expectation)
         self.check_record(pred_pack, ref_pack)

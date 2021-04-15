@@ -1,0 +1,12 @@
+{
+    "name": "spacy",
+    "imports": [
+      "base_ontology.json"
+    ],
+    "definitions": [
+      {
+        "entry_name": "ft.onto.spacy.Token",
+        "parent_entry": "ft.onto.base_ontology.Token"
+      }
+    ]
+}
