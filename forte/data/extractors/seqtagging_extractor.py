@@ -60,8 +60,6 @@ class BioSeqTaggingExtractor(BaseExtractor):
         self.tagging_unit: Type[Annotation] = \
                 get_class(self.config.tagging_unit)
         self.is_bert: bool = self.config.is_bert
-        if self.vocab:
-            self.vocab.mark_special_element(0, "PAD", self.config.pad_value)
 
     @classmethod
     def default_configs(cls):
@@ -101,8 +99,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
         pad_value (int):
             A customized value/representation to be used for
             padding. This value is only needed when `use_pad` is True.
-            Default is None, where the value of padding is determined by
-            the system.
+            Default is -100 to follow PyTorch convention.
 
         unk_value (int):
             A customized value/representation to be used for
