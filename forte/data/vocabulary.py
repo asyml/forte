@@ -109,6 +109,15 @@ class Vocabulary(Generic[ElementType]):
             <UNK> token) one by one.
         do_counting (bool): Whether the vocabulary class will count the
             elements.
+        pad_value: A customized value/representation to be used for
+            padding, for example, following the PyTorch convention you may
+            want to use -100. This value is only needed when `use_pad` is True.
+            Default is None, where the value of padding is determined by
+            the system.
+        unk_value: A customized value/representation to be used for
+            unknown value (`unk`). This value is only needed when `use_unk`
+            is True. Default is None, where the value of `UNK` is determined
+            by the system.
 
     Attributes:
         method (str): Same as above.
@@ -120,7 +129,9 @@ class Vocabulary(Generic[ElementType]):
     def __init__(
             self, method: str = "indexing",
             use_pad: bool = True, use_unk: bool = True,
-            special_tokens: Optional[List[str]] = None, do_counting: bool = True
+            special_tokens: Optional[List[str]] = None,
+            do_counting: bool = True,
+            pad_value: Any = None, unk_value: Any = None
     ):
         self.method: str = method
         self.use_pad: bool = use_pad
@@ -161,11 +172,12 @@ class Vocabulary(Generic[ElementType]):
             pad_id = -1 if method == "one-hot" else None
             self.add_special_element(
                 tx.data.SpecialTokens.PAD, element_id=pad_id,
-                special_token_name="PAD")
+                special_token_name="PAD", representation=pad_value)
 
         if use_unk:
             self.add_special_element(
-                tx.data.SpecialTokens.UNK, special_token_name="UNK")
+                tx.data.SpecialTokens.UNK, special_token_name="UNK",
+                representation=unk_value)
 
         if special_tokens is not None:
             for t in special_tokens:
