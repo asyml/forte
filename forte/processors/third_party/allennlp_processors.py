@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "AllenNLPProcessor",
+    "MODEL2URL"
 ]
 
 # pylint: disable=line-too-long
@@ -193,4 +194,5 @@ class AllenNLPProcessor(PackProcessor):
         expectation_dict: Dict[str, Set[str]] = {
              "ft.onto.base_ontology.Sentence": set()
         }
+
         return expectation_dict

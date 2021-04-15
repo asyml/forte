@@ -14,7 +14,6 @@
 """
 This file contains utility functions for extractors.
 """
-
 from typing import Type, List, Tuple, Union, Callable, Optional
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
@@ -77,7 +76,8 @@ def bio_tagging(pack: DataPack, instance: Annotation,
 
         is_start = True
         for unit in pack.get(tagging_unit_type, instance_entry[entry_id]):
-            while instance_tagging_unit[unit_id] != unit:
+            while instance_tagging_unit[unit_id].begin != unit.begin and \
+                instance_tagging_unit[unit_id].end != unit.end:
                 tagged.append((None, 'O'))
                 unit_id += 1
 
@@ -95,3 +95,25 @@ def bio_tagging(pack: DataPack, instance: Annotation,
                                location))
         entry_id += 1
     return tagged
+
+
+def add_entry_to_pack(pack: DataPack,
+                      entry_type: Type[Annotation],
+                      span_begin: int,
+                      span_end: int) -> Annotation:
+    """
+    Add an entry to datapack, given entry_type, span begin and end.
+    Args:
+        pack (Datapack): The datapack to add.
+
+        entry_type (Annotation): The type of entry to be added. For
+            example, EntityMethion.
+
+        span_begin (int): Begin of the entry.
+
+        span_end (int): End of the entry.
+    Returns:
+        The added entry (Annotation)
+
+    """
+    return entry_type(pack, span_begin, span_end)  # type: ignore

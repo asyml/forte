@@ -33,10 +33,10 @@ class SeqTaggingExtractorTest(unittest.TestCase):
         pipeline.initialize()
 
         config = {
-            "entry_type": EntityMention,
+            "entry_type": "ft.onto.base_ontology.EntityMention",
             "need_pad": True,
             "attribute": "ner_type",
-            "tagging_unit": Token,
+            "tagging_unit": "ft.onto.base_ontology.Token",
         }
 
         expected = [(None, 'O'), ('ORG', 'B'), ('ORG', 'I'),
@@ -72,7 +72,8 @@ class SeqTaggingExtractorTest(unittest.TestCase):
                     (None, 'O'), (None, 'O'), (None, 'O'),
                     (None, 'O'), (None, 'O'), (None, 'O')]
 
-        extractor = BioSeqTaggingExtractor(config)
+        extractor = BioSeqTaggingExtractor()
+        extractor.initialize(config=config)
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):

@@ -30,10 +30,9 @@ from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.caster import MultiPackBoxer
 from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
-from forte.data.extractors.attribute_extractor import AttributeExtractor
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
-from forte.data.readers import PlainTextReader, StringReader
+from forte.data.readers import PlainTextReader, StringReader, OntonotesReader
 from forte.data.selector import FirstPackSelector, NameMatchSelector, \
     SinglePackSelector, AllPackSelector
 from forte.data.types import DataRequest
@@ -43,8 +42,13 @@ from forte.processors.base import PackProcessor, FixedSizeBatchProcessor, \
     MultiPackProcessor
 from forte.processors.base.batch_processor import Predictor, BatchProcessor
 from forte.train_preprocessor import TrainPreprocessor
+from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
+<<<<<<< HEAD
 from forte.common import ProcessExecutionException
+=======
+from forte.common import ProcessExecutionException, ProcessorConfigError
+>>>>>>> upstream/master
 
 data_samples_root = os.path.abspath(os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
@@ -139,7 +143,7 @@ class MultiPackCopier(MultiPackProcessor):
     """
 
     def _process(self, input_pack: MultiPack):
-        pack = input_pack.add_pack()
+        pack = input_pack.add_pack('copy')
         pack.set_text(input_pack.get_pack_at(0).text)
 
 
@@ -250,6 +254,12 @@ class DummyPackProcessor(PackProcessor):
 
     def __init__(self):
         super().__init__()
+        # Use to test the initialization behavior.
+        self.initialize_count = 0
+
+    def initialize(self, resources, configs):
+        super().initialize(resources, configs)
+        self.initialize_count += 1
 
     def _process(self, input_pack: DataPack):
         entries = list(input_pack.get_entries_of(NewType))
@@ -258,6 +268,12 @@ class DummyPackProcessor(PackProcessor):
         else:
             entry = entries[0]  # type: ignore
             entry.value += "[PACK]"
+
+    @classmethod
+    def default_configs(cls) -> Dict[str, Any]:
+        configs = super().default_configs()
+        configs['test'] = "test"
+        return configs
 
 
 class DummyFixedSizeBatchProcessor(FixedSizeBatchProcessor):
@@ -324,25 +340,25 @@ class PredictorPipelineTest(unittest.TestCase):
         pipeline.set_reader(SentenceReader())
         pipeline.initialize()
 
-        text_extractor = AttributeExtractor({
+        text_extractor_name = "forte.data.extractors.AttributeExtractor"
+        text_extractor_config = {
             "need_pad": True,
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "attribute": "text",
-        })
-        for pack in pipeline.process_dataset(data_path):
-            for instance in pack.get(Sentence):
-                text_extractor.update_vocab(pack, instance)
+        }
 
         model = DummyModel()
         predictor = DummyPredictor()
         predictor_config = {
-            "scope": Sentence,
+            "scope": "ft.onto.base_ontology.Sentence",
             "batch_size": batch_size,
             "feature_scheme": {
                 "text_tag": {
-                    "extractor": text_extractor,
-                    "converter": Converter(),
-                    "type": TrainPreprocessor.DATA_INPUT
+                    "extractor": {
+                        "class_name": text_extractor_name,
+                        "config": text_extractor_config
+                    },
+                    "type": "data_input"
                 },
             },
         }
@@ -354,6 +370,13 @@ class PredictorPipelineTest(unittest.TestCase):
         nlp.add(predictor, config=predictor_config)
         nlp.add(DummyEvaluator())
         nlp.initialize()
+
+        text_extractor = predictor.configs.\
+            feature_scheme.text_tag.extractor
+        for pack in pipeline.process_dataset(data_path):
+            for instance in pack.get(Sentence):
+                text_extractor.update_vocab(pack, instance)
+
         num_packs = 0
         for _ in nlp.process_dataset(data_path):
             num_packs += 1
@@ -366,8 +389,6 @@ class PredictorPipelineTest(unittest.TestCase):
 class PipelineTest(unittest.TestCase):
 
     def test_process_next(self):
-        from forte.data.readers import OntonotesReader
-
         # Define and config the Pipeline
         nlp = Pipeline[DataPack]()
         nlp.set_reader(OntonotesReader())
@@ -911,9 +932,14 @@ class DummyPackProcessorOne(DummyPackProcessor):
 
     @classmethod
     def expected_types_and_attributes(cls):
+<<<<<<< HEAD
         expectation: Dict[str, Set[str]] = {
             "Sentence": {"1", "2", "3"}
         }
+=======
+        expectation = dict()
+        expectation["Sentence"] = {"1", "2", "3"}
+>>>>>>> upstream/master
         return expectation
 
 
@@ -925,9 +951,14 @@ class DummyPackProcessorTwo(DummyPackProcessor):
 
     @classmethod
     def expected_types_and_attributes(cls):
+<<<<<<< HEAD
         expectation: Dict[str, Set[str]] = {
             "Document": {"1", "2", "3", "4"}
         }
+=======
+        expectation = dict()
+        expectation["Document"] = {"1", "2", "3", "4"}
+>>>>>>> upstream/master
         return expectation
 
 
@@ -938,12 +969,19 @@ class DummyEvaluatorOne(Evaluator):
         record_meta["Token"] = {"1", "2"}
 
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
+<<<<<<< HEAD
         pred_pack_expectation: Dict[str, Set[str]] = {
             "Sentence": {"1", "2", "3"}
         }
         ref_pack_expectation: Dict[str, Set[str]] = {
             "Sentence": {"1", "2", "3"}
         }
+=======
+        pred_pack_expectation = dict()
+        pred_pack_expectation["Sentence"] = {"1", "2", "3"}
+        ref_pack_expectation = dict()
+        ref_pack_expectation["Sentence"] = {"1", "2", "3"}
+>>>>>>> upstream/master
         self.expected_types_and_attributes(pred_pack_expectation,
                                            ref_pack_expectation)
         self.check_record(pred_pack, ref_pack)
@@ -960,12 +998,19 @@ class DummyEvaluatorTwo(Evaluator):
         record_meta["Token"] = {"1", "2"}
 
     def consume_next(self, pred_pack: PackType, ref_pack: PackType):
+<<<<<<< HEAD
         pred_pack_expectation: Dict[str, Set[str]] = {
             "Sentence": {"1", "2", "3"}
         }
         ref_pack_expectation: Dict[str, Set[str]] = {
             "Document": {"1", "2", "3"}
         }
+=======
+        pred_pack_expectation = dict()
+        pred_pack_expectation["Sentence"] = {"1", "2", "3"}
+        ref_pack_expectation = dict()
+        ref_pack_expectation["Document"] = {"1", "2", "3"}
+>>>>>>> upstream/master
         self.expected_types_and_attributes(pred_pack_expectation,
                                            ref_pack_expectation)
         self.check_record(pred_pack, ref_pack)
@@ -1051,6 +1096,73 @@ class RecordCheckPipelineTest(unittest.TestCase):
         data_path = data_samples_root + "/random_texts/0.txt"
         with self.assertRaises(ProcessExecutionException):
             nlp.process(data_path)
+
+    def test_reuse_processor(self):
+        # Create a basic pipeline of multi packs that have two pack (by copying)
+        nlp = Pipeline().set_reader(
+            SentenceReader()).add(
+            MultiPackBoxer()).add(
+            MultiPackCopier())
+
+        # Create one shared instance of this extractor
+        dummy = DummyPackProcessor()
+        nlp.add(dummy, config={"test": "dummy1"},
+                selector=NameMatchSelector("default"))
+
+        # This will not add the component successfully because the processor is
+        # initialized.
+        with self.assertRaises(ProcessorConfigError):
+            nlp.add(dummy, config={"test": "dummy2"})
+
+        # This will add the component, with a different selector
+        nlp.add(dummy, selector=NameMatchSelector("copy"))
+        nlp.initialize()
+
+        # Check that the two processors have the same name.
+        self.assertEqual(nlp.components[2].name,
+                         get_full_module_name(DummyPackProcessor))
+        self.assertEqual(nlp.components[3].name,
+                         get_full_module_name(DummyPackProcessor))
+
+        # Check that the two processors are also the same instance.
+        self.assertEqual(nlp.components[2], nlp.components[3])
+
+        # Check that the initialization is only done once, here the count
+        #  will only be 1.
+        self.assertEqual(nlp.components[2].initialize_count, 1)
+        self.assertEqual(nlp.components[3].initialize_count, 1)
+
+        # Check that the configuration is not changed by the second insertion.
+        self.assertEqual(nlp.components[3].configs.test, 'dummy1')
+
+        # Run it once to make sure it can run.
+        dataset_path = os.path.join(data_samples_root, "random_texts", "0.txt")
+        nlp.run(dataset_path)
+
+        # Check that initialization will be false after `run`, because it
+        #  calls the `finish` function of all components.
+        self.assertFalse(nlp.components[2].is_initialized)
+        self.assertFalse(nlp.components[3].is_initialized)
+
+        # Check that we are able to re-initialize the pipeline.
+        nlp.initialize()  # initialize the first time.
+        nlp.initialize()  # re-initialize.
+
+        # Check the name again after re-initialize.
+        self.assertEqual(nlp.components[2].name,
+                         get_full_module_name(DummyPackProcessor))
+        self.assertEqual(nlp.components[3].name,
+                         get_full_module_name(DummyPackProcessor))
+
+        # Obtain the results from the multipack.
+        mp: MultiPack = nlp.process(dataset_path)
+        pack: DataPack = mp.get_pack("default")
+        pack_copy: DataPack = mp.get_pack("copy")
+
+        # Check both pack are processed by the DummyProcessor once, because
+        #  we use different selector.
+        pack.get_single(NewType).value = "[PACK]"
+        pack_copy.get_single(NewType).value = "[PACK]"
 
 
 if __name__ == '__main__':

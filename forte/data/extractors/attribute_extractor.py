@@ -91,7 +91,7 @@ class AttributeExtractor(BaseExtractor):
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
         """
-        for entry in pack.get(self.config.entry_type, instance):
+        for entry in pack.get(self._entry_type, instance):
             # The following pylint skip due to a bug:
             # https://github.com/PyCQA/pylint/issues/3507
             # Hashable is not recognized the type.
@@ -120,7 +120,7 @@ class AttributeExtractor(BaseExtractor):
             a feature that contains the extracted data.
         """
         data = []
-        for entry in pack.get(self.config.entry_type, instance):
+        for entry in pack.get(self._entry_type, instance):
             value = self._get_attribute(entry, self.config.attribute)
             rep = self.element2repr(value) if self.vocab else value
             data.append(rep)
@@ -146,7 +146,7 @@ class AttributeExtractor(BaseExtractor):
             instance (Annotation): The instance from which the
                 extractor will extractor feature.
         """
-        for entry in pack.get(self.config.entry_type, instance):
+        for entry in pack.get(self._entry_type, instance):
             self._set_attribute(entry, self.config.attribute, None)
 
     def add_to_pack(self, pack: DataPack, instance: Annotation,
@@ -169,7 +169,7 @@ class AttributeExtractor(BaseExtractor):
                 of the model, which contains the index for attributes
                 of one instance.
         """
-        instance_entry = list(pack.get(self.config.entry_type, instance))
+        instance_entry = list(pack.get(self._entry_type, instance))
 
         # The following pylint skip due to a bug:
         # https://github.com/PyCQA/pylint/issues/3507

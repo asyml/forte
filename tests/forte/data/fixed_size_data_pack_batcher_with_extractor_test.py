@@ -35,9 +35,10 @@ class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
         pipeline.set_reader(CoNLL03Reader())
         pipeline.initialize()
 
-        text_extractor = AttributeExtractor({
+        text_extractor = AttributeExtractor()
+        text_extractor.initialize({
             "need_pad": True,
-            "entry_type": Token,
+            "entry_type": "ft.onto.base_ontology.Token",
             "attribute": "text",
         })
 
