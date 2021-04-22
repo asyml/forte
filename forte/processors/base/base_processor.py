@@ -70,7 +70,7 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         `merged_entry_tree` that has all the entries in ontology specification
         file would be populated. All the parent entry nodes of the input pack
         would be collected from this tree and add to the returned record
-        dictionary for later comparison to enable subtype checking.
+        dictionary for later comparison to enable subclass type checking.
 
         Args:
             input_pack: The input datapack.
