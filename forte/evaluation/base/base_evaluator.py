@@ -99,7 +99,7 @@ class Evaluator(PipelineComponent[PackType]):
         # pylint: disable=protected-access
         r"""Method to collect the type and attributes from the input pack and if
         :attr:`~forte.pipeline.Pipeline.resource` has `onto_specs` as key
-        and `ontology specification file file` as value, then
+        and ontology specification file path as value, then
         `merged_entry_tree` that has all the entries in ontology specification
         file would be populated. All the parent entry nodes of the input pack
         would be collected from this tree and add to the returned record
