@@ -51,7 +51,8 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         """
         pass
 
-    def expected_types_and_attributes(self) -> Dict[str, Set[str]]:
+    @classmethod
+    def expected_types_and_attributes(cls) -> Dict[str, Set[str]]:
         r"""Method to add expected types and attributes for the input of the
         current processor which would be checked before running the processor if
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
