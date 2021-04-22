@@ -1021,6 +1021,26 @@ class DummyEvaluatorTwo(Evaluator):
         pass
 
 
+class DummyEvaluatorThree(Evaluator):
+    """ This evaluator does nothing, just for test purpose."""
+
+    def consume_next(self, pred_pack: PackType, ref_pack: PackType):
+        pred_pack_expectation: Dict[str, Set[str]] = {
+            "ft.onto.example_import_ontology.Token": {"pos", "lemma"}
+        }
+        ref_pack_expectation: Dict[str, Set[str]] = {
+            "ft.onto.example_import_ontology.Token": {"pos", "lemma"}
+        }
+
+        self.expected_types_and_attributes(pred_pack_expectation,
+                                           ref_pack_expectation)
+        self.check_record(pred_pack, ref_pack)
+        self.writes_record(pred_pack, ref_pack)
+
+    def get_result(self):
+        pass
+
+
 class RecordCheckPipelineTest(unittest.TestCase):
 
     def test_pipeline1(self):
@@ -1166,8 +1186,8 @@ class RecordCheckPipelineTest(unittest.TestCase):
         pack_copy.get_single(NewType).value = "[PACK]"
 
     def test_pipeline6(self):
-        r"""Tests the processor record subtype checking with pipeline
-        initialized with ontology specification file"""
+        r"""Tests the processor record subclass type checking for processor with
+        pipeline initialized with ontology specification file"""
         onto_specs_file_path = os.path.join(onto_specs_samples_root,
                                             'example_ontology.json')
 
@@ -1188,6 +1208,28 @@ class RecordCheckPipelineTest(unittest.TestCase):
                                               "token_ranks"}
         })
 
+    def test_pipeline7(self):
+        r"""Tests the processor record subclass type checking for evaluator with
+        pipeline initialized with ontology specification file"""
+        onto_specs_file_path = os.path.join(onto_specs_samples_root,
+                                            'example_ontology.json')
+
+        resources: Resources = Resources()
+        resources.update(onto_specs=onto_specs_file_path)
+        nlp = Pipeline[DataPack](resources)
+        nlp.enforce_consistency(enforce=True)
+        reader = DummySentenceReaderTwo()
+        nlp.set_reader(reader)
+        dummy = DummyEvaluatorThree()
+        nlp.add(dummy)
+        nlp.initialize()
+        data_path = data_samples_root + "/random_texts/0.txt"
+        pack = nlp.process(data_path)
+        self.assertEqual(pack._meta.record, {
+            "ft.onto.example_ontology.Word": {"string_features",
+                                              "word_forms",
+                                              "token_ranks"}
+        })
 
 if __name__ == '__main__':
     unittest.main()
