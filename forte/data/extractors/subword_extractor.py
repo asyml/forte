@@ -93,7 +93,7 @@ class SubwordExtractor(BaseExtractor):
         data = [self.element2repr('[CLS]')] + data + \
                [self.element2repr('[SEP]')]
 
-        meta_data = {"need_pad": self.vocab.use_pad, # type: ignore
+        meta_data = {"need_pad": self.vocab.use_pad,  # type: ignore
                      "pad_value": self.get_pad_value(),
                      "dim": 1,
                      "dtype": int}

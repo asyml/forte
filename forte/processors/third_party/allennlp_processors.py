@@ -24,7 +24,7 @@ from forte.utils.utils_processor import parse_allennlp_srl_tags, \
     parse_allennlp_srl_results
 from ft.onto.base_ontology import Token, Sentence, Dependency, \
     PredicateLink, PredicateArgument, PredicateMention
-from ft.onto.allennlp import AllenNLPToken
+
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +155,8 @@ class AllenNLPProcessor(PackProcessor):
         for i, word in enumerate(words):
             word_begin = sentence.text.find(word, word_end)
             word_end = word_begin + len(word)
-            token = AllenNLPToken(input_pack, offset + word_begin, offset + word_end)
+            token = Token(input_pack, offset + word_begin,
+                          offset + word_end)
             if "pos" in self.configs.processors:
                 token.pos = pos[i]
             tokens.append(token)

@@ -25,7 +25,6 @@ from typing import Dict, List, Tuple, Any, Optional, Set
 from collections import defaultdict
 from forte.data.span import Span
 from forte.common import ExpectedRecordNotFound
-from forte.data.base_pack import PackType
 # from ft.onto.base_ontology import Token
 
 

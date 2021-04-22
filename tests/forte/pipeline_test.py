@@ -1166,8 +1166,8 @@ class RecordCheckPipelineTest(unittest.TestCase):
         pack_copy.get_single(NewType).value = "[PACK]"
 
     def test_pipeline6(self):
-        """Tests the processor record subtype checking with pipeline
-        initialized with ontology specs file"""
+        r"""Tests the processor record subtype checking with pipeline
+        initialized with ontology specification file"""
         onto_specs_file_path = os.path.join(onto_specs_samples_root,
                                             'example_ontology.json')
 

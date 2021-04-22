@@ -64,12 +64,12 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
                                   input_pack: PackType) -> Dict[str, Set[str]]:
         # pylint: disable=protected-access
         r"""Method to collect the type and attributes from the input pack and if
-        :attributes:`~forte.pipeline.Pipeline.resource` has `onto_specs` as key
-        and `ontology specs json file` as value, then `merged_entry_tree` that
-        has all the entries in ontology specs file would be populated. All the
-        parent entry nodes of the input pack would be collected from this tree
-        and add to the result dictionary for later comparison to enable subtype
-        checking.
+        :attr:`~forte.pipeline.Pipeline.resource` has `onto_specs` as key
+        and `ontology specification file file` as value, then
+        `merged_entry_tree` that has all the entries in ontology specification
+        file would be populated. All the parent entry nodes of the input pack
+        would be collected from this tree and add to the returned record
+        dictionary for later comparison to enable subtype checking.
 
         Args:
             input_pack: The input datapack.

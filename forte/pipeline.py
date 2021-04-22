@@ -31,6 +31,7 @@ from forte.common.exception import (
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
+from forte.data.ontology.code_generation_objects import EntryTree
 from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
 from forte.data.selector import Selector, DummySelector
@@ -217,10 +218,16 @@ class Pipeline(Generic[PackType]):
         Returns:
 
         """
-
+        # create EntryTree type object merged_entry_tree to store the parsed
+        # entry tree from ontology specification file passed in as part of
+        # resource and add the result to resource with key of merged_entry_tree.
+        merged_entry_tree = EntryTree()
         if self.resource.get("onto_specs"):
-            _, merged_entry_tree = OntologyCodeGenerator().generate(
-                self.resource.get("onto_specs"))
+            OntologyCodeGenerator().generate(
+                self.resource.get("onto_specs"),
+                merged_entry_tree=merged_entry_tree,
+                to_generate=False
+            )
             self.resource.update(merged_entry_tree=merged_entry_tree)
 
         # The process manager need to be assigned first.

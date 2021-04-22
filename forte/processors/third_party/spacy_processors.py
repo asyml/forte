@@ -23,7 +23,7 @@ from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import EntityMention, Sentence, Token
-from ft.onto.spacy import spacyToken
+
 
 __all__ = [
     "SpacyProcessor",
@@ -90,7 +90,7 @@ class SpacyProcessor(PackProcessor):
                 for word in sentence:
                     begin_pos_word = word.idx
                     end_pos_word = begin_pos_word + len(word.text)
-                    token = spacyToken(input_pack, begin_pos_word, end_pos_word)
+                    token = Token(input_pack, begin_pos_word, end_pos_word)
 
                     if "pos" in self.processors:
                         token.pos = word.tag_
