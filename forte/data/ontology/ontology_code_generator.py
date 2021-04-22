@@ -44,7 +44,7 @@ from forte.data.ontology.code_generation_exceptions import (
 from forte.data.ontology.code_generation_objects import (
     NonCompositeProperty, ListProperty, ClassTypeDefinition,
     EntryDefinition, Property, ImportManagerPool,
-    EntryName, ModuleWriterPool, ImportManager, DictProperty)
+    EntryName, ModuleWriterPool, ImportManager, DictProperty, EntryTree)
 # Builtin and local imports required in the generated python modules.
 from forte.data.ontology.ontology_code_const import (
     REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
@@ -379,7 +379,7 @@ class OntologyCodeGenerator:
     def generate(self, spec_path: str, destination_dir: str = os.getcwd(),
                  is_dry_run: bool = False, include_init: bool = True,
                  merged_path: Optional[str] = None, lenient_prefix=False,
-                 ) -> Optional[str]:
+                 ) -> Tuple[Optional[str], EntryTree]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to
             the class.
@@ -410,6 +410,7 @@ class OntologyCodeGenerator:
 
         merged_schemas: List[Dict] = []
         merged_prefixes: List[str] = []
+        merged_entry_tree: EntryTree = EntryTree()
 
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
@@ -417,7 +418,8 @@ class OntologyCodeGenerator:
             self.parse_ontology_spec(spec_path,
                                      merged_schema=merged_schemas,
                                      merged_prefixes=merged_prefixes,
-                                     lenient_prefix=lenient_prefix
+                                     lenient_prefix=lenient_prefix,
+                                     merged_entry_tree=merged_entry_tree
                                      )
         except OntologySpecError:
             logging.error("Error at parsing [%s]", spec_path)
@@ -448,7 +450,7 @@ class OntologyCodeGenerator:
             with open(merged_path, 'w') as out:
                 json.dump(merged_config, out, indent=2)
             logging.info("Done writing.")
-
+        merged_entry_tree.print_traverse()
         # When everything is successfully completed, copy the contents of
         # `self.tempdir` to the provided folder.
         if not is_dry_run:
@@ -464,8 +466,9 @@ class OntologyCodeGenerator:
 
             utils.copytree(tempdir, destination_dir,
                            ignore_pattern_if_file_exists='*/__init__.py')
-            return destination_dir
-        return tempdir
+            return destination_dir, merged_entry_tree
+
+        return tempdir, merged_entry_tree
 
     def visit_ontology_imports(
             self, import_path: str,
@@ -521,6 +524,7 @@ class OntologyCodeGenerator:
             visited_paths: Optional[Dict[str, bool]] = None,
             rec_visited_paths: Optional[Dict[str, bool]] = None,
             lenient_prefix=False,
+            merged_entry_tree=None
     ):
         r"""Performs a topological traversal on the directed graph formed by the
         imported json configs. While processing each config, it first generates
@@ -560,7 +564,9 @@ class OntologyCodeGenerator:
                 full_pkg_path, merged_schema, merged_prefixes,
                 visited_paths=visited_paths,
                 rec_visited_paths=rec_visited_paths,
-                lenient_prefix=lenient_prefix)
+                lenient_prefix=lenient_prefix,
+                merged_entry_tree=merged_entry_tree
+            )
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
@@ -574,13 +580,13 @@ class OntologyCodeGenerator:
             print_json_file = os.path.relpath(json_file_path, curr_forte_dir)
 
         self.parse_schema(spec_dict, print_json_file, merged_schema,
-                          merged_prefixes, lenient_prefix)
+                          merged_prefixes, lenient_prefix, merged_entry_tree)
 
         rec_visited_paths[json_file_path] = False
 
     def parse_schema(self, schema: Dict, source_json_file: str,
                      merged_schema: List[Dict], merged_prefixes: List[str],
-                     lenient_prefix=False,
+                     lenient_prefix=False, merged_entry_tree=None
                      ):
         r""" Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
@@ -664,6 +670,13 @@ class OntologyCodeGenerator:
                         DuplicatedAttributesWarning
                     )
                 self.allowed_types_tree[en.class_name].add(property_name)
+            # populate the entry tree based on information
+            curr_entry_name = en.class_name
+            parent_entry_name = definition['parent_entry']
+            curr_entry_attributes = self.allowed_types_tree[en.class_name]
+            merged_entry_tree.add_node(curr_entry_name,
+                                       parent_entry_name,
+                                       curr_entry_attributes)
 
     def cleanup_generated_ontology(self, path, is_forced=False) -> (
             Tuple[bool, Optional[str]]):
@@ -1050,3 +1063,8 @@ class OntologyCodeGenerator:
             self.base_entry_lookup[this_entry] = base_entry
 
         return base_entry
+
+
+if __name__ == "__main__":
+    destination_dir = OntologyCodeGenerator().\
+        generate('/Users/jenny.zhang/Documents/forte_develop/forte/tests/forte/data/ontology/test_specs/example_ontology.json')

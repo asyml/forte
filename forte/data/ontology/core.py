@@ -208,13 +208,6 @@ class Entry(Generic[ContainerType]):
         else:
             return module + '.' + self.__class__.__name__
 
-    def entry_base(self) -> List[str]:
-        """Return the base classes of this entry type"""
-        entry_base_classes = list()
-        for base in self.__class__.__bases__:
-            entry_base_classes.append(base.__name__)
-        return entry_base_classes
-
     def _check_attr_type(self, key, value):
         """
         Use the type hint to validate whether the provided value is as expected.

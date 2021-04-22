@@ -86,7 +86,7 @@ def parse_allennlp_srl_tags(tags: str) -> \
 
 
 def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
-                                      input_pack: PackType):
+                                      input_pack_record: Dict[str, Set[str]]):
     r"""Check if any types or attributes in expectation dictionary doesn't
     match with input_pack.record. If not, an error of
     :class:`~forte.common.exception.ExpectedRecordNotFound` will be raised.
@@ -94,7 +94,9 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
     Args:
         expectation: Dictionary of types and their attributes required for
             the current processor/evaluator.
-        input_pack: The input pack.
+        input_pack_record: The input pack record content combined with
+            all the parent types and attributes collected from
+            merged_entry_tree.
 
     Returns:
 
@@ -103,7 +105,7 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
     if expectation is not None:
         # check if expected types are in input pack.
         for expected_t in expectation:
-            if expected_t not in input_pack._meta.record.keys():
+            if expected_t not in input_pack_record.keys():
                 raise ExpectedRecordNotFound(
                     f"The record type {expected_t} is not found in "
                     f"meta of the prediction datapack.")
@@ -111,7 +113,7 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
                 expected_value = expectation.get(expected_t)
                 if expected_value is not None:
                     for expected_t_v in expected_value:
-                        if expected_t_v not in input_pack._meta.record \
+                        if expected_t_v not in input_pack_record \
                                 .get(expected_t, []):
                             raise ExpectedRecordNotFound(
                                 f"The record attribute type "

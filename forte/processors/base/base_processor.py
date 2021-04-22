@@ -51,14 +51,40 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         """
         pass
 
-    @classmethod
-    def expected_types_and_attributes(cls) -> Dict[str, Set[str]]:
+    def expected_types_and_attributes(self) -> Dict[str, Set[str]]:
         r"""Method to add expected types and attributes for the input of the
         current processor which would be checked before running the processor if
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
         the pipeline.
         """
+
         return {}
+
+    def collect_input_pack_record(self,
+                                  input_pack: PackType) -> Dict[str, Set[str]]:
+        # pylint: disable=protected-access
+        r"""Method to collect the type and attributes from the input pack and if
+        :attributes:`~forte.pipeline.Pipeline.resource` has `onto_specs` as key
+        and `ontology specs json file` as value, then `merged_entry_tree` that
+        has all the entries in ontology specs file would be populated. All the
+        parent entry nodes of the input pack would be collected from this tree
+        and add to the result dictionary for later comparison to enable subtype
+        checking.
+
+        Args:
+            input_pack: The input datapack.
+
+        Returns:
+            input_pack_record: The input pack record content combined with
+            all the parent types and attributes collected from
+            merged_entry_tree
+
+        """
+        input_pack_record = input_pack._meta.record.copy()
+        if self.resources.get("merged_entry_tree"):
+            merged_entry_tree = self.resources.get("merged_entry_tree")
+            merged_entry_tree.collect_parents(input_pack_record)
+        return input_pack_record
 
     def check_record(self, input_pack: PackType):
         # pylint: disable=protected-access
@@ -74,7 +100,8 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         """
         if self._check_type_consistency:
             expectation = self.expected_types_and_attributes()
-            record_types_and_attributes_check(expectation, input_pack)
+            input_pack_record = self.collect_input_pack_record(input_pack)
+            record_types_and_attributes_check(expectation, input_pack_record)
 
     def write_record(self, input_pack: PackType):
         r"""Method to write records of the output type of the current

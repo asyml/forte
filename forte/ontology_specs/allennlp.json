@@ -5,7 +5,7 @@
     ],
     "definitions": [
       {
-        "entry_name": "ft.onto.allennlp.Token",
+        "entry_name": "ft.onto.allennlp.AllenNLPToken",
         "parent_entry": "ft.onto.base_ontology.Token"
       }
     ]

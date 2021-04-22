@@ -634,3 +634,84 @@ class ModuleWriterPool:
 
     def writers(self):
         return self.__module_writers.values()
+
+
+class EntryTreeNode:
+    def __init__(self, data):
+        self.children = []
+        self.parent = None
+        self.name = data
+        self.attributes = set()
+
+    def attr_string(self):
+        attr_str = ', '.join(self.attributes)
+        return attr_str
+
+
+class EntryTree:
+    def __init__(self):
+        self.root = EntryTreeNode("root")
+
+    def add_node(self, curr_entry_name, parent_entry_name, curr_entry_attr):
+        found_node = search(self.root, curr_entry_name)
+        if found_node is None:
+            curr_entry_node = EntryTreeNode(curr_entry_name)
+            curr_entry_node.attributes = curr_entry_attr
+            parent_in_tree = search(self.root, parent_entry_name)
+            if parent_in_tree is None:
+                parent_in_tree = EntryTreeNode(parent_entry_name)
+                self.root.children.append(parent_in_tree)
+                parent_in_tree.parent = self.root
+            parent_in_tree.children.append(curr_entry_node)
+            curr_entry_node.parent = parent_in_tree
+        else:
+            found_node.attributes = curr_entry_attr
+
+    def print_traverse(self):
+        traverse(self.root)
+
+    def collect_parents(self, node_dict):
+        input_node_dict = node_dict.copy()
+        for node_name in input_node_dict.keys():
+            found_node = search(self.root, search_node_name=node_name)
+            if found_node is not None:
+                while found_node.parent.name is not 'root':
+                    node_dict[found_node.parent.name] = found_node.\
+                        parent.attributes
+                    found_node = found_node.parent
+
+    def get_all_children_below(self, node_name):
+        found_node = search(self.root, search_node_name=node_name)
+        all_children = list()
+        queue = list()
+        # Mark the source node as
+        # visited and enqueue it
+        queue.append(found_node)
+        while queue:
+            s = queue.pop(0)
+            all_children.append(s)
+            for i in found_node.children:
+                queue.append(i)
+        return all_children
+
+
+def search(node, search_node_name):
+    if node.name == search_node_name:
+        return node
+
+    for child in node.children:
+        tmp = search(child, search_node_name)
+        if tmp:
+            return tmp
+
+
+def traverse(node, path=list()):
+    node_attr = node.attr_string()
+    path.append(node.name + ": " + node_attr)
+    if len(node.children) == 0:
+        print(path)
+        path.pop()
+    else:
+        for child in node.children:
+            traverse(child, path)
+        path.pop()

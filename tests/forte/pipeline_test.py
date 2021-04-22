@@ -36,6 +36,8 @@ from forte.data.readers import PlainTextReader, StringReader, OntonotesReader
 from forte.data.selector import FirstPackSelector, NameMatchSelector, \
     SinglePackSelector, AllPackSelector
 from forte.data.types import DataRequest
+from forte.common import ProcessExecutionException, ProcessorConfigError, \
+    Resources
 from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, FixedSizeBatchProcessor, \
@@ -44,11 +46,15 @@ from forte.processors.base.batch_processor import Predictor, BatchProcessor
 from forte.train_preprocessor import TrainPreprocessor
 from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
-from forte.common import ProcessExecutionException, ProcessorConfigError
+
 
 data_samples_root = os.path.abspath(os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     *([os.path.pardir] * 2), 'data_samples'))
+
+onto_specs_samples_root = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    *([os.path.pardir] * 1), 'forte', 'data', 'ontology', 'test_specs'))
 
 
 @dataclass
@@ -914,10 +920,18 @@ class MultiPackPipelineTest(unittest.TestCase):
             self.assertEqual(num_pack, 2)
 
 
-class DummySentenceReader(SentenceReader):
+class DummySentenceReaderOne(SentenceReader):
 
     def record(self, record_meta: Dict[str, Set[str]]):
         record_meta["Sentence"] = {"1", "2", "3"}
+
+
+class DummySentenceReaderTwo(SentenceReader):
+
+    def record(self, record_meta: Dict[str, Set[str]]):
+        record_meta["ft.onto.example_ontology.Word"] = {"string_features",
+                                                        "word_forms",
+                                                        "token_ranks"}
 
 
 class DummyPackProcessorOne(DummyPackProcessor):
@@ -945,6 +959,17 @@ class DummyPackProcessorTwo(DummyPackProcessor):
     def expected_types_and_attributes(cls):
         expectation: Dict[str, Set[str]] = {
             "Document": {"1", "2", "3", "4"}
+        }
+
+        return expectation
+
+
+class DummyPackProcessorThree(DummyPackProcessor):
+
+    @classmethod
+    def expected_types_and_attributes(cls):
+        expectation: Dict[str, Set[str]] = {
+            "ft.onto.example_import_ontology.Token": {"pos", "lemma"}
         }
 
         return expectation
@@ -1003,7 +1028,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
 
         nlp = Pipeline[DataPack]()
         nlp.enforce_consistency(enforce=True)
-        reader = DummySentenceReader()
+        reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         nlp.initialize()
         data_path = data_samples_root + "/random_texts/0.txt"
@@ -1015,7 +1040,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
 
         nlp = Pipeline[DataPack]()
         nlp.enforce_consistency(enforce=True)
-        reader = DummySentenceReader()
+        reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyPackProcessorOne()
         nlp.add(dummy)
@@ -1032,7 +1057,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
 
         nlp = Pipeline[DataPack]()
         nlp.enforce_consistency(enforce=True)
-        reader = DummySentenceReader()
+        reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyPackProcessorTwo()
         nlp.add(dummy)
@@ -1049,7 +1074,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
 
         nlp = Pipeline[DataPack]()
         nlp.enforce_consistency(enforce=True)
-        reader = DummySentenceReader()
+        reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorOne()
         nlp.add(dummy)
@@ -1064,7 +1089,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
 
         nlp = Pipeline[DataPack]()
         nlp.enforce_consistency(enforce=True)
-        reader = DummySentenceReader()
+        reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorTwo()
         nlp.add(dummy)
@@ -1139,6 +1164,29 @@ class RecordCheckPipelineTest(unittest.TestCase):
         #  we use different selector.
         pack.get_single(NewType).value = "[PACK]"
         pack_copy.get_single(NewType).value = "[PACK]"
+
+    def test_pipeline6(self):
+        """Tests the processor record subtype checking with pipeline
+        initialized with ontology specs file"""
+        onto_specs_file_path = os.path.join(onto_specs_samples_root,
+                                            'example_ontology.json')
+
+        resources: Resources = Resources()
+        resources.update(onto_specs=onto_specs_file_path)
+        nlp = Pipeline[DataPack](resources)
+        nlp.enforce_consistency(enforce=True)
+        reader = DummySentenceReaderTwo()
+        nlp.set_reader(reader)
+        dummy = DummyPackProcessorThree()
+        nlp.add(dummy)
+        nlp.initialize()
+        data_path = data_samples_root + "/random_texts/0.txt"
+        pack = nlp.process(data_path)
+        self.assertEqual(pack._meta.record, {
+            "ft.onto.example_ontology.Word": {"string_features",
+                                              "word_forms",
+                                              "token_ranks"}
+        })
 
 
 if __name__ == '__main__':

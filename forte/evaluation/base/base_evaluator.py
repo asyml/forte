@@ -14,6 +14,7 @@
 """
 Defines the Evaluator interface and related functions.
 """
+import logging
 from abc import abstractmethod
 from typing import Any, Dict, Set
 
@@ -93,6 +94,32 @@ class Evaluator(PipelineComponent[PackType]):
         """
         pass
 
+    def collect_input_pack_record(self,
+                                  input_pack: PackType) -> Dict[str, Set[str]]:
+        # pylint: disable=protected-access
+        r"""Method to collect the type and attributes from the input pack and if
+        :attributes:`~forte.pipeline.Pipeline.resource` has `onto_specs` as key
+        and `ontology specs json file` as value, then `merged_entry_tree` that
+        has all the entries in ontology specs file would be populated. All the
+        parent entry nodes of the input pack would be collected from this tree
+        and add to the result dictionary for later comparison to enable subtype
+        checking.
+
+        Args:
+            input_pack: The input datapack.
+
+        Returns:
+            input_pack_record: The input pack record content combined with
+            all the parent types and attributes collected from
+            merged_entry_tree
+
+        """
+        input_pack_record = input_pack._meta.record.copy()
+        if self.resources.get("merged_entry_tree"):
+            merged_entry_tree = self.resources.get("merged_entry_tree")
+            merged_entry_tree.collect_parents(input_pack_record)
+        return input_pack_record
+
     def check_record(self, pred_pack: PackType, ref_pack: PackType):
         # pylint: disable=protected-access
         r"""Method to check type consistency if
@@ -109,10 +136,12 @@ class Evaluator(PipelineComponent[PackType]):
                 to score on.
         """
         if self._check_type_consistency:
+            pred_pack_record = self.collect_input_pack_record(pred_pack)
+            ref_pack_record = self.collect_input_pack_record(ref_pack)
             record_types_and_attributes_check(self._pred_pack_expectation,
-                                              pred_pack)
+                                              pred_pack_record)
             record_types_and_attributes_check(self._ref_pack_expectation,
-                                              ref_pack)
+                                              ref_pack_record)
 
     def writes_record(self, pred_pack: PackType, ref_pack: PackType):
         r"""Method to write records of the output type of the current
@@ -130,5 +159,16 @@ class Evaluator(PipelineComponent[PackType]):
 
         """
         # pylint: disable=protected-access
-        self.pred_pack_record(pred_pack._meta.record)
-        self.ref_pack_record(ref_pack._meta.record)
+        try:
+            self.pred_pack_record(pred_pack._meta.record)
+        except AttributeError:
+            # For backward compatibility, no record to write.
+            logging.info(
+                "Packs of the old format do not have the record field.")
+
+        try:
+            self.ref_pack_record(ref_pack._meta.record)
+        except AttributeError:
+            # For backward compatibility, no record to write.
+            logging.info(
+                "Packs of the old format do not have the record field.")
