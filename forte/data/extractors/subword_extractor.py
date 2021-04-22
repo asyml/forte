@@ -50,6 +50,13 @@ class SubwordExtractor(BaseExtractor):
             hparams=None)
         predifined_dict = [key for key, _ in self.tokenizer.vocab.items()]
         self.predefined_vocab(predifined_dict)
+        if not self.vocab:
+            raise AttributeError("Vocabulary is required "
+                                 "in SubwordExtractor.")
+        self.vocab.mark_special_element(self.tokenizer.vocab['[PAD]'],
+                                        "PAD")
+        self.vocab.mark_special_element(self.tokenizer.vocab['[UNK]'],
+                                        "UNK")
 
     @classmethod
     def default_configs(cls):
@@ -81,18 +88,16 @@ class SubwordExtractor(BaseExtractor):
             text = subword.text
             if not subword.is_first_segment:
                 text = '##' + text
-            if text in self.tokenizer.vocab:
-                data.append(self.tokenizer.vocab[text])
-            else:
-                data.append(self.tokenizer.vocab['[UNK]'])
+            data.append(self.element2repr(text))
 
-        data = [self.tokenizer.vocab['[CLS]']] + data + \
-               [self.tokenizer.vocab['[SEP]']]
+        data = [self.element2repr('[CLS]')] + data + \
+               [self.element2repr('[SEP]')]
 
-        meta_data = {"pad_value": self.get_pad_value(),
+        meta_data = {"need_pad": self.vocab.use_pad, # type: ignore
+                     "pad_value": self.get_pad_value(),
                      "dim": 1,
                      "dtype": int}
 
         return Feature(data=data,
                        metadata=meta_data,
-                       vocab=self.tokenizer.vocab)
+                       vocab=self.vocab)
