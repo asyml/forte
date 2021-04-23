@@ -334,7 +334,7 @@ class DummyPredictor(Predictor):
 class PredictorPipelineTest(unittest.TestCase):
 
     @data(2, 4, 8)
-    def test_pipeline1(self, batch_size):
+    def test_pipeline_different_batch_size_chain_predictor(self, batch_size):
         """Tests a chain of Batch->Pack->Batch with different batch sizes."""
 
         data_path = data_samples_root + "/random_texts/0.txt"
@@ -411,7 +411,7 @@ class PipelineTest(unittest.TestCase):
                 tokens = [token.text for token in pack.get(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
 
-    def test_pipeline1(self):
+    def test_pipeline_pack_processor(self):
         """Tests a pack processor only."""
 
         nlp = Pipeline[DataPack]()
@@ -431,7 +431,7 @@ class PipelineTest(unittest.TestCase):
         # check that all packs are yielded
         self.assertEqual(num_packs, reader.count)
 
-    def test_pipeline2(self):
+    def test_pipeline_batch_processor(self):
         """Tests a batch processor only."""
 
         nlp = Pipeline[DataPack]()
@@ -453,7 +453,7 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(num_packs, reader.count)
 
     @data(2, 4, 8)
-    def test_pipeline3(self, batch_size):
+    def test_pipeline_different_batch_size_chain(self, batch_size):
         """Tests a chain of Batch->Pack->Batch with different batch sizes."""
 
         nlp = Pipeline[DataPack]()
@@ -481,7 +481,7 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(num_packs, reader.count)
 
     @data(4, 8, 16)
-    def test_pipeline4(self, batch_size):
+    def test_pipeline_pack_batch_pack_chain(self, batch_size):
         """Tests a chain of Pack->Batch->Pack."""
 
         nlp = Pipeline[DataPack]()
@@ -511,7 +511,8 @@ class PipelineTest(unittest.TestCase):
 
     @data((2, 3), (4, 5), (8, 9), (3, 2), (5, 4), (9, 8))
     @unpack
-    def test_pipeline5(self, batch_size1, batch_size2):
+    def test_pipeline_batch_pack_batch_diff_size(self, batch_size1,
+                                                 batch_size2):
         # Tests a chain of Batch->Pack->Batch with different batch sizes.
         nlp = Pipeline[DataPack]()
         reader = SentenceReader()
@@ -539,7 +540,10 @@ class PipelineTest(unittest.TestCase):
 
     @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
     @unpack
-    def test_pipeline6(self, batch_size1, batch_size2, batch_size3):
+    def test_pipeline_three_stack_batch_diff_size(self,
+                                                  batch_size1,
+                                                  batch_size2,
+                                                  batch_size3):
         # Tests a chain of Batch->Batch->Batch with different batch sizes.
 
         nlp = Pipeline[DataPack]()
@@ -569,7 +573,10 @@ class PipelineTest(unittest.TestCase):
 
     @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
     @unpack
-    def test_pipeline7(self, batch_size1, batch_size2, batch_size3):
+    def test_pipeline_three_stack_diff_size_batch_pack_chain(self,
+                                                             batch_size1,
+                                                             batch_size2,
+                                                             batch_size3):
         # Tests a chain of Batch->Batch->Batch->Pack with different batch sizes.
 
         nlp = Pipeline[DataPack]()
@@ -633,7 +640,7 @@ class MultiPackPipelineTest(unittest.TestCase):
                           pack.get(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
 
-    def test_pipeline1(self):
+    def test_pipeline_multipack_reader(self):
         """Tests a pack processor only."""
 
         nlp = Pipeline[MultiPack]()
@@ -653,7 +660,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         # check that all packs are yielded
         self.assertEqual(num_packs, reader.count)
 
-    def test_pipeline2(self):
+    def test_pipeline_multipack_selector(self):
         """Tests a batch processor only."""
 
         nlp = Pipeline[MultiPack]()
@@ -720,7 +727,7 @@ class MultiPackPipelineTest(unittest.TestCase):
                              (sent_len % (2 * batch_size) > 0)))
 
     @data(2, 4, 8)
-    def test_pipeline3(self, batch_size):
+    def test_pipeline_multipack_batch_pack_batch_diff_size(self, batch_size):
         """Tests a chain of Batch->Pack->Batch with different batch sizes."""
         nlp = Pipeline[MultiPack]()
         reader = MultiPackSentenceReader()
@@ -749,7 +756,7 @@ class MultiPackPipelineTest(unittest.TestCase):
         self.assertEqual(num_packs, reader.count)
 
     @data(4, 8, 16)
-    def test_pipeline4(self, batch_size):
+    def test_pipeline_multipack_pack_batch_pack_chain(self, batch_size):
         """Tests a chain of Pack->Batch->Pack."""
 
         nlp = Pipeline[MultiPack]()
@@ -781,7 +788,9 @@ class MultiPackPipelineTest(unittest.TestCase):
 
     @data((2, 3), (4, 5), (8, 9), (3, 2), (5, 4), (9, 8))
     @unpack
-    def test_pipeline5(self, batch_size1, batch_size2):
+    def test_pipeline_multipack_batch_pack_batch_diff_size(self,
+                                                           batch_size1,
+                                                           batch_size2):
         # Tests a chain of Batch->Pack->Batch with different batch sizes.
 
         nlp = Pipeline[MultiPack]()
@@ -813,7 +822,8 @@ class MultiPackPipelineTest(unittest.TestCase):
 
     @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
     @unpack
-    def test_pipeline6(self, batch_size1, batch_size2, batch_size3):
+    def test_pipeline_multipack_three_stack_batch_diff(
+            self, batch_size1, batch_size2, batch_size3):
         # Tests a chain of Batch->Batch->Batch with different batch sizes.
 
         nlp = Pipeline[MultiPack]()
@@ -846,7 +856,8 @@ class MultiPackPipelineTest(unittest.TestCase):
 
     @data((2, 3, 4), (4, 5, 3), (8, 9, 7))
     @unpack
-    def test_pipeline7(self, batch_size1, batch_size2, batch_size3):
+    def test_pipeline_multipack_three_stack_batch_diff_size_pack_chain(
+            self, batch_size1, batch_size2, batch_size3):
         # Tests a chain of Batch->Batch->Batch->Pack with different batch sizes.
 
         nlp = Pipeline[MultiPack]()
@@ -1043,7 +1054,7 @@ class DummyEvaluatorThree(Evaluator):
 
 class RecordCheckPipelineTest(unittest.TestCase):
 
-    def test_pipeline1(self):
+    def test_pipeline_reader_record_writing(self):
         """Tests reader record writing """
 
         nlp = Pipeline[DataPack]()
@@ -1055,7 +1066,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
         pack = nlp.process(data_path)
         self.assertEqual(pack._meta.record["Sentence"], {"1", "2", "3"})
 
-    def test_pipeline2(self):
+    def test_pipeline_processor_record_writing(self):
         """Tests the processor record writing"""
 
         nlp = Pipeline[DataPack]()
@@ -1071,7 +1082,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
         self.assertEqual(pack._meta.record["Token"], {"1", "2"})
         self.assertEqual(pack._meta.record["Document"], {"2"})
 
-    def test_pipeline3(self):
+    def test_pipeline_processor_record_checking_mismatching_error(self):
         """Tests the behavior of processor raising error exception
         and behavior of set enforce_consistency for the pipeline"""
 
@@ -1089,7 +1100,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
         nlp.initialize()
         nlp.process(data_path)
 
-    def test_pipeline4(self):
+    def test_pipeline_evaluator_record_writing(self):
         """Tests the evaluator record writing"""
 
         nlp = Pipeline[DataPack]()
@@ -1104,7 +1115,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
         self.assertEqual(pack._meta.record["Sentence"], {"1", "2", "3"})
         self.assertEqual(pack._meta.record["Token"], {"1", "2"})
 
-    def test_pipeline5(self):
+    def test_pipeline_evaluator_record_checking_mismatching_error(self):
         """Tests the behavior of evaluator raising error exception"""
 
         nlp = Pipeline[DataPack]()
@@ -1185,15 +1196,12 @@ class RecordCheckPipelineTest(unittest.TestCase):
         pack.get_single(NewType).value = "[PACK]"
         pack_copy.get_single(NewType).value = "[PACK]"
 
-    def test_pipeline6(self):
+    def test_pipeline_processor_subclass_type_checking(self):
         r"""Tests the processor record subclass type checking for processor with
         pipeline initialized with ontology specification file"""
         onto_specs_file_path = os.path.join(onto_specs_samples_root,
-                                            'example_ontology.json')
-
-        resources: Resources = Resources()
-        resources.update(onto_specs=onto_specs_file_path)
-        nlp = Pipeline[DataPack](resources)
+                                            'example_merged_ontology.json')
+        nlp = Pipeline[DataPack](ontology_file=onto_specs_file_path)
         nlp.enforce_consistency(enforce=True)
         reader = DummySentenceReaderTwo()
         nlp.set_reader(reader)
@@ -1208,15 +1216,12 @@ class RecordCheckPipelineTest(unittest.TestCase):
                                               "token_ranks"}
         })
 
-    def test_pipeline7(self):
+    def test_pipeline_evaluator_subclass_type_checking(self):
         r"""Tests the processor record subclass type checking for evaluator with
         pipeline initialized with ontology specification file"""
         onto_specs_file_path = os.path.join(onto_specs_samples_root,
-                                            'example_ontology.json')
-
-        resources: Resources = Resources()
-        resources.update(onto_specs=onto_specs_file_path)
-        nlp = Pipeline[DataPack](resources)
+                                            'example_merged_ontology.json')
+        nlp = Pipeline[DataPack](ontology_file=onto_specs_file_path)
         nlp.enforce_consistency(enforce=True)
         reader = DummySentenceReaderTwo()
         nlp.set_reader(reader)
@@ -1230,6 +1235,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
                                               "word_forms",
                                               "token_ranks"}
         })
+
 
 if __name__ == '__main__':
     unittest.main()

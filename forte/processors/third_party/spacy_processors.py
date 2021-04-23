@@ -67,7 +67,6 @@ class SpacyProcessor(PackProcessor):
             'lang': 'en_core_web_sm',
             # Language code for the language to build the Pipeline
             'use_gpu': False,
-            'onto_file': 'forte/ontology_specs/spacy.json'
         })
         return config
 

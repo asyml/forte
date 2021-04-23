@@ -97,7 +97,8 @@ class Pipeline(Generic[PackType]):
     information to the data packs.
     """
 
-    def __init__(self, resource: Optional[Resources] = None):
+    def __init__(self, resource: Optional[Resources] = None,
+                 ontology_file: Optional[str] = None):
         self._reader: BaseReader
         self._reader_config: Optional[Config] = None
 
@@ -124,6 +125,7 @@ class Pipeline(Generic[PackType]):
             self.resource = Resources()
         else:
             self.resource = resource
+        self.resource.update(onto_specs=ontology_file)
 
         # The flag indicating whether this pipeline is initialized.
         self._initialized: bool = False
@@ -223,12 +225,12 @@ class Pipeline(Generic[PackType]):
         # resource and add the result to resource with key of merged_entry_tree.
         merged_entry_tree = EntryTree()
         if self.resource.get("onto_specs"):
-            OntologyCodeGenerator().generate(
-                self.resource.get("onto_specs"),
+            OntologyCodeGenerator().parse_schema_for_no_import_onto_specs_file(
+                ontology_path=self.resource.get("onto_specs"),
                 merged_entry_tree=merged_entry_tree,
-                to_generate=False
             )
             self.resource.update(merged_entry_tree=merged_entry_tree)
+            merged_entry_tree.print_traverse()
 
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))

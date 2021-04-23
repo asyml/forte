@@ -380,9 +380,7 @@ class OntologyCodeGenerator:
 
     def generate(self, spec_path: str, destination_dir: str = os.getcwd(),
                  is_dry_run: bool = False, include_init: bool = True,
-                 merged_path: Optional[str] = None, lenient_prefix=False,
-                 merged_entry_tree: Optional[EntryTree] = None,
-                 to_generate: bool = True)\
+                 merged_path: Optional[str] = None, lenient_prefix=False)\
             -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to
@@ -404,15 +402,6 @@ class OntologyCodeGenerator:
                     be written at this path.
                 lenient_prefix: if `True`, will not enforce the entry name to
                     match a known prefix.
-                merged_entry_tree: an EntryTree type object and if it's not
-                    `None` then after running this function, all the entries
-                    from ontology specification file would be parsed into a tree
-                    structure with parent and children entries to represent
-                    the relationship.
-                to_generate: if `True`, creates the ontology, would be set to
-                    be `True` normally, only set to `False` when using it to
-                    get the `merged_entry_tree` from ontology specification
-                    file.
 
             Returns:
                 Directory path in which the modules are created: either one of
@@ -432,7 +421,6 @@ class OntologyCodeGenerator:
                                      merged_schema=merged_schemas,
                                      merged_prefixes=merged_prefixes,
                                      lenient_prefix=lenient_prefix,
-                                     merged_entry_tree=merged_entry_tree
                                      )
         except OntologySpecError:
             logging.error("Error at parsing [%s]", spec_path)
@@ -443,44 +431,43 @@ class OntologyCodeGenerator:
         # A temporary directory to save the generated file structure until the
         # generation is completed and verified.
         tempdir = tempfile.mkdtemp()
-        if to_generate:
-            # Starting from here, we won't add any more modules to import.
-            self.import_managers.fix_all_modules()
+        # Starting from here, we won't add any more modules to import.
+        self.import_managers.fix_all_modules()
 
-            logging.info('Working on %s', spec_path)
-            for writer in self.module_writers.writers():
-                logging.info('Writing module: %s', writer.module_name)
-                writer.write(tempdir, destination_dir, include_init)
-                logging.info('Done writing.')
+        logging.info('Working on %s', spec_path)
+        for writer in self.module_writers.writers():
+            logging.info('Writing module: %s', writer.module_name)
+            writer.write(tempdir, destination_dir, include_init)
+            logging.info('Done writing.')
 
-            if merged_path is not None:
-                logging.info("Writing merged schema at %s", merged_path)
-                merged_config = {
-                    "name": "all_ontology",
-                    "definitions": merged_schemas,
-                    "additional_prefixes": list(set(merged_prefixes)),
-                }
-                with open(merged_path, 'w') as out:
-                    json.dump(merged_config, out, indent=2)
-                logging.info("Done writing.")
+        if merged_path is not None:
+            logging.info("Writing merged schema at %s", merged_path)
+            merged_config = {
+                "name": "all_ontology",
+                "definitions": merged_schemas,
+                "additional_prefixes": list(set(merged_prefixes)),
+            }
+            with open(merged_path, 'w') as out:
+                json.dump(merged_config, out, indent=2)
+            logging.info("Done writing.")
 
-            # When everything is successfully completed, copy the contents of
-            # `self.tempdir` to the provided folder.
-            if not is_dry_run:
-                generated_top_dirs = set(utils.get_top_level_dirs(tempdir))
-                for existing_top_dir in utils.get_top_level_dirs(
-                        destination_dir):
-                    if existing_top_dir in generated_top_dirs:
-                        logging.warning(
-                            "The directory with the name "
-                            "%s is already present in "
-                            "%s. New files will be merge into the "
-                            "existing directory.", existing_top_dir,
-                            destination_dir)
+        # When everything is successfully completed, copy the contents of
+        # `self.tempdir` to the provided folder.
+        if not is_dry_run:
+            generated_top_dirs = set(utils.get_top_level_dirs(tempdir))
+            for existing_top_dir in utils.get_top_level_dirs(
+                    destination_dir):
+                if existing_top_dir in generated_top_dirs:
+                    logging.warning(
+                        "The directory with the name "
+                        "%s is already present in "
+                        "%s. New files will be merge into the "
+                        "existing directory.", existing_top_dir,
+                        destination_dir)
 
-                utils.copytree(tempdir, destination_dir,
-                               ignore_pattern_if_file_exists='*/__init__.py')
-                return destination_dir
+            utils.copytree(tempdir, destination_dir,
+                           ignore_pattern_if_file_exists='*/__init__.py')
+            return destination_dir
 
         return tempdir
 
@@ -538,7 +525,6 @@ class OntologyCodeGenerator:
             visited_paths: Optional[Dict[str, bool]] = None,
             rec_visited_paths: Optional[Dict[str, bool]] = None,
             lenient_prefix=False,
-            merged_entry_tree: Optional[EntryTree]=None
     ):
         r"""Performs a topological traversal on the directed graph formed by the
         imported json configs. While processing each config, it first generates
@@ -553,11 +539,6 @@ class OntologyCodeGenerator:
             rec_visited_paths: Keeps track of the current recursion stack, to
                 detect, and throw error if any cycles are present.
             lenient_prefix: Whether to relax the requirement on the prefix.
-            merged_entry_tree: an EntryTree type object and if it's not `None`
-                then after running this function, all the entries from
-                ontology specification file would be parsed into a tree
-                structure with parent and children entries to represent
-                the relationship.
         Returns:
         """
         import_info = self.visit_ontology_imports(
@@ -583,8 +564,7 @@ class OntologyCodeGenerator:
                 full_pkg_path, merged_schema, merged_prefixes,
                 visited_paths=visited_paths,
                 rec_visited_paths=rec_visited_paths,
-                lenient_prefix=lenient_prefix,
-                merged_entry_tree=merged_entry_tree
+                lenient_prefix=lenient_prefix
             )
 
         # Once the ontology for all the imported files is generated, generate
@@ -599,9 +579,48 @@ class OntologyCodeGenerator:
             print_json_file = os.path.relpath(json_file_path, curr_forte_dir)
 
         self.parse_schema(spec_dict, print_json_file, merged_schema,
-                          merged_prefixes, lenient_prefix, merged_entry_tree)
+                          merged_prefixes, lenient_prefix)
 
         rec_visited_paths[json_file_path] = False
+
+    def parse_schema_for_no_import_onto_specs_file(
+            self, ontology_path: str, lenient_prefix=False,
+            merged_entry_tree: Optional[EntryTree] = None):
+        r"""Function to populate the `merged_entry_tree` after reading
+            ontology from the input json file.
+
+        Args:
+            ontology_path: The input ontology specification file, which should
+                be a json file, and we assume it has all the entries inside
+                with no import as key.
+            lenient_prefix: Whether to remove the constraint on the prefix set.
+            merged_entry_tree: an EntryTree type object and if it's not`None`
+                then after running this function, all the entries from
+                ontology specification file would be parsed into a tree
+                structure with parent and children entries to represent
+                the relationship.
+
+        Returns:
+
+        """
+
+        with open(ontology_path, 'r') as f:
+            spec_dict = json.load(f)
+
+        # Assume no import key in the ontology file
+        if SchemaKeywords.imports in spec_dict.keys():
+            raise OntologySpecValidationError(
+                "the input ontology specification file should not have import"
+                "as key, i.e. if there is an existing ontology file that need"
+                "to be imported, you should run generate_ontology create with"
+                "-merged_path specified and use this generated file as ontology"
+                "file")
+
+        merged_schema: List[Dict] = []
+        merged_prefixes: List[str] = []
+
+        self.parse_schema(spec_dict, ontology_path, merged_schema,
+                          merged_prefixes, lenient_prefix, merged_entry_tree)
 
     def parse_schema(self, schema: Dict, source_json_file: str,
                      merged_schema: List[Dict], merged_prefixes: List[str],

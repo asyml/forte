@@ -105,8 +105,6 @@ class AllenNLPProcessor(PackProcessor):
             'tag_formalism': "stanford",
             'overwrite_entries': False,
             'allow_parallel_entries': True,
-            'onto_file': 'forte/ontology_specs/allennlp.json'
-
         })
         return config
 
