@@ -193,8 +193,6 @@ class AllenNLPProcessor(PackProcessor):
         :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
         the pipeline.
         """
-        expectation_dict: Dict[str, Set[str]] = {
+        return {
              "ft.onto.base_ontology.Sentence": set()
         }
-
-        return expectation_dict

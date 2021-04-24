@@ -659,9 +659,9 @@ class EntryTree:
     def add_node(self, curr_entry_name: str,
                  parent_entry_name: str,
                  curr_entry_attr: Set[str]):
-        r""" Add a tree node with curr_entry_name as a child to
-        parent_entry_name in the tree, the attributes curr_entry_attr would be
-        added to the tree node attributes.
+        r""" Add a tree node with `curr_entry_name` as a child to
+        `parent_entry_name` in the tree, the attributes `curr_entry_attr`
+        would be added to the tree node attributes.
 
         Args:
             curr_entry_name: the type name of the node to be added.
@@ -691,8 +691,8 @@ class EntryTree:
         traverse(self.root, path)
 
     def collect_parents(self, node_dict: Dict[str, Set[str]]):
-        r"""Collect all the parent nodes for all the nodes in the node_dict
-        and add the types and attributes of these parent nodes to node_dict.
+        r"""Collect all the parent nodes for all the nodes in the `node_dict`
+        and add the types and attributes of these parent nodes to `ode_dict`.
 
         Args:
             node_dict: the nodes dictionary of nodes to collect parent nodes

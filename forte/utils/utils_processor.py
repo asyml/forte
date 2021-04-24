@@ -18,13 +18,16 @@ Utility functions related to processors.
 __all__ = [
     "parse_allennlp_srl_results",
     "parse_allennlp_srl_tags",
-    "record_types_and_attributes_check"
+    "record_types_and_attributes_check",
+    "collect_input_pack_record"
 ]
 
 from typing import Dict, List, Tuple, Any, Optional, Set
 from collections import defaultdict
 from forte.data.span import Span
+from forte.data.base_pack import PackType
 from forte.common import ExpectedRecordNotFound
+from forte.common.resources import Resources
 # from ft.onto.base_ontology import Token
 
 
@@ -95,7 +98,7 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
             the current processor/evaluator.
         input_pack_record: The input pack record content combined with
             all the parent types and attributes collected from
-            merged_entry_tree.
+            `merged_entry_tree`.
 
     Returns:
 
@@ -119,3 +122,32 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
                                 f"{expected_t_v} is not found in "
                                 f"attribute of record {expected_t} "
                                 f"in meta of the input datapack.")
+
+
+def collect_input_pack_record(resources: Resources,
+                              input_pack: PackType) -> Dict[str, Set[str]]:
+    # pylint: disable=protected-access
+    r"""Method to collect the type and attributes from the input pack and if
+    :attr:`~forte.pipeline.Pipeline.resource` has `onto_specs` as key
+    and ontology specification file path as value, then
+    `merged_entry_tree` that has all the entries in ontology specification
+    file would be populated. All the parent entry nodes of the input pack
+    would be collected from this tree and add to the returned record
+    dictionary for later comparison to enable subclass type checking.
+
+    Args:
+        resources: The pipeline attribute that stores and passes resources on
+            the pipeline level.
+        input_pack: The input datapack.
+
+    Returns:
+        input_pack_record: The input pack record content combined with
+        all the parent types and attributes collected from
+        merged_entry_tree
+
+    """
+    input_pack_record = input_pack._meta.record.copy()
+    if resources.get("merged_entry_tree"):
+        merged_entry_tree = resources.get("merged_entry_tree")
+        merged_entry_tree.collect_parents(input_pack_record)
+    return input_pack_record
