@@ -708,18 +708,6 @@ class EntryTree:
                         parent.attributes
                     found_node = found_node.parent
 
-    def get_all_children_below(self, node_name: str):
-        found_node = search(self.root, search_node_name=node_name)
-        all_children = list()
-        queue = list()
-        queue.append(found_node)
-        while queue:
-            s = queue.pop(0)
-            all_children.append(s)
-            for i in found_node.children:
-                queue.append(i)
-        return all_children
-
 
 def search(node: EntryTreeNode, search_node_name: str):
     if node.name == search_node_name:
