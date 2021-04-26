@@ -17,6 +17,7 @@ Base class for Pipeline module.
 
 import itertools
 import logging
+import json
 from time import time
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
     Deque, Set
@@ -157,7 +158,11 @@ class Pipeline(Generic[PackType]):
             self.resource = Resources()
         else:
             self.resource = resource
-        self.resource.update(onto_specs=ontology_file)
+        if ontology_file is not None:
+            with open(ontology_file, 'r') as f:
+                spec_dict = json.load(f)
+                self.resource.update(onto_specs_path=ontology_file)
+                self.resource.update(onto_specs_dict=spec_dict)
 
         # The flag indicating whether this pipeline is initialized.
         self._initialized: bool = False
@@ -249,9 +254,10 @@ class Pipeline(Generic[PackType]):
         # entry tree from ontology specification file passed in as part of
         # resource and add the result to resource with key of merged_entry_tree.
         merged_entry_tree = EntryTree()
-        if self.resource.get("onto_specs"):
+        if self.resource.get("onto_specs_path"):
             OntologyCodeGenerator().parse_schema_for_no_import_onto_specs_file(
-                ontology_path=self.resource.get("onto_specs"),
+                ontology_path=self.resource.get("onto_specs_path"),
+                ontology_dict=self.resource.get("onto_specs_dict"),
                 merged_entry_tree=merged_entry_tree,
             )
             self.resource.update(merged_entry_tree=merged_entry_tree)

@@ -643,10 +643,10 @@ class EntryTreeNode:
         self.name: str = name
         self.attributes: Set[str] = set()
 
-    def attr_string(self):
+    def __repr__(self):
         r"""for printing purpose."""
         attr_str = ', '.join(self.attributes)
-        return attr_str
+        return self.name + ": " + attr_str
 
 
 class EntryTree:
@@ -692,7 +692,7 @@ class EntryTree:
 
     def collect_parents(self, node_dict: Dict[str, Set[str]]):
         r"""Collect all the parent nodes for all the nodes in the `node_dict`
-        and add the types and attributes of these parent nodes to `ode_dict`.
+        and add the types and attributes of these parent nodes to `node_dict`.
 
         Args:
             node_dict: the nodes dictionary of nodes to collect parent nodes
@@ -732,8 +732,7 @@ def search(node: EntryTreeNode, search_node_name: str):
 
 
 def traverse(node: EntryTreeNode, path: List[str]):
-    node_attr = node.attr_string()
-    path.append(node.name + ": " + node_attr)
+    path.append(repr(node))
     if len(node.children) == 0:
         print(path)
         path.pop()

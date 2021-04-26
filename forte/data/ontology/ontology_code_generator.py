@@ -584,7 +584,7 @@ class OntologyCodeGenerator:
         rec_visited_paths[json_file_path] = False
 
     def parse_schema_for_no_import_onto_specs_file(
-            self, ontology_path: str, lenient_prefix=False,
+            self, ontology_path: str, ontology_dict: Dict, lenient_prefix=False,
             merged_entry_tree: Optional[EntryTree] = None):
         r"""Function to populate the `merged_entry_tree` after reading
             ontology from the input json file.
@@ -593,6 +593,7 @@ class OntologyCodeGenerator:
             ontology_path: The path to the input ontology specification file,
                 which should be a json file, and it should have all the entries
                 inside with no import as key.
+            ontology_dict: The loaded dictionary of ontology specifications
             lenient_prefix: Whether to remove the constraint on the prefix set.
             merged_entry_tree: an EntryTree type object and if it's not`None`
                 then after running this function, all the entries from
@@ -603,23 +604,20 @@ class OntologyCodeGenerator:
         Returns:
 
         """
-
-        with open(ontology_path, 'r') as f:
-            spec_dict = json.load(f)
-
         # Assume no import key in the ontology file
-        if SchemaKeywords.imports in spec_dict.keys():
+        if SchemaKeywords.imports in ontology_dict.keys():
             raise OntologySpecValidationError(
-                "the input ontology specification file should not have import"
-                "as key, i.e. if there is an existing ontology file that need"
-                "to be imported, you should run generate_ontology create with"
-                "-merged_path specified and use this generated file as ontology"
-                "file")
+                "The system cannot build entry trees from an ontology file "
+                "that imports other ontologies. But we find `import` keywords "
+                f"in the provided ontology {ontology_path}"
+                " Please provide a merged ontology file with all imports "
+                "resolved by using the command "
+                "`generate_ontology create --merged_path`")
 
         merged_schema: List[Dict] = []
         merged_prefixes: List[str] = []
 
-        self.parse_schema(spec_dict, ontology_path, merged_schema,
+        self.parse_schema(ontology_dict, ontology_path, merged_schema,
                           merged_prefixes, lenient_prefix, merged_entry_tree)
 
     def parse_schema(self, schema: Dict, source_json_file: str,
