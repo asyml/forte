@@ -181,7 +181,7 @@ class Pipeline(Generic[PackType]):
         after itself. Each component will check whether the input pack contains
         the expected data via checking the meta-data, and throws a
         :class:`~forte.common.exception.ExpectedEntryNotFound` if the check
-        fails. The example of implementation is mentioned in the doctring of
+        fails. The example of implementation is mentioned in the docstrings of
         :meth:`~forte.pipeline.Pipeline.__init__`.
 
         Args:
