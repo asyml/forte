@@ -1057,8 +1057,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
     def test_pipeline_reader_record_writing(self):
         """Tests reader record writing """
 
-        nlp = Pipeline[DataPack]()
-        nlp.enforce_consistency(enforce=True)
+        nlp = Pipeline[DataPack](enforce_consistency=True)
         reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         nlp.initialize()
@@ -1069,8 +1068,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
     def test_pipeline_processor_record_writing(self):
         """Tests the processor record writing"""
 
-        nlp = Pipeline[DataPack]()
-        nlp.enforce_consistency(enforce=True)
+        nlp = Pipeline[DataPack](enforce_consistency=True)
         reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyPackProcessorOne()
@@ -1086,8 +1084,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
         """Tests the behavior of processor raising error exception
         and behavior of set enforce_consistency for the pipeline"""
 
-        nlp = Pipeline[DataPack]()
-        nlp.enforce_consistency(enforce=True)
+        nlp = Pipeline[DataPack](enforce_consistency=True)
         reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyPackProcessorTwo()
@@ -1103,8 +1100,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
     def test_pipeline_evaluator_record_writing(self):
         """Tests the evaluator record writing"""
 
-        nlp = Pipeline[DataPack]()
-        nlp.enforce_consistency(enforce=True)
+        nlp = Pipeline[DataPack](enforce_consistency=True)
         reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorOne()
@@ -1118,8 +1114,7 @@ class RecordCheckPipelineTest(unittest.TestCase):
     def test_pipeline_evaluator_record_checking_mismatching_error(self):
         """Tests the behavior of evaluator raising error exception"""
 
-        nlp = Pipeline[DataPack]()
-        nlp.enforce_consistency(enforce=True)
+        nlp = Pipeline[DataPack](enforce_consistency=True)
         reader = DummySentenceReaderOne()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorTwo()
@@ -1201,8 +1196,8 @@ class RecordCheckPipelineTest(unittest.TestCase):
         pipeline initialized with ontology specification file"""
         onto_specs_file_path = os.path.join(onto_specs_samples_root,
                                             'example_merged_ontology.json')
-        nlp = Pipeline[DataPack](ontology_file=onto_specs_file_path)
-        nlp.enforce_consistency(enforce=True)
+        nlp = Pipeline[DataPack](ontology_file=onto_specs_file_path,
+                                 enforce_consistency=True)
         reader = DummySentenceReaderTwo()
         nlp.set_reader(reader)
         dummy = DummyPackProcessorThree()
@@ -1221,8 +1216,8 @@ class RecordCheckPipelineTest(unittest.TestCase):
         pipeline initialized with ontology specification file"""
         onto_specs_file_path = os.path.join(onto_specs_samples_root,
                                             'example_merged_ontology.json')
-        nlp = Pipeline[DataPack](ontology_file=onto_specs_file_path)
-        nlp.enforce_consistency(enforce=True)
+        nlp = Pipeline[DataPack](ontology_file=onto_specs_file_path,
+                                 enforce_consistency=True)
         reader = DummySentenceReaderTwo()
         nlp.set_reader(reader)
         dummy = DummyEvaluatorThree()

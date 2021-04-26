@@ -26,7 +26,7 @@ from forte.utils.utils_processor import (record_types_and_attributes_check,
 __all__ = [
     "Evaluator",
 ]
- 
+
 
 class Evaluator(PipelineComponent[PackType]):
     r"""The base class of the evaluator."""
@@ -98,7 +98,7 @@ class Evaluator(PipelineComponent[PackType]):
     def check_record(self, pred_pack: PackType, ref_pack: PackType):
         # pylint: disable=protected-access
         r"""Method to check type consistency if
-        :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
+        :attr:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
         for the pipeline. If any expected type or its attribute
         does not exist in the `pred_pack` or `ref_pack` record of the previous
         pipeline component, an error of
@@ -124,9 +124,9 @@ class Evaluator(PipelineComponent[PackType]):
         r"""Method to write records of the output type of the current
         processor to the datapack. The key of the record should be the entry
         type and values should be attributes of the entry type. All the
-        information would be used for consistency checking purpose if
-        :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
-        for the pipeline.
+        information would be used for consistency checking purpose if the
+        pipeline is initialized with
+        `enforce_consistency=True`.
 
         Args:
             pred_pack: The prediction pack, which should contain the system

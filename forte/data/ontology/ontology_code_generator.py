@@ -590,9 +590,9 @@ class OntologyCodeGenerator:
             ontology from the input json file.
 
         Args:
-            ontology_path: The input ontology specification file, which should
-                be a json file, and we assume it has all the entries inside
-                with no import as key.
+            ontology_path: The path to the input ontology specification file,
+                which should be a json file, and it should have all the entries
+                inside with no import as key.
             lenient_prefix: Whether to remove the constraint on the prefix set.
             merged_entry_tree: an EntryTree type object and if it's not`None`
                 then after running this function, all the entries from

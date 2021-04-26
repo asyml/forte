@@ -279,9 +279,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         r"""Modify the pack meta record field of the reader's output. The
         key of the record should be the entry type and values should
         be attributes of the entry type. All the information would be used
-        for consistency checking purpose if
-        :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
-        for the pipeline.
+        for consistency checking purpose if the pipeline is initialized with
+        `enforce_consistency=True`.
 
         Args:
             record_meta: the field in the datapack for type record that need to

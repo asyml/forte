@@ -98,7 +98,39 @@ class Pipeline(Generic[PackType]):
     """
 
     def __init__(self, resource: Optional[Resources] = None,
-                 ontology_file: Optional[str] = None):
+                 ontology_file: Optional[str] = None,
+                 enforce_consistency: bool = False):
+        r"""
+
+        Args:
+            resource: The ``Resources`` object, which is a global registry used
+                in the pipeline. Objects defined as ``Resources`` will be
+                passed on to the processors in the
+                pipeline for initialization.
+            ontology_file: The path to the input ontology specification file,
+                which should be a json file, and it should have all the entries
+                inside with no import as key.
+            enforce_consistency: This boolean determines whether the
+                pipeline will check the content expectations specified in each
+                pipeline component. Each component will check whether the input
+                pack contains the expected data
+                via checking the meta-data, and throws a
+                :class:`~forte.common.exception.ExpectedEntryNotFound` if it
+                fails. When this function is called with enforce is ``True``,
+                all the pipeline components would check if the input datapack
+                record matches
+                with the expected types and attributes if function
+                ``expected_types_and_attributes`` is implemented
+                for the processor. For example, processor A requires entry type
+                of ``ft.onto.base_ontology.Sentence``, and processor B would
+                produce this type in the output datapack, so ``record`` function
+                of processor B writes the record of this type in the datapack
+                and processor A implements ``expected_types_and_attributes`` to
+                add this type. Then when the pipeline runs with
+                `enforce_consistency=True`, processor A would check if this
+                type exists in the record of the output of the
+                previous pipeline component.
+        """
         self._reader: BaseReader
         self._reader_config: Optional[Config] = None
 
@@ -140,24 +172,17 @@ class Pipeline(Generic[PackType]):
         self._enable_profiling: bool = False
         self._profiler: List[float] = []
 
+        self._check_type_consistency = enforce_consistency
+
     def enforce_consistency(self, enforce: bool = True):
-        r"""This function determines whether the pipeline will enforce
-        the content expectations specified in each pipeline component. Each
-        component will check whether the input pack contains the expected data
-        via checking the meta-data, and throws a
+        r"""This function determines whether the pipeline will check
+        the content expectations specified in each pipeline component. This
+        function works with :meth:`~forte.pipeline.Pipeline.initialize` called
+        after itself. Each component will check whether the input pack contains
+        the expected data via checking the meta-data, and throws a
         :class:`~forte.common.exception.ExpectedEntryNotFound` if the check
-        fails. When this function is called with enforce is ``True``, all the
-        pipeline components would check if the input datapack record matches
-        with the expected types and attributes if function
-        ``expected_types_and_attributes`` is implemented
-        for the processor. For example, processor A requires entry type of
-        ``ft.onto.base_ontology.Sentence``, and processor B would
-        produce this type in the output datapack, so ``record`` function
-        of processor B writes the record of this type in the datapack
-        and processor A implements ``expected_types_and_attributes`` to add this
-        type. Then when the pipeline runs with enforce_consistency, processor A
-        would check if this type exists in the record of the output of the
-        previous pipeline component.
+        fails. The example of implementation is mentioned in the doctring of
+        :meth:`~forte.pipeline.Pipeline.__init__`.
 
         Args:
             enforce: A boolean of whether to enable consistency checking
@@ -230,7 +255,6 @@ class Pipeline(Generic[PackType]):
                 merged_entry_tree=merged_entry_tree,
             )
             self.resource.update(merged_entry_tree=merged_entry_tree)
-            merged_entry_tree.print_traverse()
 
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))
