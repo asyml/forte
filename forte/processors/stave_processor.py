@@ -108,7 +108,7 @@ class StaveProcessor(PackProcessor):
             # Start a new thread to server Stave
             thread = threading.Thread(
                 target=self._start_server,
-                daemon=False
+                daemon=self.configs.server_thread_daemon
             )
             thread.start()
 
@@ -274,6 +274,8 @@ class StaveProcessor(PackProcessor):
                 default to {}.
             - projectConfigs: project configurations.
                 default value generated from ontology.
+            - server_thread_daemon: sets whether the thread is daemonic.
+                default to False.
         """
         config = super().default_configs()
 
@@ -293,7 +295,8 @@ class StaveProcessor(PackProcessor):
             "projectName": "Auto generated project",
             "ontology": ontology,
             "multiOntology": {},
-            "projectConfigs": cls._default_project_configs(ontology)
+            "projectConfigs": cls._default_project_configs(ontology),
+            "server_thread_daemon": False
         })
 
         return config
