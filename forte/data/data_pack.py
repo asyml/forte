@@ -53,9 +53,8 @@ class Meta(BaseMeta):
         record: Initialized as a dictionary. This is not a required field.
             The key of the record should be the entry type and values should
             be attributes of the entry type. All the information would be used
-            for consistency checking purpose if
-            :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
-            for the pipeline.
+            for consistency checking purpose if the pipeline is initialized with
+            `enforce_consistency=True`.
     """
 
     def __init__(self, pack_name: Optional[str] = None,
@@ -169,7 +168,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         An iterator of all annotations in this data pack.
 
         Returns: Iterator of all annotations, of
-          type :class:"~forte.data.ontology.top.Annotation".
+        type :class:`~forte.data.ontology.top.Annotation`.
 
         """
         yield from self.annotations
@@ -190,7 +189,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         An iterator of all links in this data pack.
 
         Returns: Iterator of all links, of
-          type :class:"~forte.data.ontology.top.Link".
+        type :class:`~forte.data.ontology.top.Link`.
 
         """
         yield from self.links
@@ -211,7 +210,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         An iterator of all groups in this data pack.
 
         Returns: Iterator of all groups, of
-          type :class:"~forte.data.ontology.top.Group".
+        type :class:`~forte.data.ontology.top.Group`.
 
         """
         yield from self.groups

@@ -25,7 +25,7 @@ from forte.common import ProcessExecutionException
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
-from forte.processors.spacy_processors import SpacyProcessor
+from forte.processors.third_party import SpacyProcessor
 from ft.onto.base_ontology import Token, EntityMention
 
 

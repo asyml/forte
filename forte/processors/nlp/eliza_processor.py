@@ -31,6 +31,10 @@ from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance
 
+__all__ = [
+    "ElizaProcessor",
+]
+
 
 class Key:
     def __init__(self, word, weight, decomps):

@@ -4,6 +4,10 @@ from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from forte.utils import get_class
 
+__all__ = [
+    "AnnotationRemover"
+]
+
 
 class AnnotationRemover(PackProcessor):
     def _process(self, input_pack: DataPack):

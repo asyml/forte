@@ -14,12 +14,14 @@
 """
 Defines the Evaluator interface and related functions.
 """
+import logging
 from abc import abstractmethod
 from typing import Any, Dict, Set
 
 from forte.data.base_pack import PackType
 from forte.pipeline_component import PipelineComponent
-from forte.utils.utils_processor import record_types_and_attributes_check
+from forte.utils.utils_processor import (record_types_and_attributes_check,
+                                         collect_input_pack_record)
 
 __all__ = [
     "Evaluator",
@@ -96,7 +98,7 @@ class Evaluator(PipelineComponent[PackType]):
     def check_record(self, pred_pack: PackType, ref_pack: PackType):
         # pylint: disable=protected-access
         r"""Method to check type consistency if
-        :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
+        :attr:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
         for the pipeline. If any expected type or its attribute
         does not exist in the `pred_pack` or `ref_pack` record of the previous
         pipeline component, an error of
@@ -109,18 +111,22 @@ class Evaluator(PipelineComponent[PackType]):
                 to score on.
         """
         if self._check_type_consistency:
+            pred_pack_record = collect_input_pack_record(self.resources,
+                                                         pred_pack)
+            ref_pack_record = collect_input_pack_record(self.resources,
+                                                        ref_pack)
             record_types_and_attributes_check(self._pred_pack_expectation,
-                                              pred_pack)
+                                              pred_pack_record)
             record_types_and_attributes_check(self._ref_pack_expectation,
-                                              ref_pack)
+                                              ref_pack_record)
 
     def writes_record(self, pred_pack: PackType, ref_pack: PackType):
         r"""Method to write records of the output type of the current
         processor to the datapack. The key of the record should be the entry
         type and values should be attributes of the entry type. All the
-        information would be used for consistency checking purpose if
-        :meth:`~forte.pipeline.Pipeline.enforce_consistency` is enabled
-        for the pipeline.
+        information would be used for consistency checking purpose if the
+        pipeline is initialized with
+        `enforce_consistency=True`.
 
         Args:
             pred_pack: The prediction pack, which should contain the system
@@ -130,5 +136,16 @@ class Evaluator(PipelineComponent[PackType]):
 
         """
         # pylint: disable=protected-access
-        self.pred_pack_record(pred_pack._meta.record)
-        self.ref_pack_record(ref_pack._meta.record)
+        try:
+            self.pred_pack_record(pred_pack._meta.record)
+        except AttributeError:
+            # For backward compatibility, no record to write.
+            logging.info(
+                "Packs of the old format do not have the record field.")
+
+        try:
+            self.ref_pack_record(ref_pack._meta.record)
+        except AttributeError:
+            # For backward compatibility, no record to write.
+            logging.info(
+                "Packs of the old format do not have the record field.")

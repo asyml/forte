@@ -11,3 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from forte.processors.third_party.machine_translation_processor import *
+from forte.processors.third_party.pretrained_encoder_processors import *
+from forte.processors.third_party.text_generation_processor import *
+from forte.processors.third_party.nltk_processors import *
+from forte.processors.third_party.sentiment_analysis import *
+from forte.processors.third_party.spacy_processors import *
+from forte.processors.third_party.stanfordnlp_processor import *
+from forte.processors.third_party.allennlp_processors import *

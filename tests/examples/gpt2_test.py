@@ -30,11 +30,11 @@ class Gpt2Test(unittest.TestCase):
 
         self.assertEqual(len(p.components), 3)
 
+        # pylint: disable=line-too-long
         p_names = [
-            'forte.processors.text_generation_processor.'
-            'TextGenerationProcessor',
-            'forte.processors.nltk_processors.NLTKWordTokenizer',
-            'forte.processors.nltk_processors.NLTKPOSTagger',
+            'forte.processors.third_party.text_generation_processor.TextGenerationProcessor',
+            'forte.processors.third_party.nltk_processors.NLTKWordTokenizer',
+            'forte.processors.third_party.nltk_processors.NLTKPOSTagger',
         ]
 
         for proc, p_name in zip(p.components, p_names):

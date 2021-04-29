@@ -19,7 +19,7 @@ import unittest
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors.lowercaser_processor import LowerCaserProcessor
+from forte.processors.misc import LowerCaserProcessor
 
 
 class TestLowerCaserProcessor(unittest.TestCase):
@@ -37,3 +37,7 @@ class TestLowerCaserProcessor(unittest.TestCase):
         assert pack.text == "this tool is called forte. the goal of this " \
                             "project to help you build nlp pipelines. nlp " \
                             "has never been made this easy before."
+
+
+if __name__ == '__main__':
+    unittest.main()

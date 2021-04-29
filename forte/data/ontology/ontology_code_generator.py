@@ -44,7 +44,7 @@ from forte.data.ontology.code_generation_exceptions import (
 from forte.data.ontology.code_generation_objects import (
     NonCompositeProperty, ListProperty, ClassTypeDefinition,
     EntryDefinition, Property, ImportManagerPool,
-    EntryName, ModuleWriterPool, ImportManager, DictProperty)
+    EntryName, ModuleWriterPool, ImportManager, DictProperty, EntryTree)
 # Builtin and local imports required in the generated python modules.
 from forte.data.ontology.ontology_code_const import (
     REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
@@ -281,12 +281,14 @@ class OntologyCodeGenerator:
         (5) Includes type annotations for the `__init__` arguments.
 
         Args:
-            manager: The import manager to be populated
+            manager: The import manager to be populated.
             base_ontology_module: File path of the module to be parsed.
 
         Returns:
         """
-        tree = ast.parse(open(base_ontology_module.__file__, 'r').read())
+        base_ontology_file = open(base_ontology_module.__file__, 'r')
+        tree = ast.parse(base_ontology_file.read())
+        base_ontology_file.close()
         base_module_name = base_ontology_module.__name__
 
         # Record a map from the import name to the full name.
@@ -378,8 +380,8 @@ class OntologyCodeGenerator:
 
     def generate(self, spec_path: str, destination_dir: str = os.getcwd(),
                  is_dry_run: bool = False, include_init: bool = True,
-                 merged_path: Optional[str] = None, lenient_prefix=False,
-                 ) -> Optional[str]:
+                 merged_path: Optional[str] = None, lenient_prefix=False)\
+            -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to
             the class.
@@ -404,6 +406,7 @@ class OntologyCodeGenerator:
             Returns:
                 Directory path in which the modules are created: either one of
                 the temporary directory or `destination_dir`.
+
         """
         # Update the list of directories to be examined for imported configs
         self.import_dirs.append(os.path.dirname(os.path.realpath(spec_path)))
@@ -417,7 +420,7 @@ class OntologyCodeGenerator:
             self.parse_ontology_spec(spec_path,
                                      merged_schema=merged_schemas,
                                      merged_prefixes=merged_prefixes,
-                                     lenient_prefix=lenient_prefix
+                                     lenient_prefix=lenient_prefix,
                                      )
         except OntologySpecError:
             logging.error("Error at parsing [%s]", spec_path)
@@ -428,7 +431,6 @@ class OntologyCodeGenerator:
         # A temporary directory to save the generated file structure until the
         # generation is completed and verified.
         tempdir = tempfile.mkdtemp()
-
         # Starting from here, we won't add any more modules to import.
         self.import_managers.fix_all_modules()
 
@@ -453,7 +455,8 @@ class OntologyCodeGenerator:
         # `self.tempdir` to the provided folder.
         if not is_dry_run:
             generated_top_dirs = set(utils.get_top_level_dirs(tempdir))
-            for existing_top_dir in utils.get_top_level_dirs(destination_dir):
+            for existing_top_dir in utils.get_top_level_dirs(
+                    destination_dir):
                 if existing_top_dir in generated_top_dirs:
                     logging.warning(
                         "The directory with the name "
@@ -465,6 +468,7 @@ class OntologyCodeGenerator:
             utils.copytree(tempdir, destination_dir,
                            ignore_pattern_if_file_exists='*/__init__.py')
             return destination_dir
+
         return tempdir
 
     def visit_ontology_imports(
@@ -560,7 +564,8 @@ class OntologyCodeGenerator:
                 full_pkg_path, merged_schema, merged_prefixes,
                 visited_paths=visited_paths,
                 rec_visited_paths=rec_visited_paths,
-                lenient_prefix=lenient_prefix)
+                lenient_prefix=lenient_prefix
+            )
 
         # Once the ontology for all the imported files is generated, generate
         # ontology of the current file.
@@ -578,9 +583,47 @@ class OntologyCodeGenerator:
 
         rec_visited_paths[json_file_path] = False
 
+    def parse_schema_for_no_import_onto_specs_file(
+            self, ontology_path: str, ontology_dict: Dict, lenient_prefix=False,
+            merged_entry_tree: Optional[EntryTree] = None):
+        r"""Function to populate the `merged_entry_tree` after reading
+            ontology from the input json file.
+
+        Args:
+            ontology_path: The path to the input ontology specification file,
+                which should be a json file, and it should have all the entries
+                inside with no import as key.
+            ontology_dict: The loaded dictionary of ontology specifications
+            lenient_prefix: Whether to remove the constraint on the prefix set.
+            merged_entry_tree: an EntryTree type object and if it's not`None`
+                then after running this function, all the entries from
+                ontology specification file would be parsed into a tree
+                structure with parent and children entries to represent
+                the relationship.
+
+        Returns:
+
+        """
+        # Assume no import key in the ontology file
+        if SchemaKeywords.imports in ontology_dict.keys():
+            raise OntologySpecValidationError(
+                "The system cannot build entry trees from an ontology file "
+                "that imports other ontologies. But we find `import` keywords "
+                f"in the provided ontology {ontology_path}"
+                " Please provide a merged ontology file with all imports "
+                "resolved by using the command "
+                "`generate_ontology create --merged_path`")
+
+        merged_schema: List[Dict] = []
+        merged_prefixes: List[str] = []
+
+        self.parse_schema(ontology_dict, ontology_path, merged_schema,
+                          merged_prefixes, lenient_prefix, merged_entry_tree)
+
     def parse_schema(self, schema: Dict, source_json_file: str,
                      merged_schema: List[Dict], merged_prefixes: List[str],
                      lenient_prefix=False,
+                     merged_entry_tree: Optional[EntryTree] = None
                      ):
         r""" Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
@@ -594,6 +637,11 @@ class OntologyCodeGenerator:
             merged_prefixes: To remember all prefixes encountered during
                 parsing.
             lenient_prefix: Whether to remove the constraint on the prefix set.
+            merged_entry_tree: an EntryTree type object and if it's not`None`
+                then after running this function, all the entries from
+                ontology specification file would be parsed into a tree
+                structure with parent and children entries to represent
+                the relationship.
         Returns:
             Modules to be imported by dependencies of the current ontology.
         """
@@ -664,6 +712,14 @@ class OntologyCodeGenerator:
                         DuplicatedAttributesWarning
                     )
                 self.allowed_types_tree[en.class_name].add(property_name)
+            # populate the entry tree based on information
+            if merged_entry_tree is not None:
+                curr_entry_name = en.class_name
+                parent_entry_name = definition['parent_entry']
+                curr_entry_attributes = self.allowed_types_tree[en.class_name]
+                merged_entry_tree.add_node(curr_entry_name,
+                                           parent_entry_name,
+                                           curr_entry_attributes)
 
     def cleanup_generated_ontology(self, path, is_forced=False) -> (
             Tuple[bool, Optional[str]]):

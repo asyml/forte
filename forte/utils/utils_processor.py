@@ -18,14 +18,16 @@ Utility functions related to processors.
 __all__ = [
     "parse_allennlp_srl_results",
     "parse_allennlp_srl_tags",
-    "record_types_and_attributes_check"
+    "record_types_and_attributes_check",
+    "collect_input_pack_record"
 ]
 
 from typing import Dict, List, Tuple, Any, Optional, Set
 from collections import defaultdict
 from forte.data.span import Span
-from forte.common import ExpectedRecordNotFound
 from forte.data.base_pack import PackType
+from forte.common import ExpectedRecordNotFound
+from forte.common.resources import Resources
 # from ft.onto.base_ontology import Token
 
 
@@ -86,7 +88,7 @@ def parse_allennlp_srl_tags(tags: str) -> \
 
 
 def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
-                                      input_pack: PackType):
+                                      input_pack_record: Dict[str, Set[str]]):
     r"""Check if any types or attributes in expectation dictionary doesn't
     match with input_pack.record. If not, an error of
     :class:`~forte.common.exception.ExpectedRecordNotFound` will be raised.
@@ -94,7 +96,9 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
     Args:
         expectation: Dictionary of types and their attributes required for
             the current processor/evaluator.
-        input_pack: The input pack.
+        input_pack_record: The input pack record content combined with
+            all the parent types and attributes collected from
+            `merged_entry_tree`.
 
     Returns:
 
@@ -103,7 +107,7 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
     if expectation is not None:
         # check if expected types are in input pack.
         for expected_t in expectation:
-            if expected_t not in input_pack._meta.record.keys():
+            if expected_t not in input_pack_record.keys():
                 raise ExpectedRecordNotFound(
                     f"The record type {expected_t} is not found in "
                     f"meta of the prediction datapack.")
@@ -111,10 +115,39 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
                 expected_value = expectation.get(expected_t)
                 if expected_value is not None:
                     for expected_t_v in expected_value:
-                        if expected_t_v not in input_pack._meta.record \
+                        if expected_t_v not in input_pack_record \
                                 .get(expected_t, []):
                             raise ExpectedRecordNotFound(
                                 f"The record attribute type "
                                 f"{expected_t_v} is not found in "
                                 f"attribute of record {expected_t} "
                                 f"in meta of the input datapack.")
+
+
+def collect_input_pack_record(resources: Resources,
+                              input_pack: PackType) -> Dict[str, Set[str]]:
+    # pylint: disable=protected-access
+    r"""Method to collect the type and attributes from the input pack and if
+    :attr:`~forte.pipeline.Pipeline.resource` has `onto_specs` as key
+    and ontology specification file path as value, then
+    `merged_entry_tree` that has all the entries in ontology specification
+    file would be populated. All the parent entry nodes of the input pack
+    would be collected from this tree and add to the returned record
+    dictionary for later comparison to enable subclass type checking.
+
+    Args:
+        resources: The pipeline attribute that stores and passes resources on
+            the pipeline level.
+        input_pack: The input datapack.
+
+    Returns:
+        input_pack_record: The input pack record content combined with
+        all the parent types and attributes collected from
+        merged_entry_tree
+
+    """
+    input_pack_record = input_pack._meta.record.copy()
+    if resources.get("merged_entry_tree"):
+        merged_entry_tree = resources.get("merged_entry_tree")
+        merged_entry_tree.collect_parents(input_pack_record)
+    return input_pack_record

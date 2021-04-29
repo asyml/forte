@@ -1,4 +1,4 @@
-# Copyright 2021 The Forte Authors. All Rights Reserved.
+# Copyright 2019 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.data.extractors.attribute_extractor import *
-from forte.data.extractors.char_extractor import *
-from forte.data.extractors.seqtagging_extractor import *
-from forte.data.extractors.subword_extractor import *
+from forte.processors.nlp.eliza_processor import *
+from forte.processors.nlp.ner_predictor import *
+from forte.processors.nlp.srl_predictor import *
+from forte.processors.nlp.subword_tokenizer import *

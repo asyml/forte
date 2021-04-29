@@ -20,7 +20,7 @@ import unittest
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors.stanfordnlp_processor import StandfordNLPProcessor
+from forte.processors.third_party import StandfordNLPProcessor
 
 
 class TestStanfordNLPProcessor(unittest.TestCase):
@@ -44,3 +44,7 @@ class TestStanfordNLPProcessor(unittest.TestCase):
                      "NLP has never been made this easy before."]
         document = ' '.join(sentences)
         self.stanford_nlp.process(document)
+
+
+if __name__ == "__main__":
+    unittest.main()

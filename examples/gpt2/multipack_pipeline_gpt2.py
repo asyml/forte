@@ -31,9 +31,9 @@ def create_pipeline(config_path: str) -> Pipeline[MultiPack]:
 if __name__ == '__main__':
     # This line adds a reader and 3 processors in to the pipeline
     # 1. forte.data.readers.MultiPackSentenceReader
-    # 2. forte.processors.TextGenerationProcessor
-    # 3. forte.processors.nltk_processors.NLTKWordTokenizer
-    # 4. forte.processors.nltk_processors.NLTKPOSTagger
+    # 2. forte.processors.third_party.TextGenerationProcessor
+    # 3. forte.processors.third_party.NLTKWordTokenizer
+    # 4. forte.processors.third_party.NLTKPOSTagger
     nlp = create_pipeline('sample_multipack_pipeline_gpt.yml')
     nlp.initialize()
 

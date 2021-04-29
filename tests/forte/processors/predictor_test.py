@@ -113,12 +113,16 @@ class PredictorTest(unittest.TestCase):
         }
         # dummy = DummyRelationExtractor()
         # config = {"batcher": {"batch_size": 5}}
-
+        evaluator_config = {
+            "entry_type": "ft.onto.base_ontology.EntityMention",
+            "attribute": "ner_type",
+            "tagging_unit": "ft.onto.base_ontology.Token"
+        }
         predictor = NERPredictor()
         predictor.load(model)
         predictor_pipeline.add(predictor, predictor_config)
         # predictor_pipeline.add(dummy, config)
-        predictor_pipeline.add(CoNLLNEREvaluator())
+        predictor_pipeline.add(CoNLLNEREvaluator(), evaluator_config)
         predictor_pipeline.initialize()
 
         text_extractor = predictor.configs.\

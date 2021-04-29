@@ -56,7 +56,6 @@ script:
   - pytest --doctest-modules forte
 after_success:
   - codecov
-  - "./scripts/travis_after_success.sh"
 jobs:
   include:
     - stage: docs
