@@ -122,6 +122,7 @@ jobs:
           python -m pip install --progress-bar off --upgrade pip
           pip install --progress-bar off -r requirements.txt
           pip install --progress-bar off -r docs/requirements.txt
+          pip install --progress-bar off django==3.2 tornado==6.1
           git clone https://github.com/asyml/texar-pytorch.git
           cd texar-pytorch
           pip install --progress-bar off .

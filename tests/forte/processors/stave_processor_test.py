@@ -27,12 +27,9 @@ from forte.data.readers import OntonotesReader
 from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from forte.processors.base.batch_processor import Predictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
-from forte.processors import StaveProcessor
-from forte.processors.nltk_processors import NLTKWordTokenizer, \
+from forte.processors.stave import StaveProcessor
+from forte.processors.third_party import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
-
-forte_path = "/Users/suqi.sun/OneDrive - Petuum, Inc/Projects/forte/"
-stave_path = "/Users/suqi.sun/Documents/my_stave/"
 
 
 class TestStaveProcessor(unittest.TestCase):
