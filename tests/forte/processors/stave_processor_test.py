@@ -51,7 +51,7 @@ class TestStaveProcessor(unittest.TestCase):
         self.pl.add(NLTKSentenceSegmenter())
         self.pl.add(NLTKWordTokenizer())
         self.pl.add(NLTKPOSTagger())
-        self.pl.add(StaveProcessor(), config = {
+        self.pl.add(StaveProcessor(), config={
             "port": self._port,
             "projectName": self._project_name,
             "server_thread_daemon": True
@@ -65,7 +65,6 @@ class TestStaveProcessor(unittest.TestCase):
         url = f"http://localhost:{self._port}"
 
         with requests.Session() as session:
-            
             # Log in as admin user
             response = session.post(f"{url}/api/login",
                 json={
@@ -86,7 +85,7 @@ class TestStaveProcessor(unittest.TestCase):
                 if project["name"] == self._project_name:
                     project_id = project["id"]
             self.assertGreater(project_id, 0)
-            
+
             # Check the number of newly created documents
             response = session.post(f"{url}/api/projects/{project_id}/docs")
             self.assertEqual(response.status_code, 200)
