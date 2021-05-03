@@ -28,26 +28,26 @@ from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from forte.processors.base.batch_processor import Predictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 from forte.processors.stave import StaveProcessor
-from forte.processors.third_party import NLTKWordTokenizer, \
-    NLTKPOSTagger, NLTKSentenceSegmenter
 
 
 class TestStaveProcessor(unittest.TestCase):
 
     def setUp(self):
 
+        # Currently hard coded. Will deprecate in future update.
         os.environ["FRONTEND_BUILD_PATH"] = "stave/build/"
-        os.environ["ONTOLOGY_PATH"] = "forte/ontology_specs/base_ontology.json"
         os.environ["DJANGO_BACKEND_PATH"] = "stave/simple-backend/"
 
         self._port: int = 8880
+        self._file_dir_path = os.path.dirname(__file__)
         self._project_name: str = "serialization_pipeline_test"
 
-        self.pl = Pipeline[DataPack]()
+        self.pl = Pipeline[DataPack](
+            ontology_file=os.path.abspath(os.path.join(
+                self._file_dir_path, "../../../",
+                    "forte/ontology_specs/base_ontology.json"))
+        )
         self.pl.set_reader(OntonotesReader())
-        self.pl.add(NLTKSentenceSegmenter())
-        self.pl.add(NLTKWordTokenizer())
-        self.pl.add(NLTKPOSTagger())
         self.pl.add(StaveProcessor(), config={
             "port": self._port,
             "projectName": self._project_name,
@@ -55,8 +55,8 @@ class TestStaveProcessor(unittest.TestCase):
         })
 
     def test_stave(self):
-
-        dataset_dir = "data_samples/ontonotes/00/"
+        dataset_dir = os.path.abspath(os.path.join(
+            self._file_dir_path, '../../../', 'data_samples', 'ontonotes/00/'))
 
         self.pl.run(dataset_dir)
         url = f"http://localhost:{self._port}"

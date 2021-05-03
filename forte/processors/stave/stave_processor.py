@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''
+"""
+A StaveProcessor is introduced to enable immediate visualization of forte
+pipeline result. It supports serving Stave instance with tornado(for static
+files) and django(for web apis). Forte users can plug it into the pipeline
+to easily visualize datapacks with annotations. It is also highly
+configurable for users to change port number, layout, ontology, etc.
+
 Package Requirements:
     tornado == 6.1
     django == 3.2
@@ -24,17 +30,14 @@ Required environment variables:
     FRONTEND_BUILD_PATH:
         Absolute path (or relative path from PYTHONPATH)
         to stave build folder. Example: "stave/build/"
-    ONTOLOGY_PATH:
-        Absolute path to the ontology file.
     DJANGO_BACKEND_PATH:
         Absolute path (or relative path from PYTHONPATH)
         to django backend folder. Example: "stave/simple-backend/"
-'''
+"""
 
 import os
 import sys
 import json
-import time
 import logging
 import asyncio
 import threading
@@ -52,7 +55,7 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.wsgi import WSGIContainer
 
-from forte.common import Resources
+from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
@@ -66,21 +69,78 @@ __all__ = [
 
 
 class StaveProcessor(PackProcessor):
+    """
+    `StaveProcessor` provides easy visualization for forte users. We can
+    visualize datapack with annotations by inserting it into the forte
+    pipeline without affecting the original functionalities.
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    `StaveProcessor` requires an ontology file being passed to the pipeline.
+    It then genertes default configurations based on the input
+    ontology to start a full-fledged stave instance without any additional
+    specification by users.
+    Example usage:
+        pipeline.add(StavePorcessor())
+
+    `StaveProcessor` is also highly customizable for users to set up. Users may
+    configure port number, server host, project name, etc.
+    Example usage:
+        pipeline.add(StavePorcessor(), configs={
+            "port": 8880,
+            "projectName": "serialization_pipeline_test"
+        })
+
+    `StaveProcessor` automatically creates project and documents via stave
+    backend api based on project configurations and input datapacks.
+    If users would like to modify project configs, it can pass it to the
+    processor by changing `projectConfigs` field.
+    Example usage:
+        # Suppose `ontology_file` is passed to the pipeline
+        pConfigs = StaveProcessor.default_project_configs(
+            pipeline.resource.get("onto_specs_dict")
+        )
+        pConfigs["layoutConfigs"]["center-middle"] = "DialogueBox"
+        pipeline.add(StavePorcessor(), configs={
+            "port": 8879,
+            "projectConfigs": pConfigs
+        })
+    """
+
+    def __init__(self):
+        super().__init__()
         self._url: str
         self._server_started: bool = False
         self._project_id: int = -1
+
+        # Used for sync between threads
+        self._barrier = threading.Barrier(2, timeout=1)
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
         self._url = f"http://{self.configs.host}:{self.configs.port}"
 
+        # Verify that ontology is correctly passed
+        if not self.resources.contains("onto_specs_dict"):
+            raise ProcessorConfigError("Ontology is not set in resourses.")
+
+        # Create default project config if it has not been set yet
+        if self.configs.projectConfigs is None:
+            self.configs.projectConfigs = self.default_project_configs(
+                self.resources.get("onto_specs_dict")
+            )
+
+        # Validate multi_pack project config:
+        #   A `multi_pack` project must have `multiOntology` set.
+        if self.configs.projectType != "single_pack" and (
+            self.configs.projectType != "multi_pack" or
+            self.configs.multiOntology is None):
+            raise ProcessorConfigError("Invalid project type configuration.")
+
     class ProxyHandler(FallbackHandler):
-        '''
-        URL routing for django web interface
-        '''
+        """
+        URL routing for django web interface.
+        ProxyHandler directs all requests with `/api`-prefixed url to
+        the django wsgi application.
+        """
 
         def initialize(self, fallback):
             # Strip prefix "/api" from uri and path
@@ -89,9 +149,11 @@ class StaveProcessor(PackProcessor):
             super().initialize(fallback)
 
     class ReactHandler(RequestHandler):
-        '''
+        """
         Handler of requests to React index page
-        '''
+        ReactHandler makes sure all requests fall back to index page
+        so that they can follow the standard React routing rules.
+        """
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -113,12 +175,11 @@ class StaveProcessor(PackProcessor):
             thread.start()
 
             # Wait for server to boot up
-            time.sleep(0.5)
+            self._barrier.wait()
 
             if not thread.is_alive():
                 raise ProcessExecutionException(
                     "%s: Stave server not started." % self.configs.projectName)
-            webbrowser.open(self._url)
             self._server_started = True
 
         if self._server_started:
@@ -148,6 +209,10 @@ class StaveProcessor(PackProcessor):
 
         server = HTTPServer(app)
         server.listen(self.configs.port)
+
+        # Release lock in main thread
+        self._barrier.wait()
+
         IOLoop.current().start()
 
     def _create_project(self, input_pack: DataPack):
@@ -169,14 +234,17 @@ class StaveProcessor(PackProcessor):
                     json={
                         "type": self.configs.projectType,
                         "name": self.configs.projectName,
-                        "ontology": self.configs.ontology.__str__(),
-                        "multiOntology": self.configs.multiOntology.__str__(),
-                        "config": self.configs.projectConfigs.__str__()
+                        "ontology": json.dumps(
+                            self.resources.get("onto_specs_dict")
+                        ),
+                        "multiOntology": str(self.configs.multiOntology),
+                        "config": str(self.configs.projectConfigs)
                     })
                 logger.info("%d %s", response.status_code, response.text)
                 if response.status_code != 200:
                     return
                 self._project_id = response.json()["id"]
+                webbrowser.open(self._url)
 
             # Configure and create document
             response = session.post(f"{self._url}/api/documents/new",
@@ -190,11 +258,16 @@ class StaveProcessor(PackProcessor):
                 return
 
     @classmethod
-    def _default_project_configs(cls, ontology: Dict[str, Any]):
+    def default_project_configs(cls, ontology: Dict[str, Any]):
         """
         Create default project configuration based on ontology.
         This is translated from JavaScript function `createDefaultConfig` in
-        asyml/stave/src/app/pages/Projects.tsx
+        https://github.com/asyml/stave/blob/d82383de3d74bf09c0d30f33d8a902595
+        f5aff80/src/app/pages/Projects.tsx#L140
+        Commit link:
+        https://github.com/asyml/stave/commit/63ae90583016bbc7d88c091a3bd8a2b
+        56675e49e#diff-46d2dc8ce1bf31f277e7a217416c0be739924160096aac4ca1fee4
+        23bee4c014R105
 
         Args:
             ontology: A dictionary representing ontology.
@@ -220,6 +293,10 @@ class StaveProcessor(PackProcessor):
         for entry in ontology["definitions"]:
             entry_name = entry["entry_name"]
 
+            # `scopeConfigs` applies to all subclass of
+            # `forte.data.ontology.top.Annotation`, so for entries other than
+            # annotation class, we will build a graph to trace parent-childrent
+            # relationships for all entry nodes.
             if entry_name == annotation_entry:
                 configs['scopeConfigs'][entry_name] = False
             else:
@@ -237,6 +314,8 @@ class StaveProcessor(PackProcessor):
                 legend_configs[entry_name]["attributes"] = attributes_configs
         configs["legendConfigs"] = legend_configs
 
+        # Find all subclass of `forte.data.ontology.top.Annotation` and
+        # update `scopeConfigs` accordingly.
         children = collections.deque(entry_graph[annotation_entry])
         while children:
             size = len(children)
@@ -268,8 +347,6 @@ class StaveProcessor(PackProcessor):
             - projectType: single_pack(default) / multi_pack.
             - projectName: project name displayed on Stave.
                 default name is `Auto generated project`.
-            - ontology: a dictionary for single_pack ontology.
-                default value set from env var ONTOLOGY_PATH.
             - multiOntology: a dictionary for multi_pack ontology
                 default to {}.
             - projectConfigs: project configurations.
@@ -278,11 +355,6 @@ class StaveProcessor(PackProcessor):
                 default to False.
         """
         config = super().default_configs()
-
-        # TODO: Ontology path is hard coded here.
-        #       Will pass ontology in a more efficient way in future version.
-        with open(os.environ["ONTOLOGY_PATH"], 'r') as f:
-            ontology = json.load(f)
 
         config.update({
             "frontend_build_path": os.environ["FRONTEND_BUILD_PATH"],
@@ -293,9 +365,8 @@ class StaveProcessor(PackProcessor):
             "user_password": "admin",
             "projectType": "single_pack",
             "projectName": "Auto generated project",
-            "ontology": ontology,
-            "multiOntology": {},
-            "projectConfigs": cls._default_project_configs(ontology),
+            "multiOntology": None,
+            "projectConfigs": None,
             "server_thread_daemon": False
         })
 
