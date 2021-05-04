@@ -51,15 +51,15 @@ class Token(Annotation):
     """
     A span based annotation :class:`Token`, used to represent a token or a word.
     Attributes:
-        pos (Optional[str])
-        ud_xpos (Optional[str])	Language specific pos tag. Used in CoNLL-U Format. Refer to https://universaldependencies.org/format.html
-        lemma (Optional[str])	Lemma or stem of word form.
-        chunk (Optional[str])
-        ner (Optional[str])
-        sense (Optional[str])
-        is_root (Optional[bool])
-        ud_features (Dict[str, str])
-        ud_misc (Dict[str, str])
+        pos (Optional[str]):
+        ud_xpos (Optional[str]):	Language specific pos tag. Used in CoNLL-U Format. Refer to https://universaldependencies.org/format.html
+        lemma (Optional[str]):	Lemma or stem of word form.
+        chunk (Optional[str]):
+        ner (Optional[str]):
+        sense (Optional[str]):
+        is_root (Optional[bool]):
+        ud_features (Dict[str, str]):
+        ud_misc (Dict[str, str]):
     """
 
     pos: Optional[str]
@@ -90,7 +90,7 @@ class Subword(Annotation):
     """
     Used to represent subword tokenization results.
     Attributes:
-        is_first_segment (Optional[bool])
+        is_first_segment (Optional[bool]):
     """
 
     is_first_segment: Optional[bool]
@@ -105,8 +105,8 @@ class Document(Annotation):
     """
     A span based annotation `Document`, normally used to represent a document.
     Attributes:
-        document_class (List[str])	A list of class names that the document belongs to.
-        sentiment (Dict[str, float])
+        document_class (List[str]):	A list of class names that the document belongs to.
+        sentiment (Dict[str, float]):
     """
 
     document_class: List[str]
@@ -123,9 +123,9 @@ class Sentence(Annotation):
     """
     A span based annotation `Sentence`, normally used to represent a sentence.
     Attributes:
-        speaker (Optional[str])
-        part_id (Optional[int])
-        sentiment (Dict[str, float])
+        speaker (Optional[str]):
+        part_id (Optional[int]):
+        sentiment (Dict[str, float]):
     """
 
     speaker: Optional[str]
@@ -144,8 +144,8 @@ class Phrase(Annotation):
     """
     A span based annotation `Phrase`.
     Attributes:
-        phrase_type (Optional[str])
-        headword (Optional[Token])
+        phrase_type (Optional[str]):
+        headword (Optional[Token]):
     """
 
     phrase_type: Optional[str]
@@ -172,7 +172,7 @@ class Utterance(Annotation):
     """
     A span based annotation `Utterance`, normally used to represent an utterance in dialogue.
     Attributes:
-        speaker (Optional[str])
+        speaker (Optional[str]):
     """
 
     speaker: Optional[str]
@@ -187,9 +187,9 @@ class PredicateArgument(Annotation):
     """
     A span based annotation `PredicateArgument`, normally used to represent an argument of a predicate, can be linked to the predicate via the predicate link.
     Attributes:
-        ner_type (Optional[str])
-        predicate_lemma (Optional[str])
-        is_verb (Optional[bool])
+        ner_type (Optional[str]):
+        predicate_lemma (Optional[str]):
+        is_verb (Optional[bool]):
     """
 
     ner_type: Optional[str]
@@ -208,7 +208,7 @@ class EntityMention(Annotation):
     """
     A span based annotation `EntityMention`, normally used to represent an Entity Mention in a piece of text.
     Attributes:
-        ner_type (Optional[str])
+        ner_type (Optional[str]):
     """
 
     ner_type: Optional[str]
@@ -223,7 +223,7 @@ class EventMention(Annotation):
     """
     A span based annotation `EventMention`, used to refer to a mention of an event.
     Attributes:
-        event_type (Optional[str])
+        event_type (Optional[str]):
     """
 
     event_type: Optional[str]
@@ -238,9 +238,9 @@ class PredicateMention(Phrase):
     """
     A span based annotation `PredicateMention`, normally used to represent a predicate (normally verbs) in a piece of text.
     Attributes:
-        predicate_lemma (Optional[str])
-        framenet_id (Optional[str])
-        is_verb (Optional[bool])
+        predicate_lemma (Optional[str]):
+        framenet_id (Optional[str]):
+        is_verb (Optional[bool]):
     """
 
     predicate_lemma: Optional[str]
@@ -259,7 +259,7 @@ class PredicateLink(Link):
     """
     A `Link` type entry which represent a semantic role link between a predicate and its argument.
     Attributes:
-        arg_type (Optional[str])	The predicate link type.
+        arg_type (Optional[str]):	The predicate link type.
     """
 
     arg_type: Optional[str]
@@ -277,8 +277,8 @@ class Dependency(Link):
     """
     A `Link` type entry which represent a syntactic dependency.
     Attributes:
-        dep_label (Optional[str])	The dependency label.
-        rel_type (Optional[str])
+        dep_label (Optional[str]):	The dependency label.
+        rel_type (Optional[str]):
     """
 
     dep_label: Optional[str]
@@ -299,7 +299,7 @@ class EnhancedDependency(Link):
     A `Link` type entry which represent a enhanced dependency: 
      https://universaldependencies.org/u/overview/enhanced-syntax.html
     Attributes:
-        dep_label (Optional[str])	The enhanced dependency label in Universal Dependency.
+        dep_label (Optional[str]):	The enhanced dependency label in Universal Dependency.
     """
 
     dep_label: Optional[str]
@@ -317,7 +317,7 @@ class RelationLink(Link):
     """
     A `Link` type entry which represent a relation between two entity mentions
     Attributes:
-        rel_type (Optional[str])	The type of the relation.
+        rel_type (Optional[str]):	The type of the relation.
     """
 
     rel_type: Optional[str]
@@ -335,7 +335,7 @@ class CrossDocEntityRelation(MultiPackLink):
     """
     A `Link` type entry which represent a relation between two entity mentions across the packs.
     Attributes:
-        rel_type (Optional[str])	The type of the relation.
+        rel_type (Optional[str]):	The type of the relation.
     """
 
     rel_type: Optional[str]
@@ -365,7 +365,7 @@ class EventRelation(Link):
     """
     A `Link` type entry which represent a relation between two event mentions.
     Attributes:
-        rel_type (Optional[str])	The type of the relation.
+        rel_type (Optional[str]):	The type of the relation.
     """
 
     rel_type: Optional[str]
@@ -383,7 +383,7 @@ class CrossDocEventRelation(MultiPackLink):
     """
     A `Link` type entry which represent a relation between two event mentions across the packs.
     Attributes:
-        rel_type (Optional[str])	The type of the relation.
+        rel_type (Optional[str]):	The type of the relation.
     """
 
     rel_type: Optional[str]
@@ -401,12 +401,12 @@ class ConstituentNode(Annotation):
     """
     A span based annotation `ConstituentNode` to represent constituents in constituency parsing. This can also sentiment values annotated on the nodes.
     Attributes:
-        label (Optional[str])
-        sentiment (Dict[str, float])
-        is_root (Optional[bool])
-        is_leaf (Optional[bool])
-        parent_node (Optional['ConstituentNode'])
-        children_nodes (FList['ConstituentNode'])
+        label (Optional[str]):
+        sentiment (Dict[str, float]):
+        is_root (Optional[bool]):
+        is_leaf (Optional[bool]):
+        parent_node (Optional['ConstituentNode']):
+        children_nodes (FList['ConstituentNode']):
     """
 
     label: Optional[str]

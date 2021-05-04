@@ -291,7 +291,7 @@ class Property(Item, ABC):
                            f"{self.default_value()}", level)
 
     def to_description(self, level: int) -> Optional[str]:
-        desc = f"{self.field_name} ({self.internal_type_str()})"
+        desc = f"{self.field_name} ({self.internal_type_str()}):"
 
         if self.description is not None and self.description.strip() != '':
             desc += f"\t{self.description}"

@@ -148,8 +148,8 @@ class DataPackTest(unittest.TestCase):
         )
 
         # test get groups
-        # case 2: test get link
         groups: List[List[str]] = []
+        groups_: List[List[str]] = []
         for doc in self.data_pack.get(Document):
             members: List[str] = []
             group: CoreferenceGroup
@@ -158,8 +158,21 @@ class DataPackTest(unittest.TestCase):
                 for em in group.get_members():
                     members.append(em.text)
             groups.append(sorted(members))
+
+        # get from string.
+        for doc in self.data_pack.get("ft.onto.base_ontology.Document"):
+            members: List[str] = []
+            groups_: CoreferenceGroup
+            for group in self.data_pack.get(
+                    "ft.onto.base_ontology.CoreferenceGroup", doc):
+                em: EntityMention
+                for em in group.get_members():
+                    members.append(em.text)
+            groups_.append(sorted(members))
+
         self.assertEqual(groups, [
             ['He', 'The Indonesian billionaire James Riady', 'he']])
+        self.assertEqual(groups, groups_)
 
     def test_delete_entry(self):
         # test delete entry
