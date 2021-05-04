@@ -65,7 +65,7 @@ class TerminalReader(PackReader):
                 "prompt_text": "Enter your query here: ",
             }
 
-        The `prompt_text` config defines he text shown on the terminal.
+        The `prompt_text` config defines the text shown on the terminal.
 
         Returns: The default configuration values as a dict.
         """
