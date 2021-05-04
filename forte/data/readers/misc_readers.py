@@ -51,7 +51,7 @@ class TerminalReader(PackReader):
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
         pack = DataPack()
-        pack.set_text(data_source, replace_func=self.text_replace_operation)
+        self.set_text(pack, data_source)
         Utterance(pack, 0, len(data_source))
         yield pack
 

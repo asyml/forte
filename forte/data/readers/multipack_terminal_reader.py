@@ -70,7 +70,7 @@ class MultiPackTerminalReader(MultiPackReader):
                 self.resources.get("bot_utterance")[-1], "bot_utterance")
 
         pack = multi_pack.add_pack(self.configs.pack_name)
-        pack.set_text(data_source, replace_func=self.text_replace_operation)
+        self.set_text(pack, data_source)
 
         Utterance(pack, 0, len(data_source))
 
