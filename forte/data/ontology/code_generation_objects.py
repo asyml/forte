@@ -634,3 +634,97 @@ class ModuleWriterPool:
 
     def writers(self):
         return self.__module_writers.values()
+
+
+class EntryTreeNode:
+    def __init__(self, name: str):
+        self.children: List[EntryTreeNode] = []
+        self.parent: Optional[EntryTreeNode] = None
+        self.name: str = name
+        self.attributes: Set[str] = set()
+
+    def __repr__(self):
+        r"""for printing purpose."""
+        attr_str = ', '.join(self.attributes)
+        return self.name + ": " + attr_str
+
+
+class EntryTree:
+    r"""
+    A tree structure based on the parent-children relations of the entries.
+    """
+    def __init__(self):
+        self.root = EntryTreeNode("root")
+
+    def add_node(self, curr_entry_name: str,
+                 parent_entry_name: str,
+                 curr_entry_attr: Set[str]):
+        r""" Add a tree node with `curr_entry_name` as a child to
+        `parent_entry_name` in the tree, the attributes `curr_entry_attr`
+        would be added to the tree node attributes.
+
+        Args:
+            curr_entry_name: the type name of the node to be added.
+            parent_entry_name: the type name of the parent of the node to be
+                added.
+            curr_entry_attr: the attributes of the node to be added.
+
+        Returns:
+
+        """
+        found_node = search(self.root, curr_entry_name)
+        if found_node is None:
+            curr_entry_node = EntryTreeNode(curr_entry_name)
+            curr_entry_node.attributes = curr_entry_attr
+            parent_in_tree = search(self.root, parent_entry_name)
+            if parent_in_tree is None:
+                parent_in_tree = EntryTreeNode(parent_entry_name)
+                self.root.children.append(parent_in_tree)
+                parent_in_tree.parent = self.root
+            parent_in_tree.children.append(curr_entry_node)
+            curr_entry_node.parent = parent_in_tree
+        else:
+            found_node.attributes = curr_entry_attr
+
+    def print_traverse(self):
+        path = list()
+        traverse(self.root, path)
+
+    def collect_parents(self, node_dict: Dict[str, Set[str]]):
+        r"""Collect all the parent nodes for all the nodes in the `node_dict`
+        and add the types and attributes of these parent nodes to `node_dict`.
+
+        Args:
+            node_dict: the nodes dictionary of nodes to collect parent nodes
+                for.
+
+        """
+        input_node_dict = node_dict.copy()
+        for node_name in input_node_dict.keys():
+            found_node = search(self.root, search_node_name=node_name)
+            if found_node is not None:
+                while found_node.parent.name != 'root':
+                    node_dict[found_node.parent.name] = found_node.\
+                        parent.attributes
+                    found_node = found_node.parent
+
+
+def search(node: EntryTreeNode, search_node_name: str):
+    if node.name == search_node_name:
+        return node
+
+    for child in node.children:
+        tmp = search(child, search_node_name)
+        if tmp:
+            return tmp
+
+
+def traverse(node: EntryTreeNode, path: List[str]):
+    path.append(repr(node))
+    if len(node.children) == 0:
+        print(path)
+        path.pop()
+    else:
+        for child in node.children:
+            traverse(child, path)
+        path.pop()

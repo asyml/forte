@@ -134,3 +134,4 @@ declaratively
 boolean
 embedding
 embeddings
+docstrings
