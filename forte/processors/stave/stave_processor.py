@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2021 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import asyncio
 import threading
 import collections
 import webbrowser
-from typing import Dict, Any
+from typing import Dict, Set, Any
 import requests
 
 import django
@@ -58,6 +58,7 @@ from tornado.wsgi import WSGIContainer
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
+from forte.data.ontology.code_generation_objects import search
 from forte.processors.base import PackProcessor
 from forte.common.exception import ProcessExecutionException
 
@@ -79,12 +80,12 @@ class StaveProcessor(PackProcessor):
     ontology to start a full-fledged stave instance without any additional
     specification by users.
     Example usage:
-        pipeline.add(StavePorcessor())
+        pipeline.add(StaveProcessor())
 
     `StaveProcessor` is also highly customizable for users to set up. Users may
     configure port number, server host, project name, etc.
     Example usage:
-        pipeline.add(StavePorcessor(), configs={
+        pipeline.add(StaveProcessor(), configs={
             "port": 8880,
             "projectName": "serialization_pipeline_test"
         })
@@ -94,14 +95,14 @@ class StaveProcessor(PackProcessor):
     If users would like to modify project configs, it can pass it to the
     processor by changing `projectConfigs` field.
     Example usage:
-        # Suppose `ontology_file` is passed to the pipeline
-        pConfigs = StaveProcessor.default_project_configs(
-            pipeline.resource.get("onto_specs_dict")
-        )
-        pConfigs["layoutConfigs"]["center-middle"] = "DialogueBox"
-        pipeline.add(StavePorcessor(), configs={
+        pipeline.add(StaveProcessor(), configs={
             "port": 8879,
-            "projectConfigs": pConfigs
+            "projectConfigs": {
+                # Configure Stave layout
+                "layoutConfigs": {
+                    "center-middle": "DialogueBox"
+                }
+            }
         })
     """
 
@@ -118,15 +119,15 @@ class StaveProcessor(PackProcessor):
         super().initialize(resources, configs)
         self._url = f"http://{self.configs.host}:{self.configs.port}"
 
-        # Verify that ontology is correctly passed
-        if not self.resources.contains("onto_specs_dict"):
-            raise ProcessorConfigError("Ontology is not set in resourses.")
-
-        # Create default project config if it has not been set yet
-        if self.configs.projectConfigs is None:
-            self.configs.projectConfigs = self.default_project_configs(
-                self.resources.get("onto_specs_dict")
+        # Generate default project configurations
+        try:
+            self.configs.projectConfigs = Config(
+                hparams=self.configs.projectConfigs,
+                default_hparams=self._default_project_configs()
             )
+        except Exception as e:
+            raise ProcessorConfigError(
+                "`projectConfig` not correctly set.") from e
 
         # Validate multi_pack project config:
         #   A `multi_pack` project must have `multiOntology` set.
@@ -257,25 +258,26 @@ class StaveProcessor(PackProcessor):
             if response.status_code != 200:
                 return
 
-    @classmethod
-    def default_project_configs(cls, ontology: Dict[str, Any]):
+    def _default_project_configs(self):
+        # pylint: disable=line-too-long
         """
         Create default project configuration based on ontology.
         This is translated from JavaScript function `createDefaultConfig` in
-        https://github.com/asyml/stave/blob/d82383de3d74bf09c0d30f33d8a902595
-        f5aff80/src/app/pages/Projects.tsx#L140
-        Commit link:
-        https://github.com/asyml/stave/commit/63ae90583016bbc7d88c091a3bd8a2b
-        56675e49e#diff-46d2dc8ce1bf31f277e7a217416c0be739924160096aac4ca1fee4
-        23bee4c014R105
-
-        Args:
-            ontology: A dictionary representing ontology.
+        https://github.com/asyml/stave/blob/d82383de3d74bf09c0d30f33d8a902595f5aff80/src/app/pages/Projects.tsx#L140
 
         Returns:
             configs: A dictionary with the default config for project.
 
         """
+        # pylint: enable=line-too-long
+
+        try:
+            ontology = self.resources.get("onto_specs_dict")
+            entry_tree = self.resources.get("merged_entry_tree")
+        except Exception as e:
+            raise ProcessorConfigError(
+                "Ontology/Entry_tree is not set in resourses.") from e
+
         configs: Dict[str, Any] = {
             "legendConfigs": {},
             "scopeConfigs": {},
@@ -287,21 +289,12 @@ class StaveProcessor(PackProcessor):
             }
         }
 
+        # Create legend configs
         legend_configs: Dict[str, Any] = {}
-        entry_graph = collections.defaultdict(set)
-        annotation_entry = "forte.data.ontology.top.Annotation"
+        entry_name_set: Set[str] = set()
         for entry in ontology["definitions"]:
             entry_name = entry["entry_name"]
-
-            # `scopeConfigs` applies to all subclass of
-            # `forte.data.ontology.top.Annotation`, so for entries other than
-            # annotation class, we will build a graph to trace parent-childrent
-            # relationships for all entry nodes.
-            if entry_name == annotation_entry:
-                configs['scopeConfigs'][entry_name] = False
-            else:
-                entry_graph[entry["parent_entry"]].add(entry_name)
-
+            entry_name_set.add(entry_name)
             legend_configs[entry_name] = {
                 "is_selected": False,
                 "is_shown": True,
@@ -316,14 +309,17 @@ class StaveProcessor(PackProcessor):
 
         # Find all subclass of `forte.data.ontology.top.Annotation` and
         # update `scopeConfigs` accordingly.
-        children = collections.deque(entry_graph[annotation_entry])
-        while children:
-            size = len(children)
+        queue = collections.deque([
+            search(entry_tree.root, "forte.data.ontology.top.Annotation")
+        ])
+        while queue:
+            size = len(queue)
             for _ in range(size):
-                child = children.pop()
-                configs['scopeConfigs'][child] = False
-                for entry in entry_graph[child]:
-                    children.appendleft(entry)
+                node = queue.pop()
+                if node.name in entry_name_set:
+                    configs['scopeConfigs'][node.name] = False
+                for entry in node.children:
+                    queue.appendleft(entry)
         return configs
 
     @classmethod
