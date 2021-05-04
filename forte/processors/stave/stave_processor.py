@@ -276,7 +276,8 @@ class StaveProcessor(PackProcessor):
             entry_tree = self.resources.get("merged_entry_tree")
         except Exception as e:
             raise ProcessorConfigError(
-                "Ontology/Entry_tree is not set in resourses.") from e
+                "onto_specs_dict/merged_entry_tree is"
+                " not set in resources.") from e
 
         configs: Dict[str, Any] = {
             "legendConfigs": {},

@@ -16,11 +16,13 @@ Unit tests for stave processor.
 """
 
 import os
+import json
 import unittest
 import threading
 import requests
 
 from typing import Any, Dict, Iterator, Optional, Type, Set, List
+from forte.common import ProcessorConfigError
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import OntonotesReader
@@ -41,6 +43,9 @@ class TestStaveProcessor(unittest.TestCase):
         self._port: int = 8880
         self._file_dir_path = os.path.dirname(__file__)
         self._project_name: str = "serialization_pipeline_test"
+        self._dataset_dir: str = os.path.abspath(os.path.join(
+            self._file_dir_path, '../../../', 'data_samples/ontonotes/00/'))
+        self._stave_processor = StaveProcessor()
 
         self.pl = Pipeline[DataPack](
             ontology_file=os.path.abspath(os.path.join(
@@ -48,17 +53,15 @@ class TestStaveProcessor(unittest.TestCase):
                     "forte/ontology_specs/base_ontology.json"))
         )
         self.pl.set_reader(OntonotesReader())
-        self.pl.add(StaveProcessor(), config={
+
+    def test_stave_basic(self):
+
+        self.pl.add(self._stave_processor, config={
             "port": self._port,
             "projectName": self._project_name,
             "server_thread_daemon": True
         })
-
-    def test_stave(self):
-        dataset_dir = os.path.abspath(os.path.join(
-            self._file_dir_path, '../../../', 'data_samples', 'ontonotes/00/'))
-
-        self.pl.run(dataset_dir)
+        self.pl.run(self._dataset_dir)
         url = f"http://localhost:{self._port}"
 
         with requests.Session() as session:
@@ -83,13 +86,55 @@ class TestStaveProcessor(unittest.TestCase):
                     project_id = project["id"]
             self.assertGreater(project_id, 0)
 
+            # Check default project configuration
+            with open(os.path.abspath(os.path.join(
+                self._file_dir_path, "../data/ontology/test_specs/",
+                "test_project_configuration.json")), "r") as f:
+                target_configs = json.load(f)
+            self.assertEqual(
+                json.dumps(target_configs, sort_keys = True),
+                json.dumps(
+                    self._stave_processor.configs.projectConfigs.todict(),
+                    sort_keys = True
+                )
+            )
+
             # Check the number of newly created documents
             response = session.post(f"{url}/api/projects/{project_id}/docs")
             self.assertEqual(response.status_code, 200)
             doc_list = response.json()
             self.assertIsInstance(doc_list, list)
-            self.assertEqual(len(os.listdir(dataset_dir)), len(doc_list))
+            self.assertEqual(
+                len(os.listdir(self._dataset_dir)), 
+                len(doc_list)
+            )
 
+    def test_projecttype_exception(self):
+        """
+        Check the validation of `projectType` config.
+        """
+        self.pl.add(self._stave_processor, config={
+            "port": self._port,
+            "projectType": "multi_pack",
+            "server_thread_daemon": True
+        })
+        with self.assertRaises(ProcessorConfigError) as context:
+            self.pl.run(self._dataset_dir)
+
+    def test_resources_exception(self):
+        """
+        Check exception raised when ontology is not correctly
+        configured in pipeline.
+        """
+        with self.assertRaises(ProcessorConfigError) as context:
+            self.pl.resource.remove("onto_specs_path")
+            self.pl.resource.remove("onto_specs_dict")
+            self.pl.add(self._stave_processor, config={
+                "port": self._port,
+                "server_thread_daemon": True
+            })
+            self.pl.run(self._dataset_dir)
+        
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,167 @@
+{
+    "legendConfigs": {
+        "ft.onto.base_ontology.Token": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "pos": false,
+                "ud_xpos": false,
+                "lemma": false,
+                "chunk": false,
+                "ner": false,
+                "sense": false
+            }
+        },
+        "ft.onto.base_ontology.Subword": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {}
+        },
+        "ft.onto.base_ontology.Document": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {}
+        },
+        "ft.onto.base_ontology.Sentence": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "speaker": false
+            }
+        },
+        "ft.onto.base_ontology.Phrase": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "phrase_type": false
+            }
+        },
+        "ft.onto.base_ontology.UtteranceContext": {
+            "is_selected": false,
+            "is_shown": true
+        },
+        "ft.onto.base_ontology.Utterance": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "speaker": false
+            }
+        },
+        "ft.onto.base_ontology.PredicateArgument": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "ner_type": false,
+                "predicate_lemma": false
+            }
+        },
+        "ft.onto.base_ontology.EntityMention": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "ner_type": false
+            }
+        },
+        "ft.onto.base_ontology.EventMention": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "event_type": false
+            }
+        },
+        "ft.onto.base_ontology.PredicateMention": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "predicate_lemma": false,
+                "framenet_id": false
+            }
+        },
+        "ft.onto.base_ontology.PredicateLink": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "arg_type": false
+            }
+        },
+        "ft.onto.base_ontology.Dependency": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "dep_label": false,
+                "rel_type": false
+            }
+        },
+        "ft.onto.base_ontology.EnhancedDependency": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "dep_label": false
+            }
+        },
+        "ft.onto.base_ontology.RelationLink": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "rel_type": false
+            }
+        },
+        "ft.onto.base_ontology.CrossDocEntityRelation": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "rel_type": false
+            }
+        },
+        "ft.onto.base_ontology.CoreferenceGroup": {
+            "is_selected": false,
+            "is_shown": true
+        },
+        "ft.onto.base_ontology.EventRelation": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "rel_type": false
+            }
+        },
+        "ft.onto.base_ontology.CrossDocEventRelation": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "rel_type": false
+            }
+        },
+        "ft.onto.base_ontology.ConstituentNode": {
+            "is_selected": false,
+            "is_shown": true,
+            "attributes": {
+                "label": false
+            }
+        },
+        "ft.onto.base_ontology.Title": {
+            "is_selected": false,
+            "is_shown": true
+        }
+    },
+    "scopeConfigs": {
+        "ft.onto.base_ontology.Token": false,
+        "ft.onto.base_ontology.Subword": false,
+        "ft.onto.base_ontology.Document": false,
+        "ft.onto.base_ontology.Sentence": false,
+        "ft.onto.base_ontology.Phrase": false,
+        "ft.onto.base_ontology.UtteranceContext": false,
+        "ft.onto.base_ontology.Utterance": false,
+        "ft.onto.base_ontology.PredicateArgument": false,
+        "ft.onto.base_ontology.EntityMention": false,
+        "ft.onto.base_ontology.EventMention": false,
+        "ft.onto.base_ontology.PredicateMention": false,
+        "ft.onto.base_ontology.ConstituentNode": false,
+        "ft.onto.base_ontology.Title": false
+    },
+    "layoutConfigs": {
+        "center-middle": "default-nlp",
+        "left": "default-meta",
+        "right": "default-attribute",
+        "center-bottom": "disable"
+    }
+}
