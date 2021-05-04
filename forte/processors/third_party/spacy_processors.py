@@ -24,6 +24,7 @@ from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import EntityMention, Sentence, Token
 
+
 __all__ = [
     "SpacyProcessor",
 ]

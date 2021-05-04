@@ -17,6 +17,7 @@ Base class for Pipeline module.
 
 import itertools
 import logging
+import json
 from time import time
 from typing import Any, Dict, Generic, Iterator, List, Optional, Union, Tuple, \
     Deque, Set
@@ -30,6 +31,8 @@ from forte.common.exception import (
     ProcessFlowException)
 from forte.common.resources import Resources
 from forte.data.base_pack import PackType
+from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
+from forte.data.ontology.code_generation_objects import EntryTree
 from forte.data.base_reader import BaseReader
 from forte.data.caster import Caster
 from forte.data.selector import Selector, DummySelector
@@ -95,7 +98,40 @@ class Pipeline(Generic[PackType]):
     information to the data packs.
     """
 
-    def __init__(self, resource: Optional[Resources] = None):
+    def __init__(self, resource: Optional[Resources] = None,
+                 ontology_file: Optional[str] = None,
+                 enforce_consistency: bool = False):
+        r"""
+
+        Args:
+            resource: The ``Resources`` object, which is a global registry used
+                in the pipeline. Objects defined as ``Resources`` will be
+                passed on to the processors in the
+                pipeline for initialization.
+            ontology_file: The path to the input ontology specification file,
+                which should be a json file, and it should have all the entries
+                inside with no import as key.
+            enforce_consistency: This boolean determines whether the
+                pipeline will check the content expectations specified in each
+                pipeline component. Each component will check whether the input
+                pack contains the expected data
+                via checking the meta-data, and throws a
+                :class:`~forte.common.exception.ExpectedEntryNotFound` if it
+                fails. When this function is called with enforce is ``True``,
+                all the pipeline components would check if the input datapack
+                record matches
+                with the expected types and attributes if function
+                ``expected_types_and_attributes`` is implemented
+                for the processor. For example, processor A requires entry type
+                of ``ft.onto.base_ontology.Sentence``, and processor B would
+                produce this type in the output datapack, so ``record`` function
+                of processor B writes the record of this type in the datapack
+                and processor A implements ``expected_types_and_attributes`` to
+                add this type. Then when the pipeline runs with
+                `enforce_consistency=True`, processor A would check if this
+                type exists in the record of the output of the
+                previous pipeline component.
+        """
         self._reader: BaseReader
         self._reader_config: Optional[Config] = None
 
@@ -122,6 +158,11 @@ class Pipeline(Generic[PackType]):
             self.resource = Resources()
         else:
             self.resource = resource
+        if ontology_file is not None:
+            with open(ontology_file, 'r') as f:
+                spec_dict = json.load(f)
+                self.resource.update(onto_specs_path=ontology_file)
+                self.resource.update(onto_specs_dict=spec_dict)
 
         # The flag indicating whether this pipeline is initialized.
         self._initialized: bool = False
@@ -136,24 +177,17 @@ class Pipeline(Generic[PackType]):
         self._enable_profiling: bool = False
         self._profiler: List[float] = []
 
+        self._check_type_consistency = enforce_consistency
+
     def enforce_consistency(self, enforce: bool = True):
-        r"""This function determines whether the pipeline will enforce
-        the content expectations specified in each pipeline component. Each
-        component will check whether the input pack contains the expected data
-        via checking the meta-data, and throws a
+        r"""This function determines whether the pipeline will check
+        the content expectations specified in each pipeline component. This
+        function works with :meth:`~forte.pipeline.Pipeline.initialize` called
+        after itself. Each component will check whether the input pack contains
+        the expected data via checking the meta-data, and throws a
         :class:`~forte.common.exception.ExpectedEntryNotFound` if the check
-        fails. When this function is called with enforce is ``True``, all the
-        pipeline components would check if the input datapack record matches
-        with the expected types and attributes if function
-        ``expected_types_and_attributes`` is implemented
-        for the processor. For example, processor A requires entry type of
-        ``ft.onto.base_ontology.Sentence``, and processor B would
-        produce this type in the output datapack, so ``record`` function
-        of processor B writes the record of this type in the datapack
-        and processor A implements ``expected_types_and_attributes`` to add this
-        type. Then when the pipeline runs with enforce_consistency, processor A
-        would check if this type exists in the record of the output of the
-        previous pipeline component.
+        fails. The example of implementation is mentioned in the docstrings of
+        :meth:`~forte.pipeline.Pipeline.__init__`.
 
         Args:
             enforce: A boolean of whether to enable consistency checking
@@ -216,6 +250,18 @@ class Pipeline(Generic[PackType]):
         Returns:
 
         """
+        # create EntryTree type object merged_entry_tree to store the parsed
+        # entry tree from ontology specification file passed in as part of
+        # resource and add the result to resource with key of merged_entry_tree.
+        merged_entry_tree = EntryTree()
+        if self.resource.get("onto_specs_path"):
+            OntologyCodeGenerator().parse_schema_for_no_import_onto_specs_file(
+                ontology_path=self.resource.get("onto_specs_path"),
+                ontology_dict=self.resource.get("onto_specs_dict"),
+                merged_entry_tree=merged_entry_tree,
+            )
+            self.resource.update(merged_entry_tree=merged_entry_tree)
+
         # The process manager need to be assigned first.
         self._proc_mgr = ProcessManager(len(self._components))
 

@@ -25,6 +25,7 @@ from forte.utils.utils_processor import parse_allennlp_srl_tags, \
 from ft.onto.base_ontology import Token, Sentence, Dependency, \
     PredicateLink, PredicateArgument, PredicateMention
 
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -49,7 +50,6 @@ class AllenNLPProcessor(PackProcessor):
     # pylint: disable=attribute-defined-outside-init,unused-argument
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-
         if configs.tag_formalism not in MODEL2URL:
             raise ProcessorConfigError('Incorrect value for tag_formalism')
         if configs.tag_formalism == 'stanford':
@@ -101,10 +101,10 @@ class AllenNLPProcessor(PackProcessor):
         """
         config = super().default_configs()
         config.update({
-            'processors': "tokenize,pos,depparse",
+            'processors': "tokenize, pos, depparse",
             'tag_formalism': "stanford",
             'overwrite_entries': False,
-            'allow_parallel_entries': True
+            'allow_parallel_entries': True,
         })
         return config
 
@@ -153,7 +153,8 @@ class AllenNLPProcessor(PackProcessor):
         for i, word in enumerate(words):
             word_begin = sentence.text.find(word, word_end)
             word_end = word_begin + len(word)
-            token = Token(input_pack, offset + word_begin, offset + word_end)
+            token = Token(input_pack, offset + word_begin,
+                          offset + word_end)
             if "pos" in self.configs.processors:
                 token.pos = pos[i]
             tokens.append(token)
@@ -189,9 +190,9 @@ class AllenNLPProcessor(PackProcessor):
     def expected_types_and_attributes(cls) -> Dict[str, Set[str]]:
         r"""Method to add expected type for current processor input which
         would be checked before running the processor if
-        :meth:`~forte.pipeline.Pipeline.enforce_consistency` was enabled for
-        the pipeline.
+        the pipeline is initialized with
+        `check_type_consistency=True`.
         """
-        expectation_dict: Dict[str, Set[str]] = dict()
-        expectation_dict["ft.onto.base_ontology.Sentence"] = set()
-        return expectation_dict
+        return {
+             "ft.onto.base_ontology.Sentence": set()
+        }
