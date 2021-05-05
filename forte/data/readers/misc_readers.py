@@ -61,11 +61,15 @@ class TerminalReader(PackReader):
         Defines the default configuration for this class, available options are:
 
         .. code-block:: python
+
             {
                 "prompt_text": "Enter your query here: ",
             }
 
-        The `prompt_text` config defines the text shown on the terminal.
+        Here:
+
+        `prompt_text` defines the text shown on the terminal as a prompt
+        for the user.
 
         Returns: The default configuration values as a dict.
         """
