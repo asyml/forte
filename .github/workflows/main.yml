@@ -132,6 +132,16 @@ jobs:
           sphinx-build -W -b html -d _build/doctrees . _build/html
           sphinx-build -W -b spelling -d _build/doctrees . _build/spelling
           cd ..
+  dispatch:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_DISPATCH_PAT_HECTOR }}
+          repository: asyml/forte-wrappers
+          event-type: trigger-forte-wrappers
   deploy:
     needs: [ build, docs ]
     runs-on: ubuntu-latest
