@@ -135,7 +135,7 @@ jobs:
   dispatch:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v1
