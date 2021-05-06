@@ -92,10 +92,10 @@ class TestStaveProcessor(unittest.TestCase):
                 "test_project_configuration.json")), "r") as f:
                 target_configs = json.load(f)
             self.assertEqual(
-                json.dumps(target_configs, sort_keys = True),
+                json.dumps(target_configs, sort_keys=True),
                 json.dumps(
                     self._stave_processor.configs.projectConfigs.todict(),
-                    sort_keys = True
+                    sort_keys=True
                 )
             )
 
@@ -105,7 +105,7 @@ class TestStaveProcessor(unittest.TestCase):
             doc_list = response.json()
             self.assertIsInstance(doc_list, list)
             self.assertEqual(
-                len(os.listdir(self._dataset_dir)), 
+                len(os.listdir(self._dataset_dir)),
                 len(doc_list)
             )
 
@@ -134,7 +134,7 @@ class TestStaveProcessor(unittest.TestCase):
                 "server_thread_daemon": True
             })
             self.pl.run(self._dataset_dir)
-        
+
 
 if __name__ == "__main__":
     unittest.main()
