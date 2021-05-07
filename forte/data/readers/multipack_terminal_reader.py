@@ -82,6 +82,7 @@ class MultiPackTerminalReader(MultiPackReader):
         Defines the default configuration for this class, available options are:
 
         .. code-block:: python
+
             {
                 "pack_name": "query",
                 "prompt_text": "Enter your query here: ",
