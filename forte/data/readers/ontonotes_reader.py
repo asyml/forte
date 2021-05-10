@@ -51,7 +51,7 @@ class OntonotesReader(PackReader):
         """
         Internal class used to specify the fields of an `ontonotes` file.
         """
-        word: str = None
+        word: str
         predicate_labels: List[str] = []
         document_id: Optional[str] = None
         part_number: Optional[str] = None
