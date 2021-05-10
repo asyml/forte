@@ -53,7 +53,7 @@ class DeleteOverlapEntry(PackProcessor):
             else:
                 entry_spans.append(entry.span)
 
-    def _is_overlap(self, interval1: Span, interval2: Span) -> bool:
+    def _is_overlap(self, interval1: Annotation, interval2: Annotation) -> bool:
         """
         Determine whether two intervals overlap with each other.
         """
