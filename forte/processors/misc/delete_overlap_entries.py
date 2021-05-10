@@ -20,7 +20,6 @@ __all__ = [
 from typing import List
 from forte.common import Resources
 from forte.common.configuration import Config
-from forte.data.span import Span
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from forte.data.ontology import Annotation
