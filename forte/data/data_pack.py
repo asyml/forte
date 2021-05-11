@@ -19,7 +19,7 @@ from typing import (Dict, Iterable, Iterator, List, Optional, Type, Union, Any,
 import numpy as np
 from sortedcontainers import SortedList
 
-from forte.common.exception import ProcessExecutionException
+from forte.common.exception import ProcessExecutionException, EntryNotFoundError
 from forte.data import data_utils_io
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex
@@ -991,6 +991,10 @@ class DataPack(BasePack[Entry, Link, Group]):
         entry_type_: Type[EntryType]
         if isinstance(entry_type, str):
             entry_type_ = get_class(entry_type)
+            if not issubclass(entry_type_, Entry):
+                raise AttributeError(
+                    f"The specified entry type [{entry_type}] "
+                    f"does not correspond to a forte.data.ontology.Entry class")
         else:
             entry_type_ = entry_type
 
