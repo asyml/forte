@@ -30,6 +30,7 @@ from forte.data.ontology.top import (
     MultiPackGeneric)
 from forte.data.span import Span
 from forte.data.types import DataRequest
+from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
@@ -514,7 +515,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             return target[target.index(entry)]
 
     def get(  # type: ignore
-            self, entry_type: Type[EntryType],
+            self, entry_type: Union[str, Type[EntryType]],
             components: Optional[Union[str, List[str]]] = None,
             include_sub_type=True
     ) -> Iterator[EntryType]:
@@ -524,7 +525,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         .. code-block:: python
 
-            for relation in pack.get_entries(
+            for relation in pack.get(
                                 CrossDocEntityRelation,
                                 component="relation_creator"
                                 ):
@@ -547,23 +548,34 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         insertion)
 
         """
+        entry_type_: Type[EntryType]
+        if isinstance(entry_type, str):
+            entry_type_ = get_class(entry_type)
+            if not issubclass(entry_type_, Entry):
+                raise AttributeError(
+                    f"The specified entry type [{entry_type}] "
+                    f"does not correspond to a "
+                    f"'forte.data.ontology.core.Entry' class")
+        else:
+            entry_type_ = entry_type
+
         entry_iter: Iterator[Entry]
 
         if not include_sub_type:
-            entry_iter = self.get_entries_of(entry_type)
-        elif issubclass(entry_type, MultiPackLink):
+            entry_iter = self.get_entries_of(entry_type_)
+        elif issubclass(entry_type_, MultiPackLink):
             entry_iter = self.links
-        elif issubclass(entry_type, MultiPackGroup):
+        elif issubclass(entry_type_, MultiPackGroup):
             entry_iter = self.groups
-        elif issubclass(entry_type, MultiPackGeneric):
+        elif issubclass(entry_type_, MultiPackGeneric):
             entry_iter = self.generics
         else:
             raise ValueError(
-                f"The entry type: {entry_type} is not supported by MultiPack.")
+                f"The entry type: {entry_type_} is not supported by MultiPack.")
 
         all_types: Set[Type]
         if include_sub_type:
-            all_types = self._expand_to_sub_types(entry_type)
+            all_types = self._expand_to_sub_types(entry_type_)
 
         if components is not None:
             if isinstance(components, str):

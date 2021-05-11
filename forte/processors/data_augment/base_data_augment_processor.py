@@ -20,7 +20,7 @@ from abc import ABC
 from bisect import bisect_right, bisect_left
 from collections import defaultdict
 from copy import deepcopy
-from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast
+from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast, Iterable
 
 from sortedcontainers import SortedList, SortedDict
 
@@ -516,8 +516,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
                     f"The entry type to copy from [{entry_to_copy}] is not "
                     f"a sub-class of 'forte.data.ontology.top.Annotation'.")
 
-            orig_anno: Annotation
-            for orig_anno in data_pack.get(class_to_copy):
+            orig_annos: Iterable[Annotation] = data_pack.get(class_to_copy)
+            for orig_anno in orig_annos:
                 # Dealing with insertion/deletion only for augment_entry.
                 if entry_to_copy == self.configs['augment_entry']:
                     while insert_ind < len(inserted_annos) and \

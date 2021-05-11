@@ -22,6 +22,7 @@ from typing import List
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.common.exception import ProcessorConfigError
+from forte.data import Span
 from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 from forte.processors.base import PackProcessor
@@ -52,17 +53,17 @@ class DeleteOverlapEntry(PackProcessor):
                 f"'forte.data.ontology.top.Annotation' class.")
 
     def _process(self, input_pack: DataPack):
-        entry_spans: List[Annotation] = []
-        entry: Annotation
-        for entry in list(input_pack.get(self.entry_type)):
+        entry_spans: List[Span] = []
+        entries: List[Annotation] = list(input_pack.get(self.entry_type))
+        for entry in entries:
             current_span = entry.span
             if entry_spans and \
                     self._is_overlap(entry_spans[-1], current_span):
                 input_pack.delete_entry(entry)
             else:
-                entry_spans.append(entry.span)
+                entry_spans.append(current_span)
 
-    def _is_overlap(self, interval1: Annotation, interval2: Annotation) -> bool:
+    def _is_overlap(self, interval1: Span, interval2: Span) -> bool:
         """
         Determine whether two intervals overlap with each other.
         """

@@ -932,11 +932,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                     if self._index.in_span(group, range_annotation.span):
                         yield group
 
-    def get(self, entry_type: Union[str, Type[EntryType]],  # type: ignore
+    def get(  # type: ignore
+            self, entry_type: Union[str, Type[EntryType]],
             range_annotation: Optional[Annotation] = None,
             components: Optional[Union[str, Iterable[str]]] = None,
             include_sub_type=True
-            ) -> Iterable[EntryType]:
+    ) -> Iterable[EntryType]:
         r"""This function is used to get data from a data pack with various
         methods.
 
@@ -994,7 +995,8 @@ class DataPack(BasePack[Entry, Link, Group]):
             if not issubclass(entry_type_, Entry):
                 raise AttributeError(
                     f"The specified entry type [{entry_type}] "
-                    f"does not correspond to a forte.data.ontology.Entry class")
+                    f"does not correspond to a "
+                    f"`forte.data.ontology.core.Entry` class")
         else:
             entry_type_ = entry_type
 

@@ -21,7 +21,7 @@ implemented based on the ReplacementDataAugmentProcessor.
 
 from math import ceil
 import random
-from typing import List, Dict
+from typing import List, Dict, Iterable
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
@@ -80,7 +80,7 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
                 f"but {self.configs['augment_entry']} is not.")
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations: List[Annotation] = list(  # type: ignore
+            annotations: List[Annotation] = list(
                 data_pack.get(augment_entry))
             if len(annotations) > 0:
                 replace_map: Dict = {}
@@ -154,10 +154,10 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations = []
+            annotations: List[Annotation] = []
             pos = [0]
-            anno: Annotation
-            for anno in data_pack.get(augment_entry):
+            annos: Iterable[Annotation] = data_pack.get(augment_entry)
+            for anno in annos:
                 if anno.text not in self.stopwords:
                     annotations.append(anno)
                     pos.append(anno.end)
