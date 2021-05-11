@@ -73,9 +73,15 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         augment_entry = get_class(self.configs["augment_entry"])
+        if not issubclass(augment_entry, Annotation):
+            raise ValueError(
+                f"This augmenter only accept data of "
+                f"'forte.data.ontology.Annotation' type, "
+                f"but {self.configs['augment_entry']} is not.")
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations = list(data_pack.get(augment_entry))
+            annotations: List[Annotation] = list(  # type: ignore
+                data_pack.get(augment_entry))
             if len(annotations) > 0:
                 replace_map: Dict = {}
                 for _ in range(ceil(self.configs['alpha'] * len(annotations))):
