@@ -348,15 +348,6 @@ class BaseReader(PipelineComponent[PackType], ABC):
     def finish(self, resources: Resources):
         pass
 
-
-class PackReader(BaseReader[DataPack], ABC):
-    r"""A Pack Reader reads data into :class:`DataPack`.
-    """
-
-    @property
-    def pack_type(self):
-        return DataPack
-
     def set_text(self, pack: DataPack, text: str):
         r"""Assign the text value to the :class:`DataPack`. This function will
         pass the ``text_replace_operation`` to the :class:`DataPack` to conduct
@@ -367,6 +358,15 @@ class PackReader(BaseReader[DataPack], ABC):
             text: The original text to be recorded in this dataset.
         """
         pack.set_text(text, replace_func=self.text_replace_operation)
+
+
+class PackReader(BaseReader[DataPack], ABC):
+    r"""A Pack Reader reads data into :class:`DataPack`.
+    """
+
+    @property
+    def pack_type(self):
+        return DataPack
 
 
 class MultiPackReader(BaseReader[MultiPack], ABC):

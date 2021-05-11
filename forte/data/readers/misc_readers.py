@@ -1,4 +1,4 @@
-# Copyright 2019 The Forte Authors. All Rights Reserved.
+# Copyright 2021 The Forte Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,25 +13,24 @@
 # limitations under the License.
 # pylint: disable=attribute-defined-outside-init
 """
-The reader that reads text data from a terminal and packs into a Multipack.
+The module contains assorted common readers.
 """
 import logging
 from typing import Iterator, Dict, Any
 
-from forte.data.multi_pack import MultiPack
-from forte.data.base_reader import MultiPackReader
+from forte.data import DataPack
+from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import Utterance
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "MultiPackTerminalReader"
+    "TerminalReader"
 ]
 
 
-class MultiPackTerminalReader(MultiPackReader):
-    r"""A reader designed to read text from the terminal. and returns a
-    multi-pack that contains this single pack."""
+class TerminalReader(PackReader):
+    r"""A reader designed to read text from the terminal."""
 
     # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
@@ -50,31 +49,11 @@ class MultiPackTerminalReader(MultiPackReader):
                 print()
                 break
 
-    def _parse_pack(self, data_source: str) -> Iterator[MultiPack]:
-        r"""Takes a raw string and converts into a MultiPack.
-
-        Args:
-            data_source: str that contains text of a document.
-
-        Returns: MultiPack containing a datapack for the current query.
-        """
-        multi_pack = MultiPack()
-
-        # use context to build the query
-        if self.resources is not None and self.resources.get("user_utterance"):
-            multi_pack.add_pack_(
-                self.resources.get("user_utterance")[-1], "user_utterance")
-
-        if self.resources is not None and self.resources.get("bot_utterance"):
-            multi_pack.add_pack_(
-                self.resources.get("bot_utterance")[-1], "bot_utterance")
-
-        pack = multi_pack.add_pack(self.configs.pack_name)
+    def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
+        pack = DataPack()
         self.set_text(pack, data_source)
-
         Utterance(pack, 0, len(data_source))
-
-        yield multi_pack
+        yield pack
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
@@ -84,15 +63,15 @@ class MultiPackTerminalReader(MultiPackReader):
         .. code-block:: python
 
             {
-                "pack_name": "query",
                 "prompt_text": "Enter your query here: ",
             }
 
-        The `pack_name` is the named to be assigned to the pack to identify it
-        in the multi-pack. The `prompt_text` is the text shown on the terminal.
+        Here:
+
+        `prompt_text` defines the text shown on the terminal as a prompt
+        for the user.
 
         Returns: The default configuration values as a dict.
-
         """
         configs = super().default_configs()
         configs.update({
