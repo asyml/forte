@@ -27,6 +27,7 @@ from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.data.ontology import Annotation
 from forte.processors.data_augment import ReplacementDataAugmentProcessor
 from forte.utils.utils import get_class, create_class_with_kwargs
 
@@ -149,6 +150,7 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
             data_pack: DataPack = input_pack.get_pack(pack_name)
             annotations = []
             pos = [0]
+            anno: Annotation
             for anno in data_pack.get(augment_entry):
                 if anno.text not in self.stopwords:
                     annotations.append(anno)
@@ -224,6 +226,7 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
+            anno: Annotation
             for anno in data_pack.get(augment_entry):
                 if random.random() < self.configs['alpha']:
                     self._delete(anno)

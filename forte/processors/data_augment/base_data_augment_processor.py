@@ -510,6 +510,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         # Iterate over all the original entries and modify their spans.
         for entry_to_copy in entries_to_copy:
+            orig_anno: Entry
             for orig_anno in data_pack.get(get_class(entry_to_copy)):
                 # Dealing with insertion/deletion only for augment_entry.
                 if entry_to_copy == self.configs['augment_entry']:
@@ -742,6 +743,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
+            anno: Annotation
             for anno in data_pack.get(augment_entry):
                 self._replace(replacement_op, anno)
 

@@ -125,7 +125,7 @@ class PretrainedEncoder(PackProcessor):
             raise ValueError("entry_type must be annotation type.")
 
     def _process(self, input_pack: DataPack):
-        for entry in input_pack.get(entry_type=self.entry_type):
+        for entry in input_pack.get(entry_type=self.entry_type):  # type: ignore
             input_ids, segment_ids, _ = self.tokenizer.encode_text(
                 text_a=entry.text)
 

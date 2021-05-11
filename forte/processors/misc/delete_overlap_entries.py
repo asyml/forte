@@ -21,6 +21,7 @@ from typing import List
 from forte.common import Resources
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
+from forte.data.ontology.core import Entry
 from forte.processors.base import PackProcessor
 from forte.data.ontology import Annotation
 from forte.utils import get_class
@@ -31,6 +32,7 @@ class DeleteOverlapEntry(PackProcessor):
     """
     A processor to delete overlap entries in a datapack.
     """
+
     # pylint: disable=attribute-defined-outside-init,unused-argument
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -44,10 +46,11 @@ class DeleteOverlapEntry(PackProcessor):
 
     def _process(self, input_pack: DataPack):
         entry_spans: List[Annotation] = []
+        entry: Entry
         for entry in list(input_pack.get(self.entry_type)):
             current_span = entry.span
             if entry_spans and \
-                self._is_overlap(entry_spans[-1], current_span):
+                    self._is_overlap(entry_spans[-1], current_span):
                 input_pack.delete_entry(entry)
             else:
                 entry_spans.append(entry.span)
