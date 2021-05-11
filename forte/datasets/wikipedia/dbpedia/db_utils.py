@@ -55,10 +55,6 @@ def load_redirects(redirect_path: str) -> Dict[str, str]:
                 from_page = get_resource_name(s)
                 redirect_page = get_resource_name(o)
                 if from_page is not None and redirect_page is not None:
-
-                    if from_page == 'A':
-                        import pdb
-                        pdb.set_trace()
                     redirect_to[from_page] = redirect_page
                     count += 1
                 if count % 50000 == 0:
