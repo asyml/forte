@@ -76,7 +76,7 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
         if not issubclass(augment_entry, Annotation):
             raise ValueError(
                 f"This augmenter only accept data of "
-                f"'forte.data.ontology.Annotation' type, "
+                f"'forte.data.ontology.top.Annotation' type, "
                 f"but {self.configs['augment_entry']} is not.")
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)

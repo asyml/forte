@@ -514,7 +514,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             if not issubclass(class_to_copy, Annotation):
                 raise AttributeError(
                     f"The entry type to copy from [{entry_to_copy}] is not "
-                    f"a sub-class of 'forte.data.ontology.Annotation'.")
+                    f"a sub-class of 'forte.data.ontology.top.Annotation'.")
 
             orig_anno: Annotation
             for orig_anno in data_pack.get(class_to_copy):
