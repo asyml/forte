@@ -19,7 +19,7 @@ from typing import (Dict, Iterable, Iterator, List, Optional, Type, Union, Any,
 import numpy as np
 from sortedcontainers import SortedList
 
-from forte.common.exception import ProcessExecutionException, EntryNotFoundError
+from forte.common.exception import ProcessExecutionException
 from forte.data import data_utils_io
 from forte.data.base_pack import BaseMeta, BasePack
 from forte.data.index import BaseIndex

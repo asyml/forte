@@ -174,6 +174,17 @@ class DataPackTest(unittest.TestCase):
             ['He', 'The Indonesian billionaire James Riady', 'he']])
         self.assertEqual(groups, groups_)
 
+        # The class cannot be found, so raise attribute error.
+        with self.assertRaises(AttributeError):
+            for doc in self.data_pack.get("this.is.not.a.valid.class"):
+                print(doc)
+
+        # The class can be found, but it is not an Entry, so raise attribute
+        # error.
+        with self.assertRaises(AttributeError):
+            for doc in self.data_pack.get("forte.data.data_pack.DataPack"):
+                print(doc)
+
     def test_delete_entry(self):
         # test delete entry
         sentences = list(self.data_pack.get(Sentence))
