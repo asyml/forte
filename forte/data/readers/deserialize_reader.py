@@ -110,6 +110,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         configs.update({
             "suffix": ".json",
         })
+        return configs
 
 
 class SinglePackeReader(BaseDeserializeReader):
