@@ -18,14 +18,11 @@ import sys
 import sphinx_rtd_theme
 from sphinx.domains.python import PythonDomain
 
-from forte import __version__
-
-# from unittest.mock import MagicMock
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
+from forte import __version__
 
 # -- General configuration ------------------------------------------------
 
