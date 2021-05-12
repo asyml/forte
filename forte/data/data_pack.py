@@ -993,7 +993,7 @@ class DataPack(BasePack[Entry, Link, Group]):
         if isinstance(entry_type, str):
             entry_type_ = get_class(entry_type)
             if not issubclass(entry_type_, Entry):
-                raise AttributeError(
+                raise ValueError(
                     f"The specified entry type [{entry_type}] "
                     f"does not correspond to a "
                     f"`forte.data.ontology.core.Entry` class")

@@ -34,7 +34,7 @@ class RaceDocument(Document):
 class Passage(Document):
     """
     Attributes:
-        passage_id (Optional[str])
+        passage_id (Optional[str]):
     """
 
     passage_id: Optional[str]
@@ -55,8 +55,8 @@ class Option(Annotation):
 class Question(Annotation):
     """
     Attributes:
-        options (FList[Option])
-        answers (List[int])
+        options (FList[Option]):
+        answers (List[int]):
     """
 
     options: FList[Option]

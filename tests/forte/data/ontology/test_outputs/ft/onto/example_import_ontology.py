@@ -23,8 +23,8 @@ class Token(Annotation):
     """
     Base parent token entry
     Attributes:
-        pos (Optional[str])
-        lemma (Optional[str])
+        pos (Optional[str]):
+        lemma (Optional[str]):
     """
 
     pos: Optional[str]
@@ -40,7 +40,7 @@ class Token(Annotation):
 class EntityMention(Annotation):
     """
     Attributes:
-        entity_type (Optional[str])
+        entity_type (Optional[str]):
     """
 
     entity_type: Optional[str]

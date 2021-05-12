@@ -27,9 +27,9 @@ __all__ = [
 class Word(Token):
     """
     Attributes:
-        string_features (List[str])	To demonstrate the composite type, List.
-        word_forms (FList['Word'])	To demonstrate that an attribute can be a List of other entries.
-        token_ranks (FDict[int, 'Word'])	To demonstrate that an attribute can be a Dict, and the values can be other entries.
+        string_features (List[str]):	To demonstrate the composite type, List.
+        word_forms (FList['Word']):	To demonstrate that an attribute can be a List of other entries.
+        token_ranks (FDict[int, 'Word']):	To demonstrate that an attribute can be a Dict, and the values can be other entries.
     """
 
     string_features: List[str]
@@ -47,7 +47,7 @@ class Word(Token):
 class WordLink(Link):
     """
     Attributes:
-        string_features (List[str])	To demonstrate the composite type, List.
+        string_features (List[str]):	To demonstrate the composite type, List.
     """
 
     string_features: List[str]
