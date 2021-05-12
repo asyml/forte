@@ -21,12 +21,13 @@ implemented based on the ReplacementDataAugmentProcessor.
 
 from math import ceil
 import random
-from typing import List, Dict
+from typing import List, Dict, Iterable
 
 from forte.common.configuration import Config
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
+from forte.data.ontology import Annotation
 from forte.processors.data_augment import ReplacementDataAugmentProcessor
 from forte.utils.utils import get_class, create_class_with_kwargs
 
@@ -72,9 +73,15 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
     def _augment(self, input_pack: MultiPack, aug_pack_names: List[str]):
         augment_entry = get_class(self.configs["augment_entry"])
+        if not issubclass(augment_entry, Annotation):
+            raise ValueError(
+                f"This augmenter only accept data of "
+                f"'forte.data.ontology.top.Annotation' type, "
+                f"but {self.configs['augment_entry']} is not.")
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations = list(data_pack.get(augment_entry))
+            annotations: List[Annotation] = list(
+                data_pack.get(augment_entry))
             if len(annotations) > 0:
                 replace_map: Dict = {}
                 for _ in range(ceil(self.configs['alpha'] * len(annotations))):
@@ -147,9 +154,10 @@ class RandomInsertionDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
-            annotations = []
+            annotations: List[Annotation] = []
             pos = [0]
-            for anno in data_pack.get(augment_entry):
+            annos: Iterable[Annotation] = data_pack.get(augment_entry)
+            for anno in annos:
                 if anno.text not in self.stopwords:
                     annotations.append(anno)
                     pos.append(anno.end)
@@ -224,6 +232,7 @@ class RandomDeletionDataAugmentProcessor(ReplacementDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
+            anno: Annotation
             for anno in data_pack.get(augment_entry):
                 if random.random() < self.configs['alpha']:
                     self._delete(anno)

@@ -12,17 +12,17 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
 
-# from unittest.mock import MagicMock
+import sphinx_rtd_theme
+from sphinx.domains.python import PythonDomain
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 from forte import __version__
-from forte.version import VERSION_SHORT as __version_short__
 
 # -- General configuration ------------------------------------------------
 
@@ -40,7 +40,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.extlinks',
     'sphinx.ext.napoleon',
-    'recommonmark',
+    'myst_parser',
     'sphinxcontrib.spelling',
 ]
 
@@ -126,7 +126,6 @@ todo_include_todos = False
 # a list of builtin themes.
 # html_theme = 'alabaster'
 
-import sphinx_rtd_theme
 
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
@@ -364,6 +363,7 @@ napoleon_numpy_docstring = False
 spelling_lang = 'en_US'
 spelling_word_list_filename = 'spelling_wordlist.txt'
 
+
 ## Exclude imports
 # autodoc_mock_imports = [
 #    "torch"
@@ -378,16 +378,15 @@ spelling_word_list_filename = 'spelling_wordlist.txt'
 # MOCK_MODULES = ['gym']
 # sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-# Disable the duplicated  https://github.com/sphinx-doc/sphinx/issues/3866
-from sphinx.domains.python import PythonDomain
-
+# Disable the duplicated target warning:
+# https://github.com/sphinx-doc/sphinx/issues/3866
 
 class PatchedPythonDomain(PythonDomain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,
                      contnode):
         if 'refspecific' in node:
             del node['refspecific']
-        return super(PatchedPythonDomain, self).resolve_xref(
+        return super().resolve_xref(
             env, fromdocname, builder, typ, target, node, contnode)
 
 

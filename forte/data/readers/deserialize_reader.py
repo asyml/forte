@@ -14,8 +14,9 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-
 from typing import Iterator, List, Any, Union, Optional
+
+from smart_open import open
 
 from forte.common.exception import ProcessExecutionException
 from forte.data.data_pack import DataPack
@@ -28,6 +29,7 @@ __all__ = [
     'DirPackReader',
     'MultiPackDirectoryReader',
     'MultiPackDeserializerBase',
+    'SinglePackeReader',
 ]
 
 
@@ -63,7 +65,9 @@ class RawDataDeserializeReader(BaseDeserializeReader):
 class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
     """
     This reader find all the files under the directory and read each one as
-    a DataPack.
+    a DataPack. If the `suffix` configuration is provided, then only files that
+    end with this suffix will be read, otherwise all files will be read.
+    Compressed data are supported through smart open.
     """
 
     def _collect(self, data_dir: str) -> Iterator[str]:  # type: ignore
@@ -76,8 +80,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
         Args:
             data_dir: The root directory to search for the data packs.
 
-        Returns:
-
+        Returns: Iterator of the data pack string from the directory.
         """
         for root, _, files in os.walk(data_dir):
             for file in files:
@@ -88,9 +91,46 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
 
     @classmethod
     def default_configs(cls):
-        return {
-            "suffix": ".json"
-        }
+        """
+        Store the configs for this reader.
+
+         .. code-block:: python
+
+            {
+                "suffix": ".json",
+            }
+
+        Here, "suffix" is used to finds files matching the suffix. The default
+        value is `.json`. If None, then all files will be read.
+
+        Returns:
+
+        """
+        configs = super().default_configs()
+        configs.update({
+            "suffix": ".json",
+        })
+        return configs
+
+
+class SinglePackeReader(BaseDeserializeReader):
+    """
+    This reader reader one file of the given path as a DataPack. Compressed
+    files are supported.
+    """
+
+    def _collect(self, data_path: str) -> Iterator[str]:  # type: ignore
+        """
+        This function will collect data path as a single file.
+
+        Args:
+            data_path: The file to the data pack.
+
+        Returns:
+            Iterator of only one item, the data pack string itself.
+        """
+        with open(data_path) as f:
+            yield f.read()
 
 
 class MultiPackDeserializerBase(MultiPackReader):

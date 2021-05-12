@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 from forte.data.data_pack import DataPack
+from forte.data.ontology.core import Entry
 from forte.processors.base import PackProcessor
 from forte.utils import get_class
 
@@ -16,6 +17,7 @@ class AnnotationRemover(PackProcessor):
 
             # Note: we cannot delete during iteration, which may cause
             # un-expected behavior in the iterator.
+            t: Entry
             for t in list(input_pack.get(type_cls)):
                 input_pack.delete_entry(t)
 

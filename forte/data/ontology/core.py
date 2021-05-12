@@ -245,7 +245,12 @@ class Entry(Generic[ContainerType]):
             self.__pack.record_field(self.tid, key)
 
     def __getattribute__(self, item):
-        v = super().__getattribute__(item)
+        try:
+            v = super().__getattribute__(item)
+        except AttributeError:
+            # For all unknown attributes, return None.
+            return None
+
         if isinstance(v, BasePointer):
             # Using the pointer to get the entry.
             return self.resolve_pointer(v)
