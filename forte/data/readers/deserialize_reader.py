@@ -101,7 +101,7 @@ class RecursiveDirectoryDeserializeReader(BaseDeserializeReader):
             }
 
         Here, "suffix" is used to finds files matching the suffix. The default
-        value is ".json". If None, then all files will be read.
+        value is `.json`. If None, then all files will be read.
 
         Returns:
 

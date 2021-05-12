@@ -1,8 +1,9 @@
-sphinx>=4.0.0
+# myst requires sphinx <4
+sphinx<4
+myst-parser>=0.14.0
 sphinx-rtd-theme >= 0.5.0
 Pygments >= 2.1.1
 funcsigs~=1.0.2
-recommonmark
 mypy_extensions~=0.4.1
 sphinxcontrib-spelling
 
