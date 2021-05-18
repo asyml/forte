@@ -40,9 +40,6 @@ import collections
 from typing import Dict, Set, Any
 import requests
 
-from nlpviewer_backend.lib.stave_viewer import StaveViewer
-from nlpviewer_backend.lib.stave_project import StaveProjectWriter
-
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
@@ -92,8 +89,9 @@ class StaveProcessor(PackProcessor):
     def __init__(self):
         super().__init__()
         self._project_id: int = -1
-        self._viewer: StaveViewer
-        self._project_writer: StaveProjectWriter
+        # TODO: Specify annotations in future update.
+        self._viewer: Any
+        self._project_writer: Any
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -115,6 +113,12 @@ class StaveProcessor(PackProcessor):
                 self.configs.multi_ontology or Config({}, {})
             self.configs.project_path = os.path.abspath(
                 self.configs.project_path or self.configs.project_name)
+
+            # TODO: Move to toplevel in future update.
+            # pylint: disable=import-outside-toplevel
+            from nlpviewer_backend.lib.stave_viewer import StaveViewer
+            from nlpviewer_backend.lib.stave_project import StaveProjectWriter
+            # pylint: enable=import-outside-toplevel
 
             self._viewer = StaveViewer(
                 build_path=os.environ["FRONTEND_BUILD_PATH"],
