@@ -50,6 +50,11 @@
         {
           "name": "target_page_name",
           "type": "str"
+        },
+        {
+          "name": "is_external",
+          "type": "bool",
+          "description": "whether this is a link to external (i.e. outside wikipedia)."
         }
       ]
     },

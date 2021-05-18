@@ -29,3 +29,4 @@ from forte.data.readers.sst2_reader import *
 from forte.data.readers.openie_reader import *
 from forte.data.readers.ag_news_reader import *
 from forte.data.readers.largemovie_reader import *
+from forte.data.readers.misc_readers import *

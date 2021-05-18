@@ -374,8 +374,8 @@ class WikiAnchorReader(WikiPackReader):
                              end)
                 continue
 
-            anchor = WikiAnchor(pack, begin, end)
             for info_key, info_value in link_infos.items():
+                info_value = str(info_value)
                 if info_key == 'type':
                     anchor_type = get_resource_fragment(info_value)
                     if (not anchor_type == 'Phrase'
@@ -388,7 +388,15 @@ class WikiAnchorReader(WikiPackReader):
                             and target_page_name in self._redirects):
                         target_page_name = self._redirects[
                             target_page_name]
-                    anchor.target_page_name = target_page_name
+
+                    if target_page_name is not None:
+                        # Only create anchor with proper link.
+                        anchor = WikiAnchor(pack, begin, end)
+                        anchor.target_page_name = target_page_name
+                        # If it is an DBpedia resource, the domain will be
+                        # truncated, otherwise it will stay the same, meaning
+                        # it is an external link.
+                        anchor.is_external = target_page_name == str(info_value)
 
 
 class WikiPropertyReader(WikiPackReader):

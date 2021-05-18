@@ -24,10 +24,10 @@ __all__ = [
 class Token(Annotation):
     """
     Attributes:
-        lemma (Optional[str])
-        is_verb (Optional[bool])
-        num_chars (Optional[int])
-        score (Optional[float])
+        lemma (Optional[str]):
+        is_verb (Optional[bool]):
+        num_chars (Optional[int]):
+        score (Optional[float]):
     """
 
     lemma: Optional[str]
@@ -47,7 +47,7 @@ class Token(Annotation):
 class Sentence(Annotation):
     """
     Attributes:
-        tokens (FList[Token])
+        tokens (FList[Token]):
     """
 
     tokens: FList[Token]

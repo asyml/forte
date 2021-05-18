@@ -168,7 +168,7 @@ def get_path(dataset: str):
 
 if __name__ == '__main__':
     base_dir = sys.argv[1]
-    pack_output = os.path.join(base_dir, 'packs')
+    pack_output = sys.argv[2]
 
     if not os.path.exists(pack_output):
         os.makedirs(pack_output)

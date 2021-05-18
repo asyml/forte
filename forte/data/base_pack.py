@@ -340,7 +340,9 @@ class BasePack(EntryContainer[EntryType, LinkType, GroupType]):
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, entry_type: Type[EntryType], **kwargs) -> Iterator[EntryType]:
+    def get(
+            self, entry_type: Union[str, Type[EntryType]], **kwargs
+    ) -> Iterator[EntryType]:
         """
         Implementation of this method should provide to obtain the entries in
         entry ordering. If there are orders defined between the entries, they

@@ -29,6 +29,7 @@ from forte.data.ontology.top import (
     Annotation, Link, Group, SinglePackEntries, Generics)
 from forte.data.span import Span
 from forte.data.types import ReplaceOperationsType, DataRequest
+from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
@@ -931,11 +932,12 @@ class DataPack(BasePack[Entry, Link, Group]):
                     if self._index.in_span(group, range_annotation.span):
                         yield group
 
-    def get(self, entry_type: Type[EntryType],  # type: ignore
+    def get(  # type: ignore
+            self, entry_type: Union[str, Type[EntryType]],
             range_annotation: Optional[Annotation] = None,
             components: Optional[Union[str, Iterable[str]]] = None,
             include_sub_type=True
-            ) -> Iterable[EntryType]:
+    ) -> Iterable[EntryType]:
         r"""This function is used to get data from a data pack with various
         methods.
 
@@ -987,14 +989,25 @@ class DataPack(BasePack[Entry, Link, Group]):
                 the provided entry type. Default `True`.
         """
 
+        entry_type_: Type[EntryType]
+        if isinstance(entry_type, str):
+            entry_type_ = get_class(entry_type)
+            if not issubclass(entry_type_, Entry):
+                raise ValueError(
+                    f"The specified entry type [{entry_type}] "
+                    f"does not correspond to a "
+                    f"`forte.data.ontology.core.Entry` class")
+        else:
+            entry_type_ = entry_type
+
         def require_annotations() -> bool:
-            if issubclass(entry_type, Annotation):
+            if issubclass(entry_type_, Annotation):
                 return True
-            if issubclass(entry_type, Link):
-                return (issubclass(entry_type.ParentType, Annotation)
-                        and issubclass(entry_type.ChildType, Annotation))
-            if issubclass(entry_type, Group):
-                return issubclass(entry_type.MemberType, Annotation)
+            if issubclass(entry_type_, Link):
+                return (issubclass(entry_type_.ParentType, Annotation)
+                        and issubclass(entry_type_.ChildType, Annotation))
+            if issubclass(entry_type_, Group):
+                return issubclass(entry_type_.MemberType, Annotation)
             return False
 
         # If we don't have any annotations but the items to check requires them,
@@ -1007,27 +1020,27 @@ class DataPack(BasePack[Entry, Link, Group]):
         # Valid entry ids based on type.
         all_types: Set[Type]
         if include_sub_type:
-            all_types = self._expand_to_sub_types(entry_type)
+            all_types = self._expand_to_sub_types(entry_type_)
         else:
-            all_types = {entry_type}
+            all_types = {entry_type_}
 
         entry_iter: Iterator[Entry]
-        if issubclass(entry_type, Generics):
+        if issubclass(entry_type_, Generics):
             entry_iter = self.generics
         elif range_annotation is not None:
-            if (issubclass(entry_type, Annotation)
-                    or issubclass(entry_type, Link)
-                    or issubclass(entry_type, Group)):
-                entry_iter = self.iter_in_range(entry_type, range_annotation)
-        elif issubclass(entry_type, Annotation):
+            if (issubclass(entry_type_, Annotation)
+                    or issubclass(entry_type_, Link)
+                    or issubclass(entry_type_, Group)):
+                entry_iter = self.iter_in_range(entry_type_, range_annotation)
+        elif issubclass(entry_type_, Annotation):
             entry_iter = self.annotations
-        elif issubclass(entry_type, Link):
+        elif issubclass(entry_type_, Link):
             entry_iter = self.links
-        elif issubclass(entry_type, Group):
+        elif issubclass(entry_type_, Group):
             entry_iter = self.groups
         else:
             raise ValueError(
-                f"The requested type {str(entry_type)} is not supported.")
+                f"The requested type {str(entry_type_)} is not supported.")
 
         for entry in entry_iter:
             # Filter by type and components.

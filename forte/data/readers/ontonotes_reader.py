@@ -46,9 +46,13 @@ class OntonotesReader(PackReader):
 
     """
 
-    class ParsedFields(NamedTuple):
+    # NOTE: sphinx 4.0 doesn't like inner class, making it protected to skip.
+    class _ParsedFields(NamedTuple):
+        """
+        Internal class used to specify the fields of an `ontonotes` file.
+        """
         word: str
-        predicate_labels: List[str]
+        predicate_labels: List[str] = []
         document_id: Optional[str] = None
         part_number: Optional[str] = None
         pos_tag: Optional[str] = None
@@ -91,7 +95,7 @@ class OntonotesReader(PackReader):
                 if field not in self._STAR_FIELDS:
                     raise ValueError(f"Field '{field}' cannot begin with '*'")
                 self._star_pos = idx
-            if field not in self.ParsedFields._fields:
+            if field not in self._ParsedFields._fields:
                 raise ValueError(f"Unsupported field type: '{field}'")
             if field in seen_fields:
                 raise ValueError(f"Duplicate field type: '{field}'")
@@ -167,7 +171,7 @@ class OntonotesReader(PackReader):
         return config
 
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
-        r"""Iterator over *.gold_conll files in the data_source
+        r"""Iterator over `*.gold_conll` files in the data_source
 
         Args:
             conll_directory:  path to the directory containing the files.
@@ -179,7 +183,7 @@ class OntonotesReader(PackReader):
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 
-    def _parse_line(self, line: str) -> 'ParsedFields':
+    def _parse_line(self, line: str) -> '_ParsedFields':
         parts = line.split()
         fields = {}
         if self._star_pos is not None:
@@ -189,7 +193,7 @@ class OntonotesReader(PackReader):
         for field, part in zip(self._column_format, parts):
             if field is not None:
                 fields[field] = part
-        return self.ParsedFields(**fields)  # type: ignore
+        return self._ParsedFields(**fields)  # type: ignore
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         start_new_doc: bool = True

@@ -124,14 +124,25 @@ def get_resource_fragment(url: str) -> Optional[str]:
         return None
 
 
-def get_resource_name(url: str) -> Optional[str]:
+def get_resource_name(
+        url: str,
+        resource_domain="http://dbpedia.org/resource") -> Optional[str]:
     # pylint: disable=line-too-long
     """
     Get the name of the resource from the URL.
 
-    >>> sample_url = 'http://dbpedia.org/resource/Animalia_(book)?dbpv=2016-10&nif=context'
-    >>> get_resource_name(sample_url)
+    >>> get_resource_name("http://dbpedia.org/resource/Animalia_(book)?dbpv=2016-10&nif=context")
     'Animalia_(book)'
+
+    >>> get_resource_name("http://dbpedia.org/resource/A_grave")
+    'A_grave'
+
+    # Handling wierd input from DBpedia dumps.
+    >>> get_resource_name("http://dbpedia.org/resource/A;sldkfj")
+    'A;sldkfj'
+
+    >>> get_resource_name("http://dbpedia.org/resource/A;sldkfj?nif=context")
+    'A;sldkfj'
 
     Args:
         url: The URL to find the resource name. None if the URL cannot be
@@ -146,7 +157,21 @@ def get_resource_name(url: str) -> Optional[str]:
         logging.warning("Encounter un-parsable URL [%s]", url)
         return None
 
-    return re.sub('^/resource/', '', parsed.path)
+    if url.startswith(resource_domain):
+        reconstruct = parsed.path
+        if not parsed.params == '':
+            reconstruct = parsed.path + ";" + parsed.params
+            # Sometimes there are ill-formed URL or resource name.
+            if reconstruct not in url:
+                logging.warning(
+                    "Encounter unexpected resource URL [%s]. This resource "
+                    "name may contain unexpected characters", url)
+                return None
+
+        # Params of the last fragment seem to be needed.
+        return re.sub('^/resource/', '', reconstruct)
+    else:
+        return str(url)
 
 
 def strip_url_params(url) -> Optional[str]:

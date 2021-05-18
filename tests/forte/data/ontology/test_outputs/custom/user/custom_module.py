@@ -23,7 +23,7 @@ __all__ = [
 class Dependency(Link):
     """
     Attributes:
-        rel_type (Optional[str])
+        rel_type (Optional[str]):
     """
 
     rel_type: Optional[str]

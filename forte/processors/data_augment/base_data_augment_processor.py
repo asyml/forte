@@ -20,7 +20,7 @@ from abc import ABC
 from bisect import bisect_right, bisect_left
 from collections import defaultdict
 from copy import deepcopy
-from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast
+from typing import List, Tuple, Dict, DefaultDict, Set, Union, cast, Iterable
 
 from sortedcontainers import SortedList, SortedDict
 
@@ -58,9 +58,9 @@ def modify_index(
     to the index after replacement.
 
     An index is the character offset in the data pack.
-    The old_spans are the inputs of replacement, and the new_spans
+    The `old_spans` are the inputs of replacement, and the new_spans
     are the outputs. Each of the span has start and end index.
-    The old_spans and new_spans are anchors for the mapping,
+    The `old_spans` and `new_spans` are anchors for the mapping,
     because we depend on them to determine the position change of the
     index.
 
@@ -88,7 +88,7 @@ def modify_index(
     the extra exclamation. In this case, the is_begin is False. However, if
     we prepend an "And" to the second sentence, when modifying the start index
     of the second Sentence, it should be pushed left to include the new Token.
-    In this case, the is_begin is True.
+    In this case, the `is_begin` is True.
 
     Args:
         index (int): The index to map.
@@ -133,7 +133,7 @@ def modify_index(
     the input index is 1, the output will be 2 if both
     is_inclusive and is_begin are True,
     because the inserted [1, 1] should be included in the span.
-    If the is_inclusive=True but is_begin=False, the output will be
+    If the `is_inclusive=True` but `is_begin=False`, the output will be
     4 because the index is an end index of the span.
     """
 
@@ -510,7 +510,14 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         # Iterate over all the original entries and modify their spans.
         for entry_to_copy in entries_to_copy:
-            for orig_anno in data_pack.get(get_class(entry_to_copy)):
+            class_to_copy = get_class(entry_to_copy)
+            if not issubclass(class_to_copy, Annotation):
+                raise AttributeError(
+                    f"The entry type to copy from [{entry_to_copy}] is not "
+                    f"a sub-class of 'forte.data.ontology.top.Annotation'.")
+
+            orig_annos: Iterable[Annotation] = data_pack.get(class_to_copy)
+            for orig_anno in orig_annos:
                 # Dealing with insertion/deletion only for augment_entry.
                 if entry_to_copy == self.configs['augment_entry']:
                     while insert_ind < len(inserted_annos) and \
@@ -742,6 +749,7 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
 
         for pack_name in aug_pack_names:
             data_pack: DataPack = input_pack.get_pack(pack_name)
+            anno: Annotation
             for anno in data_pack.get(augment_entry):
                 self._replace(replacement_op, anno)
 
