@@ -14,14 +14,12 @@
 
 """
 A StaveProcessor is introduced to enable immediate visualization of forte
-pipeline result. It supports serving Stave instance with tornado(for static
-files) and django(for web apis). Forte users can plug it into the pipeline
-to easily visualize datapacks with annotations. It is also highly
-configurable for users to change port number, layout, ontology, etc.
+pipeline result. It supports serving Stave instance with StaveViewer.
+Forte users can plug it into the pipeline to easily visualize datapacks
+with annotations. It is also highly configurable for users to change port
+number, host name, layout, etc.
 
 Package Requirements:
-    tornado == 6.1
-    django == 3.2
     forte
     *stave (Required in future version)
 
@@ -30,37 +28,26 @@ Required environment variables:
     FRONTEND_BUILD_PATH:
         Absolute path (or relative path from PYTHONPATH)
         to stave build folder. Example: "stave/build/"
-    DJANGO_BACKEND_PATH:
-        Absolute path (or relative path from PYTHONPATH)
-        to django backend folder. Example: "stave/simple-backend/"
+    PYTHONPATH:
+        Absolute path to django backend folder (e.g.,
+        "$STAVE_PATH/simple-backend/") should be inserted into PYTHONPATH.
 """
 
 import os
-import sys
 import json
 import logging
-import asyncio
-import threading
 import collections
-import webbrowser
 from typing import Dict, Set, Any
 import requests
-
-import django
-from django.core.wsgi import get_wsgi_application
-
-from tornado.web import FallbackHandler, StaticFileHandler, \
-    RequestHandler, url, Application
-from tornado.httpserver import HTTPServer
-from tornado.ioloop import IOLoop
-from tornado.wsgi import WSGIContainer
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.ontology.code_generation_objects import search
 from forte.processors.base import PackProcessor
-from forte.common.exception import ProcessExecutionException
+
+from nlpviewer_backend.lib.stave_viewer import StaveViewer
+from nlpviewer_backend.lib.stave_project import StaveProjectWriter
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +63,8 @@ class StaveProcessor(PackProcessor):
     pipeline without affecting the original functionalities.
 
     `StaveProcessor` requires an ontology file being passed to the pipeline.
-    It then genertes default configurations based on the input
-    ontology to start a full-fledged stave instance without any additional
-    specification by users.
+    It then genertes default configurations based on the input ontology to
+    start a stave instance without any additional specification by users.
     Example usage:
         pipeline.add(StaveProcessor())
 
@@ -87,17 +73,14 @@ class StaveProcessor(PackProcessor):
     Example usage:
         pipeline.add(StaveProcessor(), configs={
             "port": 8880,
-            "projectName": "serialization_pipeline_test"
+            "project_name": "serialization_pipeline_test"
         })
 
-    `StaveProcessor` automatically creates project and documents via stave
-    backend api based on project configurations and input datapacks.
-    If users would like to modify project configs, it can pass it to the
-    processor by changing `projectConfigs` field.
+    Users can modify project configs by changing the `project_configs` field.
     Example usage:
         pipeline.add(StaveProcessor(), configs={
             "port": 8879,
-            "projectConfigs": {
+            "project_configs": {
                 # Configure Stave layout
                 "layoutConfigs": {
                     "center-middle": "DialogueBox"
@@ -108,119 +91,77 @@ class StaveProcessor(PackProcessor):
 
     def __init__(self):
         super().__init__()
-        self._url: str
-        self._server_started: bool = False
         self._project_id: int = -1
-
-        # Used for sync between threads
-        self._barrier = threading.Barrier(2, timeout=1)
+        self._viewer: StaveViewer
+        self._project_writer: StaveProjectWriter
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        self._url = f"http://{self.configs.host}:{self.configs.port}"
-
-        # Generate default project configurations
-        try:
-            self.configs.projectConfigs = Config(
-                hparams=self.configs.projectConfigs,
-                default_hparams=self._default_project_configs()
-            )
-        except Exception as e:
-            raise ProcessorConfigError(
-                "`projectConfig` not correctly set.") from e
 
         # Validate multi_pack project config:
-        #   A `multi_pack` project must have `multiOntology` set.
-        if self.configs.projectType != "single_pack" and (
-            self.configs.projectType != "multi_pack" or
-            self.configs.multiOntology is None):
+        #   A `multi_pack` project must have `multi_ontology` set.
+        if self.configs.project_type != "single_pack" and (
+            self.configs.project_type != "multi_pack" or
+            self.configs.multi_ontology is None):
             raise ProcessorConfigError("Invalid project type configuration.")
 
-    class ProxyHandler(FallbackHandler):
-        """
-        URL routing for django web interface.
-        ProxyHandler directs all requests with `/api`-prefixed url to
-        the django wsgi application.
-        """
+        # Generate default configurations and write to project folder
+        try:
+            self.configs.project_configs = Config(
+                hparams=self.configs.project_configs,
+                default_hparams=self._default_project_configs()
+            )
+            self.configs.multi_ontology = \
+                self.configs.multi_ontology or Config({}, {})
+            self.configs.project_path = os.path.abspath(
+                self.configs.project_path or self.configs.project_name)
 
-        def initialize(self, fallback):
-            # Strip prefix "/api" from uri and path
-            self.request.uri = self.request.uri[4:]
-            self.request.path = self.request.path[4:]
-            super().initialize(fallback)
+            self._viewer = StaveViewer(
+                build_path=os.environ["FRONTEND_BUILD_PATH"],
+                project_path=self.configs.project_path,
+                host=self.configs.host,
+                port=self.configs.port,
+                thread_daemon=self.configs.server_thread_daemon,
+                in_viewer_mode=self.configs.in_viewer_mode
+            )
 
-    class ReactHandler(RequestHandler):
-        """
-        Handler of requests to React index page
-        ReactHandler makes sure all requests fall back to index page
-        so that they can follow the standard React routing rules.
-        """
+            if self._viewer.in_viewer_mode:
+                self._project_writer = StaveProjectWriter(
+                    project_path=self.configs.project_path,
+                    project_name=self.configs.project_name,
+                    project_type=self.configs.project_type,
+                    ontology=self.resources.get("onto_specs_dict"),
+                    project_configs=self.configs.project_configs.todict(),
+                    multi_ontology=self.configs.multi_ontology.todict()
+                )
 
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self._build_path: str
-
-        def initialize(self, build_path):
-            self._build_path = build_path
-
-        def get(self):
-            self.render(self._build_path + "/index.html")
+        except Exception as e:
+            raise ProcessorConfigError(
+                "Invalid conifguration for StaveProcessor.") from e
 
     def _process(self, input_pack: DataPack):
-        if not self._server_started:
-            # Start a new thread to server Stave
-            thread = threading.Thread(
-                target=self._start_server,
-                daemon=self.configs.server_thread_daemon
-            )
-            thread.start()
 
-            # Wait for server to boot up
-            self._barrier.wait()
+        if not self._viewer.server_started:
+            self._viewer.run()
 
-            if not thread.is_alive():
-                raise ProcessExecutionException(
-                    "%s: Stave server not started." % self.configs.projectName)
-            self._server_started = True
+        if self._viewer.server_started:
+            if self._viewer.in_viewer_mode:
+                textpack_id = self._project_writer.write_textpack(
+                    input_pack.pack_name
+                        if self.configs.use_pack_name
+                        else input_pack.pack_id,
+                    input_pack.serialize()
+                )
+                if textpack_id == 0:
+                    self._viewer.open()
+            else:
+                self._create_document(input_pack)
 
-        if self._server_started:
-            self._create_project(input_pack)
-
-    def _start_server(self):
-        asyncio.set_event_loop(asyncio.new_event_loop())
-        sys.path.insert(0, self.configs.django_backend_path)
-        os.environ['DJANGO_SETTINGS_MODULE'] = "nlpviewer_backend.settings"
-        os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
-        django.setup()
-
-        wsgi_app = WSGIContainer(get_wsgi_application())
-        build_path = self.configs.frontend_build_path
-
-        # TODO: Find better logic to deal with routing.
-        #       The following implementation may miss some corner cases.
-        app = Application([
-            url(r"/api/(.*)", self.ProxyHandler, dict(fallback=wsgi_app)),
-            url(r'.*/static/(.*)', StaticFileHandler, {
-                "path": build_path + "/static/"
-            }),
-            url(r'.*/([^/]*\.png)', StaticFileHandler, {"path": build_path}),
-            url(r'.*/([^/]*\.ico)', StaticFileHandler, {"path": build_path}),
-            url(r"/.*", self.ReactHandler, {"build_path": build_path})
-        ])
-
-        server = HTTPServer(app)
-        server.listen(self.configs.port)
-
-        # Release lock in main thread
-        self._barrier.wait()
-
-        IOLoop.current().start()
-
-    def _create_project(self, input_pack: DataPack):
+    def _create_document(self, input_pack: DataPack):
         with requests.Session() as session:
 
             # Log in as admin user
-            response = session.post(f"{self._url}/api/login",
+            response = session.post(f"{self._viewer.url}/api/login",
                 json={
                     "name": self.configs.user_name,
                     "password": self.configs.user_password
@@ -231,24 +172,24 @@ class StaveProcessor(PackProcessor):
 
             # Configure and create project
             if self._project_id < 0:
-                response = session.post(f"{self._url}/api/projects/new",
+                response = session.post(f"{self._viewer.url}/api/projects/new",
                     json={
-                        "type": self.configs.projectType,
-                        "name": self.configs.projectName,
+                        "type": self.configs.project_type,
+                        "name": self.configs.project_name,
                         "ontology": json.dumps(
                             self.resources.get("onto_specs_dict")
                         ),
-                        "multiOntology": str(self.configs.multiOntology),
-                        "config": str(self.configs.projectConfigs)
+                        "multiOntology": str(self.configs.multi_ontology),
+                        "config": str(self.configs.project_configs)
                     })
                 logger.info("%d %s", response.status_code, response.text)
                 if response.status_code != 200:
                     return
                 self._project_id = response.json()["id"]
-                webbrowser.open(self._url)
+                self._viewer.open()
 
             # Configure and create document
-            response = session.post(f"{self._url}/api/documents/new",
+            response = session.post(f"{self._viewer.url}/api/documents/new",
                 json={
                     "name": input_pack.pack_name,
                     "textPack": input_pack.serialize(),
@@ -329,42 +270,43 @@ class StaveProcessor(PackProcessor):
         This defines a basic config structure for StaveProcessor.
         :return: A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
-            - frontend_build_path: Absolute path (or relative path
-                from PYTHONPATH) to stave build folder.
-                Example: "stave/build/".
-                default value set from env var FRONTEND_BUILD_PATH.
-            - django_backend_path: Absolute path (or relative path
-                from PYTHONPATH) to django backend folder.
-                Example: "stave/simple-backend/".
-                default value set from env var DJANGO_BACKEND_PATH.
+            - build_path: Absolute path to stave build folder.
+                Example: "$STAVE_PATH/build/".
             - port: port number for Stave server. default value is 8888.
             - host: host name for Stave server. default value is `localhost`.
             - user_name: admin user name. default to `admin`.
             - user_password: admin user password. default to `admin`.
-            - projectType: single_pack(default) / multi_pack.
-            - projectName: project name displayed on Stave.
+            - project_type: single_pack(default) / multi_pack.
+            - project_name: project name displayed on Stave.
                 default name is `Auto generated project`.
-            - multiOntology: a dictionary for multi_pack ontology
+            - multi_ontology: a dictionary for multi_pack ontology
                 default to {}.
-            - projectConfigs: project configurations.
+            - project_configs: project configurations.
                 default value generated from ontology.
             - server_thread_daemon: sets whether the thread is daemonic.
                 default to False.
+            - in_viewer_mode: Enable viewer mode of Stave. If False,
+                StaveViewer will start a standard Stave instance.
+                Default to True.
+            - use_pack_name: Use `pack_name` to name the textpack being saved
+                to project path in viewer mode. If False, will use `pack_id`
+                for naming. Default to False.
         """
         config = super().default_configs()
 
         config.update({
-            "frontend_build_path": os.environ["FRONTEND_BUILD_PATH"],
-            "django_backend_path": os.environ["DJANGO_BACKEND_PATH"],
+            "project_path": None,
             "port": 8888,
             "host": "localhost",
             "user_name": "admin",
             "user_password": "admin",
-            "projectType": "single_pack",
-            "projectName": "Auto generated project",
-            "multiOntology": None,
-            "projectConfigs": None,
-            "server_thread_daemon": False
+            "project_type": "single_pack",
+            "project_name": "Auto generated project",
+            "multi_ontology": None,
+            "project_configs": None,
+            "server_thread_daemon": False,
+            "in_viewer_mode": True,
+            "use_pack_name": False
         })
 
         return config
