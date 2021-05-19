@@ -21,11 +21,10 @@ from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
 from forte.processors.nlp import CoNLLNERPredictor, SRLPredictor
-from forte.processors.third_party import NLTKWordTokenizer, \
-    NLTKPOSTagger, NLTKSentenceSegmenter
-
 from ft.onto.base_ontology import Token, Sentence, PredicateLink, \
     PredicateMention, PredicateArgument, EntityMention
+from forte_wrapper.nltk import NLTKWordTokenizer, \
+    NLTKPOSTagger, NLTKSentenceSegmenter
 
 config = yaml.safe_load(open("config.yml", "r"))
 
