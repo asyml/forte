@@ -22,7 +22,7 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import MSMarcoPassageReader
 from forte.pipeline import Pipeline
-from forte.processors.ir import ElasticSearchTextIndexProcessor
+from forte_wrapper.elastic import ElasticSearchTextIndexProcessor
 
 logging.basicConfig(level=logging.INFO)
 

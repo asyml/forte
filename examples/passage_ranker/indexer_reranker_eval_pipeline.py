@@ -21,8 +21,9 @@ from examples.passage_ranker.reader import EvalReader
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
-from forte.processors.ir import (
-    ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
+from forte.processors.ir import BertRerankingProcessor
+from forte_wrapper.elastic import ElasticSearchQueryCreator, \
+    ElasticSearchProcessor
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
