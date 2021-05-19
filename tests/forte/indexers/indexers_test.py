@@ -24,10 +24,10 @@ import numpy as np
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
-
-from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
-from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from tests.utils import performance_test
+
+from forte_wrapper.faiss import EmbeddingBasedIndexer
+from forte_wrapper.elastic import ElasticSearchIndexer
 
 
 class TestEmbeddingBasedIndexer(unittest.TestCase):
