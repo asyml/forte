@@ -26,10 +26,10 @@ from forte.data.readers import OntonotesReader, \
     RecursiveDirectoryDeserializeReader
 from forte.pipeline import Pipeline
 from forte.processors.misc import AnnotationRemover
+from forte.processors.third_party import NLTKWordTokenizer, \
+    NLTKPOSTagger, NLTKSentenceSegmenter
 from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import Token
-from forte_wrapper.nltk import NLTKWordTokenizer, \
-    NLTKPOSTagger, NLTKSentenceSegmenter
 
 
 class TestJsonWriter(unittest.TestCase):
