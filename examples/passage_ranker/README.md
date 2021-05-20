@@ -1,6 +1,14 @@
 # Passage Ranker
 This example showcases the use of `Forte` to build a complete two stage IR pipeline, namely the retrieval and the re-ranking. The retrieval stage typically focuses on obtaining as many relevant documents as possible (high recall) in low cost, while the re-ranking stage aims to produce a high-quality ranked list of top `n` desired number of results (high precision). We demonstrate the pipeline through the [MS-MARCO Passage Ranking](https://github.com/microsoft/MSMARCO-Passage-Ranking) use-case. We use the `Full Ranking` as the Ranking Style, which includes retrieval and re-ranking (as opposed to `Re-Ranking` where the task is to use BM25 retrieved documents and rerank them). We use the TREC 2019 version of `Passage Ranking` dataset which can be found [here](https://microsoft.github.io/TREC-2019-Deep-Learning/).
 
+## Install Extra Dependencies
+
+In command line, we run
+
+```bash
+pip install git+https://git@github.com/asyml/forte-wrappers#egg=forte-wrappers[elastic]
+```
+
 > All the examples are run from the directory `example/passage_ranker`
 
 ## Inference Mode
