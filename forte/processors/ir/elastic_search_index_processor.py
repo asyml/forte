@@ -40,7 +40,9 @@ class ElasticSearchIndexerBase(IndexProcessor, ABC):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         r"""Returns a dictionary of default hyperparameters.
+
         .. code-block:: python
+
             {
                 "batch_size": 128,
                 "fields": "content",
@@ -53,20 +55,28 @@ class ElasticSearchIndexerBase(IndexProcessor, ABC):
                     }
                 }
             }
+
         Here:
+
         `"batch_size"`: int
             Number of examples that will be bulk added to `Elasticsearch` index
+
         `"fields"`: str, list
             Field name that will be used as a key while indexing the document
+
         `"indexer"`: dict
+
             `"name"`: str
                 Name of Indexer to be used.
+
             `"hparams"`: dict
                 Hyperparameters to be used for the index. See
                 :meth:`ElasticSearchIndexer.default_hparams` for more details
+
             `"kwargs"`: dict
                 Keyword arguments that will be passed to
                 :meth:`ElasticSearchIndexer.add_bulk` API
+
         """
         config = super().default_configs()
         config.update({
@@ -94,9 +104,12 @@ class ElasticSearchTextIndexProcessor(ElasticSearchIndexerBase):
     def _content_for_index(self, input_pack: DataPack) -> List[str]:
         """
         Index two fields, the pack id and the input pack text.
+
         Args:
             input_pack:
+
         Returns:
+
         """
         return [str(input_pack.pack_id), input_pack.text]
 
@@ -111,9 +124,12 @@ class ElasticSearchPackIndexProcessor(ElasticSearchIndexerBase):
         """
         Index 3 fields, the pack id, the input pack text and the
           raw pack content.
+
         Args:
             input_pack:
+
         Returns:
+
         """
         return [str(input_pack.pack_id), input_pack.text,
                 input_pack.serialize(True)]
