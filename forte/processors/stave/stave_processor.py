@@ -67,7 +67,7 @@ class StaveProcessor(PackProcessor):
         Pipeline() \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
             .add(StaveProcessor())
-    
+
     After initialized, `StaveProcessor` will create a project directory
     (or use an existing directory specified in `project_path`). Metadata
     and textpacks will be dumped into the direcotry.
