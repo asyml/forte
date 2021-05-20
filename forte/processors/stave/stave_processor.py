@@ -60,7 +60,7 @@ class StaveProcessor(PackProcessor):
     pipeline without affecting the original functionalities.
 
     `StaveProcessor` requires an ontology file being passed to the pipeline.
-    Otherwise a `ProcessorConfigError` will be raised. It then genertes default
+    Otherwise a `ProcessorConfigError` will be raised. It then generates default
     configurations based on the input ontology to start a stave instance
     without any additional specification by users.
     Example usage:
@@ -303,7 +303,7 @@ class StaveProcessor(PackProcessor):
             - use_pack_name: Use `pack_name` to name the textpack being saved
                 to project path in viewer mode. If False, will use `pack_id`
                 for naming. Default to False.
-                
+
         Returns:
             config: A dictionary with the default config for this processor.
         """
