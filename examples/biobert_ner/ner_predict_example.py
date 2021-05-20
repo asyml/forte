@@ -20,10 +20,11 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
+from forte.processors.third_party import NLTKSentenceSegmenter
 from ft.onto.base_ontology import Subword, Sentence, EntityMention
+
 from examples.biobert_ner.transformers_processor import BERTTokenizer
 from examples.biobert_ner.bio_ner_predictor import BioBERTNERPredictor
-from forte_wrapper.nltk import NLTKSentenceSegmenter
 
 config = yaml.safe_load(open("config.yml", "r"))
 

@@ -25,9 +25,9 @@ from forte.processors.third_party import MicrosoftBingTranslator
 from forte.processors.nlp import SRLPredictor
 from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
-from ft.onto.base_ontology import PredicateLink, Sentence
-from forte_wrapper.nltk import (
+from forte.processors.third_party import (
     NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
+from ft.onto.base_ontology import PredicateLink, Sentence
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
