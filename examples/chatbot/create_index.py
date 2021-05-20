@@ -21,7 +21,7 @@ import torch
 import texar.torch as tx
 
 from forte.common.configuration import Config
-from forte_wrapper.faiss import EmbeddingBasedIndexer
+from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
 
 logging.basicConfig(level=logging.INFO)
 

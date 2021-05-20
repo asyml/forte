@@ -22,7 +22,7 @@ from forte.pipeline import Pipeline
 from forte.processors.data_augment.selector_index_processor \
     import DataSelectorIndexProcessor
 from forte.data.readers import MSMarcoPassageReader
-from forte_wrapper.elastic import ElasticSearchIndexer
+from forte.indexers.elastic_indexer import ElasticSearchIndexer
 
 
 class TestDataSelectorIndexProcessor(unittest.TestCase):
