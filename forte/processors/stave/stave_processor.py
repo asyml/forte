@@ -60,30 +60,42 @@ class StaveProcessor(PackProcessor):
     pipeline without affecting the original functionalities.
 
     `StaveProcessor` requires an ontology file being passed to the pipeline.
-    It then genertes default configurations based on the input ontology to
-    start a stave instance without any additional specification by users.
+    Otherwise a `ProcessorConfigError` will be raised. It then genertes default
+    configurations based on the input ontology to start a stave instance
+    without any additional specification by users.
     Example usage:
-        pipeline.add(StaveProcessor())
+        Pipeline() \
+            .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
+            .add(StaveProcessor())
+    
+    After initialized, `StaveProcessor` will create a project directory
+    (or use an existing directory specified in `project_path`). Metadata
+    and textpacks will be dumped into the direcotry.
 
     `StaveProcessor` is also highly customizable for users to set up. Users may
     configure port number, server host, project name, etc.
     Example usage:
-        pipeline.add(StaveProcessor(), configs={
-            "port": 8880,
-            "project_name": "serialization_pipeline_test"
-        })
+        Pipeline() \
+            .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
+            .add(StaveProcessor(), configs={
+                "port": 8880,
+                "project_name": "serialization_pipeline_test"
+            })
 
     Users can modify project configs by changing the `project_configs` field.
     Example usage:
-        pipeline.add(StaveProcessor(), configs={
-            "port": 8879,
-            "project_configs": {
-                # Configure Stave layout
-                "layoutConfigs": {
-                    "center-middle": "DialogueBox"
+        Pipeline() \
+            .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
+            .add(StaveProcessor(), configs={
+                "port": 8879,
+                "project_configs": {
+                    # Configure Stave layout. Replace the normal annotation
+                    # viewer `default-nlp` with a dialogue box.
+                    "layoutConfigs": {
+                        "center-middle": "DialogueBox"
+                    }
                 }
-            }
-        })
+            })
     """
 
     def __init__(self):
@@ -103,45 +115,41 @@ class StaveProcessor(PackProcessor):
             self.configs.multi_ontology is None):
             raise ProcessorConfigError("Invalid project type configuration.")
 
-        # Generate default configurations and write to project folder
-        try:
-            self.configs.project_configs = Config(
-                hparams=self.configs.project_configs,
-                default_hparams=self._default_project_configs()
-            )
-            self.configs.multi_ontology = \
-                self.configs.multi_ontology or Config({}, {})
-            self.configs.project_path = os.path.abspath(
-                self.configs.project_path or self.configs.project_name)
+        # Generate default configurations
+        self.configs.project_configs = Config(
+            hparams=self.configs.project_configs,
+            default_hparams=self._default_project_configs()
+        )
+        self.configs.multi_ontology = \
+            self.configs.multi_ontology or Config({}, {})
+        self.configs.project_path = os.path.abspath(
+            self.configs.project_path or self.configs.project_name)
 
-            # TODO: Move to toplevel in future update.
-            # pylint: disable=import-outside-toplevel
-            from nlpviewer_backend.lib.stave_viewer import StaveViewer
-            from nlpviewer_backend.lib.stave_project import StaveProjectWriter
-            # pylint: enable=import-outside-toplevel
+        # TODO: Move to toplevel in future update.
+        # pylint: disable=import-outside-toplevel
+        from nlpviewer_backend.lib.stave_viewer import StaveViewer
+        from nlpviewer_backend.lib.stave_project import StaveProjectWriter
+        # pylint: enable=import-outside-toplevel
 
-            self._viewer = StaveViewer(
-                build_path=os.environ["FRONTEND_BUILD_PATH"],
+        self._viewer = StaveViewer(
+            build_path=os.environ["FRONTEND_BUILD_PATH"],
+            project_path=self.configs.project_path,
+            host=self.configs.host,
+            port=self.configs.port,
+            thread_daemon=self.configs.server_thread_daemon,
+            in_viewer_mode=self.configs.in_viewer_mode
+        )
+
+        if self._viewer.in_viewer_mode:
+            #  Write meta data to project folder
+            self._project_writer = StaveProjectWriter(
                 project_path=self.configs.project_path,
-                host=self.configs.host,
-                port=self.configs.port,
-                thread_daemon=self.configs.server_thread_daemon,
-                in_viewer_mode=self.configs.in_viewer_mode
+                project_name=self.configs.project_name,
+                project_type=self.configs.project_type,
+                ontology=self.resources.get("onto_specs_dict"),
+                project_configs=self.configs.project_configs.todict(),
+                multi_ontology=self.configs.multi_ontology.todict()
             )
-
-            if self._viewer.in_viewer_mode:
-                self._project_writer = StaveProjectWriter(
-                    project_path=self.configs.project_path,
-                    project_name=self.configs.project_name,
-                    project_type=self.configs.project_type,
-                    ontology=self.resources.get("onto_specs_dict"),
-                    project_configs=self.configs.project_configs.todict(),
-                    multi_ontology=self.configs.multi_ontology.todict()
-                )
-
-        except Exception as e:
-            raise ProcessorConfigError(
-                "Invalid conifguration for StaveProcessor.") from e
 
     def _process(self, input_pack: DataPack):
 
@@ -216,13 +224,12 @@ class StaveProcessor(PackProcessor):
         """
         # pylint: enable=line-too-long
 
-        try:
-            ontology = self.resources.get("onto_specs_dict")
-            entry_tree = self.resources.get("merged_entry_tree")
-        except Exception as e:
+        if not (self.resources.contains("onto_specs_dict") and
+            self.resources.contains("merged_entry_tree")):
             raise ProcessorConfigError(
-                "onto_specs_dict/merged_entry_tree is"
-                " not set in resources.") from e
+                "onto_specs_dict/merged_entry_tree is not set in resources.")
+        ontology = self.resources.get("onto_specs_dict")
+        entry_tree = self.resources.get("merged_entry_tree")
 
         configs: Dict[str, Any] = {
             "legendConfigs": {},
@@ -272,7 +279,6 @@ class StaveProcessor(PackProcessor):
     def default_configs(cls) -> Dict[str, Any]:
         """
         This defines a basic config structure for StaveProcessor.
-        :return: A dictionary with the default config for this processor.
         Following are the keys for this dictionary:
             - build_path: Absolute path to stave build folder.
                 Example: "$STAVE_PATH/build/".
@@ -290,11 +296,16 @@ class StaveProcessor(PackProcessor):
             - server_thread_daemon: sets whether the thread is daemonic.
                 default to False.
             - in_viewer_mode: Enable viewer mode of Stave. If False,
-                StaveViewer will start a standard Stave instance.
+                StaveViewer will start a standard Stave instance and add
+                project and documents via Stave backend APIs based on
+                `user_name` and `user_password` (hence no project dump).
                 Default to True.
             - use_pack_name: Use `pack_name` to name the textpack being saved
                 to project path in viewer mode. If False, will use `pack_id`
                 for naming. Default to False.
+                
+        Returns:
+            config: A dictionary with the default config for this processor.
         """
         config = super().default_configs()
 

@@ -58,7 +58,9 @@ class TestStaveProcessor(unittest.TestCase):
 
     def test_stave_viewer(self):
         """
-        Test in viewer mode Stave
+        Test in viewer mode Stave. Project data, including metadata and
+        textpacks, will be dumped to local disk. Consistency checking
+        is performed here to verify the dumped project data.
         """
         self.pl.add(self._stave_processor, config={
             "project_name": self._project_name,
@@ -107,7 +109,9 @@ class TestStaveProcessor(unittest.TestCase):
 
     def test_stave_standard(self):
         """
-        Test in standard Stave
+        Test in standard Stave. Project data will be uploaded to Stave
+        backend via diango APIs. Consistency checking is performed here
+        to verify the project and documents being saved to the Stave database.
         """
         self.pl.add(self._stave_processor, config={
             "port": self._port,
