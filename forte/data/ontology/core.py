@@ -221,6 +221,11 @@ class Entry(Generic[ContainerType]):
         """
         if key not in default_entry_fields:
             hints = get_type_hints(self.__class__)
+            if key not in hints.keys():
+                raise KeyError(
+                    f"The [{key}] attribute_name does not exist in the "
+                    f"[{self.__class__}] that you specified to add to. "
+                )
             is_valid = check_type(value, hints[key])
             if not is_valid:
                 raise TypeError(

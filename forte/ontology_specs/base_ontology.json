@@ -98,6 +98,12 @@
           "type": "Dict",
           "key_type": "str",
           "value_type": "float"
+        },
+        {
+          "name": "classification",
+          "type": "Dict",
+          "key_type": "str",
+          "value_type": "float"
         }
       ]
     },
