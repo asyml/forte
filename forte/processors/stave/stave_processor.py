@@ -59,12 +59,13 @@ class StaveProcessor(PackProcessor):
     visualize datapack with annotations by inserting it into the forte
     pipeline without affecting the original functionalities.
 
-    `StaveProcessor` requires an ontology file being passed to the pipeline.
-    Otherwise a `ProcessorConfigError` will be raised. It then generates default
+    `StaveProcessor` requires an ontology file being passed to the pipeline
+    by setting the input parameter `ontology_file`. Otherwise a
+    `ProcessorConfigError` will be raised. It then generates default
     configurations based on the input ontology to start a stave instance
-    without any additional specification by users.
+    without any additional specification by users. 
     Example usage:
-        Pipeline() \
+        Pipeline(ontology_file="ontology/path") \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
             .add(StaveProcessor())
 
@@ -75,7 +76,7 @@ class StaveProcessor(PackProcessor):
     `StaveProcessor` is also highly customizable for users to set up. Users may
     configure port number, server host, project name, etc.
     Example usage:
-        Pipeline() \
+        Pipeline(ontology_file="ontology/path") \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
             .add(StaveProcessor(), configs={
                 "port": 8880,
@@ -84,7 +85,7 @@ class StaveProcessor(PackProcessor):
 
     Users can modify project configs by changing the `project_configs` field.
     Example usage:
-        Pipeline() \
+        Pipeline(ontology_file="ontology/path") \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
             .add(StaveProcessor(), configs={
                 "port": 8879,
