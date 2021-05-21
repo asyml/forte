@@ -63,7 +63,7 @@ class StaveProcessor(PackProcessor):
     by setting the input parameter `ontology_file`. Otherwise a
     `ProcessorConfigError` will be raised. It then generates default
     configurations based on the input ontology to start a stave instance
-    without any additional specification by users. 
+    without any additional specification by users.
     Example usage:
         Pipeline(ontology_file="ontology/path") \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
