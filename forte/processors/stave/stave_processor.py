@@ -54,28 +54,34 @@ __all__ = [
 
 
 class StaveProcessor(PackProcessor):
-    """
-    `StaveProcessor` provides easy visualization for forte users. We can
+    r"""
+    ``StaveProcessor`` provides easy visualization for forte users. We can
     visualize datapack with annotations by inserting it into the forte
     pipeline without affecting the original functionalities.
 
-    `StaveProcessor` requires an ontology file being passed to the pipeline
-    by setting the input parameter `ontology_file`. Otherwise a
-    `ProcessorConfigError` will be raised. It then generates default
+    ``StaveProcessor`` requires an ontology file being passed to the pipeline
+    by setting the input parameter ``ontology_file``. Otherwise a
+    ``ProcessorConfigError`` will be raised. It then generates default
     configurations based on the input ontology to start a stave instance
     without any additional specification by users.
     Example usage:
+
+    .. code-block:: python
+
         Pipeline(ontology_file="ontology/path") \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
             .add(StaveProcessor())
 
-    After initialized, `StaveProcessor` will create a project directory
-    (or use an existing directory specified in `project_path`). Metadata
+    After initialized, ``StaveProcessor`` will create a project directory
+    (or use an existing directory specified in ``project_path``). Metadata
     and textpacks will be dumped into the direcotry.
 
-    `StaveProcessor` is also highly customizable for users to set up. Users may
-    configure port number, server host, project name, etc.
+    ``StaveProcessor`` is also highly customizable for users to set up. Users
+    may configure port number, server host, project name, etc.
     Example usage:
+
+    .. code-block:: python
+
         Pipeline(ontology_file="ontology/path") \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
             .add(StaveProcessor(), configs={
@@ -83,15 +89,18 @@ class StaveProcessor(PackProcessor):
                 "project_name": "serialization_pipeline_test"
             })
 
-    Users can modify project configs by changing the `project_configs` field.
+    Users can modify project configs by changing the ``project_configs`` field.
     Example usage:
+
+    .. code-block:: python
+
         Pipeline(ontology_file="ontology/path") \
             .set_reader(plaintext_reader(), {"input_path":"some/path"}) \
             .add(StaveProcessor(), configs={
                 "port": 8879,
                 "project_configs": {
                     # Configure Stave layout. Replace the normal annotation
-                    # viewer `default-nlp` with a dialogue box.
+                    # viewer "default-nlp" with a dialogue box.
                     "layoutConfigs": {
                         "center-middle": "DialogueBox"
                     }
@@ -281,32 +290,32 @@ class StaveProcessor(PackProcessor):
         """
         This defines a basic config structure for StaveProcessor.
         Following are the keys for this dictionary:
-            - build_path: Absolute path to stave build folder.
-                Example: "$STAVE_PATH/build/".
-            - port: port number for Stave server. default value is 8888.
-            - host: host name for Stave server. default value is `localhost`.
-            - user_name: admin user name. default to `admin`.
-            - user_password: admin user password. default to `admin`.
-            - project_type: single_pack(default) / multi_pack.
-            - project_name: project name displayed on Stave.
-                default name is `Auto generated project`.
-            - multi_ontology: a dictionary for multi_pack ontology
-                default to {}.
-            - project_configs: project configurations.
-                default value generated from ontology.
-            - server_thread_daemon: sets whether the thread is daemonic.
-                default to False.
-            - in_viewer_mode: Enable viewer mode of Stave. If False,
-                StaveViewer will start a standard Stave instance and add
-                project and documents via Stave backend APIs based on
-                `user_name` and `user_password` (hence no project dump).
-                Default to True.
-            - use_pack_name: Use `pack_name` to name the textpack being saved
-                to project path in viewer mode. If False, will use `pack_id`
-                for naming. Default to False.
+
+            - ``build_path``: Absolute path to stave build folder.
+              Example: `"$STAVE_PATH/build/"`.
+            - ``port``: Port number for Stave server. Default value is `8888`.
+            - ``host``: Host name for Stave server. Default value is
+              `"localhost"`.
+            - ``user_name``: Admin user name. Default to `"admin"`.
+            - ``user_password``: Admin user password. Default to `"admin"`.
+            - ``project_type``: `"single_pack\"` (default) or `\"multi_pack"`.
+            - ``project_name``: Project name displayed on Stave. Default name
+              is `"Auto generated project"`.
+            - ``multi_ontology``: A dictionary for multi_pack ontology
+              Default to `None`.
+            - ``project_configs``: Project configurations. Default to `None`.
+            - ``server_thread_daemon``: Sets whether the server thread is
+              daemonic. Default to `False`.
+            - ``in_viewer_mode``: Enable viewer mode of Stave. If `False`,
+              StaveViewer will start a standard Stave instance and add project
+              and documents via Stave backend APIs based on ``user_name`` and
+              ``user_password`` (hence no project dump). Default to `True`.
+            - ``use_pack_name``: Use ``pack_name`` to name the textpack being
+              saved to project path in viewer mode. If `False`, will use
+              ``pack_id`` for naming. Default to False.
 
         Returns:
-            config: A dictionary with the default config for this processor.
+            dict: A dictionary with the default config for this processor.
         """
         config = super().default_configs()
 
