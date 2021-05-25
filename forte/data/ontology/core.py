@@ -226,7 +226,7 @@ class Entry(Generic[ContainerType]):
                 warnings.warn(
                     f"Base on attributes in entry definition, "
                     f"the [{key}] attribute_name does not exist in the "
-                    f"[{self.__class__}] that you specified to add to."
+                    f"[{type(self)}] that you specified to add to."
                 )
             is_valid = check_type(value, hints[key])
             if not is_valid:
