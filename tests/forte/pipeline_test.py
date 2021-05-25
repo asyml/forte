@@ -261,6 +261,10 @@ class DummyPackProcessor(PackProcessor):
 
     def initialize(self, resources, configs):
         super().initialize(resources, configs)
+        if ("successor" in configs["test"] and "test" not in configs["test"]):
+                raise ProcessorConfigError('"test" is necessary as the first '
+                                           'step for "successor" in config '
+                                           'for test case purpose.')
         self.initialize_count += 1
 
     def _process(self, input_pack: DataPack):
@@ -274,7 +278,7 @@ class DummyPackProcessor(PackProcessor):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         configs = super().default_configs()
-        configs['test'] = "test"
+        configs['test'] = "test, successor"
         return configs
 
 
@@ -410,6 +414,20 @@ class PipelineTest(unittest.TestCase):
                 # second method to get entry in a sentence
                 tokens = [token.text for token in pack.get(Token, sentence)]
                 self.assertEqual(sent_text, " ".join(tokens))
+
+    def test_pipeline_invalid_config(self):
+        # Test a invalid config
+        nlp = Pipeline[DataPack]()
+        reader = SentenceReader()
+        nlp.set_reader(reader)
+        dummy = DummyPackProcessor()
+        config = {'test': 'successor'}
+        nlp.add(dummy, config=config)
+        print(nlp.components)
+
+        with self.assertRaises(ProcessorConfigError):
+            nlp.initialize()
+
 
     def test_pipeline_pack_processor(self):
         """Tests a pack processor only."""

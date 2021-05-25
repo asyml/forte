@@ -18,11 +18,13 @@ import os
 
 import yaml
 
+from forte_wrapper.elastic import ElasticSearchTextIndexProcessor
+
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import MSMarcoPassageReader
 from forte.pipeline import Pipeline
-from forte.processors.ir import ElasticSearchTextIndexProcessor
+
 
 logging.basicConfig(level=logging.INFO)
 

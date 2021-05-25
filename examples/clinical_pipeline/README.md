@@ -3,6 +3,14 @@
 This project shows how we can construct projects to make Forte and Stave work
  side by side.
  
+## Install extra dependencies
+
+In command line, we run
+
+```bash
+pip install git+https://git@github.com/asyml/forte-wrappers#egg=forte-wrappers[elastic,nltk]
+```
+
 ## Downloading the models
 
 In this example, we use an NER model fine-tuned on the NCBI-disease dataset, which predicts 
