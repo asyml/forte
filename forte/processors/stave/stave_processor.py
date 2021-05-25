@@ -32,14 +32,14 @@ import collections
 from typing import Dict, Set, Any
 import requests
 
+from nlpviewer_backend.lib.stave_viewer import StaveViewer
+from nlpviewer_backend.lib.stave_project import StaveProjectWriter
+
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.ontology.code_generation_objects import search
 from forte.processors.base import PackProcessor
-
-from nlpviewer_backend.lib.stave_viewer import StaveViewer
-from nlpviewer_backend.lib.stave_project import StaveProjectWriter
 
 logger = logging.getLogger(__name__)
 
