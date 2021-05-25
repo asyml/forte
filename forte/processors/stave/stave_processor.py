@@ -21,16 +21,7 @@ number, host name, layout, etc.
 
 Package Requirements:
     forte
-    *stave (Required in future version)
-
-Required environment variables:
-*All of the variables below will be deprecated in future version.
-    FRONTEND_BUILD_PATH:
-        Absolute path (or relative path from PYTHONPATH)
-        to stave build folder. Example: "stave/build/"
-    PYTHONPATH:
-        Absolute path to django backend folder (e.g.,
-        "$STAVE_PATH/simple-backend/") should be inserted into PYTHONPATH.
+    stave
 """
 
 import os
@@ -45,6 +36,9 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.ontology.code_generation_objects import search
 from forte.processors.base import PackProcessor
+
+from nlpviewer_backend.lib.stave_viewer import StaveViewer
+from nlpviewer_backend.lib.stave_project import StaveProjectWriter
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +105,8 @@ class StaveProcessor(PackProcessor):
     def __init__(self):
         super().__init__()
         self._project_id: int = -1
-        # TODO: Specify annotations in future update.
-        self._viewer: Any
-        self._project_writer: Any
+        self._viewer: StaveViewer
+        self._project_writer: StaveProjectWriter
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -135,14 +128,7 @@ class StaveProcessor(PackProcessor):
         self.configs.project_path = os.path.abspath(
             self.configs.project_path or self.configs.project_name)
 
-        # TODO: Move to toplevel in future update.
-        # pylint: disable=import-outside-toplevel
-        from nlpviewer_backend.lib.stave_viewer import StaveViewer
-        from nlpviewer_backend.lib.stave_project import StaveProjectWriter
-        # pylint: enable=import-outside-toplevel
-
         self._viewer = StaveViewer(
-            build_path=os.environ["FRONTEND_BUILD_PATH"],
             project_path=self.configs.project_path,
             host=self.configs.host,
             port=self.configs.port,
