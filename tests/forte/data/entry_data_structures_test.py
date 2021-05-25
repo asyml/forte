@@ -149,6 +149,7 @@ class MultiEntryStructure(unittest.TestCase):
         e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
         with self.assertWarns(UserWarning):
             mp_entry.refer_entry = e1
+            mp_entry.regret_creation()
 
 
 class EntryDataStructure(unittest.TestCase):
