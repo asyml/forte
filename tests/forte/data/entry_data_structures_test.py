@@ -147,8 +147,12 @@ class MultiEntryStructure(unittest.TestCase):
         mp_entry = ExampleMPEntry(input_pack)
         p1 = input_pack.add_pack('pack1')
         e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
-
-        with self.assertRaises(TypeError):
+        expected_warning = "Based on type annotation, " \
+                           "the [refer_entry] attribute of " \
+                           "[__main__.ExampleMPEntry] should be " \
+                           "[typing.Union[__main__.ExampleEntry, NoneType]]," \
+                           " but got [__main__.DifferentEntry]."
+        with self.assertWarnsRegex(UserWarning, expected_warning):
             mp_entry.refer_entry = e1
 
         mp_entry.regret_creation()
@@ -212,3 +216,6 @@ class NotHashingTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             hash(anno1)
         anno1.regret_creation()
+
+if __name__ == '__main__':
+    unittest.main()
