@@ -1,5 +1,4 @@
 import unittest
-import warnings
 from dataclasses import dataclass
 from typing import Optional, List, Any, Iterator
 
@@ -148,15 +147,8 @@ class MultiEntryStructure(unittest.TestCase):
         mp_entry = ExampleMPEntry(input_pack)
         p1 = input_pack.add_pack('pack1')
         e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
-        expected_warning = "Based on type annotation, " \
-                           "the [refer_entry] attribute of " \
-                           "[__main__.ExampleMPEntry] should be " \
-                           "[typing.Union[__main__.ExampleEntry, NoneType]]," \
-                           " but got [__main__.DifferentEntry]."
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with self.assertWarns(UserWarning):
             mp_entry.refer_entry = e1
-            self.assertEqual(str(w[-1].message), expected_warning)
 
 
 class EntryDataStructure(unittest.TestCase):
