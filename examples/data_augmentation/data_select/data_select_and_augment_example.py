@@ -18,7 +18,7 @@ import yaml
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.processors.base.data_selector_for_da import RandomDataSelector
-from forte.processors.nltk_processors import NLTKWordTokenizer, NLTKPOSTagger
+from forte.processors.third_party import NLTKWordTokenizer, NLTKPOSTagger
 from forte.data.selector import AllPackSelector
 from forte.data.caster import MultiPackBoxer
 from forte.processors.data_augment import ReplacementDataAugmentProcessor
