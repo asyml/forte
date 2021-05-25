@@ -1,4 +1,5 @@
 import unittest
+import warnings
 from dataclasses import dataclass
 from typing import Optional, List, Any, Iterator
 
@@ -152,10 +153,10 @@ class MultiEntryStructure(unittest.TestCase):
                            "[__main__.ExampleMPEntry] should be " \
                            "[typing.Union[__main__.ExampleEntry, NoneType]]," \
                            " but got [__main__.DifferentEntry]."
-        with self.assertWarnsRegex(UserWarning, expected_warning):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             mp_entry.refer_entry = e1
-
-        mp_entry.regret_creation()
+            self.assertEqual(str(w[-1].message), expected_warning)
 
 
 class EntryDataStructure(unittest.TestCase):
@@ -216,6 +217,3 @@ class NotHashingTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             hash(anno1)
         anno1.regret_creation()
-
-if __name__ == '__main__':
-    unittest.main()
