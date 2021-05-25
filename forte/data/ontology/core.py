@@ -226,13 +226,13 @@ class Entry(Generic[ContainerType]):
                 warnings.warn(
                     f"Base on attributes in entry definition, "
                     f"the [{key}] attribute_name does not exist in the "
-                    f"[{type(self)}] that you specified to add to."
+                    f"[{type(self).__name__}] that you specified to add to."
                 )
             is_valid = check_type(value, hints[key])
             if not is_valid:
                 warnings.warn(
                     f"Based on type annotation, "
-                    f"the [{key}] attribute of [{type(self)}] "
+                    f"the [{key}] attribute of [{type(self).__name__}] "
                     f"should be [{hints[key]}], but got [{type(value)}].")
 
     def __setattr__(self, key, value):
