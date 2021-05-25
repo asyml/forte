@@ -22,6 +22,7 @@ number, host name, layout, etc.
 Package Requirements:
     forte
     stave
+    requests
 """
 
 import os

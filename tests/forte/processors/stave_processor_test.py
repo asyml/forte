@@ -31,9 +31,6 @@ from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from forte.processors.base.batch_processor import Predictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
-# Currently hard coded. Deprecated in future update.
-os.environ["FRONTEND_BUILD_PATH"] = os.path.abspath("stave/build/")
-sys.path.insert(0, os.path.abspath("stave/simple-backend/"))
 from forte.processors.stave import StaveProcessor
 from nlpviewer_backend.lib.stave_project import StaveProjectReader
 
