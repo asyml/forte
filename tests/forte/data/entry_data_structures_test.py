@@ -143,15 +143,17 @@ class MultiEntryStructure(unittest.TestCase):
         self.assertIsInstance(mpe.__dict__['refer_entry'], MpPointer)
 
     def test_wrong_attribute(self):
+        import warnings
         input_pack = MultiPack()
         mp_entry = ExampleMPEntry(input_pack)
         p1 = input_pack.add_pack('pack1')
         e1: DifferentEntry = p1.add_entry(DifferentEntry(p1))
-
-        with self.assertRaises(TypeError):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             mp_entry.refer_entry = e1
-
-        mp_entry.regret_creation()
+            mp_entry.regret_creation()
+            assert issubclass(w[-1].category, UserWarning)
+            # self.assertEqual(str(w[-1].message), warning_content)
 
 
 class EntryDataStructure(unittest.TestCase):

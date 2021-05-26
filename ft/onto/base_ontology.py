@@ -131,12 +131,14 @@ class Sentence(Annotation):
     speaker: Optional[str]
     part_id: Optional[int]
     sentiment: Dict[str, float]
+    classification: Dict[str, float]
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.speaker: Optional[str] = None
         self.part_id: Optional[int] = None
         self.sentiment: Dict[str, float] = dict()
+        self.classification: Dict[str, float] = dict()
 
 
 @dataclass

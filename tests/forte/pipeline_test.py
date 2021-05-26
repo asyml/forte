@@ -18,6 +18,7 @@ Unit tests for Pipeline.
 import os
 import re
 import unittest
+import warnings
 from dataclasses import dataclass
 from typing import Any, Dict, Iterator, Optional, Type, Set
 
@@ -1004,6 +1005,22 @@ class DummyPackProcessorThree(DummyPackProcessor):
         return expectation
 
 
+class DummyPackProcessorFour(DummyPackProcessor):
+
+    def _process(self, input_pack: DataPack):
+        for sentence in input_pack.get(entry_type=Sentence):
+            scores = {"a": 0.1, "b": 0.9}
+            sentence.ab = scores
+
+
+class DummyPackProcessorFive(DummyPackProcessor):
+
+    def _process(self, input_pack: DataPack):
+        for sentence in input_pack.get(entry_type=Sentence):
+            scores = 0.1
+            sentence.classification = scores
+
+
 class DummyEvaluatorOne(Evaluator):
     """ This evaluator does nothing, just for test purpose."""
 
@@ -1248,6 +1265,46 @@ class RecordCheckPipelineTest(unittest.TestCase):
                                               "word_forms",
                                               "token_ranks"}
         })
+
+    def test_entry_adding_attribute_wrong_key(self):
+        r"""Tests the processor adding attributes content to entry with
+        the wrong key"""
+        nlp = Pipeline[DataPack](enforce_consistency=True)
+        reader = DummySentenceReaderTwo()
+        nlp.set_reader(reader)
+        dummy = DummyPackProcessorFour()
+        nlp.add(dummy)
+        nlp.initialize()
+        data_path = data_samples_root + "/random_texts/0.txt"
+        warning_content = "Base on attributes in entry definition, " \
+                          "the [ab] attribute_name " \
+                          "does not exist in the " \
+                          "[Sentence] that " \
+                          "you specified to add to."
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            with self.assertRaises(KeyError):
+                nlp.process(data_path)
+            self.assertEqual(str(w[-1].message), warning_content)
+
+    def test_entry_adding_attribute_wrong_type(self):
+        r"""Tests the processor adding attributes content to entry with
+        the wrong type"""
+        nlp = Pipeline[DataPack](enforce_consistency=True)
+        reader = DummySentenceReaderTwo()
+        nlp.set_reader(reader)
+        dummy = DummyPackProcessorFive()
+        nlp.add(dummy)
+        nlp.initialize()
+        data_path = data_samples_root + "/random_texts/0.txt"
+        warning_content = "Based on type annotation, the [classification] " \
+                          "attribute of [Sentence] " \
+                          "should be [typing.Dict[str, float]], but got " \
+                          "[<class 'float'>]."
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            nlp.process(data_path)
+            self.assertEqual(str(w[-1].message), warning_content)
 
 
 if __name__ == '__main__':
