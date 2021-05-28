@@ -78,4 +78,3 @@ class PlainTextReader(PackReader):
                 fill in for consistency checking.
         """
         record_meta['ft.onto.base_ontology.Document'] = set()
-
