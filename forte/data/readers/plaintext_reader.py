@@ -15,7 +15,7 @@
 The reader that reads plain text data into Datapacks.
 """
 import os
-from typing import Any, Iterator
+from typing import Any, Iterator, Dict, Set
 
 from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
@@ -67,3 +67,14 @@ class PlainTextReader(PackReader):
         config = super().default_configs()
         config['file_ext'] = '.txt'
         return config
+
+    def record(self, record_meta: Dict[str, Set[str]]):
+        r"""Method to add output type record of `PlainTextReader` which is
+        `ft.onto.base_ontology.Document` with an empty set
+        to :attr:`forte.data.data_pack.Meta.record`.
+
+        Args:
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
+        """
+        record_meta['ft.onto.base_ontology.Document'] = set()
