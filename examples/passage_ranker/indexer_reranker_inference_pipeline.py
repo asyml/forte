@@ -17,13 +17,16 @@ import os
 import yaml
 from termcolor import colored
 
+from forte_wrapper.elastic import ElasticSearchQueryCreator, \
+    ElasticSearchProcessor
+
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
 from forte.pipeline import Pipeline
-from forte.processors.ir import (
-    ElasticSearchQueryCreator, ElasticSearchProcessor, BertRerankingProcessor)
+from forte.processors.ir import BertRerankingProcessor
 from ft.onto.base_ontology import Sentence
+
 
 if __name__ == "__main__":
     config_file = os.path.join(os.path.dirname(__file__), 'config.yml')

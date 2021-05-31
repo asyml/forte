@@ -17,7 +17,5 @@
 
 from forte.processors.ir.bert_based_query_creator import *
 from forte.processors.ir.bert_reranking_processor import *
-from forte.processors.ir.elastic_search_query_creator import *
-from forte.processors.ir.elastic_search_index_processor import *
-from forte.processors.ir.elastic_search_processor import *
 from forte.processors.ir.search_processor import *
+from forte.processors.ir.elastic_search_index_processor import *

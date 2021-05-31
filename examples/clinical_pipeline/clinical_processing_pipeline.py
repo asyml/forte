@@ -9,9 +9,9 @@ from examples.biobert_ner.transformers_processor import BERTTokenizer
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
-from forte.processors.ir import ElasticSearchPackIndexProcessor
-from forte.processors.nltk_processors import NLTKSentenceSegmenter
 from forte.processors.writers import PackIdJsonPackWriter
+from forte_wrapper.elastic import ElasticSearchPackIndexProcessor
+from forte_wrapper.nltk import NLTKSentenceSegmenter
 
 
 def main(input_path: str, output_path: str, max_packs: int = -1):

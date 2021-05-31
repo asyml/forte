@@ -16,75 +16,14 @@ Utility functions related to processors.
 """
 
 __all__ = [
-    "parse_allennlp_srl_results",
-    "parse_allennlp_srl_tags",
     "record_types_and_attributes_check",
     "collect_input_pack_record"
 ]
 
-from typing import Dict, List, Tuple, Any, Optional, Set
-from collections import defaultdict
-from forte.data.span import Span
+from typing import Dict, Set
 from forte.data.base_pack import PackType
 from forte.common import ExpectedRecordNotFound
 from forte.common.resources import Resources
-# from ft.onto.base_ontology import Token
-
-
-def parse_allennlp_srl_results(
-        results: List[Dict[str, Any]]) -> Dict[str, List[str]]:
-    r"""Convert SRL output into a dictionary
-    of verbs and tags.
-
-    Args:
-        results (dict):
-            the verb dictionary output by AllenNLP SRL
-
-    Returns:
-         a dictionary of verbs and tags
-    """
-    parsed_results: Dict[str, List[str]] = defaultdict(list)
-    parsed_results['verbs'] = []
-    parsed_results['srl_tags'] = []
-    for verb_item in results:
-        parsed_results['verbs'].append(verb_item['verb'])
-        parsed_results['srl_tags'].append(
-            ' '.join(verb_item['tags']))
-    return parsed_results
-
-
-def parse_allennlp_srl_tags(tags: str) -> \
-        Tuple[Optional[Span], List[Tuple[Span, str]]]:
-    r"""Parse the tag list of a specific verb output by
-    AllenNLP SRL processor.
-
-    Args:
-        tags (str): a str of semantic role labels.
-
-    Returns:
-         the span of the verb and
-         its semantic role arguments.
-    """
-    pred_span = None
-    arguments = []
-    begin, end, prev_argument = -1, -1, ''
-    tags += ' O'
-    for i, tag in enumerate(tags.split()):
-        argument = '-'.join(tag.split('-')[1:])
-        if tag[0] == 'O' or tag[0] == 'B' or \
-            (tag[0] == 'I' and argument != prev_argument):
-            if prev_argument == 'V':
-                pred_span = Span(begin, end)
-            elif prev_argument != '':
-                arg_span = Span(begin, end)
-                arguments.append((arg_span, prev_argument))
-            begin = i
-            end = i
-            prev_argument = argument
-        else:
-            end = i
-
-    return pred_span, arguments
 
 
 def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
