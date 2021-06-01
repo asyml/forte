@@ -9,7 +9,7 @@ if sys.version_info < (3, 6):
 
 setuptools.setup(
     name="forte",
-    version="0.1.0post1",
+    version="0.1.0post2",
     url="https://github.com/asyml/forte",
 
     description="Forte is extensible framework for building composable and "
@@ -56,7 +56,7 @@ setuptools.setup(
     },
     entry_points={
         'console_scripts': [
-            'generate_ontology = scripts.generate_ontology.__main__:main'
+            'generate_ontology = forte.command_line.generate_ontology.__main__:main'
         ]
     },
     classifiers=[
