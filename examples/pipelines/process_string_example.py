@@ -27,10 +27,6 @@ from forte_wrapper.nltk import NLTKWordTokenizer, \
 from ft.onto.base_ontology import Token, Sentence, PredicateLink, \
     PredicateMention, PredicateArgument, EntityMention
 
-config = yaml.safe_load(open("config.yml", "r"))
-
-config = Config(config, default_hparams=None)
-
 
 def main():
     pl = Pipeline[DataPack]()
@@ -38,6 +34,10 @@ def main():
     pl.add(NLTKSentenceSegmenter())
     pl.add(NLTKWordTokenizer())
     pl.add(NLTKPOSTagger())
+
+    config = yaml.safe_load(open("config.yml", "r"))
+
+    config = Config(config, default_hparams=None)
 
     pl.add(CoNLLNERPredictor(), config=config.NER)
     pl.add(SRLPredictor(), config=config.SRL)
