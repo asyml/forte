@@ -16,6 +16,7 @@ Defines the basic data structures and interfaces for the Forte data
 representation system.
 """
 import uuid
+import warnings
 from abc import abstractmethod, ABC
 from collections.abc import MutableSequence, MutableMapping
 from dataclasses import dataclass
@@ -221,10 +222,17 @@ class Entry(Generic[ContainerType]):
         """
         if key not in default_entry_fields:
             hints = get_type_hints(self.__class__)
+            if key not in hints.keys():
+                warnings.warn(
+                    f"Base on attributes in entry definition, "
+                    f"the [{key}] attribute_name does not exist in the "
+                    f"[{type(self).__name__}] that you specified to add to."
+                )
             is_valid = check_type(value, hints[key])
             if not is_valid:
-                raise TypeError(
-                    f"The [{key}] attribute of [{type(self)}] "
+                warnings.warn(
+                    f"Based on type annotation, "
+                    f"the [{key}] attribute of [{type(self).__name__}] "
                     f"should be [{hints[key]}], but got [{type(value)}].")
 
     def __setattr__(self, key, value):

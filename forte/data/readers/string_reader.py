@@ -15,7 +15,7 @@
 The reader that reads plain text data into Datapacks.
 """
 import logging
-from typing import Iterator, List, Union
+from typing import Iterator, List, Union, Dict, Set
 
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
@@ -62,3 +62,14 @@ class StringReader(PackReader):
         Document(pack, 0, len(data_source))
 
         yield pack
+
+    def record(self, record_meta: Dict[str, Set[str]]):
+        r"""Method to add output type record of `StringReader` which is
+        `ft.onto.base_ontology.Document` with an empty set
+        to :attr:`forte.data.data_pack.Meta.record`.
+
+        Args:
+            record_meta: the field in the datapack for type record that need to
+                fill in for consistency checking.
+        """
+        record_meta['ft.onto.base_ontology.Document'] = set()
