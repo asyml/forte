@@ -28,7 +28,7 @@ from forte.processors.data_augment.algorithms.eda_processors import (
     RandomInsertionDataAugmentProcessor,
     RandomSwapDataAugmentProcessor
 )
-from forte.processors.third_party import NLTKWordTokenizer, NLTKPOSTagger
+from forte_wrapper.nltk import NLTKWordTokenizer, NLTKPOSTagger
 from ft.onto.base_ontology import Token
 
 from ddt import ddt, data, unpack

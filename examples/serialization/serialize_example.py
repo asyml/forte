@@ -22,7 +22,7 @@ from forte.data.readers import OntonotesReader, DirPackReader
 from forte.data.readers.deserialize_reader import MultiPackDirectoryReader
 from forte.pipeline import Pipeline
 from forte.processors.base import MultiPackProcessor, MultiPackWriter
-from forte.processors.third_party import (
+from forte_wrapper.nltk import (
     NLTKWordTokenizer, NLTKPOSTagger, NLTKSentenceSegmenter)
 from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import EntityMention, CrossDocEntityRelation
