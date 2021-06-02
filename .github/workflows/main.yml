@@ -83,6 +83,11 @@ jobs:
       - name: Lint main code with mypy when torch version is not 1.5.0
         run: |
           if [[ ${{ matrix.torch-version }} != "1.5.0" ]]; then mypy .; fi
+      - name: Download models for testing
+        run: |
+          spacy download en_core_web_sm
+          spacy download xx_ent_wiki_sm
+          python -m nltk.downloader punkt averaged_perceptron_tagger wordnet maxent_ne_chunker words
       - name: Test with pytest and run coverage
         run: |
           coverage run -m pytest
