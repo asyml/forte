@@ -66,8 +66,8 @@ def main():
         # second method to get entry in a sentence
         print(colored("Semantic role labels:", 'red'))
         for link in pack.get(PredicateLink, sentence):
-            parent: PredicateMention = link.get_parent()  # type: ignore
-            child: PredicateArgument = link.get_child()  # type: ignore
+            parent: PredicateMention = link.get_parent()
+            child: PredicateArgument = link.get_child()
             print(f"  - \"{child.text}\" is role {link.arg_type} of "
                   f"predicate \"{parent.text}\"")
             entities = [entity.text for entity

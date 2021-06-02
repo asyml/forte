@@ -26,4 +26,4 @@ train = {
 }
 
 for name, hparams in train.items():
-    hparams['name'] = get_scope_name_of_train_op(name)  # type: ignore
+    hparams['name'] = get_scope_name_of_train_op(name)
