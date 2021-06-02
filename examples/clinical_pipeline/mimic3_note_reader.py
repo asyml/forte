@@ -39,7 +39,9 @@ class Mimic3DischargeNoteReader(PackReader):
         self.description_col = 0  # Default to be first column.
         self.__note_count = 0  # Count number of notes processed.
 
-    def _collect(self, mimic3_path: Union[Path, str]) -> Iterator[Any]:
+    def _collect(  # type: ignore
+            self, mimic3_path: Union[Path, str]
+    ) -> Iterator[Any]:
         with open(mimic3_path) as f:
             for r in csv.reader(f):
                 if 0 < self.configs.max_num_notes <= self.__note_count:

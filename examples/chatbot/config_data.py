@@ -1,3 +1,7 @@
+"""
+chatbot config
+"""
+
 max_seq_length = 128
 pickle_data_dir = "data/"
 train_batch_size = 16

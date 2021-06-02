@@ -52,7 +52,7 @@ def stanford_nlp_example(lang: str, text: str):
             child: Token = link.get_child()  # type: ignore
             print(colored(child.text, 'cyan'),
                   "has relation",
-                  colored(link.rel_type, 'green'),
+                  colored(link.rel_type, 'green'),  # type: ignore
                   "of parent",
                   colored(parent.text, 'cyan'))
 
