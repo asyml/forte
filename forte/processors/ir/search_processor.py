@@ -31,25 +31,15 @@ __all__ = [
 class SearchProcessor(MultiPackProcessor):
     r"""This processor searches for relevant documents for a query"""
 
-    def __init__(self) -> None:
-        super().__init__()
-
-        # self.index = EmbeddingBasedIndexer(config={
-        #     "index_type": "GpuIndexFlatIP",
-        #     "dim": 768,
-        #     "device": "gpu0"
-        # })
-
+    def initialize(self, resources: Resources, configs: Config):
+        super().initialize(resources, configs)
         # Replace explicit class with configuration class name.
-        create_class_with_kwargs(
+        self.index = create_class_with_kwargs(
             self.configs.indexer_class,
             class_args={
                 'config': self.configs.indexer_configs
             }
         )
-
-    def initialize(self, resources: Resources, configs: Config):
-        super().initialize(resources, configs)
         self.index.load(self.configs.model_dir)
         self.k = self.configs.k or 5
 

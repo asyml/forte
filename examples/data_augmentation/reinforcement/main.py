@@ -30,7 +30,6 @@ from config import config_data, config_classifier
 from utils import model_utils
 from forte.models.da_rl import MetaAugmentationWrapper, TexarBertMetaModule
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--pretrained-model-name', type=str, default='bert-base-uncased',
@@ -58,7 +57,6 @@ parser.add_argument(
     '--classifier-pretrain-epoch', type=int, default=10,
     help="number of epochs to pretrain the classifier")
 args = parser.parse_args()
-
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logging.root.setLevel(logging.INFO)
@@ -154,8 +152,8 @@ class RLAugmentClassifierTrainer:
                                * config_data.warmup_proportion)
         self.scheduler = torch.optim.lr_scheduler.LambdaLR(
             self.optim, functools.partial(model_utils.get_lr_multiplier,
-                                     total_steps=self.num_train_steps,
-                                     warmup_steps=num_warmup_steps))
+                                          total_steps=self.num_train_steps,
+                                          warmup_steps=num_warmup_steps))
 
     def pre_train_classifier_epoch(self):
         r"""Pre-trains model on the training set
@@ -219,7 +217,7 @@ class RLAugmentClassifierTrainer:
                     meta_model, loss, self.classifier, self.optim)
 
                 # Compute grads of aug_model on validation data.
-                for val_batch in self.val_data_iterator:   # one batch
+                for val_batch in self.val_data_iterator:  # one batch
                     val_input_ids = val_batch["input_ids"]
                     val_segment_ids = val_batch["segment_ids"]
                     val_labels = val_batch["label_ids"]
@@ -239,7 +237,7 @@ class RLAugmentClassifierTrainer:
             # Train classifier with augmented batch
             input_probs, input_masks, segment_ids, label_ids = \
                 self.aug_wrapper.augment_batch((input_ids, input_mask,
-                                          segment_ids, labels))
+                                                segment_ids, labels))
 
             input_length = ((input_masks == 1).int()).sum(dim=1)
             self.optim.zero_grad()
