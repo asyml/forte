@@ -61,16 +61,10 @@ jobs:
           rm -rf texar-pytorch
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[nltk,ner,txtgen,test,example,ir,wikipedia,augment]
+          pip install --use-feature=in-tree-build --progress-bar off .[nltk,ner,txtgen,test,example,wikipedia,augment]
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
-      - name: Start Elastic Server
-        run: |
-          wget -q https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.4.2-linux-x86_64.tar.gz
-          tar -zxf elasticsearch-7.4.2-linux-x86_64.tar.gz
-          rm -rf elasticsearch-7.4.2-linux-x86_64.tar.gz
-          elasticsearch-7.4.2/bin/elasticsearch -d
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
