@@ -91,7 +91,7 @@ jobs:
           coverage run -m pytest
       - name: Test doctest and try to append the coverage
         run: |
-          coverage run --append pytest --doctest-modules forte
+          coverage run --append -m pytest --doctest-modules forte
       - name: Upload to codecov
         run: |
           codecov
