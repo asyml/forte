@@ -3,12 +3,13 @@ import logging
 import sqlite3
 from typing import Dict, Any, Optional, List
 
+from forte_wrapper.elastic import ElasticSearchIndexer
+
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
 from forte.data.common_entry_utils import create_utterance, \
     get_last_utterance
 from forte.data.data_pack import DataPack
-from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance
 

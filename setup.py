@@ -43,8 +43,7 @@ setuptools.setup(
         'test': ['ddt', 'testfixtures'],
         'example': ['termcolor==1.1.0', 'hypothesis==2.0.0'],
         'wikipedia': ['rdflib==4.2.2'],
-        'ir': ['faiss-cpu>=1.6.1', 'elasticsearch==7.5.1'],
-        'augment': ['elasticsearch==7.5.1', 'transformers>=3.1']
+        'augment': ['transformers>=3.1']
     },
     entry_points={
         'console_scripts': [
