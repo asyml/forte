@@ -82,7 +82,7 @@ jobs:
           pylint forte/
       - name: Lint main code with mypy when torch version is not 1.5.0
         run: |
-          if [[ ${{ matrix.torch-version }} != "1.5.0" ]]; mypy .
+          if [[ ${{ matrix.torch-version }} != "1.5.0" ]]; mypy . fi
       - name: Test with pytest and run coverage
         run: |
           coverage run -m pytest
