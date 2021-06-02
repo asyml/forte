@@ -25,7 +25,7 @@ from forte.processors.third_party import MicrosoftBingTranslator
 from forte.processors.nlp import SRLPredictor
 from forte.processors.ir import SearchProcessor, BertBasedQueryCreator
 from forte.data.selector import NameMatchSelector
-from forte.processors.third_party import (
+from forte_wrapper.nltk import (
     NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
 from ft.onto.base_ontology import PredicateLink, Sentence
 

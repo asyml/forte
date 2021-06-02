@@ -19,7 +19,7 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.data.readers import StringReader
 from forte.pipeline import Pipeline
-from forte.processors.third_party import StandfordNLPProcessor
+from forte_wrapper.stanza import StandfordNLPProcessor
 from ft.onto.base_ontology import Token, Sentence, Dependency
 
 
@@ -52,7 +52,7 @@ def stanford_nlp_example(lang: str, text: str):
             child: Token = link.get_child()  # type: ignore
             print(colored(child.text, 'cyan'),
                   "has relation",
-                  colored(link.rel_type, 'green'),
+                  colored(link.rel_type, 'green'),  # type: ignore
                   "of parent",
                   colored(parent.text, 'cyan'))
 

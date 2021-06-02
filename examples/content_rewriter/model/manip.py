@@ -16,8 +16,8 @@ import texar as tx
 from tensorflow.contrib.seq2seq.python.ops.beam_search_decoder import tile_batch
 from texar.core import get_train_op
 
-from examples.content_rewriter.model.copy_net import CopyNetWrapper
-from examples.content_rewriter.model.utils_e2e_clean import (
+from copy_net import CopyNetWrapper
+from utils_e2e_clean import (
     x_strs,
     x_fields,
     y_strs,

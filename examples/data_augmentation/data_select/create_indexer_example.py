@@ -15,8 +15,9 @@ import argparse
 import os
 import yaml
 
-from examples.data_augmentation.data_select import CreateIndexerPipeline
 from forte.data.readers import MSMarcoPassageReader
+
+from data_select_index_pipeline import CreateIndexerPipeline
 
 
 def main():
