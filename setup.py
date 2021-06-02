@@ -40,7 +40,6 @@ setuptools.setup(
     ],
     extras_require={
         'ner': ['torch>=1.1.0', 'torchtext==0.4.0', 'tqdm>=4.36.1'],
-        'txtgen': ['regex', 'tensorflow'],
         'test': ['ddt', 'testfixtures'],
         'example': ['termcolor==1.1.0', 'hypothesis==2.0.0'],
         'wikipedia': ['rdflib==4.2.2'],
