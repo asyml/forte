@@ -14,4 +14,3 @@
 
 from forte.processors.third_party.machine_translation_processor import *
 from forte.processors.third_party.pretrained_encoder_processors import *
-from forte.processors.third_party.nltk_processors import *

@@ -20,7 +20,7 @@ import unittest
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 from forte.data.readers import StringReader
-from forte.processors.third_party import NLTKSentenceSegmenter, \
+from forte_wrapper.nltk import NLTKSentenceSegmenter, \
     NLTKWordTokenizer, NLTKPOSTagger, NLTKChunker
 from forte.processors.third_party import PretrainedEncoder
 from ft.onto.base_ontology import Document, Phrase, Sentence
