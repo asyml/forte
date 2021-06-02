@@ -24,7 +24,7 @@ from torch import nn
 from sklearn.metrics.pairwise import paired_cosine_distances
 import texar.torch as tx
 
-from examples.chatbot import config_data
+import config_data
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_dir", default="data/",

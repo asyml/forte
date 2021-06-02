@@ -79,7 +79,7 @@ jobs:
           flake8 forte/ examples/ ft/ scripts/ tests/  --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Lint with pylint
         run: |
-          pylint forte/ examples/
+          pylint forte/
       - name: Lint main code with mypy when torch version is not 1.5.0
         run: |
           if [[ ${{ matrix.torch-version }} != "1.5.0" ]]; mypy .
