@@ -26,9 +26,8 @@ import torch.nn.functional as F
 import texar.torch as tx
 from transformers import BertForMaskedLM
 
-from examples.data_augmentation.reinforcement.config \
-    import config_data, config_classifier
-from examples.data_augmentation.reinforcement.utils import model_utils
+from config import config_data, config_classifier
+from utils import model_utils
 from forte.models.da_rl import MetaAugmentationWrapper, TexarBertMetaModule
 
 

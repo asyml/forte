@@ -16,7 +16,7 @@ import logging
 
 import yaml
 
-from examples.ner.ner_vocab_processor import CoNLL03VocabularyProcessor
+from ner_vocab_processor import CoNLL03VocabularyProcessor
 from forte.common.configuration import Config
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.evaluation.ner_evaluator import CoNLLNEREvaluator

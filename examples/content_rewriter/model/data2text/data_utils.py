@@ -20,8 +20,7 @@ import h5py
 # pylint: disable=consider-using-enumerate
 
 
-from examples.content_rewriter.model.data2text.text2num import (
-    text2num, NumberException)
+from text2num import text2num, NumberException
 
 
 def divide_or_const(a, b, c=0.):
