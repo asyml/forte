@@ -19,8 +19,8 @@ import yaml
 from forte_wrapper.elastic import ElasticSearchQueryCreator, \
     ElasticSearchProcessor
 
-from examples.passage_ranker.ms_marco_evaluator import MSMarcoEvaluator
-from examples.passage_ranker.reader import EvalReader
+from ms_marco_evaluator import MSMarcoEvaluator
+from reader import EvalReader
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline

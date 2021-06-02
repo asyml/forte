@@ -11,8 +11,7 @@ from typing import List
 
 import texar as tx
 
-from examples.content_rewriter.model.data2text.data_utils import \
-    extract_entities
+from data2text.data_utils import extract_entities
 
 # load all entities
 

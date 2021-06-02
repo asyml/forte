@@ -23,10 +23,10 @@ from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
 from forte.processors.base import PackProcessor
 from ft.onto.base_ontology import Utterance, UtteranceContext
-from examples.content_rewriter.model.manip import Rewriter
-from examples.content_rewriter.model import utils_e2e_clean
-from examples.content_rewriter.model import config_data_e2e_clean
-from examples.content_rewriter.model import manip
+from model.manip import Rewriter
+from model import utils_e2e_clean
+from model import config_data_e2e_clean
+from model import manip
 
 
 class ContentRewriter(PackProcessor):

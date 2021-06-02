@@ -16,17 +16,18 @@ Unit tests for serialization Example.
 """
 import os
 import unittest
-
-from examples.serialization import serialize_example
+import subprocess
 
 
 class SerializationExampleTest(unittest.TestCase):
     def test_run_example(self):
+        curr_dir = os.path.dirname(__file__)
         data_path = os.path.abspath(os.path.join(
-            os.path.dirname(__file__),
-            '../../', 'data_samples', 'ontonotes/one_file'))
+            curr_dir, '../../', 'data_samples', 'ontonotes/one_file'))
 
-        serialize_example.main(data_path)
+        subprocess.call(
+            ['python', os.path.join(curr_dir, 'serialize_example.py'),
+             data_path])
 
         self.assertTrue(os.path.exists(os.path.join('multi_out', 'multi.idx')))
         self.assertTrue(os.path.exists(os.path.join('multi_out', 'pack.idx')))

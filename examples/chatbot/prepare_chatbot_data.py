@@ -19,7 +19,7 @@ import logging
 import torch
 import texar.torch as tx
 
-from examples.chatbot import data_utils
+import data_utils
 
 logging.basicConfig(level=logging.INFO)
 

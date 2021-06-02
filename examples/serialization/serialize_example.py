@@ -13,6 +13,7 @@
 # limitations under the License.
 from typing import Any, Dict
 import os
+import sys
 
 from forte.data.caster import MultiPackBoxer
 from forte.data.data_pack import DataPack
@@ -173,4 +174,4 @@ def main(data_path: str):
 
 
 if __name__ == '__main__':
-    main("../../data_samples/ontonotes/00/")
+    main(sys.argv[1])

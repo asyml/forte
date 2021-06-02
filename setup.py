@@ -41,17 +41,11 @@ setuptools.setup(
     extras_require={
         'nltk': ['nltk==3.4.5'],
         'ner': ['torch>=1.1.0', 'torchtext==0.4.0', 'tqdm>=4.36.1'],
-        'sentiment': ['vaderSentiment==3.2.1'],
         'txtgen': ['regex', 'tensorflow'],
-        'stanza': ['stanza==1.0.1'],
         'test': ['ddt', 'testfixtures'],
         'example': ['termcolor==1.1.0', 'hypothesis==2.0.0'],
         'wikipedia': ['rdflib==4.2.2'],
         'ir': ['faiss-cpu>=1.6.1', 'elasticsearch==7.5.1'],
-        'spacy': ['spacy==2.3.0'],
-        'allennlp': ['allennlp==1.2.0', 'allennlp-models==1.2.0',
-                     'torch>=1.5.0'],
-        'cliner': ['python-crfsuite==0.9.7'],
         'augment': ['elasticsearch==7.5.1', 'transformers>=3.1']
     },
     entry_points={

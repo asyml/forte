@@ -51,52 +51,51 @@ class LastUtteranceSearcher(PackProcessor):
         # Make sure we take the last utterance from the user.
         utterance: Optional[Utterance] = get_last_utterance(input_pack, "user")
 
-        if utterance:
+        if utterance is not None:
             logging.info("The last utterance is %s", utterance)
+            # Create the query using the last utterance from user.
+            size = self.configs.size or 1000
+            field = self.configs.field or "content"
+            query_value = {"query": {"match": {field: utterance.text}},
+                           "size": size}
+
+            # Search against the index.
+            results = self.index.search(query_value)
+            hits = results["hits"]["hits"]
+
+            conn = sqlite3.connect(self.configs.stave_db_path)
+
+            answers = []
+            for idx, hit in enumerate(hits):
+                source = hit["_source"]
+                # The raw pack string and pack id (not database id)
+                raw_pack_str: str = source["pack_info"]
+                pack_id: str = source["doc_id"]
+
+                # Now you can write the pack into the database and generate url.
+                item = {"name": f"clinical_results_{idx}",
+                        "textPack": raw_pack_str, "project_id": 5}
+                db_id = sqlite_insert(conn, 'nlpviewer_backend_document', item)
+                answers += [db_id]
+                print(pack_id, db_id)
+
+            if len(answers) == 0:
+                create_utterance(input_pack,
+                                 "No results found. Please try another query.",
+                                 'ai')
+            else:
+                links: List[str] = create_links(self.configs.url_stub, answers)
+                response_text: str = "I found the following results: <br> -- " \
+                                     + "<br> -- ".join(links)
+                print(response_text)
+
+                create_utterance(input_pack, response_text, 'ai')
         else:
             logging.info("Cannot get another utterance.")
             create_utterance(
                 input_pack,
                 "Hey, I didn't get what you say, could you try again?",
                 'ai')
-
-        # Create the query using the last utterance from user.
-        size = self.configs.size or 1000
-        field = self.configs.field or "content"
-        query_value = {"query": {"match": {field: utterance.text}},
-                       "size": size}
-
-        # Search against the index.
-        results = self.index.search(query_value)
-        hits = results["hits"]["hits"]
-
-        conn = sqlite3.connect(self.configs.stave_db_path)
-
-        answers = []
-        for idx, hit in enumerate(hits):
-            source = hit["_source"]
-            # The raw pack string and pack id (not database id)
-            raw_pack_str: str = source["pack_info"]
-            pack_id: str = source["doc_id"]
-
-            # Now you can write the pack into the database, and generate url.
-            item = {"name": f"clinical_results_{idx}",
-                    "textPack": raw_pack_str, "project_id": 5}
-            db_id = sqlite_insert(conn, 'nlpviewer_backend_document', item)
-            answers += [db_id]
-            print(pack_id, db_id)
-
-        if len(answers) == 0:
-            create_utterance(input_pack,
-                             "No results found. Please try another query.",
-                             'ai')
-        else:
-            links: List[str] = create_links(self.configs.url_stub, answers)
-            response_text: str = "I found the following results: <br> -- " \
-                                 + "<br> -- ".join(links)
-            print(response_text)
-
-            create_utterance(input_pack, response_text, 'ai')
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
