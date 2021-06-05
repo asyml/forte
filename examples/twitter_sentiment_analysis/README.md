@@ -31,4 +31,3 @@ Then you can input your search query in terminal to get the tweets and sentiment
 You can also refer to Twitter's official documentation 
 https://developer.twitter.com/en/docs/twitter-api/tweets/search/integrate/build-a-query
 for customized query.
-
