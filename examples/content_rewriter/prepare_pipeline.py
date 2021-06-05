@@ -14,7 +14,7 @@
 """
 The main running pipeline for the rewriter.
 """
-from examples.content_rewriter.reader import TableReader
+from reader import TableReader
 from forte.data.data_pack import DataPack
 from forte.pipeline import Pipeline
 

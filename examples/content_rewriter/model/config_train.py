@@ -1,4 +1,4 @@
-from examples.content_rewriter.model.utils_e2e_clean import (
+from utils_e2e_clean import (
     get_scope_name_of_train_op
 )
 
@@ -26,4 +26,4 @@ train = {
 }
 
 for name, hparams in train.items():
-    hparams['name'] = get_scope_name_of_train_op(name)  # type: ignore
+    hparams['name'] = get_scope_name_of_train_op(name)

@@ -44,7 +44,7 @@ class MSMarcoPassageReader(PackReader):
 
         corpus_file_path = os.path.join(dir_path, 'collection.tsv')
 
-        with open(corpus_file_path, 'r') as file:
+        with open(corpus_file_path, 'r', encoding='utf-8') as file:
             for line in file:
                 doc_id, doc_content = line.split('\t', 1)
                 yield doc_id, doc_content

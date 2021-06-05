@@ -17,11 +17,6 @@ Data Augmentation Processors
 .. autoclass:: forte.processors.base.data_selector_for_da.BaseElasticSearchDataSelector
     :members:
 
-.. autoclass:: forte.processors.data_augment.selector_index_processor.DataSelectorIndexProcessor
-    :members:
-
-.. autoclass:: forte.processors.ir.elastic_search_index_processor.ElasticSearchPackIndexProcessor
-    :members:
 
 :hidden:`UDAIterator`
 ---------------------------------------------

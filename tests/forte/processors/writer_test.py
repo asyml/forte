@@ -16,18 +16,18 @@
 Unit tests for the writers.
 """
 import os
-import shutil
 import tempfile
 import unittest
 from typing import List, Dict
+
+from forte_wrapper.nltk import NLTKWordTokenizer, \
+    NLTKPOSTagger, NLTKSentenceSegmenter
 
 from forte.data.data_pack import DataPack
 from forte.data.readers import OntonotesReader, \
     RecursiveDirectoryDeserializeReader
 from forte.pipeline import Pipeline
 from forte.processors.misc import AnnotationRemover
-from forte.processors.third_party import NLTKWordTokenizer, \
-    NLTKPOSTagger, NLTKSentenceSegmenter
 from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import Token
 

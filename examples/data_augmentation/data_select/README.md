@@ -8,7 +8,7 @@ The data selector is used for pre-select data from the training dataset that are
 ##### To create an elastic search indexer for a specific dataset: 
 
 ```python
-from examples.data_augmentation.data_select import CreateIndexerPipeline
+from data_select_index_pipeline import CreateIndexerPipeline
 
 # Build a reader to read data into datapacks.
 reader = SomeReader()

@@ -16,7 +16,7 @@ The main running pipeline for the rewriter.
 """
 import sys
 
-from examples.content_rewriter.rewriter import ContentRewriter
+from rewriter import ContentRewriter
 from forte.data.data_pack import DataPack
 from forte.data.readers import RawDataDeserializeReader
 from forte.pipeline import Pipeline
