@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import os
-
-
 import yaml
 from forte.common.configuration import Config
 from forte.data.caster import MultiPackBoxer
