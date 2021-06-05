@@ -1,40 +1,34 @@
 # Twitter Sentiment Analysis
 
+This example show the use of `Forte` to perform sentiment
+analysis on the user's retrieved tweets, based on [Twitter API](https://developer.twitter.com/en/products/twitter-api) and 
+[Vader (Valence Aware Dictionary and Sentiment Reasoner)](https://github.com/cjhutto/vaderSentiment).
+ 
+
+> **Note**: To run this example, you need to have a Twitter account and apply for Developer Access, 
+then create an application. It will generate the API credentials that you will need use to access Twitter from Python.
+You should put the credentials at `api_credential.yml` first to make the pipeline work. 
+You could refer to 
+https://developer.twitter.com/en/docs/twitter-api/getting-started/getting-access-to-the-twitter-api
+ for more information.
 
 
-This example showcases the use of `Forte` to build a retrieval-based chatbot and perform text 
-analysis on the retrieved results. We use the dataset released as part of this paper 
-[Target-Guided Open-Domain Conversation](https://arxiv.org/abs/1905.11553). The dataset consists 
-of conversations between two entities A and B. We finetune a BERT model that helps retrieve a 
-response for a context.
+## How to run the pipeline
 
-**Note**: All the commands below should be run from `examples/chatbot/` directory.
+First, you need to create a virtual environment, then in command line:
 
-In this example, the user speaks in German and the bot extracts information stored in English. The 
-bot finally translates the response to German. For text analysis, we run a *Semantic Role 
-Labeler* (SRL) on the retrieved response to identify predicate mentions and arguments. Let us see a 
-step-by-step guide on how to run this example.
+`cd twitter_sentiment_analysis`
 
-## Using the example in inference mode
+`pip install -r requirements.txt`
 
-### Downloading the models
 
-Before we run the chatbot, we need to download the models. 
+We can run the pipeline by run
 
-- Download chatbot model
+`python pipeline.py`
 
-```bash
-python download_models.py --model-name chatbot-bert
-```
+Then you can input your search query in terminal to get the tweets and sentiment scores.
 
-- Download the index
+You can also refer to Twitter's official documentation 
+https://developer.twitter.com/en/docs/twitter-api/tweets/search/integrate/build-a-query
+for customized query.
 
-```bash
-python download_models.py --model-name indexer
-```
-
-- Download the SRL model
-
-```bash
-python download_models.py --model-name srl
-```
