@@ -26,12 +26,12 @@ This indexer is then used by the DataSelector class to search for documents.
 from typing import Dict, Any
 import logging
 
+from forte_wrapper.elastic import ElasticSearchIndexer
+from forte_wrapper.elastic import ElasticSearchPackIndexProcessor
+
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
-from forte.indexers.elastic_indexer import ElasticSearchIndexer
 from forte.pipeline import Pipeline
-from forte.processors.data_augment.selector_index_processor import \
-    DataSelectorIndexProcessor
 
 __all__ = [
     "CreateIndexerPipeline",
@@ -52,7 +52,7 @@ class CreateIndexerPipeline:
         # pylint: disable=attribute-defined-outside-init
         self.nlp: Pipeline[DataPack] = Pipeline()
         self.nlp.set_reader(reader=self.reader, config=self.reader_config)
-        self.nlp.add(DataSelectorIndexProcessor(), config=self.config)
+        self.nlp.add(ElasticSearchPackIndexProcessor(), config=self.config)
         self.nlp.initialize()
 
     def create_index(self, datapath):
