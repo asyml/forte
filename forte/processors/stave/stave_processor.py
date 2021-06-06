@@ -22,7 +22,6 @@ number, host name, layout, etc.
 Package Requirements:
     forte
     stave
-    requests
 """
 
 import os
@@ -30,9 +29,9 @@ import json
 import logging
 import collections
 from typing import Dict, Set, Any
-import requests
 
 from nlpviewer_backend.lib.stave_viewer import StaveViewer
+from nlpviewer_backend.lib.stave_session import StaveSession
 from nlpviewer_backend.lib.stave_project import StaveProjectWriter
 
 from forte.common import Resources, ProcessorConfigError
@@ -167,46 +166,34 @@ class StaveProcessor(PackProcessor):
                 self._create_document(input_pack)
 
     def _create_document(self, input_pack: DataPack):
-        with requests.Session() as session:
+        with StaveSession(self._viewer.url, suppress_err=True) as session:
 
             # Log in as admin user
-            response = session.post(f"{self._viewer.url}/api/login",
-                json={
-                    "name": self.configs.user_name,
-                    "password": self.configs.user_password
-                })
-            logger.info("%d %s", response.status_code, response.text)
-            if response.status_code != 200:
-                return
+            session.login(
+                username=self.configs.user_name,
+                password=self.configs.user_password
+            )
 
             # Configure and create project
             if self._project_id < 0:
-                response = session.post(f"{self._viewer.url}/api/projects/new",
-                    json={
-                        "type": self.configs.project_type,
-                        "name": self.configs.project_name,
-                        "ontology": json.dumps(
-                            self.resources.get("onto_specs_dict")
-                        ),
-                        "multiOntology": str(self.configs.multi_ontology),
-                        "config": str(self.configs.project_configs)
-                    })
-                logger.info("%d %s", response.status_code, response.text)
-                if response.status_code != 200:
-                    return
+                response = session.create_project(project_json={
+                    "type": self.configs.project_type,
+                    "name": self.configs.project_name,
+                    "ontology": json.dumps(
+                        self.resources.get("onto_specs_dict")
+                    ),
+                    "multiOntology": str(self.configs.multi_ontology),
+                    "config": str(self.configs.project_configs)
+                })
                 self._project_id = response.json()["id"]
                 self._viewer.open()
 
             # Configure and create document
-            response = session.post(f"{self._viewer.url}/api/documents/new",
-                json={
-                    "name": input_pack.pack_name,
-                    "textPack": input_pack.serialize(),
-                    "project_id": self._project_id,
-                })
-            logger.info("%d %s", response.status_code, response.text)
-            if response.status_code != 200:
-                return
+            session.create_document(document_json={
+                "name": input_pack.pack_name,
+                "textPack": input_pack.serialize(),
+                "project_id": self._project_id,
+            })
 
     def _default_project_configs(self):
         # pylint: disable=line-too-long
