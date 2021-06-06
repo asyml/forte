@@ -20,7 +20,6 @@ import sys
 import json
 import unittest
 import threading
-import requests
 
 from typing import Any, Dict, Iterator, Optional, Type, Set, List
 from forte.common import ProcessorConfigError
