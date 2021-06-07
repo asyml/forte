@@ -20,7 +20,6 @@ from typing import List
 from abc import abstractmethod
 from transformers import MarianMTModel, MarianTokenizer
 
-
 __all__ = [
     "MachineTranslator",
     "MarianMachineTranslator",
@@ -36,6 +35,7 @@ class MachineTranslator:
         tgt_lang: The target language.
         device: "cuda" for gpu, "cpu" otherwise.
     """
+
     def __init__(self, src_lang: str, tgt_lang: str, device: str):
         self.src_lang: str = src_lang
         self.tgt_lang: str = tgt_lang
@@ -60,6 +60,7 @@ class MarianMachineTranslator(MachineTranslator):
     (https://huggingface.co/transformers/model_doc/marian.html).
     Please refer to their doc for supported languages.
     """
+
     def __init__(
             self,
             src_lang: str = 'en',
@@ -76,8 +77,14 @@ class MarianMachineTranslator(MachineTranslator):
 
     def translate(self, src_text: str) -> str:
         translated: List[str] = self.model.generate(
-            **self.tokenizer.prepare_seq2seq_batch([src_text]).to(self.device)
+            # TODO: Should not use prepare_seq2seq_batch for deprecation
+            **self.tokenizer.prepare_seq2seq_batch(
+                # Have to use explicitly call `convert_to_tensors` to make
+                # this line work in both transformers 3 and 4, probably won't
+                # work in 5.
+                [src_text]).convert_to_tensors('pt').to(self.device)
         )
+
         tgt_texts: List[str] = [
             self.tokenizer.decode(t, skip_special_tokens=True)
             for t in translated

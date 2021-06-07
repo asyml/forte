@@ -22,17 +22,18 @@ for indexer creation.
 from abc import ABC
 from typing import Iterator, Any, Dict, Optional
 
-from forte.common.resources import Resources
 from forte.common.configuration import Config
-from forte.data.data_pack import DataPack
+from forte.common.resources import Resources
 from forte.data.base_reader import PackReader
-from forte.indexers.elastic_indexer import ElasticSearchIndexer
+from forte.data.data_pack import DataPack
 
 __all__ = [
     "BaseElasticSearchDataSelector",
     "RandomDataSelector",
     "QueryDataSelector",
 ]
+
+from forte.utils import create_class_with_kwargs
 
 
 class BaseDataSelector(PackReader, ABC):
@@ -51,7 +52,12 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
-        self.index = ElasticSearchIndexer(config=self.configs.index_config)
+        self.index = create_class_with_kwargs(
+            self.configs.indexer_class,
+            class_args={
+                'config': self.configs.index_configs
+            }
+        )
 
     def _create_search_key(self, data: Optional[str]) -> Dict[str, Any]:
         raise NotImplementedError
@@ -67,13 +73,18 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
         config.update({
-            "index_config": ElasticSearchIndexer.default_configs(),
+            "indexer_class":
+                "forte_wrapper.elastic.elastic_indexer.ElasticSearchIndexer",
+            "index_config": {
+                "index_name": "elastic_indexer",
+                "hosts": "localhost:9200",
+                "algorithm": "bm25"
+            }
         })
         return config
 
 
 class QueryDataSelector(BaseElasticSearchDataSelector):
-
     def _collect(self, *args, **kwargs) -> Iterator[str]:
         # pylint: disable = unused-argument
         r"""Iterator over query text files in the data_source.

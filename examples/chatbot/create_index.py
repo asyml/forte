@@ -11,6 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+script to create index.
+"""
+
 import argparse
 import pickle
 import importlib
@@ -21,7 +25,7 @@ import torch
 import texar.torch as tx
 
 from forte.common.configuration import Config
-from forte.indexers.embedding_based_indexer import EmbeddingBasedIndexer
+from forte_wrapper.faiss import EmbeddingBasedIndexer
 
 logging.basicConfig(level=logging.INFO)
 
