@@ -2,7 +2,7 @@ boxer:
   pack_name: "query"
 
 twitter_search:
-  tweet_items: 5
+  num_tweets_returned: 5
   lang: "en"
   date_since: "2020-01-01"
   result_type: 'recent'
@@ -12,3 +12,4 @@ twitter_search:
 
 vader_sentiment:
   entry_type: 'ft.onto.base_ontology.Document'
+  attribute_name: 'sentiment'
