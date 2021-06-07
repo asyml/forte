@@ -228,8 +228,8 @@ class StaveProcessor(PackProcessor):
         This defines a basic config structure for StaveProcessor.
         Following are the keys for this dictionary:
 
-            - ``build_path``: Absolute path to stave build folder.
-              Example: `"$STAVE_PATH/build/"`.
+            - ``project_path``: Path to the project directory for rendering.
+              Default to None, which creates a folder using ``project_name``.
             - ``port``: Port number for Stave server. Default value is `8888`.
             - ``host``: Host name for Stave server. Default value is
               `"localhost"`.
