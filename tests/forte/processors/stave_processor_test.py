@@ -32,7 +32,6 @@ from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
 from forte.processors.stave import StaveProcessor
 from nlpviewer_backend.lib.stave_project import StaveProjectReader
-from nlpviewer_backend.lib.stave_session import StaveSession
 
 
 class TestStaveProcessor(unittest.TestCase):
@@ -104,62 +103,6 @@ class TestStaveProcessor(unittest.TestCase):
 
         self.assertEqual(count + 1, len(os.listdir(self._dataset_dir)))
 
-    def test_stave_standard(self):
-        """
-        Test in standard Stave. Project data will be uploaded to Stave
-        backend via diango APIs. Consistency checking is performed here
-        to verify the project and documents being saved to the Stave database.
-        """
-        self.pl.add(self._stave_processor, config={
-            "port": self._port,
-            "project_name": self._project_name,
-            "in_viewer_mode": False,
-            "server_thread_daemon": True
-        })
-        self.pl.run(self._dataset_dir)
-        url = f"http://localhost:{self._port}"
-
-        with StaveSession(url=url) as session:
-            # Log in as admin user
-            response = session.login(
-                username=self._stave_processor.configs.user_name,
-                password=self._stave_processor.configs.user_password
-            )
-            self.assertEqual(response.text, "OK")
-
-            # Check if new project is created
-            response = session.get_project_list()
-            project_list = response.json()
-            self.assertIsInstance(project_list, list)
-
-            project_id = -1
-            for project in project_list:
-                if project["name"] == self._project_name:
-                    project_id = project["id"]
-            self.assertGreater(project_id, 0)
-
-            # Check default project configuration
-            with open(os.path.abspath(os.path.join(
-                self._file_dir_path, "../data/ontology/test_specs/",
-                "test_project_configuration.json")), "r") as f:
-                target_configs = json.load(f)
-            self.assertEqual(
-                json.dumps(target_configs, sort_keys=True),
-                json.dumps(
-                    self._stave_processor.configs.project_configs.todict(),
-                    sort_keys=True
-                )
-            )
-
-            # Check the number of newly created documents
-            response = session.get_document_list(project_id)
-            doc_list = response.json()
-            self.assertIsInstance(doc_list, list)
-            self.assertEqual(
-                len(os.listdir(self._dataset_dir)),
-                len(doc_list)
-            )
-
     def test_projecttype_exception(self):
         """
         Check the validation of `project_type` config.
@@ -167,8 +110,7 @@ class TestStaveProcessor(unittest.TestCase):
         self.pl.add(self._stave_processor, config={
             "port": self._port,
             "project_type": "multi_pack",
-            "server_thread_daemon": True,
-            "in_viewer_mode": False
+            "server_thread_daemon": True
         })
         with self.assertRaises(ProcessorConfigError) as context:
             self.pl.run(self._dataset_dir)
@@ -183,8 +125,7 @@ class TestStaveProcessor(unittest.TestCase):
             self.pl.resource.remove("onto_specs_dict")
             self.pl.add(self._stave_processor, config={
                 "port": self._port,
-                "server_thread_daemon": True,
-                "in_viewer_mode": False
+                "server_thread_daemon": True
             })
             self.pl.run(self._dataset_dir)
 

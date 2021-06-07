@@ -31,7 +31,6 @@ import collections
 from typing import Dict, Set, Any
 
 from nlpviewer_backend.lib.stave_viewer import StaveViewer
-from nlpviewer_backend.lib.stave_session import StaveSession
 from nlpviewer_backend.lib.stave_project import StaveProjectWriter
 
 from forte.common import Resources, ProcessorConfigError
@@ -132,20 +131,18 @@ class StaveProcessor(PackProcessor):
             project_path=self.configs.project_path,
             host=self.configs.host,
             port=self.configs.port,
-            thread_daemon=self.configs.server_thread_daemon,
-            in_viewer_mode=self.configs.in_viewer_mode
+            thread_daemon=self.configs.server_thread_daemon
         )
 
-        if self._viewer.in_viewer_mode:
-            #  Write meta data to project folder
-            self._project_writer = StaveProjectWriter(
-                project_path=self.configs.project_path,
-                project_name=self.configs.project_name,
-                project_type=self.configs.project_type,
-                ontology=self.resources.get("onto_specs_dict"),
-                project_configs=self.configs.project_configs.todict(),
-                multi_ontology=self.configs.multi_ontology.todict()
-            )
+        #  Write meta data to project folder
+        self._project_writer = StaveProjectWriter(
+            project_path=self.configs.project_path,
+            project_name=self.configs.project_name,
+            project_type=self.configs.project_type,
+            ontology=self.resources.get("onto_specs_dict"),
+            project_configs=self.configs.project_configs.todict(),
+            multi_ontology=self.configs.multi_ontology.todict()
+        )
 
     def _process(self, input_pack: DataPack):
 
@@ -153,47 +150,14 @@ class StaveProcessor(PackProcessor):
             self._viewer.run()
 
         if self._viewer.server_started:
-            if self._viewer.in_viewer_mode:
-                textpack_id = self._project_writer.write_textpack(
-                    input_pack.pack_name
-                        if self.configs.use_pack_name
-                        else input_pack.pack_id,
-                    input_pack.serialize()
-                )
-                if textpack_id == 0:
-                    self._viewer.open()
-            else:
-                self._create_document(input_pack)
-
-    def _create_document(self, input_pack: DataPack):
-        with StaveSession(self._viewer.url, suppress_err=True) as session:
-
-            # Log in as admin user
-            session.login(
-                username=self.configs.user_name,
-                password=self.configs.user_password
+            textpack_id = self._project_writer.write_textpack(
+                input_pack.pack_name
+                    if self.configs.use_pack_name
+                    else input_pack.pack_id,
+                input_pack.serialize()
             )
-
-            # Configure and create project
-            if self._project_id < 0:
-                response = session.create_project(project_json={
-                    "type": self.configs.project_type,
-                    "name": self.configs.project_name,
-                    "ontology": json.dumps(
-                        self.resources.get("onto_specs_dict")
-                    ),
-                    "multiOntology": str(self.configs.multi_ontology),
-                    "config": str(self.configs.project_configs)
-                })
-                self._project_id = response.json()["id"]
+            if textpack_id == 0:
                 self._viewer.open()
-
-            # Configure and create document
-            session.create_document(document_json={
-                "name": input_pack.pack_name,
-                "textPack": input_pack.serialize(),
-                "project_id": self._project_id,
-            })
 
     def _default_project_configs(self):
         # pylint: disable=line-too-long
@@ -280,10 +244,6 @@ class StaveProcessor(PackProcessor):
             - ``project_configs``: Project configurations. Default to `None`.
             - ``server_thread_daemon``: Sets whether the server thread is
               daemonic. Default to `False`.
-            - ``in_viewer_mode``: Enable viewer mode of Stave. If `False`,
-              StaveViewer will start a standard Stave instance and add project
-              and documents via Stave backend APIs based on ``user_name`` and
-              ``user_password`` (hence no project dump). Default to `True`.
             - ``use_pack_name``: Use ``pack_name`` to name the textpack being
               saved to project path in viewer mode. If `False`, will use
               ``pack_id`` for naming. Default to False.
@@ -304,7 +264,6 @@ class StaveProcessor(PackProcessor):
             "multi_ontology": None,
             "project_configs": None,
             "server_thread_daemon": False,
-            "in_viewer_mode": True,
             "use_pack_name": False
         })
 
