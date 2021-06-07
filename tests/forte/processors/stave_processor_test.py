@@ -20,7 +20,6 @@ import sys
 import json
 import unittest
 import threading
-import requests
 
 from typing import Any, Dict, Iterator, Optional, Type, Set, List
 from forte.common import ProcessorConfigError
@@ -31,11 +30,9 @@ from forte.processors.base import PackProcessor, FixedSizeBatchProcessor
 from forte.processors.base.batch_processor import Predictor
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
-# Currently hard coded. Deprecated in future update.
-os.environ["FRONTEND_BUILD_PATH"] = os.path.abspath("stave/build/")
-sys.path.insert(0, os.path.abspath("stave/simple-backend/"))
 from forte.processors.stave import StaveProcessor
 from nlpviewer_backend.lib.stave_project import StaveProjectReader
+from nlpviewer_backend.lib.stave_session import StaveSession
 
 
 class TestStaveProcessor(unittest.TestCase):
@@ -122,19 +119,16 @@ class TestStaveProcessor(unittest.TestCase):
         self.pl.run(self._dataset_dir)
         url = f"http://localhost:{self._port}"
 
-        with requests.Session() as session:
+        with StaveSession(url=url) as session:
             # Log in as admin user
-            response = session.post(f"{url}/api/login",
-                json={
-                    "name": "admin",
-                    "password": "admin"
-                })
-            self.assertEqual(response.status_code, 200)
+            response = session.login(
+                username=self._stave_processor.configs.user_name,
+                password=self._stave_processor.configs.user_password
+            )
             self.assertEqual(response.text, "OK")
 
             # Check if new project is created
-            response = session.post(f"{url}/api/projects")
-            self.assertEqual(response.status_code, 200)
+            response = session.get_project_list()
             project_list = response.json()
             self.assertIsInstance(project_list, list)
 
@@ -158,8 +152,7 @@ class TestStaveProcessor(unittest.TestCase):
             )
 
             # Check the number of newly created documents
-            response = session.post(f"{url}/api/projects/{project_id}/docs")
-            self.assertEqual(response.status_code, 200)
+            response = session.get_document_list(project_id)
             doc_list = response.json()
             self.assertIsInstance(doc_list, list)
             self.assertEqual(

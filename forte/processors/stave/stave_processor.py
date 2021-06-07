@@ -21,16 +21,7 @@ number, host name, layout, etc.
 
 Package Requirements:
     forte
-    *stave (Required in future version)
-
-Required environment variables:
-*All of the variables below will be deprecated in future version.
-    FRONTEND_BUILD_PATH:
-        Absolute path (or relative path from PYTHONPATH)
-        to stave build folder. Example: "stave/build/"
-    PYTHONPATH:
-        Absolute path to django backend folder (e.g.,
-        "$STAVE_PATH/simple-backend/") should be inserted into PYTHONPATH.
+    stave
 """
 
 import os
@@ -38,7 +29,10 @@ import json
 import logging
 import collections
 from typing import Dict, Set, Any
-import requests
+
+from nlpviewer_backend.lib.stave_viewer import StaveViewer
+from nlpviewer_backend.lib.stave_session import StaveSession
+from nlpviewer_backend.lib.stave_project import StaveProjectWriter
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config
@@ -111,9 +105,8 @@ class StaveProcessor(PackProcessor):
     def __init__(self):
         super().__init__()
         self._project_id: int = -1
-        # TODO: Specify annotations in future update.
-        self._viewer: Any
-        self._project_writer: Any
+        self._viewer: StaveViewer
+        self._project_writer: StaveProjectWriter
 
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -135,14 +128,7 @@ class StaveProcessor(PackProcessor):
         self.configs.project_path = os.path.abspath(
             self.configs.project_path or self.configs.project_name)
 
-        # TODO: Move to toplevel in future update.
-        # pylint: disable=import-outside-toplevel
-        from nlpviewer_backend.lib.stave_viewer import StaveViewer
-        from nlpviewer_backend.lib.stave_project import StaveProjectWriter
-        # pylint: enable=import-outside-toplevel
-
         self._viewer = StaveViewer(
-            build_path=os.environ["FRONTEND_BUILD_PATH"],
             project_path=self.configs.project_path,
             host=self.configs.host,
             port=self.configs.port,
@@ -180,46 +166,34 @@ class StaveProcessor(PackProcessor):
                 self._create_document(input_pack)
 
     def _create_document(self, input_pack: DataPack):
-        with requests.Session() as session:
+        with StaveSession(self._viewer.url, suppress_err=True) as session:
 
             # Log in as admin user
-            response = session.post(f"{self._viewer.url}/api/login",
-                json={
-                    "name": self.configs.user_name,
-                    "password": self.configs.user_password
-                })
-            logger.info("%d %s", response.status_code, response.text)
-            if response.status_code != 200:
-                return
+            session.login(
+                username=self.configs.user_name,
+                password=self.configs.user_password
+            )
 
             # Configure and create project
             if self._project_id < 0:
-                response = session.post(f"{self._viewer.url}/api/projects/new",
-                    json={
-                        "type": self.configs.project_type,
-                        "name": self.configs.project_name,
-                        "ontology": json.dumps(
-                            self.resources.get("onto_specs_dict")
-                        ),
-                        "multiOntology": str(self.configs.multi_ontology),
-                        "config": str(self.configs.project_configs)
-                    })
-                logger.info("%d %s", response.status_code, response.text)
-                if response.status_code != 200:
-                    return
+                response = session.create_project(project_json={
+                    "type": self.configs.project_type,
+                    "name": self.configs.project_name,
+                    "ontology": json.dumps(
+                        self.resources.get("onto_specs_dict")
+                    ),
+                    "multiOntology": str(self.configs.multi_ontology),
+                    "config": str(self.configs.project_configs)
+                })
                 self._project_id = response.json()["id"]
                 self._viewer.open()
 
             # Configure and create document
-            response = session.post(f"{self._viewer.url}/api/documents/new",
-                json={
-                    "name": input_pack.pack_name,
-                    "textPack": input_pack.serialize(),
-                    "project_id": self._project_id,
-                })
-            logger.info("%d %s", response.status_code, response.text)
-            if response.status_code != 200:
-                return
+            session.create_document(document_json={
+                "name": input_pack.pack_name,
+                "textPack": input_pack.serialize(),
+                "project_id": self._project_id,
+            })
 
     def _default_project_configs(self):
         # pylint: disable=line-too-long
