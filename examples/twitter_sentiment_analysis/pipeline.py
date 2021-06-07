@@ -55,12 +55,31 @@ if __name__ == "__main__":
     for m_pack in nlp.process_dataset():
         print('The number of datapacks(including query) is', len(m_pack.packs))
 
-        for pack in m_pack.packs:
+        tweets, pos_sentiment, neg_sentiment, neutral_sentiment = 0, 0, 0, 0
+
+        for name, pack in m_pack.iter_packs():
             # Do not process the query datapack
-            if pack.pack_name == config.twitter_search.query_pack_name:
+            if name == config.twitter_search.query_pack_name:
                 continue
-            for sentence in pack.get(config.vader_sentiment.entry_type):
-                print('Tweet: ', sentence.text)
-                print('Sentiment Score: ', sentence.sentiment['compound'])
+
+            tweets += 1
+            for doc in pack.get(config.vader_sentiment.entry_type):
+                print('Tweet: ', doc.text)
+                print('Sentiment Compound Score: ',
+                      doc.sentiment['compound'])
+
+                compound_score = doc.sentiment['compound']
+                if compound_score >= 0.05:
+                    pos_sentiment += 1
+                elif compound_score <= -0.05:
+                    neg_sentiment += 1
+                else:
+                    neutral_sentiment += 1
+
+        print('The number of tweets retrieved: ', tweets)
+        print('The proportion of positive sentiment: ', pos_sentiment / tweets)
+        print('The proportion of negative sentiment: ', neg_sentiment / tweets)
+        print('The proportion of neutral sentiment: ',
+              neutral_sentiment / tweets)
 
     print('Done')
