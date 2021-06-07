@@ -233,8 +233,6 @@ class StaveProcessor(PackProcessor):
             - ``port``: Port number for Stave server. Default value is `8888`.
             - ``host``: Host name for Stave server. Default value is
               `"localhost"`.
-            - ``user_name``: Admin user name. Default to `"admin"`.
-            - ``user_password``: Admin user password. Default to `"admin"`.
             - ``project_type``: `"single_pack\"` (default) or `\"multi_pack"`.
             - ``project_name``: Project name displayed on Stave. Default name
               is `"Auto generated project"`.
@@ -256,8 +254,6 @@ class StaveProcessor(PackProcessor):
             "project_path": None,
             "port": 8888,
             "host": "localhost",
-            "user_name": "admin",
-            "user_password": "admin",
             "project_type": "single_pack",
             "project_name": "Auto generated project",
             "multi_ontology": None,
