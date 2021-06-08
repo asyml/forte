@@ -3,7 +3,7 @@ import logging
 import sqlite3
 from typing import Dict, Any, Optional, List
 
-from forte_wrapper.elastic import ElasticSearchIndexer
+from forte.elastic import ElasticSearchIndexer
 
 from forte.common import Resources, ProcessorConfigError
 from forte.common.configuration import Config

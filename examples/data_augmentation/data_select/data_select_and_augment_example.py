@@ -15,10 +15,10 @@ import argparse
 import logging
 import yaml
 
+from forte.nltk import NLTKWordTokenizer, NLTKPOSTagger
 from forte.data.multi_pack import MultiPack
 from forte.pipeline import Pipeline
 from forte.processors.base.data_selector_for_da import RandomDataSelector
-from forte_wrapper.nltk import NLTKWordTokenizer, NLTKPOSTagger
 from forte.data.selector import AllPackSelector
 from forte.data.caster import MultiPackBoxer
 from forte.processors.data_augment import ReplacementDataAugmentProcessor

@@ -4,10 +4,10 @@ import time
 import yaml
 from mimic3_note_reader import Mimic3DischargeNoteReader
 
-from forte_wrapper.elastic import ElasticSearchPackIndexProcessor
-from forte_wrapper.nltk import NLTKSentenceSegmenter
-from forte_wrapper.hugginface.bio_ner_predictor import BioBERTNERPredictor
-from forte_wrapper.hugginface.transformers_processor import BERTTokenizer
+from forte.elastic import ElasticSearchPackIndexProcessor
+from forte.nltk import NLTKSentenceSegmenter
+from forte.hugginface.bio_ner_predictor import BioBERTNERPredictor
+from forte.hugginface.transformers_processor import BERTTokenizer
 
 from forte.common.configuration import Config
 from forte.data.data_pack import DataPack
