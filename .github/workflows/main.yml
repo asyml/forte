@@ -61,7 +61,7 @@ jobs:
           rm -rf texar-pytorch
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,ir,wikipedia,augment]
+          pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,ir,wikipedia,augment,stave]
       - name: Install a few wrappers for testing
         run: |
           git clone https://github.com/asyml/forte-wrappers.git
