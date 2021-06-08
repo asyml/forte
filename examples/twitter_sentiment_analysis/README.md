@@ -1,7 +1,7 @@
 # Twitter Sentiment Analysis
 
 This example show the use of `Forte` to perform sentiment
-analysis on the user's retrieved tweets, based on [Twitter API](https://developer.twitter.com/en/products/twitter-api) and 
+analysis on the user's retrieved tweets, based on [Tweepy](https://docs.tweepy.org/en/latest/index.html), [Twitter API](https://developer.twitter.com/en/products/twitter-api) and 
 [Vader (Valence Aware Dictionary and Sentiment Reasoner)](https://github.com/cjhutto/vaderSentiment).
  
 
