@@ -1,0 +1,15 @@
+boxer:
+  pack_name: "query"
+
+twitter_search:
+  num_tweets_returned: 5
+  lang: "en"
+  date_since: "2020-01-01"
+  result_type: 'recent'
+  query_pack_name: "query"
+  response_pack_name_prefix: "passage"
+  credential_file: "api_credential.yml"
+
+vader_sentiment:
+  entry_type: 'ft.onto.base_ontology.Document'
+  attribute_name: 'sentiment'
