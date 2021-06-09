@@ -18,7 +18,6 @@ from forte.data.base_extractor import BaseExtractor
 
 
 class BaseExtractorTest(unittest.TestCase):
-
     def test_base_extractor(self):
         config = {
             "entry_type": "ft.onto.base_ontology.Token",
@@ -32,10 +31,12 @@ class BaseExtractorTest(unittest.TestCase):
         new_extractor = pkl.loads(pkl.dumps(extractor))
 
         # Check state and from state
-        self.assertEqual(extractor.config.entry_type,
-                         new_extractor.config.entry_type)
-        self.assertEqual(extractor.config.entry_type,
-                         "ft.onto.base_ontology.Token")
+        self.assertEqual(
+            extractor.config.entry_type, new_extractor.config.entry_type
+        )
+        self.assertEqual(
+            extractor.config.entry_type, "ft.onto.base_ontology.Token"
+        )
         self.assertNotEqual(new_extractor.vocab, None)
 
         # Check entry_type
@@ -48,5 +49,5 @@ class BaseExtractorTest(unittest.TestCase):
         self.assertEqual(extractor.get_pad_value(), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

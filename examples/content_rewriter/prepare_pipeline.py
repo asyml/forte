@@ -29,24 +29,34 @@ class Instructor(PackProcessor):
         self.instruction = instruction
 
     def _process(self, input_pack: DataPack):
-        input_pack.set_text(input_pack.text + '\n' + self.instruction)
-        u = Utterance(input_pack,
-                      len(input_pack.text) - len(self.instruction),
-                      len(input_pack.text))
-        u.speaker = 'ai'
+        input_pack.set_text(input_pack.text + "\n" + self.instruction)
+        u = Utterance(
+            input_pack,
+            len(input_pack.text) - len(self.instruction),
+            len(input_pack.text),
+        )
+        u.speaker = "ai"
 
 
-instruct_text = 'This is an example to use the chatbot interface with the ' \
-                'content rewriter model. To run this example, follow the ' \
-                'instructions here "https://github.com/asyml/forte' \
-                '/tree/master/examples/content_rewriter" to obtain ' \
-                'the models and make sure Forte is in your Python Path.'
+instruct_text = (
+    "This is an example to use the chatbot interface with the "
+    "content rewriter model. To run this example, follow the "
+    'instructions here "https://github.com/asyml/forte'
+    '/tree/master/examples/content_rewriter" to obtain '
+    "the models and make sure Forte is in your Python Path."
+)
 
 pipeline = Pipeline[DataPack]()
 pipeline.set_reader(TableReader())
 pipeline.add(Instructor(instruct_text))
-pipeline.add(PackNameJsonPackWriter(),
-             {'indent': 2, 'output_dir': 'table_inputs', 'overwrite': True,
-              'drop_record': True})
+pipeline.add(
+    PackNameJsonPackWriter(),
+    {
+        "indent": 2,
+        "output_dir": "table_inputs",
+        "overwrite": True,
+        "drop_record": True,
+    },
+)
 
-pipeline.run('table_samples.txt')
+pipeline.run("table_samples.txt")

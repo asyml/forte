@@ -25,7 +25,6 @@ __all__ = [
 
 @dataclass
 class RaceDocument(Document):
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -46,7 +45,6 @@ class Passage(Document):
 
 @dataclass
 class Option(Annotation):
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 

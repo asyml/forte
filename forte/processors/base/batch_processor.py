@@ -23,9 +23,11 @@ from forte.common.configuration import Config
 from forte.data import slice_batch
 from forte.data.converter import Converter
 from forte.data.base_pack import PackType
-from forte.data.batchers import \
-    (ProcessingBatcher, FixedSizeDataPackBatcher,
-     FixedSizeDataPackBatcherWithExtractor)
+from forte.data.batchers import (
+    ProcessingBatcher,
+    FixedSizeDataPackBatcher,
+    FixedSizeDataPackBatcherWithExtractor,
+)
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Annotation
@@ -40,7 +42,7 @@ __all__ = [
     "Predictor",
     "MultiPackBatchProcessor",
     "FixedSizeBatchProcessor",
-    "FixedSizeMultiPackBatchProcessor"
+    "FixedSizeMultiPackBatchProcessor",
 ]
 
 
@@ -101,7 +103,8 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
             self._prepare_coverage_index(input_pack)
 
         for packs, _, batch in self._batcher.get_batch(
-                input_pack, self.context_type, self.input_info):
+            input_pack, self.context_type, self.input_info
+        ):
             pred = self.predict(batch)
             self.pack_all(packs, pred)
 
@@ -140,8 +143,9 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
         start = 0
         for i, pack_i in enumerate(data_pack_pool):
-            output_dict_i = slice_batch(output_dict, start,
-                                        current_batch_sources[i])
+            output_dict_i = slice_batch(
+                output_dict, start, current_batch_sources[i]
+            )
             self.pack(pack_i, output_dict_i)
             start += current_batch_sources[i]
             pack_i.add_all_remaining_entries()
@@ -151,7 +155,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
         r"""A default config contains the field for batcher."""
         super_config = super().default_configs()
 
-        super_config['batcher'] = cls.define_batcher().default_configs()
+        super_config["batcher"] = cls.define_batcher().default_configs()
 
         return super_config
 
@@ -229,8 +233,7 @@ class BaseBatchProcessor(BaseProcessor[PackType], ABC):
 
 
 class BatchProcessor(BaseBatchProcessor[DataPack], ABC):
-    r"""The batch processors that process :class:`DataPack`.
-    """
+    r"""The batch processors that process :class:`DataPack`."""
 
     def _prepare_coverage_index(self, input_pack: DataPack):
         for entry_type in self.input_info.keys():
@@ -287,14 +290,16 @@ class Predictor(BaseBatchProcessor):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         super_config = super().default_configs()
-        super_config.update({
-            "scope": None,
-            "feature_scheme": None,
-            "batch_size": None,
-            "model": None,
-            "batcher": cls.define_batcher().default_configs(),
-            "do_eval": False
-        })
+        super_config.update(
+            {
+                "scope": None,
+                "feature_scheme": None,
+                "batch_size": None,
+                "model": None,
+                "batcher": cls.define_batcher().default_configs(),
+                "do_eval": False,
+            }
+        )
         return super_config
 
     def initialize(self, resources: Resources, configs: Optional[Config]):
@@ -316,35 +321,36 @@ class Predictor(BaseBatchProcessor):
     def _parse_configs(self, configs):
         parsed_configs = self.default_configs()
         parsed_configs["batch_size"] = configs.batch_size
-        parsed_configs['scope'] = get_class(configs.scope)
-        parsed_configs['do_eval'] = configs.do_eval
-        parsed_configs['feature_scheme'] = {}
+        parsed_configs["scope"] = get_class(configs.scope)
+        parsed_configs["do_eval"] = configs.do_eval
+        parsed_configs["feature_scheme"] = {}
         for tag, scheme in configs.feature_scheme.items():
             parsed_configs["feature_scheme"][tag] = {}
             if scheme["type"] == "data_input":
-                parsed_configs["feature_scheme"][tag]["type"] = \
-                    TrainPreprocessor.DATA_INPUT
+                parsed_configs["feature_scheme"][tag][
+                    "type"
+                ] = TrainPreprocessor.DATA_INPUT
             elif scheme["type"] == "data_output":
-                parsed_configs["feature_scheme"][tag]["type"] = \
-                    TrainPreprocessor.DATA_OUTPUT
+                parsed_configs["feature_scheme"][tag][
+                    "type"
+                ] = TrainPreprocessor.DATA_OUTPUT
 
-            extractor = get_class(
-                scheme["extractor"]["class_name"])()
-            extractor.initialize(
-                config=scheme["extractor"]["config"])
+            extractor = get_class(scheme["extractor"]["class_name"])()
+            extractor.initialize(config=scheme["extractor"]["config"])
             if "vocab_path" in scheme["extractor"]:
-                vocab_file = open(scheme["extractor"]["vocab_path"], 'rb')
+                vocab_file = open(scheme["extractor"]["vocab_path"], "rb")
                 extractor.vocab = pickle.load(vocab_file)
                 vocab_file.close()
-            parsed_configs["feature_scheme"][tag]["extractor"] = \
-                extractor
+            parsed_configs["feature_scheme"][tag]["extractor"] = extractor
 
             if "converter" not in scheme:
-                parsed_configs["feature_scheme"][tag]["converter"] = \
-                    Converter({})
+                parsed_configs["feature_scheme"][tag]["converter"] = Converter(
+                    {}
+                )
             else:
-                parsed_configs["feature_scheme"][tag]["converter"] = \
-                    scheme["converter"]
+                parsed_configs["feature_scheme"][tag]["converter"] = scheme[
+                    "converter"
+                ]
         return Config(parsed_configs, default_hparams=self.default_configs())
 
     def _process(self, input_pack: DataPack):
@@ -360,9 +366,9 @@ class Predictor(BaseBatchProcessor):
         if self.use_coverage_index:
             self._prepare_coverage_index(input_pack)
 
-        for batch in self._batcher.get_batch(input_pack,
-                                             self.context_type,
-                                             self.input_info):
+        for batch in self._batcher.get_batch(
+            input_pack, self.context_type, self.input_info
+        ):
             self.__process_batch(batch)
 
     def flush(self):
@@ -375,10 +381,12 @@ class Predictor(BaseBatchProcessor):
         for tag, preds in predictions.items():
             for pred, pack, instance in zip(preds, packs, instances):
                 if self.do_eval:
-                    self.configs.feature_scheme[tag]["extractor"]. \
-                        pre_evaluation_action(pack, instance)
-                self.configs.feature_scheme[tag]["extractor"]. \
-                    add_to_pack(pack, instance, pred)
+                    self.configs.feature_scheme[tag][
+                        "extractor"
+                    ].pre_evaluation_action(pack, instance)
+                self.configs.feature_scheme[tag]["extractor"].add_to_pack(
+                    pack, instance, pred
+                )
                 pack.add_all_remaining_entries()
 
     def predict(self, data_batch: Dict) -> Dict:
@@ -407,7 +415,8 @@ class MultiPackBatchProcessor(BaseBatchProcessor[MultiPack], ABC):
     def _prepare_coverage_index(self, input_pack: MultiPack):
         for entry_type in self.input_info.keys():
             input_pack.packs[self.input_pack_name].build_coverage_for(
-                self.context_type, entry_type)
+                self.context_type, entry_type
+            )
 
 
 class FixedSizeMultiPackBatchProcessor(MultiPackBatchProcessor, ABC):

@@ -36,7 +36,7 @@ __all__ = [
     "DataPackIterator",
     "DataPackDataset",
     "RawExample",
-    "FeatureCollection"
+    "FeatureCollection",
 ]
 
 # An instance is a single data point from data pack
@@ -93,17 +93,20 @@ class DataPackIterator(IterDataSource):
         For parameters `context_type`, `request`, `skip_k`, please refer to
         :meth:`get_data()` in :class:`~forte.data.data_pack.DataPack`.
     """
-    def __init__(self,
-                 pack_iterator: Iterator[DataPack],
-                 context_type: Type[Annotation],
-                 request: Optional[DataRequest] = None,
-                 skip_k: int = 0):
+
+    def __init__(
+        self,
+        pack_iterator: Iterator[DataPack],
+        context_type: Type[Annotation],
+        request: Optional[DataRequest] = None,
+        skip_k: int = 0,
+    ):
         super().__init__(self)
 
         self._get_data_args: Dict = {
             "context_type": context_type,
             "request": request,
-            "skip_k": skip_k
+            "skip_k": skip_k,
         }
 
         self._data_pack_iter: Iterator[DataPack] = pack_iterator
@@ -116,8 +119,9 @@ class DataPackIterator(IterDataSource):
     def __next__(self) -> RawExample:
         if self._curr_data_pack is None:
             self._curr_data_pack = next(self._data_pack_iter)
-            self._instance_iter = \
-                self._curr_data_pack.get_data(**self._get_data_args)
+            self._instance_iter = self._curr_data_pack.get_data(
+                **self._get_data_args
+            )
 
         if self._instance_iter is None:
             raise ValueError("Instance iterator is None")
@@ -127,8 +131,9 @@ class DataPackIterator(IterDataSource):
         except StopIteration:
             # Current data pack has no more instance. Go to next data pack.
             self._curr_data_pack = next(self._data_pack_iter)
-            self._instance_iter = \
-                self._curr_data_pack.get_data(**self._get_data_args)
+            self._instance_iter = self._curr_data_pack.get_data(
+                **self._get_data_args
+            )
 
         return next(self._instance_iter)["tid"], self._curr_data_pack
 
@@ -154,11 +159,14 @@ class DataPackDataset(DatasetBase):
         device: The device of the produced batches. For GPU training,
             set to current CUDA device.
     """
-    def __init__(self,
-                 data_source: DataPackIterator,
-                 feature_schemes: Dict,
-                 hparams: Union[Dict, HParams] = None,
-                 device: Optional[torch.device] = None):
+
+    def __init__(
+        self,
+        data_source: DataPackIterator,
+        feature_schemes: Dict,
+        hparams: Union[Dict, HParams] = None,
+        device: Optional[torch.device] = None,
+    ):
         self._data_source: DataPackIterator = data_source
         self._feature_scheme: Dict = feature_schemes
 
@@ -264,8 +272,7 @@ class DataPackDataset(DatasetBase):
             if tag not in tensor_collection:
                 tensor_collection[tag] = {}
 
-            converter: Converter = \
-                self._feature_scheme[tag]["converter"]
+            converter: Converter = self._feature_scheme[tag]["converter"]
             data, masks = converter.convert(features)
             tensor_collection[tag]["data"] = data
             tensor_collection[tag]["masks"] = masks

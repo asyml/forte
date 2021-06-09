@@ -22,21 +22,26 @@ from data_select_index_pipeline import CreateIndexerPipeline
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", default="./config.yml",
-                        help="Config YAML filepath")
+    parser.add_argument(
+        "--config_file", default="./config.yml", help="Config YAML filepath"
+    )
     args = parser.parse_args()
 
     # loading config
     config = yaml.safe_load(open(args.config_file, "r"))
 
     file_dir_path = os.path.dirname(__file__)
-    data_dir = 'data_samples/ms_marco_passage_retrieval'
+    data_dir = "data_samples/ms_marco_passage_retrieval"
     abs_data_dir = os.path.abspath(
-        os.path.join(file_dir_path, *([os.pardir] * 3), data_dir))
+        os.path.join(file_dir_path, *([os.pardir] * 3), data_dir)
+    )
 
     reader = MSMarcoPassageReader()
-    nlp = CreateIndexerPipeline(reader=reader, reader_config=None,
-                                indexer_config=config["indexer_config"])
+    nlp = CreateIndexerPipeline(
+        reader=reader,
+        reader_config=None,
+        indexer_config=config["indexer_config"],
+    )
     nlp.create_index(abs_data_dir)
 
 

@@ -22,7 +22,11 @@ from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
 from ft.onto.race_multi_choice_qa_ontology import (
-    RaceDocument, Passage, Question, Option)
+    RaceDocument,
+    Passage,
+    Question,
+    Option,
+)
 
 __all__ = [
     "RACEMultiChoiceQAReader",
@@ -53,33 +57,35 @@ class RACEMultiChoiceQAReader(PackReader):
             return ch
         if isinstance(ch, str):
             return ord(ch.lower()) - 97
-        raise ValueError("Wrong datatype for Answers: expected int or str, "
-                         f"got {type(ch).__name__}")
+        raise ValueError(
+            "Wrong datatype for Answers: expected int or str, "
+            f"got {type(ch).__name__}"
+        )
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
-        with open(file_path, "r", encoding="utf8", errors='ignore') as file:
+        with open(file_path, "r", encoding="utf8", errors="ignore") as file:
             dataset = json.load(file)
 
             pack = DataPack()
-            text: str = dataset['article']
+            text: str = dataset["article"]
             article_end = len(text)
             offset = article_end + 1
 
-            for qid, ques_text in enumerate(dataset['questions']):
-                text += '\n' + ques_text
+            for qid, ques_text in enumerate(dataset["questions"]):
+                text += "\n" + ques_text
                 ques_end = offset + len(ques_text)
                 question = Question(pack, offset, ques_end)
                 offset = ques_end + 1
 
-                options_text = dataset['options'][qid]
+                options_text = dataset["options"][qid]
                 for option_text in options_text:
-                    text += '\n' + option_text
+                    text += "\n" + option_text
                     option_end = offset + len(option_text)
                     option = Option(pack, offset, option_end)
                     offset = option_end + 1
                     question.options.append(option)
 
-                answers = dataset['answers'][qid]
+                answers = dataset["answers"][qid]
                 if not isinstance(answers, list):
                     answers = [answers]
                 answers = [self._convert_to_int(ans) for ans in answers]
@@ -89,7 +95,7 @@ class RACEMultiChoiceQAReader(PackReader):
 
             RaceDocument(pack, 0, article_end)
 
-            passage_id: str = dataset['id']
+            passage_id: str = dataset["id"]
             passage = Passage(pack, 0, len(pack.text))
             passage.passage_id = passage_id
 

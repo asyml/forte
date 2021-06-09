@@ -42,11 +42,13 @@ def post_edit(element: Tuple[Optional[str], str]) -> str:
     return "%s-%s" % (element[1], element[0])
 
 
-def get_tag(pack: DataPack,
-            instance: Annotation,
-            tagging_unit: Type[Annotation],
-            entry_type: Type[Annotation],
-            attribute: str) -> List[str]:
+def get_tag(
+    pack: DataPack,
+    instance: Annotation,
+    tagging_unit: Type[Annotation],
+    entry_type: Type[Annotation],
+    attribute: str,
+) -> List[str]:
     r"""Align entries to tagging units, and convert it to string format.
 
     Args:
@@ -76,22 +78,20 @@ def get_tag(pack: DataPack,
         BIO tag sequence in string format.
 
     """
-    tag = bio_tagging(pack,
-                      instance,
-                      tagging_unit,
-                      entry_type,
-                      attribute)
+    tag = bio_tagging(pack, instance, tagging_unit, entry_type, attribute)
     tag = [post_edit(x) for x in tag]
     return tag
 
 
-def write_tokens_to_file(pred_pack: DataPack,
-                         refer_pack: DataPack,
-                         refer_request: Dict,
-                         tagging_unit: Type[Annotation],
-                         entry_type: Type[Annotation],
-                         attribute: str,
-                         output_file: str):
+def write_tokens_to_file(
+    pred_pack: DataPack,
+    refer_pack: DataPack,
+    refer_request: Dict,
+    tagging_unit: Type[Annotation],
+    entry_type: Type[Annotation],
+    attribute: str,
+    output_file: str,
+):
     r"""Write prediction results into files, along with reference
     labels, for performance evaluation.
 
@@ -123,25 +123,21 @@ def write_tokens_to_file(pred_pack: DataPack,
     for refer_data, pred_sent, refer_sent in zip(
         refer_pack.get_data(**refer_request),
         pred_pack.get(Sentence),
-        refer_pack.get(Sentence)):
+        refer_pack.get(Sentence),
+    ):
 
-        refer_tag = get_tag(refer_pack,
-                            refer_sent,
-                            tagging_unit,
-                            entry_type,
-                            attribute)
-        pred_tag = get_tag(pred_pack,
-                           pred_sent,
-                           tagging_unit,
-                           entry_type,
-                           attribute)
+        refer_tag = get_tag(
+            refer_pack, refer_sent, tagging_unit, entry_type, attribute
+        )
+        pred_tag = get_tag(
+            pred_pack, pred_sent, tagging_unit, entry_type, attribute
+        )
 
         words = refer_data["Token"]["text"]
 
-        for i, (word, tgt, pred) in \
-                enumerate(zip(words, refer_tag, pred_tag), 1):
-            opened_file.write(
-                "%d %s %s %s\n" % (i, word, tgt, pred)
-            )
+        for i, (word, tgt, pred) in enumerate(
+            zip(words, refer_tag, pred_tag), 1
+        ):
+            opened_file.write("%d %s %s %s\n" % (i, word, tgt, pred))
         opened_file.write("\n")
     opened_file.close()

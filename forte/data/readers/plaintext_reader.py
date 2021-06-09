@@ -28,8 +28,7 @@ __all__ = [
 
 
 class PlainTextReader(PackReader):
-    r""":class:`PlainTextReader` is designed to read in plain text dataset.
-    """
+    r""":class:`PlainTextReader` is designed to read in plain text dataset."""
 
     def _collect(self, text_directory) -> Iterator[Any]:  # type: ignore
         r"""Should be called with param ``text_directory`` which is a path to a
@@ -52,7 +51,7 @@ class PlainTextReader(PackReader):
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack = DataPack()
 
-        with open(file_path, "r", encoding="utf8", errors='ignore') as file:
+        with open(file_path, "r", encoding="utf8", errors="ignore") as file:
             text = file.read()
 
         pack.set_text(text, replace_func=self.text_replace_operation)
@@ -65,7 +64,7 @@ class PlainTextReader(PackReader):
     @classmethod
     def default_configs(cls):
         config = super().default_configs()
-        config['file_ext'] = '.txt'
+        config["file_ext"] = ".txt"
         return config
 
     def record(self, record_meta: Dict[str, Set[str]]):
@@ -77,4 +76,4 @@ class PlainTextReader(PackReader):
             record_meta: the field in the datapack for type record that need to
                 fill in for consistency checking.
         """
-        record_meta['ft.onto.base_ontology.Document'] = set()
+        record_meta["ft.onto.base_ontology.Document"] = set()

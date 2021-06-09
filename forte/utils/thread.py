@@ -16,7 +16,7 @@ import threading
 
 
 class AtomicCounter:
-    """ An Atomic Counter that is supposed to be thread safe. Code adopted
+    """An Atomic Counter that is supposed to be thread safe. Code adopted
     from:
     https://gist.github.com/benhoyt/8c8a8d62debe8e5aa5340373f9c509c7
 
@@ -57,4 +57,5 @@ class AtomicCounter:
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

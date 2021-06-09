@@ -27,11 +27,16 @@ logger = logging.getLogger(__name__)
 
 
 class TrainPipeline:
-    def __init__(self, train_reader: BaseReader, trainer: BaseTrainer,
-                 dev_reader: BaseReader, configs: Config,
-                 preprocessors: Optional[List[BaseProcessor]] = None,
-                 evaluator: Optional[Evaluator] = None,
-                 predictor: Optional[BaseProcessor] = None):
+    def __init__(
+        self,
+        train_reader: BaseReader,
+        trainer: BaseTrainer,
+        dev_reader: BaseReader,
+        configs: Config,
+        preprocessors: Optional[List[BaseProcessor]] = None,
+        evaluator: Optional[Evaluator] = None,
+        predictor: Optional[BaseProcessor] = None,
+    ):
         self.resource = Resources()
         self.configs = configs
 
@@ -39,8 +44,9 @@ class TrainPipeline:
 
         if preprocessors is not None:
             for p in preprocessors:
-                p.initialize(resources=self.resource,
-                             configs=configs.preprocessor)
+                p.initialize(
+                    resources=self.resource, configs=configs.preprocessor
+                )
             self.preprocessors = preprocessors
         else:
             self.preprocessors = []
@@ -84,7 +90,8 @@ class TrainPipeline:
         while True:
             epoch += 1
             for pack in self.train_reader.iter(
-                    self.configs.config_data.train_path):
+                self.configs.config_data.train_path
+            ):
                 for instance in pack.get_data(**self.trainer.data_request()):
                     self.trainer.consume(instance)
 
@@ -103,8 +110,7 @@ class TrainPipeline:
         validation_result = {"epoch": epoch}
 
         if self.predictor is not None:
-            for pack in self.dev_reader.iter(
-                    self.configs.config_data.val_path):
+            for pack in self.dev_reader.iter(self.configs.config_data.val_path):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
                 self.evaluator.consume_next(predicted_pack, pack)
@@ -112,7 +118,8 @@ class TrainPipeline:
 
         if self.evaluator is not None:
             for pack in self.dev_reader.iter(
-                    self.configs.config_data.test_path):
+                self.configs.config_data.test_path
+            ):
                 predicted_pack = pack.view()
                 self.predictor.process(predicted_pack)
                 self.evaluator.consume_next(predicted_pack, pack)

@@ -75,15 +75,16 @@ def slice_batch(batch, start, length):
             if entry not in sliced_batch.keys():
                 sliced_batch[entry] = {}
             for k, value in fields.items():
-                sliced_batch[entry][k] = value[start: start + length]
+                sliced_batch[entry][k] = value[start : start + length]
         else:  # context level feature
-            sliced_batch[entry] = fields[start: start + length]
+            sliced_batch[entry] = fields[start : start + length]
 
     return sliced_batch
 
 
 def dataset_path_iterator_with_base(
-        dir_path: str, file_extension: str) -> Iterator[Tuple[str, str]]:
+    dir_path: str, file_extension: str
+) -> Iterator[Tuple[str, str]]:
     r"""An iterator returning file_paths in a directory containing files of the
     given datasets, including the original directory as the first element.
     """
@@ -101,7 +102,7 @@ def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
     the given datasets.
     """
     if not os.path.exists(dir_path):
-        raise FileNotFoundError('Cannot find the directory [%s].' % dir_path)
+        raise FileNotFoundError("Cannot find the directory [%s]." % dir_path)
 
     for root, _, files in os.walk(dir_path):
         for data_file in files:
@@ -112,9 +113,9 @@ def dataset_path_iterator(dir_path: str, file_extension: str) -> Iterator[str]:
                 yield os.path.join(root, data_file)
 
 
-def modify_text_and_track_ops(original_text: str,
-                              replace_operations: ReplaceOperationsType) -> \
-        Tuple[str, ReplaceOperationsType, List[Tuple[Span, Span]], int]:
+def modify_text_and_track_ops(
+    original_text: str, replace_operations: ReplaceOperationsType
+) -> Tuple[str, ReplaceOperationsType, List[Tuple[Span, Span]], int]:
     r"""Modifies the original text using ``replace_operations`` provided by the
     user to return modified text and other data required for tracking original
     text.
@@ -147,21 +148,23 @@ def modify_text_and_track_ops(original_text: str,
 
     for span, replacement in replace_operations:
         if span.begin < 0 or span.end < 0:
-            raise ValueError(
-                "Negative indexing not supported")
+            raise ValueError("Negative indexing not supported")
         if span.begin > len(original_text) or span.end > len(original_text):
             raise ValueError(
-                "One of the span indices are outside the string length")
+                "One of the span indices are outside the string length"
+            )
         if span.end < span.begin:
             print(span.begin, span.end)
             raise ValueError(
-                "One of the end indices is lesser than start index")
+                "One of the end indices is lesser than start index"
+            )
         if span.begin < prev_span_end:
             raise ValueError(
-                "The replacement spans should be mutually exclusive")
+                "The replacement spans should be mutually exclusive"
+            )
         span_begin = span.begin + increment
         span_end = span.end + increment
-        original_span_text = mod_text[span_begin: span_end]
+        original_span_text = mod_text[span_begin:span_end]
         mod_text = mod_text[:span_begin] + replacement + mod_text[span_end:]
         increment += len(replacement) - (span.end - span.begin)
         replacement_span = Span(span_begin, span_begin + len(replacement))
@@ -169,5 +172,9 @@ def modify_text_and_track_ops(original_text: str,
         processed_original_spans.append((replacement_span, span))
         prev_span_end = span.end
 
-    return (mod_text, replace_back_operations, sorted(processed_original_spans),
-            orig_text_len)
+    return (
+        mod_text,
+        replace_back_operations,
+        sorted(processed_original_spans),
+        orig_text_len,
+    )

@@ -38,20 +38,22 @@ class Span:
         if not isinstance(begin, int) or not isinstance(end, int):
             raise ValueError(
                 f"Begin and End for an annotation must be integer, "
-                f"got {begin}:{type(begin)} and {end}:{type(end)}")
+                f"got {begin}:{type(begin)} and {end}:{type(end)}"
+            )
 
         if begin > end:
             raise ValueError(
-                f"The begin {begin} of span is greater than the end {end}")
+                f"The begin {begin} of span is greater than the end {end}"
+            )
 
         if begin < 0:
-            raise ValueError('The begin cannot be negative.')
+            raise ValueError("The begin cannot be negative.")
 
         self.begin = begin
         self.end = end
 
     def __repr__(self):
-        return f'({self.begin}, {self.end})'
+        return f"({self.begin}, {self.end})"
 
     def __lt__(self, other):
         if self.begin == other.begin:

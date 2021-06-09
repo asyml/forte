@@ -21,6 +21,5 @@ __all__ = [
 
 
 class LowerCaserProcessor(PackProcessor):
-
     def _process(self, input_pack: DataPack):
         input_pack.set_text(input_pack.text.lower())

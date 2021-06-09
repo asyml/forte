@@ -27,10 +27,14 @@ import texar.torch as tx
 import config_data
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_dir", default="data/",
-                    help="Data directory to read the files from")
-parser.add_argument("--output_dir", default="model/",
-                    help="Output directory to write the pickled files")
+parser.add_argument(
+    "--data_dir", default="data/", help="Data directory to read the files from"
+)
+parser.add_argument(
+    "--output_dir",
+    default="model/",
+    help="Output directory to write the pickled files",
+)
 args = parser.parse_args()
 
 
@@ -42,7 +46,7 @@ def get_lr_multiplier(step: int, total_steps: int, warmup_steps: int) -> float:
 
     step = min(step, total_steps)
 
-    multiplier = (1 - (step - warmup_steps) / (total_steps - warmup_steps))
+    multiplier = 1 - (step - warmup_steps) / (total_steps - warmup_steps)
 
     if warmup_steps > 0 and step < warmup_steps:
         warmup_percent_done = step / warmup_steps
@@ -61,31 +65,48 @@ class SiameseBert(nn.Module):
             placement.
     """
 
-    def __init__(self, num_classes: int,
-                 torch_device: Optional[torch.device] = None):
+    def __init__(
+        self, num_classes: int, torch_device: Optional[torch.device] = None
+    ):
         super().__init__()
         self.bert = tx.modules.BERTEncoder(
-            pretrained_model_name="bert-base-uncased")
+            pretrained_model_name="bert-base-uncased"
+        )
         self.bert.to(device=torch_device)
         self.num_classes = num_classes
-        self.classifier = nn.Linear(in_features=3 * self.bert.output_size,
-                                    out_features=num_classes)
+        self.classifier = nn.Linear(
+            in_features=3 * self.bert.output_size, out_features=num_classes
+        )
         self.classifier.to(device=torch_device)
 
-    def forward(self, sent_a_input_ids, sent_a_seq_len, sent_a_segment_ids,
-                sent_b_input_ids, sent_b_seq_len, sent_b_segment_ids):
-        output, _ = self.bert(inputs=sent_a_input_ids,
-                              sequence_length=sent_a_seq_len,
-                              segment_ids=sent_a_segment_ids)
+    def forward(
+        self,
+        sent_a_input_ids,
+        sent_a_seq_len,
+        sent_a_segment_ids,
+        sent_b_input_ids,
+        sent_b_seq_len,
+        sent_b_segment_ids,
+    ):
+        output, _ = self.bert(
+            inputs=sent_a_input_ids,
+            sequence_length=sent_a_seq_len,
+            segment_ids=sent_a_segment_ids,
+        )
         sent_a_embedding = output[:, 0, :]
 
-        output, _ = self.bert(inputs=sent_b_input_ids,
-                              sequence_length=sent_b_seq_len,
-                              segment_ids=sent_b_segment_ids)
+        output, _ = self.bert(
+            inputs=sent_b_input_ids,
+            sequence_length=sent_b_seq_len,
+            segment_ids=sent_b_segment_ids,
+        )
         sent_b_embedding = output[:, 0, :]
 
-        vectors = [sent_a_embedding, sent_b_embedding,
-                   torch.abs(sent_a_embedding - sent_b_embedding)]
+        vectors = [
+            sent_a_embedding,
+            sent_b_embedding,
+            torch.abs(sent_a_embedding - sent_b_embedding),
+        ]
         vectors = torch.cat(vectors, dim=1)
 
         logits = self.classifier(vectors)
@@ -95,11 +116,13 @@ class SiameseBert(nn.Module):
 
 
 def _compute_loss(logits, labels):
-    r"""Compute loss.
-    """
+    r"""Compute loss."""
 
-    loss = F.cross_entropy(logits.view(-1, chatbot_bert.num_classes),
-                           labels.view(-1), reduction='mean')
+    loss = F.cross_entropy(
+        logits.view(-1, chatbot_bert.num_classes),
+        labels.view(-1),
+        reduction="mean",
+    )
     return loss
 
 
@@ -119,7 +142,8 @@ def _train_epoch():
             sent_a_segment_ids=batch["sent_a_segment_ids"],
             sent_b_input_ids=batch["sent_b_input_ids"],
             sent_b_seq_len=batch["sent_b_seq_len"],
-            sent_b_segment_ids=batch["sent_b_segment_ids"])
+            sent_b_segment_ids=batch["sent_b_segment_ids"],
+        )
         labels = batch["label_ids"]
 
         loss = _compute_loss(logits, labels)
@@ -151,13 +175,14 @@ def _eval_epoch(dataset="eval"):
     nsamples = 0
     avg_rec = tx.utils.AverageRecorder()
     for batch in data_iterator:
-        sent_a_embedding, sent_b_embedding, _, preds = \
-            chatbot_bert(sent_a_input_ids=batch["sent_a_input_ids"],
-                         sent_a_seq_len=batch["sent_a_seq_len"],
-                         sent_a_segment_ids=batch["sent_a_segment_ids"],
-                         sent_b_input_ids=batch["sent_b_input_ids"],
-                         sent_b_seq_len=batch["sent_b_seq_len"],
-                         sent_b_segment_ids=batch["sent_b_segment_ids"])
+        sent_a_embedding, sent_b_embedding, _, preds = chatbot_bert(
+            sent_a_input_ids=batch["sent_a_input_ids"],
+            sent_a_seq_len=batch["sent_a_seq_len"],
+            sent_a_segment_ids=batch["sent_a_segment_ids"],
+            sent_b_input_ids=batch["sent_b_input_ids"],
+            sent_b_seq_len=batch["sent_b_seq_len"],
+            sent_b_segment_ids=batch["sent_b_segment_ids"],
+        )
 
         label_ids = batch["label_ids"]
         labels.extend(label_ids.to("cpu").numpy())
@@ -168,15 +193,16 @@ def _eval_epoch(dataset="eval"):
         avg_rec.add([accu], batch["sent_a_input_ids"].size(1))
         nsamples += len(batch)
 
-    cosine_scores = \
-        1 - (paired_cosine_distances(embeddings_a, embeddings_b))
+    cosine_scores = 1 - (paired_cosine_distances(embeddings_a, embeddings_b))
     threshold = 0.5
     predictions = np.array(cosine_scores > threshold, dtype=int)
     cosine_accuracy = np.sum(predictions == labels) / len(labels)
-    print(f"Evaluating on {dataset} dataset."
-          f"Accuracy based on Cosine Similarity: {cosine_accuracy},"
-          f"Accuracy based on logits: {avg_rec.avg(0)},"
-          f"nsamples: {nsamples}")
+    print(
+        f"Evaluating on {dataset} dataset."
+        f"Accuracy based on Cosine Similarity: {cosine_accuracy},"
+        f"Accuracy based on logits: {avg_rec.avg(0)},"
+        f"nsamples: {nsamples}"
+    )
 
 
 if __name__ == "__main__":
@@ -185,8 +211,11 @@ if __name__ == "__main__":
     chatbot_bert = SiameseBert(num_classes=2, torch_device=device)
 
     num_train_data = config_data.num_train_data
-    num_train_steps = int(num_train_data / config_data.train_batch_size *
-                          config_data.max_train_epoch)
+    num_train_steps = int(
+        num_train_data
+        / config_data.train_batch_size
+        * config_data.max_train_epoch
+    )
     num_warmup_steps = int(num_train_steps * config_data.warmup_proportion)
 
     # Builds learning rate decay scheduler
@@ -195,35 +224,47 @@ if __name__ == "__main__":
     vars_with_decay = []
     vars_without_decay = []
     for name, param in chatbot_bert.named_parameters():
-        if 'layer_norm' in name or name.endswith('bias'):
+        if "layer_norm" in name or name.endswith("bias"):
             vars_without_decay.append(param)
         else:
             vars_with_decay.append(param)
 
-    opt_params = [{
-        'params': vars_with_decay,
-        'weight_decay': 0.01,
-    }, {
-        'params': vars_without_decay,
-        'weight_decay': 0.0,
-    }]
+    opt_params = [
+        {
+            "params": vars_with_decay,
+            "weight_decay": 0.01,
+        },
+        {
+            "params": vars_without_decay,
+            "weight_decay": 0.0,
+        },
+    ]
     optim = tx.core.BertAdam(
-        opt_params, betas=(0.9, 0.999), eps=1e-6, lr=static_lr)
+        opt_params, betas=(0.9, 0.999), eps=1e-6, lr=static_lr
+    )
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(
-        optim, functools.partial(get_lr_multiplier,
-                                 total_steps=num_train_steps,
-                                 warmup_steps=num_warmup_steps))
+        optim,
+        functools.partial(
+            get_lr_multiplier,
+            total_steps=num_train_steps,
+            warmup_steps=num_warmup_steps,
+        ),
+    )
 
     train_dataset = tx.data.RecordData(
-        hparams=config_data.train_hparam, device=device)
+        hparams=config_data.train_hparam, device=device
+    )
     eval_dataset = tx.data.RecordData(
-        hparams=config_data.eval_hparam, device=device)
+        hparams=config_data.eval_hparam, device=device
+    )
     test_dataset = tx.data.RecordData(
-        hparams=config_data.test_hparam, device=device)
+        hparams=config_data.test_hparam, device=device
+    )
 
     data_iterator = tx.data.DataIterator(
-        {"train": train_dataset, "eval": eval_dataset, "test": test_dataset})
+        {"train": train_dataset, "eval": eval_dataset, "test": test_dataset}
+    )
 
     for _ in range(config_data.max_train_epoch):
         print("Finetuning BERT for chatbot...")
@@ -233,8 +274,8 @@ if __name__ == "__main__":
 
     print("Saving the model...")
     states = {
-        'bert': chatbot_bert.bert.state_dict(),
-        'classifier': chatbot_bert.classifier.state_dict()
+        "bert": chatbot_bert.bert.state_dict(),
+        "classifier": chatbot_bert.classifier.state_dict(),
     }
-    with open(Path(args.output_dir, 'chatbot_model.ckpt'), "wb") as f:
+    with open(Path(args.output_dir, "chatbot_model.ckpt"), "wb") as f:
         pickle.dump(states, f)

@@ -21,19 +21,25 @@ from unittest import TestCase
 
 from forte.common import Resources
 from forte.data.data_pack import DataPack
-from forte.datasets.wikipedia.dbpedia import DBpediaWikiReader, \
-    WikiArticleWriter, WikiStructReader, WikiAnchorReader, WikiInfoBoxReader, \
-    WikiPropertyReader
+from forte.datasets.wikipedia.dbpedia import (
+    DBpediaWikiReader,
+    WikiArticleWriter,
+    WikiStructReader,
+    WikiAnchorReader,
+    WikiInfoBoxReader,
+    WikiPropertyReader,
+)
 from forte.pipeline import Pipeline
 
 
 def write_results(pl: Pipeline, output_path: str, input_data: str):
     pl.add(
-        WikiArticleWriter(), config={
-            'output_dir': output_path,
-            'zip_pack': True,
-            'drop_record': True,
-        }
+        WikiArticleWriter(),
+        config={
+            "output_dir": output_path,
+            "zip_pack": True,
+            "drop_record": True,
+        },
     )
     pl.run(input_data)
 
@@ -45,33 +51,35 @@ class TestDBpediaReaders(TestCase):
         self.resources: Resources = Resources()
         self.resources.update(redirects={})
 
-        self.data_dir: str = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            '../../../../../data_samples/dbpedia'
-        ))
+        self.data_dir: str = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "../../../../../data_samples/dbpedia",
+            )
+        )
 
         self.output_dir = tempfile.TemporaryDirectory()
 
-        self.raw_output: str = os.path.join(self.output_dir.name, 'raw')
+        self.raw_output: str = os.path.join(self.output_dir.name, "raw")
 
         pl = Pipeline[DataPack](self.resources)
         pl.set_reader(DBpediaWikiReader())
         pl.add(
-            WikiArticleWriter(), config={
-                'output_dir': self.raw_output,
-                'zip_pack': True,
-                'drop_record': True,
-            }
+            WikiArticleWriter(),
+            config={
+                "output_dir": self.raw_output,
+                "zip_pack": True,
+                "drop_record": True,
+            },
         )
-        pl.run(os.path.join(self.data_dir, 'nif_context.tql'))
+        pl.run(os.path.join(self.data_dir, "nif_context.tql"))
 
     def num_packs_check(self, output: str, expected: int):
         num_packs_written: int = len(glob.glob(output + "/**/*.json.gz"))
         self.assertEqual(num_packs_written, expected)
 
     def num_indexed(self, output: str, expected: int):
-        num_article_indices: int = sum(
-            1 for _ in open(output + '/article.idx'))
+        num_article_indices: int = sum(1 for _ in open(output + "/article.idx"))
         self.assertEqual(num_article_indices, expected)
 
     def test_wiki_text(self):
@@ -81,16 +89,16 @@ class TestDBpediaReaders(TestCase):
     def test_struct(self):
         pl = Pipeline[DataPack](self.resources)
         pl.set_reader(
-            WikiStructReader(), config={
-                'pack_index': os.path.join(self.raw_output, 'article.idx'),
-                'pack_dir': self.raw_output,
-            }
+            WikiStructReader(),
+            config={
+                "pack_index": os.path.join(self.raw_output, "article.idx"),
+                "pack_dir": self.raw_output,
+            },
         )
 
-        output: str = os.path.join(self.output_dir.name, 'struct')
+        output: str = os.path.join(self.output_dir.name, "struct")
         write_results(
-            pl, output,
-            os.path.join(self.data_dir, 'nif_page_structure.tql')
+            pl, output, os.path.join(self.data_dir, "nif_page_structure.tql")
         )
         self.num_packs_check(output, 1)
         self.num_indexed(output, 1)
@@ -98,16 +106,14 @@ class TestDBpediaReaders(TestCase):
     def test_anchor(self):
         pl = Pipeline[DataPack](self.resources)
         pl.set_reader(
-            WikiAnchorReader(), config={
-                'pack_index': os.path.join(self.raw_output, 'article.idx'),
-                'pack_dir': self.raw_output,
-            }
+            WikiAnchorReader(),
+            config={
+                "pack_index": os.path.join(self.raw_output, "article.idx"),
+                "pack_dir": self.raw_output,
+            },
         )
-        output: str = os.path.join(self.output_dir.name, 'anchor')
-        write_results(
-            pl, output,
-            os.path.join(self.data_dir, 'text_links.tql')
-        )
+        output: str = os.path.join(self.output_dir.name, "anchor")
+        write_results(pl, output, os.path.join(self.data_dir, "text_links.tql"))
 
         self.num_packs_check(output, 1)
         self.num_indexed(output, 1)
@@ -115,15 +121,17 @@ class TestDBpediaReaders(TestCase):
     def test_property(self):
         pl = Pipeline[DataPack](self.resources)
         pl.set_reader(
-            WikiPropertyReader(), config={
-                'pack_index': os.path.join(self.raw_output, 'article.idx'),
-                'pack_dir': self.raw_output,
-            }
+            WikiPropertyReader(),
+            config={
+                "pack_index": os.path.join(self.raw_output, "article.idx"),
+                "pack_dir": self.raw_output,
+            },
         )
-        output: str = os.path.join(self.output_dir.name, 'property')
+        output: str = os.path.join(self.output_dir.name, "property")
         write_results(
-            pl, output,
-            os.path.join(self.data_dir, 'info_box_property_mapped.tql')
+            pl,
+            output,
+            os.path.join(self.data_dir, "info_box_property_mapped.tql"),
         )
 
         self.num_packs_check(output, 1)
@@ -132,17 +140,14 @@ class TestDBpediaReaders(TestCase):
     def test_infobox(self):
         pl = Pipeline[DataPack](self.resources)
         pl.set_reader(
-            WikiInfoBoxReader(), config={
-                'pack_index': os.path.join(
-                    self.raw_output, 'article.idx'),
-                'pack_dir': self.raw_output,
-            }
+            WikiInfoBoxReader(),
+            config={
+                "pack_index": os.path.join(self.raw_output, "article.idx"),
+                "pack_dir": self.raw_output,
+            },
         )
-        output: str = os.path.join(self.output_dir.name, 'literals')
-        write_results(
-            pl, output,
-            os.path.join(self.data_dir, 'literals.tql')
-        )
+        output: str = os.path.join(self.output_dir.name, "literals")
+        write_results(pl, output, os.path.join(self.data_dir, "literals.tql"))
 
         self.num_packs_check(output, 1)
         self.num_indexed(output, 1)

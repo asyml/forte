@@ -13,8 +13,10 @@ from ddt import ddt, data
 
 from forte.data.data_pack import DataPack
 from forte.data.ontology.ontology_code_generator import OntologyCodeGenerator
-from forte.data.readers.stave_readers import StaveMultiDocSqlReader, \
-    StaveDataPackSqlReader
+from forte.data.readers.stave_readers import (
+    StaveMultiDocSqlReader,
+    StaveDataPackSqlReader,
+)
 from forte.pipeline import Pipeline
 
 
@@ -39,11 +41,11 @@ def build_ontology(sql_db, project_name):
     onto_path = "./stave_test_onto"
     res = query(
         sql_db,
-        f'SELECT ontology FROM nlpviewer_backend_project '
-        f'WHERE nlpviewer_backend_project.name = '
-        f'"{project_name}"'
+        f"SELECT ontology FROM nlpviewer_backend_project "
+        f"WHERE nlpviewer_backend_project.name = "
+        f'"{project_name}"',
     ).fetchone()[0]
-    with tempfile.NamedTemporaryFile('w') as onto_file:
+    with tempfile.NamedTemporaryFile("w") as onto_file:
         onto_file.write(res)
         OntologyCodeGenerator().generate(
             onto_file.name, onto_path, lenient_prefix=True
@@ -53,7 +55,7 @@ def build_ontology(sql_db, project_name):
 
     # Make sure we can import the newly generated modules.
     try:
-        importlib.import_module('edu.cmu')
+        importlib.import_module("edu.cmu")
     except Exception:
         pass
 
@@ -62,20 +64,26 @@ def build_ontology(sql_db, project_name):
 class StaveReaderTest(unittest.TestCase):
     def setUp(self):
         self.datapack_table: str = StaveMultiDocSqlReader.default_configs()[
-            'datapack_table']
+            "datapack_table"
+        ]
         self.multipack_table: str = StaveMultiDocSqlReader.default_configs()[
-            'multipack_table']
+            "multipack_table"
+        ]
         self.project_table: str = StaveDataPackSqlReader.default_configs()[
-            'project_table'
+            "project_table"
         ]
 
         # This path correspond to the .travis.yml.
-        self.sql_db: str = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            *([os.path.pardir] * 4), 'db.sqlite3'))
+        self.sql_db: str = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                *([os.path.pardir] * 4),
+                "db.sqlite3",
+            )
+        )
         self.assertTrue(os.path.exists(self.sql_db))
 
-    @data('project-1-example', 'project-2-example')
+    @data("project-1-example", "project-2-example")
     def test_stave_reader_project(self, project_name: str):
         build_ontology(self.sql_db, project_name)
 
@@ -84,15 +92,18 @@ class StaveReaderTest(unittest.TestCase):
             self.sql_db,
             f"SELECT Count(*) FROM {self.datapack_table}, {self.project_table} "
             f"WHERE {self.datapack_table}.project_id = {self.project_table}.id "
-            f"AND {self.project_table}.name = '{project_name}'"
+            f"AND {self.project_table}.name = '{project_name}'",
         ).fetchone()[0]
 
         # Read the data packs using the reader.
         nlp: Pipeline[DataPack] = Pipeline[DataPack]()
-        nlp.set_reader(StaveDataPackSqlReader(), config={
-            "stave_db_path": self.sql_db,
-            "target_project_name": project_name
-        })
+        nlp.set_reader(
+            StaveDataPackSqlReader(),
+            config={
+                "stave_db_path": self.sql_db,
+                "target_project_name": project_name,
+            },
+        )
         nlp.initialize()
 
         read_pack_count = 0
@@ -102,5 +113,5 @@ class StaveReaderTest(unittest.TestCase):
         self.assertEqual(pack_count, read_pack_count)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

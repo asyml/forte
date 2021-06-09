@@ -30,6 +30,7 @@ class SubwordTokenizer(PackProcessor):
     """
     Subword Tokenizer using pretrained Bert model.
     """
+
     # pylint: disable=attribute-defined-outside-init,unused-argument
     def initialize(self, resources: Resources, configs: Config):
         super().initialize(resources, configs)
@@ -41,7 +42,8 @@ class SubwordTokenizer(PackProcessor):
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=None,
-            hparams=None)
+            hparams=None,
+        )
 
     def _process(self, input_pack: DataPack):
         subword_tokenizer = self.tokenizer.wordpiece_tokenizer
@@ -49,15 +51,16 @@ class SubwordTokenizer(PackProcessor):
             subwords = subword_tokenizer.tokenize_with_span(token.text)
             for subword, start, end in subwords:
                 subword_token = Subword(
-                        input_pack,
-                        token.begin + start,
-                        token.begin + end)
-                subword_token.is_first_segment = not subword.startswith('##')
+                    input_pack, token.begin + start, token.begin + end
+                )
+                subword_token.is_first_segment = not subword.startswith("##")
 
     @classmethod
     def default_configs(cls):
         configs = super().default_configs()
-        configs.update({
-            "pretrained_model_name": None,
-        })
+        configs.update(
+            {
+                "pretrained_model_name": None,
+            }
+        )
         return configs

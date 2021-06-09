@@ -40,9 +40,7 @@ from forte.processors.base import PackProcessor
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "StaveProcessor"
-]
+__all__ = ["StaveProcessor"]
 
 
 class StaveProcessor(PackProcessor):
@@ -112,25 +110,28 @@ class StaveProcessor(PackProcessor):
         # Validate multi_pack project config:
         #   A `multi_pack` project must have `multi_ontology` set.
         if self.configs.project_type != "single_pack" and (
-            self.configs.project_type != "multi_pack" or
-            self.configs.multi_ontology is None):
+            self.configs.project_type != "multi_pack"
+            or self.configs.multi_ontology is None
+        ):
             raise ProcessorConfigError("Invalid project type configuration.")
 
         # Generate default configurations
         self.configs.project_configs = Config(
             hparams=self.configs.project_configs,
-            default_hparams=self._default_project_configs()
+            default_hparams=self._default_project_configs(),
         )
-        self.configs.multi_ontology = \
-            self.configs.multi_ontology or Config({}, {})
+        self.configs.multi_ontology = self.configs.multi_ontology or Config(
+            {}, {}
+        )
         self.configs.project_path = os.path.abspath(
-            self.configs.project_path or self.configs.project_name)
+            self.configs.project_path or self.configs.project_name
+        )
 
         self._viewer = StaveViewer(
             project_path=self.configs.project_path,
             host=self.configs.host,
             port=self.configs.port,
-            thread_daemon=self.configs.server_thread_daemon
+            thread_daemon=self.configs.server_thread_daemon,
         )
 
         #  Write meta data to project folder
@@ -140,7 +141,7 @@ class StaveProcessor(PackProcessor):
             project_type=self.configs.project_type,
             ontology=self.resources.get("onto_specs_dict"),
             project_configs=self.configs.project_configs.todict(),
-            multi_ontology=self.configs.multi_ontology.todict()
+            multi_ontology=self.configs.multi_ontology.todict(),
         )
 
     def _process(self, input_pack: DataPack):
@@ -151,9 +152,9 @@ class StaveProcessor(PackProcessor):
         if self._viewer.server_started:
             textpack_id = self._project_writer.write_textpack(
                 input_pack.pack_name
-                    if self.configs.use_pack_name
-                    else input_pack.pack_id,
-                input_pack.serialize()
+                if self.configs.use_pack_name
+                else input_pack.pack_id,
+                input_pack.serialize(),
             )
             if textpack_id == 0:
                 self._viewer.open()
@@ -171,10 +172,13 @@ class StaveProcessor(PackProcessor):
         """
         # pylint: enable=line-too-long
 
-        if not (self.resources.contains("onto_specs_dict") and
-            self.resources.contains("merged_entry_tree")):
+        if not (
+            self.resources.contains("onto_specs_dict")
+            and self.resources.contains("merged_entry_tree")
+        ):
             raise ProcessorConfigError(
-                "onto_specs_dict/merged_entry_tree is not set in resources.")
+                "onto_specs_dict/merged_entry_tree is not set in resources."
+            )
         ontology = self.resources.get("onto_specs_dict")
         entry_tree = self.resources.get("merged_entry_tree")
 
@@ -185,8 +189,8 @@ class StaveProcessor(PackProcessor):
                 "center-middle": "default-nlp",
                 "left": "default-meta",
                 "right": "default-attribute",
-                "center-bottom": "disable"
-            }
+                "center-bottom": "disable",
+            },
         }
 
         # Create legend configs
@@ -209,15 +213,15 @@ class StaveProcessor(PackProcessor):
 
         # Find all subclass of `forte.data.ontology.top.Annotation` and
         # update `scopeConfigs` accordingly.
-        queue = collections.deque([
-            search(entry_tree.root, "forte.data.ontology.top.Annotation")
-        ])
+        queue = collections.deque(
+            [search(entry_tree.root, "forte.data.ontology.top.Annotation")]
+        )
         while queue:
             size = len(queue)
             for _ in range(size):
                 node = queue.pop()
                 if node.name in entry_name_set:
-                    configs['scopeConfigs'][node.name] = False
+                    configs["scopeConfigs"][node.name] = False
                 for entry in node.children:
                     queue.appendleft(entry)
         return configs
@@ -250,16 +254,18 @@ class StaveProcessor(PackProcessor):
         """
         config = super().default_configs()
 
-        config.update({
-            "project_path": None,
-            "port": 8888,
-            "host": "localhost",
-            "project_type": "single_pack",
-            "project_name": "Auto generated project",
-            "multi_ontology": None,
-            "project_configs": None,
-            "server_thread_daemon": False,
-            "use_pack_name": False
-        })
+        config.update(
+            {
+                "project_path": None,
+                "port": 8888,
+                "host": "localhost",
+                "project_type": "single_pack",
+                "project_name": "Auto generated project",
+                "multi_ontology": None,
+                "project_configs": None,
+                "server_thread_daemon": False,
+                "use_pack_name": False,
+            }
+        )
 
         return config

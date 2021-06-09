@@ -28,21 +28,29 @@ from forte.common.resources import Resources
 from forte.data.base_pack import BasePack
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
-from forte.processors.base.pack_processor import PackProcessor, \
-    MultiPackProcessor
+from forte.processors.base.pack_processor import (
+    PackProcessor,
+    MultiPackProcessor,
+)
 from forte.utils.utils_io import maybe_create_dir, ensure_dir
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'JsonPackWriter',
-    'MultiPackWriter',
+    "JsonPackWriter",
+    "MultiPackWriter",
 ]
 
 
-def write_pack(input_pack: BasePack, output_dir: str, sub_path: str,
-               indent: Optional[int] = None, zip_pack: bool = False,
-               overwrite: bool = False, drop_record: bool = False) -> str:
+def write_pack(
+    input_pack: BasePack,
+    output_dir: str,
+    sub_path: str,
+    indent: Optional[int] = None,
+    zip_pack: bool = False,
+    overwrite: bool = False,
+    drop_record: bool = False,
+) -> str:
     """
     Write a pack to a path.
 
@@ -71,10 +79,10 @@ def write_pack(input_pack: BasePack, output_dir: str, sub_path: str,
             out_str = json.dumps(json.loads(out_str), indent=indent)
 
         if zip_pack:
-            with gzip.open(output_path, 'wt') as out:
+            with gzip.open(output_path, "wt") as out:
                 out.write(out_str)
         else:
-            with open(output_path, 'w') as out:
+            with open(output_path, "w") as out:
                 out.write(out_str)
     else:
         logging.info("Will not overwrite existing path %s", output_path)
@@ -93,8 +101,10 @@ class JsonPackWriter(PackProcessor, ABC):
         super().initialize(resources, configs)
 
         if not configs.output_dir:
-            raise NotADirectoryError('Root output directory is not defined '
-                                     'correctly in the configs.')
+            raise NotADirectoryError(
+                "Root output directory is not defined "
+                "correctly in the configs."
+            )
 
         if not os.path.exists(configs.output_dir):
             os.makedirs(configs.output_dir)
@@ -113,34 +123,40 @@ class JsonPackWriter(PackProcessor, ABC):
 
     @classmethod
     def default_configs(cls):
-        r"""This defines a basic ``Hparams`` structure.
-        """
+        r"""This defines a basic ``Hparams`` structure."""
         config = super().default_configs()
-        config.update({
-            'output_dir': None,
-            'zip_pack': False,
-            'indent': None,
-            'drop_record': False
-        })
+        config.update(
+            {
+                "output_dir": None,
+                "zip_pack": False,
+                "indent": None,
+                "drop_record": False,
+            }
+        )
         return config
 
     def _process(self, input_pack: DataPack):
         sub_path = self.sub_output_path(input_pack)
-        if sub_path == '':
-            raise ValueError(
-                "No concrete path provided from sub_output_path.")
+        if sub_path == "":
+            raise ValueError("No concrete path provided from sub_output_path.")
 
         maybe_create_dir(self.configs.output_dir)
-        write_pack(input_pack, self.configs.output_dir, sub_path,
-                   self.configs.indent, self.configs.zip_pack,
-                   self.configs.overwrite, self.configs.drop_record)
+        write_pack(
+            input_pack,
+            self.configs.output_dir,
+            sub_path,
+            self.configs.indent,
+            self.configs.zip_pack,
+            self.configs.overwrite,
+            self.configs.drop_record,
+        )
 
 
 class MultiPackWriter(MultiPackProcessor):
-    pack_base_out = 'packs'
-    multi_base = 'multi'
-    pack_idx = 'pack.idx'
-    multi_idx = 'multi.idx'
+    pack_base_out = "packs"
+    multi_base = "multi"
+    pack_idx = "pack.idx"
+    multi_idx = "multi.idx"
 
     def initialize(self, resources: Resources, configs: Config):
         # pylint: disable=attribute-defined-outside-init
@@ -148,11 +164,11 @@ class MultiPackWriter(MultiPackProcessor):
 
         pack_paths = os.path.join(self.configs.output_dir, self.pack_idx)
         ensure_dir(pack_paths)
-        self.pack_idx_out = open(pack_paths, 'w')
+        self.pack_idx_out = open(pack_paths, "w")
 
         multi_index = os.path.join(self.configs.output_dir, self.multi_idx)
         ensure_dir(multi_index)
-        self.multi_idx_out = open(multi_index, 'w')
+        self.multi_idx_out = open(multi_index, "w")
 
     def pack_name(self, pack: DataPack) -> str:
         r"""Allow defining output name using the information of the datapack.
@@ -176,24 +192,34 @@ class MultiPackWriter(MultiPackProcessor):
 
         for pack in input_pack.packs:
             pack_out = write_pack(
-                pack, pack_out_dir, self.pack_name(pack), self.configs.indent,
-                self.configs.zip_pack, self.configs.overwrite,
-                self.configs.drop_record)
+                pack,
+                pack_out_dir,
+                self.pack_name(pack),
+                self.configs.indent,
+                self.configs.zip_pack,
+                self.configs.overwrite,
+                self.configs.drop_record,
+            )
 
             self.pack_idx_out.write(
-                f'{pack.pack_id}\t'
-                f'{posixpath.relpath(pack_out, self.configs.output_dir)}\n')
+                f"{pack.pack_id}\t"
+                f"{posixpath.relpath(pack_out, self.configs.output_dir)}\n"
+            )
 
         multi_out = write_pack(
-            input_pack, multi_out_dir,
-            self.multipack_name(input_pack), self.configs.indent,
-            self.configs.zip_pack, self.configs.overwrite,
-            self.configs.drop_record
+            input_pack,
+            multi_out_dir,
+            self.multipack_name(input_pack),
+            self.configs.indent,
+            self.configs.zip_pack,
+            self.configs.overwrite,
+            self.configs.drop_record,
         )
 
         self.multi_idx_out.write(
-            f'{input_pack.pack_id}\t'
-            f'{posixpath.relpath(multi_out, self.configs.output_dir)}\n')
+            f"{input_pack.pack_id}\t"
+            f"{posixpath.relpath(multi_out, self.configs.output_dir)}\n"
+        )
 
     def finish(self, _):
         self.pack_idx_out.close()
@@ -202,10 +228,12 @@ class MultiPackWriter(MultiPackProcessor):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            'output_dir': None,
-            'zip_pack': False,
-            'indent': None,
-            'drop_record': False
-        })
+        config.update(
+            {
+                "output_dir": None,
+                "zip_pack": False,
+                "indent": None,
+                "drop_record": False,
+            }
+        )
         return config

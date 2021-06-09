@@ -34,10 +34,7 @@ class DummyObject:
 
 class ResourcesTest(unittest.TestCase):
     def setUp(self):
-        self.kwargs = {
-            '1': 'one',
-            'dummy': DummyObject(1, 2)
-        }
+        self.kwargs = {"1": "one", "dummy": DummyObject(1, 2)}
         self.resources = Resources(**self.kwargs)
         self.output_dir = tempfile.mkdtemp()
 
@@ -63,5 +60,5 @@ class ResourcesTest(unittest.TestCase):
         shutil.rmtree(self.output_dir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -23,9 +23,7 @@ from forte.data.base_extractor import BaseExtractor
 from forte.data.ontology.core import Entry
 from forte.data.ontology.top import Annotation
 
-__all__ = [
-    "AttributeExtractor"
-]
+__all__ = ["AttributeExtractor"]
 
 
 class AttributeExtractor(BaseExtractor):
@@ -77,8 +75,9 @@ class AttributeExtractor(BaseExtractor):
             value (Any): The value to be set for the attribute.
         """
         if attr == "text":
-            raise AttributeError("text attribute of entry cannot "
-                                 "be changed.")
+            raise AttributeError(
+                "text attribute of entry cannot " "be changed."
+            )
         setattr(entry, attr, value)
 
     def update_vocab(self, pack: DataPack, instance: Annotation):
@@ -103,7 +102,8 @@ class AttributeExtractor(BaseExtractor):
                     "added into the vocabulary. Consider setting"
                     "vocab_method to be raw and do not call update_vocab"
                     "if you only need the raw attribute value without"
-                    "converting them into index.")
+                    "converting them into index."
+                )
             self.add(element)
 
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
@@ -125,14 +125,14 @@ class AttributeExtractor(BaseExtractor):
             rep = self.element2repr(value) if self.vocab else value
             data.append(rep)
 
-        meta_data = {"need_pad": self.config.need_pad,
-                     "pad_value": self.get_pad_value(),
-                     "dim": 1,
-                     "dtype": int if self.vocab else Any}
+        meta_data = {
+            "need_pad": self.config.need_pad,
+            "pad_value": self.get_pad_value(),
+            "dim": 1,
+            "dtype": int if self.vocab else Any,
+        }
 
-        return Feature(data=data,
-                       metadata=meta_data,
-                       vocab=self.vocab)
+        return Feature(data=data, metadata=meta_data, vocab=self.vocab)
 
     def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
         r"""This function is performed on the pack before the evaluation
@@ -149,8 +149,12 @@ class AttributeExtractor(BaseExtractor):
         for entry in pack.get(self._entry_type, instance):
             self._set_attribute(entry, self.config.attribute, None)
 
-    def add_to_pack(self, pack: DataPack, instance: Annotation,
-                    prediction: Iterable[Union[int, Any]]):
+    def add_to_pack(
+        self,
+        pack: DataPack,
+        instance: Annotation,
+        prediction: Iterable[Union[int, Any]],
+    ):
         r"""Add the prediction for attribute to the
         instance. If the prediction is an iterable object, we assume
         each of the element in prediction will correspond to one entry.

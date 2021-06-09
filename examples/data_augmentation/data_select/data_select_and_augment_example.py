@@ -28,26 +28,28 @@ logging.root.setLevel(logging.INFO)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", default="./config.yml",
-                        help="Config YAML filepath")
+    parser.add_argument(
+        "--config_file", default="./config.yml", help="Config YAML filepath"
+    )
     args = parser.parse_args()
 
     # loading config
     config = yaml.safe_load(open(args.config_file, "r"))
 
     nlp: Pipeline[MultiPack] = Pipeline()
-    nlp.set_reader(RandomDataSelector(),
-                   config=config["data_selector_config"])
+    nlp.set_reader(RandomDataSelector(), config=config["data_selector_config"])
     nlp.add(component=MultiPackBoxer(), config=config["boxer_config"])
     nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
     nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
-    nlp.add(component=ReplacementDataAugmentProcessor(),
-            config=config["da_processor_config"])
+    nlp.add(
+        component=ReplacementDataAugmentProcessor(),
+        config=config["da_processor_config"],
+    )
 
     nlp.initialize()
 
     for _, m_pack in enumerate(nlp.process_dataset()):
-        aug_pack = m_pack.get_pack('augmented_input')
+        aug_pack = m_pack.get_pack("augmented_input")
         logging.info(aug_pack.text)
 
 

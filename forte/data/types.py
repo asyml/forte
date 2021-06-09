@@ -17,10 +17,7 @@ from typing import Dict, List, Tuple, Type, Union
 from forte.data.span import Span
 from forte.data.ontology.core import Entry
 
-__all__ = [
-    "ReplaceOperationsType",
-    "DataRequest"
-]
+__all__ = ["ReplaceOperationsType", "DataRequest"]
 
 ReplaceOperationsType = List[Tuple[Span, str]]
 

@@ -23,9 +23,7 @@ from forte.processors.base import MultiPackProcessor
 from forte.utils import create_class_with_kwargs
 from ft.onto.base_ontology import Document
 
-__all__ = [
-    "SearchProcessor"
-]
+__all__ = ["SearchProcessor"]
 
 
 class SearchProcessor(MultiPackProcessor):
@@ -36,9 +34,7 @@ class SearchProcessor(MultiPackProcessor):
         # Replace explicit class with configuration class name.
         self.index = create_class_with_kwargs(
             self.configs.indexer_class,
-            class_args={
-                'config': self.configs.indexer_configs
-            }
+            class_args={"config": self.configs.indexer_configs},
         )
         self.index.load(self.configs.model_dir)
         self.k = self.configs.k or 5
@@ -55,22 +51,24 @@ class SearchProcessor(MultiPackProcessor):
             pack.set_text(doc)
 
             Document(pack, 0, len(doc))
-            packs[self.configs.response_pack_name_prefix + f'_{i}'] = pack
+            packs[self.configs.response_pack_name_prefix + f"_{i}"] = pack
 
         input_pack.update_pack(packs)
 
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            'model_dir': None,
-            'response_pack_name_prefix': 'doc',
-            'indexer_class': 'forte.faiss.embedding_based_indexer'
-                             '.EmbeddingBasedIndexer',
-            'indexer_configs': {
-                "index_type": "GpuIndexFlatIP",
-                "dim": 768,
-                "device": "gpu0"
+        config.update(
+            {
+                "model_dir": None,
+                "response_pack_name_prefix": "doc",
+                "indexer_class": "forte.faiss.embedding_based_indexer"
+                ".EmbeddingBasedIndexer",
+                "indexer_configs": {
+                    "index_type": "GpuIndexFlatIP",
+                    "dim": 768,
+                    "device": "gpu0",
+                },
             }
-        })
+        )
         return config

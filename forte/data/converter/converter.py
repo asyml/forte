@@ -22,9 +22,7 @@ from forte.data.converter.feature import Feature
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "Converter"
-]
+__all__ = ["Converter"]
 
 
 class Converter:
@@ -43,9 +41,11 @@ class Converter:
     """
 
     def __init__(self, config: Union[Dict, Config] = None):
-        self._config = Config(config,
-                              default_hparams=self.default_configs(),
-                              allow_new_hparam=True)
+        self._config = Config(
+            config,
+            default_hparams=self.default_configs(),
+            allow_new_hparam=True,
+        )
 
     @staticmethod
     def default_configs():
@@ -79,10 +79,7 @@ class Converter:
             is True and `to_torch` is True, `to_torch` will overwrite the
             effect of `to_numpy`.
         """
-        return {
-            "to_numpy": True,
-            "to_torch": True
-        }
+        return {"to_numpy": True, "to_torch": True}
 
     @property
     def to_numpy(self) -> bool:
@@ -94,17 +91,13 @@ class Converter:
 
     @property
     def state(self) -> Dict:
-        return {
-            "to_numpy": self.to_numpy,
-            "to_torch": self.to_torch
-        }
+        return {"to_numpy": self.to_numpy, "to_torch": self.to_torch}
 
     def load_state(self, state: Dict):
         self._config.to_numpy = state["to_numpy"]
         self._config.to_torch = state["to_torch"]
 
-    def convert(self, features: List[Feature]) -> \
-            Tuple[Any, List[Any]]:
+    def convert(self, features: List[Feature]) -> Tuple[Any, List[Any]]:
         """
         Convert a list of Features to actual data, where
 
@@ -246,8 +239,10 @@ class Converter:
         need_pad: bool = features[0].need_pad
 
         if need_pad and self.to_torch and not self.to_numpy:
-            logger.warning("need_pad is True and to_torch is True, "
-                           "setting to_numpy to False will be ignored.")
+            logger.warning(
+                "need_pad is True and to_torch is True, "
+                "setting to_numpy to False will be ignored."
+            )
 
         # Do padding if needed
         if need_pad:
@@ -279,22 +274,22 @@ class Converter:
 
         # Note: to_torch == True overwrite to_numpy option
         if self.to_torch:
-            data_tensor: torch.Tensor = \
-                self._to_tensor_type(data_list, dtype)
+            data_tensor: torch.Tensor = self._to_tensor_type(data_list, dtype)
             masks_tensor_list: List[torch.Tensor] = []
             for batch_masks_dim_i in masks_list:
                 masks_tensor_list.append(
-                    self._to_tensor_type(batch_masks_dim_i, np.bool))
+                    self._to_tensor_type(batch_masks_dim_i, np.bool)
+                )
 
             return data_tensor, masks_tensor_list
 
         if self.to_numpy:
-            data_np: np.ndarray = \
-                self._to_numpy_type(data_list, dtype)
+            data_np: np.ndarray = self._to_numpy_type(data_list, dtype)
             masks_np_list: List[np.ndarray] = []
             for batch_masks_dim_i in masks_list:
                 masks_np_list.append(
-                    self._to_numpy_type(batch_masks_dim_i, np.bool))
+                    self._to_numpy_type(batch_masks_dim_i, np.bool)
+                )
 
             return data_np, masks_np_list
 
@@ -314,10 +309,12 @@ class Converter:
             else:
                 if dtype != feature.dtype:
                     raise ValidationError(
-                        "The dtype should be same within a batch of Features")
+                        "The dtype should be same within a batch of Features"
+                    )
             if not feature.need_pad:
                 raise ValidationError(
-                    "Inconsistent need pad flag for a batch of Features")
+                    "Inconsistent need pad flag for a batch of Features"
+                )
             queue.append(feature)
             curr_max_len = max(curr_max_len, len(feature))
 
@@ -330,8 +327,7 @@ class Converter:
 
                 if not feature.leaf_feature:
                     for sub_feature in feature.sub_features:
-                        next_max_len = max(next_max_len,
-                                           len(sub_feature))
+                        next_max_len = max(next_max_len, len(sub_feature))
                         queue.append(sub_feature)
 
                 size -= 1

@@ -4,10 +4,7 @@ from typing import Optional
 
 from forte.data.base_pack import PackType
 
-__all__ = [
-    "ProcessJobStatus",
-    "ProcessJob"
-]
+__all__ = ["ProcessJobStatus", "ProcessJob"]
 
 ProcessJobStatus = Enum("ProcessJobStatus", "UNPROCESSED QUEUED PROCESSED")
 

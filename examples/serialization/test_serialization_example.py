@@ -22,21 +22,28 @@ import subprocess
 class SerializationExampleTest(unittest.TestCase):
     def test_run_example(self):
         curr_dir = os.path.dirname(__file__)
-        data_path = os.path.abspath(os.path.join(
-            curr_dir, '../../', 'data_samples', 'ontonotes/one_file'))
+        data_path = os.path.abspath(
+            os.path.join(
+                curr_dir, "../../", "data_samples", "ontonotes/one_file"
+            )
+        )
 
         subprocess.call(
-            ['python', os.path.join(curr_dir, 'serialize_example.py'),
-             data_path])
+            [
+                "python",
+                os.path.join(curr_dir, "serialize_example.py"),
+                data_path,
+            ]
+        )
 
-        self.assertTrue(os.path.exists(os.path.join('multi_out', 'multi.idx')))
-        self.assertTrue(os.path.exists(os.path.join('multi_out', 'pack.idx')))
-        self.assertTrue(os.path.exists(os.path.join('multi_out', 'packs')))
-        self.assertTrue(os.path.exists(os.path.join('multi_out', 'multi')))
+        self.assertTrue(os.path.exists(os.path.join("multi_out", "multi.idx")))
+        self.assertTrue(os.path.exists(os.path.join("multi_out", "pack.idx")))
+        self.assertTrue(os.path.exists(os.path.join("multi_out", "packs")))
+        self.assertTrue(os.path.exists(os.path.join("multi_out", "multi")))
 
-        self.assertTrue(os.path.exists('pack_out'))
+        self.assertTrue(os.path.exists("pack_out"))
 
-        with open(os.path.join('multi_out', 'multi.idx')) as f:
+        with open(os.path.join("multi_out", "multi.idx")) as f:
             for line in f:
-                self.assertTrue('/' in line)
-                self.assertTrue('\\' not in line)
+                self.assertTrue("/" in line)
+                self.assertTrue("\\" not in line)

@@ -26,22 +26,26 @@ from ft.onto.base_ontology import Token, Sentence, PredicateLink
 
 
 class DummyPackProcessor(PackProcessor):
-
     def _process(self, input_pack: DataPack):
         pass
 
 
 class OntonotesReaderPipelineTest(unittest.TestCase):
-
     def setUp(self):
-        root_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            os.pardir, os.pardir, os.pardir, os.pardir
-        ))
+        root_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                os.pardir,
+                os.pardir,
+                os.pardir,
+                os.pardir,
+            )
+        )
         # Define and config the Pipeline
         self.dataset_path = os.path.join(root_path, "data_samples/ontonotes/00")
         self.dataset_path_nested_span = os.path.join(
-            root_path, "data_samples/ontonotes/nested_spans")
+            root_path, "data_samples/ontonotes/nested_spans"
+        )
 
         self.nlp = Pipeline[DataPack]()
 
@@ -68,10 +72,14 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
             ("bring", "Tomorrow", "ARG0"),
             ("bring", "Ehud Barak and Yasser Arafat", "ARG2"),
             ("bring", "to the resort city of Sharm El", "ARG4"),
-            ("have", "years in terms of their statements and attitudes , "
-                     "six years or", "ARG0"),
+            (
+                "have",
+                "years in terms of their statements and attitudes , "
+                "six years or",
+                "ARG0",
+            ),
             ("statements", "their", "ARG0"),
-            ("statements", "or more -- before the Oslo accords ,", "ARG1")
+            ("statements", "or more -- before the Oslo accords ,", "ARG1"),
         ]
 
         actual: List[Tuple] = []
@@ -82,11 +90,15 @@ class OntonotesReaderPipelineTest(unittest.TestCase):
             for sentence in pack.get(Sentence):
                 for pred_link in pack.get(PredicateLink, sentence):
                     pred_link: PredicateLink
-                    actual.append((pred_link.get_parent().text,
-                                   pred_link.get_child().text,
-                                   pred_link.arg_type))
+                    actual.append(
+                        (
+                            pred_link.get_parent().text,
+                            pred_link.get_child().text,
+                            pred_link.arg_type,
+                        )
+                    )
         self.assertEqual(actual, expected)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

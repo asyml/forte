@@ -23,8 +23,8 @@ from forte.data.base_pack import BasePack
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 
-InputPackType = TypeVar('InputPackType', bound=BasePack)
-OutputPackType = TypeVar('OutputPackType', bound=BasePack)
+InputPackType = TypeVar("InputPackType", bound=BasePack)
+OutputPackType = TypeVar("OutputPackType", bound=BasePack)
 
 __all__ = [
     "Selector",
@@ -81,13 +81,13 @@ class NameMatchSelector(SinglePackSelector):
                 yield pack
 
         if matches == 0:
-            raise ValueError(f"Pack name {self.select_name}"
-                             f" not in the MultiPack")
+            raise ValueError(
+                f"Pack name {self.select_name}" f" not in the MultiPack"
+            )
 
 
 class RegexNameMatchSelector(SinglePackSelector):
-    r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex.
-    """
+    r"""Select a :class:`DataPack` from a :class:`MultiPack` using a regex."""
 
     def __init__(self, select_name: str):
         super().__init__()
@@ -104,8 +104,7 @@ class RegexNameMatchSelector(SinglePackSelector):
 
 
 class FirstPackSelector(SinglePackSelector):
-    r"""Select the first entry from :class:`MultiPack` and yield it.
-    """
+    r"""Select the first entry from :class:`MultiPack` and yield it."""
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:
@@ -116,8 +115,7 @@ class FirstPackSelector(SinglePackSelector):
 
 
 class AllPackSelector(SinglePackSelector):
-    r"""Select all the packs from :class:`MultiPack` and yield them.
-    """
+    r"""Select all the packs from :class:`MultiPack` and yield them."""
 
     def select(self, m_pack: MultiPack) -> Iterator[DataPack]:
         if len(m_pack.packs) == 0:

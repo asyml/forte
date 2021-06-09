@@ -14,8 +14,7 @@
 
 import copy
 import logging
-from typing import (Dict, List, Set, Union, Iterator, Optional, Type, Any,
-                    Tuple)
+from typing import Dict, List, Set, Union, Iterator, Optional, Type, Any, Tuple
 
 from sortedcontainers import SortedList
 
@@ -26,8 +25,12 @@ from forte.data.index import BaseIndex
 from forte.data.ontology.core import Entry
 from forte.data.ontology.core import EntryType
 from forte.data.ontology.top import (
-    Annotation, MultiPackGroup, MultiPackLink, MultiPackEntries,
-    MultiPackGeneric)
+    Annotation,
+    MultiPackGroup,
+    MultiPackLink,
+    MultiPackEntries,
+    MultiPackGeneric,
+)
 from forte.data.span import Span
 from forte.data.types import DataRequest
 from forte.utils import get_class
@@ -41,10 +44,7 @@ __all__ = [
     "MultiPackGroup",
 ]
 
-MdRequest = Dict[
-    Type[Union[MultiPackLink, MultiPackGroup]],
-    Union[Dict, List]
-]
+MdRequest = Dict[Type[Union[MultiPackLink, MultiPackGroup]], Union[Dict, List]]
 
 
 class MultiPackMeta(BaseMeta):
@@ -53,6 +53,7 @@ class MultiPackMeta(BaseMeta):
 
 
 # pylint: disable=too-many-public-methods
+
 
 class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     r"""A :class:`MultiPack` contains multiple `DataPacks` and a collection of
@@ -81,7 +82,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         self.generics: SortedList[MultiPackGeneric] = SortedList()
 
         # Used to automatically give name to sub packs.
-        self.__default_pack_prefix = '_pack'
+        self.__default_pack_prefix = "_pack"
 
         self._index: MultiIndex = MultiIndex()
 
@@ -125,11 +126,11 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         """
         state = super().__getstate__()
         # Do not directly serialize the pack itself.
-        state.pop('_packs')
+        state.pop("_packs")
 
-        state['links'] = list(state['links'])
-        state['groups'] = list(state['groups'])
-        state['generics'] = list(state['generics'])
+        state["links"] = list(state["links"])
+        state["groups"] = list(state["groups"])
+        state["generics"] = list(state["generics"])
 
         return state
 
@@ -151,7 +152,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     def get_span_text(self, span: Span):
         raise ValueError(
             "MultiPack objects do not contain text, please refer to a "
-            "specific data pack to get text.")
+            "specific data pack to get text."
+        )
 
     def add_pack(self, ref_name: Optional[str] = None) -> DataPack:
         """
@@ -168,12 +170,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         """
         if ref_name in self._name_index:
-            raise ValueError(
-                f"The name {ref_name} has already been taken.")
+            raise ValueError(f"The name {ref_name} has already been taken.")
         if ref_name is not None and not isinstance(ref_name, str):
             raise ValueError(
                 f"key of the pack should be str, but got "
-                f"" f"{type(ref_name)}"
+                f""
+                f"{type(ref_name)}"
             )
 
         pack: DataPack = DataPack()
@@ -192,12 +194,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         """
         if ref_name in self._name_index:
-            raise ValueError(
-                f"The name {ref_name} has already been taken.")
+            raise ValueError(f"The name {ref_name} has already been taken.")
         if ref_name is not None and not isinstance(ref_name, str):
             raise ValueError(
                 f"key of the pack should be str, but got "
-                f"" f"{type(ref_name)}"
+                f""
+                f"{type(ref_name)}"
             )
         if not isinstance(pack, DataPack):
             raise ValueError(
@@ -209,7 +211,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
 
         if ref_name is None:
             # Create a default name based on the pack id.
-            ref_name = f'{self.__default_pack_prefix}_{pid}'
+            ref_name = f"{self.__default_pack_prefix}_{pid}"
 
         # Record the pack's global id and names. Also the reverse lookup map.
         self._pack_ref.append(pid)
@@ -247,7 +249,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             return self._inverse_pack_ref[pack_id]
         except KeyError as e:
             raise ProcessExecutionException(
-                f"Pack {pack_id} is not in this multi-pack.") from e
+                f"Pack {pack_id} is not in this multi-pack."
+            ) from e
 
     def get_pack(self, name: str) -> DataPack:
         """
@@ -334,12 +337,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
     @property
     def all_groups(self) -> Iterator[MultiPackGroup]:
         """
-         An iterator of all groups in this multi pack.
+        An iterator of all groups in this multi pack.
 
-         Returns: Iterator of all groups, of
-         type :class:`~forte.data.ontology.top.MultiPackGroup`.
+        Returns: Iterator of all groups, of
+        type :class:`~forte.data.ontology.top.MultiPackGroup`.
 
-         """
+        """
         yield from self.groups
 
     @property
@@ -371,18 +374,22 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         for pack in self.packs:
             pack.add_all_remaining_entries(component)
 
-    def get_data(self, context_type,
-                 request: Optional[DataRequest] = None,
-                 skip_k: int = 0) -> Iterator[Dict[str, Any]]:
+    def get_data(
+        self,
+        context_type,
+        request: Optional[DataRequest] = None,
+        skip_k: int = 0,
+    ) -> Iterator[Dict[str, Any]]:
         raise NotImplementedError(
-            "We haven't implemented get data for multi pack data yet.")
+            "We haven't implemented get data for multi pack data yet."
+        )
 
     def get_single_pack_data(
-            self,
-            pack_index: int,
-            context_type: Type[Annotation],
-            request: Optional[DataRequest] = None,
-            skip_k: int = 0
+        self,
+        pack_index: int,
+        context_type: Type[Annotation],
+        request: Optional[DataRequest] = None,
+        skip_k: int = 0,
     ) -> Iterator[Dict[str, Any]]:
         r"""Get pack data from one of the packs specified by the name. This is
         equivalent to calling the
@@ -413,12 +420,13 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             containing the required annotations and context).
         """
 
-        yield from self.get_pack_at(
-            pack_index).get_data(context_type, request, skip_k)
+        yield from self.get_pack_at(pack_index).get_data(
+            context_type, request, skip_k
+        )
 
     def get_cross_pack_data(
-            self,
-            request: MdRequest,
+        self,
+        request: MdRequest,
     ):
         r"""
         NOTE: This function is not finished.
@@ -470,7 +478,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
         pass
 
     def __add_entry_with_check(
-            self, entry: EntryType, allow_duplicate: bool = True) -> EntryType:
+        self, entry: EntryType, allow_duplicate: bool = True
+    ) -> EntryType:
         r"""Internal method to add an :class:`Entry` object to the
         :class:`MultiPack` object.
 
@@ -505,8 +514,7 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             self._index.update_basic_index([entry])
             if self._index.link_index_on and isinstance(entry, MultiPackLink):
                 self._index.update_link_index([entry])
-            if self._index.group_index_on and isinstance(entry,
-                                                         MultiPackGroup):
+            if self._index.group_index_on and isinstance(entry, MultiPackGroup):
                 self._index.update_group_index([entry])
 
             self._pending_entries.pop(entry.tid)
@@ -515,11 +523,12 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             return target[target.index(entry)]
 
     def get(  # type: ignore
-            self, entry_type: Union[str, Type[EntryType]],
-            components: Optional[Union[str, List[str]]] = None,
-            include_sub_type=True
+        self,
+        entry_type: Union[str, Type[EntryType]],
+        components: Optional[Union[str, List[str]]] = None,
+        include_sub_type=True,
     ) -> Iterator[EntryType]:
-        """ Get entries of `entry_type` from this multi pack.
+        """Get entries of `entry_type` from this multi pack.
 
         Example:
 
@@ -555,7 +564,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
                 raise AttributeError(
                     f"The specified entry type [{entry_type}] "
                     f"does not correspond to a "
-                    f"'forte.data.ontology.core.Entry' class")
+                    f"'forte.data.ontology.core.Entry' class"
+                )
         else:
             entry_type_ = entry_type
 
@@ -571,7 +581,8 @@ class MultiPack(BasePack[Entry, MultiPackLink, MultiPackGroup]):
             entry_iter = self.generics
         else:
             raise ValueError(
-                f"The entry type: {entry_type_} is not supported by MultiPack.")
+                f"The entry type: {entry_type_} is not supported by MultiPack."
+            )
 
         all_types: Set[Type]
         if include_sub_type:

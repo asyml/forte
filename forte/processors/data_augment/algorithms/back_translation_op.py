@@ -19,8 +19,9 @@ import random
 from typing import Tuple
 
 from forte.data.ontology import Annotation
-from forte.processors.data_augment.algorithms.text_replacement_op \
-    import TextReplacementOp
+from forte.processors.data_augment.algorithms.text_replacement_op import (
+    TextReplacementOp,
+)
 from forte.common.configuration import Config
 from forte.utils.utils import create_class_with_kwargs
 
@@ -58,20 +59,20 @@ class BackTranslationOp(TextReplacementOp):
         super().__init__(configs)
         self._validate_configs(configs)
         self.model_to = create_class_with_kwargs(
-            configs['model_to'],
+            configs["model_to"],
             class_args={
-                "src_lang": configs['src_language'],
-                "tgt_lang": configs['tgt_language'],
-                "device": configs["device"]
-            }
+                "src_lang": configs["src_language"],
+                "tgt_lang": configs["tgt_language"],
+                "device": configs["device"],
+            },
         )
         self.model_back = create_class_with_kwargs(
-            configs['model_back'],
+            configs["model_back"],
             class_args={
-                "src_lang": configs['tgt_language'],
-                "tgt_lang": configs['src_language'],
-                "device": configs["device"]
-            }
+                "src_lang": configs["tgt_language"],
+                "tgt_lang": configs["src_language"],
+                "device": configs["device"],
+            },
         )
 
     def _validate_configs(self, configs):

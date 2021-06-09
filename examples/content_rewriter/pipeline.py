@@ -31,19 +31,17 @@ def do_process(input_pack_str: str):
     # You can get the JSON form like this.
     data_json = datapack.serialize()
     # Let's write it out.
-    with open('generation.txt', 'w') as fo:
+    with open("generation.txt", "w") as fo:
         fo.write(data_json)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pipeline.set_reader(RawDataDeserializeReader())
-    pipeline.add(ContentRewriter(), config={
-        'model_dir': sys.argv[1]
-    })
+    pipeline.add(ContentRewriter(), config={"model_dir": sys.argv[1]})
 
     # You should initialize the model here, so we only do it once.
     pipeline.initialize()
 
-    with open('rewriting_input.json') as fi:
+    with open("rewriting_input.json") as fi:
         test_str = fi.read()
         do_process(test_str)

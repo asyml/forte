@@ -34,7 +34,7 @@ from forte.utils.utils import get_full_module_name
 __all__ = [
     "BaseReader",
     "PackReader",
-    'MultiPackReader',
+    "MultiPackReader",
 ]
 
 logger = logging.getLogger(__name__)
@@ -61,11 +61,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
             cache the datapack append to end of the caching file.
     """
 
-    def __init__(self,
-                 from_cache: bool = False,
-                 cache_directory: Optional[str] = None,
-                 append_to_cache: bool = False,
-                 cache_in_memory: bool = False):
+    def __init__(
+        self,
+        from_cache: bool = False,
+        cache_directory: Optional[str] = None,
+        append_to_cache: bool = False,
+        cache_in_memory: bool = False,
+    ):
         super().__init__()
         self.from_cache = from_cache
         self._cache_directory = cache_directory
@@ -99,9 +101,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 "name": "reader"
             }
         """
-        return {
-            'name': 'reader'
-        }
+        return {"name": "reader"}
 
     @property
     def pack_type(self):
@@ -131,7 +131,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         """
         if collection is None:
             raise ProcessExecutionException(
-                "Got None collection, cannot parse as data pack.")
+                "Got None collection, cannot parse as data pack."
+            )
 
         for p in self._parse_pack(collection):
             p.add_all_remaining_entries(self.name)
@@ -186,7 +187,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         if file_path is None:
             raise ProcessExecutionException(
                 "Cache key is None. You probably set `from_cache` to true but "
-                "fail to implement the _cache_key_function")
+                "fail to implement the _cache_key_function"
+            )
 
         return os.path.join(str(self._cache_directory), file_path)
 
@@ -194,7 +196,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
         for collection in self._collect(*args, **kwargs):
             if self.from_cache:
                 for pack in self.read_from_cache(
-                        self._get_cache_location(collection)):
+                    self._get_cache_location(collection)
+                ):
                     pack.add_all_remaining_entries()
                     yield pack
             else:
@@ -260,13 +263,13 @@ class BaseReader(PipelineComponent[PackType], ABC):
         if self._cache_in_memory and self._cache_ready:
             # Read from memory
             for pack in self._data_packs:
-                if hasattr(pack._meta, 'record'):
+                if hasattr(pack._meta, "record"):
                     self.record(pack._meta.record)
                 yield from self.timer_yield(pack)
         else:
             # Read via parsing dataset
             for pack in self._lazy_iter(*args, **kwargs):
-                if hasattr(pack._meta, 'record'):
+                if hasattr(pack._meta, "record"):
                     self.record(pack._meta.record)
                 if self._cache_in_memory:
                     self._data_packs.append(pack)
@@ -313,20 +316,20 @@ class BaseReader(PipelineComponent[PackType], ABC):
         os.makedirs(self._cache_directory, exist_ok=True)
 
         cache_filename = os.path.join(
-            self._cache_directory,
-            self._get_cache_location(collection)
+            self._cache_directory, self._get_cache_location(collection)
         )
 
         logger.info("Caching pack to %s", cache_filename)
         if append:
-            with open(cache_filename, 'a') as cache:
+            with open(cache_filename, "a") as cache:
                 cache.write(pack.serialize() + "\n")
         else:
-            with open(cache_filename, 'w') as cache:
+            with open(cache_filename, "w") as cache:
                 cache.write(pack.serialize() + "\n")
 
     def read_from_cache(
-            self, cache_filename: Union[Path, str]) -> Iterator[PackType]:
+        self, cache_filename: Union[Path, str]
+    ) -> Iterator[PackType]:
         r"""Reads one or more Packs from ``cache_filename``, and yields Pack(s)
         from the cache file.
 
@@ -342,7 +345,8 @@ class BaseReader(PipelineComponent[PackType], ABC):
                 if not isinstance(pack, self.pack_type):
                     raise TypeError(
                         f"Pack deserialized from {cache_filename} "
-                        f"is {type(pack)}, but expect {self.pack_type}")
+                        f"is {type(pack)}, but expect {self.pack_type}"
+                    )
                 yield pack
 
     def finish(self, resources: Resources):
@@ -361,8 +365,7 @@ class BaseReader(PipelineComponent[PackType], ABC):
 
 
 class PackReader(BaseReader[DataPack], ABC):
-    r"""A Pack Reader reads data into :class:`DataPack`.
-    """
+    r"""A Pack Reader reads data into :class:`DataPack`."""
 
     @property
     def pack_type(self):

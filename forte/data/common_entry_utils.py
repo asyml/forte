@@ -21,13 +21,14 @@ from forte.data.data_pack import DataPack
 from ft.onto.base_ontology import Utterance
 
 __all__ = [
-    'create_utterance',
-    'get_last_utterance',
+    "create_utterance",
+    "get_last_utterance",
 ]
 
 
 def get_last_utterance(
-        input_pack: DataPack, target_speaker: str) -> Optional[Utterance]:
+    input_pack: DataPack, target_speaker: str
+) -> Optional[Utterance]:
     """
     Get the last utterance from a particular speaker. An utterance is an entry
     of type :class:`~ft.onto.base_ontology.Utterance`
@@ -61,9 +62,9 @@ def create_utterance(input_pack: DataPack, text: str, speaker: str):
         speaker: The speaker name to be associated with the utterance.
 
     """
-    input_pack.set_text(input_pack.text + '\n' + text)
+    input_pack.set_text(input_pack.text + "\n" + text)
 
-    u = Utterance(input_pack,
-                  len(input_pack.text) - len(text),
-                  len(input_pack.text))
+    u = Utterance(
+        input_pack, len(input_pack.text) - len(text), len(input_pack.text)
+    )
     u.speaker = speaker

@@ -24,9 +24,7 @@ from ft.onto.base_ontology import Utterance
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "MultiPackTerminalReader"
-]
+__all__ = ["MultiPackTerminalReader"]
 
 
 class MultiPackTerminalReader(MultiPackReader):
@@ -63,11 +61,13 @@ class MultiPackTerminalReader(MultiPackReader):
         # use context to build the query
         if self.resources is not None and self.resources.get("user_utterance"):
             multi_pack.add_pack_(
-                self.resources.get("user_utterance")[-1], "user_utterance")
+                self.resources.get("user_utterance")[-1], "user_utterance"
+            )
 
         if self.resources is not None and self.resources.get("bot_utterance"):
             multi_pack.add_pack_(
-                self.resources.get("bot_utterance")[-1], "bot_utterance")
+                self.resources.get("bot_utterance")[-1], "bot_utterance"
+            )
 
         pack = multi_pack.add_pack(self.configs.pack_name)
         self.set_text(pack, data_source)
@@ -95,10 +95,12 @@ class MultiPackTerminalReader(MultiPackReader):
 
         """
         configs = super().default_configs()
-        configs.update({
-            "pack_name": "query",
-            "prompt_text": "Enter your query here: ",
-        })
+        configs.update(
+            {
+                "pack_name": "query",
+                "prompt_text": "Enter your query here: ",
+            }
+        )
 
         configs["pack_name"] = "query"
         return configs

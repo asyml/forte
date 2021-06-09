@@ -23,9 +23,7 @@ from forte.data.ontology import Annotation
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "CharExtractor"
-]
+__all__ = ["CharExtractor"]
 
 
 class CharExtractor(BaseExtractor):
@@ -76,22 +74,22 @@ class CharExtractor(BaseExtractor):
 
         for word in pack.get(self._entry_type, instance):
             if self.vocab:
-                data.append([self.element2repr(char)
-                             for char in word.text])
+                data.append([self.element2repr(char) for char in word.text])
             else:
                 data.append(list(word.text))
             max_char_length = max(max_char_length, len(data[-1]))
 
-        if hasattr(self.config, "max_char_length") and \
-                self.config.max_char_length is not None and \
-                self.config.max_char_length < max_char_length:
-            data = [token[:self.config.max_char_length] for
-                    token in data]
+        if (
+            hasattr(self.config, "max_char_length")
+            and self.config.max_char_length is not None
+            and self.config.max_char_length < max_char_length
+        ):
+            data = [token[: self.config.max_char_length] for token in data]
 
-        meta_data = {"need_pad": self.config.need_pad,
-                     "pad_value": self.get_pad_value(),
-                     "dim": 2,
-                     "dtype": int if self.vocab else str}
-        return Feature(data=data,
-                       metadata=meta_data,
-                       vocab=self.vocab)
+        meta_data = {
+            "need_pad": self.config.need_pad,
+            "pad_value": self.get_pad_value(),
+            "dim": 2,
+            "dtype": int if self.vocab else str,
+        }
+        return Feature(data=data, metadata=meta_data, vocab=self.vocab)

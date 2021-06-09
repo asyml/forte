@@ -62,7 +62,6 @@ class Sentence(Annotation):
 
 @dataclass
 class Document(Annotation):
-
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -76,6 +75,11 @@ class Dependency(Link):
 
     rel_type: Optional[str]
 
-    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: DataPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None

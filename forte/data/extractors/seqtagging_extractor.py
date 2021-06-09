@@ -29,9 +29,7 @@ from forte.utils import get_class
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "BioSeqTaggingExtractor"
-]
+__all__ = ["BioSeqTaggingExtractor"]
 
 
 class BioSeqTaggingExtractor(BaseExtractor):
@@ -51,14 +49,17 @@ class BioSeqTaggingExtractor(BaseExtractor):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(config=config)
         if self.config.attribute is None:
-            raise AttributeError("attribute is required "
-                                 "in BioSeqTaggingExtractor.")
+            raise AttributeError(
+                "attribute is required " "in BioSeqTaggingExtractor."
+            )
         if not self.config.tagging_unit:
-            raise AttributeError("tagging_unit is required in "
-                                 "BioSeqTaggingExtractor.")
+            raise AttributeError(
+                "tagging_unit is required in " "BioSeqTaggingExtractor."
+            )
         self.attribute: str = self.config.attribute
-        self.tagging_unit: Type[Annotation] = \
-                get_class(self.config.tagging_unit)
+        self.tagging_unit: Type[Annotation] = get_class(
+            self.config.tagging_unit
+        )
         self.is_bert: bool = self.config.is_bert
 
     @classmethod
@@ -133,10 +134,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         """
         config = super().default_configs()
-        config.update({"attribute": None,
-                       "tagging_unit": "",
-                       "is_bert": False,
-                       "pad_value": -100})
+        config.update(
+            {
+                "attribute": None,
+                "tagging_unit": "",
+                "is_bert": False,
+                "pad_value": -100,
+            }
+        )
         return config
 
     @classmethod
@@ -191,11 +196,9 @@ class BioSeqTaggingExtractor(BaseExtractor):
         Returns (Feature):
            a feature that contains the extracted data.
         """
-        instance_tagged: List[Tuple[Optional[str], str]] = \
-            bio_tagging(pack, instance,
-            self.tagging_unit,
-            self._entry_type,
-            self.attribute)
+        instance_tagged: List[Tuple[Optional[str], str]] = bio_tagging(
+            pack, instance, self.tagging_unit, self._entry_type, self.attribute
+        )
 
         pad_value = self.get_pad_value()
         if self.vocab:
@@ -213,14 +216,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
             raw_data = instance_tagged
             need_pad = self.config.need_pad
 
-        meta_data = {"need_pad": need_pad,
-                     "pad_value": pad_value,
-                     "dim": 1,
-                     "dtype": int if self.vocab else tuple}
+        meta_data = {
+            "need_pad": need_pad,
+            "pad_value": pad_value,
+            "dim": 1,
+            "dtype": int if self.vocab else tuple,
+        }
 
-        return Feature(data=raw_data,
-                       metadata=meta_data,
-                       vocab=self.vocab)
+        return Feature(data=raw_data, metadata=meta_data, vocab=self.vocab)
 
     def pre_evaluation_action(self, pack: DataPack, instance: Annotation):
         r"""This function is performed on the pack before the evaluation
@@ -237,8 +240,9 @@ class BioSeqTaggingExtractor(BaseExtractor):
         for entry in pack.get(self._entry_type, instance):
             pack.delete_entry(entry)
 
-    def add_to_pack(self, pack: DataPack, instance: Annotation,
-                    prediction: List[int]):
+    def add_to_pack(
+        self, pack: DataPack, instance: Annotation, prediction: List[int]
+    ):
         r"""Add the prediction for attribute to the instance. We make following
         assumptions for prediction.
 
@@ -257,13 +261,14 @@ class BioSeqTaggingExtractor(BaseExtractor):
                 This is the output of the model, which contains the index for
                 attributes of one instance.
         """
-        instance_tagging_unit: List[Annotation] = \
-            list(pack.get(self.tagging_unit, instance))
+        instance_tagging_unit: List[Annotation] = list(
+            pack.get(self.tagging_unit, instance)
+        )
 
         if self.is_bert:
             prediction = prediction[1:-1]
 
-        prediction = prediction[:len(instance_tagging_unit)]
+        prediction = prediction[: len(instance_tagging_unit)]
         if isinstance(prediction, Tensor):
             prediction = prediction.cpu().numpy()
         tags = [self.id2element(x) for x in prediction]
@@ -271,13 +276,15 @@ class BioSeqTaggingExtractor(BaseExtractor):
         tag_end = None
         tag_type = None
         for entry, tag in zip(instance_tagging_unit, tags):
-            if tag[1] == "O" or tag[1] == "B" or \
-                    (tag[1] == "I" and tag[0] != tag_type):
+            if (
+                tag[1] == "O"
+                or tag[1] == "B"
+                or (tag[1] == "I" and tag[0] != tag_type)
+            ):
                 if tag_type:
-                    entity_mention = add_entry_to_pack(pack,
-                                                       self._entry_type,
-                                                       tag_start,
-                                                       tag_end)
+                    entity_mention = add_entry_to_pack(
+                        pack, self._entry_type, tag_start, tag_end
+                    )
                     setattr(entity_mention, self.attribute, tag_type)
                 tag_start = entry.begin
                 tag_end = entry.end
@@ -287,8 +294,7 @@ class BioSeqTaggingExtractor(BaseExtractor):
 
         # Handle the final tag
         if tag_type and tag_start and tag_end:
-            entity_mention = add_entry_to_pack(pack,
-                                               self._entry_type,
-                                               tag_start,
-                                               tag_end)
+            entity_mention = add_entry_to_pack(
+                pack, self._entry_type, tag_start, tag_end
+            )
             setattr(entity_mention, self.attribute, tag_type)

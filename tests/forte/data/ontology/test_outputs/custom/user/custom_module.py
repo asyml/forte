@@ -31,6 +31,11 @@ class Dependency(Link):
     ParentType = Token
     ChildType = Token
 
-    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
+    def __init__(
+        self,
+        pack: DataPack,
+        parent: Optional[Entry] = None,
+        child: Optional[Entry] = None,
+    ):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None

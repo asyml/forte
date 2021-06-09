@@ -27,7 +27,7 @@ from forte.pipeline_component import PipelineComponent
 
 class BaseTrainer(PipelineComponent):
     def __init__(self):  # pylint: disable=unused-argument
-        """ Create a machine learning trainer. This abstract class defines the
+        """Create a machine learning trainer. This abstract class defines the
         skeleton of a trainer, which correspond to events and actions during a
         training phase. New trainers need to inherit and implement the
         functions.

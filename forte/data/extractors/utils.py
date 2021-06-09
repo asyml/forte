@@ -19,11 +19,13 @@ from forte.data.data_pack import DataPack
 from forte.data.ontology import Annotation
 
 
-def bio_tagging(pack: DataPack, instance: Annotation,
-                tagging_unit_type: Type[Annotation],
-                entry_type: Type[Annotation],
-                attribute: Union[Callable[[Annotation], str], str]) \
-        -> List[Tuple[Optional[str], str]]:
+def bio_tagging(
+    pack: DataPack,
+    instance: Annotation,
+    tagging_unit_type: Type[Annotation],
+    entry_type: Type[Annotation],
+    attribute: Union[Callable[[Annotation], str], str],
+) -> List[Tuple[Optional[str], str]]:
     """This utility function use BIO tagging method to convert tags
     of "instance_entry" into the same length as "instance_tagging_unit". Both
     element from "instance_entry" and "instance_tagging_unit" should Annotation
@@ -58,49 +60,52 @@ def bio_tagging(pack: DataPack, instance: Annotation,
         [(None, "O"), (LOC, "B"), (LOC, "I"), (None, "O"),
          (None, "O"), (PER, "B"), (None, "O")]
     """
-    instance_tagging_unit: List[Annotation] = \
-        list(pack.get(tagging_unit_type, instance))
-    instance_entry: List[Annotation] = \
-        list(pack.get(entry_type, instance))
+    instance_tagging_unit: List[Annotation] = list(
+        pack.get(tagging_unit_type, instance)
+    )
+    instance_entry: List[Annotation] = list(pack.get(entry_type, instance))
 
     tagged: List[Tuple[Optional[str], str]] = []
     unit_id = 0
     entry_id = 0
-    while unit_id < len(instance_tagging_unit) or \
-            entry_id < len(instance_entry):
+    while unit_id < len(instance_tagging_unit) or entry_id < len(
+        instance_entry
+    ):
 
         if entry_id == len(instance_entry):
-            tagged.append((None, 'O'))
+            tagged.append((None, "O"))
             unit_id += 1
             continue
 
         is_start = True
         for unit in pack.get(tagging_unit_type, instance_entry[entry_id]):
-            while instance_tagging_unit[unit_id].begin != unit.begin and \
-                instance_tagging_unit[unit_id].end != unit.end:
-                tagged.append((None, 'O'))
+            while (
+                instance_tagging_unit[unit_id].begin != unit.begin
+                and instance_tagging_unit[unit_id].end != unit.end
+            ):
+                tagged.append((None, "O"))
                 unit_id += 1
 
             if is_start:
-                location = 'B'
+                location = "B"
                 is_start = False
             else:
-                location = 'I'
+                location = "I"
 
             unit_id += 1
             if callable(attribute):
                 tagged.append((attribute(instance_entry[entry_id]), location))
             else:
-                tagged.append((getattr(instance_entry[entry_id], attribute),
-                               location))
+                tagged.append(
+                    (getattr(instance_entry[entry_id], attribute), location)
+                )
         entry_id += 1
     return tagged
 
 
-def add_entry_to_pack(pack: DataPack,
-                      entry_type: Type[Annotation],
-                      span_begin: int,
-                      span_end: int) -> Annotation:
+def add_entry_to_pack(
+    pack: DataPack, entry_type: Type[Annotation], span_begin: int, span_end: int
+) -> Annotation:
     """
     Add an entry to datapack, given entry_type, span begin and end.
     Args:

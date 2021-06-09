@@ -22,9 +22,7 @@ from forte.data.base_reader import PackReader
 from forte.data.data_utils_io import dataset_path_iterator
 from ft.onto.base_ontology import Sentence, RelationLink, EntityMention
 
-__all__ = [
-    "SemEvalTask8Reader"
-]
+__all__ = ["SemEvalTask8Reader"]
 
 
 class SemEvalTask8Reader(PackReader):
@@ -69,13 +67,14 @@ class SemEvalTask8Reader(PackReader):
         Returns: Iterator over the file name (str).
         """
         sem_file_dir: str = args[0]
-        return dataset_path_iterator(sem_file_dir,
-                                     self.configs.sem_eval_task8_file_extension)
+        return dataset_path_iterator(
+            sem_file_dir, self.configs.sem_eval_task8_file_extension
+        )
 
     def _parse_pack(self, file_path: str) -> Iterator[DataPack]:
         pack: DataPack = DataPack()
 
-        with open(file_path, 'r', encoding='utf8') as fp:
+        with open(file_path, "r", encoding="utf8") as fp:
             txt = ""
             offset = 0
 
@@ -91,14 +90,15 @@ class SemEvalTask8Reader(PackReader):
                 # Command line is not used.
                 _ = fp.readline()
 
-                sent_line = sent_line[sent_line.find('"') + 1:
-                                      sent_line.rfind('"')]
+                sent_line = sent_line[
+                    sent_line.find('"') + 1 : sent_line.rfind('"')
+                ]
                 index1 = sent_line.find("<e1>")
                 index2 = sent_line.find("<e2>")
                 # 5 is the length of "</e1>", include both <e1> and
                 # </e1> when extracting the string.
-                e1 = sent_line[index1:sent_line.find("</e1>") + 5]
-                e2 = sent_line[index2:sent_line.find("</e2>") + 5]
+                e1 = sent_line[index1 : sent_line.find("</e1>") + 5]
+                e2 = sent_line[index2 : sent_line.find("</e2>") + 5]
                 # Remove <e1> and </e1> in the sentence.
                 sent_line = sent_line.replace(e1, e1[4:-5])
                 sent_line = sent_line.replace(e2, e2[4:-5])
@@ -122,8 +122,9 @@ class SemEvalTask8Reader(PackReader):
                 offset += len(sent_line) + 1
                 txt += sent_line + " "
 
-                pair = relation_line[relation_line.find("(") + 1:
-                                     relation_line.find(")")]
+                pair = relation_line[
+                    relation_line.find("(") + 1 : relation_line.find(")")
+                ]
 
                 if "," in pair:
                     parent, _ = pair.split(",")
@@ -131,7 +132,7 @@ class SemEvalTask8Reader(PackReader):
                         relation = RelationLink(pack, entry1, entry2)
                     else:
                         relation = RelationLink(pack, entry2, entry1)
-                    relation.rel_type = relation_line[:relation_line.find("(")]
+                    relation.rel_type = relation_line[: relation_line.find("(")]
                 else:
                     # For "Other" relation, just set parent as e1
                     # set child as e2.
@@ -147,7 +148,5 @@ class SemEvalTask8Reader(PackReader):
     def default_configs(cls) -> Dict[str, Any]:
         configs: Dict = super().default_configs()
 
-        configs.update({
-            'sem_eval_task8_file_extension': 'txt'
-        })
+        configs.update({"sem_eval_task8_file_extension": "txt"})
         return configs
