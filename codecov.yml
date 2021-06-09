@@ -9,6 +9,3 @@ coverage:
 ignore:
   - "examples/"
   - "data_samples/"
-
-fixes:
-  - "forte/::"
