@@ -94,7 +94,7 @@ class BertBasedQueryCreator(QueryProcessor):
         return cls_token
 
     def _build_query(self, text: str) -> np.ndarray:
-        input_ids, segment_ids, input_mask = self.tokenizer.encode_text(
+        (input_ids, segment_ids, input_mask,) = self.tokenizer.encode_text(
             text_a=text, max_seq_length=self.config.max_seq_length
         )
         input_ids = torch.LongTensor(input_ids).unsqueeze(0).to(self.device)

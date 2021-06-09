@@ -278,7 +278,8 @@ class RandomSwapDataAugmentProcessor(ReplacementDataAugmentProcessor):
             {
                 "augment_entry": "ft.onto.base_ontology.Token",
                 "other_entry_policy": {
-                    # to use Texar hyperparams 'kwargs' must accompany with 'type'
+                    # to use Texar hyperparams 'kwargs' must
+                    # accompany with 'type'
                     "type": "",
                     "kwargs": {
                         "ft.onto.base_ontology.Document": "auto_align",

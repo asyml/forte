@@ -26,7 +26,10 @@ from forte.data.multi_pack import MultiPack
 from forte.data.ontology import Query
 from forte.processors.base import MultiPackProcessor
 
-from forte.processors.ir.bert_ranker import BERTClassifier, BERTEncoder
+from forte.processors.ir.bert_ranker import (
+    BERTClassifier,
+    BERTEncoder,
+)
 
 __all__ = ["BertRerankingProcessor"]
 

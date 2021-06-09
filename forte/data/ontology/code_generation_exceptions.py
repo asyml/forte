@@ -78,7 +78,9 @@ class ParentEntryNotSupportedException(OntologySpecError):
 
 
 class TypeNotDeclaredException(OntologySpecError):
-    """Raise when the entry uses an attribute which is previously not defined."""
+    """
+    Raise when the entry uses an attribute which is previously not defined.
+    """
 
     pass
 

@@ -29,7 +29,9 @@ __all__ = [
 
 
 class StringReader(PackReader):
-    r""":class:`StringReader` is designed to read in a list of string variables."""
+    r"""
+    :class:`StringReader` is designed to read in a list of string variables.
+    """
 
     # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
