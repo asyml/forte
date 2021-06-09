@@ -30,8 +30,9 @@ from forte.faiss import EmbeddingBasedIndexer
 logging.basicConfig(level=logging.INFO)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--config_data", default="config_data",
-                    help="File to read the config from")
+parser.add_argument(
+    "--config_data", default="config_data", help="File to read the config from"
+)
 args = parser.parse_args()
 
 config = yaml.safe_load(open("config.yml", "r"))
@@ -40,11 +41,11 @@ config_data = importlib.import_module(args.config_data)
 
 
 class Indexer:
-
     def __init__(self, model_path, torch_device=None):
 
         self.bert = tx.modules.BERTEncoder(
-            pretrained_model_name=None, hparams={"pretrained_model_name": None})
+            pretrained_model_name=None, hparams={"pretrained_model_name": None}
+        )
         self.device = torch_device
         self.bert.to(device=self.device)
 
@@ -54,10 +55,16 @@ class Indexer:
         self.bert.load_state_dict(state_dict["bert"])
 
         self.tokenizer = tx.data.BERTTokenizer(
-            pretrained_model_name="bert-base-uncased")
+            pretrained_model_name="bert-base-uncased"
+        )
 
-        self.index = EmbeddingBasedIndexer(config={
-            "index_type": "GpuIndexFlatIP", "dim": 768, "device": "gpu0"})
+        self.index = EmbeddingBasedIndexer(
+            config={
+                "index_type": "GpuIndexFlatIP",
+                "dim": 768,
+                "device": "gpu0",
+            }
+        )
 
     @torch.no_grad()
     def create_index(self):
@@ -67,9 +74,9 @@ class Indexer:
             "dataset": {
                 "data_name": "data",
                 "feature_types": config_data.feature_types,
-                "files": ["data/train.pkl", "data/eval.pkl", "data/test.pkl"]
+                "files": ["data/train.pkl", "data/eval.pkl", "data/test.pkl"],
             },
-            "shuffle": False
+            "shuffle": False,
         }
 
         dataset = tx.data.RecordData(hparams=hparams, device=self.device)
@@ -79,23 +86,29 @@ class Indexer:
         for idx, batch in enumerate(data_iterator):
             ids = range(start, start + len(batch))
             text = batch["sentence_b"]
-            output, _ = self.bert(inputs=batch["sent_b_input_ids"],
-                                  sequence_length=batch["sent_b_seq_len"],
-                                  segment_ids=batch["sent_b_segment_ids"])
+            output, _ = self.bert(
+                inputs=batch["sent_b_input_ids"],
+                sequence_length=batch["sent_b_seq_len"],
+                segment_ids=batch["sent_b_segment_ids"],
+            )
             cls_tokens = output[:, 0, :]  # CLS token is first token
             self.index.add(vectors=cls_tokens, meta_data=dict(zip(ids, text)))
 
             start += len(batch)
 
             if (idx + 1) % 50 == 0:
-                logging.info("Completed %s batches of size %s", idx + 1,
-                             config.indexer.batch_size)
+                logging.info(
+                    "Completed %s batches of size %s",
+                    idx + 1,
+                    config.indexer.batch_size,
+                )
 
         self.index.save(path=config.indexer.model_dir)
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    indexer = Indexer(model_path="model/chatbot_model.ckpt",
-                      torch_device=device)
+    indexer = Indexer(
+        model_path="model/chatbot_model.ckpt", torch_device=device
+    )
     indexer.create_index()

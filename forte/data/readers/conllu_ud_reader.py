@@ -19,15 +19,18 @@ into data_pack format
 from typing import Iterator, Dict, Tuple, Any
 
 from ft.onto.base_ontology import (
-    Document, Sentence, Token, Dependency, EnhancedDependency)
+    Document,
+    Sentence,
+    Token,
+    Dependency,
+    EnhancedDependency,
+)
 
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.data_pack import DataPack
 from forte.data.base_reader import PackReader
 
-__all__ = [
-    "ConllUDReader"
-]
+__all__ = ["ConllUDReader"]
 
 
 class ConllUDReader(PackReader):
@@ -60,25 +63,38 @@ class ConllUDReader(PackReader):
                 for i, line in enumerate(lines):
                     # previous document ends
                     doc_lines.append(line)
-                    if i == len(lines) - 1 or \
-                            lines[i + 1].strip().startswith("# newdoc"):
+                    if i == len(lines) - 1 or lines[i + 1].strip().startswith(
+                        "# newdoc"
+                    ):
                         yield doc_lines
                         doc_lines = []
 
     def _parse_pack(self, doc_lines) -> Iterator[DataPack]:
-        token_comp_fields = ["id", "form", "lemma", "pos",
-                             "ud_xpos", "ud_features", "head", "label",
-                             "enhanced_dependency_relations", "ud_misc"]
+        token_comp_fields = [
+            "id",
+            "form",
+            "lemma",
+            "pos",
+            "ud_xpos",
+            "ud_features",
+            "head",
+            "label",
+            "enhanced_dependency_relations",
+            "ud_misc",
+        ]
 
-        token_multi_fields = ["ud_features", "ud_misc",
-                              "enhanced_dependency_relations"]
+        token_multi_fields = [
+            "ud_features",
+            "ud_misc",
+            "enhanced_dependency_relations",
+        ]
 
         token_feature_fields = ["ud_features", "ud_misc"]
 
         data_pack: DataPack = DataPack()
         doc_sent_begin: int = 0
         doc_num_sent: int = 0
-        doc_text: str = ''
+        doc_text: str = ""
         doc_offset: int = 0
         doc_id: str
 
@@ -93,10 +109,9 @@ class ConllUDReader(PackReader):
                 doc_id = line.split("=")[1].strip()
 
             elif line.startswith("# sent"):
-                sent_text = ''
+                sent_text = ""
 
-            elif len(line_comps) > 0 and \
-                    line_comps[0].strip().isdigit():
+            elif len(line_comps) > 0 and line_comps[0].strip().isdigit():
                 # token
                 token_comps: Dict[str, Any] = {}
 
@@ -104,15 +119,20 @@ class ConllUDReader(PackReader):
                     token_comps[key] = str(line_comps[index])
 
                     if key in token_multi_fields:
-                        values = str(token_comps[key]).split("|") \
-                            if token_comps[key] != '_' else []
+                        values = (
+                            str(token_comps[key]).split("|")
+                            if token_comps[key] != "_"
+                            else []
+                        )
                         if key not in token_feature_fields:
                             token_comps[key] = values
                         else:
-                            feature_lst = [elem.split('=', 1)
-                                           for elem in values]
-                            feature_dict = {elem[0]: elem[1]
-                                            for elem in feature_lst}
+                            feature_lst = [
+                                elem.split("=", 1) for elem in values
+                            ]
+                            feature_dict = {
+                                elem[0]: elem[1] for elem in feature_lst
+                            }
                             token_comps[key] = feature_dict
 
                 word: str = token_comps["form"]
@@ -122,11 +142,11 @@ class ConllUDReader(PackReader):
                 # add token
                 token: Token = Token(data_pack, word_begin, word_end)
 
-                token.lemma = token_comps['lemma']
-                token.pos = token_comps['pos']
-                token.ud_xpos = token_comps['ud_xpos']
-                token.ud_features = token_comps['ud_features']
-                token.ud_misc = token_comps['ud_misc']
+                token.lemma = token_comps["lemma"]
+                token.pos = token_comps["pos"]
+                token.ud_xpos = token_comps["ud_xpos"]
+                token.ud_features = token_comps["ud_features"]
+                token.ud_misc = token_comps["ud_misc"]
 
                 sent_tokens[str(token_comps["id"])] = (token_comps, token)
 
@@ -136,7 +156,7 @@ class ConllUDReader(PackReader):
             elif line == "":
                 # sentence ends
                 sent_text = sent_text.strip()
-                doc_text += ' ' + sent_text
+                doc_text += " " + sent_text
 
                 # add dependencies for a sentence when all the tokens have been
                 # added
@@ -158,8 +178,9 @@ class ConllUDReader(PackReader):
                         head_id, label = dep.split(":", 1)
                         if label != "root":
                             head = sent_tokens[head_id][1]
-                            enhanced_dependency = \
-                                EnhancedDependency(data_pack, head, token)
+                            enhanced_dependency = EnhancedDependency(
+                                data_pack, head, token
+                            )
                             enhanced_dependency.dep_label = label
 
                 # add sentence

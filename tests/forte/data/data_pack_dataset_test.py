@@ -25,31 +25,34 @@ from ft.onto.base_ontology import Sentence
 
 class DataPackDatasetTest(unittest.TestCase):
     def setUp(self):
-        root_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            os.pardir, os.pardir, os.pardir
-        ))
+        root_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                os.pardir,
+                os.pardir,
+                os.pardir,
+            )
+        )
 
-        file_path: str = os.path.join(root_path,
-                                      "data_samples/data_pack_dataset_test")
+        file_path: str = os.path.join(
+            root_path, "data_samples/data_pack_dataset_test"
+        )
         reader = CoNLL03Reader()
         context_type = Sentence
         request = {Sentence: []}
         skip_k = 0
 
-        self.input_files = [
-            "conll03_1.conll", "conll03_2.conll"
-        ]
+        self.input_files = ["conll03_1.conll", "conll03_2.conll"]
         self.feature_schemes = {}
 
         train_pl: Pipeline = Pipeline()
         train_pl.set_reader(reader)
         train_pl.initialize()
-        pack_iterator: Iterator[PackType] = \
-            train_pl.process_dataset(file_path)
+        pack_iterator: Iterator[PackType] = train_pl.process_dataset(file_path)
 
         self.data_source: DataPackIterator = DataPackIterator(
-            pack_iterator, context_type, request, skip_k)
+            pack_iterator, context_type, request, skip_k
+        )
 
     def test_data_pack_iterator(self):
         data_pack_iter = iter(self.data_source)
@@ -69,15 +72,21 @@ class DataPackDatasetTest(unittest.TestCase):
 
         self.assertEqual(len(raw_examples_1), 7)
         self.assertEqual(len(raw_examples_2), 3)
-        self.assertEqual(packs_1[0].get_entry(raw_examples_1[0][0]).text,
-                         "EU rejects German call to boycott British lamb .")
-        self.assertEqual(packs_1[0].get_entry(raw_examples_1[1][0]).text,
-                         "Peter Blackburn")
-        self.assertEqual(packs_2[0].get_entry(raw_examples_2[0][0]).text,
-                         "EU rejects German call to boycott British lamb .")
-        self.assertEqual(packs_2[0].get_entry(raw_examples_2[1][0]).text,
-                         "Peter Blackburn")
+        self.assertEqual(
+            packs_1[0].get_entry(raw_examples_1[0][0]).text,
+            "EU rejects German call to boycott British lamb .",
+        )
+        self.assertEqual(
+            packs_1[0].get_entry(raw_examples_1[1][0]).text, "Peter Blackburn"
+        )
+        self.assertEqual(
+            packs_2[0].get_entry(raw_examples_2[0][0]).text,
+            "EU rejects German call to boycott British lamb .",
+        )
+        self.assertEqual(
+            packs_2[0].get_entry(raw_examples_2[1][0]).text, "Peter Blackburn"
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

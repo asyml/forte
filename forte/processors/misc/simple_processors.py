@@ -29,7 +29,7 @@ class PeriodSentenceSplitter(PackProcessor):
     """
 
     def _process(self, input_pack: DataPack):
-        pattern = '\\.\\s*'
+        pattern = "\\.\\s*"
         start = 0
 
         for m in re.finditer(pattern, input_pack.text):
@@ -44,7 +44,7 @@ class WhiteSpaceTokenizer(PackProcessor):
     """
 
     def _process(self, input_pack: DataPack):
-        pattern = r'\s+'
+        pattern = r"\s+"
         start = 0
 
         for m in re.finditer(pattern, input_pack.text):

@@ -29,9 +29,9 @@ __all__ = [
     "BasePointer",
 ]
 
-E = TypeVar('E')
-L = TypeVar('L')
-G = TypeVar('G')
+E = TypeVar("E")
+L = TypeVar("L")
+G = TypeVar("G")
 
 
 class BasePointer:
@@ -58,15 +58,15 @@ class EntryContainer(Generic[E, L, G]):
 
     def __setstate__(self, state):
         r"""In deserialization,
-            - The :class:`IdManager` is recreated from the id count.
+        - The :class:`IdManager` is recreated from the id count.
         """
         self.__dict__.update(state)
 
-        if 'creation_records' in self.__dict__:
-            self._creation_records = self.__dict__.pop('creation_records')
+        if "creation_records" in self.__dict__:
+            self._creation_records = self.__dict__.pop("creation_records")
 
-        if 'field_records' in self.__dict__:
-            self._field_records = self.__dict__.pop('field_records')
+        if "field_records" in self.__dict__:
+            self._field_records = self.__dict__.pop("field_records")
 
     @abstractmethod
     def on_entry_creation(self, entry: E):

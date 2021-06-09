@@ -29,26 +29,28 @@ from ft.onto.base_ontology import Document
 # Regular expressions used for parsing. Borrowed from
 # https://github.com/python/cpython/blob/3.6/Lib/html/parser.py
 
-interesting_normal = re.compile('[&<]')
-incomplete = re.compile('&[a-zA-Z#]')
+interesting_normal = re.compile("[&<]")
+incomplete = re.compile("&[a-zA-Z#]")
 
-entityref = re.compile('&([a-zA-Z][-.a-zA-Z0-9]*)[^a-zA-Z0-9]')
-charref = re.compile('&#(?:[0-9]+|[xX][0-9a-fA-F]+)[^0-9a-fA-F]')
+entityref = re.compile("&([a-zA-Z][-.a-zA-Z0-9]*)[^a-zA-Z0-9]")
+charref = re.compile("&#(?:[0-9]+|[xX][0-9a-fA-F]+)[^0-9a-fA-F]")
 
-starttagopen = re.compile('<[a-zA-Z]')
-piclose = re.compile('>')
-commentclose = re.compile(r'--\s*>')
+starttagopen = re.compile("<[a-zA-Z]")
+piclose = re.compile(">")
+commentclose = re.compile(r"--\s*>")
 # Note:
 #  1) if you change tagfind/attrfind remember to update locatestarttagend too;
 #  2) if you change tagfind/attrfind and/or locatestarttagend the parser will
 #     explode, so don't do it.
 # see http://www.w3.org/TR/html5/tokenization.html#tag-open-state
 # and http://www.w3.org/TR/html5/tokenization.html#tag-name-state
-tagfind_tolerant = re.compile(r'([a-zA-Z][^\t\n\r\f />\x00]*)(?:\s|/(?!>))*')
+tagfind_tolerant = re.compile(r"([a-zA-Z][^\t\n\r\f />\x00]*)(?:\s|/(?!>))*")
 attrfind_tolerant = re.compile(
     r'((?<=[\'"\s/])[^\s/>][^\s/=>]*)(\s*=+\s*'
-    r'(\'[^\']*\'|"[^"]*"|(?![\'"])[^>\s]*))?(?:\s|/(?!>))*')
-locatestarttagend_tolerant = re.compile(r"""
+    r'(\'[^\']*\'|"[^"]*"|(?![\'"])[^>\s]*))?(?:\s|/(?!>))*'
+)
+locatestarttagend_tolerant = re.compile(
+    r"""
   <[a-zA-Z][^\t\n\r\f />\x00]*       # tag name
   (?:[\s/]*                          # optional whitespace before attribute name
     (?:(?<=['"\s/])[^\s/>][^\s/=>]*  # attribute name
@@ -62,11 +64,13 @@ locatestarttagend_tolerant = re.compile(r"""
      )*
    )?
   \s*                                # trailing whitespace
-""", re.VERBOSE)
-endendtag = re.compile('>')
+""",
+    re.VERBOSE,
+)
+endendtag = re.compile(">")
 # the HTML 5 spec, section 8.1.2.2, doesn't allow spaces between
 # </ and the tag name, so maybe this should be fixed
-endtagfind = re.compile(r'</\s*([a-zA-Z][-.a-zA-Z0-9:_]*)\s*>')
+endtagfind = re.compile(r"</\s*([a-zA-Z][-.a-zA-Z0-9:_]*)\s*>")
 
 __all__ = [
     "HTMLReader",
@@ -74,15 +78,14 @@ __all__ = [
 
 
 class ForteHTMLParser(HTMLParser):
-    r"""Parser that stores spans that HTMLReader can use.
-    """
+    r"""Parser that stores spans that HTMLReader can use."""
 
     def __init__(self):
         super().__init__()
         self.spans = []
 
     def collect_span(self, begin, end):
-        self.spans.append((Span(begin, end), ''))
+        self.spans.append((Span(begin, end), ""))
 
     # We override the original goahead method and collect the information
     # we need to successfully remove tag information and retrieve the original
@@ -93,7 +96,7 @@ class ForteHTMLParser(HTMLParser):
         n = len(rawdata)
         while i < n:
             if self.convert_charrefs and not self.cdata_elem:
-                j = rawdata.find('<', i)
+                j = rawdata.find("<", i)
                 if j < 0:
                     # if we can't find the next <, either we are at the end
                     # or there's more text incoming.  If the latter is True,
@@ -101,9 +104,10 @@ class ForteHTMLParser(HTMLParser):
                     # a charref cut in half at end.  Try to determine if
                     # this is the case before proceeding by looking for an
                     # & near the end and see if it's followed by a space or ;.
-                    amppos = rawdata.rfind('&', max(i, n - 34))
-                    if (amppos >= 0 and
-                            not re.compile(r'[\s;]').search(rawdata, amppos)):
+                    amppos = rawdata.rfind("&", max(i, n - 34))
+                    if amppos >= 0 and not re.compile(r"[\s;]").search(
+                        rawdata, amppos
+                    ):
                         break  # wait till we get all the text
                     j = n
             else:
@@ -123,7 +127,7 @@ class ForteHTMLParser(HTMLParser):
             if i == n:
                 break
             startswith = rawdata.startswith
-            if startswith('<', i):
+            if startswith("<", i):
                 if starttagopen.match(rawdata, i):  # < + letter
                     k = self.parse_starttag(i)
                     self.collect_span(i, k)
@@ -147,9 +151,9 @@ class ForteHTMLParser(HTMLParser):
                 if k < 0:
                     if not end:
                         break
-                    k = rawdata.find('>', i + 1)
+                    k = rawdata.find(">", i + 1)
                     if k < 0:
-                        k = rawdata.find('<', i + 1)
+                        k = rawdata.find("<", i + 1)
                         if k < 0:
                             k = i + 1
                     else:
@@ -165,21 +169,21 @@ class ForteHTMLParser(HTMLParser):
                     name = match.group()[2:-1]
                     self.handle_charref(name)
                     k = match.end()
-                    if not startswith(';', k - 1):
+                    if not startswith(";", k - 1):
                         k = k - 1
                     i = self.updatepos(i, k)
                 else:
                     if ";" in rawdata[i:]:  # bail by consuming &#
-                        self.handle_data(rawdata[i:i + 2])
+                        self.handle_data(rawdata[i : i + 2])
                         i = self.updatepos(i, i + 2)
                     break
-            elif startswith('&', i):
+            elif startswith("&", i):
                 match = entityref.match(rawdata, i)
                 if match:
                     name = match.group(1)
                     self.handle_entityref(name)
                     k = match.end()
-                    if not startswith(';', k - 1):
+                    if not startswith(";", k - 1):
                         k = k - 1
                     i = self.updatepos(i, k)
                     continue
@@ -241,6 +245,7 @@ class HTMLReader(PackReader):
                 return dataset_path_iterator(content, ".html")
             # If file path to a single file, just return the filepath
             elif os.path.isfile(content):
+
                 def data_yielder(data):
                     yield data
 
@@ -259,10 +264,12 @@ class HTMLReader(PackReader):
             return data_iterator(content)
 
         else:
-            raise TypeError(f"HTMLReader supports only strings and list of"
-                            f" strings, Please make sure your inputs are"
-                            f" correct!"
-                            f"Found {type(content)} instead!")
+            raise TypeError(
+                f"HTMLReader supports only strings and list of"
+                f" strings, Please make sure your inputs are"
+                f" correct!"
+                f"Found {type(content)} instead!"
+            )
 
     def _parse_pack(self, data_source: str) -> Iterator[DataPack]:
         r"""Takes a string which could be either a filepath or html_content and
@@ -277,9 +284,9 @@ class HTMLReader(PackReader):
 
         # Check if data_source is a filepath
         if self.init_with_fileloc:
-            with open(data_source, "r",
-                      encoding="utf8",
-                      errors='ignore') as file:
+            with open(
+                data_source, "r", encoding="utf8", errors="ignore"
+            ) as file:
                 text = file.read()
         # else, must be a string with actual data
         else:
@@ -312,4 +319,4 @@ class HTMLReader(PackReader):
             return os.path.basename(collection)
         # If html string
         else:
-            return str(hash(collection)) + '.html'
+            return str(hash(collection)) + ".html"

@@ -91,8 +91,10 @@ class ProcessManager:
     @current_processor_index.setter
     def current_processor_index(self, processor_index: int):
         if processor_index >= len(self._queues):
-            raise ValueError(f"{processor_index} exceeds the pipeline "
-                             f"range [0, {self.pipeline_length - 1}]")
+            raise ValueError(
+                f"{processor_index} exceeds the pipeline "
+                f"range [0, {self.pipeline_length - 1}]"
+            )
         self._current_processor_index = processor_index
 
     @property
@@ -102,8 +104,10 @@ class ProcessManager:
     @current_queue_index.setter
     def current_queue_index(self, queue_index: int):
         if queue_index >= len(self._queues):
-            raise ValueError(f"{queue_index} exceeds the pipeline range "
-                             f"[0, {self.pipeline_length - 1}]")
+            raise ValueError(
+                f"{queue_index} exceeds the pipeline range "
+                f"[0, {self.pipeline_length - 1}]"
+            )
         self._current_queue_index = queue_index
 
     @property
@@ -134,8 +138,10 @@ class ProcessManager:
 
         """
         if queue_index > len(self._queues):
-            raise ValueError(f"Queue number {queue_index} exceeds queue "
-                             f"size {len(self._queues)}")
+            raise ValueError(
+                f"Queue number {queue_index} exceeds queue "
+                f"size {len(self._queues)}"
+            )
         else:
             # When a job is added to a queue, it will be
             # consider as unprocessed.
@@ -144,7 +150,9 @@ class ProcessManager:
 
     def exhausted(self) -> bool:
         r"""Returns True only if the last element remaining in the last queue is
-         a poison pack."""
+        a poison pack."""
 
-        return (len(self._queues[self.pipeline_length - 1]) == 1
-                and self._queues[self.pipeline_length - 1][0].is_poison)
+        return (
+            len(self._queues[self.pipeline_length - 1]) == 1
+            and self._queues[self.pipeline_length - 1][0].is_poison
+        )

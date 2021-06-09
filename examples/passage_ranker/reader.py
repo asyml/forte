@@ -47,6 +47,4 @@ class EvalReader(MultiPackReader):
 
     @classmethod
     def default_configs(cls):
-        return {
-            "pack_name": "query"
-        }
+        return {"pack_name": "query"}

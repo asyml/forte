@@ -16,8 +16,16 @@ The reader that reads Ontonotes data into Datapacks.
 """
 import os
 from collections import defaultdict
-from typing import (Any, DefaultDict, Iterator, List, NamedTuple, Optional,
-                    Set, Tuple)
+from typing import (
+    Any,
+    DefaultDict,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+)
 
 from forte.common.exception import ProcessorConfigError
 from forte.common.configuration import Config
@@ -26,8 +34,15 @@ from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
 from ft.onto.base_ontology import (
-    CoreferenceGroup, Document, EntityMention, PredicateArgument, PredicateLink,
-    PredicateMention, Sentence, Token)
+    CoreferenceGroup,
+    Document,
+    EntityMention,
+    PredicateArgument,
+    PredicateLink,
+    PredicateMention,
+    Sentence,
+    Token,
+)
 
 __all__ = [
     "OntonotesReader",
@@ -51,6 +66,7 @@ class OntonotesReader(PackReader):
         """
         Internal class used to specify the fields of an `ontonotes` file.
         """
+
         word: str
         predicate_labels: List[str] = []
         document_id: Optional[str] = None
@@ -64,9 +80,19 @@ class OntonotesReader(PackReader):
         coreference: Optional[str] = None
 
     _DEFAULT_FORMAT = [
-        "document_id", "part_number", None, "word", "pos_tag", None,
-        "lemmatised_word", "framenet_id", "word_sense", "speaker",
-        "entity_label", "*predicate_labels", "coreference",
+        "document_id",
+        "part_number",
+        None,
+        "word",
+        "pos_tag",
+        None,
+        "lemmatised_word",
+        "framenet_id",
+        "word_sense",
+        "speaker",
+        "entity_label",
+        "*predicate_labels",
+        "coreference",
     ]
     _STAR_FIELDS = {"predicate_labels"}
     _REQUIRED_FIELDS = ["word", "predicate_labels"]
@@ -76,7 +102,8 @@ class OntonotesReader(PackReader):
 
         if configs.column_format is None:
             raise ProcessorConfigError(
-                "Configuration column_format not provided.")
+                "Configuration column_format not provided."
+            )
 
         column_format = configs.column_format
         # Validate column format.
@@ -165,9 +192,7 @@ class OntonotesReader(PackReader):
         """
         config: dict = super().default_configs()
 
-        config.update({
-            "column_format": cls._DEFAULT_FORMAT
-        })
+        config.update({"column_format": cls._DEFAULT_FORMAT})
         return config
 
     def _collect(self, conll_directory: str) -> Iterator[Any]:  # type: ignore
@@ -183,7 +208,7 @@ class OntonotesReader(PackReader):
     def _cache_key_function(self, conll_file: str) -> str:
         return os.path.basename(conll_file)
 
-    def _parse_line(self, line: str) -> '_ParsedFields':
+    def _parse_line(self, line: str) -> "_ParsedFields":
         parts = line.split()
         fields = {}
         if self._star_pos is not None:
@@ -216,12 +241,15 @@ class OntonotesReader(PackReader):
 
                     current_pred_arg: List[Stack] = []
                     verbal_pred_args: List[
-                        List[Tuple[PredicateArgument, str]]] = []
+                        List[Tuple[PredicateArgument, str]]
+                    ] = []
 
                     groups: DefaultDict[int, List[EntityMention]] = defaultdict(
-                        list)
+                        list
+                    )
                     coref_stacks: DefaultDict[int, List[int]] = defaultdict(
-                        list)
+                        list
+                    )
 
                     start_new_doc = False
 
@@ -234,8 +262,9 @@ class OntonotesReader(PackReader):
                         group.add_members(mention_list)
 
                     text = " ".join(words)
-                    pack.set_text(text,
-                                  replace_func=self.text_replace_operation)
+                    pack.set_text(
+                        text, replace_func=self.text_replace_operation
+                    )
 
                     _ = Document(pack, 0, len(text))
                     if document_id is not None:
@@ -267,17 +296,24 @@ class OntonotesReader(PackReader):
 
                     # add entity mentions
                     current_entity_mention = self._process_entity_annotations(
-                        pack, fields.entity_label, word_begin, word_end,
+                        pack,
+                        fields.entity_label,
+                        word_begin,
+                        word_end,
                         current_entity_mention,
                     )
 
                     # add predicate mentions
-                    if (fields.lemmatised_word is not None and
-                            fields.lemmatised_word != "-"):
+                    if (
+                        fields.lemmatised_word is not None
+                        and fields.lemmatised_word != "-"
+                    ):
                         word_is_verbal_predicate = any(
-                            "(V" in x for x in fields.predicate_labels)
+                            "(V" in x for x in fields.predicate_labels
+                        )
                         pred_mention = PredicateMention(
-                            pack, word_begin, word_end)
+                            pack, word_begin, word_end
+                        )
 
                         pred_mention.predicate_lemma = fields.lemmatised_word
                         pred_mention.is_verb = word_is_verbal_predicate
@@ -321,8 +357,9 @@ class OntonotesReader(PackReader):
                         continue
 
                     # add predicate links in the sentence
-                    for predicate, pred_arg in zip(verbal_predicates,
-                                                   verbal_pred_args):
+                    for predicate, pred_arg in zip(
+                        verbal_predicates, verbal_pred_args
+                    ):
                         for arg in pred_arg:
                             link = PredicateLink(pack, predicate, arg[0])
                             link.arg_type = arg[1]
@@ -344,12 +381,12 @@ class OntonotesReader(PackReader):
                     has_rows = False
 
     def _process_entity_annotations(
-            self,
-            pack: DataPack,
-            label: Optional[str],
-            word_begin: int,
-            word_end: int,
-            current_entity_mention: Optional[Tuple[int, str]],
+        self,
+        pack: DataPack,
+        label: Optional[str],
+        word_begin: int,
+        word_end: int,
+        current_entity_mention: Optional[Tuple[int, str]],
     ) -> Optional[Tuple[int, str]]:
         if label is None:
             return None
@@ -362,7 +399,8 @@ class OntonotesReader(PackReader):
         if ")" in label:
             if current_entity_mention is None:
                 raise ValueError(
-                    "current_entity_mention is None when meet right blanket.")
+                    "current_entity_mention is None when meet right blanket."
+                )
             # Exiting a span, add and then reset the current span.
             entity = EntityMention(pack, current_entity_mention[0], word_end)
             entity.ner_type = current_entity_mention[1]
@@ -372,13 +410,13 @@ class OntonotesReader(PackReader):
         return current_entity_mention
 
     def _process_pred_annotations(
-            self,
-            pack: DataPack,
-            labels: List[str],
-            word_begin: int,
-            word_end: int,
-            current_pred_arg: List[Stack],
-            verbal_pred_args: List[List[Tuple[PredicateArgument, str]]],
+        self,
+        pack: DataPack,
+        labels: List[str],
+        word_begin: int,
+        word_end: int,
+        current_pred_arg: List[Stack],
+        verbal_pred_args: List[List[Tuple[PredicateArgument, str]]],
     ) -> None:
         """
         Various cases will be handled regarding nested spans including:
@@ -417,14 +455,14 @@ class OntonotesReader(PackReader):
             i: int = 0
             while i < len(label):
                 c: str = label[i]
-                if c == '*':
+                if c == "*":
                     i += 1
-                elif c == '(':
+                elif c == "(":
                     # New argument span.
                     j: int = i + 1
                     while j < len(label):
                         arg_type += label[j]
-                        if j == len(label) - 1 or label[j + 1] in ['(', ')']:
+                        if j == len(label) - 1 or label[j + 1] in ["(", ")"]:
                             break
                         j += 1
                     i = j + 1
@@ -433,32 +471,35 @@ class OntonotesReader(PackReader):
                     stack: Stack = current_pred_arg[label_index]
                     stack.append((word_begin, arg_type))
                     arg_type = ""
-                elif c == ')':
+                elif c == ")":
                     # End of current argument span.
                     stack = current_pred_arg[label_index]
-                    assert len(stack) > 0, \
-                        "invalid parsing state: mismatch argument span"
+                    assert (
+                        len(stack) > 0
+                    ), "invalid parsing state: mismatch argument span"
 
                     arg_begin, arg_type = stack.pop()
 
                     if not stack:
                         # The outer most span will be stored into data pack
                         if arg_type != "V":
-                            pred_arg = PredicateArgument(pack, arg_begin,
-                                                         word_end)
+                            pred_arg = PredicateArgument(
+                                pack, arg_begin, word_end
+                            )
 
                             verbal_pred_args[label_index].append(
-                                (pred_arg, arg_type))
+                                (pred_arg, arg_type)
+                            )
                     i += 1
 
     def _process_coref_annotations(
-            self,
-            pack: DataPack,
-            label: Optional[str],
-            word_begin: int,
-            word_end: int,
-            coref_stacks: DefaultDict[int, List[int]],
-            groups: DefaultDict[int, List[EntityMention]],
+        self,
+        pack: DataPack,
+        label: Optional[str],
+        word_begin: int,
+        word_end: int,
+        coref_stacks: DefaultDict[int, List[int]],
+        groups: DefaultDict[int, List[EntityMention]],
     ) -> None:
 
         if label is None or label == "-":

@@ -27,50 +27,51 @@ from forte.data.readers import MultiPackSentenceReader
 from forte.processors.third_party import MicrosoftBingTranslator
 
 
-@unittest.skip("BingTranslator will be moved into examples. A texar model will "
-               "be used to write NMT processor.")
+@unittest.skip(
+    "BingTranslator will be moved into examples. A texar model will "
+    "be used to write NMT processor."
+)
 @ddt
 class TestMachineTranslationProcessor(unittest.TestCase):
-
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    @data((["Hallo, Guten Morgen",
-            "Das ist Forte. Ein tool für NLP"],))
+    @data((["Hallo, Guten Morgen", "Das ist Forte. Ein tool für NLP"],))
     @unpack
     def test_pipeline(self, texts):
         for idx, text in enumerate(texts):
             file_path = os.path.join(self.test_dir, f"{idx + 1}.txt")
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 f.write(text)
 
         nlp = Pipeline[MultiPack]()
         reader_config = {
             "input_pack_name": "input",
-            "output_pack_name": "output"
+            "output_pack_name": "output",
         }
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
         translator_config = {
             "src_language": "de",
             "target_language": "en",
             "in_pack_name": "input",
-            "out_pack_name": "result"
+            "out_pack_name": "result",
         }
 
-        nlp.add(MicrosoftBingTranslator(),
-                config=translator_config)
+        nlp.add(MicrosoftBingTranslator(), config=translator_config)
         nlp.initialize()
 
         english_results = ["Hey good morning", "This is Forte. A tool for NLP"]
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
-            self.assertEqual(set(m_pack._pack_names),
-                             set(["input", "output", "result"]))
-            self.assertEqual(m_pack.get_pack("result").text,
-                             english_results[idx] + "\n")
+            self.assertEqual(
+                set(m_pack._pack_names), set(["input", "output", "result"])
+            )
+            self.assertEqual(
+                m_pack.get_pack("result").text, english_results[idx] + "\n"
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

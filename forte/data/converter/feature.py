@@ -18,9 +18,7 @@ import torch
 from forte.common import ValidationError
 from forte.data.vocabulary import Vocabulary
 
-__all__ = [
-    "Feature"
-]
+__all__ = ["Feature"]
 
 
 class Feature:
@@ -48,10 +46,9 @@ class Feature:
     Please refer to :meth:`data` for the typical usage of this class.
     """
 
-    def __init__(self,
-                 data: List,
-                 metadata: Dict,
-                 vocab: Optional[Vocabulary] = None):
+    def __init__(
+        self, data: List, metadata: Dict, vocab: Optional[Vocabulary] = None
+    ):
         self._meta_data: Dict = metadata
         self._validate_metadata()
 
@@ -84,11 +81,11 @@ class Feature:
         for field in necessary_fields:
             if field not in self._meta_data:
                 raise ValidationError(
-                    "Field not found in metadata: {}".format(field))
+                    "Field not found in metadata: {}".format(field)
+                )
 
         if self.need_pad and "pad_value" not in self._meta_data:
-            raise ValidationError(
-                "need_pad is True but no pad_value is given")
+            raise ValidationError("need_pad is True but no pad_value is given")
 
     def _validate_input(self):
         """
@@ -98,13 +95,14 @@ class Feature:
             raise ValidationError("Leaf feature should contain actual data.")
         if not self.leaf_feature and self._data:
             raise ValidationError(
-                "Non-leaf feature should not contain actual data.")
+                "Non-leaf feature should not contain actual data."
+            )
         if not self.leaf_feature and not self._sub_features:
             raise ValidationError(
-                "Non-leaf feature should contain sub features.")
+                "Non-leaf feature should contain sub features."
+            )
         if self._dim < 1:
-            raise ValidationError(
-                "The `dim` in meta should be at least 1.")
+            raise ValidationError("The `dim` in meta should be at least 1.")
 
     def _parse_sub_features(self, data):
         """
@@ -124,9 +122,10 @@ class Feature:
                 sub_metadata = deepcopy(self._meta_data)
                 sub_metadata["dim"] = sub_metadata["dim"] - 1
                 self._sub_features.append(
-                    Feature(data=sub_data,
-                            metadata=sub_metadata,
-                            vocab=self._vocab))
+                    Feature(
+                        data=sub_data, metadata=sub_metadata, vocab=self._vocab
+                    )
+                )
 
         self._mask: List = [1] * len(data)
 
@@ -147,7 +146,7 @@ class Feature:
         return self._dtype
 
     @property
-    def sub_features(self) -> List['Feature']:
+    def sub_features(self) -> List["Feature"]:
         """
         Returns:
             A list of sub features. Raise exception if current feature is the
@@ -157,7 +156,8 @@ class Feature:
             raise ValidationError("Leaf feature does not have sub features")
         if self._dim <= 1:
             raise ValidationError(
-                "Non-leaf feature should have as least 2 dimension")
+                "Non-leaf feature should have as least 2 dimension"
+            )
 
         return self._sub_features
 
@@ -192,12 +192,14 @@ class Feature:
         Returns:
             Whether the Feature need to be padded.
         """
-        return self._meta_data["need_pad"] if "need_pad" in self._meta_data \
+        return (
+            self._meta_data["need_pad"]
+            if "need_pad" in self._meta_data
             else True
+        )
 
     def __len__(self):
-        return len(self._data) if self.leaf_feature else \
-            len(self._sub_features)
+        return len(self._data) if self.leaf_feature else len(self._sub_features)
 
     def pad(self, max_len: int):
         """
@@ -210,21 +212,23 @@ class Feature:
         """
         if len(self) > max_len:
             raise ValidationError(
-                "Feature length should not exceed given max_len")
+                "Feature length should not exceed given max_len"
+            )
 
         for _ in range(max_len - len(self)):
             if self.leaf_feature:
                 if self._data is None:
                     raise ValueError(
                         "Invalid internal state: leaf_feature "
-                        "does not have actual data")
+                        "does not have actual data"
+                    )
                 self._data.append(self._pad_value)
             else:
                 sub_metadata = deepcopy(self._meta_data)
                 sub_metadata["dim"] = sub_metadata["dim"] - 1
-                self._sub_features.append(Feature(data=[],
-                                                  metadata=sub_metadata,
-                                                  vocab=self._vocab))
+                self._sub_features.append(
+                    Feature(data=[], metadata=sub_metadata, vocab=self._vocab)
+                )
             self._mask.append(0)
 
     @property
@@ -345,7 +349,8 @@ class Feature:
             if self._data is None:
                 raise ValueError(
                     "Invalid internal state: leaf_feature "
-                    "does not have actual data")
+                    "does not have actual data"
+                )
             return self._data, [self._mask]
         else:
             unroll_features: List = []

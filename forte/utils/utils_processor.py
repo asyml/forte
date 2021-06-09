@@ -15,10 +15,7 @@
 Utility functions related to processors.
 """
 
-__all__ = [
-    "record_types_and_attributes_check",
-    "collect_input_pack_record"
-]
+__all__ = ["record_types_and_attributes_check", "collect_input_pack_record"]
 
 from typing import Dict, Set
 from forte.data.base_pack import PackType
@@ -26,8 +23,9 @@ from forte.common import ExpectedRecordNotFound
 from forte.common.resources import Resources
 
 
-def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
-                                      input_pack_record: Dict[str, Set[str]]):
+def record_types_and_attributes_check(
+    expectation: Dict[str, Set[str]], input_pack_record: Dict[str, Set[str]]
+):
     r"""Check if any types or attributes in expectation dictionary doesn't
     match with input_pack.record. If not, an error of
     :class:`~forte.common.exception.ExpectedRecordNotFound` will be raised.
@@ -49,22 +47,26 @@ def record_types_and_attributes_check(expectation: Dict[str, Set[str]],
             if expected_t not in input_pack_record.keys():
                 raise ExpectedRecordNotFound(
                     f"The record type {expected_t} is not found in "
-                    f"meta of the prediction datapack.")
+                    f"meta of the prediction datapack."
+                )
             else:
                 expected_value = expectation.get(expected_t)
                 if expected_value is not None:
                     for expected_t_v in expected_value:
-                        if expected_t_v not in input_pack_record \
-                                .get(expected_t, []):
+                        if expected_t_v not in input_pack_record.get(
+                            expected_t, []
+                        ):
                             raise ExpectedRecordNotFound(
                                 f"The record attribute type "
                                 f"{expected_t_v} is not found in "
                                 f"attribute of record {expected_t} "
-                                f"in meta of the input datapack.")
+                                f"in meta of the input datapack."
+                            )
 
 
-def collect_input_pack_record(resources: Resources,
-                              input_pack: PackType) -> Dict[str, Set[str]]:
+def collect_input_pack_record(
+    resources: Resources, input_pack: PackType
+) -> Dict[str, Set[str]]:
     # pylint: disable=protected-access
     r"""Method to collect the type and attributes from the input pack and if
     :attr:`~forte.pipeline.Pipeline.resource` has `onto_specs` as key

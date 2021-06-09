@@ -16,8 +16,9 @@ Unit tests for dictionary word replacement op.
 """
 
 import unittest
-from forte.processors.data_augment.algorithms.dictionary_replacement_op \
-    import DictionaryReplacementOp
+from forte.processors.data_augment.algorithms.dictionary_replacement_op import (
+    DictionaryReplacementOp,
+)
 
 from ft.onto.base_ontology import Token
 from forte.data.data_pack import DataPack
@@ -50,18 +51,36 @@ class TestDictionaryReplacementOp(unittest.TestCase):
         self.assertIn(
             self.dra.replace(token_1)[1],
             [
-                'eat', 'feed', 'eat on', 'consume',
-                'eat up', 'use up', 'deplete', 'exhaust',
-                'run through', 'wipe out', 'corrode', 'rust'
-            ]
+                "eat",
+                "feed",
+                "eat on",
+                "consume",
+                "eat up",
+                "use up",
+                "deplete",
+                "exhaust",
+                "run through",
+                "wipe out",
+                "corrode",
+                "rust",
+            ],
         )
         self.assertIn(
             self.dra.replace(token_2)[1],
             [
-                'telephone', 'phone', 'telephone set',
-                'speech sound', 'sound', 'earphone', 'earpiece',
-                'headphone', 'call', 'telephone', 'call up', 'ring'
-            ]
+                "telephone",
+                "phone",
+                "telephone set",
+                "speech sound",
+                "sound",
+                "earphone",
+                "earpiece",
+                "headphone",
+                "call",
+                "telephone",
+                "call up",
+                "ring",
+            ],
         )
 
 

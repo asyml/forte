@@ -139,7 +139,8 @@ class PipelineComponent(Generic[PackType]):
 
     @classmethod
     def make_configs(
-            cls, configs: Optional[Union[Config, Dict[str, Any]]]) -> Config:
+        cls, configs: Optional[Union[Config, Dict[str, Any]]]
+    ) -> Config:
         """
         Create the component configuration for this class, by merging the
         provided config with the ``default_configs()``.
@@ -164,7 +165,8 @@ class PipelineComponent(Generic[PackType]):
 
             if "config_path" in configs and not configs["config_path"] is None:
                 filebased_configs = yaml.safe_load(
-                    open(configs.pop("config_path")))
+                    open(configs.pop("config_path"))
+                )
             else:
                 filebased_configs = {}
 
@@ -176,8 +178,9 @@ class PipelineComponent(Generic[PackType]):
             final_configs = Config(merged_configs, cls.default_configs())
         except ValueError as e:
             raise ProcessorConfigError(
-                f'Configuration error for the processor '
-                f'{get_full_module_name(cls)}.') from e
+                f"Configuration error for the processor "
+                f"{get_full_module_name(cls)}."
+            ) from e
 
         return final_configs
 

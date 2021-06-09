@@ -5,9 +5,7 @@ from forte.data.ontology.core import Entry
 from forte.processors.base import PackProcessor
 from forte.utils import get_class
 
-__all__ = [
-    "AnnotationRemover"
-]
+__all__ = ["AnnotationRemover"]
 
 
 class AnnotationRemover(PackProcessor):
@@ -24,7 +22,5 @@ class AnnotationRemover(PackProcessor):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            'removal_types': []
-        })
+        config.update({"removal_types": []})
         return config

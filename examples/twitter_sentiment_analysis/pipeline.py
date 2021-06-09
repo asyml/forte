@@ -27,7 +27,7 @@ from forte.data.selector import RegexNameMatchSelector
 
 if __name__ == "__main__":
     # Load config file
-    config_file = os.path.join(os.path.dirname(__file__), 'config.yml')
+    config_file = os.path.join(os.path.dirname(__file__), "config.yml")
     config = yaml.safe_load(open(config_file, "r"))
     config = Config(config, default_hparams=None)
 
@@ -45,15 +45,18 @@ if __name__ == "__main__":
     # Conduct sentiment analysis.
     pattern = rf"{config.twitter_search.response_pack_name_prefix}_\d"
     selector_hit = RegexNameMatchSelector(select_name=pattern)
-    nlp.add(component=VaderSentimentProcessor(),
-            selector=selector_hit, config=config.vader_sentiment)
+    nlp.add(
+        component=VaderSentimentProcessor(),
+        selector=selector_hit,
+        config=config.vader_sentiment,
+    )
 
     nlp.initialize()
 
     # process dataset
     m_pack: MultiPack
     for m_pack in nlp.process_dataset():
-        print('The number of datapacks(including query) is', len(m_pack.packs))
+        print("The number of datapacks(including query) is", len(m_pack.packs))
 
         tweets, pos_sentiment, neg_sentiment, neutral_sentiment = 0, 0, 0, 0
 
@@ -64,11 +67,10 @@ if __name__ == "__main__":
 
             tweets += 1
             for doc in pack.get(config.vader_sentiment.entry_type):
-                print('Tweet: ', doc.text)
-                print('Sentiment Compound Score: ',
-                      doc.sentiment['compound'])
+                print("Tweet: ", doc.text)
+                print("Sentiment Compound Score: ", doc.sentiment["compound"])
 
-                compound_score = doc.sentiment['compound']
+                compound_score = doc.sentiment["compound"]
                 if compound_score >= 0.05:
                     pos_sentiment += 1
                 elif compound_score <= -0.05:
@@ -76,10 +78,11 @@ if __name__ == "__main__":
                 else:
                     neutral_sentiment += 1
 
-        print('The number of tweets retrieved: ', tweets)
-        print('The proportion of positive sentiment: ', pos_sentiment / tweets)
-        print('The proportion of negative sentiment: ', neg_sentiment / tweets)
-        print('The proportion of neutral sentiment: ',
-              neutral_sentiment / tweets)
+        print("The number of tweets retrieved: ", tweets)
+        print("The proportion of positive sentiment: ", pos_sentiment / tweets)
+        print("The proportion of negative sentiment: ", neg_sentiment / tweets)
+        print(
+            "The proportion of neutral sentiment: ", neutral_sentiment / tweets
+        )
 
-    print('Done')
+    print("Done")

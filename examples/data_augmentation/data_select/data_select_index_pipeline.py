@@ -39,12 +39,14 @@ __all__ = [
 
 
 class CreateIndexerPipeline:
-
     def __init__(self, reader, reader_config, indexer_config=None):
         self.reader = reader
         self.reader_config = reader_config
-        self.config = indexer_config if indexer_config is not None \
+        self.config = (
+            indexer_config
+            if indexer_config is not None
             else self.default_config()
+        )
         self.config = Config(self.config, default_hparams=None)
         self.create_pipeline()
 
@@ -68,9 +70,6 @@ class CreateIndexerPipeline:
             "indexer": {
                 "name": "ElasticSearchIndexer",
                 "hparams": ElasticSearchIndexer.default_configs(),
-                "other_kwargs": {
-                    "request_timeout": 60,
-                    "refresh": False
-                }
-            }
+                "other_kwargs": {"request_timeout": 60, "refresh": False},
+            },
         }

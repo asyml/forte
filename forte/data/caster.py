@@ -25,12 +25,15 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.pipeline_component import PipelineComponent
 
-InputPackType = TypeVar('InputPackType', bound=BasePack)
-OutputPackType = TypeVar('OutputPackType', bound=BasePack)
+InputPackType = TypeVar("InputPackType", bound=BasePack)
+OutputPackType = TypeVar("OutputPackType", bound=BasePack)
 
 
-class Caster(PipelineComponent[InputPackType],
-             Generic[InputPackType, OutputPackType], ABC):
+class Caster(
+    PipelineComponent[InputPackType],
+    Generic[InputPackType, OutputPackType],
+    ABC,
+):
     def cast(self, pack: InputPackType) -> OutputPackType:
         raise NotImplementedError
 
@@ -57,6 +60,4 @@ class MultiPackBoxer(Caster[DataPack, MultiPack]):
 
     @classmethod
     def default_configs(cls):
-        return {
-            'pack_name': 'default'
-        }
+        return {"pack_name": "default"}

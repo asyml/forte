@@ -22,11 +22,7 @@ from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.processors.base.base_processor import BaseProcessor
 
-__all__ = [
-    "BasePackProcessor",
-    "PackProcessor",
-    "MultiPackProcessor"
-]
+__all__ = ["BasePackProcessor", "PackProcessor", "MultiPackProcessor"]
 
 
 class BasePackProcessor(BaseProcessor[PackType], ABC):
@@ -47,7 +43,8 @@ class PackProcessor(BasePackProcessor[DataPack], ABC):
 
 
 class MultiPackProcessor(BasePackProcessor[MultiPack], ABC):
-    r"""The base class of processors that process :class:`MultiPack` each time.
+    r"""
+    The base class of processors that process :class:`MultiPack` each time.
     """
 
     def _process(self, input_pack: MultiPack):

@@ -62,13 +62,10 @@ class MarianMachineTranslator(MachineTranslator):
     """
 
     def __init__(
-            self,
-            src_lang: str = 'en',
-            tgt_lang: str = 'fr',
-            device: str = "cpu"
+        self, src_lang: str = "en", tgt_lang: str = "fr", device: str = "cpu"
     ):
         super().__init__(src_lang, tgt_lang, device)
-        self.model_name = 'Helsinki-NLP/opus-mt-{src}-{tgt}'.format(
+        self.model_name = "Helsinki-NLP/opus-mt-{src}-{tgt}".format(
             src=src_lang, tgt=tgt_lang
         )
         self.tokenizer = MarianTokenizer.from_pretrained(self.model_name)
@@ -82,7 +79,10 @@ class MarianMachineTranslator(MachineTranslator):
                 # Have to use explicitly call `convert_to_tensors` to make
                 # this line work in both transformers 3 and 4, probably won't
                 # work in 5.
-                [src_text]).convert_to_tensors('pt').to(self.device)
+                [src_text]
+            )
+            .convert_to_tensors("pt")
+            .to(self.device)
         )
 
         tgt_texts: List[str] = [

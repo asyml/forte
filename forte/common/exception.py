@@ -38,14 +38,12 @@ class PackIndexError(Exception):
 
 
 class IncompleteEntryError(Exception):
-    r"""Raise this error when the entry is not complete.
-    """
+    r"""Raise this error when the entry is not complete."""
     pass
 
 
 class EntryNotFoundError(ValueError):
-    r"""Raise this error when the entry is not found in the data pack.
-    """
+    r"""Raise this error when the entry is not found in the data pack."""
     pass
 
 
@@ -69,7 +67,7 @@ class PackDataException(Exception):
 
 
 class ProcessFlowException(Exception):
-    r"""Raise this when errors happen in flow control """
+    r"""Raise this when errors happen in flow control"""
     pass
 
 
@@ -90,4 +88,5 @@ class ExpectedRecordNotFound(ValueError):
 
 class InvalidOperationException(Exception):
     """Throw when a methoc call is invalid for the object's current state"""
+
     pass

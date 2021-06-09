@@ -12,5 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from forte.processors.data_augment.algorithms.distribution_replacement_op \
-    import *
+from forte.processors.data_augment.algorithms.distribution_replacement_op import *

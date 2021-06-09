@@ -29,22 +29,25 @@ __all__ = [
 
 
 class StringReader(PackReader):
-    r""":class:`StringReader` is designed to read in a list of string variables.
+    r"""
+    :class:`StringReader` is designed to read in a list of string variables.
     """
 
     # pylint: disable=unused-argument
     def _cache_key_function(self, collection) -> str:
-        return str(hash(collection)) + '.html'
+        return str(hash(collection)) + ".html"
 
-    def _collect(self,  # type: ignore
-                 string_data: Union[List[str], str]) -> Iterator[str]:
+    def _collect(  # type: ignore
+        self, string_data: Union[List[str], str]
+    ) -> Iterator[str]:
         r"""``string`_data` should be of type `List[str]`,
         which is the list of raw text strings to iterate over.
         """
         # This allows the user to pass in either one single string or a list of
         # strings.
-        data_strings = [string_data] if isinstance(
-            string_data, str) else string_data
+        data_strings = (
+            [string_data] if isinstance(string_data, str) else string_data
+        )
         for data in data_strings:
             yield data
 
@@ -72,4 +75,4 @@ class StringReader(PackReader):
             record_meta: the field in the datapack for type record that need to
                 fill in for consistency checking.
         """
-        record_meta['ft.onto.base_ontology.Document'] = set()
+        record_meta["ft.onto.base_ontology.Document"] = set()

@@ -35,20 +35,26 @@ from nlpviewer_backend.lib.stave_project import StaveProjectReader
 
 
 class TestStaveProcessor(unittest.TestCase):
-
     def setUp(self):
 
         self._port: int = 8880
         self._file_dir_path = os.path.dirname(__file__)
         self._project_name: str = "serialization_pipeline_test"
-        self._dataset_dir: str = os.path.abspath(os.path.join(
-            self._file_dir_path, '../../../', 'data_samples/ontonotes/00/'))
+        self._dataset_dir: str = os.path.abspath(
+            os.path.join(
+                self._file_dir_path, "../../../", "data_samples/ontonotes/00/"
+            )
+        )
         self._stave_processor = StaveProcessor()
 
         self.pl = Pipeline[DataPack](
-            ontology_file=os.path.abspath(os.path.join(
-                self._file_dir_path, "../../../",
-                    "forte/ontology_specs/base_ontology.json"))
+            ontology_file=os.path.abspath(
+                os.path.join(
+                    self._file_dir_path,
+                    "../../../",
+                    "forte/ontology_specs/base_ontology.json",
+                )
+            )
         )
         self.pl.set_reader(OntonotesReader())
 
@@ -58,10 +64,13 @@ class TestStaveProcessor(unittest.TestCase):
         textpacks, will be dumped to local disk. Consistency checking
         is performed here to verify the dumped project data.
         """
-        self.pl.add(self._stave_processor, config={
-            "project_name": self._project_name,
-            "server_thread_daemon": True
-        })
+        self.pl.add(
+            self._stave_processor,
+            config={
+                "project_name": self._project_name,
+                "server_thread_daemon": True,
+            },
+        )
         self.pl.run(self._dataset_dir)
 
         project_reader = StaveProjectReader(
@@ -71,21 +80,28 @@ class TestStaveProcessor(unittest.TestCase):
         self.assertEqual(project_reader.project_name, self._project_name)
         self.assertEqual(
             project_reader.project_type,
-            self._stave_processor.configs.project_type
+            self._stave_processor.configs.project_type,
         )
         self.assertEqual(
             project_reader.ontology,
-            self._stave_processor.resources.get("onto_specs_dict")
+            self._stave_processor.resources.get("onto_specs_dict"),
         )
         self.assertEqual(
             project_reader.project_configs,
-            self._stave_processor.configs.project_configs.todict()
+            self._stave_processor.configs.project_configs.todict(),
         )
 
         # Check default project configuration
-        with open(os.path.abspath(os.path.join(
-            self._file_dir_path, "../data/ontology/test_specs/",
-            "test_project_configuration.json")), "r") as f:
+        with open(
+            os.path.abspath(
+                os.path.join(
+                    self._file_dir_path,
+                    "../data/ontology/test_specs/",
+                    "test_project_configuration.json",
+                )
+            ),
+            "r",
+        ) as f:
             target_configs = json.load(f)
         self.assertEqual(
             target_configs,
@@ -107,11 +123,14 @@ class TestStaveProcessor(unittest.TestCase):
         """
         Check the validation of `project_type` config.
         """
-        self.pl.add(self._stave_processor, config={
-            "port": self._port,
-            "project_type": "multi_pack",
-            "server_thread_daemon": True
-        })
+        self.pl.add(
+            self._stave_processor,
+            config={
+                "port": self._port,
+                "project_type": "multi_pack",
+                "server_thread_daemon": True,
+            },
+        )
         with self.assertRaises(ProcessorConfigError) as context:
             self.pl.run(self._dataset_dir)
 
@@ -123,10 +142,10 @@ class TestStaveProcessor(unittest.TestCase):
         with self.assertRaises(ProcessorConfigError) as context:
             self.pl.resource.remove("onto_specs_path")
             self.pl.resource.remove("onto_specs_dict")
-            self.pl.add(self._stave_processor, config={
-                "port": self._port,
-                "server_thread_daemon": True
-            })
+            self.pl.add(
+                self._stave_processor,
+                config={"port": self._port, "server_thread_daemon": True},
+            )
             self.pl.run(self._dataset_dir)
 
 

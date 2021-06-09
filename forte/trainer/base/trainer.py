@@ -36,9 +36,7 @@ from forte.train_preprocessor import TrainPreprocessor
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "BaseTrainer"
-]
+__all__ = ["BaseTrainer"]
 
 
 class BaseTrainer:
@@ -178,13 +176,13 @@ class BaseTrainer:
         internally create an instance of this class to do the actual training.
         """
         if not self._initialized:
-            raise ValueError("initialize should be called to "
-                             "build train preprocessor.")
+            raise ValueError(
+                "initialize should be called to " "build train preprocessor."
+            )
         return self._tp
 
     def run(self):
-        r"""The main entry for starting a training process.
-        """
+        r"""The main entry for starting a training process."""
         self.initialize()
         self.train()
 
@@ -234,14 +232,20 @@ class BaseTrainer:
         # Check arg type. Default behavior only supports str as args[0] which
         # is considered as a disk file path.
         if not isinstance(args[0], str):
-            raise ValueError("Do not support input args: {} and kwargs: {}"
-                             .format(args, kwargs))
+            raise ValueError(
+                "Do not support input args: {} and kwargs: {}".format(
+                    args, kwargs
+                )
+            )
 
         file_path = args[0]
 
         if not isinstance(self.train_preprocessor, TrainPreprocessor):
-            raise ValueError("Invalid TrainPreprocessor type: {}".format(
-                self.train_preprocessor))
+            raise ValueError(
+                "Invalid TrainPreprocessor type: {}".format(
+                    self.train_preprocessor
+                )
+            )
 
         request: Dict = self.train_preprocessor.request
 

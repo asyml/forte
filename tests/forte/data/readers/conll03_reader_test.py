@@ -25,12 +25,16 @@ from ft.onto.base_ontology import Token, Sentence, EntityMention
 
 
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
-
     def setUp(self):
-        root_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            os.pardir, os.pardir, os.pardir, os.pardir
-        ))
+        root_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                os.pardir,
+                os.pardir,
+                os.pardir,
+                os.pardir,
+            )
+        )
         # Define and config the Pipeline
         self.dataset_path = os.path.join(root_path, "data_samples/conll03")
         self.nlp = Pipeline[DataPack]()
@@ -40,14 +44,38 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
     def test_process_next(self):
         doc_exists = False
 
-        expected_sentence = ['The', 'European', 'Commission', 'said', 'on',
-                             'Thursday', 'it', 'disagreed', 'with', 'German',
-                             'advice', 'to',
-                             'consumers', 'to', 'shun', 'British', 'lamb',
-                             'until', 'scientists',
-                             'determine', 'whether', 'mad', 'cow', 'disease',
-                             'can', 'be',
-                             'transmitted', 'to', 'sheep', '.']
+        expected_sentence = [
+            "The",
+            "European",
+            "Commission",
+            "said",
+            "on",
+            "Thursday",
+            "it",
+            "disagreed",
+            "with",
+            "German",
+            "advice",
+            "to",
+            "consumers",
+            "to",
+            "shun",
+            "British",
+            "lamb",
+            "until",
+            "scientists",
+            "determine",
+            "whether",
+            "mad",
+            "cow",
+            "disease",
+            "can",
+            "be",
+            "transmitted",
+            "to",
+            "sheep",
+            ".",
+        ]
         expected_ner_type = ["ORG", "MISC", "MISC"]
         expected_token = ["European Commission", "German", "British"]
 
@@ -69,5 +97,5 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         self.assertTrue(doc_exists)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

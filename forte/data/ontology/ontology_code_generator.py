@@ -35,35 +35,61 @@ import typed_astunparse as ast_unparse
 
 from forte.data.ontology import top, utils
 from forte.data.ontology.code_generation_exceptions import (
-    DuplicateEntriesWarning, OntologySpecError,
+    DuplicateEntriesWarning,
+    OntologySpecError,
     OntologyAlreadyGeneratedException,
-    ParentEntryNotDeclaredException, TypeNotDeclaredException,
-    UnsupportedTypeException, InvalidIdentifierException,
-    DuplicatedAttributesWarning, ParentEntryNotSupportedException,
-    OntologySpecValidationError, OntologySourceNotFoundException)
+    ParentEntryNotDeclaredException,
+    TypeNotDeclaredException,
+    UnsupportedTypeException,
+    InvalidIdentifierException,
+    DuplicatedAttributesWarning,
+    ParentEntryNotSupportedException,
+    OntologySpecValidationError,
+    OntologySourceNotFoundException,
+)
 from forte.data.ontology.code_generation_objects import (
-    NonCompositeProperty, ListProperty, ClassTypeDefinition,
-    EntryDefinition, Property, ImportManagerPool,
-    EntryName, ModuleWriterPool, ImportManager, DictProperty, EntryTree)
+    NonCompositeProperty,
+    ListProperty,
+    ClassTypeDefinition,
+    EntryDefinition,
+    Property,
+    ImportManagerPool,
+    EntryName,
+    ModuleWriterPool,
+    ImportManager,
+    DictProperty,
+    EntryTree,
+)
+
 # Builtin and local imports required in the generated python modules.
 from forte.data.ontology.ontology_code_const import (
-    REQUIRED_IMPORTS, DEFAULT_CONSTRAINTS_KEYS, AUTO_GEN_SIGNATURE,
-    DEFAULT_PREFIX, SchemaKeywords, file_header, NON_COMPOSITES, COMPOSITES,
-    ALL_INBUILT_TYPES, TOP_MOST_MODULE_NAME, PACK_TYPE_CLASS_NAME,
-    hardcoded_pack_map, AUTO_GEN_FILENAME,
-    AUTO_DEL_FILENAME)
+    REQUIRED_IMPORTS,
+    DEFAULT_CONSTRAINTS_KEYS,
+    AUTO_GEN_SIGNATURE,
+    DEFAULT_PREFIX,
+    SchemaKeywords,
+    file_header,
+    NON_COMPOSITES,
+    COMPOSITES,
+    ALL_INBUILT_TYPES,
+    TOP_MOST_MODULE_NAME,
+    PACK_TYPE_CLASS_NAME,
+    hardcoded_pack_map,
+    AUTO_GEN_FILENAME,
+    AUTO_DEL_FILENAME,
+)
 from forte.utils.utils_io import get_resource
 
 
 def name_validation(name):
-    parts = name.split('.')
+    parts = name.split(".")
     for part in parts:
         if not part.isidentifier():
             raise SyntaxError(f"'{part}' is not an valid identifier.")
 
 
 def analyze_packages(packages: Set[str]):
-    r""" Analyze the package paths to make sure they are valid.
+    r"""Analyze the package paths to make sure they are valid.
 
     Args:
         packages: The list of packages.
@@ -74,21 +100,24 @@ def analyze_packages(packages: Set[str]):
     """
     package_len = []
     for p in packages:
-        parts = p.split('.')
+        parts = p.split(".")
         package_len.append((len(parts), p))
         try:
             name_validation(p)
         except InvalidIdentifierException:
             logging.error(
                 "Error analyzing package name: '%s' is "
-                "not a valid package name", p)
+                "not a valid package name",
+                p,
+            )
             raise
 
     return [p for (l, p) in sorted(package_len, reverse=True)]
 
 
-def validate_entry(entry_name: str, sorted_packages: List[str],
-                   lenient_prefix=False):
+def validate_entry(
+    entry_name: str, sorted_packages: List[str], lenient_prefix=False
+):
     """
     Validate if this entry name can be used. It currently checks for:
       1) If the package name is defined. (This can be turn off by setting
@@ -117,7 +146,7 @@ def validate_entry(entry_name: str, sorted_packages: List[str],
                 f"default prefix 'ft.onto'."
             )
 
-    entry_splits = entry_name.split('.')
+    entry_splits = entry_name.split(".")
 
     for e in entry_splits:
         if not e.isidentifier():
@@ -130,7 +159,8 @@ def validate_entry(entry_name: str, sorted_packages: List[str],
             f"We currently require each entry to contains at least 3 levels, "
             f"which corresponds to the directory name, the file (module) name,"
             f"the entry class name. There are only {len(entry_splits)}"
-            f"levels in [{entry_name}].")
+            f"levels in [{entry_name}]."
+        )
 
 
 def as_init_str(init_args):
@@ -143,8 +173,8 @@ def as_init_str(init_args):
 
     """
     # Unparsing the `__init__` args and normalising the string
-    args = ast_unparse.unparse(init_args).strip().split(',', 1)
-    return args[1].strip().replace('  ', '')
+    args = ast_unparse.unparse(init_args).strip().split(",", 1)
+    return args[1].strip().replace("  ", "")
 
 
 def is_composite_type(item_type: str):
@@ -152,7 +182,7 @@ def is_composite_type(item_type: str):
 
 
 def valid_composite_key(item_type: str):
-    return item_type in ('int', 'str')
+    return item_type in ("int", "str")
 
 
 class OntologyCodeGenerator:
@@ -172,8 +202,9 @@ class OntologyCodeGenerator:
 
     """
 
-    def __init__(self, import_dirs: Optional[List[str]] = None,
-                 generate_all=False):
+    def __init__(
+        self, import_dirs: Optional[List[str]] = None, generate_all=False
+    ):
         """
         Args:
             import_dirs: Additional user provided paths to search the
@@ -198,7 +229,8 @@ class OntologyCodeGenerator:
 
         # Store information to write each modules.
         self.module_writers: ModuleWriterPool = ModuleWriterPool(
-            self.import_managers)
+            self.import_managers
+        )
 
         # Mapping from entries parsed from the `top_ontology_module`
         # (default is `forte.data.ontology.top.py`), to their
@@ -220,12 +252,13 @@ class OntologyCodeGenerator:
 
         # Populate the two dictionaries above. And make the classes in the base
         # ontology aware to the root manager.
-        self.initialize_top_entries(self.import_managers.root,
-                                    top_ontology_module)
+        self.initialize_top_entries(
+            self.import_managers.root, top_ontology_module
+        )
 
         # A few pre-requesite type to support.
         self.import_managers.add_default_import("dataclasses.dataclass")
-        self.import_managers.root.add_object_to_import('typing.Optional')
+        self.import_managers.root.add_object_to_import("typing.Optional")
 
         for type_class in NON_COMPOSITES.values():
             self.import_managers.root.add_object_to_import(type_class)
@@ -251,7 +284,7 @@ class OntologyCodeGenerator:
         # The current directory is secondary.
         self.import_dirs.append(os.getcwd())
 
-        spec_base = 'forte/ontology_specs'
+        spec_base = "forte/ontology_specs"
         forte_spec_dir = get_resource(spec_base, False)
 
         # Lastly, the Forte installed directory.
@@ -259,19 +292,24 @@ class OntologyCodeGenerator:
         self.exclude_from_writing = set()
 
         if not generate_all:
-            logging.info("Checking existing specification "
-                         "directory: %s", forte_spec_dir)
+            logging.info(
+                "Checking existing specification " "directory: %s",
+                forte_spec_dir,
+            )
             for existing_spec in os.listdir(forte_spec_dir):
-                if existing_spec.endswith('.json'):
+                if existing_spec.endswith(".json"):
                     logging.info(
-                        "Forte library contains %s, "
-                        "will skip this one.", existing_spec)
+                        "Forte library contains %s, " "will skip this one.",
+                        existing_spec,
+                    )
                     self.exclude_from_writing.add(
-                        os.path.join(spec_base, existing_spec))
+                        os.path.join(spec_base, existing_spec)
+                    )
 
     @no_type_check
-    def initialize_top_entries(self, manager: ImportManager,
-                               base_ontology_module: ModuleType):
+    def initialize_top_entries(
+        self, manager: ImportManager, base_ontology_module: ModuleType
+    ):
         """
         Parses the file corresponding to `base_ontology_module` -
         (1) Imports the imports defined by the base file,
@@ -290,7 +328,7 @@ class OntologyCodeGenerator:
 
         Returns:
         """
-        base_ontology_file = open(base_ontology_module.__file__, 'r')
+        base_ontology_file = open(base_ontology_module.__file__, "r")
         tree = ast.parse(base_ontology_file.read())
         base_ontology_file.close()
         base_module_name = base_ontology_module.__name__
@@ -315,11 +353,16 @@ class OntologyCodeGenerator:
 
             # Adding all the module objects defined in `__all__` to imports.
             if isinstance(elem, ast.Assign) and len(elem.targets) > 0:
-                if elem.targets[0].id == '__all__':
+                if elem.targets[0].id == "__all__":
                     full_names.update(
-                        [(name.s,
-                          f"{base_ontology_module.__name__}.{name.s}")
-                         for name in elem.value.elts])
+                        [
+                            (
+                                name.s,
+                                f"{base_ontology_module.__name__}.{name.s}",
+                            )
+                            for name in elem.value.elts
+                        ]
+                    )
 
                     for name in elem.value.elts:
                         full_class_name = f"{base_module_name}.{name.s}"
@@ -340,8 +383,10 @@ class OntologyCodeGenerator:
                 init_func = None
 
                 for func in elem.body:
-                    if isinstance(func, ast.FunctionDef) and \
-                            func.name == '__init__':
+                    if (
+                        isinstance(func, ast.FunctionDef)
+                        and func.name == "__init__"
+                    ):
                         init_func = func
                         break
 
@@ -349,7 +394,8 @@ class OntologyCodeGenerator:
                     warnings.warn(
                         f"No `__init__` function found in the class"
                         f" {elem.name} of the module "
-                        f"{base_ontology_module}.")
+                        f"{base_ontology_module}."
+                    )
                 else:
                     full_ele_name = full_names[elem.name]
 
@@ -374,7 +420,8 @@ class OntologyCodeGenerator:
                                 # type, such as DataPack or MultiPack.
                                 if arg_ann.id == PACK_TYPE_CLASS_NAME:
                                     pack_class = hardcoded_pack_map(
-                                        full_ele_name)
+                                        full_ele_name
+                                    )
                                     manager.add_object_to_import(pack_class)
                                     arg_ann.id = pack_class
 
@@ -382,34 +429,39 @@ class OntologyCodeGenerator:
                     self.base_entry_lookup[full_ele_name] = full_ele_name
                     self.top_init_args[full_ele_name] = init_func.args
 
-    def generate(self, spec_path: str, destination_dir: str = os.getcwd(),
-                 is_dry_run: bool = False, include_init: bool = True,
-                 merged_path: Optional[str] = None, lenient_prefix=False) \
-            -> Optional[str]:
+    def generate(
+        self,
+        spec_path: str,
+        destination_dir: str = os.getcwd(),
+        is_dry_run: bool = False,
+        include_init: bool = True,
+        merged_path: Optional[str] = None,
+        lenient_prefix=False,
+    ) -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
-            ontology from the input json file. This is the main entry point to
-            the class.
+        ontology from the input json file. This is the main entry point to
+        the class.
 
-            Args:
-                spec_path: The input ontology specification file, which should
-                    be a json file.
-                destination_dir: The folder in which config packages are to be
-                    generated. If not provided, current working directory is
-                    used. Ignored if `is_dry_run` is `True`.
-                is_dry_run: if `True`, creates the ontology in the temporary
-                    directory, else, creates the ontology in the
-                    `destination_dir`.
-                include_init: if `True`, generates `__init__.py` in the already
-                    existing directories, otherwise only generates `__init__.py`
-                    in the generated directories.
-                merged_path: if a path is provided, a merged ontology file will
-                    be written at this path.
-                lenient_prefix: if `True`, will not enforce the entry name to
-                    match a known prefix.
+        Args:
+            spec_path: The input ontology specification file, which should
+                be a json file.
+            destination_dir: The folder in which config packages are to be
+                generated. If not provided, current working directory is
+                used. Ignored if `is_dry_run` is `True`.
+            is_dry_run: if `True`, creates the ontology in the temporary
+                directory, else, creates the ontology in the
+                `destination_dir`.
+            include_init: if `True`, generates `__init__.py` in the already
+                existing directories, otherwise only generates `__init__.py`
+                in the generated directories.
+            merged_path: if a path is provided, a merged ontology file will
+                be written at this path.
+            lenient_prefix: if `True`, will not enforce the entry name to
+                match a known prefix.
 
-            Returns:
-                Directory path in which the modules are created: either one of
-                the temporary directory or `destination_dir`.
+        Returns:
+            Directory path in which the modules are created: either one of
+            the temporary directory or `destination_dir`.
 
         """
         # Update the list of directories to be examined for imported configs
@@ -421,11 +473,12 @@ class OntologyCodeGenerator:
         # Generate ontology classes for the input json config and the configs
         # it is dependent upon.
         try:
-            self.parse_ontology_spec(spec_path,
-                                     merged_schema=merged_schemas,
-                                     merged_prefixes=merged_prefixes,
-                                     lenient_prefix=lenient_prefix,
-                                     )
+            self.parse_ontology_spec(
+                spec_path,
+                merged_schema=merged_schemas,
+                merged_prefixes=merged_prefixes,
+                lenient_prefix=lenient_prefix,
+            )
         except OntologySpecError:
             logging.error("Error at parsing [%s]", spec_path)
             raise
@@ -438,11 +491,11 @@ class OntologyCodeGenerator:
         # Starting from here, we won't add any more modules to import.
         self.import_managers.fix_all_modules()
 
-        logging.info('Working on %s', spec_path)
+        logging.info("Working on %s", spec_path)
         for writer in self.module_writers.writers():
-            logging.info('Writing module: %s', writer.module_name)
+            logging.info("Writing module: %s", writer.module_name)
             writer.write(tempdir, destination_dir, include_init)
-            logging.info('Done writing.')
+            logging.info("Done writing.")
 
         if merged_path is not None:
             logging.info("Writing merged schema at %s", merged_path)
@@ -451,7 +504,7 @@ class OntologyCodeGenerator:
                 "definitions": merged_schemas,
                 "additional_prefixes": list(set(merged_prefixes)),
             }
-            with open(merged_path, 'w') as out:
+            with open(merged_path, "w") as out:
                 json.dump(merged_config, out, indent=2)
             logging.info("Done writing.")
 
@@ -459,26 +512,31 @@ class OntologyCodeGenerator:
         # `self.tempdir` to the provided folder.
         if not is_dry_run:
             generated_top_dirs = set(utils.get_top_level_dirs(tempdir))
-            for existing_top_dir in utils.get_top_level_dirs(
-                    destination_dir):
+            for existing_top_dir in utils.get_top_level_dirs(destination_dir):
                 if existing_top_dir in generated_top_dirs:
                     logging.warning(
                         "The directory with the name "
                         "%s is already present in "
                         "%s. New files will be merge into the "
-                        "existing directory.", existing_top_dir,
-                        destination_dir)
+                        "existing directory.",
+                        existing_top_dir,
+                        destination_dir,
+                    )
 
-            utils.copytree(tempdir, destination_dir,
-                           ignore_pattern_if_file_exists='*/__init__.py')
+            utils.copytree(
+                tempdir,
+                destination_dir,
+                ignore_pattern_if_file_exists="*/__init__.py",
+            )
             return destination_dir
 
         return tempdir
 
     def visit_ontology_imports(
-            self, import_path: str,
-            visited_paths: Optional[Dict[str, bool]] = None,
-            rec_visited_paths: Optional[Dict[str, bool]] = None
+        self,
+        import_path: str,
+        visited_paths: Optional[Dict[str, bool]] = None,
+        rec_visited_paths: Optional[Dict[str, bool]] = None,
     ) -> Optional[Tuple[str, Dict[str, bool], Dict[str, bool]]]:
         # Initialize the visited dicts when the function is called for the
         # first time.
@@ -492,7 +550,8 @@ class OntologyCodeGenerator:
         if rec_visited_paths[import_path]:
             raise OntologyAlreadyGeneratedException(
                 f"Ontology corresponding to {import_path} already "
-                f"generated, cycles not permitted, aborting")
+                f"generated, cycles not permitted, aborting"
+            )
 
         # If the ontology is already generated, need not generate it again
         if visited_paths[import_path]:
@@ -506,8 +565,9 @@ class OntologyCodeGenerator:
         try:
             utils.validate_json_schema(import_path)
         except Exception as exception:
-            if type(exception).__name__.split('.')[0] == jsonschema.__name__ \
-                    and hasattr(exception, 'message'):
+            if type(exception).__name__.split(".")[
+                0
+            ] == jsonschema.__name__ and hasattr(exception, "message"):
                 raise OntologySpecValidationError() from exception
             raise
 
@@ -520,15 +580,17 @@ class OntologyCodeGenerator:
                 return full_spec_path
 
         raise OntologySourceNotFoundException(
-            'Cannot find import [%s].' % import_path)
+            "Cannot find import [%s]." % import_path
+        )
 
     def parse_ontology_spec(
-            self, ontology_path: str,
-            merged_schema: List[Dict],
-            merged_prefixes: List[str],
-            visited_paths: Optional[Dict[str, bool]] = None,
-            rec_visited_paths: Optional[Dict[str, bool]] = None,
-            lenient_prefix=False,
+        self,
+        ontology_path: str,
+        merged_schema: List[Dict],
+        merged_prefixes: List[str],
+        visited_paths: Optional[Dict[str, bool]] = None,
+        rec_visited_paths: Optional[Dict[str, bool]] = None,
+        lenient_prefix=False,
     ):
         r"""Performs a topological traversal on the directed graph formed by the
         imported json configs. While processing each config, it first generates
@@ -546,29 +608,33 @@ class OntologyCodeGenerator:
         Returns:
         """
         import_info = self.visit_ontology_imports(
-            ontology_path, visited_paths, rec_visited_paths)
+            ontology_path, visited_paths, rec_visited_paths
+        )
 
         if import_info is None:
             return
 
         json_file_path, visited_paths, rec_visited_paths = import_info
 
-        with open(json_file_path, 'r') as f:
+        with open(json_file_path, "r") as f:
             spec_dict = json.load(f)
 
         # Parse imported ontologies. Users can import them via a path relative
         # to the PYTHONPATH.
         relative_imports: Set[str] = set(
-            spec_dict.get(SchemaKeywords.imports, []))
+            spec_dict.get(SchemaKeywords.imports, [])
+        )
 
         for rel_import in relative_imports:
             full_pkg_path: str = self.find_import_path(rel_import)
-            logging.info('Imported ontology at: %s', full_pkg_path)
+            logging.info("Imported ontology at: %s", full_pkg_path)
             self.parse_ontology_spec(
-                full_pkg_path, merged_schema, merged_prefixes,
+                full_pkg_path,
+                merged_schema,
+                merged_prefixes,
                 visited_paths=visited_paths,
                 rec_visited_paths=rec_visited_paths,
-                lenient_prefix=lenient_prefix
+                lenient_prefix=lenient_prefix,
             )
 
         # Once the ontology for all the imported files is generated, generate
@@ -579,17 +645,27 @@ class OntologyCodeGenerator:
 
         print_json_file = json_file_path
         if self.installed_forte_dir is not None and os.path.samefile(
-                curr_forte_dir, self.installed_forte_dir):
+            curr_forte_dir, self.installed_forte_dir
+        ):
             print_json_file = os.path.relpath(json_file_path, curr_forte_dir)
 
-        self.parse_schema(spec_dict, print_json_file, merged_schema,
-                          merged_prefixes, lenient_prefix)
+        self.parse_schema(
+            spec_dict,
+            print_json_file,
+            merged_schema,
+            merged_prefixes,
+            lenient_prefix,
+        )
 
         rec_visited_paths[json_file_path] = False
 
     def parse_schema_for_no_import_onto_specs_file(
-            self, ontology_path: str, ontology_dict: Dict, lenient_prefix=False,
-            merged_entry_tree: Optional[EntryTree] = None):
+        self,
+        ontology_path: str,
+        ontology_dict: Dict,
+        lenient_prefix=False,
+        merged_entry_tree: Optional[EntryTree] = None,
+    ):
         r"""Function to populate the `merged_entry_tree` after reading
             ontology from the input json file.
 
@@ -616,20 +692,31 @@ class OntologyCodeGenerator:
                 f"in the provided ontology {ontology_path}"
                 " Please provide a merged ontology file with all imports "
                 "resolved by using the command "
-                "`generate_ontology create --merged_path`")
+                "`generate_ontology create --merged_path`"
+            )
 
         merged_schema: List[Dict] = []
         merged_prefixes: List[str] = []
 
-        self.parse_schema(ontology_dict, ontology_path, merged_schema,
-                          merged_prefixes, lenient_prefix, merged_entry_tree)
+        self.parse_schema(
+            ontology_dict,
+            ontology_path,
+            merged_schema,
+            merged_prefixes,
+            lenient_prefix,
+            merged_entry_tree,
+        )
 
-    def parse_schema(self, schema: Dict, source_json_file: str,
-                     merged_schema: List[Dict], merged_prefixes: List[str],
-                     lenient_prefix=False,
-                     merged_entry_tree: Optional[EntryTree] = None
-                     ):
-        r""" Generates ontology code for a parsed schema extracted from a
+    def parse_schema(
+        self,
+        schema: Dict,
+        source_json_file: str,
+        merged_schema: List[Dict],
+        merged_prefixes: List[str],
+        lenient_prefix=False,
+        merged_entry_tree: Optional[EntryTree] = None,
+    ):
+        r"""Generates ontology code for a parsed schema extracted from a
         json config. Appends entry code to the corresponding module. Creates a
         new module file if module is generated for the first time.
 
@@ -656,12 +743,13 @@ class OntologyCodeGenerator:
             merged_prefixes.extend(schema[SchemaKeywords.prefixes])
 
         allowed_packages = set(
-            schema.get(SchemaKeywords.prefixes, []) + [DEFAULT_PREFIX])
+            schema.get(SchemaKeywords.prefixes, []) + [DEFAULT_PREFIX]
+        )
         sorted_prefixes = analyze_packages(allowed_packages)
 
         file_desc = file_header(
             schema.get(SchemaKeywords.description, ""),
-            schema.get(SchemaKeywords.ontology_name, "")
+            schema.get(SchemaKeywords.ontology_name, ""),
         )
 
         for definition in entry_definitions:
@@ -671,7 +759,9 @@ class OntologyCodeGenerator:
             if raw_entry_name in self.allowed_types_tree:
                 warnings.warn(
                     f"Class {raw_entry_name} already present in the "
-                    f"ontology, will be overridden.", DuplicateEntriesWarning)
+                    f"ontology, will be overridden.",
+                    DuplicateEntriesWarning,
+                )
             self.allowed_types_tree[raw_entry_name] = set()
 
             # Add the entry definition to the import managers.
@@ -688,7 +778,8 @@ class OntologyCodeGenerator:
 
             # Add it as a defining object.
             self.import_managers.get(en.module_name).add_defining_objects(
-                raw_entry_name)
+                raw_entry_name
+            )
 
             # Get or set module writer only if the ontology to be generated
             # is not already installed.
@@ -713,20 +804,21 @@ class OntologyCodeGenerator:
                         f"Attribute type for the entry {en.class_name} "
                         f"and the attribute {property_name} already present in "
                         f"the ontology, will be overridden",
-                        DuplicatedAttributesWarning
+                        DuplicatedAttributesWarning,
                     )
                 self.allowed_types_tree[en.class_name].add(property_name)
             # populate the entry tree based on information
             if merged_entry_tree is not None:
                 curr_entry_name = en.class_name
-                parent_entry_name = definition['parent_entry']
+                parent_entry_name = definition["parent_entry"]
                 curr_entry_attributes = self.allowed_types_tree[en.class_name]
-                merged_entry_tree.add_node(curr_entry_name,
-                                           parent_entry_name,
-                                           curr_entry_attributes)
+                merged_entry_tree.add_node(
+                    curr_entry_name, parent_entry_name, curr_entry_attributes
+                )
 
-    def cleanup_generated_ontology(self, path, is_forced=False) -> (
-            Tuple[bool, Optional[str]]):
+    def cleanup_generated_ontology(
+        self, path, is_forced=False
+    ) -> (Tuple[bool, Optional[str]]):
         """
         Deletes the generated files and directories. Generated files are
         identified by the header `***automatically_generated***`. Generated
@@ -744,24 +836,31 @@ class OntologyCodeGenerator:
         """
         path = os.path.abspath(path)
 
-        rel_paths = dir_util.copy_tree(path, '', dry_run=1)
-        rel_paths = [os.path.dirname(file) for file in rel_paths
-                     if os.path.basename(file).startswith(AUTO_GEN_FILENAME)]
+        rel_paths = dir_util.copy_tree(path, "", dry_run=1)
+        rel_paths = [
+            os.path.dirname(file)
+            for file in rel_paths
+            if os.path.basename(file).startswith(AUTO_GEN_FILENAME)
+        ]
 
         del_dir = None
         if not is_forced:
-            curr_time_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S-%f')
-            del_dir = os.path.join(os.path.dirname(path), AUTO_DEL_FILENAME,
-                                   curr_time_str)
+            curr_time_str = datetime.utcnow().strftime("%Y-%m-%d-%H-%M-%S-%f")
+            del_dir = os.path.join(
+                os.path.dirname(path), AUTO_DEL_FILENAME, curr_time_str
+            )
             for rel_path in rel_paths:
                 joined_path = os.path.join(del_dir, rel_path)
                 Path(joined_path).mkdir(parents=True, exist_ok=True)
-        rel_paths += ['']
-        return (self._cleanup_generated_ontology(path, '', del_dir, rel_paths),
-                del_dir)
+        rel_paths += [""]
+        return (
+            self._cleanup_generated_ontology(path, "", del_dir, rel_paths),
+            del_dir,
+        )
 
-    def _cleanup_generated_ontology(self, outer_path, relative_path, delete_dir,
-                                    allowed_relative_paths) -> bool:
+    def _cleanup_generated_ontology(
+        self, outer_path, relative_path, delete_dir, allowed_relative_paths
+    ) -> bool:
         """
         Recursively deletes the generated files and the newly empty directories.
         Args:
@@ -779,18 +878,21 @@ class OntologyCodeGenerator:
             return False
 
         path = os.path.join(outer_path, relative_path)
-        dst_dir = os.path.join(delete_dir, os.path.dirname(relative_path)) \
-            if delete_dir is not None else None
+        dst_dir = (
+            os.path.join(delete_dir, os.path.dirname(relative_path))
+            if delete_dir is not None
+            else None
+        )
 
         if os.path.isfile(path):
             # path is a file type
             # delete .generated marker files and automatically generated files
             is_empty = os.path.basename(path).startswith(AUTO_GEN_FILENAME)
             if not is_empty and os.access(path, os.R_OK):
-                with open(path, 'r') as f:
+                with open(path, "r") as f:
                     lines = f.readlines()
                     if len(lines) > 0:
-                        if lines[0].startswith(f'# {AUTO_GEN_SIGNATURE}'):
+                        if lines[0].startswith(f"# {AUTO_GEN_SIGNATURE}"):
                             is_empty = True
             if is_empty:
                 if delete_dir is not None:
@@ -801,10 +903,12 @@ class OntologyCodeGenerator:
             is_empty = True
             for child in os.listdir(path):
                 child_rel_path = os.path.join(relative_path, child)
-                if not self._cleanup_generated_ontology(outer_path,
-                                                        child_rel_path,
-                                                        delete_dir,
-                                                        allowed_relative_paths):
+                if not self._cleanup_generated_ontology(
+                    outer_path,
+                    child_rel_path,
+                    delete_dir,
+                    allowed_relative_paths,
+                ):
                     is_empty = False
             if is_empty:
                 if delete_dir is not None:
@@ -824,7 +928,8 @@ class OntologyCodeGenerator:
 
                     short_ann_name = arg_ann.value.id  # type: ignore
                     full_ann_name: str = this_manager.get_name_to_use(
-                        short_ann_name)
+                        short_ann_name
+                    )
 
                     arg_ann.value.id = full_ann_name  # type: ignore
                     arg_ann = arg_ann.slice.value  # type: ignore
@@ -840,8 +945,9 @@ class OntologyCodeGenerator:
         custom_init_args_str = as_init_str(custom_init_args)
         return custom_init_args_str
 
-    def parse_entry(self, entry_name: EntryName,
-                    schema: Dict) -> Tuple[EntryDefinition, List[str]]:
+    def parse_entry(
+        self, entry_name: EntryName, schema: Dict
+    ) -> Tuple[EntryDefinition, List[str]]:
         """
         Args:
             entry_name: Object holds various name form of the entry.
@@ -872,7 +978,8 @@ class OntologyCodeGenerator:
             )
 
         base_entry: Optional[str] = self.find_base_entry(
-            entry_name.class_name, parent_entry)
+            entry_name.class_name, parent_entry
+        )
 
         if base_entry is None:
             raise OntologySpecError(
@@ -897,15 +1004,15 @@ class OntologyCodeGenerator:
             raise ParentEntryNotDeclaredException(
                 f"Cannot add {entry_name.class_name} to the ontology as "
                 f"it's parent entry {parent_entry} is not present "
-                f"in the ontology.")
+                f"in the ontology."
+            )
 
         parent_entry_use_name = this_manager.get_name_to_use(parent_entry)
 
         property_items, property_names = [], []
         for prop_schema in properties:
             property_names.append(prop_schema["name"])
-            property_items.append(
-                self.parse_property(entry_name, prop_schema))
+            property_items.append(self.parse_property(entry_name, prop_schema))
 
         # For special classes that requires a constraint.
         core_bases: Set[str] = self.top_to_core_entries[base_entry]
@@ -920,13 +1027,15 @@ class OntologyCodeGenerator:
             if schema_key in schema:
                 constraint_type_ = schema[schema_key]
                 constraint_type_name = this_manager.get_name_to_use(
-                    constraint_type_)
+                    constraint_type_
+                )
 
                 # TODO: cannot handle constraints that contain self-references.
                 # self_ref = entry_name.class_name == constraint_type_
 
                 class_att_items.append(
-                    ClassTypeDefinition(class_key, constraint_type_name))
+                    ClassTypeDefinition(class_key, constraint_type_name)
+                )
 
         # TODO: Can assign better object type to Link and Group objects
         custom_init_arg_str: str = self.construct_init(entry_name, base_entry)
@@ -937,28 +1046,39 @@ class OntologyCodeGenerator:
             init_args=custom_init_arg_str,
             properties=property_items,
             class_attributes=class_att_items,
-            description=schema.get(SchemaKeywords.description, None))
+            description=schema.get(SchemaKeywords.description, None),
+        )
 
         return entry_item, property_names
 
     def parse_dict(
-            self, manager: ImportManager, schema: Dict, entry_name: EntryName,
-            att_name: str, att_type: str, desc: str):
-        if (SchemaKeywords.dict_key_type not in schema
-                or SchemaKeywords.dict_value_type not in schema):
+        self,
+        manager: ImportManager,
+        schema: Dict,
+        entry_name: EntryName,
+        att_name: str,
+        att_type: str,
+        desc: str,
+    ):
+        if (
+            SchemaKeywords.dict_key_type not in schema
+            or SchemaKeywords.dict_value_type not in schema
+        ):
             raise TypeNotDeclaredException(
                 f"Item type of the attribute {att_name} for the entry "
                 f" {entry_name.class_name} not declared. This attribute is "
                 f"a composite type: {att_type}, it should have a "
                 f"{SchemaKeywords.dict_key_type} and "
-                f"{SchemaKeywords.dict_value_type}.")
+                f"{SchemaKeywords.dict_value_type}."
+            )
 
         key_type = schema[SchemaKeywords.dict_key_type]
         if not valid_composite_key(key_type):
             raise UnsupportedTypeException(
                 f"Key type {key_type} for entry {entry_name.name}'s "
                 f"attribute {att_name} is not supported, we only support a "
-                f"limited set of keys.")
+                f"limited set of keys."
+            )
 
         value_type = schema[SchemaKeywords.dict_value_type]
         if is_composite_type(value_type):
@@ -966,14 +1086,16 @@ class OntologyCodeGenerator:
             raise UnsupportedTypeException(
                 f"Item type {value_type} for entry {entry_name.name}'s "
                 f"attribute {att_name} is a composite type, we do not support "
-                f"nested composite type.")
+                f"nested composite type."
+            )
 
         if not manager.is_known_name(value_type):
             # Case of unknown.
             raise TypeNotDeclaredException(
                 f"Item type {value_type} for the entry "
                 f"{entry_name.name} of the attribute {att_name} "
-                f"not declared in ontology.")
+                f"not declared in ontology."
+            )
 
         # Make sure the import of these related types are handled.
         manager.add_object_to_import(value_type)
@@ -983,18 +1105,31 @@ class OntologyCodeGenerator:
         default_val: Dict = {}
 
         return DictProperty(
-            manager, att_name, key_type, value_type,
-            description=desc, default_val=default_val, self_ref=self_ref)
+            manager,
+            att_name,
+            key_type,
+            value_type,
+            description=desc,
+            default_val=default_val,
+            self_ref=self_ref,
+        )
 
     def parse_list(
-            self, manager: ImportManager, schema: Dict, entry_name: EntryName,
-            att_name: str, att_type: str, desc: str) -> ListProperty:
+        self,
+        manager: ImportManager,
+        schema: Dict,
+        entry_name: EntryName,
+        att_name: str,
+        att_type: str,
+        desc: str,
+    ) -> ListProperty:
         if SchemaKeywords.element_type not in schema:
             raise TypeNotDeclaredException(
                 f"Item type for the attribute {att_name} of the entry "
                 f"[{entry_name.class_name}] not declared. This attribute is "
                 f"a composite type: {att_type}, it should have a "
-                f"{SchemaKeywords.element_type}.")
+                f"{SchemaKeywords.element_type}."
+            )
 
         item_type = schema[SchemaKeywords.element_type]
         if is_composite_type(item_type):
@@ -1002,14 +1137,16 @@ class OntologyCodeGenerator:
             raise UnsupportedTypeException(
                 f"Item type {item_type} for entry {entry_name.name}'s "
                 f"attribute {att_name} is a composite type, we do not support "
-                f"nested composite type.")
+                f"nested composite type."
+            )
 
         if not manager.is_known_name(item_type):
             # Case of unknown.
             raise TypeNotDeclaredException(
                 f"Item type {item_type} for the entry "
                 f"{entry_name.name} of the attribute {att_name} "
-                f"not declared in ontology.")
+                f"not declared in ontology."
+            )
 
         # Make sure the import of these related types are handled.
         manager.add_object_to_import(item_type)
@@ -1017,18 +1154,33 @@ class OntologyCodeGenerator:
         self_ref = entry_name.class_name == item_type
 
         return ListProperty(
-            manager, att_name, item_type, description=desc,
-            default_val=[], self_ref=self_ref)
+            manager,
+            att_name,
+            item_type,
+            description=desc,
+            default_val=[],
+            self_ref=self_ref,
+        )
 
     def parse_non_composite(
-            self, manager: ImportManager, att_name: str, att_type: str,
-            desc: str, default_val: str, self_ref: bool = False
+        self,
+        manager: ImportManager,
+        att_name: str,
+        att_type: str,
+        desc: str,
+        default_val: str,
+        self_ref: bool = False,
     ) -> NonCompositeProperty:
-        manager.add_object_to_import('typing.Optional')
+        manager.add_object_to_import("typing.Optional")
 
         return NonCompositeProperty(
-            manager, att_name, att_type, description=desc,
-            default_val=default_val, self_ref=self_ref)
+            manager,
+            att_name,
+            att_type,
+            description=desc,
+            default_val=default_val,
+            self_ref=self_ref,
+        )
 
     def parse_property(self, entry_name: EntryName, schema: Dict) -> Property:
         """
@@ -1046,7 +1198,8 @@ class OntologyCodeGenerator:
         att_type = schema[SchemaKeywords.attribute_type]
 
         manager: ImportManager = self.import_managers.get(
-            entry_name.module_name)
+            entry_name.module_name
+        )
 
         # schema type should be present in the validation tree
         # TODO: Remove this hack
@@ -1054,31 +1207,39 @@ class OntologyCodeGenerator:
             raise TypeNotDeclaredException(
                 f"Attribute type '{att_type}' for the entry "
                 f"'{entry_name.name}' of the attribute '{att_name}' not "
-                f"declared in the ontology")
+                f"declared in the ontology"
+            )
 
         desc = schema.get(SchemaKeywords.description, None)
         default_val = schema.get(SchemaKeywords.default_value, None)
 
         # element type should be present in the validation tree
         if att_type in COMPOSITES:
-            if att_type == 'List':
+            if att_type == "List":
                 return self.parse_list(
-                    manager, schema, entry_name, att_name, att_type, desc)
-            elif att_type == 'Dict':
+                    manager, schema, entry_name, att_name, att_type, desc
+                )
+            elif att_type == "Dict":
                 return self.parse_dict(
-                    manager, schema, entry_name, att_name, att_type, desc)
+                    manager, schema, entry_name, att_name, att_type, desc
+                )
         elif att_type in NON_COMPOSITES or manager.is_imported(att_type):
             self_ref = entry_name.class_name == att_type
             return self.parse_non_composite(
-                manager, att_name, att_type, desc, default_val,
-                self_ref=self_ref)
+                manager,
+                att_name,
+                att_type,
+                desc,
+                default_val,
+                self_ref=self_ref,
+            )
 
-        raise UnsupportedTypeException(
-            f"{att_type} is not a supported type.")
+        raise UnsupportedTypeException(f"{att_type} is not a supported type.")
 
     def find_base_entry(
-            self, this_entry: str, parent_entry: str) -> Optional[str]:
-        """ Find the `base_entry`. As a side effect, it will populate the
+        self, this_entry: str, parent_entry: str
+    ) -> Optional[str]:
+        """Find the `base_entry`. As a side effect, it will populate the
         internal state `self.base_entry_lookup`. The base will be one of the
         predefined base entry group in the top ontology, which are:
          ["Link", "Annotation", "Group", "Generic", "MultiPackLink",

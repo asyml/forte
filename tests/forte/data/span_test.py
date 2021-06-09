@@ -21,7 +21,6 @@ from forte.data.span import Span
 
 
 class SpanTest(unittest.TestCase):
-
     def test_span(self):
         span1 = Span(1, 2)
         span2 = Span(1, 2)
@@ -36,5 +35,5 @@ class SpanTest(unittest.TestCase):
         self.assertLess(span1, span2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

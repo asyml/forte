@@ -23,138 +23,193 @@ from typing import Dict
 
 from forte.common.resources import Resources
 from forte.data.data_pack import DataPack
-from forte.datasets.wikipedia.dbpedia.db_utils import load_redirects, \
-    print_progress
+from forte.datasets.wikipedia.dbpedia.db_utils import (
+    load_redirects,
+    print_progress,
+)
 from forte.datasets.wikipedia.dbpedia import (
-    DBpediaWikiReader, WikiArticleWriter,
-    WikiStructReader, WikiAnchorReader, WikiPropertyReader, WikiInfoBoxReader
+    DBpediaWikiReader,
+    WikiArticleWriter,
+    WikiStructReader,
+    WikiAnchorReader,
+    WikiPropertyReader,
+    WikiInfoBoxReader,
 )
 from forte.data.base_reader import PackReader
 from forte.pipeline import Pipeline
 
 
 def add_wiki_info(
-        reader: PackReader, resources: Resources,
-        input_path: str, input_pack_path: str,
-        output_path: str, prompt_name: str,
-        skip_existing=True, overwrite=False,
-        input_index_file_name: str = 'article.idx',
-        output_index_file_name: str = 'article.idx',
+    reader: PackReader,
+    resources: Resources,
+    input_path: str,
+    input_pack_path: str,
+    output_path: str,
+    prompt_name: str,
+    skip_existing=True,
+    overwrite=False,
+    input_index_file_name: str = "article.idx",
+    output_index_file_name: str = "article.idx",
 ):
     pl = Pipeline[DataPack](resources)
 
     out_index_path = os.path.join(output_path, output_index_file_name)
     if skip_existing and os.path.exists(out_index_path):
-        print_progress(f'\n{output_path} exist, skipping {prompt_name}', '\n')
+        print_progress(f"\n{output_path} exist, skipping {prompt_name}", "\n")
         return
 
     pl.set_reader(
-        reader, config={
-            'pack_index': os.path.join(input_pack_path, input_index_file_name),
-            'pack_dir': input_pack_path,
-        }
-    )
-
-    pl.add(
-        WikiArticleWriter(), config={
-            'output_dir': output_path,
-            'zip_pack': True,
-            'drop_record': True,
-            'output_index_file': output_index_file_name,
-            'overwrite': overwrite
+        reader,
+        config={
+            "pack_index": os.path.join(input_pack_path, input_index_file_name),
+            "pack_dir": input_pack_path,
         },
     )
 
-    print_progress(f'Start running the {prompt_name} pipeline.', '\n')
+    pl.add(
+        WikiArticleWriter(),
+        config={
+            "output_dir": output_path,
+            "zip_pack": True,
+            "drop_record": True,
+            "output_index_file": output_index_file_name,
+            "overwrite": overwrite,
+        },
+    )
+
+    print_progress(f"Start running the {prompt_name} pipeline.", "\n")
     pl.run(input_path)
-    print_progress(f'Done collecting {prompt_name}.', '\n')
+    print_progress(f"Done collecting {prompt_name}.", "\n")
 
 
 def read_wiki_text(
-        nif_context: str,
-        output_dir: str,
-        resources: Resources,
-        skip_existing: bool = False
+    nif_context: str,
+    output_dir: str,
+    resources: Resources,
+    skip_existing: bool = False,
 ):
     if skip_existing and os.path.exists(output_dir):
-        print_progress(f'\n{output_dir} exist, skipping reading text', '\n')
+        print_progress(f"\n{output_dir} exist, skipping reading text", "\n")
         return
 
     pl = Pipeline[DataPack](resources)
     pl.set_reader(DBpediaWikiReader())
     pl.add(
-        WikiArticleWriter(), config={
-            'output_dir': output_dir,
-            'zip_pack': True,
-            'drop_record': True,
+        WikiArticleWriter(),
+        config={
+            "output_dir": output_dir,
+            "zip_pack": True,
+            "drop_record": True,
         },
     )
-    print_progress('Start running wiki text pipeline.', '\n')
+    print_progress("Start running wiki text pipeline.", "\n")
     pl.run(nif_context)
-    print_progress('Done collecting wiki text.', '\n')
+    print_progress("Done collecting wiki text.", "\n")
 
 
-def main(nif_context: str, nif_page_structure: str, mapping_literals: str,
-         mapping_objects: str, nif_text_links: str, redirects: str,
-         info_boxs_properties: str, base_output_path: str):
+def main(
+    nif_context: str,
+    nif_page_structure: str,
+    mapping_literals: str,
+    mapping_objects: str,
+    nif_text_links: str,
+    redirects: str,
+    info_boxs_properties: str,
+    base_output_path: str,
+):
     # The datasets are read in a few steps.
     # 0. Load redirects between wikipedia pages.
-    print_progress('Loading redirects', '\n')
-    redirect_pickle = os.path.join(base_output_path, 'redirects.pickle')
+    print_progress("Loading redirects", "\n")
+    redirect_pickle = os.path.join(base_output_path, "redirects.pickle")
 
     redirect_map: Dict[str, str]
     if os.path.exists(redirect_pickle):
-        redirect_map = pickle.load(open(redirect_pickle, 'rb'))
+        redirect_map = pickle.load(open(redirect_pickle, "rb"))
     else:
         redirect_map = load_redirects(redirects)
-        with open(redirect_pickle, 'wb') as pickle_f:
+        with open(redirect_pickle, "wb") as pickle_f:
             pickle.dump(redirect_map, pickle_f)
 
     resources: Resources = Resources()
     resources.update(redirects=redirect_map)
-    print_progress("Done loading.", '\n')
+    print_progress("Done loading.", "\n")
 
     # 1. Read the wiki text.
-    raw_pack_dir = os.path.join(base_output_path, 'nif_raw')
+    raw_pack_dir = os.path.join(base_output_path, "nif_raw")
     read_wiki_text(nif_context, raw_pack_dir, resources, True)
-    print_progress("Done reading wikipedia text.", '\n')
+    print_progress("Done reading wikipedia text.", "\n")
 
     # 2. Add wiki page structures, create a new directory for it.
-    struct_dir = raw_pack_dir + '_struct'
-    add_wiki_info(WikiStructReader(), resources, nif_page_structure,
-                  raw_pack_dir, struct_dir, 'page_structures', True)
-    print_progress("Done reading wikipedia structures.", '\n')
+    struct_dir = raw_pack_dir + "_struct"
+    add_wiki_info(
+        WikiStructReader(),
+        resources,
+        nif_page_structure,
+        raw_pack_dir,
+        struct_dir,
+        "page_structures",
+        True,
+    )
+    print_progress("Done reading wikipedia structures.", "\n")
 
     # 3. Add wiki links, create a new directory for it.
-    link_dir = struct_dir + '_links'
-    add_wiki_info(WikiAnchorReader(), resources, nif_text_links,
-                  struct_dir, link_dir, 'anchor_links', True)
-    print_progress("Done reading wikipedia anchors.", '\n')
+    link_dir = struct_dir + "_links"
+    add_wiki_info(
+        WikiAnchorReader(),
+        resources,
+        nif_text_links,
+        struct_dir,
+        link_dir,
+        "anchor_links",
+        True,
+    )
+    print_progress("Done reading wikipedia anchors.", "\n")
 
     # 4 The following steps add info boxes:
     # 4.1 Add un-mapped infobox, we directly write to the previous directory
     property_dir = link_dir
-    add_wiki_info(WikiPropertyReader(), resources, info_boxs_properties,
-                  link_dir, property_dir, 'info_box_properties',
-                  skip_existing=True, overwrite=True,
-                  output_index_file_name='properties.idx')
-    print_progress("Done reading wikipedia info-boxes properties.", '\n')
+    add_wiki_info(
+        WikiPropertyReader(),
+        resources,
+        info_boxs_properties,
+        link_dir,
+        property_dir,
+        "info_box_properties",
+        skip_existing=True,
+        overwrite=True,
+        output_index_file_name="properties.idx",
+    )
+    print_progress("Done reading wikipedia info-boxes properties.", "\n")
 
     # 4.1 Add mapped literal, we directly write to the previous directory.
     literal_dir = property_dir
-    add_wiki_info(WikiInfoBoxReader(), resources, mapping_literals,
-                  property_dir, literal_dir, 'literals',
-                  skip_existing=True, overwrite=True,
-                  output_index_file_name='literals.idx')
-    print_progress("Done reading wikipedia info-boxes literals.", '\n')
+    add_wiki_info(
+        WikiInfoBoxReader(),
+        resources,
+        mapping_literals,
+        property_dir,
+        literal_dir,
+        "literals",
+        skip_existing=True,
+        overwrite=True,
+        output_index_file_name="literals.idx",
+    )
+    print_progress("Done reading wikipedia info-boxes literals.", "\n")
 
     # 4.1 Add mapped object, we directly write to the previous directory.
     mapping_dir = literal_dir
-    add_wiki_info(WikiInfoBoxReader(), resources, mapping_objects,
-                  literal_dir, mapping_dir, 'objects',
-                  skip_existing=True, overwrite=True,
-                  output_index_file_name='objects.idx')
-    print_progress("Done reading wikipedia info-boxes objects.", '\n')
+    add_wiki_info(
+        WikiInfoBoxReader(),
+        resources,
+        mapping_objects,
+        literal_dir,
+        mapping_dir,
+        "objects",
+        skip_existing=True,
+        overwrite=True,
+        output_index_file_name="objects.idx",
+    )
+    print_progress("Done reading wikipedia info-boxes objects.", "\n")
 
 
 def get_path(dataset: str):
@@ -162,11 +217,13 @@ def get_path(dataset: str):
     if os.path.exists(p):
         return p
     else:
-        raise FileNotFoundError(f'The dataset {dataset} is not found in '
-                                f'base directory {base_dir}')
+        raise FileNotFoundError(
+            f"The dataset {dataset} is not found in "
+            f"base directory {base_dir}"
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     base_dir = sys.argv[1]
     pack_output = sys.argv[2]
 
@@ -174,17 +231,18 @@ if __name__ == '__main__':
         os.makedirs(pack_output)
 
     logging.basicConfig(
-        format='%(asctime)s - %(message)s', level=logging.INFO,
-        filename=os.path.join(pack_output, 'dump.log')
+        format="%(asctime)s - %(message)s",
+        level=logging.INFO,
+        filename=os.path.join(pack_output, "dump.log"),
     )
 
     main(
-        get_path('nif_context_en.tql.bz2'),
-        get_path('nif_page_structure_en.tql.bz2'),
-        get_path('mappingbased_literals_en.tql.bz2'),
-        get_path('mappingbased_objects_en.tql.bz2'),
-        get_path('nif_text_links_en.tql.bz2'),
-        get_path('redirects_en.tql.bz2'),
-        get_path('infobox_properties_mapped_en.tql.bz2'),
-        pack_output
+        get_path("nif_context_en.tql.bz2"),
+        get_path("nif_page_structure_en.tql.bz2"),
+        get_path("mappingbased_literals_en.tql.bz2"),
+        get_path("mappingbased_objects_en.tql.bz2"),
+        get_path("nif_text_links_en.tql.bz2"),
+        get_path("redirects_en.tql.bz2"),
+        get_path("infobox_properties_mapped_en.tql.bz2"),
+        pack_output,
     )

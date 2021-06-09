@@ -27,9 +27,7 @@ from forte.data.ontology import Annotation
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "SubwordExtractor"
-]
+__all__ = ["SubwordExtractor"]
 
 
 class SubwordExtractor(BaseExtractor):
@@ -41,22 +39,23 @@ class SubwordExtractor(BaseExtractor):
         config: An instance of `Dict` or
             :class:`forte.common.configuration.Config`
     """
+
     def initialize(self, config: Union[Dict, Config]):
         # pylint: disable=attribute-defined-outside-init
         super().initialize(config=config)
         self.tokenizer = BERTTokenizer(
             pretrained_model_name=self.config.pretrained_model_name,
             cache_dir=None,
-            hparams=None)
+            hparams=None,
+        )
         predifined_dict = [key for key, _ in self.tokenizer.vocab.items()]
         self.predefined_vocab(predifined_dict)
         if not self.vocab:
-            raise AttributeError("Vocabulary is required "
-                                 "in SubwordExtractor.")
-        self.vocab.mark_special_element(self.tokenizer.vocab['[PAD]'],
-                                        "PAD")
-        self.vocab.mark_special_element(self.tokenizer.vocab['[UNK]'],
-                                        "UNK")
+            raise AttributeError(
+                "Vocabulary is required " "in SubwordExtractor."
+            )
+        self.vocab.mark_special_element(self.tokenizer.vocab["[PAD]"], "PAD")
+        self.vocab.mark_special_element(self.tokenizer.vocab["[UNK]"], "UNK")
 
     @classmethod
     def default_configs(cls):
@@ -67,8 +66,7 @@ class SubwordExtractor(BaseExtractor):
             as used in subword tokenizer.
         """
         config = super().default_configs()
-        config.update(
-            {"pretrained_model_name": None})
+        config.update({"pretrained_model_name": None})
         return config
 
     def extract(self, pack: DataPack, instance: Annotation) -> Feature:
@@ -87,17 +85,18 @@ class SubwordExtractor(BaseExtractor):
         for subword in pack.get(self._entry_type, instance):
             text = subword.text
             if not subword.is_first_segment:
-                text = '##' + text
+                text = "##" + text
             data.append(self.element2repr(text))
 
-        data = [self.element2repr('[CLS]')] + data + \
-               [self.element2repr('[SEP]')]
+        data = (
+            [self.element2repr("[CLS]")] + data + [self.element2repr("[SEP]")]
+        )
 
-        meta_data = {"need_pad": self.vocab.use_pad,  # type: ignore
-                     "pad_value": self.get_pad_value(),
-                     "dim": 1,
-                     "dtype": int}
+        meta_data = {
+            "need_pad": self.vocab.use_pad,  # type: ignore
+            "pad_value": self.get_pad_value(),
+            "dim": 1,
+            "dtype": int,
+        }
 
-        return Feature(data=data,
-                       metadata=meta_data,
-                       vocab=self.vocab)
+        return Feature(data=data, metadata=meta_data, vocab=self.vocab)

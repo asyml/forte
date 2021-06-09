@@ -19,10 +19,12 @@ import os
 from forte.data.data_utils import maybe_download
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model-name", default="srl",
-                    help="Model name to download")
-parser.add_argument("--path", default="model/",
-                    help="Path to where the models will be saved")
+parser.add_argument(
+    "--model-name", default="srl", help="Model name to download"
+)
+parser.add_argument(
+    "--path", default="model/", help="Path to where the models will be saved"
+)
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -38,44 +40,64 @@ if __name__ == "__main__":
         pretrained_path = Path("srl/pretrained")
         (model_path / pretrained_path).mkdir(parents=True, exist_ok=True)
 
-        urls_to_file_names = OrderedDict({
-            "https://drive.google.com/file/d/102YRcdXqDFLOjToR7L-3XYcU-yqcKAO8/"
-            "view?usp=sharing": os.path.join(str(embedding_path),
-                                             "char_vocab.english.txt"),
-            "https://drive.google.com/file/d/1hgwmUBk8Mb3iZYiHi1UpCpPFOCfOQLLB/"
-            "view?usp=sharing": os.path.join(str(embedding_path),
-                                             "glove.840B.300d.05.filtered"),
-            "https://drive.google.com/file/d/1H4PZhJhGoFBqrSMRPufjJ-9zwROw8hAK/"
-            "view?usp=sharing": os.path.join(str(embedding_path),
-                                             "glove_50_300_2.filtered"),
-            "https://drive.google.com/file/d/1uoA5EnZMWl5m5DMevGcI7UjiXxQRlD9W/"
-            "view?usp=sharing": os.path.join(str(embedding_path),
-                                             "word_vocab.english.txt"),
-            "https://drive.google.com/file/d/1UZc8x-mhdXg7Rtt6FSBDlEoJb_nHxDAQ/"
-            "view?usp=sharing": os.path.join(str(pretrained_path), "model.pt")
-        })
-        maybe_download(urls=list(urls_to_file_names.keys()),
-                       path=model_path,
-                       filenames=list(urls_to_file_names.values()))
+        urls_to_file_names = OrderedDict(
+            {
+                "https://drive.google.com/file/d/102YRcdXqDFLOjToR7L-3XYcU-yqcKAO8/"
+                "view?usp=sharing": os.path.join(
+                    str(embedding_path), "char_vocab.english.txt"
+                ),
+                "https://drive.google.com/file/d/1hgwmUBk8Mb3iZYiHi1UpCpPFOCfOQLLB/"
+                "view?usp=sharing": os.path.join(
+                    str(embedding_path), "glove.840B.300d.05.filtered"
+                ),
+                "https://drive.google.com/file/d/1H4PZhJhGoFBqrSMRPufjJ-9zwROw8hAK/"
+                "view?usp=sharing": os.path.join(
+                    str(embedding_path), "glove_50_300_2.filtered"
+                ),
+                "https://drive.google.com/file/d/1uoA5EnZMWl5m5DMevGcI7UjiXxQRlD9W/"
+                "view?usp=sharing": os.path.join(
+                    str(embedding_path), "word_vocab.english.txt"
+                ),
+                "https://drive.google.com/file/d/1UZc8x-mhdXg7Rtt6FSBDlEoJb_nHxDAQ/"
+                "view?usp=sharing": os.path.join(
+                    str(pretrained_path), "model.pt"
+                ),
+            }
+        )
+        maybe_download(
+            urls=list(urls_to_file_names.keys()),
+            path=model_path,
+            filenames=list(urls_to_file_names.values()),
+        )
 
     # download indexer model
     elif args.model_name.lower() == "indexer":
-        urls_to_file_names = OrderedDict({
-            "https://drive.google.com/file/d/14lL6AoyjdCp-fj8DOlyZhQZrNwoJBfQm/"
-            "view?usp=sharing": "index.faiss",
-            "https://drive.google.com/file/d/1DdgMA7jttgA113EIlebVb33JpGCGbEYf/"
-            "view?usp=sharing": "index.meta_data"
-        })
-        maybe_download(urls=list(urls_to_file_names.keys()),
-                       path=model_path / "chatbot",
-                       filenames=list(urls_to_file_names.values()))
+        urls_to_file_names = OrderedDict(
+            {
+                "https://drive.google.com/file/d/14lL6AoyjdCp-fj8DOlyZhQZrNwoJBfQm/"
+                "view?usp=sharing": "index.faiss",
+                "https://drive.google.com/file/d/1DdgMA7jttgA113EIlebVb33JpGCGbEYf/"
+                "view?usp=sharing": "index.meta_data",
+            }
+        )
+        maybe_download(
+            urls=list(urls_to_file_names.keys()),
+            path=model_path / "chatbot",
+            filenames=list(urls_to_file_names.values()),
+        )
 
     # download chatbot model
     elif args.model_name.lower() == "chatbot-bert":
-        maybe_download(urls=["https://drive.google.com/file/d/1_DbcrgJ_rRsX9k8i"
-                             "9zVv7sDiTGrek9-p/view?usp=sharing"],
-                       path=model_path,
-                       filenames=["chatbot_model.ckpt"])
+        maybe_download(
+            urls=[
+                "https://drive.google.com/file/d/1_DbcrgJ_rRsX9k8i"
+                "9zVv7sDiTGrek9-p/view?usp=sharing"
+            ],
+            path=model_path,
+            filenames=["chatbot_model.ckpt"],
+        )
     else:
-        print(f"Incorrect 'model-name' {args.model_name}. Available values are "
-              f"'srl' and 'indexer' and 'chatbot-bert'.")
+        print(
+            f"Incorrect 'model-name' {args.model_name}. Available values are "
+            f"'srl' and 'indexer' and 'chatbot-bert'."
+        )

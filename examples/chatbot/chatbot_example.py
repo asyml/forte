@@ -16,8 +16,7 @@ import yaml
 from termcolor import colored
 import torch
 
-from forte.nltk import (
-    NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger)
+from forte.nltk import NLTKSentenceSegmenter, NLTKWordTokenizer, NLTKPOSTagger
 from forte.common.configuration import Config
 from forte.data.multi_pack import MultiPack
 from forte.data.readers import MultiPackTerminalReader
@@ -36,30 +35,38 @@ def setup(config: Config) -> Pipeline:
     resource = Resources()
     query_pipeline = Pipeline[MultiPack](resource=resource)
     query_pipeline.set_reader(
-        reader=MultiPackTerminalReader(), config=config.reader)
+        reader=MultiPackTerminalReader(), config=config.reader
+    )
     query_pipeline.add(
-        component=MicrosoftBingTranslator(), config=config.translator)
+        component=MicrosoftBingTranslator(), config=config.translator
+    )
     query_pipeline.add(
-        component=BertBasedQueryCreator(), config=config.query_creator)
-    query_pipeline.add(
-        component=SearchProcessor(), config=config.searcher)
+        component=BertBasedQueryCreator(), config=config.query_creator
+    )
+    query_pipeline.add(component=SearchProcessor(), config=config.searcher)
 
-    top_response_pack_name = config.indexer.response_pack_name + '_0'
+    top_response_pack_name = config.indexer.response_pack_name + "_0"
 
     query_pipeline.add(
         component=NLTKSentenceSegmenter(),
-        selector=NameMatchSelector(select_name=top_response_pack_name))
+        selector=NameMatchSelector(select_name=top_response_pack_name),
+    )
     query_pipeline.add(
         component=NLTKWordTokenizer(),
-        selector=NameMatchSelector(select_name=top_response_pack_name))
+        selector=NameMatchSelector(select_name=top_response_pack_name),
+    )
     query_pipeline.add(
         component=NLTKPOSTagger(),
-        selector=NameMatchSelector(select_name=top_response_pack_name))
+        selector=NameMatchSelector(select_name=top_response_pack_name),
+    )
     query_pipeline.add(
-        component=SRLPredictor(), config=config.SRL,
-        selector=NameMatchSelector(select_name=top_response_pack_name))
+        component=SRLPredictor(),
+        config=config.SRL,
+        selector=NameMatchSelector(select_name=top_response_pack_name),
+    )
     query_pipeline.add(
-        component=MicrosoftBingTranslator(), config=config.back_translator)
+        component=MicrosoftBingTranslator(), config=config.back_translator
+    )
 
     query_pipeline.initialize()
 
@@ -87,28 +94,36 @@ def main(config: Config):
             resource.update(bot_utterance=[response_pack])
 
         english_pack = m_pack.get_pack("pack")
-        print(colored("English Translation of the query: ", "green"),
-              english_pack.text, "\n")
+        print(
+            colored("English Translation of the query: ", "green"),
+            english_pack.text,
+            "\n",
+        )
 
         # Just take the first pack.
-        pack = m_pack.get_pack(config.indexer.response_pack_name_prefix + '_0')
+        pack = m_pack.get_pack(config.indexer.response_pack_name_prefix + "_0")
         print(colored("Retrieved Document", "green"), pack.text, "\n")
-        print(colored("German Translation", "green"),
-              m_pack.get_pack("response").text, "\n")
+        print(
+            colored("German Translation", "green"),
+            m_pack.get_pack("response").text,
+            "\n",
+        )
         for sentence in pack.get(Sentence):
             sent_text = sentence.text
-            print(colored("Sentence:", 'red'), sent_text, "\n")
+            print(colored("Sentence:", "red"), sent_text, "\n")
 
-            print(colored("Semantic role labels:", 'red'))
+            print(colored("Semantic role labels:", "red"))
             for link in pack.get(PredicateLink, sentence):
                 parent = link.get_parent()
                 child = link.get_child()
-                print(f"  - \"{child.text}\" is role "
-                      f"{link.arg_type} of "
-                      f"predicate \"{parent.text}\"")
+                print(
+                    f'  - "{child.text}" is role '
+                    f"{link.arg_type} of "
+                    f'predicate "{parent.text}"'
+                )
             print()
 
-            input(colored("Press ENTER to continue...\n", 'green'))
+            input(colored("Press ENTER to continue...\n", "green"))
 
 
 if __name__ == "__main__":

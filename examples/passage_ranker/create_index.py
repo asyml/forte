@@ -30,8 +30,9 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", default="./config.yml",
-                        help="Config YAML filepath")
+    parser.add_argument(
+        "--config_file", default="./config.yml", help="Config YAML filepath"
+    )
     args = parser.parse_args()
 
     config = yaml.safe_load(open(args.config_file, "r"))
@@ -42,8 +43,9 @@ if __name__ == "__main__":
     nlp.add(ElasticSearchTextIndexProcessor(), config=config.create_index)
     nlp.initialize()
 
-    data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             config.data.relative_path)
+    data_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), config.data.relative_path
+    )
 
     for idx, pack in enumerate(nlp.process_dataset(data_path)):
         if idx + 1 > 0 and (idx + 1) % 10000 == 0:

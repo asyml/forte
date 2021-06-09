@@ -17,8 +17,9 @@ from typing import Tuple, Union, Dict, Any
 from forte.data.ontology import Annotation
 from forte.utils.utils import create_class_with_kwargs
 from forte.common.configuration import Config
-from forte.processors.data_augment.algorithms.text_replacement_op \
-    import TextReplacementOp
+from forte.processors.data_augment.algorithms.text_replacement_op import (
+    TextReplacementOp,
+)
 
 __all__ = [
     "DictionaryReplacementOp",
@@ -43,8 +44,7 @@ class DictionaryReplacementOp(TextReplacementOp):
     def __init__(self, configs: Union[Config, Dict[str, Any]]):
         super().__init__(configs)
         self.dictionary = create_class_with_kwargs(
-            configs["dictionary_class"],
-            class_args={}
+            configs["dictionary_class"], class_args={}
         )
 
     def replace(self, input_anno: Annotation) -> Tuple[bool, str]:

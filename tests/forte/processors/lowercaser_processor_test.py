@@ -30,14 +30,18 @@ class TestLowerCaserProcessor(unittest.TestCase):
         self.nlp.initialize()
 
     def test_lowercaser_processor(self):
-        document = "This tool is called Forte. The goal of this project to " \
-                   "help you build NLP pipelines. NLP has never been made " \
-                   "this easy before."
+        document = (
+            "This tool is called Forte. The goal of this project to "
+            "help you build NLP pipelines. NLP has never been made "
+            "this easy before."
+        )
         pack = self.nlp.process(document)
-        assert pack.text == "this tool is called forte. the goal of this " \
-                            "project to help you build nlp pipelines. nlp " \
-                            "has never been made this easy before."
+        assert (
+            pack.text == "this tool is called forte. the goal of this "
+            "project to help you build nlp pipelines. nlp "
+            "has never been made this easy before."
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -28,7 +28,6 @@ from ft.onto.base_ontology import Document, Sentence
 
 
 class TestPretrainedEncoder(unittest.TestCase):
-
     @pretrained_test
     def test_encoder_sentence(self):
         pipeline = Pipeline[DataPack]()
@@ -37,11 +36,12 @@ class TestPretrainedEncoder(unittest.TestCase):
         pipeline.add(PretrainedEncoder())
         pipeline.initialize()
 
-        sentences = ["This tool is called Forte.",
-                     "The goal of this project to help you build NLP "
-                     "pipelines.",
-                     "NLP has never been made this easy before."]
-        document = ' '.join(sentences)
+        sentences = [
+            "This tool is called Forte.",
+            "The goal of this project to help you build NLP " "pipelines.",
+            "NLP has never been made this easy before.",
+        ]
+        document = " ".join(sentences)
         pack = pipeline.process(document)
         for i, sentence in enumerate(pack.get(Sentence)):
             self.assertEqual(sentence.embedding.shape, (1, 512, 768))
@@ -52,14 +52,16 @@ class TestPretrainedEncoder(unittest.TestCase):
         pipeline.set_reader(StringReader())
         pipeline.add(
             PretrainedEncoder(),
-            config={'entry_type': 'ft.onto.base_ontology.Document'})
+            config={"entry_type": "ft.onto.base_ontology.Document"},
+        )
         pipeline.initialize()
 
-        sentences = ["This tool is called Forte.",
-                     "The goal of this project to help you build NLP "
-                     "pipelines.",
-                     "NLP has never been made this easy before."]
-        document = ' '.join(sentences)
+        sentences = [
+            "This tool is called Forte.",
+            "The goal of this project to help you build NLP " "pipelines.",
+            "NLP has never been made this easy before.",
+        ]
+        document = " ".join(sentences)
         pack = pipeline.process(document)
         for i, doc in enumerate(pack.get(Document)):
             self.assertEqual(doc.embedding.shape, (1, 512, 768))

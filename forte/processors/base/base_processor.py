@@ -21,8 +21,10 @@ from typing import Any, Dict, Set
 from forte.data.base_pack import PackType
 from forte.data.selector import DummySelector
 from forte.pipeline_component import PipelineComponent
-from forte.utils.utils_processor import (record_types_and_attributes_check,
-                                         collect_input_pack_record)
+from forte.utils.utils_processor import (
+    record_types_and_attributes_check,
+    collect_input_pack_record,
+)
 
 __all__ = [
     "BaseProcessor",
@@ -75,8 +77,9 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         """
         if self._check_type_consistency:
             expectation = self.expected_types_and_attributes()
-            input_pack_record = collect_input_pack_record(self.resources,
-                                                          input_pack)
+            input_pack_record = collect_input_pack_record(
+                self.resources, input_pack
+            )
             record_types_and_attributes_check(expectation, input_pack_record)
 
     def write_record(self, input_pack: PackType):
@@ -97,7 +100,8 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         except AttributeError:
             # For backward compatibility, no record to write.
             logging.info(
-                "Packs of the old format do not have the record field.")
+                "Packs of the old format do not have the record field."
+            )
 
     def process(self, input_pack: PackType):
         self.check_record(input_pack)
@@ -124,12 +128,14 @@ class BaseProcessor(PipelineComponent[PackType], ABC):
         pipeline construction.
         """
         config = super().default_configs()
-        config.update({
-            'selector': {
-                'type': 'forte.data.selector.DummySelector',
-                'args': None,
-                'kwargs': {}
-            },
-            'overwrite': False,
-        })
+        config.update(
+            {
+                "selector": {
+                    "type": "forte.data.selector.DummySelector",
+                    "args": None,
+                    "kwargs": {},
+                },
+                "overwrite": False,
+            }
+        )
         return config

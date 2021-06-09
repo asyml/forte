@@ -22,14 +22,13 @@ import torch
 from torch.nn import Parameter
 from texar.torch.modules.pretrained import PretrainedBERTMixin
 from texar.torch.modules.encoders import BERTEncoder as TxBERTEncoder
-from texar.torch.modules.classifiers import BERTClassifier as TxBERTClassifier
+from texar.torch.modules.classifiers import (
+    BERTClassifier as TxBERTClassifier,
+)
 
 from forte.common.configuration import Config
 
-__all__ = [
-    "BERTEncoder",
-    "BERTClassifier"
-]
+__all__ = ["BERTEncoder", "BERTClassifier"]
 
 
 class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
@@ -40,8 +39,10 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
 
         self.load_pretrained_config(hparams=hparams)
 
-        super().__init__(pretrained_model_name=self.pretrained_model_name,
-                         cache_dir=self.cache_dir)
+        super().__init__(
+            pretrained_model_name=self.pretrained_model_name,
+            cache_dir=self.cache_dir,
+        )
 
         self.init_pretrained_weights(prefix=self._hparams.prefix)
 
@@ -50,10 +51,12 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
         params.update(self.kwargs)
         return params
 
-    def load_pretrained_config(self,
-                               pretrained_model_name: Optional[str] = None,
-                               cache_dir: Optional[str] = None,
-                               hparams=None):
+    def load_pretrained_config(
+        self,
+        pretrained_model_name: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        hparams=None,
+    ):
         r"""Load paths and configurations of the pre-trained model.
 
         Args:
@@ -68,51 +71,57 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
                 and default values.
         """
 
-        self.pretrained_model_name = hparams['pretrained_model_name'] \
-            if pretrained_model_name is None else pretrained_model_name
+        self.pretrained_model_name = (
+            hparams["pretrained_model_name"]
+            if pretrained_model_name is None
+            else pretrained_model_name
+        )
 
-        rel_dir = hparams['model_dir'] if cache_dir is None else cache_dir
+        rel_dir = hparams["model_dir"] if cache_dir is None else cache_dir
         self.cache_dir = os.path.join(os.path.dirname(__file__), rel_dir)
 
         if self.pretrained_model_name is None or self.cache_dir is None:
-            raise ValueError("Pre-trained model name and directory should"
-                             "be defined in the fine tuned BERT model.")
+            raise ValueError(
+                "Pre-trained model name and directory should"
+                "be defined in the fine tuned BERT model."
+            )
 
-        self.pretrained_model_dir = os.path.join(self.cache_dir,
-                                                 self.pretrained_model_name)
+        self.pretrained_model_dir = os.path.join(
+            self.cache_dir, self.pretrained_model_name
+        )
 
         pretrained_model_hparams = self._transform_config(
-            self.pretrained_model_name, self.pretrained_model_dir)
+            self.pretrained_model_name, self.pretrained_model_dir
+        )
 
         super_params = self.default_hparams()
-        if 'prefix' not in super_params:
-            super_params["prefix"] = '_encoder.encoder.'
+        if "prefix" not in super_params:
+            super_params["prefix"] = "_encoder.encoder."
         self._hparams = Config(pretrained_model_hparams, super_params)
 
-    def _init_from_checkpoint(self, pretrained_model_name: str,
-                              cache_dir: str, **kwargs):
+    def _init_from_checkpoint(
+        self, pretrained_model_name: str, cache_dir: str, **kwargs
+    ):
         # pylint: disable=import-outside-toplevel
         try:
             import numpy as np
             import tensorflow as tf
         except ImportError:
-            print("Loading TensorFlow models in PyTorch requires installing "
-                  "TensorFlow. Please see https://www.tensorflow.org/install/ "
-                  "for installation instructions.")
+            print(
+                "Loading TensorFlow models in PyTorch requires installing "
+                "TensorFlow. Please see https://www.tensorflow.org/install/ "
+                "for installation instructions."
+            )
             raise
 
-        py_prefix = "encoder." if 'prefix' not in kwargs else kwargs['prefix']
+        py_prefix = "encoder." if "prefix" not in kwargs else kwargs["prefix"]
 
         global_tensor_map = {
-            'bert/embeddings/word_embeddings': 'word_embedder._embedding',
-            'bert/embeddings/token_type_embeddings':
-                'segment_embedder._embedding',
-            'bert/embeddings/position_embeddings':
-                'position_embedder._embedding',
-            'bert/embeddings/LayerNorm/beta':
-                'encoder.input_normalizer.bias',
-            'bert/embeddings/LayerNorm/gamma':
-                'encoder.input_normalizer.weight',
+            "bert/embeddings/word_embeddings": "word_embedder._embedding",
+            "bert/embeddings/token_type_embeddings": "segment_embedder._embedding",
+            "bert/embeddings/position_embeddings": "position_embedder._embedding",
+            "bert/embeddings/LayerNorm/beta": "encoder.input_normalizer.bias",
+            "bert/embeddings/LayerNorm/gamma": "encoder.input_normalizer.weight",
         }
         layer_tensor_map = {
             "attention/self/key/bias": "self_attns.{}.K_dense.bias",
@@ -135,15 +144,16 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
             "output/dense/kernel": "poswise_networks.{}._layers.2.weight",
         }
         pooler_map = {
-            'bert/pooler/dense/bias': 'pooler.0.bias',
-            'bert/pooler/dense/kernel': 'pooler.0.weight'
+            "bert/pooler/dense/bias": "pooler.0.bias",
+            "bert/pooler/dense/kernel": "pooler.0.weight",
         }
         output_map = {
-            'output_weights': '_logits_layer.weight',
-            'output_bias': '_logits_layer.bias'
+            "output_weights": "_logits_layer.weight",
+            "output_bias": "_logits_layer.bias",
         }
-        tf_path = os.path.abspath(os.path.join(
-            cache_dir, self._MODEL2CKPT[pretrained_model_name]))
+        tf_path = os.path.abspath(
+            os.path.join(cache_dir, self._MODEL2CKPT[pretrained_model_name])
+        )
 
         # Load weights from TF model
         init_vars = tf.train.list_variables(tf_path)
@@ -155,23 +165,27 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
 
         idx = 0
         for name, array in zip(tfnames, arrays):
-            if name.startswith('cls') or name == 'global_step' or \
-                    name.endswith('adam_m') or name.endswith('adam_v'):
+            if (
+                name.startswith("cls")
+                or name == "global_step"
+                or name.endswith("adam_m")
+                or name.endswith("adam_v")
+            ):
                 # ignore those variables begin with cls
                 # ignore 'global_step' variable
                 # ignore optimizer state variable
                 continue
 
             if name in global_tensor_map:
-                v_name = '_encoder.' + global_tensor_map[name]
+                v_name = "_encoder." + global_tensor_map[name]
                 pointer = self._name_to_variable(v_name)
                 assert pointer.shape == array.shape
                 pointer.data = torch.from_numpy(array)
                 idx += 1
             elif name in pooler_map:
-                v_name = '_encoder.' + pooler_map[name]
+                v_name = "_encoder." + pooler_map[name]
                 pointer = self._name_to_variable(v_name)
-                if name.endswith('bias'):
+                if name.endswith("bias"):
                     assert pointer.shape == array.shape
                     pointer.data = torch.from_numpy(array)
                     idx += 1
@@ -183,7 +197,7 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
             elif name in output_map:
                 v_name = output_map[name]
                 pointer = self._name_to_variable(v_name)
-                if name.endswith('bias'):
+                if name.endswith("bias"):
                     assert pointer.shape == array.shape
                     pointer.data = torch.from_numpy(array)
                     idx += 1
@@ -214,19 +228,21 @@ class BERTClassifier(TxBERTClassifier, PretrainedBERTMixin):
 
     def _name_to_variable(self, name: str) -> Parameter:
         """
-            Cast return value of method of the super class
-            `texar.torch.module.PretrainedBertMixin._name_to_variable` to avoid
-            type errors
+        Cast return value of method of the super class
+        `texar.torch.module.PretrainedBertMixin._name_to_variable` to avoid
+        type errors
         """
         return cast(Parameter, super()._name_to_variable(name))
 
 
 class BERTEncoder(TxBERTEncoder):
     # pylint: disable=unused-argument
-    def load_pretrained_config(self,
-                               pretrained_model_name: Optional[str] = None,
-                               cache_dir: Optional[str] = None,
-                               hparams=None):
+    def load_pretrained_config(
+        self,
+        pretrained_model_name: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        hparams=None,
+    ):
         # pylint: disable=attribute-defined-outside-init
         self.pretrained_model_name = pretrained_model_name
         self.cache_dir = cache_dir
@@ -237,5 +253,5 @@ class BERTEncoder(TxBERTEncoder):
     @staticmethod
     def default_hparams():
         params = BERTEncoder.default_hparams()
-        params['model_dir'] = None
+        params["model_dir"] = None
         return params

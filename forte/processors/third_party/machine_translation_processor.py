@@ -26,9 +26,7 @@ from forte.data.multi_pack import MultiPack
 from forte.processors.base import MultiPackProcessor
 from ft.onto.base_ontology import Document, Utterance
 
-__all__ = [
-    "MicrosoftBingTranslator"
-]
+__all__ = ["MicrosoftBingTranslator"]
 
 
 class MicrosoftBingTranslator(MultiPackProcessor):
@@ -41,13 +39,14 @@ class MicrosoftBingTranslator(MultiPackProcessor):
 
     def __init__(self) -> None:
         super().__init__()
-        self.microsoft_translate_url = \
+        self.microsoft_translate_url = (
             "https://api.cognitive.microsofttranslator.com/translate"
-        self.microsoft_headers_content_type = 'application/json'
+        )
+        self.microsoft_headers_content_type = "application/json"
         self.microsoft_headers = {
-            'Ocp-Apim-Subscription-Key': getenv('MICROSOFT_API_KEY'),
-            'Content-type': self.microsoft_headers_content_type,
-            'X-ClientTraceId': str(uuid.uuid4())
+            "Ocp-Apim-Subscription-Key": getenv("MICROSOFT_API_KEY"),
+            "Content-type": self.microsoft_headers_content_type,
+            "X-ClientTraceId": str(uuid.uuid4()),
         }
 
     # pylint: disable=unused-argument
@@ -81,18 +80,24 @@ class MicrosoftBingTranslator(MultiPackProcessor):
 
     def _process(self, input_pack: MultiPack):
         query = input_pack.get_pack(self.in_pack_name).text
-        params = '?' + urlencode(
-            {'api-version': '3.0',
-             'from': self.src_language,
-             'to': [self.target_language]}, doseq=True)
+        params = "?" + urlencode(
+            {
+                "api-version": "3.0",
+                "from": self.src_language,
+                "to": [self.target_language],
+            },
+            doseq=True,
+        )
         microsoft_constructed_url = self.microsoft_translate_url + params
 
         response = requests.post(
-            microsoft_constructed_url, headers=self.microsoft_headers,
-            json=[{"text": query}])
+            microsoft_constructed_url,
+            headers=self.microsoft_headers,
+            json=[{"text": query}],
+        )
 
         if response.status_code != 200:
-            raise RuntimeError(response.json()['error']['message'])
+            raise RuntimeError(response.json()["error"]["message"])
 
         text = response.json()[0]["translations"][0]["text"]
         pack: DataPack = input_pack.add_pack(self.out_pack_name)
@@ -104,10 +109,12 @@ class MicrosoftBingTranslator(MultiPackProcessor):
     @classmethod
     def default_configs(cls) -> Dict[str, Any]:
         config = super().default_configs()
-        config.update({
-            'src_language': 'en',
-            'target_language': 'de',
-            'in_pack_name': 'doc_0',
-            'out_pack_name': 'response',
-        })
+        config.update(
+            {
+                "src_language": "en",
+                "target_language": "de",
+                "in_pack_name": "doc_0",
+                "out_pack_name": "response",
+            }
+        )
         return config

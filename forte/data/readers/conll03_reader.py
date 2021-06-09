@@ -20,9 +20,7 @@ from forte.data.data_pack import DataPack
 from forte.data.data_utils_io import dataset_path_iterator
 from forte.data.base_reader import PackReader
 
-__all__ = [
-    "CoNLL03Reader"
-]
+__all__ = ["CoNLL03Reader"]
 
 
 class CoNLL03Reader(PackReader):
@@ -101,8 +99,9 @@ class CoNLL03Reader(PackReader):
                         Sentence(pack, sentence_begin, offset - 1)
                         sentence_cnt += 1
 
-                    pack.set_text(text,
-                                  replace_func=self.text_replace_operation)
+                    pack.set_text(
+                        text, replace_func=self.text_replace_operation
+                    )
                     Document(pack, 0, len(text))
                     pack.pack_name = collection + "_%d" % pack_id
                     pack_id += 1
@@ -134,9 +133,9 @@ class CoNLL03Reader(PackReader):
                     if ner_tag == "O" or ner_tag.split("-")[0] == "B":
                         # Add previous ner tag to sentence if it exists.
                         if prev_y is not None:
-                            entity_mention = EntityMention(pack,
-                                                           start_index,
-                                                           offset - 1)
+                            entity_mention = EntityMention(
+                                pack, start_index, offset - 1
+                            )
                             entity_mention.ner_type = prev_y
 
                         # Start process current ner tag.
@@ -178,8 +177,9 @@ class CoNLL03Reader(PackReader):
 
                     # Handle the last ner tag if exists.
                     if prev_x is not None:
-                        entity_mention = EntityMention(pack, start_index,
-                                                       offset - 1)
+                        entity_mention = EntityMention(
+                            pack, start_index, offset - 1
+                        )
                         entity_mention.ner_type = prev_y
 
                     # Reset information.

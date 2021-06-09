@@ -25,13 +25,15 @@ from ft.onto.base_ontology import Sentence, RelationLink
 
 
 class OpenIEReaderTest(unittest.TestCase):
-
     def setUp(self):
         # Define and config the pipeline.
-        self.dataset_path: str = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            *([os.path.pardir] * 4),
-            'data_samples/openie'))
+        self.dataset_path: str = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                *([os.path.pardir] * 4),
+                "data_samples/openie"
+            )
+        )
 
         self.pipeline: Pipeline = Pipeline[DataPack]()
         self.reader: OpenIEReader = OpenIEReader()
@@ -40,21 +42,22 @@ class OpenIEReaderTest(unittest.TestCase):
 
     def test_process_next(self):
         data_packs: Iterable[DataPack] = self.pipeline.process_dataset(
-            self.dataset_path)
+            self.dataset_path
+        )
         file_paths: Iterator[str] = self.reader._collect(self.dataset_path)
 
         count_packs: int = 0
 
         for pack, file_path in zip(data_packs, file_paths):
             count_packs += 1
-            with open(file_path, "r", encoding="utf8", errors='ignore') as file:
+            with open(file_path, "r", encoding="utf8", errors="ignore") as file:
                 expected_doc = file.read()
 
-            lines: List[str] = expected_doc.split('\n')
+            lines: List[str] = expected_doc.split("\n")
             actual_sentences: Iterator[Sentence] = pack.get(Sentence)
 
             for line, actual_sentence in zip(lines, actual_sentences):
-                segments: List[str] = line.strip().split('\t')
+                segments: List[str] = line.strip().split("\t")
 
                 # Test sentence.
                 expected_sentence: str = segments[0]
@@ -62,7 +65,8 @@ class OpenIEReaderTest(unittest.TestCase):
 
                 # Test head predicate.
                 link: RelationLink = list(
-                    pack.get(RelationLink, actual_sentence))[0]
+                    pack.get(RelationLink, actual_sentence)
+                )[0]
 
                 self.assertEqual(link.rel_type, segments[2])
                 self.assertEqual(link.get_parent().text, segments[3])
@@ -71,5 +75,5 @@ class OpenIEReaderTest(unittest.TestCase):
         self.assertEqual(count_packs, 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
