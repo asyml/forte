@@ -97,6 +97,8 @@ jobs:
           coverage run --append -m pytest --doctest-modules forte/forte
       - name: Upload to codecov
         run: |
+          # The coverage reports are all at the root.
+          cd ..
           codecov
   docs:
     needs: build
