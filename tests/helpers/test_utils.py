@@ -16,6 +16,7 @@ Utils for unit tests.
 """
 import filecmp
 import os
+import re
 import unittest
 
 __all__ = [
@@ -24,6 +25,10 @@ __all__ = [
 ]
 
 from typing import Any, Callable
+
+from forte.data import DataPack
+from forte.processors.base import PackProcessor
+from ft.onto.base_ontology import Sentence
 
 
 def define_skip_condition(flag: str, explanation: str):

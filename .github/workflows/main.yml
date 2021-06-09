@@ -87,14 +87,10 @@ jobs:
           if [[ ${{ matrix.torch-version }} != "1.5.0" ]]; then mypy .; fi
       - name: Test with pytest and run coverage
         run: |
-          # Go to test root first and do the test there.
-          cd ..
-          coverage run -m pytest forte/tests
-          coverage run --append -m pytest --doctest-modules forte/forte
+          coverage run -m pytest tests
+          coverage run --append -m pytest --doctest-modules forte
       - name: Upload coverage
         run: |
-          # Copy the coverage run we have done here.
-          cp ../.coverage* .
           codecov
   docs:
     needs: build

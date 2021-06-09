@@ -16,7 +16,6 @@ Unit tests for Pipeline.
 """
 
 import os
-import re
 import unittest
 import warnings
 from dataclasses import dataclass
@@ -25,11 +24,11 @@ from typing import Any, Dict, Iterator, Optional, Type, Set
 import numpy as np
 from ddt import ddt, data, unpack
 
+from forte.common import ProcessExecutionException, ProcessorConfigError
 from forte.data.base_pack import PackType
 from forte.data.base_reader import PackReader, MultiPackReader
 from forte.data.batchers import ProcessingBatcher, FixedSizeDataPackBatcher
 from forte.data.caster import MultiPackBoxer
-from forte.data.converter import Converter
 from forte.data.data_pack import DataPack
 from forte.data.multi_pack import MultiPack
 from forte.data.ontology.top import Generics
@@ -37,14 +36,12 @@ from forte.data.readers import PlainTextReader, StringReader, OntonotesReader
 from forte.data.selector import FirstPackSelector, NameMatchSelector, \
     SinglePackSelector, AllPackSelector
 from forte.data.types import DataRequest
-from forte.common import ProcessExecutionException, ProcessorConfigError, \
-    Resources
 from forte.evaluation.base import Evaluator
 from forte.pipeline import Pipeline
 from forte.processors.base import PackProcessor, FixedSizeBatchProcessor, \
     MultiPackProcessor
 from forte.processors.base.batch_processor import Predictor, BatchProcessor
-from forte.train_preprocessor import TrainPreprocessor
+from forte.processors.misc import PeriodSentenceSplitter
 from forte.utils import get_full_module_name
 from ft.onto.base_ontology import Token, Sentence, EntityMention, RelationLink
 
@@ -147,17 +144,6 @@ class MultiPackCopier(MultiPackProcessor):
     def _process(self, input_pack: MultiPack):
         pack = input_pack.add_pack('copy')
         pack.set_text(input_pack.get_pack_at(0).text)
-
-
-class PeriodSentenceSplitter(PackProcessor):
-    def _process(self, input_pack: DataPack):
-        pattern = '\\.\\s*'
-        start = 0
-
-        for m in re.finditer(pattern, input_pack.text):
-            end = m.end()
-            Sentence(input_pack, start, end)
-            start = end
 
 
 class DummyRelationExtractor(BatchProcessor):
