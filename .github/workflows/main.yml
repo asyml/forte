@@ -89,7 +89,7 @@ jobs:
         run: |
           # Go to test root first and do the test there.
           cd ..
-          coverage run -m pytest forte/test
+          coverage run -m pytest forte/tests
       - name: Test doctest and try to append the coverage
         run: |
           # Go to test root first and do the test there.
