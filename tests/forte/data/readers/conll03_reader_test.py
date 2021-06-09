@@ -14,7 +14,7 @@
 """
 Unit tests for CoNLL03Reader.
 """
-
+import os
 import unittest
 
 from forte.data.data_pack import DataPack
@@ -27,8 +27,12 @@ from ft.onto.base_ontology import Token, Sentence, EntityMention
 class CoNLL03ReaderPipelineTest(unittest.TestCase):
 
     def setUp(self):
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir, os.pardir
+        ))
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/conll03"
+        self.dataset_path = os.path.join(root_path, "data_samples/conll03")
         self.nlp = Pipeline[DataPack]()
         self.nlp.set_reader(CoNLL03Reader())
         self.nlp.initialize()
@@ -37,10 +41,13 @@ class CoNLL03ReaderPipelineTest(unittest.TestCase):
         doc_exists = False
 
         expected_sentence = ['The', 'European', 'Commission', 'said', 'on',
-            'Thursday', 'it', 'disagreed', 'with', 'German', 'advice', 'to',
-            'consumers', 'to', 'shun', 'British', 'lamb', 'until', 'scientists',
-            'determine', 'whether', 'mad', 'cow', 'disease', 'can', 'be',
-            'transmitted', 'to', 'sheep', '.']
+                             'Thursday', 'it', 'disagreed', 'with', 'German',
+                             'advice', 'to',
+                             'consumers', 'to', 'shun', 'British', 'lamb',
+                             'until', 'scientists',
+                             'determine', 'whether', 'mad', 'cow', 'disease',
+                             'can', 'be',
+                             'transmitted', 'to', 'sheep', '.']
         expected_ner_type = ["ORG", "MISC", "MISC"]
         expected_token = ["European Commission", "German", "British"]
 

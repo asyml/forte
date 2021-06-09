@@ -100,6 +100,8 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             'pack_name': 'input'
         }
 
+        replacer_op = TmpReplacer.__module__ + "." + TmpReplacer.__qualname__
+
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
@@ -110,7 +112,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 }
             },
             'type': 'data_augmentation_op',
-            'data_aug_op': 'tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer',
+            'data_aug_op': replacer_op,
             'data_aug_op_config': {
                 'type': '',
                 'kwargs': {}
@@ -169,6 +171,8 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
         nlp.initialize()
 
+        replacer_op = TmpReplacer.__module__ + "." + TmpReplacer.__qualname__
+
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
@@ -177,7 +181,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 }
             },
             'type': 'data_augmentation_op',
-            'data_aug_op': 'tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer',
+            'data_aug_op': replacer_op,
             "data_aug_op_config": {
                 'kwargs': {}
             },
