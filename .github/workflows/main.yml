@@ -62,14 +62,6 @@ jobs:
       - name: Install Forte
         run: |
           pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,wikipedia,augment,stave]
-      - name: Install a few wrappers for testing
-        run: |
-          git clone https://github.com/asyml/forte-wrappers.git
-          cd forte-wrappers/forte/nltk
-          pip install --use-feature=in-tree-build --progress-bar off .
-          cd ../../..
-          # Remove them to avoid confusion.
-          rm -rf forte-wrappers
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
