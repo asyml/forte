@@ -11,6 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import os
 import unittest
 
 from forte.data.batchers import FixedSizeDataPackBatcherWithExtractor
@@ -20,14 +21,18 @@ from forte.data.extractors.attribute_extractor import AttributeExtractor
 from forte.data.readers.conll03_reader import CoNLL03Reader
 from forte.pipeline import Pipeline
 from forte.train_preprocessor import TrainPreprocessor
-from ft.onto.base_ontology import Sentence, Token
+from ft.onto.base_ontology import Sentence
 
 
 class FixedSizeDataPackBatcherWithExtractorTest(unittest.TestCase):
 
     def setUp(self):
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/conll03"
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir
+        ))
+        self.dataset_path = os.path.join(root_path, "data_samples/conll03")
 
     def test_FixedSizeDataPackBatcherWithExtractor(self):
         r"""This funciton tests the corectness of cross_pack."""

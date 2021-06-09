@@ -28,7 +28,7 @@ from forte.processors.data_augment.algorithms.eda_processors import (
     RandomInsertionDataAugmentProcessor,
     RandomSwapDataAugmentProcessor
 )
-from forte_wrapper.nltk import NLTKWordTokenizer, NLTKPOSTagger
+from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token
 
 from ddt import ddt, data, unpack
@@ -46,16 +46,16 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
 
         self.nlp.set_reader(reader=StringReader())
         self.nlp.add(component=MultiPackBoxer(), config=boxer_config)
-        self.nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
-        self.nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
+        self.nlp.add(component=WhiteSpaceTokenizer(),
+                     selector=AllPackSelector())
 
     @data(
         ([
              "Mary and Samantha arrived at the bus station "
-             "early but waited until noon for the bus."],
+             "early but waited until noon for the bus ."],
          [
              "Mary early Samantha arrived at the bus station "
-             "and but waited until for noon the bus."],
+             "and but waited until for noon the bus ."],
          [['Mary', 'early', 'Samantha', 'arrived', 'at', 'the', 'bus',
            'station', 'and', 'but', 'waited', 'until', 'for', 'noon', 'the',
            'bus', '.']],
@@ -77,10 +77,10 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
     @data(
         ([
              "Mary and Samantha arrived at the bus station early "
-             "but waited until noon for the bus."],
+             "but waited until noon for the bus ."],
          [
              "await Mary and Samantha arrived at the bus station "
-             "early but waited until noon for the bus."],
+             "early but waited until noon for the bus ."],
          [['await ', 'Mary', 'and', 'Samantha', 'arrived', 'at', 'the', 'bus',
            'station', 'early', 'but', 'waited', 'until', 'noon', 'for', 'the',
            'bus', '.']],
@@ -102,8 +102,8 @@ class TestEDADataAugmentProcessor(unittest.TestCase):
     @data(
         ([
              "Mary and Samantha arrived at the bus station "
-             "early but waited until noon for the bus."],
-         ["Mary and   at  bus   but waited until  for the ."],
+             "early but waited until noon for the bus ."],
+         ["Mary and   at  bus   but waited until  for the  ."],
          [['Mary', 'and', 'at', 'bus', 'but', 'waited', 'until', 'for', 'the',
            '.']],
         )

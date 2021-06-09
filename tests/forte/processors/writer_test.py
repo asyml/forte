@@ -20,14 +20,12 @@ import tempfile
 import unittest
 from typing import List, Dict
 
-from forte_wrapper.nltk import NLTKWordTokenizer, \
-    NLTKPOSTagger, NLTKSentenceSegmenter
-
 from forte.data.data_pack import DataPack
 from forte.data.readers import OntonotesReader, \
     RecursiveDirectoryDeserializeReader
 from forte.pipeline import Pipeline
-from forte.processors.misc import AnnotationRemover
+from forte.processors.misc import AnnotationRemover, PeriodSentenceSplitter, \
+    WhiteSpaceTokenizer
 from forte.processors.writers import PackNameJsonPackWriter
 from ft.onto.base_ontology import Token
 
@@ -52,9 +50,8 @@ class TestJsonWriter(unittest.TestCase):
                     'ft.onto.base_ontology.Sentence',
                 ]}
         )
-        pipe_serialize.add(NLTKSentenceSegmenter())
-        pipe_serialize.add(NLTKWordTokenizer())
-        pipe_serialize.add(NLTKPOSTagger())
+        pipe_serialize.add(PeriodSentenceSplitter())
+        pipe_serialize.add(WhiteSpaceTokenizer())
 
         with tempfile.TemporaryDirectory() as output_dir:
             pipe_serialize.add(

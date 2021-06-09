@@ -164,8 +164,12 @@ class OntologyCodeGenerator:
         serve as ancestors of the user-defined entries.
         (2) Dependencies to other json configs through the json `imports`
     Example:
-        >>> destination_dir = OntologyCodeGenerator().generate(
-        ... 'forte/ontology_specs/base_ontology.json')
+
+        .. code-block:: python
+
+            destination_dir = OntologyCodeGenerator().generate(
+                ... 'forte/ontology_specs/base_ontology.json')
+
     """
 
     def __init__(self, import_dirs: Optional[List[str]] = None,
@@ -380,7 +384,7 @@ class OntologyCodeGenerator:
 
     def generate(self, spec_path: str, destination_dir: str = os.getcwd(),
                  is_dry_run: bool = False, include_init: bool = True,
-                 merged_path: Optional[str] = None, lenient_prefix=False)\
+                 merged_path: Optional[str] = None, lenient_prefix=False) \
             -> Optional[str]:
         r"""Function to generate and save the python ontology code after reading
             ontology from the input json file. This is the main entry point to

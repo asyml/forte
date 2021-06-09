@@ -65,7 +65,7 @@ class SearchProcessor(MultiPackProcessor):
         config.update({
             'model_dir': None,
             'response_pack_name_prefix': 'doc',
-            'indexer_class': 'forte_wrapper.faiss.embedding_based_indexer'
+            'indexer_class': 'forte.faiss.embedding_based_indexer'
                              '.EmbeddingBasedIndexer',
             'indexer_configs': {
                 "index_type": "GpuIndexFlatIP",

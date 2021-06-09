@@ -11,6 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import os
 import unittest
 import pickle as pkl
 from ft.onto.base_ontology import Sentence, Token
@@ -23,8 +24,12 @@ from forte.data.extractors.attribute_extractor import AttributeExtractor
 class AttributeExtractorTest(unittest.TestCase):
 
     def setUp(self):
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir, os.pardir
+        ))
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/conll03"
+        self.dataset_path = os.path.join(root_path, "data_samples/conll03")
 
     def test_AttributeExtractor(self):
         pipeline = Pipeline[DataPack]()
@@ -41,10 +46,10 @@ class AttributeExtractorTest(unittest.TestCase):
         extractor = AttributeExtractor()
         extractor.initialize(config=config)
 
-        sentence = "The European Commission said on Thursday it disagreed "\
-                    "with German advice to consumers to shun British lamb "\
-                    "until scientists determine whether mad cow disease "\
-                    "can be transmitted to sheep ."
+        sentence = "The European Commission said on Thursday it disagreed " \
+                   "with German advice to consumers to shun British lamb " \
+                   "until scientists determine whether mad cow disease " \
+                   "can be transmitted to sheep ."
 
         # Check update_vocab.
         for pack in pipeline.process_dataset(self.dataset_path):
@@ -72,7 +77,7 @@ class AttributeExtractorTest(unittest.TestCase):
         # become None. Since vocab_use_unk is true, None will be
         # mapped to <UNK>.
         unk_pos_ids = [extractor.element2repr(None) for _ in
-                        range(len(sentence.split(" ")))]
+                       range(len(sentence.split(" ")))]
 
         for pack in pipeline.process_dataset(self.dataset_path):
             for instance in pack.get(Sentence):
@@ -90,7 +95,7 @@ class AttributeExtractorTest(unittest.TestCase):
         # Check state and from_state.
         new_extractor = pkl.loads(pkl.dumps(extractor))
         self.assertEqual(new_extractor.config.attribute,
-                        extractor.config.attribute)
+                         extractor.config.attribute)
 
 
 if __name__ == '__main__':

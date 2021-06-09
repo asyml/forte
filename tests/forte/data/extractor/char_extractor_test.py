@@ -11,6 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import os
 import unittest
 
 from ft.onto.base_ontology import Sentence, Token, EntityMention
@@ -23,8 +24,12 @@ from forte.data.extractors.char_extractor import CharExtractor
 class CharExtractorTest(unittest.TestCase):
 
     def setUp(self):
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir, os.pardir
+        ))
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/conll03"
+        self.dataset_path = os.path.join(root_path, "data_samples/conll03")
 
     def test_CharExtractor(self):
         pipeline = Pipeline[DataPack]()
@@ -49,10 +54,10 @@ class CharExtractorTest(unittest.TestCase):
             extractor = CharExtractor()
             extractor.initialize(config=config)
 
-            sentence = "The European Commission said on Thursday it disagreed "\
-                        "with German advice to consumers to shun British lamb "\
-                        "until scientists determine whether mad cow disease "\
-                        "can be transmitted to sheep ."
+            sentence = "The European Commission said on Thursday it disagreed " \
+                       "with German advice to consumers to shun British lamb " \
+                       "until scientists determine whether mad cow disease " \
+                       "can be transmitted to sheep ."
 
             for pack in pipeline.process_dataset(self.dataset_path):
                 for instance in pack.get(Sentence):
@@ -65,7 +70,7 @@ class CharExtractorTest(unittest.TestCase):
 
             for feat in features:
                 recovered = [[extractor.id2element(idx) for idx in sent]
-                                                for sent in feat.data[0]]
+                             for sent in feat.data[0]]
 
                 recovered = ["".join(chars) for chars in recovered]
                 recovered = " ".join(recovered)
@@ -73,7 +78,7 @@ class CharExtractorTest(unittest.TestCase):
                     self.assertEqual(recovered, sentence)
                 else:
                     truncated_sent = [token[:config["max_char_length"]]
-                            for token in sentence.split(" ")]
+                                      for token in sentence.split(" ")]
                     truncated_sent = " ".join(truncated_sent)
                     self.assertEqual(recovered, truncated_sent)
 

@@ -14,7 +14,7 @@
 """
 Unit tests for BaseReader.
 """
-
+import os
 import unittest
 from typing import List
 
@@ -33,8 +33,14 @@ class DummyPackProcessor(PackProcessor):
 class BaseReaderTest(unittest.TestCase):
 
     def setUp(self):
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir, os.pardir
+        ))
+
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/base_reader_test/"
+        self.dataset_path = os.path.join(root_path,
+                                         "data_samples/base_reader_test/")
 
         self.nlp = Pipeline[DataPack]()
 

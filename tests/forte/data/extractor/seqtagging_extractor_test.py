@@ -11,6 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import os
 import unittest
 
 from ft.onto.base_ontology import Sentence, Token, EntityMention
@@ -23,8 +24,12 @@ from forte.data.extractors.seqtagging_extractor import BioSeqTaggingExtractor
 class SeqTaggingExtractorTest(unittest.TestCase):
 
     def setUp(self):
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir, os.pardir
+        ))
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/conll03"
+        self.dataset_path = os.path.join(root_path, "data_samples/conll03")
 
     def test_BioSeqTaggingExtractor(self):
         pipeline = Pipeline[DataPack]()
@@ -51,26 +56,26 @@ class SeqTaggingExtractorTest(unittest.TestCase):
                     (None, 'O'), (None, 'O'), (None, 'O')]
 
         invalid = [(None, 'O'), ('MISC', 'B'), ('ORG', 'I'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    ('MISC', 'B'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    ('MISC', 'I'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O')]
+                   (None, 'O'), (None, 'O'), (None, 'O'),
+                   (None, 'O'), (None, 'O'), (None, 'O'),
+                   ('MISC', 'B'), (None, 'O'), (None, 'O'),
+                   (None, 'O'), (None, 'O'), (None, 'O'),
+                   ('MISC', 'I'), (None, 'O'), (None, 'O'),
+                   (None, 'O'), (None, 'O'), (None, 'O'),
+                   (None, 'O'), (None, 'O'), (None, 'O'),
+                   (None, 'O'), (None, 'O'), (None, 'O'),
+                   (None, 'O'), (None, 'O'), (None, 'O')]
 
         corrected = [(None, 'O'), ('MISC', 'B'), ('ORG', 'B'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    ('MISC', 'B'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    ('MISC', 'B'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O'),
-                    (None, 'O'), (None, 'O'), (None, 'O')]
+                     (None, 'O'), (None, 'O'), (None, 'O'),
+                     (None, 'O'), (None, 'O'), (None, 'O'),
+                     ('MISC', 'B'), (None, 'O'), (None, 'O'),
+                     (None, 'O'), (None, 'O'), (None, 'O'),
+                     ('MISC', 'B'), (None, 'O'), (None, 'O'),
+                     (None, 'O'), (None, 'O'), (None, 'O'),
+                     (None, 'O'), (None, 'O'), (None, 'O'),
+                     (None, 'O'), (None, 'O'), (None, 'O'),
+                     (None, 'O'), (None, 'O'), (None, 'O')]
 
         extractor = BioSeqTaggingExtractor()
         extractor.initialize(config=config)

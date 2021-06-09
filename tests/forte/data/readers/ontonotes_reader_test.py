@@ -14,7 +14,7 @@
 """
 Unit tests for OntonotesReader.
 """
-
+import os
 import unittest
 from typing import Tuple, List
 
@@ -34,9 +34,14 @@ class DummyPackProcessor(PackProcessor):
 class OntonotesReaderPipelineTest(unittest.TestCase):
 
     def setUp(self):
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir, os.pardir
+        ))
         # Define and config the Pipeline
-        self.dataset_path = "data_samples/ontonotes/00"
-        self.dataset_path_nested_span = "data_samples/ontonotes/nested_spans"
+        self.dataset_path = os.path.join(root_path, "data_samples/ontonotes/00")
+        self.dataset_path_nested_span = os.path.join(
+            root_path, "data_samples/ontonotes/nested_spans")
 
         self.nlp = Pipeline[DataPack]()
 

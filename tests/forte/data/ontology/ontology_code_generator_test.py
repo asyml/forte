@@ -42,6 +42,7 @@ class GenerateOntologyTest(unittest.TestCase):
         self.dir_path = None
 
         curr_dir = os.path.dirname(__file__)
+
         self.spec_dir = os.path.join(curr_dir, "test_specs/")
         self.test_output = os.path.join(curr_dir, "test_outputs/")
 
@@ -53,6 +54,18 @@ class GenerateOntologyTest(unittest.TestCase):
         if self.dir_path is not None:
             self.generator.cleanup_generated_ontology(self.dir_path,
                                                       is_forced=True)
+
+    def assert_generation_equal(self, file_a, file_b):
+        with open(file_a, 'r') as a, open(file_b, 'r') as b:
+            lines_a = a.readlines()
+            lines_b = b.readlines()
+            self.assertEqual(len(lines_a), len(lines_b))
+            for la, lb in zip(lines_a, lines_b):
+                # Skip source path line.
+                if la.startswith("# ***source json:") and lb.startswith(
+                        "# ***source json:t"):
+                    continue
+                self.assertEqual(la, lb)
 
     @data(
         ('example_ontology', ['ft/onto/example_import_ontology',
@@ -77,22 +90,17 @@ class GenerateOntologyTest(unittest.TestCase):
             # Reorder code.
             generated_files = sorted(
                 utils.get_generated_files_in_dir(folder_path))
+
             expected_files = [f"{os.path.join(folder_path, file)}.py"
                               for file in file_paths]
 
             self.assertEqual(generated_files, expected_files)
 
             for i, generated_file in enumerate(generated_files):
-                with open(generated_file, 'r') as f:
-                    generated_code = f.read()
-
                 # assert if generated code matches with the expected code
                 expected_code_path = os.path.join(self.test_output,
                                                   f'{file_paths[i]}.py')
-                with open(expected_code_path, 'r') as f:
-                    expected_code = f.read()
-
-                self.assertEqual(generated_code, expected_code)
+                self.assert_generation_equal(generated_file, expected_code_path)
 
     def test_dry_run_false(self):
         json_file_path = os.path.join(

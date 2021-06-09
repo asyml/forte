@@ -61,15 +61,7 @@ jobs:
           rm -rf texar-pytorch
       - name: Install Forte
         run: |
-          pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,ir,wikipedia,augment,stave]
-      - name: Install a few wrappers for testing
-        run: |
-          git clone https://github.com/asyml/forte-wrappers.git
-          cd forte-wrappers
-          pip install --use-feature=in-tree-build --progress-bar off .[nltk]
-          cd ..
-          # Remove them to avoid confusion.
-          rm -rf forte-wrappers
+          pip install --use-feature=in-tree-build --progress-bar off .[ner,test,example,wikipedia,augment,stave]
       - name: Build ontology
         run: |
           ./scripts/build_ontology_specs.sh
@@ -87,11 +79,9 @@ jobs:
           if [[ ${{ matrix.torch-version }} != "1.5.0" ]]; then mypy .; fi
       - name: Test with pytest and run coverage
         run: |
-          coverage run -m pytest
-      - name: Test doctest and try to append the coverage
-        run: |
+          coverage run -m pytest tests
           coverage run --append -m pytest --doctest-modules forte
-      - name: Upload to codecov
+      - name: Upload coverage
         run: |
           codecov
   docs:

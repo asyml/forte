@@ -17,7 +17,7 @@ import os
 import yaml
 from termcolor import colored
 
-from forte_wrapper.elastic import ElasticSearchQueryCreator, \
+from forte.elastic import ElasticSearchQueryCreator, \
     ElasticSearchProcessor
 
 from forte.common.configuration import Config

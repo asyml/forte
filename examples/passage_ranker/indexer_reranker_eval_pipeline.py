@@ -16,7 +16,7 @@ import argparse
 
 import yaml
 
-from forte_wrapper.elastic import ElasticSearchQueryCreator, \
+from forte.elastic import ElasticSearchQueryCreator, \
     ElasticSearchProcessor
 
 from ms_marco_evaluator import MSMarcoEvaluator

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import unittest
 from typing import List, Iterator
 
@@ -24,7 +25,13 @@ from ft.onto.base_ontology import Sentence
 
 class DataPackDatasetTest(unittest.TestCase):
     def setUp(self):
-        file_path: str = "data_samples/data_pack_dataset_test"
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir
+        ))
+
+        file_path: str = os.path.join(root_path,
+                                      "data_samples/data_pack_dataset_test")
         reader = CoNLL03Reader()
         context_type = Sentence
         request = {Sentence: []}

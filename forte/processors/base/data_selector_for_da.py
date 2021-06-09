@@ -74,7 +74,7 @@ class BaseElasticSearchDataSelector(BaseDataSelector):
         config = super().default_configs()
         config.update({
             "indexer_class":
-                "forte_wrapper.elastic.elastic_indexer.ElasticSearchIndexer",
+                "forte.elastic.elastic_indexer.ElasticSearchIndexer",
             "index_config": {
                 "index_name": "elastic_indexer",
                 "hosts": "localhost:9200",

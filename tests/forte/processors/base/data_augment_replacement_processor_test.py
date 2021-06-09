@@ -34,7 +34,7 @@ from forte.processors.data_augment.base_data_augment_processor import \
     modify_index
 from forte.processors.data_augment.algorithms.text_replacement_op import \
     TextReplacementOp
-from forte_wrapper.nltk import NLTKWordTokenizer, NLTKPOSTagger
+from forte.processors.misc import WhiteSpaceTokenizer
 from ft.onto.base_ontology import Token, Sentence, Document
 
 
@@ -85,9 +85,9 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
     @data(
         ([
-             "Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+             "Mary and Samantha arrived at the bus station early but waited until noon for the bus ."],
          [
-             "Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus."],
+             "Virgin and Samantha arrived at the bus stop early but waited til 12 for the bus ."],
          [["Virgin", "and", "Samantha", "arrived", "at", "the", "bus", "stop",
            "early", "but", "waited", "til", "12", "for", "the", "bus", "."]]
         )
@@ -100,6 +100,8 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             'pack_name': 'input'
         }
 
+        replacer_op = TmpReplacer.__module__ + "." + TmpReplacer.__qualname__
+
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
             'other_entry_policy': {
@@ -110,7 +112,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 }
             },
             'type': 'data_augmentation_op',
-            'data_aug_op': 'tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer',
+            'data_aug_op': replacer_op,
             'data_aug_op_config': {
                 'type': '',
                 'kwargs': {}
@@ -124,8 +126,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
         nlp.set_reader(reader=StringReader())
         nlp.add(component=MultiPackBoxer(), config=boxer_config)
-        nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
-        nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
+        nlp.add(component=WhiteSpaceTokenizer(), selector=AllPackSelector())
         nlp.add(component=ReplacementDataAugmentProcessor(),
                 config=processor_config)
         nlp.initialize()
@@ -140,12 +141,12 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
 
     @data(
         ([
-             "Mary and Samantha arrived at the bus station early but waited until noon for the bus."],
+             "Mary and Samantha arrived at the bus station early but waited until noon for the bus ."],
          [
-             " NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus NLP .NLP"],
+             " NLP Virgin  Samantha  NLP arrived at the bus stop early but waited til 12 for the bus  NLP . NLP"],
          [[" NLP ", "Virgin", "Samantha", " NLP ", "arrived", "at", "the",
            "bus", "stop", "early", "but", "waited", "til", "12", "for", "the",
-           "bus", " NLP ", ".", "NLP"], ],
+           "bus", " NLP ", ".", " NLP"], ],
          [["til", "12", "for", "the", "bus", "."]]
         )
     )
@@ -164,10 +165,9 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
         }
         nlp.set_reader(reader=MultiPackSentenceReader(), config=reader_config)
 
-        nlp.add(component=NLTKWordTokenizer(), selector=AllPackSelector())
-        nlp.add(component=NLTKPOSTagger(), selector=AllPackSelector())
+        nlp.add(component=WhiteSpaceTokenizer(), selector=AllPackSelector())
 
-        nlp.initialize()
+        replacer_op = TmpReplacer.__module__ + "." + TmpReplacer.__qualname__
 
         processor_config = {
             'augment_entry': "ft.onto.base_ontology.Token",
@@ -177,7 +177,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 }
             },
             'type': 'data_augmentation_op',
-            'data_aug_op': 'tests.forte.processors.base.data_augment_replacement_processor_test.TmpReplacer',
+            'data_aug_op': replacer_op,
             "data_aug_op_config": {
                 'kwargs': {}
             },
@@ -186,7 +186,10 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             }
         }
 
+        nlp.initialize()
+
         processor = ReplacementDataAugmentProcessor()
+        # To test, initialize the processor itself.
         processor.initialize(resources=None, configs=processor_config)
 
         for idx, m_pack in enumerate(nlp.process_dataset(self.test_dir)):
@@ -294,7 +297,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
                 processor._insert(" NLP ", pack, 0)
                 processor._insert(" NLP ", pack, 18)
                 processor._insert(" NLP ", pack, len(pack.text) - 2)
-                processor._insert("NLP", pack, len(pack.text) - 1)
+                processor._insert(" NLP", pack, len(pack.text) - 1)
                 # Delete the second token "and"
                 processor._delete(list(pack.get(Token))[1])
 
@@ -312,6 +315,7 @@ class TestReplacementDataAugmentProcessor(unittest.TestCase):
             self.assertEqual(new_src_pack.text, expected_outputs[idx] + "\n")
 
             for j, token in enumerate(new_src_pack.get(Token)):
+                # print(f'[{token.text}], [{expected_tokens[idx][j]}]')
                 self.assertEqual(token.text, expected_tokens[idx][j])
 
             for sent in new_src_pack.get(Sentence):

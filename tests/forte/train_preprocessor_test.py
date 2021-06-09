@@ -12,30 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
-import torch
 from typing import Dict, Any, Iterator
+import os
+import torch
 
-from forte.common.resources import Resources
-from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
-from forte.data.base_pack import PackType
-from forte.data.vocabulary import Vocabulary
-from forte.data.converter import Converter
-from forte.train_preprocessor import TrainPreprocessor
-from forte.data.readers.conll03_reader import CoNLL03Reader
-from forte.data.extractors.attribute_extractor import AttributeExtractor
 from forte.data.base_extractor import BaseExtractor
+from forte.data.base_pack import PackType
+from forte.data.converter import Converter
+from forte.data.extractors.attribute_extractor import AttributeExtractor
 from forte.data.extractors.char_extractor import CharExtractor
 from forte.data.extractors.seqtagging_extractor import BioSeqTaggingExtractor
+from forte.data.readers.conll03_reader import CoNLL03Reader
+from forte.data.vocabulary import Vocabulary
+from forte.evaluation.ner_evaluator import CoNLLNEREvaluator
 from forte.pipeline import Pipeline
-from ft.onto.base_ontology import Sentence, Token, EntityMention
+from forte.train_preprocessor import TrainPreprocessor
 
 
 class TrainPreprocessorTest(unittest.TestCase):
     def setUp(self):
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir
+        ))
+
         self.config = {
             "max_char_length": 45,
-            "train_path": "data_samples/train_pipeline_test",
-            "val_path": "data_samples/train_pipeline_test",
+            "train_path": os.path.join(root_path,
+                                       "data_samples/train_pipeline_test"),
+            "val_path": os.path.join(root_path,
+                                     "data_samples/train_pipeline_test"),
             "num_epochs": 1,
             "batch_size_tokens": 5,
             "learning_rate": 0.01,

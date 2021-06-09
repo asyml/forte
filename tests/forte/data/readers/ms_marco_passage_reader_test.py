@@ -33,7 +33,13 @@ class MSMarcoPassageReaderTest(unittest.TestCase):
         self.pipeline.set_reader(MSMarcoPassageReader())
         self.pipeline.initialize()
 
-        self.data_dir = 'data_samples/ms_marco_passage_retrieval'
+        root_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, os.pardir, os.pardir, os.pardir
+        ))
+
+        self.data_dir = os.path.join(root_path,
+                                     'data_samples/ms_marco_passage_retrieval')
 
         corpus_file = os.path.join(self.data_dir, 'collection.tsv')
         self.expected_content = {}
