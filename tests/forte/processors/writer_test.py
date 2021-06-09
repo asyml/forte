@@ -20,7 +20,7 @@ import tempfile
 import unittest
 from typing import List, Dict
 
-from forte_wrapper.nltk import NLTKWordTokenizer, \
+from forte.nltk import NLTKWordTokenizer, \
     NLTKPOSTagger, NLTKSentenceSegmenter
 
 from forte.data.data_pack import DataPack
