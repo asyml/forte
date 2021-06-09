@@ -1,2 +1,3 @@
 torch>=1.5.0
-git+https://git@github.com/asyml/forte-wrappers#egg=forte-wrappers[nltk,varder,twitter]
+git+https://git@github.com/asyml/forte-wrappers.git#egg=forte.tweepy&subdirectory=src/tweepy
+git+https://git@github.com/asyml/forte-wrappers.git#egg=forte.vader&subdirectory=src/vader
