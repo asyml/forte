@@ -126,6 +126,7 @@ class Sentence(Annotation):
         speaker (Optional[str]):
         part_id (Optional[int]):
         sentiment (Dict[str, float]):
+        classification (Dict[str, float]):
     """
 
     speaker: Optional[str]
