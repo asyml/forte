@@ -21,7 +21,7 @@ from forte.data.multi_pack import MultiPack
 
 from forte.pipeline import Pipeline
 from forte.vader import VaderSentimentProcessor
-from forte.twitter import TweetSearchProcessor
+from forte.tweepy import TweetSearchProcessor
 from forte.data.selector import RegexNameMatchSelector
 
 
