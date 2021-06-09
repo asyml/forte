@@ -239,7 +239,7 @@ class CoNLLNERTrainer(BaseTrainer):
 
         if epoch % self.config_model.decay_interval == 0:
             lr = self.config_model.learning_rate / (
-                1.0 + self.trained_epochs * self.config_model.decay_rate
+                    1.0 + self.trained_epochs * self.config_model.decay_rate
             )
             for param_group in self.optim.param_groups:
                 param_group["lr"] = lr
@@ -265,9 +265,9 @@ class CoNLLNERTrainer(BaseTrainer):
         losses = 0
         val_data = list(instances)
         for i in tqdm(
-            range(0, len(val_data), self.config_data.test_batch_size)
+                range(0, len(val_data), self.config_data.test_batch_size)
         ):
-            b_data = val_data[i : i + self.config_data.test_batch_size]
+            b_data = val_data[i: i + self.config_data.test_batch_size]
             batch = self.get_batch_tensor(b_data, device=self.device)
 
             word, char, labels, masks, unused_lengths = batch
@@ -289,7 +289,7 @@ class CoNLLNERTrainer(BaseTrainer):
         """
 
         if self.__past_dev_result is None or (
-            eval_result["eval"]["f1"] > self.__past_dev_result["eval"]["f1"]
+                eval_result["eval"]["f1"] > self.__past_dev_result["eval"]["f1"]
         ):
             self.__past_dev_result = eval_result
             logger.info("Validation f1 increased, saving model")
@@ -374,9 +374,9 @@ class CoNLLNERTrainer(BaseTrainer):
         self.optim.load_state_dict(ckpt["optimizer"])
 
     def get_batch_tensor(
-        self,
-        data: List[Tuple[List[int], List[List[int]], List[int]]],
-        device: Optional[torch.device] = None,
+            self,
+            data: List[Tuple[List[int], List[List[int]], List[int]]],
+            device: Optional[torch.device] = None,
     ) -> Tuple[
         torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor
     ]:
@@ -433,7 +433,7 @@ class CoNLLNERTrainer(BaseTrainer):
             wid_inputs[i, inst_size:] = self.word_alphabet.pad_id
             for c, cids in enumerate(cid_seqs):
                 cid_inputs[i, c, : len(cids)] = cids
-                cid_inputs[i, c, len(cids) :] = self.char_alphabet.pad_id
+                cid_inputs[i, c, len(cids):] = self.char_alphabet.pad_id
             cid_inputs[i, inst_size:, :] = self.char_alphabet.pad_id
             # ner ids
             nid_inputs[i, :inst_size] = nids
@@ -455,7 +455,7 @@ def _batch_size_fn(new: Tuple, count: int, _: int):
         _batch_size_fn.max_length = 0  # type: ignore
 
     _batch_size_fn.max_length = max(  # type: ignore
-        _batch_size_fn.max_length, len(new[0])
-    )  # type: ignore
+        _batch_size_fn.max_length, len(new[0])  # type: ignore
+    )
     elements = count * _batch_size_fn.max_length  # type: ignore
     return elements

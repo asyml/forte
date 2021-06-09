@@ -660,8 +660,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
             new_entry = type(entry)(
-                new_pack, new_link_parent, new_link_child
-            )  # type: ignore
+                new_pack, new_link_parent, new_link_child  # type: ignore
+            )
         else:
             entry = cast(Group, entry)
             new_entry = type(entry)(new_pack, new_children)  # type: ignore
@@ -721,8 +721,8 @@ class ReplacementDataAugmentProcessor(BaseDataAugmentProcessor):
             new_link_parent: Entry = new_children[0]
             new_link_child: Entry = new_children[1]
             new_entry = type(entry)(
-                multi_pack, new_link_parent, new_link_child
-            )  # type: ignore
+                multi_pack, new_link_parent, new_link_child  # type: ignore
+            )
         else:
             entry = cast(MultiPackGroup, entry)
             new_entry = type(entry)(multi_pack, new_children)  # type: ignore

@@ -37,8 +37,8 @@ class StringReader(PackReader):
     def _cache_key_function(self, collection) -> str:
         return str(hash(collection)) + ".html"
 
-    def _collect(
-        self, string_data: Union[List[str], str]  # type: ignore
+    def _collect(  # type: ignore
+        self, string_data: Union[List[str], str]
     ) -> Iterator[str]:
         r"""``string`_data` should be of type `List[str]`,
         which is the list of raw text strings to iterate over.

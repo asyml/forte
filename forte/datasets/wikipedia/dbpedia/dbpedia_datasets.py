@@ -78,7 +78,7 @@ class DBpediaWikiReader(PackReader):
     """
 
     def __init__(
-        self,
+            self,
     ):
         super().__init__()
         self.__redirects: Dict[str, str] = {}
@@ -91,8 +91,8 @@ class DBpediaWikiReader(PackReader):
         else:
             raise ResourceError("Redirects not provided from resources.")
 
-    def _collect(
-        self, nif_context: str  # type: ignore
+    def _collect(  # type: ignore
+            self, nif_context: str
     ) -> Iterator[Dict[str, str]]:
         str_data: Dict[str, str] = {}
 
@@ -103,10 +103,10 @@ class DBpediaWikiReader(PackReader):
 
                 fragment = get_resource_fragment(v)
                 if (
-                    nif_type
-                    and nif_type == "context"
-                    and fragment is not None
-                    and fragment == "isString"
+                        nif_type
+                        and nif_type == "context"
+                        and fragment is not None
+                        and fragment == "isString"
                 ):
                     str_data["text"] = o.toPython()
                     doc_name: Optional[str] = get_resource_name(s)
@@ -187,8 +187,8 @@ class WikiPackReader(PackReader):
     def add_wiki_info(self, pack: DataPack, statements: List[state_type]):
         raise NotImplementedError
 
-    def _collect(
-        self, nif_path: str  # type: ignore
+    def _collect(  # type: ignore
+            self, nif_path: str
     ) -> Iterator[Tuple[str, Dict[str, List[state_type]]]]:
         for _, statements in ContextGroupedNIFReader(nif_path):
             name = get_resource_name(statements[0][0])
@@ -196,7 +196,7 @@ class WikiPackReader(PackReader):
                 yield name, statements
 
     def _parse_pack(
-        self, collection: Tuple[str, List[state_type]]
+            self, collection: Tuple[str, List[state_type]]
     ) -> Iterator[DataPack]:
         resource_name, statements = collection
         if resource_name in self._redirects:
@@ -417,15 +417,15 @@ class WikiAnchorReader(WikiPackReader):
                 if info_key == "type":
                     anchor_type = get_resource_fragment(info_value)
                     if (
-                        not anchor_type == "Phrase"
-                        and not anchor_type == "Word"
+                            not anchor_type == "Phrase"
+                            and not anchor_type == "Word"
                     ):
                         logging.warning("Unknown anchor type: %s", info_value)
                 if info_key == "taIdentRef":
                     target_page_name = get_resource_name(info_value)
                     if (
-                        target_page_name is not None
-                        and target_page_name in self._redirects
+                            target_page_name is not None
+                            and target_page_name in self._redirects
                     ):
                         target_page_name = self._redirects[target_page_name]
 
