@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/race_qa_onto.json***
+# ***source json:../../../../../../Documents/projects/forte/tests/forte/data/ontology/test_specs/race_qa_onto.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -25,6 +25,7 @@ __all__ = [
 
 @dataclass
 class RaceDocument(Document):
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 
@@ -45,6 +46,7 @@ class Passage(Document):
 
 @dataclass
 class Option(Annotation):
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
 

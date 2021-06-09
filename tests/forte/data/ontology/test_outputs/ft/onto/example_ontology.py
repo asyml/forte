@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/example_ontology.json***
+# ***source json:../../../../../../Documents/projects/forte/tests/forte/data/ontology/test_specs/example_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -33,14 +33,14 @@ class Word(Token):
     """
 
     string_features: List[str]
-    word_forms: FList["Word"]
-    token_ranks: FDict[int, "Word"]
+    word_forms: FList['Word']
+    token_ranks: FDict[int, 'Word']
 
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
         self.string_features: List[str] = []
-        self.word_forms: FList["Word"] = FList(self)
-        self.token_ranks: FDict[int, "Word"] = FDict(self)
+        self.word_forms: FList['Word'] = FList(self)
+        self.token_ranks: FDict[int, 'Word'] = FDict(self)
 
 
 @dataclass
@@ -55,11 +55,6 @@ class WordLink(Link):
     ParentType = Word
     ChildType = Word
 
-    def __init__(
-        self,
-        pack: DataPack,
-        parent: Optional[Entry] = None,
-        child: Optional[Entry] = None,
-    ):
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self.string_features: List[str] = []

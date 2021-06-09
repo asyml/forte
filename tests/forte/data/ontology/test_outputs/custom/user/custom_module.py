@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/example_multi_module_ontology.json***
+# ***source json:../../../../../../Documents/projects/forte/tests/forte/data/ontology/test_specs/example_multi_module_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -31,11 +31,6 @@ class Dependency(Link):
     ParentType = Token
     ChildType = Token
 
-    def __init__(
-        self,
-        pack: DataPack,
-        parent: Optional[Entry] = None,
-        child: Optional[Entry] = None,
-    ):
+    def __init__(self, pack: DataPack, parent: Optional[Entry] = None, child: Optional[Entry] = None):
         super().__init__(pack, parent, child)
         self.rel_type: Optional[str] = None

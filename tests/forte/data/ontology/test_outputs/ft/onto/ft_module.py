@@ -1,5 +1,5 @@
 # ***automatically_generated***
-# ***source json:tests/forte/data/ontology/test_specs/example_multi_module_ontology.json***
+# ***source json:../../../../../../Documents/projects/forte/tests/forte/data/ontology/test_specs/example_multi_module_ontology.json***
 # flake8: noqa
 # mypy: ignore-errors
 # pylint: skip-file
@@ -59,5 +59,6 @@ class Sentence(Annotation):
 
 @dataclass
 class Document(Annotation):
+
     def __init__(self, pack: DataPack, begin: int, end: int):
         super().__init__(pack, begin, end)
