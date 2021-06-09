@@ -68,7 +68,7 @@ class GenerateOntologyTest(unittest.TestCase):
             for la, lb in zip(lines_a, lines_b):
                 # Skip source path line.
                 if la.startswith("# ***source json:") and lb.startswith(
-                    "# ***source json:t"
+                    "# ***source json:"
                 ):
                     continue
                 self.assertEqual(la, lb)
