@@ -89,9 +89,11 @@ jobs:
         run: |
           # Go to test root first and do the test there.
           cd ..
-          coverage run -m pytest forte
+          coverage run -m pytest forte/test
       - name: Test doctest and try to append the coverage
         run: |
+          # Go to test root first and do the test there.
+          cd ..
           coverage run --append -m pytest --doctest-modules forte/forte
       - name: Upload to codecov
         run: |
