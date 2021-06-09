@@ -65,14 +65,14 @@ jobs:
       - name: Install a few wrappers for testing
         run: |
           git clone https://github.com/asyml/forte-wrappers.git
-          cd forte-wrappers
-          pip install --use-feature=in-tree-build --progress-bar off .[nltk]
-          cd ..
+          cd forte-wrappers/forte/nltk
+          pip install --use-feature=in-tree-build --progress-bar off .
+          cd ../../..
           # Remove them to avoid confusion.
           rm -rf forte-wrappers
       - name: Build ontology
         run: |
-          ./scripts/build_ontology_specs.sh
+          forte/scripts/build_ontology_specs.sh
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -87,10 +87,12 @@ jobs:
           if [[ ${{ matrix.torch-version }} != "1.5.0" ]]; then mypy .; fi
       - name: Test with pytest and run coverage
         run: |
-          coverage run -m pytest
+          # Go to test root first and do the test there.
+          cd ..
+          coverage run -m pytest forte
       - name: Test doctest and try to append the coverage
         run: |
-          coverage run --append -m pytest --doctest-modules forte
+          coverage run --append -m pytest --doctest-modules forte/forte
       - name: Upload to codecov
         run: |
           codecov
