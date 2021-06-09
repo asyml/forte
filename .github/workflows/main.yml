@@ -91,6 +91,10 @@ jobs:
           cd ..
           coverage run -m pytest forte/tests
           coverage run --append -m pytest --doctest-modules forte/forte
+      - name: Upload coverage
+        run: |
+          # Copy the coverage run we have done here.
+          cp ../.coverage* .
           codecov
   docs:
     needs: build
