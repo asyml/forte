@@ -46,7 +46,7 @@ existing [libraries](https://github.com/asyml/forte-wrappers#libraries-and-tools
 git clone https://github.com/asyml/forte-wrappers.git
 cd forte-wrappers
 # Change spacy to other tools. Check here https://github.com/asyml/forte-wrappers#libraries-and-tools-supported for available tools.
-pip install ."[spacy]"
+pip install src/spacy
 ```
 
 With Forte, it is extremely simple to build an integrated system that can search
