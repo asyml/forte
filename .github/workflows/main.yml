@@ -72,7 +72,7 @@ jobs:
           rm -rf forte-wrappers
       - name: Build ontology
         run: |
-          forte/scripts/build_ontology_specs.sh
+          ./scripts/build_ontology_specs.sh
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
